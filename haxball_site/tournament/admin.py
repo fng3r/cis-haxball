@@ -100,12 +100,21 @@ class DisqualificationAdmin(admin.ModelAdmin):
 
 @admin.register(Postponement)
 class PostponementAdmin(admin.ModelAdmin):
-    list_display = ('match', 'is_emergency', 'get_teams', 'taken_at', 'taken_by', 'cancelled_at', 'cancelled_by')
+    list_display = ('match', 'is_emergency', 'get_teams', 'starts_at', 'ends_at', 'taken_at', 'taken_by',
+                    'is_cancelled', 'cancelled_at', 'cancelled_by')
     filter_horizontal = ('teams',)
+    autocomplete_fields = ('taken_by', 'cancelled_by')
+    list_filter = ('is_emergency',)
+    search_fields = ('match__team_home__title', 'match__team_guest__title')
 
     def get_teams(self, model):
         return ', '.join(map(lambda t: str(t), model.teams.all()))
     get_teams.short_description = 'На кого взят перенос'
+
+    def is_cancelled(self, model):
+        return model.is_cancelled
+    is_cancelled.short_description = 'Отменен'
+    is_cancelled.boolean = True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'match':

@@ -245,12 +245,15 @@ class Match(models.Model):
         if not self.is_postponed:
             return timezone.now().date() >= self.numb_tour.date_from
         else:
-            last_postponement = self.postponements.filter(cancelled_at=None).order_by('match__numb_tour__date_from').last()
+            last_postponement = self.get_last_postponement()
             return last_postponement.starts_at <= timezone.now().date() <= last_postponement.ends_at
 
     @property
     def is_postponed(self):
         return self.postponements.filter(cancelled_at=None).count() > 0
+
+    def get_last_postponement(self):
+        return self.postponements.filter(cancelled_at=None).order_by('-taken_at').first()
 
     def get_absolute_url(self):
         return reverse('tournament:match_detail', args=[self.id])
@@ -267,10 +270,6 @@ class Match(models.Model):
 class Goal(models.Model):
     match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_goal', null=True, blank=True,
                               on_delete=models.CASCADE)
-
-    # team = ChainedForeignKey(Team, chained_field='match', verbose_name='Команда забила', related_name='team_goals',
-    #                         chained_model_field='leagues__matches_in_league', null=True,
-    #                         on_delete=models.SET_NULL)
 
     team = models.ForeignKey(Team, verbose_name='Команда забила', related_name='team_goals', null=True,
                              on_delete=models.SET_NULL)
@@ -450,6 +449,8 @@ class Postponement(models.Model):
                               null=False, on_delete=models.CASCADE)
     is_emergency = models.BooleanField('Экстренный', default=False)
     teams = models.ManyToManyField(Team, verbose_name='На кого взят перенос', related_name='postponements')
+    starts_at = models.DateField('Дата старта переноса', null=False, blank=False)
+    ends_at = models.DateField('Дата окончания переноса', null=False, blank=False)
     taken_at = models.DateTimeField('Дата офомления переноса', default=timezone.now)
     taken_by = models.ForeignKey(User, verbose_name='Кем взят перенос', related_name='taken_postponements',
                                  null=True, on_delete=models.SET_NULL)
@@ -472,14 +473,6 @@ class Postponement(models.Model):
     @property
     def league(self):
         return self.match.league
-
-    @cached_property
-    def starts_at(self):
-        return self.match.numb_tour.date_to + timezone.timedelta(days=1)
-
-    @cached_property
-    def ends_at(self):
-        return self.match.numb_tour.date_to + timezone.timedelta(days=7)
 
     class Meta:
         verbose_name = 'Перенос'

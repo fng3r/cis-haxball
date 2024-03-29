@@ -361,7 +361,15 @@ class PostponementsList(ListView):
             teams = [Team.objects.get(pk=team_id)]
         is_emergency = type == 'emergency'
         taken_by = request.user
-        postponement = Postponement.objects.create(match=match, is_emergency=is_emergency, taken_by=taken_by)
+        match_expiration_date = match.numb_tour.date_to
+        if match.is_postponed:
+            match_expiration_date = match.get_last_postponement().ends_at
+
+        starts_at = match_expiration_date + timezone.timedelta(days=1)
+        ends_at = match_expiration_date + timezone.timedelta(days=7)
+
+        postponement = Postponement.objects.create(match=match, is_emergency=is_emergency, taken_by=taken_by,
+                                                   starts_at=starts_at, ends_at=ends_at)
         postponement.teams.set(teams)
 
         return redirect('tournament:postponements')

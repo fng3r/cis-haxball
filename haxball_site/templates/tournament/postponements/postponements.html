@@ -26,7 +26,7 @@
             <table class="table table-hover" style="max-width: 100%">
                 <thead class="thead-dark py-2 text-center">
                     <tr>
-                        <th scope="col" class="col-sm-3 border-right">Команда</th>
+                        <th scope="col" class="border-right">Команда</th>
                         <th scope="col" class="border-right">Перенос 1</th>
                         <th scope="col" class="border-right">Перенос 2</th>
                         <th scope="col" class="border-right">Перенос 3</th>
@@ -39,11 +39,11 @@
                 <tbody>
                     {% for team in teams %}
                         <tr style="font-weight: 700">
-                            <td class="border-right" style="text-align: center; font-size: 17px; vertical-align: center;">
+                            <td class="p-2 border-right" style="text-align: center; font-size: 17px; vertical-align: center;">
                                 <img src="{{team.logo.url}}" alt="..." style="margin-right: 5px;" width="25" height="25">{{team.title}}
                             </td>
                             {% for postponement in team|postponements_in_leagues:filter.qs %}
-                                <td class="border-right" style="font-size: 14px; text-align: center;" height="80px">
+                                <td class="p-1 border-right" style="font-size: 14px; text-align: center;" height="80px">
                                     {% if postponement is not None %}
                                         {% with match=postponement.match %}
                                             {{match.numb_tour.number}} тур<br>
