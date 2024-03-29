@@ -1,10 +1,11 @@
-# Register your models here.
+from django import forms
 from django.contrib import admin
 from django.db.models import Q
 from django.urls import resolve
 
 from .models import FreeAgent, Player, League, Team, Match, Goal, OtherEvents, Substitution, Season, PlayerTransfer, \
-    TourNumber, Nation, Achievements, TeamAchievement, AchievementCategory, Disqualification, Postponement
+    TourNumber, Nation, Achievements, TeamAchievement, AchievementCategory, Disqualification, Postponement, \
+    PostponementSlots
 
 
 @admin.register(FreeAgent)
@@ -68,12 +69,6 @@ class SeasonAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_active', 'created')
 
 
-@admin.register(League)
-class LeagueAdmin(admin.ModelAdmin):
-    list_display = ('title', 'priority', 'created')
-    filter_horizontal = ('teams',)
-
-
 @admin.register(Nation)
 class NationAdmin(admin.ModelAdmin):
     list_display = ('country',)
@@ -96,6 +91,23 @@ class DisqualificationAdmin(admin.ModelAdmin):
         if db_field.name == 'tours' or db_field.name == 'lifted_tours':
             kwargs['queryset'] = TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+class AlwaysChangedModelForm(forms.ModelForm):
+    def has_changed(self):
+        """ Should returns True if data differs from initial.
+        By always returning true even unchanged inlines will get validated and saved."""
+        return True
+
+
+class PostponementSlotsInline(admin.TabularInline):
+    model = PostponementSlots
+    form = AlwaysChangedModelForm
+    min_num = 1
+    max_num = 1
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Postponement)
@@ -125,6 +137,13 @@ class PostponementAdmin(admin.ModelAdmin):
         if db_field.name == 'teams':
             kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct()
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(League)
+class LeagueAdmin(admin.ModelAdmin):
+    list_display = ('title', 'priority', 'created')
+    filter_horizontal = ('teams',)
+    inlines = [PostponementSlotsInline]
 
 
 class GoalInline(admin.StackedInline):
@@ -173,6 +192,7 @@ class DisqualificationInline(admin.StackedInline):
         if db_field.name == "tours":
             kwargs["queryset"] = TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
 
 class EventInline(admin.StackedInline):
     model = OtherEvents

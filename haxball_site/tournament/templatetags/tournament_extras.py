@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 from django import template
 from django.contrib.auth.models import User
@@ -389,7 +390,6 @@ def league_table(league):
         draws[i] = draw_count
 
     l = zip(b, matches_played, wins, draws, looses, scores, consided, diffrence, points, last_matches)
-    print(l)
     s1 = sorted(l, key=lambda x: x[5], reverse=True)
     s2 = sorted(s1, key=lambda x: x[7], reverse=True)
     ls = sorted(s2, key=lambda x: x[8], reverse=True)
@@ -770,25 +770,30 @@ def get_lifted_string(disqualification: Disqualification):
 
 
 @register.filter
-def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Postponement]:
-    postponements = team.postponements.filter(cancelled_at=None, match__league__in=leagues).order_by('taken_at')
-    postponement_slots = [None for _ in range(1, 7)]
-    common_slots_count = 3
-    emergency_slots_count = 3
+def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Optional[Postponement]]:
+    postponements = team.get_postponements(leagues)
+    league = leagues.first()
+    league_slots = league.get_postponement_slots()
+    common_slots_count = league_slots.common_count
+    emergency_slots_count = league_slots.emergency_count
+    total_slots_count = league_slots.total_count
+    slots = [None for _ in range(1, total_slots_count + 1)]
+
     common_count = 0
     emergency_count = 0
     for postponement in postponements:
         if postponement.is_emergency:
-            postponement_slots[common_slots_count + emergency_count] = postponement
+            slots[common_slots_count + emergency_count] = postponement
             emergency_count += 1
         else:
             if common_count < common_slots_count:
-                postponement_slots[common_count] = postponement
+                slots[common_count] = postponement
+                common_count += 1
             else:
-                postponement_slots[common_slots_count + emergency_count] = postponement
-            common_count += 1
+                slots[common_slots_count + emergency_count] = postponement
+                emergency_count += 1
 
-    return postponement_slots
+    return slots
 
 
 @register.filter

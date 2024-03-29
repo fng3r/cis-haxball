@@ -21,15 +21,14 @@
                                     {% csrf_token %}
                                     <input type="hidden" name="match_id" value="{{ match.id }}"/>
 
-                                    <td width="5%" scope="col">{{ match.numb_tour.number }}</td>
-                                    <td style="font-size: 15px"><img src="{{match.team_home.logo.url}}" alt="..." width="25" height="25"> {{ match.team_home.title }}</td>
-                                    <td style="font-size: 15px"><img src="{{match.team_guest.logo.url}}" alt="..." width="25" height="25"> {{ match.team_guest.title }}</td>
+                                    <td width="5%" scope="col" style="font-weight: 500">{{ match.numb_tour.number }}</td>
+                                    <td style="font-size: 15px; font-weight: 500"><img src="{{match.team_home.logo.url}}" alt="..." width="25" height="25"> {{ match.team_home.title }}</td>
+                                    <td style="font-size: 15px; font-weight: 500"><img src="{{match.team_guest.logo.url}}" alt="..." width="25" height="25"> {{ match.team_guest.title }}</td>
                                     <td>
-                                        <select class="postponements-select" name="team">
-                                            <option value="{{None}}">-------------</option>
+                                        <select class="postponements-select w-90" name="team">
+                                            <option value="mutual">Обоюдный</option>
                                             <option value="{{ match.team_home.id }}">{{ match.team_home }}</option>
                                             <option value="{{ match.team_guest.id }}">{{ match.team_guest }}</option>
-                                            <option value="mutual">Обоюдный</option>
                                         </select>
                                     </td>
                                     <td>

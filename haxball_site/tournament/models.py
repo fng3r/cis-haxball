@@ -95,6 +95,9 @@ class Team(models.Model):
     def get_active_leagues(self):
         return self.leagues.filter(championship__is_active=True)
 
+    def get_postponements(self, leagues):
+        return self.postponements.filter(cancelled_at__isnull=True, match__league__in=leagues).order_by('taken_at')
+
     def __str__(self):
         return '{}'.format(self.title)
 
@@ -118,6 +121,9 @@ class League(models.Model):
 
     def __str__(self):
         return '{}, {}'.format(self.title, self.championship)
+
+    def get_postponement_slots(self):
+        return self.postponement_slots.first()
 
     def get_absolute_url(self):
         return reverse('tournament:league', args=[self.slug])
@@ -250,10 +256,10 @@ class Match(models.Model):
 
     @property
     def is_postponed(self):
-        return self.postponements.filter(cancelled_at=None).count() > 0
+        return self.postponements.filter(cancelled_at__isnull=True).count() > 0
 
     def get_last_postponement(self):
-        return self.postponements.filter(cancelled_at=None).order_by('-taken_at').first()
+        return self.postponements.filter(cancelled_at__isnull=True).order_by('-taken_at').first()
 
     def get_absolute_url(self):
         return reverse('tournament:match_detail', args=[self.id])
@@ -477,6 +483,25 @@ class Postponement(models.Model):
     class Meta:
         verbose_name = 'Перенос'
         verbose_name_plural = 'Переносы'
+
+
+class PostponementSlots(models.Model):
+    league = models.ForeignKey(League, verbose_name='Турнир', related_name='postponement_slots',
+                               null=False, blank=False, on_delete=models.CASCADE)
+    common_count = models.PositiveSmallIntegerField('Количество обычных переносов', default=3)
+    emergency_count = models.PositiveSmallIntegerField('Количество экстренных переносов', default=3)
+    extra_count = models.PositiveSmallIntegerField('Количество дополнительных (платных) переносов', default=3)
+
+    @property
+    def total_count(self):
+        return self.common_count + self.emergency_count + self.extra_count
+
+    def __str__(self):
+        return '{}'.format(self.league)
+
+    class Meta:
+        verbose_name = 'Слоты переноса'
+        verbose_name_plural = 'Слоты переноса'
 
 
 class AchievementCategory(models.Model):
