@@ -480,6 +480,12 @@ class Postponement(models.Model):
     def league(self):
         return self.match.league
 
+    def __str__(self):
+        return 'Переноса матча {} - {}, {} тур ({} - {})'.format(self.match.team_home, self.match.team_guest,
+                                                                 self.match.numb_tour.number,
+                                                                 self.starts_at.strftime("%d.%m"),
+                                                                 self.ends_at.strftime("%d.%m"))
+
     class Meta:
         verbose_name = 'Перенос'
         verbose_name_plural = 'Переносы'

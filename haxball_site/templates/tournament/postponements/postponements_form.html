@@ -25,7 +25,7 @@
                                     <td style="font-size: 15px; font-weight: 500"><img src="{{match.team_home.logo.url}}" alt="..." width="25" height="25"> {{ match.team_home.title }}</td>
                                     <td style="font-size: 15px; font-weight: 500"><img src="{{match.team_guest.logo.url}}" alt="..." width="25" height="25"> {{ match.team_guest.title }}</td>
                                     <td>
-                                        <select class="postponements-select w-90" name="team">
+                                        <select class="postponements-select" name="team" style="width: 90%;">
                                             <option value="mutual">Обоюдный</option>
                                             <option value="{{ match.team_home.id }}">{{ match.team_home }}</option>
                                             <option value="{{ match.team_guest.id }}">{{ match.team_guest }}</option>
