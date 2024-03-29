@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
@@ -252,7 +252,12 @@ class Match(models.Model):
             return timezone.now().date() >= self.numb_tour.date_from
         else:
             last_postponement = self.get_last_postponement()
-            return last_postponement.starts_at <= timezone.now().date() <= last_postponement.ends_at
+            start_datetime = timezone.datetime.combine(last_postponement.starts_at, timezone.datetime.min.time())
+            # match can be postponed during 12h since tour end date
+            end_datetime = (timezone.datetime.combine(last_postponement.ends_at, timezone.datetime.min.time()) +
+                            timezone.timedelta(days=1, hours=12))
+
+            return start_datetime.timestamp() <= timezone.now().timestamp() <= end_datetime.timestamp()
 
     @property
     def is_postponed(self):
