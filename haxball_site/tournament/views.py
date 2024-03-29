@@ -325,7 +325,8 @@ class PostponementsList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        filter = LeagueByTitleFilter(self.request.GET, queryset=League.objects.filter(championship__is_active=True))
+        filter = LeagueByTitleFilter(self.request.GET or {'title': 'Высшая лига'},
+                                     queryset=League.objects.filter(championship__is_active=True))
         leagues = filter.qs
         teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
         postponements = context['all_postponements'].filter(match__league__in=leagues)
