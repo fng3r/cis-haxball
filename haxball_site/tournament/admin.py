@@ -115,6 +115,7 @@ class PostponementAdmin(admin.ModelAdmin):
     list_display = ('match', 'is_emergency', 'get_teams', 'starts_at', 'ends_at', 'taken_at', 'taken_by',
                     'is_cancelled', 'cancelled_at', 'cancelled_by')
     filter_horizontal = ('teams',)
+    raw_id_fields = ('match',)
     autocomplete_fields = ('taken_by', 'cancelled_by')
     list_filter = ('is_emergency',)
     search_fields = ('match__team_home__title', 'match__team_guest__title')
@@ -215,7 +216,7 @@ class MatchAdmin(admin.ModelAdmin):
     list_display = (
         'league', 'numb_tour', 'team_home', 'score_home', 'team_guest', 'score_guest', 'is_played', 'updated',
         'inspector', 'id',)
-    # readonly_fields = ('score_home', 'score_guest',)
+    search_fields = ('team_home__title', 'team_guest__title')
     filter_horizontal = ('team_home_start', 'team_guest_start',)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
