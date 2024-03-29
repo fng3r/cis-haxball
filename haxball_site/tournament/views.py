@@ -6,6 +6,7 @@ from functools import reduce
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Count, F, Q, Sum
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django_filters import FilterSet, ModelChoiceFilter, ChoiceFilter
 from django.http import HttpResponse
@@ -372,7 +373,7 @@ class PostponementsList(ListView):
                                                    starts_at=starts_at, ends_at=ends_at)
         postponement.teams.set(teams)
 
-        return redirect('tournament:postponements')
+        return redirect(reverse('tournament:postponements') + '?title={}'.format(request.GET['title']))
 
 
 @require_POST
@@ -385,7 +386,7 @@ def cancel_postponement(request, pk):
         postponement.cancelled_by = request.user
         postponement.save()
 
-        return redirect('tournament:postponements')
+        return redirect(reverse('tournament:postponements') + '?title={}'.format(request.GET['title']))
     else:
         return HttpResponse('Ошибка доступа')
 

@@ -72,7 +72,7 @@
                                                                         data-dismiss="modal">Нет, подождите
                                                                 </button>
                                                                 <form method="POST"
-                                                                      action="{% url 'tournament:cancel_postponement' postponement.id %}">
+                                                                      action="{% url 'tournament:cancel_postponement' postponement.id %}?title={{ filter.data.title }}">
                                                                     {% csrf_token %}
                                                                     <button type="submit"
                                                                             class="btn btn-primary">

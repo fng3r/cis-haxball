@@ -768,6 +768,7 @@ def get_lifted_string(disqualification: Disqualification):
 
     return 'Частично\n' + '\n'.join(map(lambda t: str(t), diff))
 
+
 @register.filter
 def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Postponement]:
     postponements = team.postponements.filter(cancelled_at=None, match__league__in=leagues).order_by('taken_at')
