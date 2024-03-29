@@ -117,7 +117,7 @@ class PostponementAdmin(admin.ModelAdmin):
     filter_horizontal = ('teams',)
     raw_id_fields = ('match',)
     autocomplete_fields = ('taken_by', 'cancelled_by')
-    list_filter = ('is_emergency',)
+    list_filter = ('match__league', 'is_emergency')
     search_fields = ('match__team_home__title', 'match__team_guest__title')
 
     def get_teams(self, model):

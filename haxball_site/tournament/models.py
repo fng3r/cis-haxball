@@ -458,7 +458,7 @@ class Postponement(models.Model):
     starts_at = models.DateField('Дата старта переноса', null=False, blank=False)
     ends_at = models.DateField('Дата окончания переноса', null=False, blank=False)
     taken_at = models.DateTimeField('Дата офомления переноса', default=timezone.now)
-    taken_by = models.ForeignKey(User, verbose_name='Кем взят перенос', related_name='taken_postponements',
+    taken_by = models.ForeignKey(User, verbose_name='Кем оформлен перенос', related_name='taken_postponements',
                                  null=True, on_delete=models.SET_NULL)
     cancelled_at = models.DateTimeField('Дата отмены переноса', null=True, blank=True)
     cancelled_by = models.ForeignKey(User, verbose_name='Кем отменен перенос', related_name='cancelled_postponements',
