@@ -100,7 +100,9 @@
 
 </div>
 
-{% postponements_form user=user leagues=filter.qs %}
+{% if user|is_executive:filter.qs %}
+    {% postponements_form user=user leagues=filter.qs %}
+{% endif %}
 
 <div class="card mb-5" style="border-radius: 20px">
     <div class="card-body card-body-comment">

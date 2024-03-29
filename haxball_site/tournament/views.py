@@ -372,11 +372,8 @@ class PostponementsList(ListView):
             team_postponements = team.get_postponements(leagues=[match.league])
             if team_postponements.count() + 1 > total_slots_count:
                 request.session['show_exceeded_limit_modal'] = True
-                request.session['exceeded_limit_message'] = 'У команды {} достигнут лимит переносов'.format(team.title)
+                request.session['exceeded_limit_message'] = 'Команда {} исчерпала лимит переносов'.format(team.title)
                 return redirect(reverse('tournament:postponements') + '?title={}'.format(request.GET['title']))
-                # return render(request, 'tournament/postponements/postponements.html',
-                #               {'show_exceeded_limit_modal': True})
-                # return HttpResponse('У команды {} достигнут лимит переносов'.format(team.title))
         taken_by = request.user
         match_expiration_date = match.numb_tour.date_to
         if match.is_postponed:

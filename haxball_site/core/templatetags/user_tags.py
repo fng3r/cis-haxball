@@ -9,7 +9,7 @@ from django.utils import timezone
 from online_users.models import OnlineUserActivity
 
 from ..models import Post, NewComment, Subscription
-from tournament.models import Team, League
+from tournament.models import Team, League, Player
 from haxball_site import settings
 
 register = template.Library()
@@ -214,6 +214,22 @@ def can_edit_profile_bg(user: User):
 
     subscriptions = Subscription.objects.by_user(user).active().order_by('tier')
     return subscriptions.count() > 0
+
+
+@register.filter
+def is_executive(user: User, leagues):
+    try:
+        player = user.user_player
+    except:
+        return False
+
+    has_team_in_leagues = Player.objects.filter(id=player.id, team__leagues__in=leagues).exists()
+    if has_team_in_leagues and (player.role == Player.CAPTAIN or player.role == Player.ASSISTENT):
+        return True
+
+    is_owner = Team.objects.filter(owner=user, leagues__in=leagues).exists()
+
+    return is_owner
 
 
 @register.filter
