@@ -248,23 +248,27 @@ class Match(models.Model):
     def can_be_postponed(self):
         if self.is_played:
             return False
-        if not self.is_postponed:
-            return timezone.now().date() >= self.numb_tour.date_from
-        else:
-            last_postponement = self.get_last_postponement()
-            start_datetime = timezone.datetime.combine(last_postponement.starts_at, timezone.datetime.min.time())
-            # match can be postponed during 12h since tour end date
-            end_datetime = (timezone.datetime.combine(last_postponement.ends_at, timezone.datetime.min.time()) +
-                            timezone.timedelta(days=1, hours=12))
 
-            return start_datetime.timestamp() <= timezone.now().timestamp() <= end_datetime.timestamp()
+        start_date = self.numb_tour.date_from
+        end_date = self.numb_tour.date_to
+        if self.is_postponed:
+            last_postponement = self.get_last_postponement()
+            start_date = last_postponement.starts_at
+            end_date = last_postponement.ends_at
+
+        start_datetime = timezone.datetime.combine(start_date, timezone.datetime.min.time())
+        # match can be postponed during 12h since tour/previous postponement end date
+        end_datetime = (timezone.datetime.combine(end_date, timezone.datetime.min.time()) +
+                        timezone.timedelta(days=1, hours=12))
+
+        return start_datetime.timestamp() <= timezone.now().timestamp() <= end_datetime.timestamp()
 
     @property
     def is_postponed(self):
         return self.postponements.filter(cancelled_at__isnull=True).count() > 0
 
     def get_last_postponement(self):
-        return self.postponements.filter(cancelled_at__isnull=True).order_by('-taken_at').first()
+        return self.postponements.filter(cancelled_at__isnull=True).order_by('-ends_at').first()
 
     def get_absolute_url(self):
         return reverse('tournament:match_detail', args=[self.id])

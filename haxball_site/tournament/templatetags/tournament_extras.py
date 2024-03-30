@@ -814,7 +814,6 @@ def postponements_form(user: User, leagues: QuerySet):
     matches = Match.objects.filter(Q(team_home__in=teams) | Q(team_guest__in=teams), league__in=leagues,
                                    is_played=False, numb_tour__date_from__lte=timezone.now().date())
     available_matches = [match for match in matches.all() if match.can_be_postponed]
-    print(available_matches)
 
     return {
         'matches': available_matches,
