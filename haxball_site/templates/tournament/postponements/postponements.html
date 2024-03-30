@@ -51,9 +51,9 @@
                                         {% with match=postponement.match %}
                                             {{match.numb_tour.number}} тур<br>
                                             <a href="{{match.get_absolute_url}}">
-                                                <img src="{{match.team_home.logo.url}}" alt="..." width="16" style="vertical-align: bottom;" height="16">
+                                                <img src="{{match.team_home.logo.url}}" alt="..." width="16" height="16">
                                                 {{match.team_home.short_title}} - {{match.team_guest.short_title}}
-                                                <img src="{{match.team_guest.logo.url}}" style="vertical-align: bottom;" alt="..." width="16" height="16">
+                                                <img src="{{match.team_guest.logo.url}}" alt="..." width="16" height="16">
                                             </a><br>
                                             {{postponement.starts_at|date:'d.m'}}-{{postponement.ends_at|date:'d.m'}}
                                             {% if postponement|can_be_cancelled_by_user:user %}
