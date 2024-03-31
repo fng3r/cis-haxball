@@ -63,7 +63,7 @@
     <tbody>
     {% for seas,team in stat.items %}
         <tr>
-            <td class="h6 text" rowspan="{{ player|rows_player_stat:seas }}" style="font-weight: 700;">{{ seas }}</td>
+            <td class="h6 text" rowspan="{{ user|rows_player_stat:seas }}" style="font-weight: 700;">{{ seas }}</td>
 
 
             {% for t,c in team.items %}
