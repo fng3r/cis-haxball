@@ -147,14 +147,14 @@ def matches_in_team(player, team):
 def team_statistics(team: Team):
     stats_by_season = {}
     seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct().order_by('number')
-    print('seasons: ', seasons.count())
     for season in seasons:
         season_stats = {}
 
         leagues = list(League.objects.filter(championship=season, teams=team).order_by('id'))
         for league in leagues:
             league_stats = []
-            matches_count = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), league=league).count()
+            matches_count = Match.objects.filter(Q(team_home=team) | Q(team_guest=team),
+                                                 league=league, is_played=True).count()
 
             if matches_count == 0:
                 continue
@@ -177,15 +177,11 @@ def team_statistics(team: Team):
 
             season_stats[league] = league_stats
 
-        print(season_stats)
-
         if season_stats:
             stats_by_season[season] = season_stats
 
-    print(stats_by_season)
-
     overall_stats = []
-    matches = (Match.objects.filter(Q(team_home=team) | Q(team_guest=team)).count())
+    matches = (Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True).count())
     overall_stats.append(matches)
     overall_stats.append(Goal.objects.filter(team=team).count())
     overall_stats.append(Goal.objects.filter(assistent__isnull=False, team=team).count())
@@ -200,11 +196,15 @@ def team_statistics(team: Team):
 
 @register.filter
 def rows_team_stat(team: Team, season: Season):
+    matches_filter = (
+            (Q(matches_in_league__team_home=team) | Q(matches_in_league__team_guest=team)) &
+            Q(matches_in_league__is_played=True)
+    )
     leagues = (League.objects
-                    .filter(Q(matches_in_league__team_home=team) | Q(matches_in_league__team_guest=team),
-                            teams=team, championship=season)
-                    .annotate(matches_count=Count('matches_in_league'))
+                    .filter(teams=team, championship=season)
+                    .annotate(matches_count=Count('matches_in_league', filter=matches_filter))
                     .filter(matches_count__gt=0))
+
     return leagues.count()
 
 
