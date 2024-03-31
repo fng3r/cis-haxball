@@ -367,9 +367,9 @@
                                     <div class="comment-footer">
                                 <span class="date text-muted small">
                                     <i class="fa fa-calendar text-primary"
-                                       aria-hidden="true"></i>  {{ children.created|date:"d.m.y" }}
+                                       aria-hidden="true"></i> {{ children.created|date:"d.m.y" }}
                                     <i class="fa fa-clock-o text-primary"
-                                       aria-hidden="true"></i>{{ children.created|time:"H:i" }}
+                                       aria-hidden="true"></i> {{ children.created|time:"H:i" }}
                                     {% if children.edited %}
                                         {% if children.edited.date == children.created.date %}
                                             <i class="fa fa-pencil comment-edit" aria-hidden="true"

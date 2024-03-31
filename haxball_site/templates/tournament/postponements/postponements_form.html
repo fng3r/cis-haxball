@@ -1,0 +1,56 @@
+<div class="card mb-2" style="border-radius: 10px; overflow-y: auto;">
+    <div class="container-fluid p-0 mx-0">
+        {% if matches %}
+            <table class="table table-hover" style="max-width: 100%; margin: 1px auto; background: #ffffff">
+                <thead class="thead-dark py-2 text-center">
+                    <tr>
+                        <th width="5%" scope="col">Тур</th>
+                        <th scope="col">Хозяева</th>
+                        <th scope="col">Гости</th>
+                        <th scope="col">Чей перенос</th>
+                        <th scope="col">Тип переноса</th>
+                        <th scope="col">Подтверждение</th>
+                    </tr>
+                </thead>
+
+                <tbody style="text-align: center;">
+                    {% for match in matches %}
+                        {% if match.can_be_postponed %}
+                            <tr>
+                                <form method="POST" class="row p-3">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="match_id" value="{{ match.id }}"/>
+
+                                    <td width="5%" scope="col" style="font-weight: 500">{{ match.numb_tour.number }}</td>
+                                    <td style="font-size: 15px; font-weight: 500"><img src="{{match.team_home.logo.url}}" alt="..." width="25" height="25"> {{ match.team_home.title }}</td>
+                                    <td style="font-size: 15px; font-weight: 500"><img src="{{match.team_guest.logo.url}}" alt="..." width="25" height="25"> {{ match.team_guest.title }}</td>
+                                    <td>
+                                        <select class="postponements-select" name="team" style="width: 90%;">
+                                            <option value="mutual">Обоюдный</option>
+                                            <option value="{{ match.team_home.id }}">{{ match.team_home }}</option>
+                                            <option value="{{ match.team_guest.id }}">{{ match.team_guest }}</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="postponements-select" name="type">
+                                            <option value="common">Обычный</option>
+                                            <option value="emergency">Экстренный</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="postponements-button" type="submit">Перенос</button>
+                                    </td>
+                                </form>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="d-inline-flex justify-content-center bg-c-lite-unknown p-3 w-100">
+                <h6 class="mb-0">На текущий момент у Вас нет несыгранных матчей в данном турнире</h6>
+            </div>
+        {% endif %}
+    </div>
+
+</div>

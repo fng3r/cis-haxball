@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models import CheckConstraint, Q, F
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from smart_selects.db_fields import ChainedForeignKey
 
 from core.models import NewComment
@@ -94,6 +95,9 @@ class Team(models.Model):
     def get_active_leagues(self):
         return self.leagues.filter(championship__is_active=True)
 
+    def get_postponements(self, leagues):
+        return self.postponements.filter(cancelled_at__isnull=True, match__league__in=leagues).order_by('taken_at')
+
     def __str__(self):
         return '{}'.format(self.title)
 
@@ -117,6 +121,9 @@ class League(models.Model):
 
     def __str__(self):
         return '{}, {}'.format(self.title, self.championship)
+
+    def get_postponement_slots(self):
+        return self.postponement_slots.first()
 
     def get_absolute_url(self):
         return reverse('tournament:league', args=[self.slug])
@@ -234,14 +241,40 @@ class Match(models.Model):
 
     comment = models.TextField('Комментарий к матчу', max_length=1024, blank=True, null=True)
 
-    def __str__(self):
-        return 'Матч {} - {}, {} тур'.format(self.team_home.short_title, self.team_guest.short_title, self.numb_tour.number)
-
     def cards(self):
         return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by('team')
 
+    @property
+    def can_be_postponed(self):
+        if self.is_played:
+            return False
+
+        start_date = self.numb_tour.date_from
+        end_date = self.numb_tour.date_to
+        if self.is_postponed:
+            last_postponement = self.get_last_postponement()
+            start_date = last_postponement.starts_at
+            end_date = last_postponement.ends_at
+
+        start_datetime = timezone.datetime.combine(start_date, timezone.datetime.min.time())
+        # match can be postponed during 12h since tour/previous postponement end date
+        end_datetime = (timezone.datetime.combine(end_date, timezone.datetime.min.time()) +
+                        timezone.timedelta(days=1, hours=12))
+
+        return start_datetime.timestamp() <= timezone.now().timestamp() <= end_datetime.timestamp()
+
+    @property
+    def is_postponed(self):
+        return self.postponements.filter(cancelled_at__isnull=True).count() > 0
+
+    def get_last_postponement(self):
+        return self.postponements.filter(cancelled_at__isnull=True).order_by('-ends_at').first()
+
     def get_absolute_url(self):
         return reverse('tournament:match_detail', args=[self.id])
+
+    def __str__(self):
+        return 'Матч {} - {}, {} тур'.format(self.team_home.short_title, self.team_guest.short_title, self.numb_tour.number)
 
     class Meta:
         verbose_name = 'Матч'
@@ -252,10 +285,6 @@ class Match(models.Model):
 class Goal(models.Model):
     match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_goal', null=True, blank=True,
                               on_delete=models.CASCADE)
-
-    # team = ChainedForeignKey(Team, chained_field='match', verbose_name='Команда забила', related_name='team_goals',
-    #                         chained_model_field='leagues__matches_in_league', null=True,
-    #                         on_delete=models.SET_NULL)
 
     team = models.ForeignKey(Team, verbose_name='Команда забила', related_name='team_goals', null=True,
                              on_delete=models.SET_NULL)
@@ -428,6 +457,66 @@ class PlayerTransfer(models.Model):
     class Meta:
         verbose_name = 'Трансфер'
         verbose_name_plural = 'Трансферы'
+
+
+class Postponement(models.Model):
+    match = models.ForeignKey(Match, verbose_name='Матч', related_name='postponements',
+                              null=False, on_delete=models.CASCADE)
+    is_emergency = models.BooleanField('Экстренный', default=False)
+    teams = models.ManyToManyField(Team, verbose_name='На кого взят перенос', related_name='postponements')
+    starts_at = models.DateField('Дата старта переноса', null=False, blank=False)
+    ends_at = models.DateField('Дата окончания переноса', null=False, blank=False)
+    taken_at = models.DateTimeField('Дата офомления переноса', default=timezone.now)
+    taken_by = models.ForeignKey(User, verbose_name='Кем оформлен перенос', related_name='taken_postponements',
+                                 null=True, on_delete=models.SET_NULL)
+    cancelled_at = models.DateTimeField('Дата отмены переноса', null=True, blank=True)
+    cancelled_by = models.ForeignKey(User, verbose_name='Кем отменен перенос', related_name='cancelled_postponements',
+                                     null=True, blank=True, on_delete=models.SET_NULL)
+
+    @property
+    def is_mutual(self):
+        return self.teams.count() > 1
+
+    @property
+    def can_be_cancelled(self):
+        return not self.is_cancelled and timezone.now().date() < self.starts_at
+
+    @property
+    def is_cancelled(self):
+        return self.cancelled_at is not None
+
+    @property
+    def league(self):
+        return self.match.league
+
+    def __str__(self):
+        return 'Переноса матча {} - {}, {} тур ({} - {})'.format(self.match.team_home, self.match.team_guest,
+                                                                 self.match.numb_tour.number,
+                                                                 self.starts_at.strftime("%d.%m"),
+                                                                 self.ends_at.strftime("%d.%m"))
+
+    class Meta:
+        verbose_name = 'Перенос'
+        verbose_name_plural = 'Переносы'
+
+
+class PostponementSlots(models.Model):
+    league = models.ForeignKey(League, verbose_name='Турнир', related_name='postponement_slots',
+                               null=False, blank=False, on_delete=models.CASCADE)
+    common_count = models.PositiveSmallIntegerField('Количество обычных переносов', default=3)
+    emergency_count = models.PositiveSmallIntegerField('Количество экстренных переносов', default=3)
+    extra_count = models.PositiveSmallIntegerField('Количество дополнительных (платных) переносов', default=3)
+
+    @property
+    def total_count(self):
+        return self.common_count + self.emergency_count + self.extra_count
+
+    def __str__(self):
+        return '{}'.format(self.league)
+
+    class Meta:
+        verbose_name = 'Слоты переноса'
+        verbose_name_plural = 'Слоты переноса'
 
 
 class AchievementCategory(models.Model):

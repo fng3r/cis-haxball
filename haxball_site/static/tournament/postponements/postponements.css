@@ -1,0 +1,75 @@
+.table-fix {
+    overflow-y: auto;
+    height: 570px;
+}
+
+.table-fix thead th {
+    position: sticky;
+    top: 0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.bg-c-lite-unknown {
+    background: -webkit-gradient(linear, left top, right top, from(#8d3e11), to(#3f6804));
+    background: linear-gradient(to right, #ea99d4, rgba(126, 255, 239, 0.49))
+}
+
+.main-col {
+    padding-left: 0;
+    padding-right: 1%;
+}
+
+.perenos-table{
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.postponements-select{
+    font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+    font-weight: 600;
+    border: 0;
+    border-radius: 0.25rem;
+    text-align: center;
+    font-size: 13px;
+    background: none;
+}
+
+.postponements-button{
+    background: #27a327;
+    width: 100px;
+    height: 30px;
+    font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+    font-size: 13px;
+    text-align: center;
+    border-radius: 10px;
+    font-weight: 600;
+    border: 0;
+    transition: 0.5s;
+}
+
+.postponements-button:hover{
+    background: #1d7a1d;
+}
+
+.postponements-log-text::first-letter{
+    text-transform: uppercase;
+}

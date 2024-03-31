@@ -71,15 +71,7 @@
 
                     <a class="dropdown-item" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
 
-                    <a class="dropdown-item submenu" href="#">Переносы</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'core:post_detail' '827' 'postpone12-PL' %}">Высшая лига</a>
-                        <a class="dropdown-item" href="{% url 'core:post_detail' '828' 'postpone12-FL' %}">Первая лига</a>
-                        <a class="dropdown-item" href="{% url 'core:post_detail' '829' 'postpone12-SL' %}">Вторая лига</a>
-                        <a class="dropdown-item" href="{% url 'core:post_detail' '836' 'postpone12-PL-lc' %}">Кубок Высшей лиги</a>
-                        <a class="dropdown-item" href="{% url 'core:post_detail' '835' 'postpone12-FL-lc' %}">Кубок Первой лиги</a>
-                        <a class="dropdown-item" href="{% url 'core:post_detail' '834' 'postpone12-SL-lc' %}">Кубок Второй лиги</a>
-                    </div>
+                    <a class="dropdown-item" href="{% url 'tournament:postponements' %}?title=Высшая%20лига">Переносы</a>
 
                     <a class="dropdown-item" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
                     <a class="dropdown-item" href="{% url 'core:post_detail' '824' 'transfers-12' %}">Трансферы</a>
@@ -132,6 +124,9 @@
                         </a>
                         <a class="dropdown-item" href="https://vk.com/haxball_ru">
                             <img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK
+                        </a>
+                        <a class="dropdown-item" href="https://discord.gg/h6mgc4bTJh">
+                            <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
                         </a>
                     </div>
                     <div class="dropdown-menu">

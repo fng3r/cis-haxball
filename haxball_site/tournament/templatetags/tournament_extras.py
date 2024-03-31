@@ -1,11 +1,13 @@
 import datetime
+from typing import Optional
 
 from django import template
-from django.db.models import Q, Count
+from django.contrib.auth.models import User
+from django.db.models import Q, Count, QuerySet
 from django.utils import timezone
 
 from ..models import FreeAgent, OtherEvents, Goal, Match, League, Team, Player, Substitution, Season, PlayerTransfer, \
-    Disqualification
+    Disqualification, Postponement
 
 register = template.Library()
 
@@ -140,8 +142,6 @@ def matches_in_team(player, team):
         match_substitutions__player_in=player
     ).distinct().count()
 
-
-# return Match.objects.filter(Q(team_home=team, team_home_start=player) | Q(team_guest=team, team_guest_start=player)).count()
 
 #   Для статы юзера по командам
 @register.inclusion_tag('tournament/include/player_team.html')
@@ -390,7 +390,6 @@ def league_table(league):
         draws[i] = draw_count
 
     l = zip(b, matches_played, wins, draws, looses, scores, consided, diffrence, points, last_matches)
-    print(l)
     s1 = sorted(l, key=lambda x: x[5], reverse=True)
     s2 = sorted(s1, key=lambda x: x[7], reverse=True)
     ls = sorted(s2, key=lambda x: x[8], reverse=True)
@@ -768,3 +767,72 @@ def get_lifted_string(disqualification: Disqualification):
         return 'Да'
 
     return 'Частично\n' + '\n'.join(map(lambda t: str(t), diff))
+
+
+@register.filter
+def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Optional[Postponement]]:
+    postponements = team.get_postponements(leagues)
+    league = leagues.first()
+    league_slots = league.get_postponement_slots()
+    common_slots_count = league_slots.common_count
+    emergency_slots_count = league_slots.emergency_count
+    total_slots_count = league_slots.total_count
+    slots = [None for _ in range(1, total_slots_count + 1)]
+
+    common_count = 0
+    emergency_count = 0
+    for postponement in postponements:
+        if postponement.is_emergency:
+            slots[common_slots_count + emergency_count] = postponement
+            emergency_count += 1
+        else:
+            if common_count < common_slots_count:
+                slots[common_count] = postponement
+                common_count += 1
+            else:
+                slots[common_slots_count + emergency_count] = postponement
+                emergency_count += 1
+
+    return slots
+
+
+@register.filter
+def can_be_cancelled_by_user(postponement: Postponement, user: User):
+    if not postponement.can_be_cancelled:
+        return False
+
+    user_teams = get_user_teams(user)
+
+    return postponement.match.team_home in user_teams or postponement.match.team_guest in user_teams
+
+
+@register.inclusion_tag('tournament/postponements/postponements_form.html')
+def postponements_form(user: User, leagues: QuerySet):
+    teams = get_user_teams(user)
+
+    # Выбираем все матчи игрока, которые уже можно играть, но котоыре еще не были сыграны
+    matches = Match.objects.filter(Q(team_home__in=teams) | Q(team_guest__in=teams), league__in=leagues,
+                                   is_played=False, numb_tour__date_from__lte=timezone.now().date())
+    available_matches = [match for match in matches.all() if match.can_be_postponed]
+
+    return {
+        'matches': available_matches,
+        'user': user,
+    }
+
+
+def get_user_teams(user: User):
+    try:
+        player = user.user_player
+    except Exception as e:
+        print(e)
+        return []
+    teams = []
+    if player.role == Player.CAPTAIN or player.role == Player.ASSISTENT:
+        teams.append(player.team)
+
+    owned_teams = Team.objects.filter(owner=user, leagues__championship__is_active=True)
+    for team in owned_teams:
+        teams.append(team)
+
+    return teams

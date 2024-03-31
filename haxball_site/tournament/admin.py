@@ -1,10 +1,11 @@
-# Register your models here.
+from django import forms
 from django.contrib import admin
 from django.db.models import Q
 from django.urls import resolve
 
 from .models import FreeAgent, Player, League, Team, Match, Goal, OtherEvents, Substitution, Season, PlayerTransfer, \
-    TourNumber, Nation, Achievements, TeamAchievement, AchievementCategory, Disqualification
+    TourNumber, Nation, Achievements, TeamAchievement, AchievementCategory, Disqualification, Postponement, \
+    PostponementSlots
 
 
 @admin.register(FreeAgent)
@@ -68,12 +69,6 @@ class SeasonAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_active', 'created')
 
 
-@admin.register(League)
-class LeagueAdmin(admin.ModelAdmin):
-    list_display = ('title', 'priority', 'created')
-    filter_horizontal = ('teams',)
-
-
 @admin.register(Nation)
 class NationAdmin(admin.ModelAdmin):
     list_display = ('country',)
@@ -96,6 +91,60 @@ class DisqualificationAdmin(admin.ModelAdmin):
         if db_field.name == 'tours' or db_field.name == 'lifted_tours':
             kwargs['queryset'] = TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+class AlwaysChangedModelForm(forms.ModelForm):
+    def has_changed(self):
+        """ Should returns True if data differs from initial.
+        By always returning true even unchanged inlines will get validated and saved."""
+        return True
+
+
+class PostponementSlotsInline(admin.TabularInline):
+    model = PostponementSlots
+    form = AlwaysChangedModelForm
+    min_num = 1
+    max_num = 1
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Postponement)
+class PostponementAdmin(admin.ModelAdmin):
+    list_display = ('match', 'is_emergency', 'get_teams', 'starts_at', 'ends_at', 'taken_at', 'taken_by',
+                    'is_cancelled', 'cancelled_at', 'cancelled_by')
+    filter_horizontal = ('teams',)
+    raw_id_fields = ('match',)
+    autocomplete_fields = ('taken_by', 'cancelled_by')
+    list_filter = ('match__league', 'is_emergency')
+    search_fields = ('match__team_home__title', 'match__team_guest__title')
+
+    def get_teams(self, model):
+        return ', '.join(map(lambda t: str(t), model.teams.all()))
+    get_teams.short_description = 'На кого взят перенос'
+
+    def is_cancelled(self, model):
+        return model.is_cancelled
+    is_cancelled.short_description = 'Отменен'
+    is_cancelled.boolean = True
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'match':
+            kwargs['queryset'] = Match.objects.filter(league__championship__is_active=True).order_by('numb_tour__number')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'teams':
+            kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(League)
+class LeagueAdmin(admin.ModelAdmin):
+    list_display = ('title', 'priority', 'created')
+    filter_horizontal = ('teams',)
+    inlines = [PostponementSlotsInline]
 
 
 class GoalInline(admin.StackedInline):
@@ -145,6 +194,7 @@ class DisqualificationInline(admin.StackedInline):
             kwargs["queryset"] = TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
+
 class EventInline(admin.StackedInline):
     model = OtherEvents
     extra = 2
@@ -166,7 +216,7 @@ class MatchAdmin(admin.ModelAdmin):
     list_display = (
         'league', 'numb_tour', 'team_home', 'score_home', 'team_guest', 'score_guest', 'is_played', 'updated',
         'inspector', 'id',)
-    # readonly_fields = ('score_home', 'score_guest',)
+    search_fields = ('team_home__title', 'team_guest__title')
     filter_horizontal = ('team_home_start', 'team_guest_start',)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
