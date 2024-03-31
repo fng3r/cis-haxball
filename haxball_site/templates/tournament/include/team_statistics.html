@@ -1,0 +1,88 @@
+{% load static %}
+{% load tournament_extras %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+</style>
+
+<style>
+    .table td, .table th {
+        padding: 0.5rem;
+    }
+    .table .number {
+        font-family: 'Quicksand', sans-serif;
+        font-size: 12pt;
+    }
+
+    .table .text {
+        font-family: 'Montserrat', serif;
+    }
+
+    td img {
+        width: 26px;
+        height: 26px;
+    }
+</style>
+
+<table class="table table-striped">
+    <thead>
+    <tr class="text">
+        <th scope="col" class="h6" style="font-weight: 800;">Сезон</th>
+        <th scope="col" class="h6" style="font-weight: 800;">Турнир</th>
+        <th scope="col" class="text-center">
+            <img src="{% static "img/ico/statistic/jersey.PNG" %}" title="Матчей сыгранно">
+        </th>
+        <th scope="col" class="text-center">
+            <img src="{% static "img/ico/statistic/ball-alt.PNG" %}" title="Забито">
+        </th>
+        <th scope="col" class="text-center">
+            <img src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}" title="Голевые передачи"></th>
+        <th scope="col" class="text-center">
+            <img src="{% static "img/ico/statistic/gloves-alt2.PNG" %}" title="Сухие таймы">
+        </th>
+        <th scope="col" class="text-center">
+           <img
+                src="{% static "img/ico/statistic/sub-in-alt.PNG" %}"
+                title="Замены">
+        </th>
+        <th scope="col" class="text-center">
+            <img src="{% static "img/ico/statistic/dont-do.PNG" %}" title="Автоголы">
+        </th>
+        <th scope="col" class="text-center">
+            <img src="{% static "img/ico/statistic/yellow-card.PNG" %}" title="Жёлтые карточки">
+        </th>
+        <th scope="col" class="text-center">
+            <img src="{% static "img/ico/statistic/red-card.PNG" %}" title="Красные карточки">
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+
+    {% for seas,stats_by_league in stats.items %}
+        <tr>
+            <td class="h6 text" rowspan="{{ team|rows_team_stat:seas }}" style="font-weight: 700;">{{ seas }}</td>
+
+            {% for league, stats in stats_by_league.items %}
+                <td class="text" style="font-size: 11pt; font-weight: 600;">
+                    <a href="{{ league.get_absolute_url }}">{{ league.title }}</a>
+                </td>
+                {% for i in stats %}
+                    <td class="text-center number">{{ i }}</td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+
+    {% endfor %}
+
+    <tr>
+        <th colspan="2" class="text-center text">
+        </th>
+        {% for i in overall_stats %}
+            <td class="text-center font-weight-bolder number">{{ i }} </td>
+
+        {% endfor %}
+    </tr>
+
+    </tbody>
+</table>

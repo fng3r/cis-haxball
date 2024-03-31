@@ -206,7 +206,7 @@ class TourNumber(models.Model):
 
 class Match(models.Model):
     league = models.ForeignKey(League, verbose_name='В лиге', related_name='matches_in_league',
-                               on_delete=models.CASCADE)
+                               related_query_name='matches_in_league', on_delete=models.CASCADE)
     numb_tour = ChainedForeignKey(TourNumber, chained_field='league', chained_model_field='league',
                                   verbose_name='Номер тура', related_name='tour_matches',
                                   on_delete=models.CASCADE, null=True, )
