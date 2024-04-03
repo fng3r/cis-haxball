@@ -495,7 +495,7 @@ def teams_halloffame():
     team_matches = []
     subs = []
     for team in Team.objects.all():
-        matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team)).count()
+        matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True).count()
         if matches > 0:
             team_matches.append([team, matches])
         teams_subs = Substitution.objects.filter(team=team).count()
