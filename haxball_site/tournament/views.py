@@ -219,7 +219,7 @@ class MatchDetail(DetailView):
 
         clean_sheets = \
             (match.match_event
-                .filter(event=OtherEvents.CLEAN_SHIT)
+                .filter(event=OtherEvents.CLEAN_SHEET)
                 .values('author')
                 .annotate(cs=Count('author'))
                 .order_by('author'))
@@ -406,43 +406,56 @@ def cancel_postponement(request, pk):
 
 def halloffame(request):
     top_goalscorers = Player.objects.annotate(
-        goals_c=Count('goals__match__league')).filter(goals_c__gt=0).order_by('-goals_c')
+        goals_count=Count('goals__match__league')).filter(goals_count__gt=0).order_by('-goals_count')
 
-    top_assistent = Player.objects.annotate(
-        ass_c=Count('assists__match__league')).filter(ass_c__gt=0).order_by('-ass_c')
-    top_clean_sheets = Player.objects.filter(event__event='CLN').annotate(
-        event_c=Count('event__match__league')).filter(event_c__gt=0).order_by('-event_c')
+    top_assistants = Player.objects.annotate(
+        assists_count=Count('assists__match__league')).filter(assists_count__gt=0).order_by('-assists_count')
+
+    top_cs = Player.objects.filter(event__event=OtherEvents.CLEAN_SHEET).annotate(
+        cs_count=Count('event__match__league')).filter(cs_count__gt=0).order_by('-cs_count')
+
+    top_ogs = Player.objects.filter(event__event=OtherEvents.OWN_GOAL).annotate(
+        og_count=Count('event__match__league')).filter(og_count__gt=0).order_by('-og_count')
+
+    top_yellow_cards = Player.objects.filter(event__event=OtherEvents.YELLOW_CARD).annotate(
+        yellow_cards_count=Count('event__match__league')).filter(yellow_cards_count__gt=0).order_by('-yellow_cards_count')
+
+    top_red_cards = Player.objects.filter(event__event=OtherEvents.RED_CARD).annotate(
+        red_cards_count=Count('event__match__league')).filter(red_cards_count__gt=0).order_by('-red_cards_count')
 
     player_matches = []
     subs_in = []
     subs_out = []
     for player in Player.objects.all():
-        m_played = Match.objects.filter(
+        matches = Match.objects.filter(
             team_guest_start=player).count() + Match.objects.filter(
             team_home_start=player).count() + Match.objects.filter(
             ~(Q(team_guest_start=player) | Q(team_home_start=player)),
 
             match_substitutions__player_in=player
         ).distinct().count()
-        if m_played > 0:
-            player_matches.append([player, m_played])
-        subin_pl = Substitution.objects.filter(player_in=player).count()
-        if subin_pl > 0:
-            subs_in.append([player, subin_pl])
+        if matches > 0:
+            player_matches.append([player, matches])
+        player_subs_in = Substitution.objects.filter(player_in=player).count()
+        if player_subs_in > 0:
+            subs_in.append([player, player_subs_in])
 
-        subout_pl = Substitution.objects.filter(player_out=player).count()
-        if subout_pl > 0:
-            subs_out.append([player, subout_pl])
+        player_subs_out = Substitution.objects.filter(player_out=player).count()
+        if player_subs_out > 0:
+            subs_out.append([player, player_subs_out])
 
-    pl = sorted(player_matches, key=lambda x: x[1], reverse=True)
-    subs_inn = sorted(subs_in, key=lambda x: x[1], reverse=True)
-    subs_outt = sorted(subs_out, key=lambda x: x[1], reverse=True)
-    return render(request, 'tournament/hall_of_fame.html', {'goalscorers': top_goalscorers,
-                                                            'assistents': top_assistent,
-                                                            'clean_sheeters': top_clean_sheets,
-                                                            'player_matches': pl,
-                                                            'subs_in': subs_inn,
-                                                            'subs_out': subs_outt,
+    sorted_matches = sorted(player_matches, key=lambda x: x[1], reverse=True)
+    sorted_subs_in = sorted(subs_in, key=lambda x: x[1], reverse=True)
+    sorted_subs_out = sorted(subs_out, key=lambda x: x[1], reverse=True)
+    return render(request, 'tournament/hall_of_fame.html', {'goals': top_goalscorers,
+                                                            'assists': top_assistants,
+                                                            'clean_sheets': top_cs,
+                                                            'yellow_cards': top_yellow_cards,
+                                                            'red_cards': top_red_cards,
+                                                            'ogs': top_ogs,
+                                                            'player_matches': sorted_matches,
+                                                            'subs_in': sorted_subs_in,
+                                                            'subs_out': sorted_subs_out,
                                                             })
 
 
