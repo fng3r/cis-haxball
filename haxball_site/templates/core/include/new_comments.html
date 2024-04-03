@@ -6,6 +6,11 @@
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/include/comments.css" %}">
     <link rel="stylesheet" type="text/css" href="{% static "core/core.css" %}">
+    <style>
+        .django-ckeditor-widget{
+            display: block !important;
+        }
+    </style>
 {% endblock %}
 {% block scripts %}
     <script>
@@ -14,8 +19,6 @@
             else Element.innerHTML = '<i class="fa fa-chevron-up"></i>Скрыть ответы';
         }
     </script>
-
-
 {% endblock %}
 
 
