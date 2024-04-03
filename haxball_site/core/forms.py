@@ -1,3 +1,4 @@
+from ckeditor.widgets import CKEditorWidget
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django_summernote.fields import SummernoteTextFormField
@@ -6,7 +7,7 @@ from .models import Comment, Profile, Post, NewComment
 
 
 class NewCommentForm(forms.ModelForm):
-    body = SummernoteTextFormField()
+    body = forms.CharField(label='Пост', widget=CKEditorUploadingWidget(config_name='comment'))
 
     class Meta:
         model = NewComment

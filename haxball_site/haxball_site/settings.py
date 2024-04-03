@@ -273,7 +273,6 @@ CKEDITOR_CONFIGS = {
         'skin': 'moono',
         'height': 400,
         'width': '100%',
-        # 'skin': 'office2013',
         'toolbar_Basic': [
             ['Source', '-', 'Bold', 'Italic']
         ],
@@ -308,13 +307,6 @@ CKEDITOR_CONFIGS = {
             ]},
         ],
         'toolbar': 'YourCustomToolbarConfig',  # put selected toolbar config here
-        # 'toolbarGroups': [{ 'name': 'document', 'groups': [ 'mode', 'document', 'doctools' ] }],
-        # 'height': 291,
-        # 'width': '100%',
-        # 'filebrowserWindowHeight': 725,
-        # 'filebrowserWindowWidth': 940,
-        # 'toolbarCanCollapse': True,
-        # 'mathJaxLib': '//cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=TeX-AMS_HTML',
         'tabSpaces': 4,
         'extraPlugins': ','.join([
             'uploadimage',  # the upload image feature
@@ -336,21 +328,24 @@ CKEDITOR_CONFIGS = {
         ]),
     },
     'comment': {
-        'skin': 'minimalist',
+        'skin': 'moono-lisa',
         "removePlugins": "stylesheetparser",
         'allowedContent': True,
-        'height': 100,
-        'width': '200%',
-        'toolbar':
-            [
-                ['Bold', 'Italic', 'Underline']
-            ],
+        'height': 200,
+        'width': '99%',
+        'toolbar': [
+            ['Bold', 'Italic', 'Underline', 'Strike',
+             '-', 'Link', 'Unlink', 'Image', 'Youtube', 'Html5video', 'Smiley',
+             '-', 'NumberedList', 'BulletedList',
+             '-', 'Undo', 'Redo'
+            ]
+        ],
+
         'extraPlugins': ','.join([
             'uploadimage',  # the upload image feature
             # your extra plugins here
             'div',
             'autolink',
-            'autoembed',
             'embedsemantic',
             'autogrow',
             'widget',
@@ -359,7 +354,8 @@ CKEDITOR_CONFIGS = {
             'dialog',
             'dialogui',
             'elementspath',
-            'youtube'
+            'youtube',
+            'html5video'
         ])
     }
 }
