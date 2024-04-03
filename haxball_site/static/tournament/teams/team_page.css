@@ -137,3 +137,7 @@
         width: 100%;
 
 }
+
+.team-stats-table td {
+    padding: 0.5rem
+}

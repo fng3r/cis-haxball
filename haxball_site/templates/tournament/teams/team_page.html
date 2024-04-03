@@ -57,19 +57,25 @@
                                 <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab"
                                    aria-controls="home" aria-selected="true">Состав</a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link" id="match-tab" data-toggle="tab" href="#calendar" role="tab"
                                    aria-controls="calendar-tab" aria-selected="false">Матчи</a>
                             </li>
 
                             <li class="nav-item">
-                                <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab"
-                                   aria-controls="profile" aria-selected="false">Контакты</a>
+                                <a class="nav-link" id="stats-tab" data-toggle="tab" href="#stats" role="tab"
+                                   aria-controls="stats-tab" aria-selected="false">Статистика</a>
                             </li>
 
                             <li class="nav-item">
                                 <a class="nav-link" id="achievements-tab" data-toggle="tab" href="#achievements" role="tab"
                                    aria-controls="achievements" aria-selected="false">Достижения</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab"
+                                   aria-controls="profile" aria-selected="false">Контакты</a>
                             </li>
                         </ul>
                     </div>
@@ -279,12 +285,12 @@
                                             <td>{{ player|matches_in_team:team }}</td>
                                             <td>{{ player|goals_in_team:team }}</td>
                                             <td>{{ player|assists_in_team:team }}</td>
-                                            <td>{{ player|cln_count:team }}</td>
+                                            <td>{{ player|event_count:'CLN' }}</td>
                                             <td>{{ player|replaced_in_team:team }}</td>
                                             <td>{{ player|join_game_in_team:team }}</td>
-                                            <td>{{ player|og_count:team }}</td>
-                                            <td>{{ player|yel_count:team }}</td>
-                                            <td>{{ player|red_count:team }}</td>
+                                            <td>{{ player|event_count:'OG' }}</td>
+                                            <td>{{ player|event_count:'YEL' }}</td>
+                                            <td>{{ player|event_count:'RED' }}</td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
@@ -387,6 +393,10 @@
                             {% endfor %}
                         </div>
 
+                    </div>
+
+                    <div class="tab-pane fade" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+                        {% team_statistics team %}
                     </div>
 
                     <div class="tab-pane fade" id="achievements" role="tabpanel" aria-labelledby="achievements">
