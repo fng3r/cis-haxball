@@ -405,6 +405,16 @@ def cancel_postponement(request, pk):
 
 
 def halloffame(request):
+    players = players_halloffame()
+    teams = teams_halloffame()
+
+    return render(request, 'tournament/hall_of_fame.html', {
+        'players': players,
+        'teams': teams
+    })
+
+
+def players_halloffame():
     top_goalscorers = Player.objects.annotate(
         goals_count=Count('goals__match__league')).filter(goals_count__gt=0).order_by('-goals_count')
 
@@ -447,16 +457,64 @@ def halloffame(request):
     sorted_matches = sorted(player_matches, key=lambda x: x[1], reverse=True)
     sorted_subs_in = sorted(subs_in, key=lambda x: x[1], reverse=True)
     sorted_subs_out = sorted(subs_out, key=lambda x: x[1], reverse=True)
-    return render(request, 'tournament/hall_of_fame.html', {'goals': top_goalscorers,
-                                                            'assists': top_assistants,
-                                                            'clean_sheets': top_cs,
-                                                            'yellow_cards': top_yellow_cards,
-                                                            'red_cards': top_red_cards,
-                                                            'ogs': top_ogs,
-                                                            'player_matches': sorted_matches,
-                                                            'subs_in': sorted_subs_in,
-                                                            'subs_out': sorted_subs_out,
-                                                            })
+
+    return {
+        'goals': top_goalscorers,
+        'assists': top_assistants,
+        'clean_sheets': top_cs,
+        'yellow_cards': top_yellow_cards,
+        'red_cards': top_red_cards,
+        'ogs': top_ogs,
+        'player_matches': sorted_matches,
+        'subs_in': sorted_subs_in,
+        'subs_out': sorted_subs_out,
+    }
+
+
+def teams_halloffame():
+    top_goalscorers = Team.objects.annotate(
+        goals_count=Count('team_goals__match__league')).filter(goals_count__gt=0).order_by('-goals_count')
+
+    top_assistants = (Team.objects
+                      .annotate(assists_count=Count('team_goals__match__league',
+                                                    filter=Q(team_goals__assistent__isnull=False)))
+                      .filter(assists_count__gt=0).order_by('-assists_count'))
+
+    top_cs = Team.objects.filter(team_events__event=OtherEvents.CLEAN_SHEET).annotate(
+        cs_count=Count('team_events__match__league')).filter(cs_count__gt=0).order_by('-cs_count')
+
+    top_ogs = Team.objects.filter(team_events__event=OtherEvents.OWN_GOAL).annotate(
+        og_count=Count('team_events__match__league')).filter(og_count__gt=0).order_by('-og_count')
+
+    top_yellow_cards = Team.objects.filter(team_events__event=OtherEvents.YELLOW_CARD).annotate(
+        yellow_cards_count=Count('team_events__match__league')).filter(yellow_cards_count__gt=0).order_by('-yellow_cards_count')
+
+    top_red_cards = Team.objects.filter(team_events__event=OtherEvents.RED_CARD).annotate(
+        red_cards_count=Count('team_events__match__league')).filter(red_cards_count__gt=0).order_by('-red_cards_count')
+
+    team_matches = []
+    subs = []
+    for team in Team.objects.all():
+        matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team)).count()
+        if matches > 0:
+            team_matches.append([team, matches])
+        teams_subs = Substitution.objects.filter(team=team).count()
+        if teams_subs > 0:
+            subs.append([team, teams_subs])
+
+    sorted_matches = sorted(team_matches, key=lambda x: x[1], reverse=True)
+    sorted_subs = sorted(subs, key=lambda x: x[1], reverse=True)
+
+    return {
+        'goals': top_goalscorers,
+        'assists': top_assistants,
+        'clean_sheets': top_cs,
+        'yellow_cards': top_yellow_cards,
+        'red_cards': top_red_cards,
+        'ogs': top_ogs,
+        'team_matches': sorted_matches,
+        'subs': sorted_subs
+    }
 
 
 def team_rating(request):

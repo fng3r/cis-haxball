@@ -330,10 +330,6 @@ class Substitution(models.Model):
     match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_substitutions', null=True,
                               on_delete=models.CASCADE)
 
-    # team = ChainedForeignKey(Team, chained_field='match', verbose_name='Замена в команде',
-    #                         chained_model_field='leagues__matches_in_league', null=True,
-    #                         on_delete=models.SET_NULL)
-
     team = models.ForeignKey(Team, verbose_name='Замена в команде', related_name='team_substitution', null=True,
                              on_delete=models.SET_NULL)
 
