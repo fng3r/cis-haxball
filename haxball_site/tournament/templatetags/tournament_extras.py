@@ -216,7 +216,7 @@ def player_detailed_statistics(user: User):
     for season in seasons:
         season_stats_by_team = {}
         transfer_teams = list(
-            PlayerTransfer.objects.filter(~Q(to_team=None), season_join=season, trans_player=player).distinct())
+            PlayerTransfer.objects.filter(~Q(to_team=None), season_join=season, trans_player=player).distinct('to_team'))
         for transfer_team in transfer_teams:
             season_stats_in_single_team = {}
             team = transfer_team.to_team
@@ -292,7 +292,8 @@ def rows_player_stat(user, season):
     except:
         return 0
     rows_count = 0
-    player_transfers = PlayerTransfer.objects.filter(~Q(to_team=None), season_join=season, trans_player=player).distinct()
+    player_transfers = PlayerTransfer.objects.filter(~Q(to_team=None), season_join=season,
+                                                     trans_player=player).distinct('to_team')
     leagues = season.tournaments_in_season.all()
     for transfer in player_transfers:
         for league in leagues:

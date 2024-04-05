@@ -330,10 +330,6 @@ class Substitution(models.Model):
     match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_substitutions', null=True,
                               on_delete=models.CASCADE)
 
-    # team = ChainedForeignKey(Team, chained_field='match', verbose_name='Замена в команде',
-    #                         chained_model_field='leagues__matches_in_league', null=True,
-    #                         on_delete=models.SET_NULL)
-
     team = models.ForeignKey(Team, verbose_name='Замена в команде', related_name='team_substitution', null=True,
                              on_delete=models.SET_NULL)
 
@@ -378,6 +374,23 @@ class Disqualification(models.Model):
                                      self.match.team_guest.short_title)
 
 
+class OtherEventsQuerySet(models.QuerySet):
+    def cards(self):
+        return self.filter(event=Q(OtherEvents.YELLOW_CARD) | Q(OtherEvents.RED_CARD))
+
+    def yellow_cards(self):
+        return self.filter(event=OtherEvents.YELLOW_CARD)
+
+    def red_cards(self):
+        return self.filter(event=OtherEvents.RED_CARD)
+
+    def cs(self):
+        return self.filter(event=OtherEvents.CLEAN_SHEET)
+
+    def ogs(self):
+        return self.filter(event=OtherEvents.OWN_GOAL)
+
+
 class OtherEvents(models.Model):
     match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_event', null=True,
                               on_delete=models.CASCADE)
@@ -393,20 +406,22 @@ class OtherEvents(models.Model):
 
     YELLOW_CARD = 'YEL'
     RED_CARD = 'RED'
-    CLEAN_SHIT = 'CLN'
-    OWN_GOALS = 'OG'
+    CLEAN_SHEET = 'CLN'
+    OWN_GOAL = 'OG'
     EVENT = [
         (YELLOW_CARD, 'Жёлтая'),
         (RED_CARD, 'Красная'),
-        (CLEAN_SHIT, 'Сухой тайм'),
-        (OWN_GOALS, 'Автогол'),
+        (CLEAN_SHEET, 'Сухой тайм'),
+        (OWN_GOAL, 'Автогол'),
     ]
 
-    event = models.CharField(max_length=3, choices=EVENT, default=CLEAN_SHIT, verbose_name='Тип события')
+    event = models.CharField(max_length=3, choices=EVENT, default=CLEAN_SHEET, verbose_name='Тип события')
     card_reason = models.CharField(
         max_length=300, verbose_name="За что выдана карточка", null=True, blank=True,
         help_text='Только для карточек. Указывать в формате "за нарушение гл. 1 ст. 2 ч. 3 Регламента..." '
                   'для корректного отображения на странице матча')
+
+    objects = OtherEventsQuerySet.as_manager()
 
     def save(self, *args, **kwargs):
         if self.match.team_home == self.team and self.event == 'OG':
