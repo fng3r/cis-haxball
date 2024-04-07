@@ -125,7 +125,6 @@
                 </th>
                 {% for i in overall_stats %}
                     <td class="text-center font-weight-bolder number">{{ i|floatformat:0 }} </td>
-
                 {% endfor %}
             </tr>
 
@@ -203,17 +202,13 @@
                 <th colspan="2" class="text-center text">
                 </th>
                 {% for i in overall_avg_stats %}
-                    {% if forloop.counter == 1 or i == 0 %}
-                        <td class="text-center font-weight-bolder number">
-                    {% else %}
-                        <td class="text-center font-weight-bolder number">
-                    {% endif %}
-                            {% if forloop.counter == 1 or i == 0 %}
-                                {{ i|floatformat:0 }}
-                            {% else %}
-                                {{ i|floatformat:2 }}
-                            {% endif %}
-                        </td>
+                    <td class="text-center font-weight-bolder number">
+                        {% if forloop.counter == 1 or i == 0 %}
+                            {{ i|floatformat:0 }}
+                        {% else %}
+                            {{ i|floatformat:2 }}
+                        {% endif %}
+                    </td>
                 {% endfor %}
             </tr>
 
