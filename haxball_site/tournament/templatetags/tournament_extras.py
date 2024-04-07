@@ -44,12 +44,12 @@ def event_count(player, team, type):
 
 @register.filter
 def cs_count(player, team):
-    return event_count(player, team, OtherEvents.CLEAN_SHIT)
+    return event_count(player, team, OtherEvents.CLEAN_SHEET)
 
 
 @register.filter
 def og_count(player, team):
-    return event_count(player, team, OtherEvents.OWN_GOALS)
+    return event_count(player, team, OtherEvents.OWN_GOAL)
 
 
 @register.filter
