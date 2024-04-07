@@ -38,9 +38,28 @@ def date_can(user):
 
 
 # Евенты, всего/в текущем сезоне
+def event_count(player, team, type):
+    return OtherEvents.objects.filter(author=player, team=team, event=type, match__is_played=True).count()
+
+
 @register.filter
-def event_count(player, type):
-    return OtherEvents.objects.filter(author=player, team=player.team, event=type, match__is_played=True).count()
+def cs_count(player, team):
+    return event_count(player, team, OtherEvents.CLEAN_SHIT)
+
+
+@register.filter
+def og_count(player, team):
+    return event_count(player, team, OtherEvents.OWN_GOALS)
+
+
+@register.filter
+def yellow_cards_count(player, team):
+    return event_count(player, team, OtherEvents.YELLOW_CARD)
+
+
+@register.filter
+def red_cards_count(player, team):
+    return event_count(player, team, OtherEvents.RED_CARD)
 
 
 @register.filter
@@ -50,7 +69,6 @@ def event_count_current(player, type):
                                       match__league__championship=current).count()
 
 
-#
 @register.filter
 def goals_in_team(player, team):
     return Goal.objects.filter(author=player, team=team, match__is_played=True).count()
