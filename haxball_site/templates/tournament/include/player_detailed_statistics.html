@@ -293,6 +293,29 @@
                 </tr>
 
                 <tr class="border-bottom">
+                    {% with goal=other_stats.latest_goal match=other_stats.latest_goal.match %}
+                    <th scope="row" class="col-sm-4">
+                        Самый поздний гол
+                    </th>
+                    <td class="text-left">
+                        {% if goal %}
+                            {{ goal|goal_time }} -
+                            <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                            {{ match.team_home.title }}
+                            <a href="{{match.get_absolute_url}}">
+                                 {{ match.score_home }}:{{ match.score_guest }}
+                            </a>
+                            {{ match.team_guest.title }}
+                            <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                            ({{ match.league }})
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    {% endwith %}
+                </tr>
+
+                <tr class="border-bottom">
                     {% with match=other_stats.most_goals_in_match %}
                     <th scope="row" class="col-sm-4">
                         Больше всего голов за матч
@@ -364,7 +387,7 @@
                 <tr class="border-bottom">
                     {% with season=other_stats.most_goals_in_season %}
                     <th scope="row" class="col-sm-4">
-                        Больше всего голов за за сезон
+                        Больше всего голов за сезон
                     </th>
                     <td class="text-left">
                         {% if season %}

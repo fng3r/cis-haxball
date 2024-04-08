@@ -275,6 +275,9 @@ def team_statistics(team: Team):
                                 .annotate(cards_count=Count('match_event', filter=cards_filter))
                                 .order_by('-cards_count')).first()
 
+    fastest_goal = Goal.objects.filter(team=team).order_by('time_min', 'time_sec').first()
+    latest_goal = Goal.objects.filter(team=team).order_by('-time_min', '-time_sec').first()
+
     greatest_goalscorer = team.goals.values('author').annotate(goals=Count('author')).order_by('-goals').first()
     greatest_assistant = team.goals.values('assistent').annotate(assists=Count('assistent')).order_by('-assists').first()
     greatest_goalkeeper = team.team_events.filter(event=OtherEvents.CLEAN_SHEET).values('author').annotate(cs=Count('author')).order_by('-cs').first()
@@ -300,6 +303,9 @@ def team_statistics(team: Team):
     other_stats['biggest_guest_loss'] = biggest_guest_loss
     other_stats['most_effective_draw'] = most_effective_draw
     other_stats['most_biggest_cards_given'] = most_biggest_cards_given
+    other_stats['fastest_goal'] = fastest_goal
+    other_stats['latest_goal'] = latest_goal
+
     if greatest_goalscorer:
         other_stats['greatest_goalscorer'] = {
             'player': User.objects.get(user_player=greatest_goalscorer['author']),
@@ -472,6 +478,7 @@ def player_detailed_statistics(user: User):
                    .order_by('match_date').first())
 
     fastest_goal = Goal.objects.filter(author=player).order_by('time_min', 'time_sec').first()
+    latest_goal = Goal.objects.filter(author=player).order_by('-time_min', '-time_sec').first()
     most_goals_in_match = (Match.objects.filter(match_goal__author=player)
                            .annotate(goals=Count('id', filter=Q(match_goal__author=player)))
                            .order_by('-goals').first())
@@ -508,6 +515,7 @@ def player_detailed_statistics(user: User):
     other_stats = {}
     other_stats['first_match'] = first_match
     other_stats['fastest_goal'] = fastest_goal
+    other_stats['latest_goal'] = latest_goal
     other_stats['most_goals_in_match'] = most_goals_in_match
     other_stats['most_assists_in_match'] = most_assists_in_match
     other_stats['most_goals_assists_in_match'] = most_goals_assists_in_match
