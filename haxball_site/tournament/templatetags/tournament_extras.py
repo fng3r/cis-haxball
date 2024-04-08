@@ -290,10 +290,11 @@ def team_statistics(team: Team):
     matches_by_player = defaultdict(int)
     for player_matches in all_matches:
         matches_by_player[player_matches['player']] += player_matches['matches']
-    if len(all_matches) == 0:
-        (greatest_player, greatest_sub_in) = (None, None)
-    else:
+
+    (greatest_player, greatest_sub_in) = (None, None)
+    if len(all_matches) > 0:
         greatest_player = sorted(matches_by_player.items(), key=lambda kv: kv[1], reverse=True)[0]
+    if len(sub_matches) > 0:
         greatest_sub_in = sorted(sub_matches, key=lambda x: x['matches'], reverse=True)[0]
 
     other_stats['first_match'] = first_match
@@ -376,7 +377,7 @@ def player_detailed_statistics(user: User):
         season_extra_stats_by_team = {}
         overall_by_season = [0 for _ in range(1, 11)]
         transfer_teams = list(
-            PlayerTransfer.objects.filter(~Q(to_team=None), season_join=season, trans_player=player).distinct())
+            PlayerTransfer.objects.filter(~Q(to_team=None), season_join=season, trans_player=player).distinct('to_team'))
         for transfer_team in transfer_teams:
             season_stats_in_single_team = {}
             season_extra_stats_in_single_team = {}
@@ -553,7 +554,7 @@ def rows_player_stat(user, season):
         return 0
     rows_count = 0
     player_transfers = PlayerTransfer.objects.filter(~Q(to_team=None), season_join=season,
-                                                     trans_player=player).distinct()
+                                                     trans_player=player).distinct('to_team')
     leagues = season.tournaments_in_season.all()
     for transfer in player_transfers:
         for league in leagues:
