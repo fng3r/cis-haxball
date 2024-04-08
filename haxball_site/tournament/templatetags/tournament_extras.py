@@ -427,7 +427,7 @@ def player_detailed_statistics(user: User):
                 avg_subs_out = subs_out / matches_count
 
                 league_extra_stats = [matches_count, avg_goals, avg_assists, avg_goals_assists, avg_clean_sheets,
-                                      avg_subs_in, avg_subs_out, avg_own_goals, avg_yellow_cards, avg_red_cards]
+                                      avg_subs_out, avg_subs_in, avg_own_goals, avg_yellow_cards, avg_red_cards]
 
                 season_stats_in_single_team[league] = league_stats
                 season_extra_stats_in_single_team[league] = league_extra_stats
@@ -469,7 +469,7 @@ def player_detailed_statistics(user: User):
     overall_avg_subs_out = overall_subs_out / (overall_matches or 1)
 
     overall_extra_stats = [overall_matches, overall_avg_goals, overall_avg_assists, overall_avg_goals_assists,
-                           overall_avg_clean_sheets, overall_avg_subs_in, overall_avg_subs_out, overall_avg_own_goals,
+                           overall_avg_clean_sheets, overall_avg_subs_out, overall_avg_subs_in, overall_avg_own_goals,
                            overall_avg_yellow_cards, overall_avg_red_cards]
 
     first_match = (Match.objects.filter(Q(team_home_start=player) | Q(team_guest_start=player) |
