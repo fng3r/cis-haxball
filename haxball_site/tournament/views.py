@@ -473,11 +473,11 @@ def players_halloffame():
 
 def teams_halloffame():
     top_goalscorers = Team.objects.annotate(
-        goals_count=Count('team_goals__match__league')).filter(goals_count__gt=0).order_by('-goals_count')
+        goals_count=Count('goals__match__league')).filter(goals_count__gt=0).order_by('-goals_count')
 
     top_assistants = (Team.objects
-                      .annotate(assists_count=Count('team_goals__match__league',
-                                                    filter=Q(team_goals__assistent__isnull=False)))
+                      .annotate(assists_count=Count('goals__match__league',
+                                                    filter=Q(goals__assistent__isnull=False)))
                       .filter(assists_count__gt=0).order_by('-assists_count'))
 
     top_cs = Team.objects.filter(team_events__event=OtherEvents.CLEAN_SHEET).annotate(
@@ -493,16 +493,27 @@ def teams_halloffame():
         red_cards_count=Count('team_events__match__league')).filter(red_cards_count__gt=0).order_by('-red_cards_count')
 
     team_matches = []
+    team_wins = []
+    team_winrates = []
     subs = []
     for team in Team.objects.all():
         matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True).count()
+        wins = (Match.objects.filter(team_home=team, score_home__gt=F('score_guest'), is_played=True).count() +
+                Match.objects.filter(team_guest=team, score_guest__gt=F('score_home'), is_played=True).count())
+        winrate = wins / (matches or 1) * 100
         if matches > 0:
             team_matches.append([team, matches])
+        if wins > 0:
+            team_wins.append([team, wins])
+        if winrate > 0:
+            team_winrates.append([team, winrate])
         teams_subs = Substitution.objects.filter(team=team).count()
         if teams_subs > 0:
             subs.append([team, teams_subs])
 
     sorted_matches = sorted(team_matches, key=lambda x: x[1], reverse=True)
+    sorted_wins = sorted(team_wins, key=lambda x: x[1], reverse=True)
+    sorted_winrates = sorted(team_winrates, key=lambda x: x[1], reverse=True)
     sorted_subs = sorted(subs, key=lambda x: x[1], reverse=True)
 
     return {
@@ -513,6 +524,8 @@ def teams_halloffame():
         'red_cards': top_red_cards,
         'ogs': top_ogs,
         'team_matches': sorted_matches,
+        'wins': sorted_wins,
+        'winrates': sorted_winrates,
         'subs': sorted_subs
     }
 

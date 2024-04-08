@@ -506,11 +506,6 @@ def player_detailed_statistics(user: User):
                                     .annotate(cs=Count('author'))
                                     .order_by('-cs').first())
 
-    cards_filter = Q(match_event__event=OtherEvents.YELLOW_CARD) | Q(match_event__event=OtherEvents.RED_CARD)
-    most_biggest_cards_given = ((team.home_matches.all() | team.guest_matches.all())
-                                .annotate(cards_count=Count('match_event', filter=cards_filter))
-                                .order_by('-cards_count')).first()
-
 
     other_stats = {}
     other_stats['first_match'] = first_match
