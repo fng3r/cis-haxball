@@ -1,6 +1,9 @@
+{% load tournament_extras %}
+
 <style>
     .marquee {
         display: block;
+        background-color: white;
         width: 100%;
         white-space: nowrap;
         overflow: hidden;
@@ -9,9 +12,9 @@
     .marquee span {
         display: inline-block;
         padding-left: 100%;
-        -webkit-animation: scroll 30s infinite linear;
-        -moz-animation: scroll 30s infinite linear;
-        animation: scroll 30s infinite linear;
+        -webkit-animation: scroll {{animation_duration}}s infinite linear;
+        -moz-animation: scroll {{animation_duration}}s infinite linear;
+        animation: scroll {{animation_duration}}s infinite linear;
     }
 
     @keyframes scroll {
@@ -25,20 +28,29 @@
 </style>
 
 
-<h6 class="marquee" style="background-color: white">
+<h6 class="marquee">
     <span>
-        Результаты матчей:
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        {% for match in latest_matches %}
-            {{ match.league.title }}. {{ match.numb_tour.number }} тур.
-            <img src="{{match.team_home.logo.url}}" width=20 height=20>
-            {{ match.team_home.title }}
-            <a href="{{match.get_absolute_url}}">
-                 {{ match.score_home }}:{{ match.score_guest }}
-            </a>
-            {{ match.team_guest.title }}
-            <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        {% endfor %}
+        {% if latest_matches.count > 0 %}
+            Результаты матчей:
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {% for match in latest_matches %}
+                {{ match.league.title }},
+                {% if match.league.is_cup %}
+                    {{ match.numb_tour|cup_round_name }}.
+                {% else %}
+                    {{ match.numb_tour.number }} тур.
+                {% endif %}
+                <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                {{ match.team_home.title }}
+                <a href="{{match.get_absolute_url}}">
+                     {{ match.score_home }}:{{ match.score_guest }}
+                </a>
+                {{ match.team_guest.title }}
+                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {% endfor %}
+        {% else %}
+            Нет актуальных матчей
+        {% endif %}
     </span>
 </h6>
