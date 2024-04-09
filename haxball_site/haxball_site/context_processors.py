@@ -9,7 +9,7 @@ def running_line_context(request):
     latest_matches = (Match.objects
                       .filter(is_played=True, match_date__range=[three_days_ago, today])
                       .order_by('league__priority', 'league__created', '-match_date'))
-    base_duration = 20
+    base_duration = 15
     added_duration = 3 * latest_matches.count()
     animation_duration = base_duration + added_duration
 
