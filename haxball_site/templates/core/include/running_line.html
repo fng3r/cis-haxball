@@ -7,6 +7,12 @@
         width: 100%;
         white-space: nowrap;
         overflow: hidden;
+
+        position: sticky;
+        top: 50px;
+        z-index: 999;
+        font-weight: 500;
+        border-bottom: #343a40 2px solid;
     }
 
     .marquee span {
@@ -33,7 +39,7 @@
 </style>
 
 
-<h6 class="marquee">
+<div class="marquee">
     <span>
         {% if latest_matches.count > 0 %}
             Результаты матчей:
@@ -59,4 +65,4 @@
             Нет актуальных матчей
         {% endif %}
     </span>
-</h6>
+</div>
