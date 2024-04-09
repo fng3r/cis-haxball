@@ -25,6 +25,11 @@
             transform: translate(-100%, 0)
         }
     }
+
+    .marquee .match-link {
+        color: #08102c;
+        text-decoration: none;
+    }
 </style>
 
 
@@ -34,20 +39,21 @@
             Результаты матчей:
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             {% for match in latest_matches %}
-                {{ match.league.title }},
-                {% if match.league.is_cup %}
-                    {{ match.numb_tour|cup_round_name }}.
-                {% else %}
-                    {{ match.numb_tour.number }} тур.
-                {% endif %}
-                <img src="{{match.team_home.logo.url}}" width=20 height=20>
-                {{ match.team_home.title }}
-                <a href="{{match.get_absolute_url}}">
-                     {{ match.score_home }}:{{ match.score_guest }}
+                <a class="match-link" href="{{match.get_absolute_url}}">
+                    {{ match.league.title }},
+                    {% if match.league.is_cup %}
+                        {{ match.numb_tour|cup_round_name }}.
+                    {% else %}
+                        {{ match.numb_tour.number }} тур.
+                    {% endif %}
+                    <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                    {{ match.team_home.title }}
+
+                         {{ match.score_home }}:{{ match.score_guest }}
+                    {{ match.team_guest.title }}
+                    <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 </a>
-                {{ match.team_guest.title }}
-                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             {% endfor %}
         {% else %}
             Нет актуальных матчей
