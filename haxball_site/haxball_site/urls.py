@@ -16,22 +16,23 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
-
+from django.contrib.auth.decorators import login_required
+from django.urls import path, re_path, include
+from django.views.decorators.cache import never_cache
+from ckeditor_uploader import views as ckuploader_views
 
 urlpatterns = [
     path('grappelli/', include('grappelli.urls')),
     path('admin/', admin.site.urls),
+    re_path(r'^ckeditor/upload/', login_required(ckuploader_views.upload), name='ckeditor_upload'),
+    re_path(r'^ckeditor/browse/', never_cache(login_required(ckuploader_views.browse)), name='ckeditor_browse'),
     path('chaining/', include('smart_selects.urls')),
     path('', include('core.urls', namespace='core')),
     path('championship/', include('tournament.urls', namespace='tournament')),
     path('host_reservation/', include('reservation.urls', namespace='reservation')),
     path('polls/', include('polls.urls', namespace='polls')),
-    path('ckeditor/', include('ckeditor_uploader.urls')),
     path('accounts/', include('allauth.urls')),
-    #path('markdownx/', include('markdownx.urls')),
     path('summernote/', include('django_summernote.urls')),
-    #path('froala_editor/',include('froala_editor.urls'))
 ]
 
 if settings.URL_PREFIX:

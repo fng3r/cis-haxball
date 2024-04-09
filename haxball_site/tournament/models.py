@@ -286,15 +286,13 @@ class Goal(models.Model):
     match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_goal', null=True, blank=True,
                               on_delete=models.CASCADE)
 
-    team = models.ForeignKey(Team, verbose_name='Команда забила', related_name='team_goals', null=True,
+    team = models.ForeignKey(Team, verbose_name='Команда забила', related_name='goals', null=True,
                              on_delete=models.SET_NULL)
 
     author = ChainedForeignKey(Player, chained_field='team', chained_model_field='team', verbose_name='Автор гола',
-                               related_name='goals', null=True,
-                               on_delete=models.CASCADE)
+                               related_name='goals', null=True, on_delete=models.CASCADE)
     assistent = ChainedForeignKey(Player, chained_field='team', chained_model_field='team', verbose_name='Ассистент',
-                                  related_name='assists', blank=True, null=True,
-                                  on_delete=models.CASCADE)
+                                  related_name='assists', blank=True, null=True, on_delete=models.CASCADE)
     time_min = models.SmallIntegerField('Минута')
     time_sec = models.SmallIntegerField('Секунда')
 

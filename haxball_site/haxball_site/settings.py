@@ -340,9 +340,11 @@ CKEDITOR_CONFIGS = {
              '-', 'Undo', 'Redo'
             ]
         ],
+        # 'plugins': [],
 
         'extraPlugins': ','.join([
             'uploadimage',  # the upload image feature
+            # 'autoimage',
             # your extra plugins here
             'div',
             'autolink',
