@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from .models import ReservationEntry, ReservationHost, Replay
 from django.views.generic import ListView
 
-from .templatetags.reservation_extras import teams_can_reserv
+from .templatetags.reservation_extras import teams_can_reserve
 
 
 class ReservationList(ListView):
@@ -51,7 +51,7 @@ class ReplaysList(ListView):
 @require_POST
 def delete_entry(request, pk):
     reserved_match = get_object_or_404(ReservationEntry, pk=pk)
-    t = teams_can_reserv(request.user)
+    t = teams_can_reserve(request.user)
 
     if (reserved_match.match.team_home in t) or (reserved_match.match.team_guest in t):
         reserved_match.delete()

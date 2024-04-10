@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from django import template
 from django.db.models import Q
-from django.db.models.functions import datetime
 from django.utils import timezone
 from tournament.models import Player, Team, League, TourNumber, Match
 from reservation.models import ReservationHost
@@ -10,7 +9,7 @@ from reservation.models import ReservationHost
 register = template.Library()
 
 
-def teams_can_reserv(user):
+def teams_can_reserve(user):
     try:
         a = user.user_player
     except:
@@ -30,7 +29,7 @@ def teams_can_reserv(user):
 
 @register.filter
 def user_can_reserv(user):
-    if teams_can_reserv(user):
+    if teams_can_reserve(user):
         return True
     else:
         return False
@@ -38,32 +37,19 @@ def user_can_reserv(user):
 
 @register.inclusion_tag('reservation/reservation_form.html')
 def reservation_form(user):
-    t = teams_can_reserv(user)
-    actual_tour = TourNumber.objects.filter(league__championship__is_active=True, is_actual=True,
-                                            league__teams__in=t).distinct()
-
-    if actual_tour is None:
-        return {
-            'matches': []
-        }
-
-    # Матчи, которые можно будет выбрать
-    matches_to_choose = []
-
-    # Просматриваем все активные туры и смотрим матчи, которые не сыграны и на которых нету брони
-    for tour in actual_tour:
-        matches_unplayed = \
-            (Match.objects
-                .filter((Q(team_home__in=t) | Q(team_guest__in=t)), is_played=False,
-                        numb_tour__number=tour.number, league=tour.league,
-                        match_reservation=None)
-                .distinct()
-                .order_by('-numb_tour__number'))
-        matches_to_choose.extend(matches_unplayed)
+    teams = teams_can_reserve(user)
+    today = timezone.now().date() + timezone.timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
+    matches_to_choose = \
+        (Match.objects
+            .filter((Q(team_home__in=teams) | Q(team_guest__in=teams)), is_played=False,
+                    league__championship__is_active=True, numb_tour__date_from__lte=tomorrow,
+                    match_reservation=None)
+            .distinct()
+            .order_by('league', 'numb_tour__number'))
 
     hosts = ReservationHost.objects.filter(is_active=True)
-    today = datetime.datetime.today().date()
-    tomorrow = today + timedelta(days=1)
+
     hours_list = list(range(18, 24))
     minutes_list = [0, 15, 30, 45]
     return {
@@ -85,7 +71,7 @@ def match_can_delete(user, match):
         a = user.user_player
     except:
         return False
-    t = teams_can_reserv(user)
+    t = teams_can_reserve(user)
     delt_time = match.match_reservation.time_date - timezone.now()
     if ((match.team_home in t) or (match.team_guest in t)) and delt_time > timedelta(minutes=30):
         return True
@@ -127,16 +113,3 @@ def round_name(tour, all_tours):
         return '1/8 Финала'
     else:
         return '{} Раунд'.format(tour)
-
-
-'''
-@register.filter
-def match_can_reserv(user):
-    t = teams_can_reserv(user)
-    actual_tour = TourNumber.objects.filter(league__championship__is_active=True, is_actual=True).first()
-
-    matches_unplayed = Match.objects.filter((Q(team_home__in=t) | Q(team_guest__in=t)), is_played=False,
-                                            numb_tour__number__lte=actual_tour.number,
-                                            )
-    return matches_unplayed
-'''
