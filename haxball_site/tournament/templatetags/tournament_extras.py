@@ -10,7 +10,7 @@ from django.db.models import Q, Count, QuerySet, F, Max, Sum
 from django.utils import timezone
 
 from ..models import FreeAgent, OtherEvents, Goal, Match, League, Team, Player, Substitution, Season, PlayerTransfer, \
-    Disqualification, Postponement
+    Disqualification, Postponement, TourNumber
 
 register = template.Library()
 
@@ -647,6 +647,21 @@ def round_name(tour, all_tours):
         return '1/8 Финала'
 
     return '{} Раунд'.format(tour)
+
+
+@register.filter
+def cup_round_name(tour: TourNumber):
+    tours_count = tour.league.tours.count()
+    if tour.number == tours_count:
+        return 'Финал'
+    elif tour.number == tours_count - 1:
+        return '1/2'
+    elif tour.number == tours_count - 2:
+        return '1/4'
+    elif tour.number == tours_count - 3:
+        return '1/8'
+    else:
+        return '{} раунд'.format(tour.number)
 
 
 @register.inclusion_tag('tournament/include/league_table.html')

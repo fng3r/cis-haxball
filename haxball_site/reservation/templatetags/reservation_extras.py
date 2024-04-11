@@ -127,16 +127,3 @@ def round_name(tour, all_tours):
         return '1/8 Финала'
     else:
         return '{} Раунд'.format(tour)
-
-
-'''
-@register.filter
-def match_can_reserv(user):
-    t = teams_can_reserv(user)
-    actual_tour = TourNumber.objects.filter(league__championship__is_active=True, is_actual=True).first()
-
-    matches_unplayed = Match.objects.filter((Q(team_home__in=t) | Q(team_guest__in=t)), is_played=False,
-                                            numb_tour__number__lte=actual_tour.number,
-                                            )
-    return matches_unplayed
-'''
