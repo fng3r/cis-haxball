@@ -193,7 +193,11 @@ class TourNumber(models.Model):
     date_from = models.DateField('Дата тура с', default=date.today, blank=True, null=True)
     date_to = models.DateField('Дата тура по', default=date.today, blank=True, null=True)
     league = models.ForeignKey(League, verbose_name='В какой лиге', related_name='tours', on_delete=models.CASCADE)
-    is_actual = models.BooleanField('Актуальный', default=False)
+
+    @property
+    def is_actual(self):
+        today = timezone.now().date()
+        return today >= self.date_from and self.tour_matches.filter(is_played=False).exists()
 
     def __str__(self):
         return '{} тур ({})'.format(self.number, self.league.title)

@@ -253,8 +253,6 @@ class MatchAdmin(admin.ModelAdmin):
             'fields': ('comment',)
         })
     )
-    # fields = ['is_played', 'league', 'tour_num', 'match_date', ('team_home', 'team_guest'),
-    #          ('team_home_start', 'team_guest_start')]
     inlines = [GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
 
@@ -275,14 +273,11 @@ class OtherEventsAdmin(admin.ModelAdmin):
 
 @admin.register(TourNumber)
 class MatchTourAdmin(admin.ModelAdmin):
-    list_display = ('number', 'league', 'is_actual', 'date_from', 'date_to')
-    list_editable = ('is_actual',)
+    list_display = ('number', 'league', 'date_from', 'date_to', 'is_actual')
     list_filter = ('league', 'number')
 
+    def is_actual(self, model):
+        return model.is_actual
+    is_actual.short_description = 'Актуальный'
+    is_actual.boolean = True
 
-"""
-@admin.register(Goal)
-class GoalAdmin(admin.ModelAdmin):
-    form = GoalAdminForm
-    list_display = ('match', 'author', 'assistent',)
-"""
