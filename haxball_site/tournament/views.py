@@ -46,7 +46,7 @@ class DisqualificationsList(ListView):
 class TransfersList(ListView):
     from_date = datetime(2024, 3, 13)
     queryset = PlayerTransfer.objects.filter(season_join__is_active=True,
-                                             date_join__gte=from_date).order_by('-date_join')
+                                             date_join__gte=from_date).order_by('-date_join', '-id')
     context_object_name = 'transfers'
     template_name = 'tournament/transfers/transfers_list.html'
 
