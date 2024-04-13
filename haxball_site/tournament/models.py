@@ -452,9 +452,11 @@ class OtherEvents(models.Model):
 
 
 class PlayerTransfer(models.Model):
-    trans_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='teams_all', verbose_name='Игрок', )
-    to_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='team_transfers', verbose_name='В команду',
-                                blank=True, null=True)
+    trans_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='teams_all', verbose_name='Игрок')
+    from_team = models.ForeignKey(Team, verbose_name='Из команды', related_name='outgoing_transfers',
+                                  on_delete=models.SET_NULL, blank=True, null=True)
+    to_team = models.ForeignKey(Team, verbose_name='В команду', related_name='incoming_transfers',
+                                on_delete=models.CASCADE, blank=True, null=True)
     date_join = models.DateField(default=None)
     season_join = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name='В каком сезоне')
 
@@ -463,13 +465,12 @@ class PlayerTransfer(models.Model):
             self.trans_player.team = self.to_team
             self.trans_player.save()
         else:
-            print(self.trans_player)
             self.trans_player.team = None
             self.trans_player.save()
         super(PlayerTransfer, self).save(*args, **kwargs)
 
     def __str__(self):
-        return 'Переход {} в команду {}'.format(self.trans_player, self.to_team)
+        return 'Переход {} в команду {} (из {})'.format(self.trans_player, self.to_team, self.from_team)
 
     class Meta:
         verbose_name = 'Трансфер'

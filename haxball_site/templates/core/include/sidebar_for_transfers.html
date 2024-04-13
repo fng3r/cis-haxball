@@ -1,0 +1,64 @@
+{% load static %}
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static "core/include/sidebar_for_transfers.css" %}">
+
+    <style>
+
+
+    </style>
+{% endblock %}
+
+<div class="card" style="border-radius: 20px 20px 0 0;">
+    <div class="card-header d-inline-flex mb-0 justify-content-center bg-for-online-head" style="border-radius: 20px 20px 0px 0;">
+            <h6 class="mb-0" style="font-size: 1rem">Последние трансферы</h6>
+    </div>
+
+    <div class="transfers btn-group-vertical w-100">
+        {% for transfer in transfers %}
+
+            <div class="transfer w-100 py-1 d-flex justify-content-center align-items-center">
+                <div class="transfer-player d-flex justify-content-center">
+                    <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
+                        <img src="{{ transfer.trans_player.name.user_profile.avatar.url }}" class="align-self-start mr-1"
+                             alt="{{ transfer.trans_player.nickname }}" width="45" height="45" title="{{ transfer.trans_player }}"
+                             style="border-radius: 100%; background-position: center center; background-repeat: no-repeat;">
+                    </a>
+                </div>
+                <div class="transfer-teams">
+                    {% if transfer.from_team %}
+                        <a href="{{ transfer.from_team.get_absolute_url }}">
+                            <img src="{{ transfer.from_team.logo.url }}" class="align-self-start mr-1"
+                                 alt="{{ transfer.from_team.title }}" width="55" style="border-radius: 100%"
+                                 title="{{ transfer.from_team.title }}">
+                        </a>
+                    {% else %}
+                        <img src="{% static 'img/ico/free.png' %}" class="align-self-start mr-1"
+                             alt="СА" width="55" style="border-radius: 100%"
+                             title="Свободный агент">
+                    {% endif %}
+                    <i class="fa fa-long-arrow-right"></i>
+
+                    {% if transfer.to_team %}
+                        <a href="{{ transfer.to_team.get_absolute_url }}">
+                            <img src="{{ transfer.to_team.logo.url }}" class="align-self-start mr-1"
+                                 alt="{{ transfer.to_team.title }}" width="55" style="border-radius: 100%"
+                                 title="{{ transfer.to_team.title }}">
+                        </a>
+                    {% else %}
+                        <img src="{% static 'img/ico/free.png' %}" class="align-self-start mr-1"
+                             alt="СА" width="55" style="border-radius: 100%"
+                             title="Свободный агент">
+                    {% endif %}
+                </div>
+
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="p-0">
+        <a type="button" class="transfers-button btn btn-block text-center" style="background: cornflowerblue;"
+           href="{% url 'tournament:transfers' %}">
+            Все трансферы
+        </a>
+    </div>
+</div>

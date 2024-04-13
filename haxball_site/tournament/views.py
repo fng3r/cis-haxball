@@ -16,7 +16,7 @@ from django.views.generic import ListView, DetailView
 
 from .forms import FreeAgentForm, EditTeamProfileForm
 from .models import FreeAgent, Team, Match, League, Player, Substitution, Season, OtherEvents, Disqualification, \
-    Postponement
+    Postponement, PlayerTransfer
 from core.forms import NewCommentForm
 from core.models import NewComment, Profile
 
@@ -41,6 +41,14 @@ class DisqualificationsList(ListView):
         context['filter'] = DisqualificationFilter(self.request.GET, queryset=self.queryset)
 
         return context
+
+
+class TransfersList(ListView):
+    from_date = datetime(2024, 3, 13)
+    queryset = PlayerTransfer.objects.filter(season_join__is_active=True,
+                                             date_join__gte=from_date).order_by('-date_join')
+    context_object_name = 'transfers'
+    template_name = 'tournament/transfers/transfers_list.html'
 
 
 class FreeAgentList(ListView):
