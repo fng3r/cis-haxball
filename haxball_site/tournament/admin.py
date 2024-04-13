@@ -48,6 +48,11 @@ class PlayerTransferAdmin(admin.ModelAdmin):
     autocomplete_fields = ('trans_player',)
     ordering = ('-date_join', '-id',)
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'from_team' or db_field.name == 'to_team':
+            kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 class PlayerInline(admin.StackedInline):
     model = Player
