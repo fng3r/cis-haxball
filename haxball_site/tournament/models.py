@@ -8,6 +8,7 @@ from django.db.models import CheckConstraint, Q, F
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
+from model_utils import FieldTracker
 from smart_selects.db_fields import ChainedForeignKey
 
 from core.models import NewComment
@@ -460,13 +461,16 @@ class PlayerTransfer(models.Model):
     date_join = models.DateField(default=None)
     season_join = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name='В каком сезоне')
 
+    tracker = FieldTracker(['to_team'])
+
     def save(self, *args, **kwargs):
-        if self.to_team:
-            self.trans_player.team = self.to_team
+        if not self.pk or self.tracker.has_changed('to_team'):
+            if self.to_team:
+                self.trans_player.team = self.to_team
+            else:
+                self.trans_player.team = None
             self.trans_player.save()
-        else:
-            self.trans_player.team = None
-            self.trans_player.save()
+
         super(PlayerTransfer, self).save(*args, **kwargs)
 
     def __str__(self):
