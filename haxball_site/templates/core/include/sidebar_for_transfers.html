@@ -15,7 +15,7 @@
                 <div class="transfer-player d-flex justify-content-center">
                     <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
                         <img src="{{ transfer.trans_player.name.user_profile.avatar.url }}" class="align-self-start mr-1"
-                             alt="{{ transfer.trans_player.nickname }}" width="45" height="45" title="{{ transfer.trans_player }}"
+                             alt="{{ transfer.trans_player.nickname }}" width="50" height="50" title="{{ transfer.trans_player }}"
                              style="border-radius: 100%; background-position: center center; background-repeat: no-repeat;">
                     </a>
                 </div>
@@ -36,12 +36,12 @@
 
                     {% if transfer.to_team %}
                         <a href="{{ transfer.to_team.get_absolute_url }}">
-                            <img src="{{ transfer.to_team.logo.url }}" class="align-self-start ml-1"
+                            <img src="{{ transfer.to_team.logo.url }}" class="align-self-start ml-1 my-1"
                                  alt="{{ transfer.to_team.title }}" width="55"
                                  title="{{ transfer.to_team.title }}">
                         </a>
                     {% else %}
-                        <img src="{% static 'img/ico/free.png' %}" class="align-self-start ml-1"
+                        <img src="{% static 'img/ico/free.png' %}" class="align-self-start ml-1 my-1"
                              alt="СА" width="55"
                              title="Свободный агент">
                     {% endif %}
