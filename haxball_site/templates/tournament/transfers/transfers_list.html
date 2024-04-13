@@ -68,6 +68,8 @@
                                                 </h6>
                                             </div>
                                         {% else %}
+                                            <img src="{% static 'img/ico/free.png' %}" class="align-self-start mr-1"
+                                                 alt="{{ transfer.from_team.title }}" width="30" style="border-radius: 100%">
                                             <span>Свободный агент</span>
                                         {% endif %}
                                     </div>
