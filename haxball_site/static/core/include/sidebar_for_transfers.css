@@ -1,0 +1,23 @@
+.transfer {
+    border-top: 1px solid rgba(0,0,0,.125);
+}
+
+.transfer-player {
+    width: 33%;
+}
+
+.transfer-teams {
+    width: 60%;
+}
+
+.transfers-button {
+    border-radius: 0;
+}
+
+.transfers-button:hover {
+    background-color: #3677ec !important;
+}
+
+.transfers-button:active, .transfers-button:focus {
+    box-shadow: none;
+}

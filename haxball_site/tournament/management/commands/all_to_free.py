@@ -25,7 +25,8 @@ class Command(BaseCommand):
 
         for p in players_in_team:
             print(p, p.team)
-            PlayerTransfer.objects.create(trans_player=p, to_team=None, season_join=seas, date_join=timezone.now())
+            PlayerTransfer.objects.create(trans_player=p, from_team=p.team, to_team=None,
+                                          season_join=seas, date_join=timezone.now())
 
 
         #PlayerTransfer.objects.create(trans_player=s, to_team=None, season_join=seas, date_join=timezone.now())

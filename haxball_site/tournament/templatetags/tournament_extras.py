@@ -121,9 +121,6 @@ def join_game_in_team_current(player, team):
                                        match__league__championship=current).count()
 
 
-#
-
-
 @register.filter
 def matches_in_team_current(player, team):
     return (Match.objects.filter(team_guest=team, team_guest_start=player, is_played=True,

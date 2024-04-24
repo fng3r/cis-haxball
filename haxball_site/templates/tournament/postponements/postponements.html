@@ -49,6 +49,7 @@
                                 <td class="p-1 border-right" style="font-size: 14px; text-align: center;" height="80px">
                                     {% if postponement is not None %}
                                         {% with match=postponement.match %}
+                                        <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">
                                             {{match.numb_tour.number}} тур<br>
                                             <a href="{{match.get_absolute_url}}">
                                                 <img src="{{match.team_home.logo.url}}" alt="..." width="16" height="16">
@@ -87,6 +88,7 @@
                                                     </div>
                                                 </div>
                                             {% endif %}
+                                        </div>
                                         {% endwith %}
                                     {% endif %}
                                 </td>

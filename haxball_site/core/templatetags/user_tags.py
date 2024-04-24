@@ -9,7 +9,7 @@ from django.utils import timezone
 from online_users.models import OnlineUserActivity
 
 from ..models import Post, NewComment, Subscription
-from tournament.models import Team, League, Player
+from tournament.models import Team, League, Player, PlayerTransfer
 from haxball_site import settings
 
 register = template.Library()
@@ -297,3 +297,12 @@ def pages_to_show(page: Page):
         yield None
         yield from range(page.number - pages_before, pages_total + 1)
         return
+
+
+@register.inclusion_tag('core/include/sidebar_for_transfers.html')
+def show_last_transfers():
+    from_date = datetime(2024, 3, 13)
+    last_transfers = PlayerTransfer.objects.filter(season_join__is_active=True,
+                                                   date_join__gte=from_date).order_by('-date_join', '-id')[:5]
+
+    return {'transfers': last_transfers}

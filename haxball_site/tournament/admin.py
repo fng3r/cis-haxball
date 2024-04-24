@@ -42,9 +42,16 @@ class PlayerAdmin(admin.ModelAdmin):
 
 @admin.register(PlayerTransfer)
 class PlayerTransferAdmin(admin.ModelAdmin):
-    list_display = ('trans_player', 'to_team', 'date_join', 'season_join')
-    list_filter = ('trans_player', 'to_team',)
+    list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join')
+    list_filter = ('trans_player', 'from_team', 'to_team',)
+    search_fields = ('trans_player__nickname', 'from_team__title', 'to_team__title',)
     autocomplete_fields = ('trans_player',)
+    ordering = ('-date_join', '-id',)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'from_team' or db_field.name == 'to_team':
+            kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class PlayerInline(admin.StackedInline):
