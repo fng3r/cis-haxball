@@ -109,9 +109,9 @@ class Team(models.Model):
 class League(models.Model):
     championship = models.ForeignKey(Season, verbose_name='Сезон', related_name='tournaments_in_season', null=True,
                                      on_delete=models.CASCADE)
-    title = models.CharField('Название лиги', max_length=128)
+    title = models.CharField('Название турнира', max_length=128)
     is_cup = models.BooleanField('Кубок', help_text='галочка, если кубок', default=False)
-    priority = models.SmallIntegerField('Приоритет лиги', help_text='1-высшая, 2-пердив, 3-втордив',
+    priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив',
                                         blank=True)
     slug = models.SlugField(max_length=250)
     created = models.DateTimeField('Создана', auto_now_add=True)

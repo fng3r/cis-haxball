@@ -142,7 +142,7 @@ class PostponementAdmin(admin.ModelAdmin):
 
 @admin.register(League)
 class LeagueAdmin(admin.ModelAdmin):
-    list_display = ('title', 'priority', 'created')
+    list_display = ('title', 'slug', 'is_cup', 'priority', 'championship', 'created')
     filter_horizontal = ('teams',)
     inlines = [PostponementSlotsInline]
 
