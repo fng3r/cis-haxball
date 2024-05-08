@@ -989,8 +989,9 @@ def sort_teams(league):
 
 @register.filter
 def current_league(team):
+    primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
     try:
-        return League.objects.filter(teams=team, is_cup=False, championship__is_active=True).first()
+        return League.objects.filter(teams=team, title__in=primary_leagues, championship__is_active=True).first()
     except:
         return None
 
