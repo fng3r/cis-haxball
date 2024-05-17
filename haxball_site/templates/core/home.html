@@ -61,7 +61,9 @@
 
                 {% polls_list 2 user %}
 
-                {% show_last_transfers %}
+                {% cache 60 transfers_sidebar %}
+                    {% show_last_transfers %}
+                {% endcache %}
             </div>
             <div class="col-8 main-col col-xl-8 col-lg-12 col-md-12 col-sm-12 mx-0 order-xl-2 order-md-1 order-sm-1 order-lg-1 px-1">
 
