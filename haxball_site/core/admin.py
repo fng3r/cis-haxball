@@ -146,7 +146,8 @@ class UserActivityAdmin(admin.ModelAdmin):
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'starts_at', 'expires_at', 'tier', 'is_active', 'disabled')
     list_filter = ('user', 'tier', 'disabled')
-    autocomplete_fields = ('user',)
+    # autocomplete_fields = ('user',)
+    raw_id_fields = ('user',)
     search_fields = ('user__username',)
 
     def is_active(self, model):
@@ -158,4 +159,5 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(UserNicknameHistoryItem)
 class UserNicknameHistoryItemAdmin(admin.ModelAdmin):
     list_display = ('user', 'nickname', 'edited')
-    autocomplete_fields = ('user',)
+    # autocomplete_fields = ('user',)
+    raw_id_fields = ('user',)
