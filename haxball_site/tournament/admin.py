@@ -45,7 +45,8 @@ class PlayerTransferAdmin(admin.ModelAdmin):
     list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join')
     list_filter = ('trans_player', 'from_team', 'to_team',)
     search_fields = ('trans_player__nickname', 'from_team__title', 'to_team__title',)
-    autocomplete_fields = ('trans_player',)
+    # autocomplete_fields = ('trans_player',)
+    raw_id_fields = ('trans_player',)
     ordering = ('-date_join', '-id',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -122,8 +123,8 @@ class PostponementAdmin(admin.ModelAdmin):
     list_display = ('match', 'is_emergency', 'get_teams', 'starts_at', 'ends_at', 'taken_at', 'taken_by',
                     'is_cancelled', 'cancelled_at', 'cancelled_by')
     filter_horizontal = ('teams',)
-    raw_id_fields = ('match',)
-    autocomplete_fields = ('taken_by', 'cancelled_by')
+    raw_id_fields = ('match', 'taken_by', 'cancelled_by')
+    # autocomplete_fields = ('taken_by', 'cancelled_by')
     list_filter = ('match__league', 'is_emergency')
     search_fields = ('match__team_home__title', 'match__team_guest__title')
 

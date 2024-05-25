@@ -7,7 +7,7 @@
 {% endblock %}
 {% block title %}Чемпионат | {{ league.title }}          cis-haxball.com {% endblock %}
 {% block profile_of_user %}
-    {% cache 2400 champ_table league.id %}
+    {% cache 900 champ_table league.id %}
 
         <div class="card mb-4 mt-2" style="border-radius: 25px">
             <div class="card-header pb-0" style="border-radius: 25px 25px 0 0">
