@@ -1,6 +1,6 @@
 # haxball
 Blog-site with social component and tables for creating haxball championships 
-[cis-haxball](https://cis-haxball.com/)
+[cis-haxball](https://cis-haxball.ru/)
 
 ## Запуск проекта
 
