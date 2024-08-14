@@ -196,7 +196,6 @@ class CommentHistoryItem(models.Model):
                                comment=instance, version=previous_version).save()
 
     def __str__(self):
-        print(self.created)
         return 'Версия комментария #{}'.format(self.version)
 
 
@@ -375,7 +374,6 @@ class UserNicknameHistoryItem(models.Model):
         if previous_instance is None:
             return
 
-        print(previous_instance.username, instance.username)
         if previous_instance.username != instance.username:
             UserNicknameHistoryItem.objects.create(user=instance, nickname=previous_instance.username)
 
