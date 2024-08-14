@@ -5,7 +5,7 @@
 {% block scripts %}
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
-{% block title %}Чемпионат | {{ league.title }}          cis-haxball.com {% endblock %}
+{% block title %}Чемпионат | {{ league.title }} — CIS-HAXBALL {% endblock %}
 {% block profile_of_user %}
     {% cache 900 champ_table league.id %}
 
