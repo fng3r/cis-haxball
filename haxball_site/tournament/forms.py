@@ -11,11 +11,9 @@ class FreeAgentForm(forms.ModelForm):
 
 
 class EditTeamProfileForm(forms.ModelForm):
-
-
     class Meta:
         model = Team
-        fields = ('color_1', 'color_2', 'short_title',)
+        fields = ('color_1', 'color_2')
         widgets = {
             'color_1': ColorWidget,
             'color_2': ColorWidget,
