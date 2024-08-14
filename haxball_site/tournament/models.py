@@ -4,10 +4,11 @@ from colorfield.fields import ColorField
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.db.models import CheckConstraint, Q, F
+from django.db.models import Q, F
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.functional import cached_property
 from model_utils import FieldTracker
 from smart_selects.db_fields import ChainedForeignKey
 
@@ -178,7 +179,18 @@ class Player(models.Model):
         (ASSISTENT, 'Ассистент')
     ]
 
-    role = models.CharField("Должность", max_length=2, choices=ROLES, default=JUST_PLAYER, )
+    role = models.CharField("Должность", max_length=2, choices=ROLES, default=JUST_PLAYER)
+
+    @receiver(post_save, sender=User)
+    def create_comment_history_item(sender, instance, created, **kwargs):
+        if not created:
+            player = Player.objects.filter(name=instance).first()
+            if not player:
+                return
+
+            if player.nickname != instance.username:
+                player.nickname = instance.username
+                player.save()
 
     def __str__(self):
         return '{}'.format(self.nickname)
