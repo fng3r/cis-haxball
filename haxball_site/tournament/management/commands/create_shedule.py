@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand
 from ...models import League, TourNumber, Match
 from ...templatetags.tournament_extras import sort_teams
 
+
 class Command(BaseCommand):
     help = 'The Zen of Python'
 
