@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'froala_editor',
     'ckeditor_uploader',
     'sorl.thumbnail',
+    'mathfilters'
 
 ]
 

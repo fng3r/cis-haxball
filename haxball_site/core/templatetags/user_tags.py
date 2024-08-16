@@ -68,7 +68,7 @@ def can_edit(comment):
 
 @register.filter
 def exceeds_edit_limit(comment):
-    return comment.version > settings.EDIT_COMMENT_LIMIT
+    return comment.number > settings.EDIT_COMMENT_LIMIT
 
 
 @register.inclusion_tag('core/include/profile/last_actuvity.html')

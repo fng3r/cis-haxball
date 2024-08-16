@@ -1184,3 +1184,11 @@ def ru_pluralize(value, variants):
         variant = 2
 
     return variants[variant]
+
+
+@register.filter
+def previous_rating_rank(team, previous_rating):
+    if team not in previous_rating:
+        return None
+
+    return previous_rating[team]

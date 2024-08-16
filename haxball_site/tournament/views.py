@@ -16,7 +16,7 @@ from django.views.generic import ListView, DetailView
 
 from .forms import FreeAgentForm, EditTeamProfileForm
 from .models import FreeAgent, Team, Match, League, Player, Substitution, Season, OtherEvents, Disqualification, \
-    Postponement, PlayerTransfer
+    Postponement, PlayerTransfer, TeamRating, RatingVersion
 from core.forms import NewCommentForm
 from core.models import NewComment, Profile
 
@@ -538,16 +538,27 @@ def teams_halloffame():
     }
 
 
-def team_rating(request):
-    t = Team.objects.all()
-    for s in t:
-        s.rating = 0
-        s.save(update_fields=['rating'])
-        print(s)
+class TeamRatingFilter(FilterSet):
+    version = ModelChoiceFilter(queryset=RatingVersion.objects.all())
 
-    seasons = Season.objects.filter(is_round_robin=True, is_active=False).order_by('number')[:2]
-    for s in seasons:
-        a = s.tournaments_in_season.filter(is_cup=False).first()
-        print(a)
+    class Meta:
+        model = TeamRating
+        fields = ['version']
 
-    return render(request, 'tournament/team_all_time_rating.html', {'teams': t, 'seas': seasons})
+
+class TeamRatingView(ListView):
+    queryset = TeamRating.objects.all()
+    context_object_name = 'team_rating'
+    template_name = 'tournament/team_rating.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        params = self.request.GET or {'version': 7}
+        context['filter'] = TeamRatingFilter(params, queryset=self.queryset)
+        current_version = int(params['version'])
+        previous_rating_version = TeamRating.objects.filter(version__number=current_version-1)
+        if previous_rating_version:
+            context['previous_rating'] = {item.team: item.rank
+                                          for item in previous_rating_version.all()}
+
+        return context
