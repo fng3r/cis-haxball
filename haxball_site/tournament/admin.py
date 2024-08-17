@@ -292,7 +292,7 @@ class MatchTourAdmin(admin.ModelAdmin):
 
 @admin.register(SeasonTeamRating)
 class SeasonTeamRatingAdmin(admin.ModelAdmin):
-    list_display = ('season', 'team', 'points_for_matches')
+    list_display = ('season', 'team', 'points_for_matches', 'points_for_result', 'total_points')
     list_filter = ('season', 'team')
 
 

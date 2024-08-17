@@ -621,7 +621,7 @@ class TeamRatingLeagueWeight(models.Model):
 
 
 class SeasonTeamRating(models.Model):
-    season = models.ForeignKey(Season, verbose_name='Турнир', on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, verbose_name='Сезон', on_delete=models.CASCADE)
     team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.CASCADE)
     points_for_matches = models.FloatField(verbose_name='Очки за матчи')
     points_for_result = models.FloatField(verbose_name='Очки за итоговый результат', default=0)

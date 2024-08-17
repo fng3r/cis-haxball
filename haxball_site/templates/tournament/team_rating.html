@@ -32,9 +32,9 @@
                             <th scope="col">Итого</th>
                         </tr>
                     </thead>
-                    <tbody class="">
+                    <tbody>
                     {% for rating_entry in filter.qs %}
-                        <tr class="">
+                        <tr>
                             <td class="rating-row pr-1 border-right">
                                 <div>
                                     <span style="font-size: 18px">
@@ -78,7 +78,7 @@
                                 <td class="rating-row border-right">
                                     <div>
                                         {% get_season_rating rating_entry.team season seasons_rating as season_rating %}
-                                        {% if season_rating %}
+                                        {% if season_rating is not None %}
                                             <span>{{season_rating|floatformat:2}}</span>
                                         {% else %}
                                             <span>—</span>
