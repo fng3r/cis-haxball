@@ -62,6 +62,7 @@ class FreeAgent(models.Model):
 
 class Season(models.Model):
     title = models.CharField('Название Розыгрыша', max_length=128)
+    short_title = models.CharField('Короткое название', max_length=15, null=True, blank=True)
     number = models.SmallIntegerField('Номер сезона')
     is_active = models.BooleanField('Текущий')
     created = models.DateTimeField('Создана', auto_now_add=True)

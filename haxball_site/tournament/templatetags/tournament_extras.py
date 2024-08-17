@@ -1192,3 +1192,16 @@ def previous_rating_rank(team, previous_rating):
         return None
 
     return previous_rating[team]
+
+
+@register.simple_tag
+def get_season_rating(team, season, seasons_rating):
+    if team not in seasons_rating[season]:
+        return None
+
+    return seasons_rating[season][team]
+
+
+@register.filter
+def get_season_weight(season, seasons_weights):
+    return seasons_weights[season]

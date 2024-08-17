@@ -2,6 +2,7 @@ import operator
 from collections import defaultdict
 from datetime import datetime, time, timedelta
 from functools import reduce
+from itertools import groupby
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -16,7 +17,7 @@ from django.views.generic import ListView, DetailView
 
 from .forms import FreeAgentForm, EditTeamProfileForm
 from .models import FreeAgent, Team, Match, League, Player, Substitution, Season, OtherEvents, Disqualification, \
-    Postponement, PlayerTransfer, TeamRating, RatingVersion
+    Postponement, PlayerTransfer, TeamRating, RatingVersion, SeasonTeamRating
 from core.forms import NewCommentForm
 from core.models import NewComment, Profile
 
@@ -550,15 +551,68 @@ class TeamRatingView(ListView):
     queryset = TeamRating.objects.all()
     context_object_name = 'team_rating'
     template_name = 'tournament/team_rating.html'
+    latest_rating_version = RatingVersion.objects.order_by('-number').first()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        params = self.request.GET or {'version': 7}
+        params = self.request.GET or {'version': self.latest_rating_version.number}
         context['filter'] = TeamRatingFilter(params, queryset=self.queryset)
-        current_version = int(params['version'])
-        previous_rating_version = TeamRating.objects.filter(version__number=current_version-1)
+        selected_version = int(params['version'])
+        source_season = RatingVersion.objects.get(number=selected_version).related_season
+        previous_seasons = Season.objects \
+            .filter(number__lt=source_season.number, number__gt=5, title__contains='ЧР') \
+            .order_by('-number')
+        earliest_season_taken_into_account = None
+        if previous_seasons.count() > 0:
+            earliest_season_taken_into_account = list(previous_seasons[:5])[-1]
+
+        seasons_weights = self.get_seasons_weights(source_season, earliest_season_taken_into_account)
+        seasons = list(sorted(seasons_weights, key=lambda s: s.number))
+        weighted_seasons_rating = self.get_weighted_seasons_rating(seasons, seasons_weights)
+        context['seasons_rating'] = weighted_seasons_rating
+        context['seasons_weights'] = seasons_weights
+
+        previous_rating_version = TeamRating.objects.filter(version__number=selected_version-1)
         if previous_rating_version:
             context['previous_rating'] = {item.team: item.rank
                                           for item in previous_rating_version.all()}
 
+        print(seasons_weights)
+        print(weighted_seasons_rating)
+
         return context
+
+    @staticmethod
+    def get_seasons_weights(source_season, earliest_season):
+        weights = [1, 1, 1, 0.9, 0.8, 0.7]
+        season_weights = {source_season: 1}
+        season_count = 1
+        if earliest_season:
+            previous_seasons = Season.objects \
+                .filter(number__gte=earliest_season.number, number__lt=source_season.number) \
+                .order_by('-number')
+            for season in previous_seasons:
+                if season.title.startswith('ЧР'):
+                    season_weights[season] = weights[season_count]
+                    if season.bound_season:
+                        season_weights[season.bound_season] = weights[season_count]
+                    season_count += 1
+
+        return season_weights
+
+    @staticmethod
+    def get_weighted_seasons_rating(seasons, seasons_weights):
+        weighted_seasons_rating = {}
+        seasons_rating = SeasonTeamRating.objects \
+            .filter(season__in=seasons) \
+            .order_by('season__number')
+        for rating_entry in seasons_rating:
+            season = rating_entry.season
+            season_weight = seasons_weights[season]
+            team = rating_entry.team
+            if season not in weighted_seasons_rating:
+                weighted_seasons_rating[season] = {}
+            if team not in weighted_seasons_rating[season]:
+                weighted_seasons_rating[season][team] = round(rating_entry.total_points() * season_weight, 2)
+
+        return weighted_seasons_rating

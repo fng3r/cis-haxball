@@ -74,7 +74,7 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Season)
 class SeasonAdmin(admin.ModelAdmin):
-    list_display = ('number', 'title', 'is_active', 'created')
+    list_display = ('number', 'title', 'short_title', 'is_active', 'created')
 
 
 @admin.register(Nation)

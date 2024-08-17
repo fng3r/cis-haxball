@@ -10,7 +10,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'tournament/team_rating/team_rating.css' %}">
 
     <div class="card mb-2 mt-2" style="border-radius: 10px">
-        <h2 class="text-center my-2">
+        <h2 class="text-center mt-2 mb-4">
             <i class="fa fa-star text-warning" aria-hidden="true"></i> Рейтинг команд
         </h2>
         <div class="container-fluid p-0 mx-0">
@@ -20,17 +20,22 @@
             </form>
             <div class="table-fix table-responsive">
                 <table class="table table-hover" style="max-width: 100%">
-                    <thead class="thead-dark py-2 text-left">
-                    <tr>
-                        <th scope="col" class="border-right" width="12%">Место</th>
-                        <th scope="col" class="border-right" width="40%">Команда</th>
-                        <th scope="col">Кол-во очков</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for rating_entry in filter.qs %}
+                    <thead class="thead-dark py-2">
                         <tr>
-                            <td class="team-rating-row pr-1 border-right">
+                            <th scope="col" class="border-right" width="11%">Место</th>
+                            <th scope="col" class="border-right">Команда</th>
+                            {% for season in seasons_rating %}
+                                <th scope="col" class="border-right">
+                                    {{season.short_title}} (коэф. {{season|get_season_weight:seasons_weights}})
+                                </th>
+                            {% endfor %}
+                            <th scope="col">Итого</th>
+                        </tr>
+                    </thead>
+                    <tbody class="">
+                    {% for rating_entry in filter.qs %}
+                        <tr class="">
+                            <td class="rating-row pr-1 border-right">
                                 <div>
                                     <span style="font-size: 18px">
                                         {{rating_entry.rank}}&nbsp;&nbsp;
@@ -48,7 +53,7 @@
                                                     <img src="{% static 'img/ico/rating/dash.png' %}" width=20 height=20>
                                                 {% endif %}
                                             {% else %}
-                                                <img src="{% static 'img/ico/rating/new.png' %}" width=24 height=24>
+                                                <img src="{% static 'img/ico/rating/new.png' %}" width=25 height=25>
                                             {% endif %}
                                             {% endwith %}
                                             {% endwith %}
@@ -57,7 +62,7 @@
                                 </div>
                             </td>
 
-                            <td class="team-rating-row pr-1 border-right">
+                            <td class="rating-row pr-1 border-right">
                                 <div class="media pt-1">
                                     <img src="{{ rating_entry.team.logo.url }}" class="align-self-start mr-1"
                                          alt="{{ rating_entry.team.title }}" width="24">
@@ -69,9 +74,22 @@
                                 </div>
                             </td>
 
-                            <td class="team-rating-row">
+                            {% for season in seasons_rating %}
+                                <td class="rating-row border-right">
+                                    <div>
+                                        {% get_season_rating rating_entry.team season seasons_rating as season_rating %}
+                                        {% if season_rating %}
+                                            <span>{{season_rating|floatformat:2}}</span>
+                                        {% else %}
+                                            <span>—</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            {% endfor %}
+
+                            <td class="rating-row">
                                 <div>
-                                    <span>{{rating_entry.total_points|floatformat:2}}</span>
+                                    <span style="font-weight: 700">{{rating_entry.total_points|floatformat:2}}</span>
                                 </div>
                             </td>
                         </tr>
