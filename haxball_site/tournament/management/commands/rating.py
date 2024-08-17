@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
         source_season_number = 6
         version = 1
-        while source_season_number < 15:
+        while source_season_number < 16:
             season_count = 0
             source_season = Season.objects.get(number=source_season_number)
             if not source_season.title.startswith('ЧР'):

@@ -539,7 +539,7 @@ def teams_halloffame():
 
 
 class TeamRatingFilter(FilterSet):
-    version = ModelChoiceFilter(queryset=RatingVersion.objects.all())
+    version = ModelChoiceFilter(queryset=RatingVersion.objects.all(), empty_label=None)
 
     class Meta:
         model = TeamRating
