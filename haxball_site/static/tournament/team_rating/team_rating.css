@@ -1,5 +1,13 @@
+.tab-content > .active {
+    height: 755px;
+}
+
+.tab-content > #ref-info-tab-content {
+    overflow-y: scroll;
+}
+
 .table-fix {
-    height: 720px;
+    height: 710px;
 }
 
 .table-fix tr th:nth-child(-n+1) {

@@ -640,7 +640,7 @@ class RatingVersion(models.Model):
     related_season = models.OneToOneField(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
 
     def __str__(self):
-        return 'Рейтинг от {} ({})'.format(self.date.strftime('%d.%m.%y'), self.related_season)
+        return 'Рейтинг на {} ({})'.format(self.date.strftime('%d.%m.%y'), self.related_season.short_title)
 
     class Meta:
         ordering = ['-number']
