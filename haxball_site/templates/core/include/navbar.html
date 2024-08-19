@@ -103,23 +103,21 @@
             </li>
 
             <li class="nav-item font-weight-bold dropdown mx-1 text-right">
-                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
-                    Архив
-                </a>
+                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Архив</a>
                 <div class="dropdown-menu">
                     <a class="dropdown-item" href="{% url 'core:post_detail' '46' 'season_1' %}">ЧР #1</a>
                     <a class="dropdown-item" href="{% url 'core:post_detail' '47' 'season_2' %}">ЧР #2</a>
                     <a class="dropdown-item" href="{% url 'core:post_detail' '48' 'season_3' %}">ЧР #3</a>
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">ЛЧ
-                        #1</a>
-
+                    <a class="dropdown-item" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">ЛЧ #1</a>
                     <a class="dropdown-item" href="{% url 'core:post_detail' '49' 'season_4' %}">ЧР #4</a>
+
                     <a class="dropdown-item submenu" href="#">ЧР #5</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{% url 'tournament:league' 's5-premier_league' %}">Единая
                             лига</a>
                         <a class="dropdown-item" href="{% url 'tournament:league' 's5-cup' %}">Кубок России</a>
                     </div>
+
                     <a class="dropdown-item submenu" href="#">ЛЧ #2</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{% url 'tournament:league' 'lch2-group-a' %}">Группа А</a>
@@ -151,48 +149,49 @@
                         <a class="dropdown-item" href="{% url 'tournament:league' 'lch3-group-d' %}">Группа D</a>
                         <a class="dropdown-item" href="{% url 'tournament:league' 'lch3-play-off' %}">Плей-офф</a>
                     </div>
+
                     <a class="dropdown-item submenu" href="#">ЧР #8</a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-premier-league' %}">Высшая
-                            лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-first_sharks' %}">Первая лига –
-                            дивизион Акул</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-first_berkuts' %}">Первая лига –
-                            дивизион Беркутов</a>
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-premier-league' %}">Высшая лига</a>
+
+                        <a class="dropdown-item submenu" href="#">Первая лига</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-first_sharks' %}">Дивизион Акул</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-first_berkuts' %}">Дивизион Беркутов</a>
+                        </div>
+
+                        <a class="dropdown-item submenu" href="#">Кубок Первой лиги</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-A' %}">Группа А</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-B' %}">Группа B</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-C' %}">Группа C</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-D' %}">Группа D</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-play-off' %}">Плей-офф</a>
+                        </div>
+
                         <a class="dropdown-item" href="{% url 'tournament:league' 's8-cup' %}">Кубок России</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-A' %}">Кубок Лиги
-                            группа А</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-B' %}">Кубок Лиги
-                            группа B</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-C' %}">Кубок Лиги
-                            группа C</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-group-D' %}">Кубок Лиги
-                            группа D</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup-play-off' %}">Кубок
-                            Лиги плей-офф</a>
                     </div>
 
                     <a class="dropdown-item submenu" href="#">ЧР #9</a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-premier-league' %}">Высшая
-                            лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-Volga' %}">Первая лига -
-                            Дивизион
-                            Волги</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-Kama' %}">Первая лига -
-                            Дивизион
-                            Камы</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-cup' %}"> Кубок России</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-A' %}">Кубок первой лиги - группа
-                            А</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-B' %}">Кубок первой лиги - группа
-                            B</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-C' %}">Кубок первой лиги - группа
-                            С</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-D' %}">Кубок первой лиги - группа
-                            D</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-play-off' %}">Кубок первой лиги - плей-офф</a>
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-premier-league' %}">Высшая лига</a>
 
+                        <a class="dropdown-item submenu" href="#">Первая лига</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-Volga' %}">Дивизион Волги</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-Kama' %}">Дивизион Камы</a>
+                        </div>
+
+                        <a class="dropdown-item submenu" href="#">Кубок Первой лиги</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-A' %}">Группа А</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-B' %}">Группа B</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-C' %}">Группа С</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-group-D' %}">Группа D</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-play-off' %}">Плей-офф</a>
+                        </div>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-cup' %}"> Кубок России</a>
                     </div>
 
                     <a class="dropdown-item submenu" href="#">ЧР #10</a>
@@ -205,17 +204,51 @@
                     <a class="dropdown-item submenu" href="#">ЧР #11</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{% url 'tournament:league' 's11-premier-league' %}">Высшая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-Nadezhda' %}">Первая лига - дивизион Надежды
-                        </a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-Vera' %}">Первая лига - дивизион Веры
-                        </a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 'play-offpl' %}">Первая лига - плей-офф
-                        </a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 'superfinalpl' %}">Первая лига - суперфинал
-                        </a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 'kubokchr11' %}">Кубок России
-                        </a>
 
+                        <a class="dropdown-item submenu" href="#">Первая лига</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-Nadezhda' %}">Дивизион Надежды</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-Vera' %}">Дивизион Веры</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 'play-offpl' %}">Плей-офф</a>
+                            <a class="dropdown-item" href="{% url 'tournament:league' 'superfinalpl' %}">Суперфинал</a>
+                        </div>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 'kubokchr11' %}">Кубок России</a>
+                    </div>
+
+                    <a class="dropdown-item submenu" href="#">ЧР #12</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's12-premier-league' %}">Высшая лига</a>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's12-first-division' %}">Первая лига</a>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's12-second-division' %}">Вторая лига</a>
+
+                        <a class="dropdown-item submenu" href="#">Кубок лиги</a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item submenu" href="#">Высшая лига</a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-pl-a' %}">Группа A</a>
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-pl-b' %}">Группа B</a>
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-pl-playoff' %}">Плей-офф</a>
+                            </div>
+
+                            <a class="dropdown-item submenu" href="#">Первая лига</a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-fl-a' %}">Группа A</a>
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-fl-b' %}">Группа B</a>
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-fl-playoff' %}">Плей-офф</a>
+                            </div>
+
+                            <a class="dropdown-item submenu" href="#">Вторая лига</a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-sl-a' %}">Группа A</a>
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-sl-b' %}">Группа B</a>
+                                <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-sl-playoff' %}">Плей-офф</a>
+                            </div>
+                        </div>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 'kubokchr12' %}">Кубок России</a>
                     </div>
                 </div>
             </li>
