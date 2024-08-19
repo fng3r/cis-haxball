@@ -5,7 +5,7 @@ from django.urls import resolve
 
 from .models import FreeAgent, Player, League, Team, Match, Goal, OtherEvents, Substitution, Season, PlayerTransfer, \
     TourNumber, Nation, Achievements, TeamAchievement, AchievementCategory, Disqualification, Postponement, \
-    PostponementSlots
+    PostponementSlots, SeasonTeamRating, RatingVersion, TeamRating
 
 
 @admin.register(FreeAgent)
@@ -74,7 +74,7 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Season)
 class SeasonAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_active', 'created')
+    list_display = ('number', 'title', 'short_title', 'is_active', 'created')
 
 
 @admin.register(Nation)
@@ -289,3 +289,19 @@ class MatchTourAdmin(admin.ModelAdmin):
     is_actual.short_description = 'Актуальный'
     is_actual.boolean = True
 
+
+@admin.register(SeasonTeamRating)
+class SeasonTeamRatingAdmin(admin.ModelAdmin):
+    list_display = ('season', 'team', 'points_for_matches', 'points_for_result', 'total_points')
+    list_filter = ('season', 'team')
+
+
+@admin.register(RatingVersion)
+class RatingVersionAdmin(admin.ModelAdmin):
+    list_display = ('number', 'date', 'related_season')
+
+
+@admin.register(TeamRating)
+class TeamRatingAdmin(admin.ModelAdmin):
+    list_display = ('version', 'rank', 'team', 'total_points')
+    list_filter = ('version', 'team')

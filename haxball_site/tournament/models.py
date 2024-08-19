@@ -62,17 +62,21 @@ class FreeAgent(models.Model):
 
 class Season(models.Model):
     title = models.CharField('Название Розыгрыша', max_length=128)
+    short_title = models.CharField('Короткое название', max_length=15, null=True, blank=True)
     number = models.SmallIntegerField('Номер сезона')
     is_active = models.BooleanField('Текущий')
     created = models.DateTimeField('Создана', auto_now_add=True)
     is_round_robin = models.BooleanField('Круговой розыгрыш',
                                          help_text='Галочка, если обычный ЧР, если нету - ЛЧ или иже с ним',
                                          default=True)
+    bound_season = models.ForeignKey('self', verbose_name='Связанный сезон',
+                                     null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.title
 
     class Meta:
+        ordering = ['-number']
         verbose_name = 'Сезон'
         verbose_name_plural = 'Сезоны'
 
@@ -117,7 +121,7 @@ class League(models.Model):
                                         blank=True)
     slug = models.SlugField(max_length=250)
     created = models.DateTimeField('Создана', auto_now_add=True)
-    teams = models.ManyToManyField(Team, related_name='leagues', related_query_name="leagues", verbose_name='Команды в лиге')
+    teams = models.ManyToManyField(Team, related_name='leagues', related_query_name='leagues', verbose_name='Команды в лиге')
     comments = GenericRelation(NewComment, related_query_name='league_comments')
     commentable = models.BooleanField("Комментируемый турнир", default=True)
 
@@ -602,3 +606,55 @@ class TeamAchievement(models.Model):
         ordering = ['season__number', 'position_number']
         verbose_name = 'Медалька (командная)'
         verbose_name_plural = 'Медальки (командные)'
+
+
+class TeamRatingLeagueWeight(models.Model):
+    league = models.OneToOneField(League, verbose_name='Турнир', on_delete=models.CASCADE)
+    weight = models.FloatField(verbose_name='Вес турнира')
+
+    def __str__(self):
+        return '{} ({})'.format(self.league, self.weight)
+
+    class Meta:
+        verbose_name = 'Коэффицент лиги в рейтинге'
+        verbose_name_plural = 'Коэффиценты лиг в рейтинге'
+
+
+class SeasonTeamRating(models.Model):
+    season = models.ForeignKey(Season, verbose_name='Сезон', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.CASCADE)
+    points_for_matches = models.FloatField(verbose_name='Очки за матчи')
+    points_for_result = models.FloatField(verbose_name='Очки за итоговый результат', default=0)
+
+    def total_points(self):
+        return self.points_for_matches + self.points_for_result
+
+    class Meta:
+        verbose_name = 'Сезонный рейтинг команды'
+        verbose_name_plural = 'Сезонный рейтинг команд'
+
+
+class RatingVersion(models.Model):
+    number = models.PositiveSmallIntegerField(verbose_name='Версия', primary_key=True)
+    date = models.DateField(verbose_name='Дата')
+    related_season = models.OneToOneField(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return 'Рейтинг на {} ({})'.format(self.date.strftime('%d.%m.%y'), self.related_season.short_title)
+
+    class Meta:
+        ordering = ['-number']
+        verbose_name = 'Версия рейтинга'
+        verbose_name_plural = 'Версии рейтинга'
+
+
+class TeamRating(models.Model):
+    version = models.ForeignKey(RatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.CASCADE)
+    rank = models.PositiveSmallIntegerField(verbose_name='Место в рейтинге')
+    total_points = models.FloatField(verbose_name='Общее количество очков')
+
+    class Meta:
+        ordering = ['-version__number', 'rank']
+        verbose_name = 'Командный рейтинг'
+        verbose_name_plural = 'Командный рейтинг'

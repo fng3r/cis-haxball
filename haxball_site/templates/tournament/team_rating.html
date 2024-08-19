@@ -1,0 +1,189 @@
+{% extends "core/home.html" %}
+{% load static %}
+{% load mathfilters %}
+{% load tournament_extras %}
+
+
+{% block title %}Чемпионат | Рейтинг команд — CIS-HAXBALL{% endblock %}
+
+{% block profile_of_user %}
+    <link rel="stylesheet" type="text/css" href="{% static 'tournament/team_rating/team_rating.css' %}">
+
+    <div class="card my-2" style="border-radius: 10px">
+
+        <h2 class="text-center mt-2 mb-3">
+            <i class="fa fa-star text-warning" aria-hidden="true"></i> Рейтинг команд
+        </h2>
+
+        <div>
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="rating-tab" data-toggle="tab" href="#rating-tab-content" role="tab"
+                       aria-controls="rating-tab" aria-selected="false">Рейтинг</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" id="ref-info-tab" data-toggle="tab" href="#ref-info-tab-content" role="tab"
+                       aria-controls="ref-info-tab" aria-selected="true">
+                        Справка <i class="fa fa-info-circle" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content mt-2" id="tabs-content">
+            <div class="tab-pane fade show active" id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
+
+                <div class="container-fluid p-0 mx-0">
+                    <form method="get" class="mt-1 ml-1">
+                        {{ filter.form }}
+                        <button style="visibility: none;">Применить фильтр</button>
+                    </form>
+                    <div class="table-fix table-responsive">
+                        <table class="table table-hover" style="max-width: 100%">
+                            <thead class="thead-dark py-2">
+                                <tr>
+                                    <th scope="col" class="border-right" width="11%">Место</th>
+                                    <th scope="col" class="border-right">Команда</th>
+                                    {% for season in seasons_rating %}
+                                        <th scope="col" class="border-right">
+                                            {{season.short_title}} (коэф. {{season|get_season_weight:seasons_weights}})
+                                        </th>
+                                    {% endfor %}
+                                    <th scope="col">Итого</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for rating_entry in filter.qs %}
+                                <tr>
+                                    <td class="rating-row pr-1 border-right">
+                                        <div>
+                                            <span style="font-size: 18px">
+                                                {{rating_entry.rank}}&nbsp;&nbsp;
+                                                {% if previous_rating %}
+                                                    {% with previous_rank=rating_entry.team|previous_rating_rank:previous_rating %}
+                                                    {% with rank_diff=previous_rank|sub:rating_entry.rank %}
+                                                    {% if previous_rank %}
+                                                        {% if rank_diff > 0 %}
+                                                            <img src="{% static 'img/ico/rating/arrow-up.png' %}" width=18 height=18>
+                                                            &nbsp;{{rank_diff}}
+                                                        {% elif rank_diff < 0 %}
+                                                            <img src="{% static 'img/ico/rating/arrow-down.png' %}" width=18 height=18>
+                                                            &nbsp;{{rank_diff|abs}}
+                                                        {% else %}
+                                                            <img src="{% static 'img/ico/rating/dash.png' %}" width=20 height=20>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <img src="{% static 'img/ico/rating/new.png' %}" width=25 height=25>
+                                                    {% endif %}
+                                                    {% endwith %}
+                                                    {% endwith %}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td class="rating-row pr-1 border-right">
+                                        <div class="media pt-1">
+                                            <img src="{{ rating_entry.team.logo.url }}" class="align-self-start mr-1"
+                                                 alt="{{ rating_entry.team.title }}" width="24">
+                                            <div class="media-body">
+                                                <h6 class="mt-0" style="font-size: 20px">
+                                                    <a href="{{ rating_entry.team.get_absolute_url }}">{{ rating_entry.team.title }}</a>
+                                                </h6>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    {% for season in seasons_rating %}
+                                        <td class="rating-row border-right">
+                                            <div>
+                                                {% get_season_rating rating_entry.team season seasons_rating as season_rating %}
+                                                {% if season_rating is not None %}
+                                                    <span>{{season_rating|floatformat:2}}</span>
+                                                {% else %}
+                                                    <span>—</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    {% endfor %}
+
+                                    <td class="rating-row">
+                                        <div>
+                                            <span style="font-weight: 700">{{rating_entry.total_points|floatformat:2}}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="tab-pane fade" id="ref-info-tab-content" role="tabpanel" aria-labelledby="ref-info-tab">
+                <div class="mx-3 mt-1">
+                    <p>
+                        Рейтинг рассчитывается следующим образом:
+                    </p>
+                    <ul>
+                        <li>Итоговое место команды рейтинге формируется в зависимости от количества набранных очков;</li>
+                        <li>
+                            Промежуток времени, который учитывается при формирование рейтинга - 3 года (6 сезонов с последнего завершенного).<br />
+                            При этом учитываются только те сезоны, что проводились на сайте (начиная с 5-го сезона);
+                        </li>
+                        <li>
+                            Общее количество очков, полученное командой за расчетный период, равняется взвешенной сумме очков за каждый из сезонов.<br />
+                            Веса распределяются следующим образом:
+                            <ol>
+                                <li>Последний проведенный сезон S<sub>n</sub> - 1;</li>
+                                <li>S<sub>n-1</sub> - 1;</li>
+                                <li>S<sub>n-2</sub> - 1;</li>
+                                <li>S<sub>n-3</sub> - 0.9;</li>
+                                <li>S<sub>n-4</sub> - 0.8;</li>
+                                <li>S<sub>n-5</sub> - 0.7;</li>
+                            </ol>
+                            Прим. Лига Чемпионов не считается отдельным сезоном и учитывается с весом того сезона, вместе с которым она проводилась (ЛЧ#2 - ЧР#6, ЧР#7 - ЛЧ#3);
+                        </li>
+                    </ul>
+
+                    <p>
+                        Количество очков, набранное командой в конкретном сезоне, является суммой очков, набранных в каждом из турниров данного сезона.<br />
+                        Сумма очков, добытых в каждом из турниров, складывается из двух компонентов: очки за результат в матче и очки за результат во всем турнире.
+                    </p>
+                    <p class="pl-1">
+                        1) За победу в матче начисляется 1 очко, за ничью - 0.5;<br />
+                        2) За достигнутый в турнире результат очки начисляются согласно следующим правилам:
+                    </p>
+                    <ul>
+                        <li>
+                            <span>Победитель ВЛ/ПЛ/2Л - 5 баллов, 2 место - 3б., 3 место - 2б.</span><br />
+                            <span class="pl-3">- Для 8-го и 9-го сезона победитель каждого из дивизионов ПЛ получает 3.5 б., 2 место - 1.5 б.</span><br />
+                            <span class="pl-3">- В 10-м сезоне баллы распределяются согласно итогам Суперфинала и плей-офф ПЛ</span>
+                        </li>
+                        <li>Победитель КР/ЛЧ - 5 баллов, финалист - 3б., полуфиналист либо победитель матча за 3-е место - 1б.</li>
+                        <li>Победитель КВЛ/КПЛ/К2Л - 3 балла, финалист - 2б., полуфиналист - 1б.</li>
+                    </ul>
+
+                    <p>
+                        Каждый турнир имеет коэффициент, на который умножается количество очков, полученное командой за выступление в данном первенстве. Далее представлены коэффициенты для каждого турнира:
+                    </p>
+                    <ul>
+                        <li>Высшая (Единая) лига, Кубок Высшей лиги - 1;</li>
+                        <li>Кубок России, Лига Чемпионов - 0.75;</li>
+                        <li>Первая лига, Кубок Первой лиги - 0.5;</li>
+                        <li>Вторая лига, Кубок Второй лиги - 0.25;</li>
+                    </ul>
+
+                    <p>
+                        Очередная версия рейтинга будет выходить каждые полгода по завершении соответствующего сезона.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+{% endblock %}

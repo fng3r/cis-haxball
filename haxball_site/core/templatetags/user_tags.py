@@ -62,12 +62,12 @@ def age(born_date):
 
 
 @register.filter
-def can_edit(comment):
+def can_edit(comment: NewComment):
     return timezone.now() - comment.created < timezone.timedelta(minutes=settings.EDIT_COMMENT_TIME_LIMIT)
 
 
 @register.filter
-def exceeds_edit_limit(comment):
+def exceeds_edit_limit(comment: NewComment):
     return comment.version > settings.EDIT_COMMENT_LIMIT
 
 

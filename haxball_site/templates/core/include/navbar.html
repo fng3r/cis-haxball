@@ -94,46 +94,14 @@
                 </div>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold mx-1 text-right" href="{% url 'core:tournaments' %}">Турниры</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold mx-1 text-right" href="{% url 'core:fastcups' %}">Фасткапы</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold mx-1 text-right text-success"
-                   href="{% url 'core:forum_category' 'guides' %}">Гайды</a>
-            </li>
-            <li class="nav-item font-weight-bold dropdown mx-1 text-right">
-                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Медиа</a>
+            <li class="nav-item dropdown font-weight-bold mx-1 text-right">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Турниры</a>
                 <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{% url 'core:lives' %}">Трансляции</a>
-                    <a class="dropdown-item submenu" href="#">Соцсети</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="https://discord.gg/h6mgc4bTJh">
-                            <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
-                        </a>
-                        <a class="dropdown-item" href="https://www.youtube.com/@cis-haxball">
-                            <img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> YouTube
-                        </a>
-                        <a class="dropdown-item" href="https://www.twitch.tv/cis_haxball">
-                            <img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> Twitch
-                        </a>
-                        <a class="dropdown-item" href="https://t.me/+GRxpyqeJKosxODQy">
-                            <img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> Telegram
-                        </a>
-                        <a class="dropdown-item" href="https://www.tiktok.com/@cishaxball3">
-                            <img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> TikTok
-                        </a>
-                        <a class="dropdown-item" href="https://vk.com/haxball_ru">
-                            <img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK
-                        </a>
-                        <a class="dropdown-item" href="https://discord.gg/h6mgc4bTJh">
-                            <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
-                        </a>
-                    </div>
-                    <div class="dropdown-menu">
+                    <a class="dropdown-item" href="{% url 'core:fastcups' %}">Фасткапы</a>
+                    <a class="dropdown-item" href="{% url 'core:tournaments' %}">Прочие турниры</a>
+                </div>
             </li>
+
             <li class="nav-item font-weight-bold dropdown mx-1 text-right">
                 <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
                     Архив
@@ -225,17 +193,13 @@
                             D</a>
                         <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-cup-play-off' %}">Кубок первой лиги - плей-офф</a>
 
-
-
                     </div>
 
                     <a class="dropdown-item submenu" href="#">ЧР #10</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{% url 'tournament:league' 's10-premier-league' %}">Высшая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's10-first_division' %}">Первая лига
-                            </a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's10-cup' %}">Кубок России
-                            </a>
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's10-first_division' %}">Первая лига</a>
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's10-cup' %}">Кубок России</a>
                     </div>
 
                     <a class="dropdown-item submenu" href="#">ЧР #11</a>
@@ -256,14 +220,57 @@
                 </div>
             </li>
 
+            <li class="nav-item dropdown font-weight-bold mx-1 text-right">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Рейтинг</a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="{% url 'tournament:team_rating' %}">Рейтинг команд</a>
+                    <a class="dropdown-item" href="{% url 'core:post_detail' '881' 'player-rating' %}">Рейтинг игроков</a>
+                </div>
+            </li>
 
             <li class="nav-item">
                 <a class="nav-link font-weight-bold text-warning mx-1 text-right"
                    href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
             </li>
 
+            <li class="nav-item font-weight-bold dropdown mx-1 text-right">
+                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Медиа</a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="{% url 'core:lives' %}">Трансляции</a>
+                    <a class="dropdown-item submenu" href="#">Соцсети</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="https://discord.gg/h6mgc4bTJh">
+                            <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
+                        </a>
+                        <a class="dropdown-item" href="https://www.youtube.com/@cis-haxball">
+                            <img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> YouTube
+                        </a>
+                        <a class="dropdown-item" href="https://www.twitch.tv/cis_haxball">
+                            <img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> Twitch
+                        </a>
+                        <a class="dropdown-item" href="https://t.me/+GRxpyqeJKosxODQy">
+                            <img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> Telegram
+                        </a>
+                        <a class="dropdown-item" href="https://www.tiktok.com/@cishaxball3">
+                            <img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> TikTok
+                        </a>
+                        <a class="dropdown-item" href="https://vk.com/haxball_ru">
+                            <img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK
+                        </a>
+                        <a class="dropdown-item" href="https://discord.gg/h6mgc4bTJh">
+                            <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
+                        </a>
+                    </div>
+                </div>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link font-weight-bold mx-1 text-right" href="{% url 'core:forum' %}">Форум</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link font-weight-bold mx-1 text-right text-success"
+                   href="{% url 'core:forum_category' 'guides' %}">Гайды</a>
             </li>
 
             <li class="nav-item">
