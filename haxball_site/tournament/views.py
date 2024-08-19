@@ -24,16 +24,38 @@ from core.models import NewComment, Profile
 from .templatetags.tournament_extras import get_user_teams
 
 
-class DisqualificationFilter(FilterSet):
-    team = ModelChoiceFilter(queryset=Team.objects.filter(leagues__championship__is_active=True).distinct())
+class DefaultFilterSet(FilterSet):
+
+    def __init__(self, data=None, *args, **kwargs):
+        # if filterset is bound, use initial values as defaults
+        if data is not None:
+            # get a mutable copy of the QueryDict
+            data = data.copy()
+
+            for name, f in self.base_filters.items():
+                initial = f.extra.get('initial')
+
+                # filter param is either missing or empty, use initial as default
+                if not data.get(name) and initial:
+                    data[name] = initial
+
+        super().__init__(data, *args, **kwargs)
+
+
+class DisqualificationFilter(DefaultFilterSet):
+    season = ModelChoiceFilter(field_name='match__league__championship', label='Сезон', empty_label=None,
+                               queryset=Season.objects.filter(number__gt=14).order_by('-number'),
+                               initial=Season.objects.order_by('-number').first())
+    team = ModelChoiceFilter(queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
+    player = ModelChoiceFilter(queryset=Player.objects.all())
 
     class Meta:
         model = Disqualification
-        fields = ['team']
+        fields = ['season', 'team']
 
 
 class DisqualificationsList(ListView):
-    queryset = Disqualification.objects.filter(match__league__championship__is_active=True).order_by('-created')
+    queryset = Disqualification.objects.filter(match__league__championship__number__gt=14).order_by('-created')
     context_object_name = 'disqualifications'
     template_name = 'tournament/disqualification/disqualifications_list.html'
 
@@ -312,16 +334,17 @@ class LeagueByTitleFilter(FilterSet):
         ('Высшая лига', 'Высшая лига'),
         ('Первая лига', 'Первая лига'),
         ('Вторая лига', 'Вторая лига'),
-        ('Кубок Высшей лиги', 'Кубок Высшей лиги'),
-        ('Кубок Первой лиги', 'Кубок Первой лиги'),
-        ('Кубок Второй лиги', 'Кубок Второй лиги'),
+        ('Кубок Высшей лиги – Группа', 'Кубок Высшей лиги'),
+        ('Кубок Первой лиги – Группа', 'Кубок Первой лиги'),
+        ('Кубок Второй лиги – Группа', 'Кубок Второй лиги'),
     )
 
-    title = ChoiceFilter(choices=CHOICES, lookup_expr='icontains', label='Турнир', empty_label=None)
+    tournament = ChoiceFilter(field_name='title', label='Турнир', empty_label=None,
+                              choices=CHOICES, lookup_expr='icontains')
 
     class Meta:
         model = League
-        fields = ['title']
+        fields = ['tournament']
 
 
 class PostponementsList(ListView):
@@ -333,7 +356,7 @@ class PostponementsList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        filter = LeagueByTitleFilter(self.request.GET or {'title': 'Высшая лига'},
+        filter = LeagueByTitleFilter(self.request.GET or {'tournament': 'Высшая лига'},
                                      queryset=League.objects.filter(championship__is_active=True))
         leagues = filter.qs
         teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
@@ -382,7 +405,7 @@ class PostponementsList(ListView):
             if team_postponements.count() + 1 > total_slots_count:
                 request.session['show_exceeded_limit_modal'] = True
                 request.session['exceeded_limit_message'] = 'Команда {} исчерпала лимит переносов'.format(team.title)
-                return redirect(reverse('tournament:postponements') + '?title={}'.format(request.GET['title']))
+                return redirect(reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament']))
         taken_by = request.user
         match_expiration_date = match.numb_tour.date_to
         if match.is_postponed:
@@ -395,7 +418,7 @@ class PostponementsList(ListView):
                                                    starts_at=starts_at, ends_at=ends_at)
         postponement.teams.set(teams)
 
-        return redirect(reverse('tournament:postponements') + '?title={}'.format(request.GET['title']))
+        return redirect(reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament']))
 
 
 @require_POST
@@ -408,7 +431,7 @@ def cancel_postponement(request, pk):
         postponement.cancelled_by = request.user
         postponement.save()
 
-        return redirect(reverse('tournament:postponements') + '?title={}'.format(request.GET['title']))
+        return redirect(reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament']))
     else:
         return HttpResponse('Ошибка доступа')
 
