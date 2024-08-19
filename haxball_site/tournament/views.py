@@ -66,12 +66,32 @@ class DisqualificationsList(ListView):
         return context
 
 
+class TransferFilter(DefaultFilterSet):
+    season = ModelChoiceFilter(field_name='season_join', label='Сезон', empty_label=None,
+                               queryset=Season.objects.filter(number__gt=14).order_by('-number'),
+                               initial=Season.objects.order_by('-number').first())
+    team_from = ModelChoiceFilter(field_name='from_team', null_label='Свободный агент',
+                                  queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
+    team_to = ModelChoiceFilter(field_name='to_team', null_label='Свободный агент',
+                                queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
+    player = ModelChoiceFilter(field_name='trans_player', queryset=Player.objects.all())
+
+    class Meta:
+        model = PlayerTransfer
+        fields = ['season', 'team_from', 'team_to', 'player']
+
+
 class TransfersList(ListView):
     from_date = datetime(2024, 3, 13)
-    queryset = PlayerTransfer.objects.filter(season_join__is_active=True,
-                                             date_join__gte=from_date).order_by('-date_join', '-id')
+    queryset = PlayerTransfer.objects.filter(date_join__gte=from_date).order_by('-date_join', '-id')
     context_object_name = 'transfers'
     template_name = 'tournament/transfers/transfers_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = TransferFilter(self.request.GET, queryset=self.queryset)
+
+        return context
 
 
 class FreeAgentList(ListView):
