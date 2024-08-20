@@ -15,7 +15,10 @@ from smart_selects.db_fields import ChainedForeignKey
 from core.models import NewComment
 
 
-# from django.db.models import
+class TeamIsNotMatchParticipantError(Exception):
+    def __init__(self, team, match):
+        message = 'Team {} is not a participant of the match {}'.format(team, match)
+        super().__init__(message)
 
 
 class FreeAgent(models.Model):
@@ -286,6 +289,39 @@ class Match(models.Model):
 
     def get_last_postponement(self):
         return self.postponements.filter(cancelled_at__isnull=True).order_by('-ends_at').first()
+
+    def is_win(self, team):
+        return team == self.winner_team()
+
+    def is_loss(self, team):
+        return not self.is_draw() and team != self.winner_team()
+
+    def is_draw(self):
+        return self.result.value == MatchResult.DRAW
+
+    def winner_team(self):
+        if self.result.value == MatchResult.HOME_WIN or self.result.value == MatchResult.HOME_DEF_WIN:
+            return self.team_home
+        elif self.result.value == MatchResult.AWAY_WIN or self.result.value == MatchResult.AWAY_DEF_WIN:
+            return self.team_guest
+        else:
+            return None
+
+    def scored_by(self, team):
+        if team == self.team_home:
+            return self.score_home
+        elif team == self.team_guest:
+            return self.score_guest
+
+        raise TeamIsNotMatchParticipantError(team, self)
+
+    def conceded_by(self, team):
+        if team == self.team_home:
+            return self.score_guest
+        elif team == self.team_guest:
+            return self.score_home
+
+        raise TeamIsNotMatchParticipantError(team, self)
 
     def get_absolute_url(self):
         return reverse('tournament:match_detail', args=[self.id])
