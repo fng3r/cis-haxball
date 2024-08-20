@@ -76,7 +76,7 @@
                                                                         data-dismiss="modal">Нет, подождите
                                                                 </button>
                                                                 <form method="POST"
-                                                                      action="{% url 'tournament:cancel_postponement' postponement.id %}?title={{ filter.data.title }}">
+                                                                      action="{% url 'tournament:cancel_postponement' postponement.id %}?tournament={{ filter.data.tournament }}">
                                                                     {% csrf_token %}
                                                                     <button type="submit"
                                                                             class="btn btn-primary">
@@ -242,7 +242,10 @@
                             {% elif page_number == page.number %}
                                 <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">{{ page_number }}</a></li>
                             {% else %}
-                                <li class="page-item"><a class="page-link" href="{{ object.get_absolute_url }}?title={{ filter.data.title }}&page={{ page_number }}">{{ page_number }}</a></li>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="{{ object.get_absolute_url }}?tournament={{ filter.data.tournament }}&page={{ page_number }}">{{ page_number }}</a>
+                                </li>
                             {% endif %}
                         {% endfor %}
 
