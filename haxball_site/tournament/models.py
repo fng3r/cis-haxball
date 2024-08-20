@@ -356,10 +356,10 @@ class MatchResult(models.Model):
     match = models.OneToOneField(Match, verbose_name='Матч', related_name='result',
                                  primary_key=True, on_delete=models.CASCADE)
     value = models.CharField(verbose_name='Результат', choices=results, null=False, blank=False)
-    set_manually = models.BooleanField('Установить вручную', default=False,
-                                       help_text='По умолчанию результат определяется автоматически на основе \
-                                                  итогового счета. Использовать только в том случае, если нужно \
-                                                  вручную разметить результат (ТП/обоюдное ТП')
+    set_manually = models.BooleanField('Указать вручную', default=False,
+                                       help_text='По умолчанию результат определяется автоматически на основе ' +
+                                                 'итогового счета. Использовать только в том случае, если нужно ' +
+                                                 'вручную разметить результат (ТП/обоюдное ТП)')
 
     def save(self, *args, **kwargs):
         if not self.set_manually:  # determine result automatically if it is not specified explicitly
@@ -390,6 +390,7 @@ class MatchResult(models.Model):
     class Meta:
         ordering = ['value']
         verbose_name = 'Результат матча'
+        verbose_name_plural = 'Результат матча'
 
 
 class Goal(models.Model):

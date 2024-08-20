@@ -265,7 +265,7 @@ class MatchAdmin(admin.ModelAdmin):
             'fields': ('comment',)
         })
     )
-    inlines = [GoalInline, MatchResultInline, SubstitutionInline, EventInline, DisqualificationInline]
+    inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
 
 @admin.register(Goal)
