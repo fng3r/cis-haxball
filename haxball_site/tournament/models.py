@@ -20,7 +20,7 @@ from core.models import NewComment
 
 class FreeAgent(models.Model):
     player = models.OneToOneField(User, verbose_name='Игрок', on_delete=models.CASCADE, related_name='user_free_agent')
-    description = models.TextField("Комментарий к заявке", max_length=200, blank=True)
+    description = models.TextField('Комментарий к заявке', max_length=200, blank=True)
     TOP_FORWARD = 'Верхний нападающий'
     BOT_FORWARD = 'Нижний нападающий'
     FORWARD = 'Нападающий'
@@ -42,9 +42,9 @@ class FreeAgent(models.Model):
         (ANY, 'Любая'),
     )
     position_main = models.CharField(max_length=40, choices=POSITION, default=ANY)
-    created = models.DateTimeField("Оставлена", default=timezone.now)
-    deleted = models.DateTimeField("Снята", auto_now_add=True)
-    is_active = models.BooleanField("Активно", default=True)
+    created = models.DateTimeField('Оставлена', default=timezone.now)
+    deleted = models.DateTimeField('Снята', auto_now_add=True)
+    is_active = models.BooleanField('Активно', default=True)
 
     def __str__(self):
         return 'CA {}'.format(self.player.username)
@@ -245,22 +245,18 @@ class Match(models.Model):
 
     score_home = models.SmallIntegerField('Забито хозявами', default=0)
     score_guest = models.SmallIntegerField('Забито гостями', default=0)
+
     team_home_start = models.ManyToManyField(Player, related_name='player_in_start_home',
                                              verbose_name='Состав хозяев', blank=True)
-    comments = GenericRelation(NewComment, related_query_name='match_comments')
-    commentable = models.BooleanField("Комментируемый матч", default=True)
-
-    # chained_field = 'team_home',
-    # chained_model_field = 'team',
-
     team_guest_start = models.ManyToManyField(Player, related_name='player_in_start_guest',
                                               verbose_name='Состав Гостей', blank=True)
 
-    # chained_field='team_guest',
-    #                                               chained_model_field='team',
     is_played = models.BooleanField('Сыгран', default=False)
 
     comment = models.TextField('Комментарий к матчу', max_length=1024, blank=True, null=True)
+
+    comments = GenericRelation(NewComment, related_query_name='match_comments')
+    commentable = models.BooleanField("Комментируемый матч", default=True)
 
     def cards(self):
         return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by('team')
@@ -295,12 +291,69 @@ class Match(models.Model):
         return reverse('tournament:match_detail', args=[self.id])
 
     def __str__(self):
-        return 'Матч {} - {}, {} тур'.format(self.team_home.short_title, self.team_guest.short_title, self.numb_tour.number)
+        return 'Матч {} - {}, {} тур'.format(self.team_home.short_title, self.team_guest.short_title,
+                                             self.numb_tour.number)
 
     class Meta:
         verbose_name = 'Матч'
         verbose_name_plural = 'Матчи'
         ordering = ['id']
+
+
+class MatchResult(models.Model):
+    HOME_WIN = 'HW'
+    DRAW = 'D'
+    AWAY_WIN = 'AW'
+    HOME_DEF_WIN = 'HDW'
+    AWAY_DEF_WIN = 'ADW'
+    MUTUAL_TECH_DEFEAT = 'MTD'
+
+    results = [
+        (HOME_WIN, 'Победа хозяев'),
+        (DRAW, 'Ничья'),
+        (AWAY_WIN, 'Победа гостей'),
+        (HOME_DEF_WIN, 'ТП гостям'),
+        (AWAY_DEF_WIN, 'ТП хозяевам'),
+        (MUTUAL_TECH_DEFEAT, 'Обоюдное ТП')
+    ]
+
+    match = models.OneToOneField(Match, verbose_name='Матч', related_name='result',
+                                 primary_key=True, on_delete=models.CASCADE)
+    value = models.CharField(verbose_name='Результат', choices=results, null=False, blank=False)
+    set_manually = models.BooleanField('Установить вручную', default=False,
+                                       help_text='По умолчанию результат определяется автоматически на основе \
+                                                  итогового счета. Использовать только в том случае, если нужно \
+                                                  вручную разметить результат (ТП/обоюдное ТП')
+
+    def save(self, *args, **kwargs):
+        if not self.set_manually:  # determine result automatically if it is not specified explicitly
+            self.value = self.get_result_from_scores()
+        super(MatchResult, self).save(*args, **kwargs)
+
+    @receiver(post_save, sender=Match)
+    def create_or_update_result(sender, instance, created, **kwargs):
+        if not instance.is_played:
+            return
+
+        result = MatchResult.objects.filter(match=instance).first()
+        if not result:
+            result = MatchResult(match=instance)
+        result.save()
+
+    def get_result_from_scores(self):
+        if self.match.score_home == self.match.score_guest:
+            return MatchResult.DRAW
+        elif self.match.score_home > self.match.score_guest:
+            return MatchResult.HOME_WIN
+        else:
+            return MatchResult.AWAY_WIN
+
+    def __str__(self):
+        return self.get_value_display()
+
+    class Meta:
+        ordering = ['value']
+        verbose_name = 'Результат матча'
 
 
 class Goal(models.Model):
@@ -319,7 +372,7 @@ class Goal(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:  # update score only when goal is created
-            if self.match.team_home == self.team:
+            if self.team == self.match.team_home:
                 self.match.score_home += 1
                 self.match.save(update_fields=['score_home'])
             elif self.team == self.match.team_guest:
@@ -328,7 +381,7 @@ class Goal(models.Model):
         super(Goal, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if self.match.team_home == self.team:
+        if self.team == self.match.team_home:
             self.match.score_home -= 1
             self.match.save(update_fields=['score_home'])
         elif self.team == self.match.team_guest:
