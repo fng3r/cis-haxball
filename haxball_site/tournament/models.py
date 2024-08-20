@@ -299,6 +299,11 @@ class Match(models.Model):
     def is_draw(self):
         return self.result.value == MatchResult.DRAW
 
+    def is_tech_defeat(self):
+        return self.result.value == MatchResult.HOME_DEF_WIN or \
+               self.result.value == MatchResult.AWAY_DEF_WIN or \
+               self.result.value == MatchResult.MUTUAL_TECH_DEFEAT
+
     def winner_team(self):
         if self.result.value == MatchResult.HOME_WIN or self.result.value == MatchResult.HOME_DEF_WIN:
             return self.team_home
