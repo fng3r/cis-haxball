@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from datetime import date
+from typing import Optional
 
 from colorfield.fields import ColorField
 from django.contrib.auth.models import User
@@ -290,11 +291,16 @@ class Match(models.Model):
     def get_last_postponement(self):
         return self.postponements.filter(cancelled_at__isnull=True).order_by('-ends_at').first()
 
+    @property
+    def winner(self) -> Optional[Team]:
+        if self.result:
+            return self.result.winner
+
     def is_win(self, team):
-        return team == self.winner_team()
+        return team == self.winner
 
     def is_loss(self, team):
-        return not self.is_draw() and team != self.winner_team()
+        return not self.is_draw() and team != self.winner
 
     def is_draw(self):
         return self.result.value == MatchResult.DRAW
@@ -303,14 +309,6 @@ class Match(models.Model):
         return self.result.value == MatchResult.HOME_DEF_WIN or \
                self.result.value == MatchResult.AWAY_DEF_WIN or \
                self.result.value == MatchResult.MUTUAL_TECH_DEFEAT
-
-    def winner_team(self):
-        if self.result.value == MatchResult.HOME_WIN or self.result.value == MatchResult.HOME_DEF_WIN:
-            return self.team_home
-        elif self.result.value == MatchResult.AWAY_WIN or self.result.value == MatchResult.AWAY_DEF_WIN:
-            return self.team_guest
-        else:
-            return None
 
     def scored_by(self, team):
         if team == self.team_home:
@@ -365,10 +363,18 @@ class MatchResult(models.Model):
                                        help_text='По умолчанию результат определяется автоматически на основе ' +
                                                  'итогового счета. Использовать только в том случае, если нужно ' +
                                                  'вручную разметить результат (ТП/обоюдное ТП)')
+    winner = models.ForeignKey(Team, verbose_name='Победитель', on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.set_manually:  # determine result automatically if it is not specified explicitly
             self.value = self.get_result_from_scores()
+
+        if self.value == MatchResult.HOME_WIN or self.value == MatchResult.HOME_DEF_WIN:
+            self.winner = self.match.team_home
+        elif self.value == MatchResult.AWAY_WIN or self.value == MatchResult.AWAY_DEF_WIN:
+            self.winner = self.match.team_guest
+        else:
+            self.winner = None
         super(MatchResult, self).save(*args, **kwargs)
 
     @receiver(post_save, sender=Match)

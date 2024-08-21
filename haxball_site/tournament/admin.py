@@ -221,6 +221,7 @@ class EventInline(admin.StackedInline):
 
 class MatchResultInline(admin.TabularInline):
     model = MatchResult
+    readonly_fields = ['winner']
 
 
 @admin.register(Match)
