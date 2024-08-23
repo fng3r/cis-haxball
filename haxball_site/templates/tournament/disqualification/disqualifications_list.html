@@ -34,7 +34,7 @@
                             <td class="disqualification-row pl-2 pr-1">
                                 <div class="media">
                                     <img src="{{ disqualification.team.logo.url }}" class="align-self-start mr-1"
-                                         alt="{{ disqualification.team.title }}" width="20" style="border-radius: 100%">
+                                         alt="{{ disqualification.team.title }}" width="20" height="20">
                                     <div class="media-body">
                                         <h6 class="mt-0" style="font-size: 13px">
                                             <a href="{{ disqualification.team.get_absolute_url }}">{{ disqualification.team.title }}</a>
@@ -58,12 +58,12 @@
                             <td class="disqualification-row pl-2 pr-1">
                                 <div class="media">
                                     <img src="{{ disqualification.match.team_home.logo.url }}" class="align-self-start mr-1"
-                                         alt="{{ disqualification.match.team_home }}" width="20" style="border-radius: 100%">
+                                         alt="{{ disqualification.match.team_home }}" width="20" height="20">
                                     <h6 class="mt-0" style="font-size: 13px">
                                         <a href="{{disqualification.match.get_absolute_url}}">{{disqualification.match.team_home.short_title}}-{{disqualification.match.team_guest.short_title}}</a>
                                     </h6>
                                     <img src="{{ disqualification.match.team_guest.logo.url }}" class="ml-1"
-                                         alt="{{ disqualification.match.team_guest }}" width="20" style="border-radius: 100%">
+                                         alt="{{ disqualification.match.team_guest }}" width="20" height="20">
                                 </div>
                             </td>
 
