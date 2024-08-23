@@ -2,10 +2,10 @@
 {% load static %}
 {% load tournament_extras %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'tournament/transfer/transfers_list.css' %}">
-
-{% block title %}Трансферы{% endblock %}
+{% block title %}Чемпионат | Трансферы — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
+    <link rel="stylesheet" type="text/css" href="{% static 'tournament/transfers/transfers_list.css' %}">
+
     <div class="card mb-2 mt-2" style="border-radius: 10px">
         <h2 class="text-center my-2">
             <i class="fa fa-arrow-circle-right text-primary" aria-hidden="true"></i> Трансферы
