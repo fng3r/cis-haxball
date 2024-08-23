@@ -1,16 +1,14 @@
 import datetime
 from collections import defaultdict
-from functools import reduce
-from itertools import groupby
 from typing import Optional
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Q, Count, QuerySet, F, Max, Sum
+from django.db.models import Q, Count, QuerySet, F
 from django.utils import timezone
 
 from ..models import FreeAgent, OtherEvents, Goal, Match, League, Team, Player, Substitution, Season, PlayerTransfer, \
-    Disqualification, Postponement, TourNumber
+    Disqualification, Postponement, TourNumber, MatchResult
 
 register = template.Library()
 
@@ -152,15 +150,16 @@ def team_statistics(team: Team):
 
         leagues = list(League.objects.filter(championship=season, teams=team).order_by('id'))
         for league in leagues:
-            matches_count = Match.objects.filter(Q(team_home=team) | Q(team_guest=team),
-                                                 league=league, is_played=True).count()
+            league_matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team),
+                                                  league=league, is_played=True)
+            matches_count = league_matches.count()
 
             if matches_count == 0:
                 continue
 
             goals = Goal.objects.filter(team=team, match__is_played=True, match__league=league).count()
             conceded_goals = (Goal.objects.filter(Q(match__team_home=team) | Q(match__team_guest=team),
-                                                        ~Q(team=team), match__league=league).count())
+                                                  ~Q(team=team), match__league=league, match__is_played=True).count())
             assists_count = Goal.objects.filter(team=team, assistent__isnull=False,
                                                 match__is_played=True, match__league=league).count()
             clean_sheets = OtherEvents.objects.cs().filter(team=team, match__is_played=True,
@@ -173,16 +172,9 @@ def team_statistics(team: Team):
                                                          match__league=league).count()
             subs = Substitution.objects.filter(team=team, match__is_played=True, match__league=league).count()
 
-            wins = (Match.objects.filter(team_home=team, score_home__gt=F('score_guest'),
-                                               league=league, is_played=True).count() +
-                          Match.objects.filter(team_guest=team, score_guest__gt=F('score_home'),
-                                               league=league, is_played=True).count())
-            losses = (Match.objects.filter(team_home=team, score_home__lt=F('score_guest'),
-                                                 league=league, is_played=True).count() +
-                            Match.objects.filter(team_guest=team, score_guest__lt=F('score_home'),
-                                                 league=league, is_played=True).count())
-            draws = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), score_home=F('score_guest'),
-                                         league=league, is_played=True).count()
+            wins = (league_matches.filter(result__winner=team).count())
+            losses = league_matches.filter(~Q(result__winner=team), ~Q(result__value=MatchResult.DRAW)).count()
+            draws = league_matches.filter(result__value=MatchResult.DRAW).count()
             winrate = wins / matches_count * 100
 
             league_stats = [matches_count, wins, draws, losses, winrate, goals, conceded_goals,
@@ -207,7 +199,8 @@ def team_statistics(team: Team):
             stats_by_season[season] = season_stats
             extra_stats_by_season[season] = season_extra_stats
 
-    overall_matches_count = (Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True).count())
+    all_team_matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
+    overall_matches_count = all_team_matches.count()
     overall_goals = Goal.objects.filter(team=team, match__is_played=True,).count()
     overall_conceded_goals = (Goal.objects.filter(Q(match__team_home=team) | Q(match__team_guest=team),
                                                   ~Q(team=team)).count())
@@ -218,12 +211,9 @@ def team_statistics(team: Team):
     overall_yellow_cards = OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True).count()
     overall_red_cards = OtherEvents.objects.red_cards().filter(team=team, match__is_played=True).count()
 
-    overall_wins = (Match.objects.filter(team_home=team, score_home__gt=F('score_guest'), is_played=True).count() +
-                    Match.objects.filter(team_guest=team, score_guest__gt=F('score_home'), is_played=True).count())
-    overall_losses = (Match.objects.filter(team_home=team, score_home__lt=F('score_guest'), is_played=True).count() +
-                      Match.objects.filter(team_guest=team, score_guest__lt=F('score_home'), is_played=True).count())
-    overall_draws = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), score_home=F('score_guest'),
-                                         is_played=True).count()
+    overall_wins = all_team_matches.filter(result__winner=team).count()
+    overall_losses = all_team_matches.filter(~Q(result__winner=team), ~Q(result__value=MatchResult.DRAW)).count()
+    overall_draws = all_team_matches.filter(result__value=MatchResult.DRAW).count()
     overall_winrate = overall_wins / (overall_matches_count or 1) * 100
 
     overall_stats = [overall_matches_count, overall_wins, overall_draws, overall_losses, overall_winrate, overall_goals,
@@ -283,13 +273,13 @@ def team_statistics(team: Team):
     guest_matches = Match.objects.filter(team_guest=team).values(player=F('team_guest_start__id')).annotate(matches=Count('team_guest_start__id')).order_by('-matches')
     sub_matches = Substitution.objects.filter(team=team).values(player=F('player_in')).distinct().annotate(matches=Count('player_in')).order_by('-matches')
 
-    all_matches = list(home_matches) + list(guest_matches) + list(sub_matches)
+    all_team_matches = list(home_matches) + list(guest_matches) + list(sub_matches)
     matches_by_player = defaultdict(int)
-    for player_matches in all_matches:
+    for player_matches in all_team_matches:
         matches_by_player[player_matches['player']] += player_matches['matches']
 
     (greatest_player, greatest_sub_in) = (None, None)
-    if len(all_matches) > 0:
+    if len(all_team_matches) > 0:
         greatest_player = sorted(matches_by_player.items(), key=lambda kv: kv[1], reverse=True)[0]
     if len(sub_matches) > 0:
         greatest_sub_in = sorted(sub_matches, key=lambda x: x['matches'], reverse=True)[0]
@@ -381,22 +371,21 @@ def player_detailed_statistics(user: User):
             team = transfer_team.to_team
             leagues = list(League.objects.filter(championship=season, teams=team).order_by('id'))
             for league in leagues:
-                matches_count = (Match.objects.filter(team_guest=team, team_guest_start=player,
-                                                      is_played=True, league=league).count() +
-                                 Match.objects.filter(team_home=team, team_home_start=player,
-                                                      is_played=True, league=league).count() +
-                                 Match.objects.filter(~(Q(team_guest_start=player) | Q(team_home_start=player)),
-                                                      is_played=True, match_substitutions__team=team,
-                                                      match_substitutions__player_in=player, league=league).distinct().count())
+                league_matches = Match.objects.filter(is_played=True, league=league)
+                matches_count = (league_matches.filter(team_guest=team, team_guest_start=player).count() +
+                                 league_matches.filter(team_home=team, team_home_start=player).count() +
+                                 league_matches.filter(~(Q(team_guest_start=player) | Q(team_home_start=player)),
+                                                       match_substitutions__team=team,
+                                                       match_substitutions__player_in=player).distinct().count())
 
                 if matches_count == 0:
                     continue
 
                 goals = Goal.objects.filter(author=user.user_player, team=team,
-                                                 match__is_played=True, match__league=league).count()
+                                            match__is_played=True, match__league=league).count()
 
                 assists = Goal.objects.filter(assistent=user.user_player, team=team,
-                                                    match__is_played=True, match__league=league).count()
+                                              match__is_played=True, match__league=league).count()
                 goals_assists = goals + assists
                 clean_sheets = OtherEvents.objects.filter(author=user.user_player, team=team, event='CLN',
                                                           match__is_played=True, match__league=league).count()
@@ -470,29 +459,34 @@ def player_detailed_statistics(user: User):
                            overall_avg_clean_sheets, overall_avg_subs_out, overall_avg_subs_in, overall_avg_own_goals,
                            overall_avg_yellow_cards, overall_avg_red_cards]
 
-    first_match = (Match.objects.filter(Q(team_home_start=player) | Q(team_guest_start=player) |
-                                        Q(match_substitutions__player_in=player))
+    first_match = (Match.objects
+                   .filter(Q(team_home_start=player) | Q(team_guest_start=player) |
+                           Q(match_substitutions__player_in=player))
                    .filter(is_played=True, match_date__isnull=False)
                    .order_by('match_date').first())
 
     fastest_goal = Goal.objects.filter(author=player).order_by('time_min', 'time_sec').first()
     latest_goal = Goal.objects.filter(author=player).order_by('-time_min', '-time_sec').first()
-    most_goals_in_match = (Match.objects.filter(match_goal__author=player)
+    most_goals_in_match = (Match.objects
+                           .filter(match_goal__author=player)
                            .annotate(goals=Count('id', filter=Q(match_goal__author=player)))
                            .order_by('-goals').first())
-    most_assists_in_match = (Match.objects.filter(match_goal__assistent=player)
+    most_assists_in_match = (Match.objects
+                             .filter(match_goal__assistent=player)
                              .annotate(assists=Count('id', filter=Q(match_goal__assistent=player)))
                              .order_by('-assists').first())
-    most_goals_assists_in_match = (Match.objects.filter(Q(match_goal__author=player) | Q(match_goal__assistent=player))
-                                   .annotate(actions=Count('id', filter=Q(match_goal__assistent=player) |
-                                                                                  Q(match_goal__author=player)))
+    most_goals_assists_in_match = (Match.objects
+                                   .filter(Q(match_goal__author=player) | Q(match_goal__assistent=player))
+                                   .annotate(actions=Count('id',
+                                                           filter=Q(match_goal__assistent=player) |
+                                                                  Q(match_goal__author=player)))
                                    .order_by('-actions').first())
     most_goals_in_season = (Goal.objects.filter(author=player)
                             .values(season=F('match__league__championship'))
                             .annotate(goals=Count('author'))
                             .order_by('-goals').first())
-    most_assists_in_season = (Goal.objects.filter(assistent=player).
-                              values(season=F('match__league__championship'))
+    most_assists_in_season = (Goal.objects.filter(assistent=player)
+                              .values(season=F('match__league__championship'))
                               .annotate(assists=Count('assistent'))
                               .order_by('-assists').first())
     most_goals_assists_in_season = (Goal.objects.filter(Q(author=player) | Q(assistent=player))
@@ -662,143 +656,8 @@ def cup_round_name(tour: TourNumber):
 
 
 @register.inclusion_tag('tournament/include/league_table.html')
-def league_table(league):
-    b = list(Team.objects.filter(leagues=league))
-    c = len(b)
-    points = [0 for _ in range(c)]  # Количество очков
-    diffrence = [0 for _ in range(c)]  # Разница мячей
-    scores = [0 for _ in range(c)]  # Мячей забито
-    consided = [0 for _ in range(c)]  # Мячей пропущено
-    matches_played = [0 for _ in range(c)]  # Игр сыграно
-    wins = [0 for _ in range(c)]  # Побед
-    draws = [0 for _ in range(c)]  # Ничей
-    looses = [0 for _ in range(c)]  # Поражений
-    last_matches = [[] for _ in range(c)]
-    for i, team in enumerate(b):
-        matches = Match.objects.filter((Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True)
-        matches_played[i] = matches.count()
-        # last_matches[i] = [(m, 0) for m in matches]
-        win_count = 0
-        draw_count = 0
-        loose_count = 0
-        goals_scores_all = 0
-        goals_consided_all = 0
-        for m in matches:
-
-            if team == m.team_home:
-                score_team = m.score_home
-                score_opp = m.score_guest
-            elif team == m.team_guest:
-                score_team = m.score_guest
-                score_opp = m.score_home
-            else:
-                return None
-
-            goals_scores_all += score_team
-            goals_consided_all += score_opp
-
-            if score_team > score_opp:
-                win_count += 1
-                last_matches[i].append((m, 1))
-            elif score_team == score_opp:
-                draw_count += 1
-                last_matches[i].append((m, 0))
-            else:
-                loose_count += 1
-                last_matches[i].append((m, -1))
-
-        last_matches[i] = sorted(last_matches[i], key=lambda x: x[0].numb_tour.number)[-5:]
-        points[i] = win_count * 3 + draw_count * 1
-        diffrence[i] = goals_scores_all - goals_consided_all
-        scores[i] = goals_scores_all
-        consided[i] = goals_consided_all
-        wins[i] = win_count
-        looses[i] = loose_count
-        draws[i] = draw_count
-
-    l = zip(b, matches_played, wins, draws, looses, scores, consided, diffrence, points, last_matches)
-    s1 = sorted(l, key=lambda x: x[5], reverse=True)
-    s2 = sorted(s1, key=lambda x: x[7], reverse=True)
-    ls = sorted(s2, key=lambda x: x[8], reverse=True)
-
-    result = []
-    i = 0
-    while i < len(ls) - 1:
-        mini_table = [ls[i][0]]
-        mini_res = [ls[i]]
-        k = i
-        for j in range(i + 1, len(ls)):
-            if ls[i][8] == ls[j][8]:
-                mini_table.append(ls[j][0])
-                mini_res.append(ls[j])
-                k += 1
-            else:
-                k += 1
-                break
-        if len(mini_table) >= 2:
-            c = len(mini_table)
-            points = [0 for _ in range(c)]  # Количество очков
-            diffrence = [0 for _ in range(c)]  # Разница мячей
-            scores = [0 for _ in range(c)]  # Мячей забито
-            consided = [0 for _ in range(c)]  # Мячей пропущено
-            matches_played = [0 for _ in range(c)]  # Игр сыграно
-            wins = [0 for _ in range(c)]  # Побед
-            draws = [0 for _ in range(c)]  # Ничей
-            looses = [0 for _ in range(c)]  # Поражений
-            for i, team in enumerate(mini_table):
-                matches = []
-                matches_all = Match.objects.filter((Q(team_home=team) | Q(team_guest=team)), league=league,
-                                                   is_played=True)
-                for mm in matches_all:
-                    if (mm.team_home in mini_table) and (mm.team_guest in mini_table):
-                        matches.append(mm)
-                matches_played[i] = len(matches)
-                win_count = 0
-                draw_count = 0
-                loose_count = 0
-                goals_scores_all = 0
-                goals_consided_all = 0
-                for m in matches:
-
-                    if team == m.team_home:
-                        score_team = m.score_home
-                        score_opp = m.score_guest
-                    elif team == m.team_guest:
-                        score_team = m.score_guest
-                        score_opp = m.score_home
-                    else:
-                        return None
-
-                    goals_scores_all += score_team
-                    goals_consided_all += score_opp
-
-                    if score_team > score_opp:
-                        win_count += 1
-                    elif score_team == score_opp:
-                        draw_count += 1
-                    else:
-                        loose_count += 1
-                points[i] = win_count * 3 + draw_count * 1
-                diffrence[i] = goals_scores_all - goals_consided_all
-                scores[i] = goals_scores_all
-                consided[i] = goals_consided_all
-                wins[i] = win_count
-                looses[i] = loose_count
-                draws[i] = draw_count
-            l = zip(mini_table, matches_played, wins, draws, looses, scores, consided, diffrence, points)
-            s1 = sorted(l, key=lambda x: x[5], reverse=True)
-            s2 = sorted(s1, key=lambda x: x[7], reverse=True)
-            lss = sorted(s2, key=lambda x: x[8], reverse=True)
-            for lll in lss:
-                for h in mini_res:
-                    if lll[0] == h[0]:
-                        result.append(h)
-                        break
-        else:
-            result.append(mini_res[0])
-        i = k
-    if len(result) < len(ls):
-        result.append(ls[len(ls) - 1])
+def league_table(league: League):
+    result = get_league_table(league)
     return {'teams': result}
 
 
@@ -847,60 +706,57 @@ def all_seasons(team):
     return Season.objects.filter(tournaments_in_season__teams=team).distinct().order_by('-number')
 
 
-def sort_teams(league):
-    b = list(Team.objects.filter(leagues=league))
-    c = len(b)
-    points = [0 for _ in range(c)]  # Количество очков
-    diffrence = [0 for _ in range(c)]  # Разница мячей
-    scores = [0 for _ in range(c)]  # Мячей забито
-    consided = [0 for _ in range(c)]  # Мячей пропущено
-    matches_played = [0 for _ in range(c)]  # Игр сыграно
-    wins = [0 for _ in range(c)]  # Побед
-    draws = [0 for _ in range(c)]  # Ничей
-    looses = [0 for _ in range(c)]  # Поражений
-    last_matches = [[] for _ in range(c)]
-    for i, team in enumerate(b):
+def sort_teams(league: League):
+    lt = get_league_table(league)
+    teams = [i[0] for i in lt]
+    return teams
+
+
+def get_league_table(league: League):
+    teams = list(Team.objects.filter(leagues=league))
+    teams_count = len(teams)
+    points = [0 for _ in range(teams_count)]  # Количество очков
+    goal_diff = [0 for _ in range(teams_count)]  # Разница мячей
+    scored = [0 for _ in range(teams_count)]  # Мячей забито
+    conceded = [0 for _ in range(teams_count)]  # Мячей пропущено
+    matches_played = [0 for _ in range(teams_count)]  # Игр сыграно
+    wins = [0 for _ in range(teams_count)]  # Побед
+    draws = [0 for _ in range(teams_count)]  # Ничей
+    losses = [0 for _ in range(teams_count)]  # Поражений
+    last_matches = [[] for _ in range(teams_count)]
+    for i, team in enumerate(teams):
         matches = Match.objects.filter((Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True)
         matches_played[i] = matches.count()
-        win_count = 0
-        draw_count = 0
-        loose_count = 0
-        goals_scores_all = 0
-        goals_consided_all = 0
-        for m in matches:
 
-            if team == m.team_home:
-                score_team = m.score_home
-                score_opp = m.score_guest
-            elif team == m.team_guest:
-                score_team = m.score_guest
-                score_opp = m.score_home
+        wins_count = 0
+        draws_count = 0
+        losses_count = 0
+        goals_scored = 0
+        goals_conceded = 0
+        for match in matches:
+            goals_scored += match.scored_by(team)
+            goals_conceded += match.conceded_by(team)
+
+            if match.is_win(team):
+                wins_count += 1
+                last_matches[i].append((match, 1))
+            elif match.is_draw():
+                draws_count += 1
+                last_matches[i].append((match, 0))
             else:
-                return None
-
-            goals_scores_all += score_team
-            goals_consided_all += score_opp
-
-            if score_team > score_opp:
-                win_count += 1
-                last_matches[i].append((m, 1))
-            elif score_team == score_opp:
-                draw_count += 1
-                last_matches[i].append((m, 0))
-            else:
-                loose_count += 1
-                last_matches[i].append((m, -1))
+                losses_count += 1
+                last_matches[i].append((match, -1))
 
         last_matches[i] = sorted(last_matches[i], key=lambda x: x[0].numb_tour.number)[-5:]
-        points[i] = win_count * 3 + draw_count * 1
-        diffrence[i] = goals_scores_all - goals_consided_all
-        scores[i] = goals_scores_all
-        consided[i] = goals_consided_all
-        wins[i] = win_count
-        looses[i] = loose_count
-        draws[i] = draw_count
+        points[i] = wins_count * 3 + draws_count * 1
+        goal_diff[i] = goals_scored - goals_conceded
+        scored[i] = goals_scored
+        conceded[i] = goals_conceded
+        wins[i] = wins_count
+        losses[i] = losses_count
+        draws[i] = draws_count
 
-    l = zip(b, matches_played, wins, draws, looses, scores, consided, diffrence, points, last_matches)
+    l = zip(teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches)
     s1 = sorted(l, key=lambda x: x[5], reverse=True)
     s2 = sorted(s1, key=lambda x: x[7], reverse=True)
     ls = sorted(s2, key=lambda x: x[8], reverse=True)
@@ -920,56 +776,47 @@ def sort_teams(league):
                 k += 1
                 break
         if len(mini_table) >= 2:
-            c = len(mini_table)
-            points = [0 for _ in range(c)]  # Количество очков
-            diffrence = [0 for _ in range(c)]  # Разница мячей
-            scores = [0 for _ in range(c)]  # Мячей забито
-            consided = [0 for _ in range(c)]  # Мячей пропущено
-            matches_played = [0 for _ in range(c)]  # Игр сыграно
-            wins = [0 for _ in range(c)]  # Побед
-            draws = [0 for _ in range(c)]  # Ничей
-            looses = [0 for _ in range(c)]  # Поражений
+            teams_count = len(mini_table)
+            points = [0 for _ in range(teams_count)]  # Количество очков
+            goal_diff = [0 for _ in range(teams_count)]  # Разница мячей
+            scored = [0 for _ in range(teams_count)]  # Мячей забито
+            conceded = [0 for _ in range(teams_count)]  # Мячей пропущено
+            matches_played = [0 for _ in range(teams_count)]  # Игр сыграно
+            wins = [0 for _ in range(teams_count)]  # Побед
+            draws = [0 for _ in range(teams_count)]  # Ничей
+            losses = [0 for _ in range(teams_count)]  # Поражений
             for i, team in enumerate(mini_table):
                 matches = []
                 matches_all = Match.objects.filter((Q(team_home=team) | Q(team_guest=team)), league=league,
                                                    is_played=True)
-                for mm in matches_all:
-                    if (mm.team_home in mini_table) and (mm.team_guest in mini_table):
-                        matches.append(mm)
+                for match in matches_all:
+                    if (match.team_home in mini_table) and (match.team_guest in mini_table):
+                        matches.append(match)
                 matches_played[i] = len(matches)
-                win_count = 0
-                draw_count = 0
-                loose_count = 0
-                goals_scores_all = 0
-                goals_consided_all = 0
-                for m in matches:
 
-                    if team == m.team_home:
-                        score_team = m.score_home
-                        score_opp = m.score_guest
-                    elif team == m.team_guest:
-                        score_team = m.score_guest
-                        score_opp = m.score_home
+                wins_count = 0
+                draws_count = 0
+                losses_count = 0
+                goals_scored = 0
+                goals_conceded = 0
+                for match in matches:
+                    goals_scored += match.scored_by(team)
+                    goals_conceded += match.conceded_by(team)
+
+                    if match.is_win(team):
+                        wins_count += 1
+                    elif match.is_draw():
+                        draws_count += 1
                     else:
-                        return None
-
-                    goals_scores_all += score_team
-                    goals_consided_all += score_opp
-
-                    if score_team > score_opp:
-                        win_count += 1
-                    elif score_team == score_opp:
-                        draw_count += 1
-                    else:
-                        loose_count += 1
-                points[i] = win_count * 3 + draw_count * 1
-                diffrence[i] = goals_scores_all - goals_consided_all
-                scores[i] = goals_scores_all
-                consided[i] = goals_consided_all
-                wins[i] = win_count
-                looses[i] = loose_count
-                draws[i] = draw_count
-            l = zip(mini_table, matches_played, wins, draws, looses, scores, consided, diffrence, points)
+                        losses_count += 1
+                points[i] = wins_count * 3 + draws_count * 1
+                goal_diff[i] = goals_scored - goals_conceded
+                scored[i] = goals_scored
+                conceded[i] = goals_conceded
+                wins[i] = wins_count
+                losses[i] = losses_count
+                draws[i] = draws_count
+            l = zip(mini_table, matches_played, wins, draws, losses, scored, conceded, goal_diff, points)
             s1 = sorted(l, key=lambda x: x[5], reverse=True)
             s2 = sorted(s1, key=lambda x: x[7], reverse=True)
             lss = sorted(s2, key=lambda x: x[8], reverse=True)
@@ -983,8 +830,8 @@ def sort_teams(league):
         i = k
     if len(result) < len(ls):
         result.append(ls[len(ls) - 1])
-    lit = [i[0] for i in result]
-    return lit
+
+    return result
 
 
 @register.filter
@@ -1002,8 +849,8 @@ def current_position(team):
     if not league:
         return '-'
 
-    a = list(sort_teams(league))
-    return a.index(team) + 1
+    sorted_teams = list(sort_teams(league))
+    return sorted_teams.index(team) + 1
 
 
 @register.filter

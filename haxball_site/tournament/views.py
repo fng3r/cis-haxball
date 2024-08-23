@@ -550,8 +550,7 @@ def teams_halloffame():
     subs = []
     for team in Team.objects.all():
         matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True).count()
-        wins = (Match.objects.filter(team_home=team, score_home__gt=F('score_guest'), is_played=True).count() +
-                Match.objects.filter(team_guest=team, score_guest__gt=F('score_home'), is_played=True).count())
+        wins = Match.objects.filter(result__winner=team, is_played=True).count()
         winrate = wins / (matches or 1) * 100
         if matches > 0:
             team_matches.append([team, matches])

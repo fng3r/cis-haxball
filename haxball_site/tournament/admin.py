@@ -5,7 +5,7 @@ from django.urls import resolve
 
 from .models import FreeAgent, Player, League, Team, Match, Goal, OtherEvents, Substitution, Season, PlayerTransfer, \
     TourNumber, Nation, Achievements, TeamAchievement, AchievementCategory, Disqualification, Postponement, \
-    PostponementSlots, SeasonTeamRating, RatingVersion, TeamRating
+    PostponementSlots, SeasonTeamRating, RatingVersion, TeamRating, MatchResult
 
 
 @admin.register(FreeAgent)
@@ -219,11 +219,16 @@ class EventInline(admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class MatchResultInline(admin.TabularInline):
+    model = MatchResult
+    readonly_fields = ['winner']
+
+
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = (
-        'league', 'numb_tour', 'team_home', 'score_home', 'team_guest', 'score_guest', 'is_played', 'updated',
-        'inspector', 'id',)
+        'league', 'numb_tour', 'team_home', 'score_home', 'team_guest', 'score_guest', 'is_played', 'result',
+        'updated', 'inspector', 'id',)
     search_fields = ('team_home__title', 'team_guest__title')
     filter_horizontal = ('team_home_start', 'team_guest_start',)
 
@@ -261,7 +266,7 @@ class MatchAdmin(admin.ModelAdmin):
             'fields': ('comment',)
         })
     )
-    inlines = [GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
+    inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
 
 @admin.register(Goal)
