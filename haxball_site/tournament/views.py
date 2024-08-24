@@ -67,13 +67,16 @@ class DisqualificationsList(ListView):
 
 
 class TransferFilter(DefaultFilterSet):
+    initial_season = Season.objects.order_by('-number').first()
+    teams_qs = Team.objects.filter(leagues__championship__number__gt=14).distinct()
+
     season = ModelChoiceFilter(field_name='season_join', label='Сезон', empty_label=None,
                                queryset=Season.objects.filter(number__gt=14).order_by('-number'),
-                               initial=Season.objects.order_by('-number').first())
+                               initial=initial_season)
     team_from = ModelChoiceFilter(field_name='from_team', null_label='Свободный агент',
-                                  queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
+                                  queryset=teams_qs)
     team_to = ModelChoiceFilter(field_name='to_team', null_label='Свободный агент',
-                                queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
+                                queryset=teams_qs)
     player = ModelChoiceFilter(field_name='trans_player', queryset=Player.objects.all())
 
     class Meta:
@@ -83,7 +86,10 @@ class TransferFilter(DefaultFilterSet):
 
 class TransfersList(ListView):
     from_date = datetime(2024, 3, 13)
-    queryset = PlayerTransfer.objects.filter(date_join__gte=from_date).order_by('-date_join', '-id')
+    queryset = PlayerTransfer.objects \
+        .select_related('trans_player__name__user_profile', 'from_team', 'to_team') \
+        .filter(date_join__gte=from_date) \
+        .order_by('-date_join', '-id')
     context_object_name = 'transfers'
     template_name = 'tournament/transfers/transfers_list.html'
 
@@ -594,7 +600,7 @@ class TeamRatingFilter(FilterSet):
 
 
 class TeamRatingView(ListView):
-    queryset = TeamRating.objects.all()
+    queryset = TeamRating.objects.select_related('team').all()
     context_object_name = 'team_rating'
     template_name = 'tournament/team_rating.html'
     latest_rating_version = RatingVersion.objects.order_by('-number').first()
@@ -602,7 +608,7 @@ class TeamRatingView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         params = self.request.GET or {'version': self.latest_rating_version.number}
-        context['filter'] = TeamRatingFilter(params, queryset=self.queryset.select_related('team'))
+        context['filter'] = TeamRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
         source_season = RatingVersion.objects \
             .select_related('related_season') \
