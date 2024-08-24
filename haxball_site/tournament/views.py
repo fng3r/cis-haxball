@@ -105,7 +105,10 @@ class TransfersList(ListView):
 
 
 class FreeAgentList(ListView):
-    queryset = FreeAgent.objects.filter(is_active=True).order_by('-created')
+    queryset = FreeAgent.objects \
+        .select_related('player__user_profile') \
+        .filter(is_active=True) \
+        .order_by('-created')
     context_object_name = 'agents'
     template_name = 'tournament/free_agent/free_agents_list.html'
 
@@ -119,7 +122,7 @@ class FreeAgentList(ListView):
                     fa.created = timezone.now()
                     fa.is_active = True
                     fa.save()
-                    agents = FreeAgent.objects.filter(is_active=True).order_by('-created')
+
                     return redirect('tournament:free_agent')
             except:
                 fa_form = FreeAgentForm(data=request.POST)
@@ -129,7 +132,9 @@ class FreeAgentList(ListView):
                     fa.created = timezone.now()
                     fa.is_active = True
                     fa.save()
+
                     return redirect('tournament:free_agent')
+
         return redirect('tournament:free_agent')
 
 
