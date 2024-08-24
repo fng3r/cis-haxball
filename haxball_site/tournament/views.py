@@ -582,7 +582,11 @@ def teams_halloffame():
 
 
 class TeamRatingFilter(FilterSet):
-    version = ModelChoiceFilter(queryset=RatingVersion.objects.all(), label='Версия', empty_label=None)
+    version = ModelChoiceFilter(
+        queryset=RatingVersion.objects.select_related('related_season').all(),
+        label='Версия',
+        empty_label=None
+    )
 
     class Meta:
         model = TeamRating
@@ -598,9 +602,12 @@ class TeamRatingView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         params = self.request.GET or {'version': self.latest_rating_version.number}
-        context['filter'] = TeamRatingFilter(params, queryset=self.queryset)
+        context['filter'] = TeamRatingFilter(params, queryset=self.queryset.select_related('team'))
         selected_version = int(params['version'])
-        source_season = RatingVersion.objects.get(number=selected_version).related_season
+        source_season = RatingVersion.objects \
+            .select_related('related_season') \
+            .get(number=selected_version) \
+            .related_season
         previous_seasons = Season.objects \
             .filter(number__lt=source_season.number, number__gt=5, title__contains='ЧР') \
             .order_by('-number')
@@ -614,13 +621,8 @@ class TeamRatingView(ListView):
         context['seasons_rating'] = weighted_seasons_rating
         context['seasons_weights'] = seasons_weights
 
-        previous_rating_version = TeamRating.objects.filter(version__number=selected_version-1)
-        if previous_rating_version:
-            context['previous_rating'] = {item.team: item.rank
-                                          for item in previous_rating_version.all()}
-
-        print(seasons_weights)
-        print(weighted_seasons_rating)
+        previous_rating_version = TeamRating.objects.select_related('team').filter(version__number=selected_version-1)
+        context['previous_rating'] = {item.team: item.rank for item in previous_rating_version.all()}
 
         return context
 
@@ -631,6 +633,7 @@ class TeamRatingView(ListView):
         season_count = 1
         if earliest_season:
             previous_seasons = Season.objects \
+                .select_related('bound_season') \
                 .filter(number__gte=earliest_season.number, number__lt=source_season.number) \
                 .order_by('-number')
             for season in previous_seasons:
@@ -646,6 +649,7 @@ class TeamRatingView(ListView):
     def get_weighted_seasons_rating(seasons, seasons_weights):
         weighted_seasons_rating = {}
         seasons_rating = SeasonTeamRating.objects \
+            .select_related('team', 'season') \
             .filter(season__in=seasons) \
             .order_by('season__number')
         for rating_entry in seasons_rating:
