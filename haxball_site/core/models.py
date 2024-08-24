@@ -146,14 +146,14 @@ class NewComment(models.Model):
         return 'Комментарий от {} к {}'.format(self.author, self.content_object)
 
     def get_absolute_url(self):
-        obj = self.content_object
-        a = list(self.content_object.comments.filter(parent=None))
-        b = list(self.content_object.comments.filter(~Q(parent=None)))
-        if self in b:
+        if self.parent:
             return self.get_parent().get_absolute_url()
-        ind = a.index(self)
-        page = (ind//25)+1
-        return '{}?page={}#r{}'.format(obj.get_absolute_url(), page, self.id)
+
+        commented_object = self.content_object
+        top_level_comments = list(self.content_object.comments.filter(parent=None))
+        index = top_level_comments.index(self)
+        page = (index // 25) + 1
+        return '{}?page={}#r{}'.format(commented_object.get_absolute_url(), page, self.id)
 
     def get_parent(self):
         obj = self
@@ -162,7 +162,7 @@ class NewComment(models.Model):
         return obj
 
     def is_parent(self):
-        return self.parent == None
+        return self.parent is None
 
     def has_childs(self):
         return self.childs.count() > 0

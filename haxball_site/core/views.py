@@ -21,7 +21,11 @@ from tournament.models import Team, Achievements
 
 # Вьюха для списка постов
 class PostListView(ListView):
-    queryset = Post.objects.filter(category__is_official=True).order_by('-important', '-publish', )
+    queryset = Post.objects \
+        .select_related('category', 'author__user_profile') \
+        .prefetch_related('comments', 'votes') \
+        .filter(category__is_official=True) \
+        .order_by('-important', '-publish',)
     context_object_name = 'posts'
     paginate_by = 7
     template_name = 'core/post/list.html'
