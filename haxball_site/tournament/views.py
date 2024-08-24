@@ -55,7 +55,11 @@ class DisqualificationFilter(DefaultFilterSet):
 
 
 class DisqualificationsList(ListView):
-    queryset = Disqualification.objects.filter(match__league__championship__number__gt=14).order_by('-created')
+    queryset = Disqualification.objects \
+        .select_related('team', 'match__team_home', 'match__team_guest', 'player__name__user_profile') \
+        .prefetch_related('tours__league', 'lifted_tours__league') \
+        .filter(match__league__championship__number__gt=14) \
+        .order_by('-created')
     context_object_name = 'disqualifications'
     template_name = 'tournament/disqualification/disqualifications_list.html'
 
