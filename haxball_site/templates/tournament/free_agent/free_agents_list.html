@@ -11,11 +11,13 @@
         }
     </script>
 {% endblock %}
-{% block title %}Чемпионат | Свободные агенты — CIS-HAXBALL {% endblock %}
+{% block title %}Чемпионат | Свободные агенты — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
     <div class="card mb-2 mt-2" style="border-radius: 10px">
-        <h2 class="text-center my-2"><i class="fa fa-search-plus text-success" aria-hidden="true"></i>
-            Команды/свободных агентов </h2>
+        <h2 class="text-center my-2">
+            <i class="fa fa-search-plus text-success" aria-hidden="true"></i>
+            Поиск команды/игроков
+        </h2>
         <div class="container-fluid p-0 mx-0">
             <div class="table-fix table-responsive">
                 <table class="table table-hover" style="max-width: 100%">
@@ -31,23 +33,17 @@
                     <tbody>
                     {% for agent in agents %}
                         <tr>
-                            <th scope="row" class="pl-2 pr-1">
+                            <td scope="row" class="pl-2 pr-1">
                                 <div class="media">
                                     <img src="{{ agent.player.user_profile.avatar.url }}" class="align-self-start mr-1"
-                                         alt="{{ agent.player.username }}" width="28" style="border-radius: 100%">
+                                         alt="{{ agent.player.username }}" width="28" height="28" style="border-radius: 100%">
                                     <div class="media-body">
                                         <h6 class="mt-0"><a
                                                 href="{{ agent.player.user_profile.get_absolute_url }}">{{ agent.player }}</a>
                                         </h6>
                                     </div>
                                 </div>
-                                   <!-- <div class="d-inline">
-                                        <img src="{{ agent.player.user_profile.avatar.url }}"
-                                             alt="{{ agent.player.username }}" width="28"
-                                             style="border-radius: 100%">
-                                        <a href="{{ agent.player.user_profile.get_absolute_url }}">{{ agent.player }}</a>
-                                    </div>-->
-                            </th>
+                            </td>
                             <td class="text-center" style="font-size: 12px">{{ agent.position_main }}</td>
                             <td>
                                 <div class="d-flex justify-content-center">
