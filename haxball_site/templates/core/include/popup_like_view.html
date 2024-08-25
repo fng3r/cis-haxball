@@ -13,17 +13,17 @@
                     <div class="popup-tab-like" id="like{{comment.id}}">
                         <div class="fa fa-thumbs-up"  style="padding-top: 2px"></div>
                         <div class="popup-tab-count">
-                            {{ comment.votes.likes.count }}</div>
+                            {{ comment.likes|length }}</div>
                     </div>
                     <div class="popup-tab-dislike" id="dislike{{comment.id}}">
                         <div class="fa fa-thumbs-down"  style="padding-top: 2px: "></div>
                         <div class=popup-tab-count>
-                            {{ comment.votes.dislikes.count }}</div>
+                            {{ comment.dislikes|length }}</div>
                     </div>
                 </div>
                 <div class="popup-user-reactions">
                     <div class="vote-like" id="vote-like{{comment.id}}">
-                        {% for like in comment.votes.likes %}
+                        {% for like in comment.likes %}
 
                                 <div class="voter-user">
                                     <img class="voter-avatar" src="{{ like.user.user_profile.avatar.url }}" alt="...">
@@ -34,7 +34,7 @@
                     </div>
 
                     <div class="vote-dislike" id="vote-dislike{{comment.id}}">
-                        {% for dislike in comment.votes.dislikes %}
+                        {% for dislike in comment.dislikes %}
 
                             <div class="voter-user">
                                 <img class="voter-avatar" src="{{ dislike.user.user_profile.avatar.url }}" alt="...">

@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import F, Max
+from django.db.models import F, Max, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -218,29 +218,6 @@ class TournamentsView(ListView):
     template_name = 'core/tournaments/tournaments_list.html'
 
 
-# Вьюха для поста и комментариев к нему.
-# С одной стороны удобно одним методом, с другой-хезе как правильно надо)
-"""
-    if request.method == 'POST':
-        comment_form = CommentForm(data=request.POST)
-        page = request.POST.get('page')
-        print(page)
-        if comment_form.is_valid():
-            new_comment = comment_form.save(commit=False)
-            if request.POST.get("parent", None):
-                new_comment.parent_id = int(request.POST.get('parent'))
-            new_comment.author = request.user
-            new_comment.post = post
-            new_comment.save()
-            return redirect(post.get_absolute_url() + '#r' + str(new_comment.id))
-    else:
-        post.views = F('views') + 1
-        post.save()
-        comment_form = CommentForm()
-        """
-
-
-# Учитывая, что потом пост-комменты будут использоваться для форума.. Такие дела
 class PostDetailView(DetailView):
     model = Post
     context_object_name = 'post'
@@ -251,9 +228,18 @@ class PostDetailView(DetailView):
         post = context['post']
         post.views = post.views + 1
         post.save()
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(Post),
-                                                 object_id=post.id,
-                                                 parent=None)
+
+        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
+        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
+        comments_obj = NewComment.objects \
+            .select_related('author__user_profile') \
+            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
+                              # tweak for prefetching recursive field
+                              'childs__childs__childs__childs__childs',
+                              prefetch_likes, prefetch_dislikes) \
+            .filter(content_type=ContentType.objects.get_for_model(Post),
+                    object_id=post.id,
+                    parent=None)
 
         paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
@@ -285,9 +271,18 @@ class ProfileDetail(DetailView):
         profile = context['profile']
         profile.views = profile.views + 1
         profile.save()
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(Profile),
-                                                 object_id=profile.id,
-                                                 parent=None)
+
+        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
+        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
+        comments_obj = NewComment.objects \
+            .select_related('author__user_profile') \
+            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
+                              # tweak for prefetching recursive field
+                              'childs__childs__childs__childs__childs',
+                              prefetch_likes, prefetch_dislikes) \
+            .filter(content_type=ContentType.objects.get_for_model(Profile),
+                    object_id=profile.id,
+                    parent=None)
 
         paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')

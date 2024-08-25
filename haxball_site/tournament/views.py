@@ -6,7 +6,7 @@ from itertools import groupby
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, F, Q, Sum, Prefetch
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django_filters import FilterSet, ModelChoiceFilter, ChoiceFilter
@@ -19,7 +19,7 @@ from .forms import FreeAgentForm, EditTeamProfileForm
 from .models import FreeAgent, Team, Match, League, Player, Substitution, Season, OtherEvents, Disqualification, \
     Postponement, PlayerTransfer, TeamRating, RatingVersion, SeasonTeamRating
 from core.forms import NewCommentForm
-from core.models import NewComment, Profile
+from core.models import NewComment, Profile, LikeDislike
 
 from .templatetags.tournament_extras import get_user_teams
 
@@ -196,16 +196,23 @@ class TeamList(ListView):
 class LeagueDetail(DetailView):
     context_object_name = 'league'
     model = League
-    # queryset = League.objects.filter(is_cup=False, championship__is_active=True)
     template_name = 'tournament/premier_league/team_table.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         league = context['league']
 
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(League),
-                                                 object_id=league.id,
-                                                 parent=None)
+        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
+        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
+        comments_obj = NewComment.objects \
+            .select_related('author__user_profile') \
+            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
+                              # tweak for prefetching recursive field
+                              'childs__childs__childs__childs__childs',
+                              prefetch_likes, prefetch_dislikes) \
+            .filter(content_type=ContentType.objects.get_for_model(League),
+                    object_id=league.id,
+                    parent=None)
 
         paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
@@ -235,9 +242,18 @@ class MatchDetail(DetailView):
         context = super().get_context_data(**kwargs)
         match = context['match']
 
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(Match),
-                                                 object_id=match.id,
-                                                 parent=None)
+        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
+        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
+        comments_obj = NewComment.objects \
+            .select_related('author__user_profile') \
+            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
+                              # tweak for prefetching recursive field
+                              'childs__childs__childs__childs__childs',
+                              prefetch_likes, prefetch_dislikes) \
+            .filter(content_type=ContentType.objects.get_for_model(Match),
+                    object_id=match.id,
+                    parent=None)
+
         paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
 

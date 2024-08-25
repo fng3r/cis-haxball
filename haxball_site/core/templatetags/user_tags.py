@@ -212,6 +212,14 @@ def user_in(objects, user):
 
 
 @register.filter
+def user_in_list(objects, user):
+    if objects and user.is_authenticated:
+        return any(obj.user == user for obj in objects)
+
+    return False
+
+
+@register.filter
 def can_edit_profile_bg(user: User):
     if user.is_superuser:
         return True
