@@ -666,22 +666,30 @@ def league_table(league: League):
 
 @register.filter
 def top_goalscorers(league):
-    players = Player.objects.filter(goals__match__league=league).annotate(
-        goals_c=Count('goals__match__league')).order_by('-goals_c')
+    players = Player.objects \
+        .select_related('team', 'name__user_profile') \
+        .filter(goals__match__league=league) \
+        .annotate(goals_c=Count('goals__match__league')).order_by('-goals_c')
     return players
 
 
 @register.filter
 def top_assistent(league):
-    players = Player.objects.filter(assists__match__league=league).annotate(
-        ass_c=Count('assists__match__league')).order_by('-ass_c')
+    players = Player.objects \
+        .select_related('team', 'name__user_profile') \
+        .filter(assists__match__league=league) \
+        .annotate(ass_c=Count('assists__match__league')) \
+        .order_by('-ass_c')
     return players
 
 
 @register.filter
 def top_clean_sheets(league):
-    players = Player.objects.filter(event__match__league=league, event__event='CLN').annotate(
-        event_c=Count('event__match__league')).order_by('-event_c')
+    players = Player.objects \
+        .select_related('team', 'name__user_profile') \
+        .filter(event__match__league=league, event__event='CLN') \
+        .annotate(event_c=Count('event__match__league')) \
+        .order_by('-event_c')
     return players
 
 
@@ -725,7 +733,9 @@ def get_league_table(league: League):
     losses = [0 for _ in range(teams_count)]  # Поражений
     last_matches = [[] for _ in range(teams_count)]
     for i, team in enumerate(teams):
-        matches = Match.objects.filter((Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True)
+        matches = Match.objects \
+            .select_related('team_home', 'team_guest', 'result__winner', 'numb_tour') \
+            .filter((Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True)
         matches_played[i] = matches.count()
 
         wins_count = 0

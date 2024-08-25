@@ -198,6 +198,10 @@ class LeagueDetail(DetailView):
     model = League
     template_name = 'tournament/premier_league/team_table.html'
 
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('tours__tour_matches__team_home',
+                                                       'tours__tour_matches__team_guest')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         league = context['league']
