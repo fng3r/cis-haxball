@@ -266,6 +266,9 @@ class ProfileDetail(DetailView):
     context_object_name = 'profile'
     template_name = 'core/profile/profile_detail.html'
 
+    def get_queryset(self):
+        return super().get_queryset().select_related('name__user_player__team')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile = context['profile']
@@ -301,7 +304,7 @@ class ProfileDetail(DetailView):
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
 
-        all_achievements = Achievements.objects.filter(player__name=profile.name)
+        all_achievements = Achievements.objects.select_related('category').filter(player__name=profile.name)
         achievements_by_category = {}
         for achievement in all_achievements:
             category = 'Без категории'
