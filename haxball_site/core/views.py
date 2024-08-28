@@ -228,8 +228,8 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = context['post']
-        post.views = post.views + 1
-        post.save()
+        post.views += 1
+        post.save(update_fields=['views'])
 
         page = self.request.GET.get('page')
         comments_obj = get_comments_for_object(Post, post.id)
@@ -254,8 +254,8 @@ class ProfileDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile = context['profile']
-        profile.views = profile.views + 1
-        profile.save()
+        profile.views += 1
+        profile.save(update_fields=['views'])
 
         page = self.request.GET.get('page')
         comments_obj = get_comments_for_object(Profile, profile.id)
