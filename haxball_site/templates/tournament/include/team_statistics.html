@@ -1,6 +1,7 @@
 {% load static %}
 {% load thumbnail %}
 {% load i18n %}
+{% load mathfilters %}
 {% load tournament_extras %}
 
 <style>
@@ -102,16 +103,16 @@
 
             <tbody>
 
-            {% for seas,stats_by_league in stats.items %}
+            {% for season, stats_by_league in stats|sorted_by_season %}
                 <tr>
-                    <td class="h6 text" rowspan="{{ team|rows_team_stat:seas }}" style="font-weight: 700;">{{ seas }}</td>
+                    <td class="h6 text" rowspan="{{ stats|team_stats_rows_count:season }}" style="font-weight: 700;">{{ season }}</td>
 
-                    {% for league, stats in stats_by_league.items %}
+                    {% for league, league_stats in stats_by_league|sorted_by_league %}
                         <td class="text" style="font-size: 11pt; font-weight: 600;">
                             <a href="{{ league.get_absolute_url }}">{{ league.title }}</a>
                         </td>
-                        {% for i in stats %}
-                            <td class="text-center number">{{ i|floatformat:0 }}</td>
+                        {% for _, single_stat in league_stats|dd_items %}
+                            <td class="text-center number">{{ single_stat|floatformat:0 }}</td>
                         {% endfor %}
                         </tr>
                     {% endfor %}
@@ -121,8 +122,8 @@
             <tr>
                 <th colspan="2" class="text-center text">
                 </th>
-                {% for i in overall_stats %}
-                    <td class="text-center font-weight-bolder number">{{ i|floatformat:0 }} </td>
+                {% for single_stat in overall_stats %}
+                    <td class="text-center font-weight-bolder number">{{ single_stat|floatformat:0 }} </td>
                 {% endfor %}
             </tr>
 
@@ -168,24 +169,24 @@
             </thead>
             <tbody>
 
-            {% for seas,stats_by_league in extra_stats.items %}
+            {% for season, stats_by_league in extra_stats|sorted_by_season %}
                 <tr>
-                    <td class="h6 text" rowspan="{{ team|rows_team_stat:seas }}" style="font-weight: 700;">{{ seas }}</td>
+                    <td class="h6 text" rowspan="{{ extra_stats|team_stats_rows_count:season }}" style="font-weight: 700;">{{ season }}</td>
 
-                    {% for league, stats in stats_by_league.items %}
+                    {% for league, league_stats in stats_by_league|sorted_by_league %}
                         <td class="text" style="font-size: 11pt; font-weight: 600;">
                             <a href="{{ league.get_absolute_url }}">{{ league.title }}</a>
                         </td>
-                        {% for i in stats %}
-                            {% if forloop.counter == 1 or i == 0 %}
+                        {% for _, single_stat in league_stats|dd_items %}
+                            {% if forloop.counter == 1 or single_stat == 0 %}
                                 <td class="text-center number">
                             {% else %}
                                 <td class="text-center number">
                             {% endif %}
-                                    {% if forloop.counter == 1 or i == 0 %}
-                                        {{ i|floatformat:0 }}
+                                    {% if forloop.counter == 1 or single_stat == 0 %}
+                                        {{ single_stat|floatformat:0 }}
                                     {% else %}
-                                        {{ i|floatformat:2 }}
+                                        {{ single_stat|floatformat:2 }}
                                     {% endif %}
                                 </td>
                         {% endfor %}
@@ -197,12 +198,12 @@
             <tr>
                 <th colspan="2" class="text-center text">
                 </th>
-                {% for i in overall_avg_stats %}
+                {% for single_stat in overall_avg_stats %}
                     <td class="text-center font-weight-bolder number">
-                        {% if forloop.counter == 1 or i == 0 %}
-                            {{ i|floatformat:0 }}
+                        {% if forloop.counter == 1 or single_stat == 0 %}
+                            {{ single_stat|floatformat:0 }}
                         {% else %}
-                            {{ i|floatformat:2 }}
+                            {{ single_stat|floatformat:2 }}
                         {% endif %}
                     </td>
                 {% endfor %}
@@ -483,6 +484,7 @@
                                     {{ player.username }}
                                 </a>
                             </span>
+                            -
                             <span>
                                  {{ other_stats.greatest_goalscorer.count }} {{ other_stats.greatest_goalscorer.count|ru_pluralize:'гол,гола,голов' }}
                             </span>
@@ -507,6 +509,7 @@
                                     {{ player.username }}
                                 </a>
                             </span>
+                            -
                             <span>
                                 {{ other_stats.greatest_assistant.count }} {{ other_stats.greatest_assistant.count|ru_pluralize:'передача,передачи,передач' }}
                             </span>
@@ -531,6 +534,7 @@
                                     {{ player.username }}
                                 </a>
                             </span>
+                            -
                             <span>
                                 {{ other_stats.greatest_goalkeeper.count }} "{{ other_stats.greatest_goalkeeper.count|ru_pluralize:'сухарь,сухаря,сухарей' }}"
                             </span>

@@ -1,24 +1,23 @@
-import operator
 from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import reduce
+
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Count, Q
-from django.urls import reverse
-from django.views.decorators.http import require_POST
-from django_filters import FilterSet, ModelChoiceFilter, ChoiceFilter
+from django.db.models import Count, Q, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView
+from django_filters import FilterSet, ModelChoiceFilter, ChoiceFilter
 
 from .forms import FreeAgentForm, EditTeamProfileForm
 from .models import FreeAgent, Team, Match, League, Player, Substitution, Season, OtherEvents, Disqualification, \
     Postponement, PlayerTransfer, TeamRating, RatingVersion, SeasonTeamRating
+from .templatetags.tournament_extras import get_user_teams
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
-
-from .templatetags.tournament_extras import get_user_teams
 
 
 class DefaultFilterSet(FilterSet):
@@ -182,6 +181,12 @@ class TeamDetail(DetailView):
     model = Team
     context_object_name = 'team'
     template_name = 'tournament/teams/team_page.html'
+
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('owner') \
+            .prefetch_related(Prefetch('players_in_team',
+                                       queryset=Player.objects.select_related('name__user_profile', 'player_nation')))
 
 
 class TeamList(ListView):

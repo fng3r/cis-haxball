@@ -4,7 +4,8 @@ from typing import Optional
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Q, Count, QuerySet, F, Prefetch, Subquery, OuterRef
+from django.db.models import Q, Count, QuerySet, F, Prefetch, Subquery, OuterRef, Exists
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from ..models import FreeAgent, OtherEvents, Goal, Match, League, Team, Player, Substitution, Season, PlayerTransfer, \
@@ -38,232 +39,278 @@ def date_can(user):
     return user.user_free_agent.created + timezone.timedelta(hours=6)
 
 
-# Евенты, всего/в текущем сезоне
-def event_count(player, team, type):
-    return OtherEvents.objects.filter(author=player, team=team, event=type, match__is_played=True).count()
+@register.filter
+def current_squad_stats(team):
+    return get_team_squad_stats(team, for_current_season=True)
 
 
 @register.filter
-def cs_count(player, team):
-    return event_count(player, team, OtherEvents.CLEAN_SHEET)
+def all_time_squad_stats(team):
+    return get_team_squad_stats(team, for_current_season=False)
 
 
-@register.filter
-def og_count(player, team):
-    return event_count(player, team, OtherEvents.OWN_GOAL)
+def get_team_squad_stats(team, for_current_season=False):
+    team_players = get_team_players(team, for_current_season)
+    players_matches = {pl: get_player_matches(pl, team, for_current_season) for pl in team_players}
+
+    current_season_condition = Q(match__league__championship__is_active=True) if for_current_season else ~Q(pk__in=[])
+
+    goals_subquery = (Goal.objects
+                      .filter(current_season_condition, team=team, author=OuterRef('id'))
+                      .order_by().values('author')
+                      .annotate(c=Count('*')).values('c'))
+
+    assists_subquery = (Goal.objects
+                        .filter(current_season_condition, team=team, assistent=OuterRef('id'))
+                        .order_by().values('assistent')
+                        .annotate(c=Count('*')).values('c'))
+
+    subs_out_subquery = (Substitution.objects
+                   .filter(current_season_condition, team=team, player_out=OuterRef('id'))
+                   .order_by().values('player_out')
+                   .annotate(c=Count('*')).values('c'))
+
+    subs_in_subquery = (Substitution.objects
+                   .filter(current_season_condition, team=team, player_in=OuterRef('id'))
+                   .order_by().values('player_in')
+                   .annotate(c=Count('*')).values('c'))
+
+    cs_subquery = (OtherEvents.objects.cs()
+                   .filter(current_season_condition, team=team, author=OuterRef('id'))
+                   .order_by().values('author')
+                   .annotate(c=Count('*')).values('c'))
+
+    ogs_subquery = (OtherEvents.objects.ogs()
+                    .filter(current_season_condition, team=team, author=OuterRef('id'))
+                    .order_by().values('author')
+                    .annotate(c=Count('*')).values('c'))
+
+    yellow_cards_subquery = (OtherEvents.objects.yellow_cards()
+                    .filter(current_season_condition, team=team, author=OuterRef('id'))
+                    .order_by().values('author')
+                    .annotate(c=Count('*')).values('c'))
+
+    red_cards_subquery = (OtherEvents.objects.red_cards()
+                    .filter(current_season_condition, team=team, author=OuterRef('id'))
+                    .order_by().values('author')
+                    .annotate(c=Count('*')).values('c'))
+
+    players_stats = team_players \
+        .annotate(
+            goals_c=Coalesce(Subquery(goals_subquery), 0),
+            assists_c=Coalesce(Subquery(assists_subquery), 0),
+            cs_c=Coalesce(Subquery(cs_subquery), 0),
+            ogs_c=Coalesce(Subquery(ogs_subquery), 0),
+            subs_out_c=Coalesce(Subquery(subs_out_subquery), 0),
+            subs_in_c=Coalesce(Subquery(subs_in_subquery), 0),
+            yellow_cards_c=Coalesce(Subquery(yellow_cards_subquery), 0),
+            red_cards_c=Coalesce(Subquery(red_cards_subquery), 0)
+        ).select_related('name__user_profile', 'player_nation')
+
+    for player in players_stats:
+        player.__setattr__('matches_c', players_matches[player])
+
+    if not for_current_season:
+        players_stats = list(filter(lambda stats: stats.matches_c > 0, players_stats))
+
+    return sorted(players_stats, key=lambda player: player.matches_c, reverse=True)
 
 
-@register.filter
-def yellow_cards_count(player, team):
-    return event_count(player, team, OtherEvents.YELLOW_CARD)
+def get_team_players(team, current=False):
+    if current:
+        return team.players_in_team.all()
+
+    return Player.objects.filter(
+        Exists(
+            PlayerTransfer.objects.filter(to_team=team, trans_player=OuterRef('id'))
+        )
+    )
 
 
-@register.filter
-def red_cards_count(player, team):
-    return event_count(player, team, OtherEvents.RED_CARD)
+def get_player_matches(player, team, for_current_season=False):
+    current_season_condition = Q(league__championship__is_active=True) if for_current_season else ~Q(pk__in=[])
 
-
-@register.filter
-def event_count_current(player, type):
-    current = Season.objects.filter(is_active=True).first()
-    return OtherEvents.objects.filter(author=player, team=player.team, event=type, match__is_played=True,
-                                      match__league__championship=current).count()
-
-
-@register.filter
-def goals_in_team(player, team):
-    return Goal.objects.filter(author=player, team=team, match__is_played=True).count()
-
-
-@register.filter
-def goals_in_team_current(player, team):
-    current = Season.objects.filter(is_active=True).first()
-    return Goal.objects.filter(author=player, team=team, match__is_played=True,
-                               match__league__championship=current).count()
-
-
-@register.filter
-def assists_in_team(player, team):
-    return Goal.objects.filter(assistent=player, team=team, match__is_played=True).count()
-
-
-@register.filter
-def assists_in_team_current(player, team):
-    current = Season.objects.filter(is_active=True).first()
-    return Goal.objects.filter(assistent=player, team=team, match__is_played=True,
-                               match__league__championship=current).count()
-
-
-@register.filter
-def replaced_in_team(player, team):
-    return Substitution.objects.filter(team=team, player_out=player, match__is_played=True).count()
-
-
-@register.filter
-def replaced_in_team_current(player, team):
-    current = Season.objects.filter(is_active=True).first()
-    return Substitution.objects.filter(team=team, player_out=player, match__is_played=True,
-                                       match__league__championship=current).count()
-
-
-#
-@register.filter
-def join_game_in_team(player, team):
-    return Substitution.objects.filter(team=team, player_in=player, match__is_played=True).count()
-
-
-@register.filter
-def join_game_in_team_current(player, team):
-    current = Season.objects.filter(is_active=True).first()
-    return Substitution.objects.filter(team=team, player_in=player, match__is_played=True,
-                                       match__league__championship=current).count()
-
-
-@register.filter
-def matches_in_team_current(player, team):
-    return (Match.objects.filter(team_guest=team, team_guest_start=player, is_played=True,
-                                 league__championship__is_active=True).count() +
-            Match.objects.filter(team_home=team, team_home_start=player, is_played=True,
-                                 league__championship__is_active=True).count() +
-            Match.objects.filter(~(Q(team_guest_start=player) | Q(team_home_start=player)),
+    return (Match.objects.filter(current_season_condition, team_guest=team, team_guest_start=player, is_played=True).count() +
+            Match.objects.filter(current_season_condition, team_home=team, team_home_start=player, is_played=True).count() +
+            Match.objects.filter(current_season_condition, ~(Q(team_guest_start=player) | Q(team_home_start=player)),
                                  is_played=True, match_substitutions__team=team,
-                                 match_substitutions__player_in=player, league__championship__is_active=True
-    ).distinct().count())
-
-
-@register.filter
-def matches_in_team(player, team):
-    return (Match.objects.filter(team_guest=team, team_guest_start=player, is_played=True).count() +
-            Match.objects.filter(team_home=team, team_home_start=player, is_played=True).count() +
-            Match.objects.filter(~(Q(team_guest_start=player) | Q(team_home_start=player)), is_played=True,
-                                 match_substitutions__team=team, match_substitutions__player_in=player).distinct().count())
+                                 match_substitutions__player_in=player).distinct().count())
 
 
 @register.inclusion_tag('tournament/include/team_statistics.html')
 def team_statistics(team: Team):
-    stats_by_season = {}
-    extra_stats_by_season = {}
-    seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct().order_by('number')
-    for season in seasons:
-        season_stats = {}
-        season_extra_stats = {}
+    prefetches = (
+        Prefetch('match_goal', queryset=Goal.objects.filter(team=team, match__is_played=True), to_attr='goals'),
+        Prefetch('match_goal', queryset=Goal.objects.filter(~Q(team=team), match__is_played=True), to_attr='conceded_goals'),
+        Prefetch('match_goal', queryset=Goal.objects.filter(team=team, assistent__isnull=False, match__is_played=True), to_attr='assists'),
+        Prefetch('match_event', queryset=OtherEvents.objects.cs().filter(team=team, match__is_played=True), to_attr='cs'),
+        Prefetch('match_event', queryset=Substitution.objects.filter(team=team, match__is_played=True), to_attr='subs'),
+        Prefetch('match_event', queryset=OtherEvents.objects.ogs().filter(team=team, match__is_played=True), to_attr='ogs'),
+        Prefetch('match_event', queryset=OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True), to_attr='yellow_cards'),
+        Prefetch('match_event', queryset=OtherEvents.objects.red_cards().filter(team=team, match__is_played=True), to_attr='red_cards'),
+    )
 
-        leagues = list(League.objects.filter(championship=season, teams=team).order_by('id'))
-        for league in leagues:
-            league_matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team),
-                                                  league=league, is_played=True)
-            matches_count = league_matches.count()
+    all_matches = Match.objects \
+        .filter(Q(team_home=team) | Q(team_guest=team), is_played=True) \
+        .select_related('league__championship', 'result__winner') \
+        .prefetch_related(*prefetches)
 
-            if matches_count == 0:
-                continue
+    stats_by_season = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+    for match in all_matches:
+        league = match.league
+        season = league.championship
 
-            goals = Goal.objects.filter(team=team, match__is_played=True, match__league=league).count()
-            conceded_goals = (Goal.objects.filter(Q(match__team_home=team) | Q(match__team_guest=team),
-                                                  ~Q(team=team), match__league=league, match__is_played=True).count())
-            assists_count = Goal.objects.filter(team=team, assistent__isnull=False,
-                                                match__is_played=True, match__league=league).count()
-            clean_sheets = OtherEvents.objects.cs().filter(team=team, match__is_played=True,
-                                                           match__league=league).count()
-            yellow_cards = OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True,
-                                                                     match__league=league).count()
-            red_cards = OtherEvents.objects.red_cards().filter(team=team, match__is_played=True,
-                                                               match__league=league).count()
-            own_goals = OtherEvents.objects.ogs().filter(team=team, match__is_played=True,
-                                                         match__league=league).count()
-            subs = Substitution.objects.filter(team=team, match__is_played=True, match__league=league).count()
+        stats_by_season[season][league][0] += 1
+        stats_by_season[season][league][1] = stats_by_season[season][league][1]
+        stats_by_season[season][league][2] = stats_by_season[season][league][2]
+        stats_by_season[season][league][3] = stats_by_season[season][league][3]
+        if match.winner == team:
+            stats_by_season[season][league][1] += 1
+        elif match.result == MatchResult.DRAW:
+            stats_by_season[season][league][2] += 1
+        else:
+            stats_by_season[season][league][3] += 1
+        stats_by_season[season][league][4] = 0
+        stats_by_season[season][league][5] += len(match.goals)
+        stats_by_season[season][league][6] += len(match.conceded_goals)
+        stats_by_season[season][league][7] += len(match.assists)
+        stats_by_season[season][league][8] += len(match.cs)
+        stats_by_season[season][league][9] += len(match.subs)
+        stats_by_season[season][league][10] += len(match.ogs)
+        stats_by_season[season][league][11] += len(match.yellow_cards)
+        stats_by_season[season][league][12] += len(match.red_cards)
 
-            wins = (league_matches.filter(result__winner=team).count())
-            losses = league_matches.filter(~Q(result__winner=team), ~Q(result__value=MatchResult.DRAW)).count()
-            draws = league_matches.filter(result__value=MatchResult.DRAW).count()
-            winrate = wins / matches_count * 100
+    for season in stats_by_season:
+        for league in stats_by_season[season]:
+            league_stats = stats_by_season[season][league]
+            league_matches = league_stats[0]
+            league_wins = league_stats[1]
+            league_stats[4] = float(league_wins) / (league_matches or 1) * 100
 
-            league_stats = [matches_count, wins, draws, losses, winrate, goals, conceded_goals,
-                            assists_count, clean_sheets, subs, own_goals, yellow_cards, red_cards]
+    all_wins = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), result__winner=team, is_played=True)
+    all_draws = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), result__value=MatchResult.DRAW, is_played=True)
+    all_losses = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), ~Q(result__winner=team), ~Q(result__value=MatchResult.DRAW), is_played=True)
+    all_goals = Goal.objects.filter(team=team, match__is_played=True)
+    all_conceded_goals = Goal.objects.filter(Q(match__team_home=team) | Q(match__team_guest=team), ~Q(team=team), match__is_played=True)
+    all_assists = Goal.objects.filter(team=team, assistent__isnull=False, match__is_played=True)
+    all_clean_sheets = OtherEvents.objects.cs().filter(team=team, match__is_played=True)
+    all_subs = Substitution.objects.filter(team=team, match__is_played=True)
+    all_ogs = OtherEvents.objects.ogs().filter(team=team, match__is_played=True)
+    all_yellow_cards = OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True)
+    all_red_cards = OtherEvents.objects.red_cards().filter(team=team, match__is_played=True)
 
-            avg_goals = goals / matches_count
-            avg_conceded_goals = conceded_goals / matches_count
-            avg_assists = assists_count / matches_count
-            avg_clean_sheets = clean_sheets / matches_count
-            avg_yellow_cards = yellow_cards / matches_count
-            avg_red_cards = red_cards / matches_count
-            avg_own_goals = own_goals / matches_count
-            avg_subs = subs / matches_count
+    overall_matches = len(all_matches)
+    overall_wins = all_wins.count()
+    overall_draws = all_draws.count()
+    overall_losses = all_losses.count()
+    overall_winrate = float(overall_wins) / (overall_matches or 1) * 100
+    overall_goals = all_goals.count()
+    overall_conceded_goals = all_conceded_goals.count()
+    overall_assists = all_assists.count()
+    overall_clean_sheets = all_clean_sheets.count()
+    overall_subs = all_subs.count()
+    overall_ogs = all_ogs.count()
+    overall_yellow_cards = all_yellow_cards.count()
+    overall_red_cards = all_red_cards.count()
 
-            league_extra_stats = [matches_count, avg_goals, avg_conceded_goals, avg_assists, avg_clean_sheets,
-                                  avg_subs, avg_own_goals, avg_yellow_cards, avg_red_cards]
+    overall_stats = [overall_matches, overall_wins, overall_draws, overall_losses, overall_winrate,
+                     overall_goals, overall_conceded_goals, overall_assists, overall_clean_sheets,
+                     overall_subs, overall_ogs, overall_yellow_cards, overall_red_cards]
 
-            season_stats[league] = league_stats
-            season_extra_stats[league] = league_extra_stats
+    overall_avg_goals = overall_goals / (overall_matches or 1)
+    overall_avg_conceded_goals = overall_conceded_goals / (overall_matches or 1)
+    overall_avg_assists = overall_assists / (overall_matches or 1)
+    overall_avg_clean_sheets = overall_clean_sheets / (overall_matches or 1)
+    overall_avg_yellow_cards = overall_yellow_cards / (overall_matches or 1)
+    overall_avg_red_cards = overall_red_cards / (overall_matches or 1)
+    overall_avg_own_goals = overall_ogs / (overall_matches or 1)
+    overall_avg_subs = overall_subs / (overall_matches or 1)
 
-        if season_stats:
-            stats_by_season[season] = season_stats
-            extra_stats_by_season[season] = season_extra_stats
+    overall_avg_stats = [overall_matches, overall_avg_goals, overall_avg_conceded_goals, overall_avg_assists,
+                         overall_avg_clean_sheets, overall_avg_subs, overall_avg_own_goals,
+                         overall_avg_yellow_cards, overall_avg_red_cards]
 
-    all_team_matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
-    overall_matches_count = all_team_matches.count()
-    overall_goals = Goal.objects.filter(team=team, match__is_played=True,).count()
-    overall_conceded_goals = (Goal.objects.filter(Q(match__team_home=team) | Q(match__team_guest=team),
-                                                  ~Q(team=team)).count())
-    overall_assists = Goal.objects.filter(assistent__isnull=False, team=team, match__is_played=True).count()
-    overall_clean_sheets = OtherEvents.objects.cs().filter(team=team, match__is_played=True).count()
-    overall_subs = Substitution.objects.filter(team=team, match__is_played=True).count()
-    overall_ogs = OtherEvents.objects.ogs().filter(team=team, match__is_played=True).count()
-    overall_yellow_cards = OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True).count()
-    overall_red_cards = OtherEvents.objects.red_cards().filter(team=team, match__is_played=True).count()
+    extra_stats_by_season = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+    if overall_matches > 0:
+        for season in stats_by_season:
+            for league in stats_by_season[season]:
+                league_stats = stats_by_season[season][league]
+                league_matches_count = league_stats[0]
+                if league_matches_count == 0:
+                    continue
 
-    overall_wins = all_team_matches.filter(result__winner=team).count()
-    overall_losses = all_team_matches.filter(~Q(result__winner=team), ~Q(result__value=MatchResult.DRAW)).count()
-    overall_draws = all_team_matches.filter(result__value=MatchResult.DRAW).count()
-    overall_winrate = overall_wins / (overall_matches_count or 1) * 100
-
-    overall_stats = [overall_matches_count, overall_wins, overall_draws, overall_losses, overall_winrate, overall_goals,
-                     overall_conceded_goals, overall_assists, overall_clean_sheets, overall_subs, overall_ogs,
-                     overall_yellow_cards, overall_red_cards]
-
-    overall_avg_goals = overall_goals / (overall_matches_count or 1)
-    overall_avg_conceded_goals = overall_conceded_goals / (overall_matches_count or 1)
-    overall_avg_assists = overall_assists / (overall_matches_count or 1)
-    overall_avg_clean_sheets = overall_clean_sheets / (overall_matches_count or 1)
-    overall_avg_yellow_cards = overall_yellow_cards / (overall_matches_count or 1)
-    overall_avg_red_cards = overall_red_cards / (overall_matches_count or 1)
-    overall_avg_ogs = overall_ogs / (overall_matches_count or 1)
-    overall_avg_subs = overall_subs / (overall_matches_count or 1)
-
-    overall_avg_stats = [overall_matches_count, overall_avg_goals, overall_avg_conceded_goals, overall_avg_assists,
-                         overall_avg_clean_sheets, overall_avg_subs, overall_avg_ogs, overall_avg_yellow_cards,
-                         overall_avg_red_cards]
+                extra_stats_by_season[season][league][0] = league_stats[0]
+                extra_stats_by_season[season][league][5] = league_stats[5] / league_matches_count
+                extra_stats_by_season[season][league][6] = league_stats[6] / league_matches_count
+                extra_stats_by_season[season][league][7] = league_stats[7] / league_matches_count
+                extra_stats_by_season[season][league][8] = league_stats[8] / league_matches_count
+                extra_stats_by_season[season][league][9] = league_stats[9] / league_matches_count
+                extra_stats_by_season[season][league][10] = league_stats[10] / league_matches_count
+                extra_stats_by_season[season][league][11] = league_stats[11] / league_matches_count
+                extra_stats_by_season[season][league][12] = league_stats[12] / league_matches_count
 
     other_stats = {}
 
     first_match = (team.home_matches.all() | team.guest_matches.all()) \
-                    .filter(is_played=True, match_date__isnull=False) \
-                    .order_by('match_date').first()
+        .filter(is_played=True, match_date__isnull=False) \
+        .select_related('league__championship') \
+        .order_by('match_date') \
+        .first()
 
-    biggest_home_win = (
-        team.home_matches.filter(score_home__gt=F('score_guest')).annotate(goal_diff=F('score_home') - F('score_guest'))
-    ).order_by('-goal_diff').first()
-    biggest_guest_win = (
-        team.guest_matches.filter(score_guest__gt=F('score_home')).annotate(goal_diff=F('score_guest') - F('score_home'))
-    ).order_by('-goal_diff').first()
+    biggest_home_win = (team.home_matches
+        .filter(score_home__gt=F('score_guest'))
+        .annotate(goal_diff=F('score_home') - F('score_guest'))
+        .select_related('league__championship')
+        .order_by('-goal_diff').first()
+    )
 
-    biggest_home_loss = (
-        team.home_matches.filter(score_home__lt=F('score_guest')).annotate(goal_diff=F('score_home') - F('score_guest'))
-    ).order_by('goal_diff').first()
+    biggest_guest_win = (team.guest_matches
+        .filter(score_guest__gt=F('score_home'))
+        .annotate(goal_diff=F('score_guest') - F('score_home'))
+        .select_related('league__championship')
+        .order_by('-goal_diff').first()
+    )
 
-    biggest_guest_loss = (
-        team.guest_matches.filter(score_guest__lt=F('score_home')).annotate(goal_diff=F('score_guest') - F('score_home'))
-    ).order_by('goal_diff').first()
+    biggest_home_loss = (team.home_matches
+        .filter(score_home__lt=F('score_guest'))
+        .annotate(goal_diff=F('score_home') - F('score_guest'))
+        .select_related('league__championship')
+        .order_by('goal_diff').first()
+    )
 
-    most_effective_draw = ((team.home_matches.all() | team.guest_matches.all()).filter(score_guest=F('score_home'))
-                           .annotate(scored_total=F('score_home') + F('score_guest')).order_by('-scored_total').first())
+    biggest_guest_loss = (team.guest_matches
+        .filter(score_guest__lt=F('score_home'))
+        .annotate(goal_diff=F('score_guest') - F('score_home'))
+        .select_related('league__championship')
+        .order_by('goal_diff')
+        .first()
+    )
+
+    most_effective_draw = ((team.home_matches.all() | team.guest_matches.all())
+        .filter(score_guest=F('score_home'))
+        .annotate(scored_total=F('score_home') + F('score_guest'))
+        .select_related('league__championship')
+        .order_by('-scored_total').first()
+    )
 
     cards_filter = Q(match_event__event=OtherEvents.YELLOW_CARD) | Q(match_event__event=OtherEvents.RED_CARD)
-    most_biggest_cards_given = ((team.home_matches.all() | team.guest_matches.all())
-                                .annotate(cards_count=Count('match_event', filter=cards_filter))
-                                .order_by('-cards_count')).first()
+    most_biggest_cards_given = (((team.home_matches.all() | team.guest_matches.all())
+        .annotate(cards_count=Count('match_event', filter=cards_filter))
+        .select_related('league__championship')
+        .order_by('-cards_count'))
+        .first()
+    )
 
-    fastest_goal = Goal.objects.filter(team=team).order_by('time_min', 'time_sec').first()
-    latest_goal = Goal.objects.filter(team=team).order_by('-time_min', '-time_sec').first()
+    fastest_goal = Goal.objects \
+        .filter(team=team) \
+        .select_related('match__team_home', 'match__team_guest', 'match__league__championship') \
+        .order_by('time_min', 'time_sec') \
+        .first()
+    latest_goal = Goal.objects \
+        .filter(team=team) \
+        .select_related('match__team_home', 'match__team_guest', 'match__league__championship') \
+        .order_by('-time_min', '-time_sec') \
+        .first()
 
     greatest_goalscorer = team.goals.values('author').annotate(goals=Count('author')).order_by('-goals').first()
     greatest_assistant = team.goals.values('assistent').annotate(assists=Count('assistent')).order_by('-assists').first()
@@ -331,17 +378,8 @@ def team_statistics(team: Team):
 
 
 @register.filter
-def rows_team_stat(team: Team, season: Season):
-    matches_filter = (
-            (Q(matches_in_league__team_home=team) | Q(matches_in_league__team_guest=team)) &
-            Q(matches_in_league__is_played=True)
-    )
-    leagues = (League.objects
-                    .filter(teams=team, championship=season)
-                    .annotate(matches_count=Count('matches_in_league', filter=matches_filter))
-                    .filter(matches_count__gt=0))
-
-    return leagues.count()
+def team_stats_rows_count(stats: defaultdict, season):
+    return len(stats[season])
 
 
 #   Для статы юзера по командам
@@ -513,7 +551,7 @@ def player_detailed_statistics(user: User):
                               .order_by().values('match__league__championship')
                               .annotate(c=Count('*')).values('c'))
 
-    cs_subquery = (OtherEvents.objects.cs().filter(Q(author=player))
+    cs_subquery = (OtherEvents.objects.cs()
                    .filter(author=player, match__league__championship=OuterRef('id'))
                    .order_by().values('match__league__championship')
                    .annotate(c=Count('*')).values('c'))
@@ -700,12 +738,12 @@ def top_clean_sheets(league):
 #  Капитан и ассистент для профиля команды(контактов)
 @register.filter
 def get_captain(team):
-    return Player.objects.filter(team=team, role='C')
+    return Player.objects.filter(team=team, role='C').select_related('name__user_profile')
 
 
 @register.filter
 def get_team_assistent(team):
-    return Player.objects.filter(team=team, role='AC')
+    return Player.objects.filter(team=team, role='AC').select_related('name__user_profile')
 
 
 @register.filter
@@ -715,7 +753,30 @@ def all_league_season(team, season):
 
 @register.filter
 def all_seasons(team):
-    return Season.objects.filter(tournaments_in_season__teams=team).distinct().order_by('-number')
+    return Season.objects \
+        .filter(tournaments_in_season__teams=team) \
+        .distinct() \
+        .prefetch_related(
+            Prefetch(
+                'tournaments_in_season',
+                queryset=League.objects
+                    .filter(teams=team)
+                    .prefetch_related(
+                        'tours',
+                        Prefetch(
+                            'matches_in_league',
+                            queryset=Match.objects \
+                                .filter(Q(team_home=team) | Q(team_guest=team)) \
+                                .select_related('team_home', 'team_guest', 'numb_tour')
+                                .order_by('numb_tour'),
+                            to_attr='team_matches'
+                        )
+                    )
+                    .order_by('-id'),
+                to_attr='team_leagues'
+            ),
+        ) \
+        .order_by('-number')
 
 
 def sort_teams(league: League):
@@ -852,7 +913,11 @@ def get_league_table(league: League):
 def current_league(team):
     primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
     try:
-        return League.objects.filter(teams=team, title__in=primary_leagues, championship__is_active=True).first()
+        primary_league = League.objects \
+            .filter(teams=team, title__in=primary_leagues, championship__is_active=True) \
+            .first()
+        if not primary_league:
+            return League.objects.filter(teams=team, championship__is_active=True).first()
     except:
         return None
 
@@ -877,36 +942,8 @@ def teams_in_league_count(team):
 
 
 @register.filter
-def tour_matches_in_league(league, tour):
-    return Match.objects.filter(league=league, tour_num=tour)
-
-
-@register.filter
-def team_matches_in_league(team, league):
-    return Match.objects.filter((Q(team_home=team) | Q(team_guest=team)), league=league).order_by('numb_tour')
-
-
-# сортировка игроков в профиле команды по играм
-@register.filter
-def sort_players(players):
-    a = sorted(players, key=lambda x: matches_in_team_current(x, x.team), reverse=True)
-    return a
-
-
-@register.filter
-def players_in_history(team):
-    players_trans = PlayerTransfer.objects.filter(to_team=team)
-    players = []
-    for i in players_trans:
-        if (matches_in_team(i.trans_player, team) > 0) and (i.trans_player not in players):
-            players.append(i.trans_player)
-    a = sorted(players, key=lambda x: matches_in_team(x, team), reverse=True)
-    return a
-
-
-@register.filter
 def team_achievements_by_season(team):
-    achievements = team.achievements.all()
+    achievements = team.achievements.select_related('season').all()
     achievements_by_season = dict()
     for achievement in achievements:
         season = achievement.season

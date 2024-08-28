@@ -153,7 +153,8 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for player in team.players_in_team.all|sort_players %}
+
+                                    {% for player in team|current_squad_stats %}
                                         <tr>
                                             <td class="text-left">
                                                 {% if player.name %}
@@ -172,16 +173,16 @@
                                                 {% endif %}
 
                                             </td>
-                                            {# player.player_in_start_home.count|add:player.player_in_start_guest.count #}
-                                            <td>{{ player|matches_in_team_current:team }}</td>
-                                            <td>{{ player|goals_in_team_current:team }}</td>
-                                            <td>{{ player|assists_in_team_current:team }}</td>
-                                            <td>{{ player|event_count_current:'CLN' }}</td>
-                                            <td>{{ player|replaced_in_team_current:team }}</td>
-                                            <td>{{ player|join_game_in_team_current:team }}</td>
-                                            <td>{{ player|event_count_current:'OG' }}</td>
-                                            <td>{{ player|event_count_current:'YEL' }}</td>
-                                            <td>{{ player|event_count_current:'RED' }}</td>
+
+                                            <td>{{ player.matches_c }}</td>
+                                            <td>{{ player.goals_c }}</td>
+                                            <td>{{ player.assists_c }}</td>
+                                            <td>{{ player.cs_c }}</td>
+                                            <td>{{ player.subs_out_c }}</td>
+                                            <td>{{ player.subs_in_c }}</td>
+                                            <td>{{ player.ogs_c }}</td>
+                                            <td>{{ player.yellow_cards_c }}</td>
+                                            <td>{{ player.red_cards_c }}</td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
@@ -235,7 +236,9 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for player in team|players_in_history %}
+
+                                    {% for player in team|all_time_squad_stats %}
+                                        {{ player }}
                                         <tr>
                                             <td class="text-left">
                                                 {% if player.name %}
@@ -254,16 +257,17 @@
                                                 {% endif %}
 
                                             </td>
-                                            {# player.player_in_start_home.count|add:player.player_in_start_guest.count #}
-                                            <td>{{ player|matches_in_team:team }}</td>
-                                            <td>{{ player|goals_in_team:team }}</td>
-                                            <td>{{ player|assists_in_team:team }}</td>
-                                            <td>{{ player|cs_count:team }}</td>
-                                            <td>{{ player|replaced_in_team:team }}</td>
-                                            <td>{{ player|join_game_in_team:team }}</td>
-                                            <td>{{ player|og_count:team }}</td>
-                                            <td>{{ player|yellow_cards_count:team }}</td>
-                                            <td>{{ player|red_cards_count:team }}</td>
+
+                                            <td>{{ player.matches_c }}</td>
+                                            <td>{{ player.goals_c }}</td>
+                                            <td>{{ player.assists_c }}</td>
+                                            <td>{{ player.cs_c }}</td>
+                                            <td>{{ player.subs_out_c }}</td>
+                                            <td>{{ player.subs_in_c }}</td>
+                                            <td>{{ player.ogs_c }}</td>
+                                            <td>{{ player.yellow_cards_c }}</td>
+                                            <td>{{ player.red_cards_c }}</td>
+
                                         </tr>
                                     {% endfor %}
                                     </tbody>
@@ -307,20 +311,20 @@
                                      id="season{{ season.id }}" role="tabpanel"
                                      aria-labelledby="shedule-{{ season.id }}-tab">
 
-                                    {% for league in team|all_league_season:season %}
+                                    {% for league in season.team_leagues %}
                                         <p class="text-center mb-0">
                                             <a href="{{ league.get_absolute_url }}"
                                                class="h5 text-center">{{ league.title }}</a>
                                         </p>
                                         <table class="table table-borderless">
                                             <tbody>
-                                            {% for match in team|team_matches_in_league:league %}
+                                            {% for match in league.team_matches %}
                                                 <tr>
-                                                    <td class="text-left h6 p0" style="width: 10%;">
+                                                    <td class="text-center h6 p0" style="width: 10%;">
                                                         {% if not league.is_cup %}
                                                             Тур {{ match.numb_tour.number }}
                                                         {% else %}
-                                                            <div style="text-align: center;">{{ match.numb_tour.number|round_name:league.tours.count }}</div>
+                                                            {{ match.numb_tour.number|round_name:league.tours.count }}
                                                         {% endif %}
                                                     </td>
                                                     <td class="text-right" style="width: 35%;">
