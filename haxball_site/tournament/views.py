@@ -224,10 +224,16 @@ class MatchDetail(DetailView):
     context_object_name = 'match'
     template_name = 'tournament/match/detail.html'
 
+    def get_queryset(self):
+        return Match.objects \
+            .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector') \
+            .prefetch_related('team_home_start__name__user_profile', 'team_home_start__player_nation',
+                              'team_guest_start__name__user_profile', 'team_guest_start__player_nation',
+                              'disqualifications__player__team', 'disqualifications__tours__league')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         match = context['match']
-
 
         page = self.request.GET.get('page')
         comments_obj = get_comments_for_object(Match, match.id)
@@ -238,15 +244,18 @@ class MatchDetail(DetailView):
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
 
-        all_matches_between = Match.objects.filter(
-            Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True) | Q(team_guest=match.team_home,
-                                                                                          team_home=match.team_guest,
-                                                                                          is_played=True))
+        all_matches_between = Match.objects \
+            .filter(Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True) |
+                    Q(team_guest=match.team_home, team_home=match.team_guest, is_played=True)) \
+            .select_related('team_home', 'team_guest')
 
         substitutes = {match.team_home: [], match.team_guest: []}
         team_home_start = match.team_home_start.all()
         team_guest_start = match.team_guest_start.all()
-        for substitution in match.match_substitutions.all():
+        substitutions = match.match_substitutions \
+            .select_related('team', 'player_in__name__user_profile', 'player_in__player_nation',
+                            'player_out__name__user_profile', 'player_out__player_nation')
+        for substitution in substitutions:
             team = substitution.team
             player_in = substitution.player_in
             if player_in not in team_home_start and player_in not in team_guest_start:
@@ -293,6 +302,9 @@ class MatchDetail(DetailView):
         time_played_by_player = {p: datetime.fromtimestamp(sec).strftime('%M:%S') for (p, sec) in time_played.items()}
         context['time_played_by_player'] = time_played_by_player
 
+        cards = match.cards().select_related('author', 'team')
+        context['cards'] = cards
+
         if all_matches_between.count() == 0:
             context['no_history'] = True
             return context
@@ -303,32 +315,32 @@ class MatchDetail(DetailView):
         win_guest = 0
         score_home_all = 0
         score_guest_all = 0
-        for i in all_matches_between:
-            if i.score_home + i.score_guest > score:
-                score = i.score_home + i.score_guest
-                the_most_score = i
+        for face_to_face_match in all_matches_between:
+            if face_to_face_match.score_home + face_to_face_match.score_guest > score:
+                score = face_to_face_match.score_home + face_to_face_match.score_guest
+                the_most_score = face_to_face_match
 
-            if i.team_home == match.team_home:
-                if i.score_home > i.score_guest:
+            if face_to_face_match.team_home == match.team_home:
+                if face_to_face_match.score_home > face_to_face_match.score_guest:
                     win_home += 1
-                elif i.score_home == i.score_guest:
+                elif face_to_face_match.score_home == face_to_face_match.score_guest:
                     draws += 1
                 else:
                     win_guest += 1
             else:
-                if i.score_home < i.score_guest:
+                if face_to_face_match.score_home < face_to_face_match.score_guest:
                     win_home += 1
-                elif i.score_home == i.score_guest:
+                elif face_to_face_match.score_home == face_to_face_match.score_guest:
                     draws += 1
                 else:
                     win_guest += 1
 
-            if i.team_home == match.team_home:
-                score_home_all += i.score_home
-                score_guest_all += i.score_guest
+            if face_to_face_match.team_home == match.team_home:
+                score_home_all += face_to_face_match.score_home
+                score_guest_all += face_to_face_match.score_guest
             else:
-                score_guest_all += i.score_home
-                score_home_all += i.score_guest
+                score_guest_all += face_to_face_match.score_home
+                score_home_all += face_to_face_match.score_guest
 
         win_home_percentage = round(100 * win_home / all_matches_between.count())
         draws_percentage = round(100 * draws / all_matches_between.count())

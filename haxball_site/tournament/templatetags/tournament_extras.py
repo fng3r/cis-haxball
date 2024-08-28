@@ -608,12 +608,12 @@ def player_stats_rows_count(stats: defaultdict, season):
 #   Для детальной статы матча
 @register.filter
 def events_sorted(match: Match):
-    events = match.match_event.all()
-    substit = match.match_substitutions.all()
-    all_events = list(match.match_goal.all())
+    events = match.match_event.select_related('team', 'author').all()
+    substitutions = match.match_substitutions.select_related('team', 'player_in', 'player_out').all()
+    all_events = list(match.match_goal.select_related('team', 'author', 'assistent').all())
     for e in events:
         all_events.append(e)
-    for s in substit:
+    for s in substitutions:
         all_events.append(s)
 
     sorted_events = sorted(all_events, key=lambda event: datetime.time(minute=event.time_min, second=event.time_sec))
