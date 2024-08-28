@@ -1,12 +1,9 @@
 import operator
 from collections import defaultdict
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from functools import reduce
-from itertools import groupby
-
-from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Count, F, Q, Sum, Prefetch
+from django.db.models import Count, Q
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django_filters import FilterSet, ModelChoiceFilter, ChoiceFilter
@@ -19,7 +16,7 @@ from .forms import FreeAgentForm, EditTeamProfileForm
 from .models import FreeAgent, Team, Match, League, Player, Substitution, Season, OtherEvents, Disqualification, \
     Postponement, PlayerTransfer, TeamRating, RatingVersion, SeasonTeamRating
 from core.forms import NewCommentForm
-from core.models import NewComment, Profile, LikeDislike
+from core.utils import get_comments_for_object, get_paginated_comments
 
 from .templatetags.tournament_extras import get_user_teams
 
@@ -206,29 +203,9 @@ class LeagueDetail(DetailView):
         context = super().get_context_data(**kwargs)
         league = context['league']
 
-        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
-        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
-        comments_obj = NewComment.objects \
-            .select_related('author__user_profile') \
-            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
-                              # tweak for prefetching recursive field
-                              'childs__childs__childs__childs__childs',
-                              prefetch_likes, prefetch_dislikes) \
-            .filter(content_type=ContentType.objects.get_for_model(League),
-                    object_id=league.id,
-                    parent=None)
-
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(League, league.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
@@ -246,34 +223,16 @@ class MatchDetail(DetailView):
         context = super().get_context_data(**kwargs)
         match = context['match']
 
-        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
-        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
-        comments_obj = NewComment.objects \
-            .select_related('author__user_profile') \
-            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
-                              # tweak for prefetching recursive field
-                              'childs__childs__childs__childs__childs',
-                              prefetch_likes, prefetch_dislikes) \
-            .filter(content_type=ContentType.objects.get_for_model(Match),
-                    object_id=match.id,
-                    parent=None)
 
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(Match, match.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
+
         all_matches_between = Match.objects.filter(
             Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True) | Q(team_guest=match.team_home,
                                                                                           team_home=match.team_guest,

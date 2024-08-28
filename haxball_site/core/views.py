@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import F, Max, Prefetch
+from django.db.models import Max
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -16,7 +16,9 @@ from pytils.translit import slugify
 from .forms import EditProfileForm, PostForm, NewCommentForm
 from .models import Post, Profile, LikeDislike, Category, Themes, NewComment, UserNicknameHistoryItem
 from .templatetags.user_tags import can_edit, exceeds_edit_limit
+from .utils import get_comments_for_object, get_paginated_comments
 from tournament.models import Team, Achievements
+
 
 
 # Вьюха для списка постов
@@ -229,29 +231,9 @@ class PostDetailView(DetailView):
         post.views = post.views + 1
         post.save()
 
-        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
-        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
-        comments_obj = NewComment.objects \
-            .select_related('author__user_profile') \
-            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
-                              # tweak for prefetching recursive field
-                              'childs__childs__childs__childs__childs',
-                              prefetch_likes, prefetch_dislikes) \
-            .filter(content_type=ContentType.objects.get_for_model(Post),
-                    object_id=post.id,
-                    parent=None)
-
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(Post, post.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
@@ -275,29 +257,9 @@ class ProfileDetail(DetailView):
         profile.views = profile.views + 1
         profile.save()
 
-        prefetch_likes = Prefetch('votes', queryset=LikeDislike.objects.likes(), to_attr='likes')
-        prefetch_dislikes = Prefetch('votes', queryset=LikeDislike.objects.dislikes(), to_attr='dislikes')
-        comments_obj = NewComment.objects \
-            .select_related('author__user_profile') \
-            .prefetch_related('author__user_profile__user_icon', 'childs__author__user_profile__user_icon',
-                              # tweak for prefetching recursive field
-                              'childs__childs__childs__childs__childs',
-                              prefetch_likes, prefetch_dislikes) \
-            .filter(content_type=ContentType.objects.get_for_model(Profile),
-                    object_id=profile.id,
-                    parent=None)
-
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(Profile, profile.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
