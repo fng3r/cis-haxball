@@ -54,18 +54,17 @@ INSTALLED_APPS = [
     'online_users',
     'allauth',
     'allauth.account',
-    # text-editors testing
-    # 'markdownx',
     'ckeditor',
     'django_summernote',
     'froala_editor',
     'ckeditor_uploader',
     'sorl.thumbnail',
-    'mathfilters'
-
+    'mathfilters',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -75,7 +74,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware'
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'haxball_site.urls'
@@ -366,3 +365,5 @@ CKEDITOR_CONFIGS = {
         ])
     }
 }
+
+INTERNAL_IPS = config('INTERNAL_IPS', cast=str.split)

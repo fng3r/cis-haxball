@@ -1,27 +1,23 @@
-import operator
 from collections import defaultdict
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from functools import reduce
-from itertools import groupby
 
-from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Count, F, Q, Sum
-from django.urls import reverse
-from django.views.decorators.http import require_POST
-from django_filters import FilterSet, ModelChoiceFilter, ChoiceFilter
+from django.db.models import Count, Q, Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView
+from django_filters import FilterSet, ModelChoiceFilter, ChoiceFilter
 
 from .forms import FreeAgentForm, EditTeamProfileForm
 from .models import FreeAgent, Team, Match, League, Player, Substitution, Season, OtherEvents, Disqualification, \
     Postponement, PlayerTransfer, TeamRating, RatingVersion, SeasonTeamRating
-from core.forms import NewCommentForm
-from core.models import NewComment, Profile
-
 from .templatetags.tournament_extras import get_user_teams
+from core.forms import NewCommentForm
+from core.utils import get_comments_for_object, get_paginated_comments
 
 
 class DefaultFilterSet(FilterSet):
@@ -55,7 +51,11 @@ class DisqualificationFilter(DefaultFilterSet):
 
 
 class DisqualificationsList(ListView):
-    queryset = Disqualification.objects.filter(match__league__championship__number__gt=14).order_by('-created')
+    queryset = Disqualification.objects \
+        .select_related('team', 'match__team_home', 'match__team_guest', 'player__name__user_profile') \
+        .prefetch_related('tours__league', 'lifted_tours__league') \
+        .filter(match__league__championship__number__gt=14) \
+        .order_by('-created')
     context_object_name = 'disqualifications'
     template_name = 'tournament/disqualification/disqualifications_list.html'
 
@@ -67,13 +67,16 @@ class DisqualificationsList(ListView):
 
 
 class TransferFilter(DefaultFilterSet):
+    initial_season = Season.objects.order_by('-number').first()
+    teams_qs = Team.objects.filter(leagues__championship__number__gt=14).distinct()
+
     season = ModelChoiceFilter(field_name='season_join', label='Сезон', empty_label=None,
                                queryset=Season.objects.filter(number__gt=14).order_by('-number'),
-                               initial=Season.objects.order_by('-number').first())
+                               initial=initial_season)
     team_from = ModelChoiceFilter(field_name='from_team', null_label='Свободный агент',
-                                  queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
+                                  queryset=teams_qs)
     team_to = ModelChoiceFilter(field_name='to_team', null_label='Свободный агент',
-                                queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
+                                queryset=teams_qs)
     player = ModelChoiceFilter(field_name='trans_player', queryset=Player.objects.all())
 
     class Meta:
@@ -83,7 +86,10 @@ class TransferFilter(DefaultFilterSet):
 
 class TransfersList(ListView):
     from_date = datetime(2024, 3, 13)
-    queryset = PlayerTransfer.objects.filter(date_join__gte=from_date).order_by('-date_join', '-id')
+    queryset = PlayerTransfer.objects \
+        .select_related('trans_player__name__user_profile', 'from_team', 'to_team') \
+        .filter(date_join__gte=from_date) \
+        .order_by('-date_join', '-id')
     context_object_name = 'transfers'
     template_name = 'tournament/transfers/transfers_list.html'
 
@@ -95,7 +101,10 @@ class TransfersList(ListView):
 
 
 class FreeAgentList(ListView):
-    queryset = FreeAgent.objects.filter(is_active=True).order_by('-created')
+    queryset = FreeAgent.objects \
+        .select_related('player__user_profile') \
+        .filter(is_active=True) \
+        .order_by('-created')
     context_object_name = 'agents'
     template_name = 'tournament/free_agent/free_agents_list.html'
 
@@ -109,7 +118,7 @@ class FreeAgentList(ListView):
                     fa.created = timezone.now()
                     fa.is_active = True
                     fa.save()
-                    agents = FreeAgent.objects.filter(is_active=True).order_by('-created')
+
                     return redirect('tournament:free_agent')
             except:
                 fa_form = FreeAgentForm(data=request.POST)
@@ -119,7 +128,9 @@ class FreeAgentList(ListView):
                     fa.created = timezone.now()
                     fa.is_active = True
                     fa.save()
+
                     return redirect('tournament:free_agent')
+
         return redirect('tournament:free_agent')
 
 
@@ -171,6 +182,12 @@ class TeamDetail(DetailView):
     context_object_name = 'team'
     template_name = 'tournament/teams/team_page.html'
 
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('owner') \
+            .prefetch_related(Prefetch('players_in_team',
+                                       queryset=Player.objects.select_related('name__user_profile', 'player_nation')))
+
 
 class TeamList(ListView):
     queryset = Team.objects.all().order_by('-title')
@@ -181,28 +198,19 @@ class TeamList(ListView):
 class LeagueDetail(DetailView):
     context_object_name = 'league'
     model = League
-    # queryset = League.objects.filter(is_cup=False, championship__is_active=True)
     template_name = 'tournament/premier_league/team_table.html'
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('tours__tour_matches__team_home',
+                                                       'tours__tour_matches__team_guest')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         league = context['league']
 
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(League),
-                                                 object_id=league.id,
-                                                 parent=None)
-
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(League, league.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
@@ -216,38 +224,38 @@ class MatchDetail(DetailView):
     context_object_name = 'match'
     template_name = 'tournament/match/detail.html'
 
+    def get_queryset(self):
+        return Match.objects \
+            .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector') \
+            .prefetch_related('team_home_start__name__user_profile', 'team_home_start__player_nation',
+                              'team_guest_start__name__user_profile', 'team_guest_start__player_nation',
+                              'disqualifications__player__team', 'disqualifications__tours__league')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         match = context['match']
 
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(Match),
-                                                 object_id=match.id,
-                                                 parent=None)
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(Match, match.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
-        all_matches_between = Match.objects.filter(
-            Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True) | Q(team_guest=match.team_home,
-                                                                                          team_home=match.team_guest,
-                                                                                          is_played=True))
+
+        all_matches_between = Match.objects \
+            .filter(Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True) |
+                    Q(team_guest=match.team_home, team_home=match.team_guest, is_played=True)) \
+            .select_related('team_home', 'team_guest')
 
         substitutes = {match.team_home: [], match.team_guest: []}
         team_home_start = match.team_home_start.all()
         team_guest_start = match.team_guest_start.all()
-        for substitution in match.match_substitutions.all():
+        substitutions = match.match_substitutions \
+            .select_related('team', 'player_in__name__user_profile', 'player_in__player_nation',
+                            'player_out__name__user_profile', 'player_out__player_nation')
+        for substitution in substitutions:
             team = substitution.team
             player_in = substitution.player_in
             if player_in not in team_home_start and player_in not in team_guest_start:
@@ -294,6 +302,9 @@ class MatchDetail(DetailView):
         time_played_by_player = {p: datetime.fromtimestamp(sec).strftime('%M:%S') for (p, sec) in time_played.items()}
         context['time_played_by_player'] = time_played_by_player
 
+        cards = match.cards().select_related('author', 'team')
+        context['cards'] = cards
+
         if all_matches_between.count() == 0:
             context['no_history'] = True
             return context
@@ -304,32 +315,32 @@ class MatchDetail(DetailView):
         win_guest = 0
         score_home_all = 0
         score_guest_all = 0
-        for i in all_matches_between:
-            if i.score_home + i.score_guest > score:
-                score = i.score_home + i.score_guest
-                the_most_score = i
+        for face_to_face_match in all_matches_between:
+            if face_to_face_match.score_home + face_to_face_match.score_guest > score:
+                score = face_to_face_match.score_home + face_to_face_match.score_guest
+                the_most_score = face_to_face_match
 
-            if i.team_home == match.team_home:
-                if i.score_home > i.score_guest:
+            if face_to_face_match.team_home == match.team_home:
+                if face_to_face_match.score_home > face_to_face_match.score_guest:
                     win_home += 1
-                elif i.score_home == i.score_guest:
+                elif face_to_face_match.score_home == face_to_face_match.score_guest:
                     draws += 1
                 else:
                     win_guest += 1
             else:
-                if i.score_home < i.score_guest:
+                if face_to_face_match.score_home < face_to_face_match.score_guest:
                     win_home += 1
-                elif i.score_home == i.score_guest:
+                elif face_to_face_match.score_home == face_to_face_match.score_guest:
                     draws += 1
                 else:
                     win_guest += 1
 
-            if i.team_home == match.team_home:
-                score_home_all += i.score_home
-                score_guest_all += i.score_guest
+            if face_to_face_match.team_home == match.team_home:
+                score_home_all += face_to_face_match.score_home
+                score_guest_all += face_to_face_match.score_guest
             else:
-                score_guest_all += i.score_home
-                score_home_all += i.score_guest
+                score_guest_all += face_to_face_match.score_home
+                score_home_all += face_to_face_match.score_guest
 
         win_home_percentage = round(100 * win_home / all_matches_between.count())
         draws_percentage = round(100 * draws / all_matches_between.count())
@@ -582,7 +593,11 @@ def teams_halloffame():
 
 
 class TeamRatingFilter(FilterSet):
-    version = ModelChoiceFilter(queryset=RatingVersion.objects.all(), label='Версия', empty_label=None)
+    version = ModelChoiceFilter(
+        queryset=RatingVersion.objects.select_related('related_season').all(),
+        label='Версия',
+        empty_label=None
+    )
 
     class Meta:
         model = TeamRating
@@ -590,7 +605,7 @@ class TeamRatingFilter(FilterSet):
 
 
 class TeamRatingView(ListView):
-    queryset = TeamRating.objects.all()
+    queryset = TeamRating.objects.select_related('team').all()
     context_object_name = 'team_rating'
     template_name = 'tournament/team_rating.html'
     latest_rating_version = RatingVersion.objects.order_by('-number').first()
@@ -600,7 +615,10 @@ class TeamRatingView(ListView):
         params = self.request.GET or {'version': self.latest_rating_version.number}
         context['filter'] = TeamRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
-        source_season = RatingVersion.objects.get(number=selected_version).related_season
+        source_season = RatingVersion.objects \
+            .select_related('related_season') \
+            .get(number=selected_version) \
+            .related_season
         previous_seasons = Season.objects \
             .filter(number__lt=source_season.number, number__gt=5, title__contains='ЧР') \
             .order_by('-number')
@@ -614,13 +632,8 @@ class TeamRatingView(ListView):
         context['seasons_rating'] = weighted_seasons_rating
         context['seasons_weights'] = seasons_weights
 
-        previous_rating_version = TeamRating.objects.filter(version__number=selected_version-1)
-        if previous_rating_version:
-            context['previous_rating'] = {item.team: item.rank
-                                          for item in previous_rating_version.all()}
-
-        print(seasons_weights)
-        print(weighted_seasons_rating)
+        previous_rating_version = TeamRating.objects.select_related('team').filter(version__number=selected_version-1)
+        context['previous_rating'] = {item.team: item.rank for item in previous_rating_version.all()}
 
         return context
 
@@ -631,6 +644,7 @@ class TeamRatingView(ListView):
         season_count = 1
         if earliest_season:
             previous_seasons = Season.objects \
+                .select_related('bound_season') \
                 .filter(number__gte=earliest_season.number, number__lt=source_season.number) \
                 .order_by('-number')
             for season in previous_seasons:
@@ -646,6 +660,7 @@ class TeamRatingView(ListView):
     def get_weighted_seasons_rating(seasons, seasons_weights):
         weighted_seasons_rating = {}
         seasons_rating = SeasonTeamRating.objects \
+            .select_related('team', 'season') \
             .filter(season__in=seasons) \
             .order_by('season__number')
         for rating_entry in seasons_rating:

@@ -102,10 +102,13 @@
                                         </div>
                                     </div>
                                     <span>
+                                        {% comment %}
                                             {% for achievement in comment.author.user_player.achievements.all %}
                                                 <img src="{{ achievement.mini_image.url }}" width="20px" height="20px"
                                                      title="{{ achievement.description }}">
                                             {% endfor %}
+                                        {% endcomment %}
+
                                         <a href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ comment.id }}">#{{ comment.id }}</a>
                                         {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
                                             <a href="{% url 'core:edit_comment' comment.id %}"

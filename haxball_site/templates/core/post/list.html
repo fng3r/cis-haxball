@@ -1,10 +1,9 @@
 {% extends "core/home.html" %}
 {% load static %}
 {% load cache %}
+
 {% block scripts %}
-
     <!-- Аякс-скрипт проставления лайков-дизлайков к постам -->
-
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 
 {% endblock %}
@@ -15,20 +14,24 @@
              style="border-radius: 25px; background-image: url({% static "img/backgrounds/bg-light-4866.png" %})">
 
             <div class="card-body">
-                {% if count_imp != 0 %}
-                    <h3 class="text-center mt-1 mb-0"><i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
-
-                        Актуальные новости <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
+                {% if count_imp > 0 %}
+                    <h3 class="text-center mt-1 mb-0">
+                        <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
+                        Актуальные новости
+                        <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
                     </h3>
                     <hr>
+
                     {% for post in posts %}
                         {% if post.important %}
-                            {% include "core/include/post_important_in_list.html" with post=post %}
+                            {% include "core/include/post_in_list.html" with post=post %}
                         {% endif %}
                     {% endfor %}
                 {% endif %}
-                <h3 class="text-center mb-0"><i class="fa fa-newspaper-o text-success" aria-hidden="true"></i> Последние
-                    новости</h3>
+
+                <h3 class="text-center mb-0">
+                    <i class="fa fa-newspaper-o text-success" aria-hidden="true"></i> Последние новости
+                </h3>
                 <hr>
 
                 {% for post in posts %}

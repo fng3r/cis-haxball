@@ -146,23 +146,23 @@ class NewComment(models.Model):
         return 'Комментарий от {} к {}'.format(self.author, self.content_object)
 
     def get_absolute_url(self):
-        obj = self.content_object
-        a = list(self.content_object.comments.filter(parent=None))
-        b = list(self.content_object.comments.filter(~Q(parent=None)))
-        if self in b:
-            return self.get_parent().get_absolute_url()
-        ind = a.index(self)
-        page = (ind//25)+1
-        return '{}?page={}#r{}'.format(obj.get_absolute_url(), page, self.id)
+        if self.parent:
+            return self.get_root().get_absolute_url()
 
-    def get_parent(self):
+        commented_object = self.content_object
+        top_level_comments = list(self.content_object.comments.filter(parent=None))
+        index = top_level_comments.index(self)
+        page = (index // 25) + 1
+        return '{}?page={}#r{}'.format(commented_object.get_absolute_url(), page, self.id)
+
+    def get_root(self):
         obj = self
         while obj.parent is not None:
             obj = obj.parent
         return obj
 
     def is_parent(self):
-        return self.parent == None
+        return self.parent is None
 
     def has_childs(self):
         return self.childs.count() > 0
@@ -261,9 +261,8 @@ class Comment(models.Model):
     def childs_count(self):
         return len(list(bfs(self)))
 
-    # Обход графа в ширину хе-хе, хоть где-то пригодилось)
 
-
+# Обход графа в ширину хе-хе, хоть где-то пригодилось)
 def bfs(root):
     visited = set()
     queue = collections.deque([root])
@@ -275,9 +274,8 @@ def bfs(root):
                 queue.append(neighbour)
     return visited
 
-    # Модель ip-адресов пользователя
 
-
+# Модель ip-адресов пользователя
 class IPAdress(models.Model):
     name = models.ForeignKey(User, verbose_name='Пользователь', related_name='user_ips', on_delete=models.SET_NULL, null=True)
     ip = models.GenericIPAddressField()

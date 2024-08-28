@@ -30,10 +30,10 @@
                    aria-controls="profile_user-tab" aria-selected="true">Профиль пользователя</a>
             </li>
             {% if profile.name.user_player %}
-            <li class="nav-item">
-                <a class="nav-link" id="detail-tab" data-toggle="tab" href="#detail_stat" role="tab"
-                   aria-controls="detail_stat-tab" aria-selected="false">Статистика игрока</a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="detail-tab" data-toggle="tab" href="#detail_stat" role="tab"
+                       aria-controls="detail_stat-tab" aria-selected="false">Статистика игрока</a>
+                </li>
             {% endif %}
         </ul>
     </div>
@@ -228,11 +228,15 @@
                 </div>
             </div>
         </div>
-        <div class="tab-pane fade" id="detail_stat" role="tabpanel" aria-labelledby="detail_stat-tab">
-            <div class="card">
-                {% player_detailed_statistics profile.name %}
+
+        {% if profile.name.user_player %}
+            <div class="tab-pane fade" id="detail_stat" role="tabpanel" aria-labelledby="detail_stat-tab">
+                <div class="card">
+                    {% player_detailed_statistics profile.name %}
+                </div>
             </div>
-        </div>
+        {% endif %}
+
     </div>
 <script type="text/javascript" src="{% static 'scripts/ProfileScripts.js' %}"></script>
 {% endblock %}

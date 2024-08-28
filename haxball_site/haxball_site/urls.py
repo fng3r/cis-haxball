@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path, re_path, include
 from django.views.decorators.cache import never_cache
 from ckeditor_uploader import views as ckuploader_views
+from debug_toolbar.toolbar import debug_toolbar_urls
 
 urlpatterns = [
     path('grappelli/', include('grappelli.urls')),
@@ -33,6 +34,7 @@ urlpatterns = [
     path('polls/', include('polls.urls', namespace='polls')),
     path('accounts/', include('allauth.urls')),
     path('summernote/', include('django_summernote.urls')),
+    path('__debug__/', include('debug_toolbar.urls')),
 ]
 
 if settings.URL_PREFIX:

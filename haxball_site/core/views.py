@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import F, Max
+from django.db.models import Max
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -16,12 +16,18 @@ from pytils.translit import slugify
 from .forms import EditProfileForm, PostForm, NewCommentForm
 from .models import Post, Profile, LikeDislike, Category, Themes, NewComment, UserNicknameHistoryItem
 from .templatetags.user_tags import can_edit, exceeds_edit_limit
+from .utils import get_comments_for_object, get_paginated_comments
 from tournament.models import Team, Achievements
+
 
 
 # Вьюха для списка постов
 class PostListView(ListView):
-    queryset = Post.objects.filter(category__is_official=True).order_by('-important', '-publish', )
+    queryset = Post.objects \
+        .select_related('category', 'author__user_profile') \
+        .prefetch_related('comments', 'votes') \
+        .filter(category__is_official=True) \
+        .order_by('-important', '-publish',)
     context_object_name = 'posts'
     paginate_by = 7
     template_name = 'core/post/list.html'
@@ -214,29 +220,6 @@ class TournamentsView(ListView):
     template_name = 'core/tournaments/tournaments_list.html'
 
 
-# Вьюха для поста и комментариев к нему.
-# С одной стороны удобно одним методом, с другой-хезе как правильно надо)
-"""
-    if request.method == 'POST':
-        comment_form = CommentForm(data=request.POST)
-        page = request.POST.get('page')
-        print(page)
-        if comment_form.is_valid():
-            new_comment = comment_form.save(commit=False)
-            if request.POST.get("parent", None):
-                new_comment.parent_id = int(request.POST.get('parent'))
-            new_comment.author = request.user
-            new_comment.post = post
-            new_comment.save()
-            return redirect(post.get_absolute_url() + '#r' + str(new_comment.id))
-    else:
-        post.views = F('views') + 1
-        post.save()
-        comment_form = CommentForm()
-        """
-
-
-# Учитывая, что потом пост-комменты будут использоваться для форума.. Такие дела
 class PostDetailView(DetailView):
     model = Post
     context_object_name = 'post'
@@ -245,23 +228,12 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = context['post']
-        post.views = post.views + 1
-        post.save()
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(Post),
-                                                 object_id=post.id,
-                                                 parent=None)
+        post.views += 1
+        post.save(update_fields=['views'])
 
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(Post, post.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
@@ -276,33 +248,25 @@ class ProfileDetail(DetailView):
     context_object_name = 'profile'
     template_name = 'core/profile/profile_detail.html'
 
+    def get_queryset(self):
+        return super().get_queryset().select_related('name__user_player__team')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile = context['profile']
-        profile.views = profile.views + 1
-        profile.save()
-        comments_obj = NewComment.objects.filter(content_type=ContentType.objects.get_for_model(Profile),
-                                                 object_id=profile.id,
-                                                 parent=None)
+        profile.views += 1
+        profile.save(update_fields=['views'])
 
-        paginate = Paginator(comments_obj, 25)
         page = self.request.GET.get('page')
-
-        try:
-            comments = paginate.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            comments = paginate.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            comments = paginate.page(paginate.num_pages)
+        comments_obj = get_comments_for_object(Profile, profile.id)
+        comments = get_paginated_comments(comments_obj, page)
 
         context['page'] = page
         context['comments'] = comments
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
 
-        all_achievements = Achievements.objects.filter(player__name=profile.name)
+        all_achievements = Achievements.objects.select_related('category').filter(player__name=profile.name)
         achievements_by_category = {}
         for achievement in all_achievements:
             category = 'Без категории'

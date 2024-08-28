@@ -61,9 +61,6 @@ class FreeAgent(models.Model):
         verbose_name_plural = "Свободные агенты"
 
 
-#           Определние моделей для чемпионата (Чемпионат, команда, игрок, матч, событие )
-
-
 class Season(models.Model):
     title = models.CharField('Название Розыгрыша', max_length=128)
     short_title = models.CharField('Короткое название', max_length=15, null=True, blank=True)
@@ -576,7 +573,8 @@ class PlayerTransfer(models.Model):
     to_team = models.ForeignKey(Team, verbose_name='В команду', related_name='incoming_transfers',
                                 on_delete=models.CASCADE, blank=True, null=True)
     date_join = models.DateField(default=None)
-    season_join = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name='В каком сезоне')
+    season_join = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name='В каком сезоне',
+                                    related_name='transfers')
 
     tracker = FieldTracker(['to_team'])
 

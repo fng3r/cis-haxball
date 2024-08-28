@@ -107,7 +107,8 @@ def forum_last_activity(category):
 # Сайдбар для пользователей онлайн(по дефолту 15 минут)
 @register.inclusion_tag('core/include/sidebar_for_users.html')
 def show_users_online():
-    user_activity_objects = OnlineUserActivity.get_user_activities(time_delta=timezone.timedelta(minutes=5))
+    user_activity_objects = OnlineUserActivity.get_user_activities(time_delta=timezone.timedelta(minutes=5)) \
+        .select_related('user__user_profile')
     users_online_count = user_activity_objects.count()
     users_online = (user.user for user in user_activity_objects)
 
@@ -120,52 +121,55 @@ def show_users_online():
 @register.inclusion_tag('core/include/sidebar_for_last_activity.html')
 def show_last_activity(count=10):
     # Последняя активность ваще везде-везде
-    a = NewComment.objects.order_by('-created')[:150]
-    content = set()
-    last = []
-    for com in a:
-        if len(content) >= count:
+    latest_comments = NewComment.objects \
+                        .select_related('author') \
+                        .prefetch_related('content_object', 'content_object__comments') \
+                        .order_by('-created')[:150]
+    selected_objects = set()
+    last_comments = []
+    for comment in latest_comments:
+        if len(selected_objects) >= count:
             break
 
-        if com.content_object in content:
+        if comment.content_object in selected_objects:
             continue
         else:
-            last.append(com)
-            content.add(com.content_object)
+            last_comments.append(comment)
+            selected_objects.add(comment.content_object)
 
-    return {'last_comments': last}
+    return {'last_comments': last_comments}
 
 
 # Топ лайков за ТЕКУЩИЙ день, неделя, месяц, год
 @register.inclusion_tag('core/include/sidebar_for_top_comments.html')
-def show_top_comments(count=5, for_year=2020):
+def show_top_comments(count=5):
     my_date = datetime.now()
     year, week, day_of_week = my_date.isocalendar()
     day = my_date.day
     month = my_date.month
-    top_com_today = NewComment.objects \
-        .annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0))) \
-        .annotate(dislike_count=Count('votes', filter=Q(votes__vote__lt=0))) \
+
+    comments = NewComment.objects \
+        .select_related('author') \
+        .prefetch_related('votes', 'content_object', 'content_object__comments') \
+        .annotate(likes_count=Count('votes', filter=Q(votes__vote__gt=0))) \
+        .annotate(dislikes_count=Count('votes', filter=Q(votes__vote__lt=0)))
+
+    top_com_today = comments \
         .filter(created__year=year, created__month=month, created__day=day) \
-        .order_by('-like_count')[:count]
-    top_com_month = NewComment.objects \
-        .annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0))) \
-        .annotate(dislike_count=Count('votes', filter=Q(votes__vote__lt=0))) \
+        .order_by('-likes_count')[:count]
+    top_com_month = comments \
         .filter(created__year=year, created__month=month) \
-        .order_by('-like_count')[:count]
-    top_com_year = NewComment.objects \
-        .annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0))) \
-        .annotate(dislike_count=Count('votes', filter=Q(votes__vote__lt=0))) \
+        .order_by('-likes_count')[:count]
+    top_com_year = comments \
         .filter(created__year=year) \
-        .order_by('-like_count')[:count]
+        .order_by('-likes_count')[:count]
 
     week_start = my_date - timezone.timedelta(days=day_of_week - 1, hours=my_date.hour, minutes=my_date.minute)
 
     week_end = my_date + timezone.timedelta(days=7 - day_of_week, hours=23 - my_date.hour, minutes=60 - my_date.minute)
-    top_com_week = NewComment.objects \
-        .annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0))) \
-        .annotate(dislike_count=Count('votes', filter=Q(votes__vote__lt=0))) \
-        .filter(created__gt=week_start, created__lt=week_end).order_by('-like_count')[:count]
+    top_com_week = comments \
+        .filter(created__gt=week_start, created__lt=week_end) \
+        .order_by('-likes_count')[:count]
 
     return {'top_comments_day': top_com_today,
             'top_comments_month': top_com_month,
@@ -204,6 +208,14 @@ def user_in(objects, user):
             return objects.filter(user=user).exists()
         except:
             return False
+    return False
+
+
+@register.filter
+def user_in_list(objects, user):
+    if objects and user.is_authenticated:
+        return any(obj.user == user for obj in objects)
+
     return False
 
 
@@ -251,11 +263,8 @@ def can_view_likes_details(user: User):
 
 @register.inclusion_tag('core/include/teams_in_navbar.html')
 def teams_in_navbar():
-    all_teams = Team.objects.all().order_by('title')
-    teams = []
-    for t in all_teams:
-        if len(t.get_active_leagues()) > 0:
-            teams.append(t)
+    teams = Team.objects.filter(leagues__championship__is_active=True).order_by('title').distinct()
+
     return {'teams': teams}
 
 
@@ -302,7 +311,9 @@ def pages_to_show(page: Page):
 @register.inclusion_tag('core/include/sidebar_for_transfers.html')
 def show_last_transfers():
     from_date = datetime(2024, 3, 13)
-    last_transfers = PlayerTransfer.objects.filter(season_join__is_active=True,
-                                                   date_join__gte=from_date).order_by('-date_join', '-id')[:5]
+    last_transfers = PlayerTransfer.objects \
+        .select_related('trans_player__name__user_profile', 'from_team', 'to_team') \
+        .filter(season_join__is_active=True, date_join__gte=from_date) \
+        .order_by('-date_join', '-id')[:5]
 
     return {'transfers': last_transfers}
