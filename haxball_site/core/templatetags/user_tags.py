@@ -313,7 +313,7 @@ def show_last_transfers():
     from_date = datetime(2024, 3, 13)
     last_transfers = PlayerTransfer.objects \
         .select_related('trans_player__name__user_profile', 'from_team', 'to_team') \
-        .filter(season_join__is_active=True, date_join__gte=from_date) \
+        .filter(season_join__is_active=True, date_join__gte=from_date, is_technical=False) \
         .order_by('-date_join', '-id')[:5]
 
     return {'transfers': last_transfers}
