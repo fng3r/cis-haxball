@@ -42,10 +42,10 @@ class PlayerAdmin(admin.ModelAdmin):
 
 @admin.register(PlayerTransfer)
 class PlayerTransferAdmin(admin.ModelAdmin):
-    list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join')
+    list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join', 'is_technical')
     list_filter = ('trans_player', 'from_team', 'to_team',)
     search_fields = ('trans_player__nickname', 'from_team__title', 'to_team__title',)
-    # autocomplete_fields = ('trans_player',)
+    readonly_fields = ('is_technical',)
     raw_id_fields = ('trans_player',)
     ordering = ('-date_join', '-id',)
 

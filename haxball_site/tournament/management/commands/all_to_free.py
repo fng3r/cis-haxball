@@ -9,24 +9,21 @@ class Command(BaseCommand):
     help = 'Всех в СА'
 
     def add_arguments(self, parser):
-        parser.add_argument('champ_number', default=0, nargs='?', type=int, )
+        parser.add_argument('season', default=0, nargs='?', type=int, )
 
     def handle(self, *args, **options):
-        print(options['champ_number'])
+        print(f'season arg={options["season"]}')
         try:
-            seas = Season.objects.get(number=options['champ_number'])
+            season = Season.objects.get(number=options['season'])
         except:
-            print('Видимо похер')
-            raise CommandError('Выбран несуществующий сезон')
+            season = Season.objects.filter(is_active=True).get()
 
         players_in_team = Player.objects.filter(~Q(team=None))
 
-        print('Выборка по сезону {}'.format(options['champ_number']))
+        print(f'Season {season.title} was selected as a season for all transfers')
+        for player in players_in_team:
+            print(f'{player}: {player.team} -> Free Agent')
+            PlayerTransfer.objects.create(trans_player=player, from_team=player.team, to_team=None,
+                                          season_join=season, date_join=timezone.now(), is_technical=True)
 
-        for p in players_in_team:
-            print(p, p.team)
-            PlayerTransfer.objects.create(trans_player=p, from_team=p.team, to_team=None,
-                                          season_join=seas, date_join=timezone.now())
-
-
-        #PlayerTransfer.objects.create(trans_player=s, to_team=None, season_join=seas, date_join=timezone.now())
+        print('All players are free agents now!')

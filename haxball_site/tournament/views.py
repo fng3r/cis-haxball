@@ -88,7 +88,7 @@ class TransfersList(ListView):
     from_date = datetime(2024, 3, 13)
     queryset = PlayerTransfer.objects \
         .select_related('trans_player__name__user_profile', 'from_team', 'to_team') \
-        .filter(date_join__gte=from_date) \
+        .filter(date_join__gte=from_date, is_technical=False) \
         .order_by('-date_join', '-id')
     context_object_name = 'transfers'
     template_name = 'tournament/transfers/transfers_list.html'

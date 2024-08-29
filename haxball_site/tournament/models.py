@@ -575,6 +575,11 @@ class PlayerTransfer(models.Model):
     date_join = models.DateField(default=None)
     season_join = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name='В каком сезоне',
                                     related_name='transfers')
+    is_technical = models.BooleanField(
+        'Технический',
+        default=False,
+        help_text='Используется для того, чтобы помечать трансферы по сбросу всех игроков в СА перед началом сезона'
+    )
 
     tracker = FieldTracker(['to_team'])
 
