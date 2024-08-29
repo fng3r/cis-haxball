@@ -379,16 +379,22 @@ class LeagueByTitleFilter(FilterSet):
 
 
 class PostponementsList(ListView):
-    queryset = (Postponement.objects
-                .filter(match__league__championship__is_active=True)
-                .order_by('-taken_at'))
+    queryset = (
+        Postponement.objects
+            .filter(match__league__championship__is_active=True)
+            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
+            .prefetch_related('teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon')
+            .order_by('-taken_at')
+    )
     context_object_name = 'all_postponements'
     template_name = 'tournament/postponements/postponements.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filter = LeagueByTitleFilter(self.request.GET or {'tournament': 'Высшая лига'},
-                                     queryset=League.objects.filter(championship__is_active=True))
+                                     queryset=League.objects \
+                                        .filter(championship__is_active=True) \
+                                        .prefetch_related('postponement_slots'))
         leagues = filter.qs
         teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
         postponements = context['all_postponements'].filter(match__league__in=leagues)

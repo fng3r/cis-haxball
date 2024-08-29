@@ -139,12 +139,7 @@
                             </a>
 
                         </div>
-                        <span>
-                                {% for achievement in postponement.taken_by.user_player.achievements.all %}
-                                    <img src="{{ achievement.mini_image.url }}" width="20px" height="20px"
-                                         title="{{ achievement.description }}">
-                                {% endfor %}
-                        </span>
+
                     </div>
 
                     <div class="comment-footer">
@@ -167,7 +162,7 @@
                                 {% if postponement.teams.count > 1 %}
                                     обоюдный перенос
                                 {% else %}
-                                    перенос на команду {{ postponement.teams.first.title }}
+                                    перенос на команду {{ postponement.teams.0.title }}
                                 {% endif %}
                             </p>
                         </div>

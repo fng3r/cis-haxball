@@ -103,7 +103,10 @@ class Team(models.Model):
         return self.leagues.filter(championship__is_active=True)
 
     def get_postponements(self, leagues):
-        return self.postponements.filter(cancelled_at__isnull=True, match__league__in=leagues).order_by('taken_at')
+        return (self.postponements
+            .filter(cancelled_at__isnull=True, match__league__in=leagues)
+            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
+            .order_by('taken_at'))
 
     def __str__(self):
         return '{}'.format(self.title)
