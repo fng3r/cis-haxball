@@ -1,11 +1,9 @@
 {% load thumbnail %}
 
 {% for league in leagues %}
-    <h6 class="text-center">
-        {{ league.title }}
-    </h6>
+    <h5 class="text-center">{{ league.title }}</h5>
 
-    <div class="row justify-content-start ml-1 mb-1">
+    <div class="row justify-content-start ml-1 mb-2">
 
         {% for team in league.teams.all %}
             <div class="col-4 justify-content-center">
@@ -17,5 +15,4 @@
             </div>
         {% endfor %}
     </div>
-
 {% endfor %}
