@@ -1,9 +1,6 @@
 {% load static %}
 {% load account %}
 {% load polls_extras %}
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "tournament/free_agent/free_agent_list.css" %}">
-{% endblock %}
 
 {% for poll in active_polls %}
 
@@ -22,9 +19,11 @@
                                 <div class="progress-bar {% if choice|most_popular_choice:poll %}bg-success{% endif %}"
                                      role="progressbar"
                                      style="width: {{ choice|percent_choices:poll }}%;"
-                                        {% if not poll.anonymously %}
-                                     title="{% for us in choice.votes.all %}{{ us.username }}
-{% endfor %}"{% else %}title="Опрос анонимен"{% endif %}
+                                    {% if not poll.anonymously %}
+                                        title="{% for us in choice.votes.all %}{{ us.username }}{% endfor %}"
+                                     {% else %}
+                                        title="Опрос анонимен"
+                                    {% endif %}
                                      aria-valuenow="{{ choice|percent_choices:poll }}"
                                      aria-valuemin="0" aria-valuemax="100">
                                 <span class="text-dark"><strong><i>{{ choice|percent_choices:poll }}%</i></strong>
