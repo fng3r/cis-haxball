@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'sorl.thumbnail',
     'mathfilters',
     'debug_toolbar',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
