@@ -141,7 +141,7 @@ class League(models.Model):
     class Meta:
         ordering = ['-created']
         verbose_name = 'Турнир'
-        verbose_name_plural = 'Турнир'
+        verbose_name_plural = 'Турниры'
 
 
 class Nation(models.Model):
