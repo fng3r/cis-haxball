@@ -1,7 +1,6 @@
 {% extends "core/home.html" %}
 {% load static %}
 {% load tournament_extras %}
-<link rel="stylesheet" type="text/css" href="{% static "tournament/free_agent/free_agent_list.css" %}">
 
 {% block scripts %}
     <script>
@@ -13,6 +12,8 @@
 {% endblock %}
 {% block title %}Чемпионат | Свободные агенты — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
+    <link rel="stylesheet" type="text/css" href="{% static "tournament/free_agent/free_agent_list.css" %}">
+
     <div class="card mb-2 mt-2" style="border-radius: 10px">
         <h2 class="text-center my-2">
             <i class="fa fa-search-plus text-success" aria-hidden="true"></i>

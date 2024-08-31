@@ -21,7 +21,7 @@
 {% block title %}Чемпионат | {{ match }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
-    <div class="card mb-4 mt-2" style="border-radius: 25px">
+    <div class="card mb-2 mt-2" style="border-radius: 25px">
         <div class="card-header text-center" style="border-radius: 25px">
 
             <h5>
@@ -256,7 +256,7 @@
                                 <ul>
                                 {% for disqualification in match.disqualifications.all %}
                                     <li>
-                                        {{ disqualification.player.nickname }} ({{ disqualification.player.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
+                                        {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
                                         Причина: {{ disqualification.reason }}
                                     </li>
                                 {% endfor %}

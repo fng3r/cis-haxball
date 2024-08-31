@@ -13,14 +13,14 @@
 {% block title %}Чемпионат | Переносы — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
-<div class="card mb-2 mt-2" style="border-radius: 10px; max-height: 700px;">
+<div class="card mb-2 mt-2" style="border-radius: 10px;">
     <h2 class="text-center my-2">
         <i class="fa fa-calendar text-success" aria-hidden="true"></i> Переносы
     </h2>
     <div class="container-fluid p-0 mx-0">
         <form method="get">
             {{ filter.form }}
-            <button style="visibility: none;">Применить фильтр</button>
+            <button>Применить фильтр</button>
         </form>
         <div class="table-fix table-responsive">
             <table id="postponements-table" class="table table-hover" style="max-width: 100%">
@@ -139,12 +139,7 @@
                             </a>
 
                         </div>
-                        <span>
-                                {% for achievement in postponement.taken_by.user_player.achievements.all %}
-                                    <img src="{{ achievement.mini_image.url }}" width="20px" height="20px"
-                                         title="{{ achievement.description }}">
-                                {% endfor %}
-                        </span>
+
                     </div>
 
                     <div class="comment-footer">
@@ -167,7 +162,7 @@
                                 {% if postponement.teams.count > 1 %}
                                     обоюдный перенос
                                 {% else %}
-                                    перенос на команду {{ postponement.teams.first.title }}
+                                    перенос на команду {{ postponement.teams.0.title }}
                                 {% endif %}
                             </p>
                         </div>

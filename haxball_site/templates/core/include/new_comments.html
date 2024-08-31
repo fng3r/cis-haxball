@@ -22,415 +22,422 @@
 {% endblock %}
 
 
-<div class="row mt-4">
+<div class="row mt-2">
     <div class="col-md-12">
 
         <div class="card mb-2 py-2 px-1" style="border-radius: 20px">
-            {% if user.is_authenticated and user.user_profile.can_comment and object.commentable %}
-                {% if object|get_class == 'Profile' %}
-                    {% include 'core/include/new_form_comment.html' %}
-                {% elif object|get_class == 'League' %}
-                    {% include 'core/include/new_form_comment_league.html' %}
-                {% elif object|get_class == 'Post' %}
-                    {% include 'core/include/new_form_comment_post.html' %}
-                {% elif object|get_class == 'Match' %}
-                    {% include 'core/include/new_form_comment_match.html' %}
+            {% if object.commentable %}
+                {% if user.is_authenticated and user.user_profile.can_comment %}
+                    {% if object|get_class == 'Profile' %}
+                        {% include 'core/include/new_form_comment.html' %}
+                    {% elif object|get_class == 'League' %}
+                        {% include 'core/include/new_form_comment_league.html' %}
+                    {% elif object|get_class == 'Post' %}
+                        {% include 'core/include/new_form_comment_post.html' %}
+                    {% elif object|get_class == 'Match' %}
+                        {% include 'core/include/new_form_comment_match.html' %}
+                    {% endif %}
+                {% elif user.is_authenticated and not user.user_profile.can_comment %}
+                    <h6 class="text-center">
+                        Брумасик считает, что вам лучше не писать здесь :(
+                    </h6>
+                {% else %}
+                    <h6 class="text-center">
+                        <a class="text-primary" data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
+                            Войдите</a>, чтобы оставить комментарий
+                    </h6>
                 {% endif %}
-            {% elif user.is_authenticated and not user.user_profile.can_comment %}
-                <h6 class="text-center">
-                    Брумасик считает, что вам лучше не писать здесь((
-                </h6>
-            {% elif object.commentable %}
-                <h6 class="text-center">
-                    <a class="text-primary" data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
-                        Войдите</a>, чтобы оставить комментарий
-                </h6>
-            {% elif not object.commentable and object|get_class == 'Profile' %}
-                <h5 class="text-center">Пользователь закрыл свой профиль</h5>
+            {% else %}
+                <h5 class="text-center">
+                    {% if object|get_class == 'Profile' %}
+                        Пользователь закрыл свой профиль
+                    {% else %}
+                        Комментарии закрыты
+                    {% endif %}
+                </h5>
             {% endif %}
         </div>
 
-        <div class="card mb-5" style="border-radius: 20px">
-            {% if object.commentable %}
+        {% if object.comments.count > 0 or object.commentable %}
+            <div class="card mb-5" style="border-radius: 20px">
                 <div class="card-body card-body-comment">
                     {% if object.comments.count > 0 %}
-                        <h4 class="card-title">Последние комментарии ({{ object.comments.count }})</h4>
+                        <h4 class="card-title">Комментарии ({{ object.comments.count }})</h4>
                     {% elif object.commentable %}
                         <h6 class="card-subtitle">Здесь пока пусто, не хочешь быть первым?</h6>
                     {% endif %}
-                    <!-- <h6 class="card-subtitle">Комментарии</h6> -->
                 </div>
-            {% endif %}
-            <div class="comment-widgets">
-                {% for comment in comments %}
+                <div class="comment-widgets">
+                    {% for comment in comments %}
 
-                    <!-- Всплывающее окно просмотра лайков -->
-                    {% include 'core/include/popup_like_view.html' with comment=comment %}
+                        <!-- Всплывающее окно просмотра лайков -->
+                        {% include 'core/include/popup_like_view.html' with comment=comment %}
 
-                    <!-- Непосредственно комментарий -->
-                    {% if comment.is_parent %}
-                        <div class="d-flex flex-row comment-row" id="r{{ comment.id }}">
-                            <div class="p-2">
-                            <span class="round">
-                                <a href="{{ comment.author.user_profile.get_absolute_url }}">
-                            {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as im %}
-                                <img src="{{ im.url }}"
-                                     alt="{{ comment.author.username }}" width="50">
-                            {% endthumbnail %}
-
-                                </a>
-                            </span>
-                            </div>
-                            <div class="comment-text w-100">
-                                <div class="d-flex justify-content-between">
-                                    <div class="m-0 d-flex" style="font-size: 13pt; font-weight: 600;">
-
-                                        {% for icon in comment.author.user_profile.user_icon.all %}
-                                            <div class="mr-1" style="vertical-align: middle">
-                                                <img src="{{ icon.image.url }}" width="16px" height="16px"
-                                                     title="{{ icon.description }}">
-                                            </div>
-                                        {% endfor %}
-                                        <a href="{{ comment.author.user_profile.get_absolute_url }}">
-                                            {{ comment.author.username }}
-                                        </a>
-
-                                        <div class="p-0 ml-1 small" style="margin-top: 2.25%">
-                                            <span class="badge badge-pill
-                            {% if comment.author.user_profile.karma >= 0 %}badge-success{% else %}badge-danger{% endif %}">{{ comment.author.user_profile.karma }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <span>
-                                        {% comment %}
-                                            {% for achievement in comment.author.user_player.achievements.all %}
-                                                <img src="{{ achievement.mini_image.url }}" width="20px" height="20px"
-                                                     title="{{ achievement.description }}">
-                                            {% endfor %}
-                                        {% endcomment %}
-
-                                        <a href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ comment.id }}">#{{ comment.id }}</a>
-                                        {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
-                                            <a href="{% url 'core:edit_comment' comment.id %}"
-                                               class="text-warning" title="Редактировать">
-                                            <i class="fa fa-pencil" aria-hidden="true"></i>
-                                            </a>
-
-                                            <a class="text-danger" data-toggle="modal"
-                                               data-target="#deleter{{ comment.id }}">
-                                            <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
-                                            </a>
-
-                                            <!-- Modal -->
-                                            <div class="modal fade" id="deleter{{ comment.id }}" tabindex="-1"
-                                                 role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                  <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                      <div class="modal-header justify-content-center">
-                                                        <h4 class="modal-title">Удалить комментарий?</h4>
-                                                          <!--
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                          <span aria-hidden="true">&times;</span>
-
-                                                        </button>
-                                                        -->
-                                                      </div>
-                                                      <div class="modal-footer justify-content-center">
-                                                        <button type="button" class="btn btn-danger"
-                                                                data-dismiss="modal">Нет, подождите</button>
-                                                          <form method="POST"
-                                                                action="{% url 'core:delete_comment' comment.id %}">
-                                                                {% csrf_token %}
-                                                                <button type="submit" class="btn btn-primary">Да, я уверен</button>
-                                                          </form>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                        {% elif comment.content_object.name == user %}
-                                            <a class="text-danger" data-toggle="modal"
-                                               data-target="#deleter{{ comment.id }}">
-                                            <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
-                                            </a>
-                                            <div class="modal fade" id="deleter{{ comment.id }}" tabindex="-1"
-                                                 role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                  <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                      <div class="modal-header justify-content-center">
-                                                        <h4 class="modal-title">Удалить комментарий?</h4>
-                                                          <!--
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                          <span aria-hidden="true">&times;</span>
-
-                                                        </button>
-                                                        -->
-                                                      </div>
-                                                      <div class="modal-footer justify-content-center">
-                                                        <button type="button" class="btn btn-danger"
-                                                                data-dismiss="modal">Нет, подождите</button>
-                                                          <form method="POST"
-                                                                action="{% url 'core:delete_comment' comment.id %}">
-                                                                {% csrf_token %}
-                                                                <button type="submit" class="btn btn-primary">Да, я уверен</button>
-                                                          </form>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-
-                                        {% endif %}
-
-                                        </span>
-                                </div>
-
-                                <div class="comment-footer">
-                                <span class="date text-muted small">
-                                    <i class="fa fa-calendar text-primary" aria-hidden="true"></i>
-                                    {{ comment.created|date:"d.m.y" }}
-                                    <i class="fa fa-clock-o text-primary" aria-hidden="true"></i>
-                                    {{ comment.created|time:"H:i" }}
-                                    {% if comment.edited %}
-                                        {% if comment.edited.date == comment.created.date %}
-                                            <i class="fa fa-pencil comment-edit" aria-hidden="true"
-                                               data-comment-edit-title='изм. {{comment.edited|time:"H:i"}}'></i>
-                                        {% else %}
-                                            <i class="fa fa-pencil comment-edit" aria-hidden="true"
-                                               data-comment-edit-title='изм. {{comment.edited|date:"d.m.y"}} {{comment.edited|time:"H:i"}}'></i>
-                                        {% endif %}
-                                    {% endif %}
-                                </span>
-
-                                    {% include 'core/include/like_dislike_comment.html' %}
-
-
-                                    <span class="action-icons">
-                                        {% if user.is_authenticated %}
-                                            <a href="#addcomment"
-                                               onclick="addComment('{{ comment.author.username }}','{{ comment.id }}')">
-                                                <i class="fa fa-reply"></i>
-                                            </a>
-                                        {% else %}
-                                            <a data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
-                                                <i class="fa fa-reply"></i>
-                                            </a>
-                                        {% endif %}
-                                </span>
-                                </div>
-                                <div class="comment-body mt-3">
-                                    {{ comment.body|safe }}
-                                </div>
-
-                                <div class="comment-footer">
-                                    {% if comment.childs_count > 2 %}
-                                        <a href="#commentcollapse{{ comment.id }}" data-toggle="collapse"
-                                           aria-expanded="true"
-                                           onclick="ChangeText(this)"
-                                           aria-controls="commentcollapse{{ comment.id }}" class="small"><i
-                                                class="fa fa-chevron-up"></i>Скрыть ответы</a>
-                                        <small>({{ comment.childs_count }})</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% if comment.has_childs %}
-                            {% if comment.childs_count > 2 %}
-                                <div class="collapse show" id="commentcollapse{{ comment.id }}">
-                            {% endif %}
-                        {% for children in comment.all_childs %}
-                            <div class="d-flex flex-row comment-row" style="padding-left: 100px"
-                                 id="r{{ children.id }}">
+                        <!-- Непосредственно комментарий -->
+                        {% if comment.is_parent %}
+                            <div class="d-flex flex-row comment-row" id="r{{ comment.id }}">
                                 <div class="p-2">
+                                <span class="round">
+                                    <a href="{{ comment.author.user_profile.get_absolute_url }}">
+                                {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as im %}
+                                    <img src="{{ im.url }}"
+                                         alt="{{ comment.author.username }}" width="50">
+                                {% endthumbnail %}
 
-                                <!-- Всплывающее окно просмотра лайков -->
-                                {% include 'core/include/popup_like_view.html' with comment=children %}
-                            <span class="round">
-                                <a href="{{ children.author.user_profile.get_absolute_url }}">
-                                    {% thumbnail children.author.user_profile.avatar "50x50" crop="center" as im %}
-                                        <img src="{{ im.url }}"
-                                             alt="{{ children.author.username }}" width="50">
-                                    {% endthumbnail %}
-                                </a>
-                            </span>
+                                    </a>
+                                </span>
                                 </div>
                                 <div class="comment-text w-100">
                                     <div class="d-flex justify-content-between">
-                                        <div class="d-inline-flex">
+                                        <div class="m-0 d-flex" style="font-size: 13pt; font-weight: 600;">
 
-                                            <div class="m-0 d-flex mr-2" style="font-size: 13pt; font-weight: 600;">
-                                                {% for icon in children.author.user_profile.user_icon.all %}
-                                                    <div class="mr-1" style="vertical-align: middle">
-
-                                                        <img src="{{ icon.image.url }}" width="16px" height="16px"
-                                                             title="{{ icon.description }}">
-                                                    </div>
-                                                {% endfor %}
-                                                <a href="{{ children.author.user_profile.get_absolute_url }}">
-                                                    {{ children.author.username }}
-                                                </a>
-
-                                                <div class="p-0 ml-1 small" style="margin-top:2.25%">
-                                                        <span class="badge badge-pill
-                                                            {% if children.author.user_profile.karma >= 0 %}badge-success{% else %}badge-danger{% endif %}">{{ children.author.user_profile.karma }}
-                                                        </span>
+                                            {% for icon in comment.author.user_profile.user_icon.all %}
+                                                <div class="mr-1" style="vertical-align: middle">
+                                                    <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                                         title="{{ icon.description }}">
                                                 </div>
+                                            {% endfor %}
+                                            <a href="{{ comment.author.user_profile.get_absolute_url }}">
+                                                {{ comment.author.username }}
+                                            </a>
 
+                                            <div class="p-0 ml-1 small" style="margin-top: 2.25%">
+                                                <span class="badge badge-pill
+                                {% if comment.author.user_profile.karma >= 0 %}badge-success{% else %}badge-danger{% endif %}">{{ comment.author.user_profile.karma }}
+                                                </span>
                                             </div>
-
-                                            <i style="align-self: flex-end; margin-bottom: 2px; font-size: 11pt;">
-                                                ответил </i>
-
-                                            <div class="m-0 d-flex ml-2" style="font-size: 13pt; font-weight: 600;">
-                                                {% for icon in children.parent.author.user_profile.user_icon.all %}
-                                                    <div class="mr-1" style="vertical-align: middle">
-
-                                                        <img src="{{ icon.image.url }}" width="16px" height="16px"
-                                                             title="{{ icon.description }}">
-                                                    </div>
-                                                {% endfor %}
-                                                <a href="{{ children.parent.author.user_profile.get_absolute_url }}">
-                                                    {{ children.parent.author.username }}
-                                                </a>
-                                            </div>
-
                                         </div>
                                         <span>
-                                            <a href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ children.id }}">#{{ children.id }}</a>
-                                            {% if user.is_superuser or children.author == user and children|can_edit and not children|exceeds_edit_limit %}
+                                            {% comment %}
+                                                {% for achievement in comment.author.user_player.achievements.all %}
+                                                    <img src="{{ achievement.mini_image.url }}" width="20px" height="20px"
+                                                         title="{{ achievement.description }}">
+                                                {% endfor %}
+                                            {% endcomment %}
 
-                                                <a href="{% url 'core:edit_comment' children.id %}"
+                                            <a href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ comment.id }}">#{{ comment.id }}</a>
+                                            {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
+                                                <a href="{% url 'core:edit_comment' comment.id %}"
                                                    class="text-warning" title="Редактировать">
                                                 <i class="fa fa-pencil" aria-hidden="true"></i>
                                                 </a>
 
                                                 <a class="text-danger" data-toggle="modal"
-                                                   data-target="#deleter{{ children.id }}">
+                                                   data-target="#deleter{{ comment.id }}">
                                                 <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
                                                 </a>
 
                                                 <!-- Modal -->
-                                                <div class="modal fade" id="deleter{{ children.id }}" tabindex="-1"
-                                                     role="dialog" aria-labelledby="exampleModalLabel"
-                                                     aria-hidden="true">
-                                                  <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                      <div class="modal-header justify-content-center">
-                                                        <h4 class="modal-title">Удалить комментарий?</h4>
-                                                          <!--
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                          <span aria-hidden="true">&times;</span>
+                                                <div class="modal fade" id="deleter{{ comment.id }}" tabindex="-1"
+                                                     role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                      <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                          <div class="modal-header justify-content-center">
+                                                            <h4 class="modal-title">Удалить комментарий?</h4>
+                                                              <!--
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
 
-                                                        </button>
-                                                        -->
-                                                      </div>
-                                                      <div class="modal-footer justify-content-center">
-                                                        <button type="button" class="btn btn-danger"
-                                                                data-dismiss="modal">Нет, подождите</button>
-                                                          <form method="POST"
-                                                                action="{% url 'core:delete_comment' children.id %}">
-                                                                {% csrf_token %}
-                                                                <button type="submit" class="btn btn-primary">Да, я уверен</button>
-                                                          </form>
+                                                            </button>
+                                                            -->
+                                                          </div>
+                                                          <div class="modal-footer justify-content-center">
+                                                            <button type="button" class="btn btn-danger"
+                                                                    data-dismiss="modal">Нет, подождите</button>
+                                                              <form method="POST"
+                                                                    action="{% url 'core:delete_comment' comment.id %}">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-primary">Да, я уверен</button>
+                                                              </form>
+                                                          </div>
+                                                        </div>
                                                       </div>
                                                     </div>
-                                                  </div>
-                                                </div>
-                                            {% elif children.content_object.name == user %}
+                                            {% elif comment.content_object.name == user %}
                                                 <a class="text-danger" data-toggle="modal"
-                                                   data-target="#deleter{{ children.id }}">
+                                                   data-target="#deleter{{ comment.id }}">
                                                 <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
                                                 </a>
-                                                <div class="modal fade" id="deleter{{ children.id }}" tabindex="-1"
-                                                     role="dialog" aria-labelledby="exampleModalLabel"
-                                                     aria-hidden="true">
-                                                  <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                      <div class="modal-header justify-content-center">
-                                                        <h4 class="modal-title">Удалить комментарий?</h4>
-                                                          <!--
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                          <span aria-hidden="true">&times;</span>
+                                                <div class="modal fade" id="deleter{{ comment.id }}" tabindex="-1"
+                                                     role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                      <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                          <div class="modal-header justify-content-center">
+                                                            <h4 class="modal-title">Удалить комментарий?</h4>
+                                                              <!--
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
 
-                                                        </button>
-                                                        -->
-                                                      </div>
-                                                      <div class="modal-footer justify-content-center">
-                                                        <button type="button" class="btn btn-danger"
-                                                                data-dismiss="modal">Нет, подождите</button>
-                                                          <form method="POST"
-                                                                action="{% url 'core:delete_comment' children.id %}">
-                                                                {% csrf_token %}
-                                                                <button type="submit" class="btn btn-primary">Да, я уверен</button>
-                                                          </form>
+                                                            </button>
+                                                            -->
+                                                          </div>
+                                                          <div class="modal-footer justify-content-center">
+                                                            <button type="button" class="btn btn-danger"
+                                                                    data-dismiss="modal">Нет, подождите</button>
+                                                              <form method="POST"
+                                                                    action="{% url 'core:delete_comment' comment.id %}">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-primary">Да, я уверен</button>
+                                                              </form>
+                                                          </div>
+                                                        </div>
                                                       </div>
                                                     </div>
-                                                  </div>
-                                                </div>
 
                                             {% endif %}
 
-                                        </span>
+                                            </span>
                                     </div>
-                                    <div class="comment-footer">
-                                <span class="date text-muted small">
-                                    <i class="fa fa-calendar text-primary"
-                                       aria-hidden="true"></i> {{ children.created|date:"d.m.y" }}
-                                    <i class="fa fa-clock-o text-primary"
-                                       aria-hidden="true"></i> {{ children.created|time:"H:i" }}
-                                    {% if children.edited %}
-                                        {% if children.edited.date == children.created.date %}
-                                            <i class="fa fa-pencil comment-edit" aria-hidden="true"
-                                               data-comment-edit-title='изм. {{children.edited|time:"H:i"}}'></i>
-                                        {% else %}
-                                            <i class="fa fa-pencil comment-edit" aria-hidden="true"
-                                               data-comment-edit-title='изм. {{children.edited|date:"d.m.y"}} {{children.edited|time:"H:i"}}'></i>
-                                        {% endif %}
-                                    {% endif %}
-                                    <!-- {# children.created|timesince #} назад -->
-                                </span>
 
-                                        <!-- ВОТ ТУТА -->
-                                        {% include 'core/include/like_dislike_comment.html' with comment=children %}
+                                    <div class="comment-footer">
+                                    <span class="date text-muted small">
+                                        <i class="fa fa-calendar text-primary" aria-hidden="true"></i>
+                                        {{ comment.created|date:"d.m.y" }}
+                                        <i class="fa fa-clock-o text-primary" aria-hidden="true"></i>
+                                        {{ comment.created|time:"H:i" }}
+                                        {% if comment.edited %}
+                                            {% if comment.edited.date == comment.created.date %}
+                                                <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                                                   data-comment-edit-title='изм. {{comment.edited|time:"H:i"}}'></i>
+                                            {% else %}
+                                                <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                                                   data-comment-edit-title='изм. {{comment.edited|date:"d.m.y"}} {{comment.edited|time:"H:i"}}'></i>
+                                            {% endif %}
+                                        {% endif %}
+                                    </span>
+
+                                        {% include 'core/include/like_dislike_comment.html' %}
 
 
                                         <span class="action-icons">
-                                                {% if user.is_authenticated %}
-                                                    <a href="#addcomment"
-                                                       onclick="addComment('{{ children.author.username }}','{{ children.id }}')">
-                                                            <i class="fa fa-reply"></i>
-                                                        </a>
-                                                {% else %}
-                                                    <a data-toggle="modal" data-target="#loginModal"
-                                                       style="cursor: pointer">
-                                                                    <i class="fa fa-reply"></i>
-                                                    </a>
-                                                {% endif %}
-
-
-
-                                </span>
+                                            {% if user.is_authenticated %}
+                                                <a href="#addcomment"
+                                                   onclick="addComment('{{ comment.author.username }}','{{ comment.id }}')">
+                                                    <i class="fa fa-reply"></i>
+                                                </a>
+                                            {% else %}
+                                                <a data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
+                                                    <i class="fa fa-reply"></i>
+                                                </a>
+                                            {% endif %}
+                                    </span>
                                     </div>
-                                    <div class="comment-body">
-                                        {{ children.body|safe }}
+                                    <div class="comment-body mt-3">
+                                        {{ comment.body|safe }}
+                                    </div>
+
+                                    <div class="comment-footer">
+                                        {% if comment.childs_count > 2 %}
+                                            <a href="#commentcollapse{{ comment.id }}" data-toggle="collapse"
+                                               aria-expanded="true"
+                                               onclick="ChangeText(this)"
+                                               aria-controls="commentcollapse{{ comment.id }}" class="small"><i
+                                                    class="fa fa-chevron-up"></i>Скрыть ответы</a>
+                                            <small>({{ comment.childs_count }})</small>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
-                        {% endfor %}
+                            {% if comment.has_childs %}
+                                {% if comment.childs_count > 2 %}
+                                    <div class="collapse show" id="commentcollapse{{ comment.id }}">
+                                {% endif %}
+                            {% for children in comment.all_childs %}
+                                <div class="d-flex flex-row comment-row" style="padding-left: 100px"
+                                     id="r{{ children.id }}">
+                                    <div class="p-2">
 
-                        {% if comment.childs_count > 2 %}
-                            </div>
+                                    <!-- Всплывающее окно просмотра лайков -->
+                                    {% include 'core/include/popup_like_view.html' with comment=children %}
+                                <span class="round">
+                                    <a href="{{ children.author.user_profile.get_absolute_url }}">
+                                        {% thumbnail children.author.user_profile.avatar "50x50" crop="center" as im %}
+                                            <img src="{{ im.url }}"
+                                                 alt="{{ children.author.username }}" width="50">
+                                        {% endthumbnail %}
+                                    </a>
+                                </span>
+                                    </div>
+                                    <div class="comment-text w-100">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="d-inline-flex">
+
+                                                <div class="m-0 d-flex mr-2" style="font-size: 13pt; font-weight: 600;">
+                                                    {% for icon in children.author.user_profile.user_icon.all %}
+                                                        <div class="mr-1" style="vertical-align: middle">
+
+                                                            <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                                                 title="{{ icon.description }}">
+                                                        </div>
+                                                    {% endfor %}
+                                                    <a href="{{ children.author.user_profile.get_absolute_url }}">
+                                                        {{ children.author.username }}
+                                                    </a>
+
+                                                    <div class="p-0 ml-1 small" style="margin-top:2.25%">
+                                                            <span class="badge badge-pill
+                                                                {% if children.author.user_profile.karma >= 0 %}badge-success{% else %}badge-danger{% endif %}">{{ children.author.user_profile.karma }}
+                                                            </span>
+                                                    </div>
+
+                                                </div>
+
+                                                <i style="align-self: flex-end; margin-bottom: 2px; font-size: 11pt;">
+                                                    ответил </i>
+
+                                                <div class="m-0 d-flex ml-2" style="font-size: 13pt; font-weight: 600;">
+                                                    {% for icon in children.parent.author.user_profile.user_icon.all %}
+                                                        <div class="mr-1" style="vertical-align: middle">
+
+                                                            <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                                                 title="{{ icon.description }}">
+                                                        </div>
+                                                    {% endfor %}
+                                                    <a href="{{ children.parent.author.user_profile.get_absolute_url }}">
+                                                        {{ children.parent.author.username }}
+                                                    </a>
+                                                </div>
+
+                                            </div>
+                                            <span>
+                                                <a href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ children.id }}">#{{ children.id }}</a>
+                                                {% if user.is_superuser or children.author == user and children|can_edit and not children|exceeds_edit_limit %}
+
+                                                    <a href="{% url 'core:edit_comment' children.id %}"
+                                                       class="text-warning" title="Редактировать">
+                                                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                                                    </a>
+
+                                                    <a class="text-danger" data-toggle="modal"
+                                                       data-target="#deleter{{ children.id }}">
+                                                    <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
+                                                    </a>
+
+                                                    <!-- Modal -->
+                                                    <div class="modal fade" id="deleter{{ children.id }}" tabindex="-1"
+                                                         role="dialog" aria-labelledby="exampleModalLabel"
+                                                         aria-hidden="true">
+                                                      <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                          <div class="modal-header justify-content-center">
+                                                            <h4 class="modal-title">Удалить комментарий?</h4>
+                                                              <!--
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+
+                                                            </button>
+                                                            -->
+                                                          </div>
+                                                          <div class="modal-footer justify-content-center">
+                                                            <button type="button" class="btn btn-danger"
+                                                                    data-dismiss="modal">Нет, подождите</button>
+                                                              <form method="POST"
+                                                                    action="{% url 'core:delete_comment' children.id %}">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-primary">Да, я уверен</button>
+                                                              </form>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                {% elif children.content_object.name == user %}
+                                                    <a class="text-danger" data-toggle="modal"
+                                                       data-target="#deleter{{ children.id }}">
+                                                    <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
+                                                    </a>
+                                                    <div class="modal fade" id="deleter{{ children.id }}" tabindex="-1"
+                                                         role="dialog" aria-labelledby="exampleModalLabel"
+                                                         aria-hidden="true">
+                                                      <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                          <div class="modal-header justify-content-center">
+                                                            <h4 class="modal-title">Удалить комментарий?</h4>
+                                                              <!--
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+
+                                                            </button>
+                                                            -->
+                                                          </div>
+                                                          <div class="modal-footer justify-content-center">
+                                                            <button type="button" class="btn btn-danger"
+                                                                    data-dismiss="modal">Нет, подождите</button>
+                                                              <form method="POST"
+                                                                    action="{% url 'core:delete_comment' children.id %}">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-primary">Да, я уверен</button>
+                                                              </form>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+
+                                                {% endif %}
+
+                                            </span>
+                                        </div>
+                                        <div class="comment-footer">
+                                    <span class="date text-muted small">
+                                        <i class="fa fa-calendar text-primary"
+                                           aria-hidden="true"></i> {{ children.created|date:"d.m.y" }}
+                                        <i class="fa fa-clock-o text-primary"
+                                           aria-hidden="true"></i> {{ children.created|time:"H:i" }}
+                                        {% if children.edited %}
+                                            {% if children.edited.date == children.created.date %}
+                                                <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                                                   data-comment-edit-title='изм. {{children.edited|time:"H:i"}}'></i>
+                                            {% else %}
+                                                <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                                                   data-comment-edit-title='изм. {{children.edited|date:"d.m.y"}} {{children.edited|time:"H:i"}}'></i>
+                                            {% endif %}
+                                        {% endif %}
+                                        <!-- {# children.created|timesince #} назад -->
+                                    </span>
+
+                                            <!-- ВОТ ТУТА -->
+                                            {% include 'core/include/like_dislike_comment.html' with comment=children %}
+
+
+                                            <span class="action-icons">
+                                                    {% if user.is_authenticated %}
+                                                        <a href="#addcomment"
+                                                           onclick="addComment('{{ children.author.username }}','{{ children.id }}')">
+                                                                <i class="fa fa-reply"></i>
+                                                            </a>
+                                                    {% else %}
+                                                        <a data-toggle="modal" data-target="#loginModal"
+                                                           style="cursor: pointer">
+                                                                        <i class="fa fa-reply"></i>
+                                                        </a>
+                                                    {% endif %}
+
+
+
+                                    </span>
+                                        </div>
+                                        <div class="comment-body">
+                                            {{ children.body|safe }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                            {% if comment.childs_count > 2 %}
+                                </div>
+                            {% endif %}
+                            {% endif %}
                         {% endif %}
-                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="card-footer text-muted pb-0 pt-3">
+                    {% if object.comments.count > 2 %}
+                        {% include "core/include/pagination.html" with page=comments %}
                     {% endif %}
-                {% endfor %}
-            </div>
+                </div>
 
-            <div class="card-footer text-muted pb-0 pt-3">
-                {% if object.comments.count > 2 %}
-                    {% include "core/include/pagination.html" with page=comments %}
-                {% endif %}
             </div>
-
-        </div>
+        {% endif %}
     </div>
 </div>
 

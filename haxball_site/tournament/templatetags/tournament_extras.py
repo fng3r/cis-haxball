@@ -316,9 +316,22 @@ def team_statistics(team: Team):
     greatest_assistant = team.goals.values('assistent').annotate(assists=Count('assistent')).order_by('-assists').first()
     greatest_goalkeeper = team.team_events.filter(event=OtherEvents.CLEAN_SHEET).values('author').annotate(cs=Count('author')).order_by('-cs').first()
 
-    home_matches = Match.objects.filter(team_home=team).values(player=F('team_home_start__id')).annotate(matches=Count('team_home_start__id')).order_by('-matches')
-    guest_matches = Match.objects.filter(team_guest=team).values(player=F('team_guest_start__id')).annotate(matches=Count('team_guest_start__id')).order_by('-matches')
-    sub_matches = Substitution.objects.filter(team=team).values(player=F('player_in')).distinct().annotate(matches=Count('player_in')).order_by('-matches')
+    home_matches = Match.objects \
+        .filter(team_home=team, is_played=True) \
+        .values(player=F('team_home_start__id')) \
+        .annotate(matches=Count('team_home_start__id')) \
+        .order_by('-matches')
+    guest_matches = Match.objects \
+        .filter(team_guest=team, is_played=True) \
+        .values(player=F('team_guest_start__id')) \
+        .annotate(matches=Count('team_guest_start__id')) \
+        .order_by('-matches')
+    sub_matches = Substitution.objects \
+        .filter(team=team) \
+        .values(player=F('player_in')) \
+        .distinct() \
+        .annotate(matches=Count('player_in')) \
+        .order_by('-matches')
 
     all_team_matches = list(home_matches) + list(guest_matches) + list(sub_matches)
     matches_by_player = defaultdict(int)

@@ -56,11 +56,11 @@
     {% block scripts %} {% endblock %}
 </head>
 <body>
-{% include "core/include/navbar.html" %}
-{% include "core/include/running_line.html" %}
 
-{% block content %}
-{% endblock %}
+    {% include "core/include/navbar.html" %}
+    {% include "core/include/running_line.html" %}
+
+    {% block content %} {% endblock %}
 
 </body>
 </html>

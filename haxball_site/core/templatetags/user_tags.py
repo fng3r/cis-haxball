@@ -4,7 +4,7 @@ from django import template
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Page
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Prefetch
 from django.utils import timezone
 from online_users.models import OnlineUserActivity
 
@@ -263,9 +263,12 @@ def can_view_likes_details(user: User):
 
 @register.inclusion_tag('core/include/teams_in_navbar.html')
 def teams_in_navbar():
-    teams = Team.objects.filter(leagues__championship__is_active=True).order_by('title').distinct()
+    primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
+    leagues = League.objects.filter(title__in=primary_leagues, championship__is_active=True) \
+        .prefetch_related(Prefetch('teams', queryset=Team.objects.order_by('title'))) \
+        .order_by('priority')
 
-    return {'teams': teams}
+    return {'leagues': leagues}
 
 
 @register.filter
