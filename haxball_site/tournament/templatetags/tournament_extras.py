@@ -30,7 +30,7 @@ register = template.Library()
 
 @register.filter
 def user_in_agents(user):
-    return FreeAgent.objects.exists(player=user, is_active=True)
+    return FreeAgent.objects.filter(player=user, is_active=True).exists()
 
 
 @register.filter
