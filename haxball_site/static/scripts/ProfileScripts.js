@@ -15,19 +15,19 @@
     });
 
 
-    let historyNicknamesButton = document.querySelector('.nickname-inline');
-    let nicknamesFlag = 1;
+    let nicknamesHistoryButton = document.querySelector('.nickname-inline');
+    let isHistoryHidden = true;
 
-    historyNicknamesButton.addEventListener("click",function(event){
-        if(nicknamesFlag){
-            document.querySelector('.nicknames-history').style.opacity = '0.8';
+    nicknamesHistoryButton.addEventListener("click",function(event){
+        if(isHistoryHidden){
+            document.querySelector('.nicknames-history').style.opacity = '0.85';
+            document.querySelector('.nicknames-history').style.visibility = 'visible';
             document.querySelector('.profile-triangle').style.transform = 'rotate(180deg)';
-            nicknamesFlag = 0;
+            isHistoryHidden = false;
         } else {
             document.querySelector('.nicknames-history').style.opacity = '0';
+            document.querySelector('.nicknames-history').style.visibility = 'hidden';
             document.querySelector('.profile-triangle').style.transform = 'rotate(0deg)';
-            nicknamesFlag = 1;
+            isHistoryHidden = true;
         }
-
-
     });
