@@ -26,59 +26,59 @@
 
 <table class="table table-hover team-table-league">
     <thead>
-    <tr>
-        <th scope="col" class="font-weight-bold h5">#</th>
-        <th scope="col">Команда</th>
-        <th scope="col">И</th>
-        <th scope="col">В</th>
-        <th scope="col">Н</th>
-        <th scope="col">П</th>
-        <th scope="col">ЗМ</th>
-        <th scope="col">ПМ</th>
-        <th scope="col">+/-</th>
-        <th scope="col">O</th>
-        <th scope="col">Форма</th>
-    </tr>
+        <tr>
+            <th scope="col" class="font-weight-bold h5">#</th>
+            <th scope="col">Команда</th>
+            <th scope="col">И</th>
+            <th scope="col">В</th>
+            <th scope="col">Н</th>
+            <th scope="col">П</th>
+            <th scope="col">ЗМ</th>
+            <th scope="col">ПМ</th>
+            <th scope="col">+/-</th>
+            <th scope="col">O</th>
+            <th scope="col">Форма</th>
+        </tr>
     </thead>
     <tbody>
-    {% for team in teams %}
-        <tr {% if forloop.counter == 1 %}bgcolor="#ffd700"{% endif %}
-            {% if forloop.counter == 2 %}bgcolor="silver"{% endif %}
-            {% if forloop.counter == 3 %}bgcolor="#ffa81c"{% endif %}
-            class="team-rows py-1"
-        >
+        {% for team in teams %}
+            <tr {% if forloop.counter == 1 %}bgcolor="#ffd700"{% endif %}
+                {% if forloop.counter == 2 %}bgcolor="silver"{% endif %}
+                {% if forloop.counter == 3 %}bgcolor="#ffa81c"{% endif %}
+                class="team-rows py-1"
+            >
 
-            <th scope="row" class="px-1 h6" width="4%" style="font-weight: 600; font-size: 20px;">{{ forloop.counter }}</th>
+                <th scope="row" class="px-1 h6" width="4%" style="font-weight: 600; font-size: 20px;">{{ forloop.counter }}</th>
 
-            <td class="team-name text-left px-0" width="34%">
+                <td class="team-name text-left px-0" width="34%">
 
-                <a class="text-dark" href="{{ team.0.get_absolute_url }}"><img
+                    <a class="text-dark" href="{{ team.0.get_absolute_url }}"><img
                         src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28"
                         class="mr-2">{% if team.0.title|length < 20 %}{{ team.0.title }}{% else %}{{ team.0.short_title }}{% endif %}</a>
-            </td>
-            <td width="6%">{{ team.1 }}</td>
-            <td width="6%">{{ team.2 }}</td>
-            <td width="6%">{{ team.3 }}</td>
-            <td width="6%">{{ team.4 }}</td>
-            <td width="6%">{{ team.5 }}</td>
-            <td width="6%">{{ team.6 }}</td>
-            <td width="6%" {% if team.7 > 0 %} class="text-success"
-                                    {% elif team.7 < 0 %}class="text-danger"{% endif %}>{{ team.7 }}</td>
-            <td width="6%" style="font-weight: 500">{{ team.8 }}</td>
-            <td class="team-form p-1" width="13%">{% for result in team.9 %}
-                <a href="{{ result.0.get_absolute_url }}" class="fa fa-circle{% if result.1 == 1 %}
-                                                                       text-success
-                                                                                  {% elif result.1 == -1 %}
-                                                                                         text-danger
-                                                                           {% elif result.1 == 0 %}
-                                                                                    text-secondary
-                                                                                   {% endif %}" title="Тур {{ result.0.numb_tour.number }}
-{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}">
+                </td>
+                <td width="6%">{{ team.1 }}</td>
+                <td width="6%">{{ team.2 }}</td>
+                <td width="6%">{{ team.3 }}</td>
+                <td width="6%">{{ team.4 }}</td>
+                <td width="6%">{{ team.5 }}</td>
+                <td width="6%">{{ team.6 }}</td>
+                <td width="6%" {% if team.7 > 0 %} class="text-success"
+                    {% elif team.7 < 0 %}class="text-danger"{% endif %}>{{ team.7 }}</td>
+                <td width="6%" style="font-weight: 500">{{ team.8 }}</td>
+                <td class="team-form p-1" width="13%">{% for result in team.9 %}
+                    <a href="{{ result.0.get_absolute_url }}" class="fa fa-circle{% if result.1 == 1 %}
+                                                                         text-success
+                                                                     {% elif result.1 == -1 %}
+                                                                         text-danger
+                                                                     {% elif result.1 == 0 %}
+                                                                         text-secondary
+                                                                     {% endif %}" title="Тур {{ result.0.numb_tour.number }}
+                                           {{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}">
                     <!--<i class=" aria-hidden="true"></i>-->
-                </a>
-            {% endfor %}
-            </td>
-        </tr>
-    {% endfor %}
+                    </a>
+                {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
     </tbody>
 </table>

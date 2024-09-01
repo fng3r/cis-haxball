@@ -54,67 +54,67 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            {% for rating_entry in filter.qs %}
-                                <tr>
-                                    <td class="rating-row pr-1 border-right">
-                                        <div>
-                                            <span style="font-size: 18px">
-                                                {{rating_entry.rank}}&nbsp;&nbsp;
-                                                {% if previous_rating %}
-                                                    {% with previous_rank=rating_entry.team|previous_rating_rank:previous_rating %}
-                                                    {% with rank_diff=previous_rank|sub:rating_entry.rank %}
-                                                    {% if previous_rank %}
-                                                        {% if rank_diff > 0 %}
-                                                            <img src="{% static 'img/ico/rating/arrow-up.png' %}" width=18 height=18>
-                                                            &nbsp;{{rank_diff}}
-                                                        {% elif rank_diff < 0 %}
-                                                            <img src="{% static 'img/ico/rating/arrow-down.png' %}" width=18 height=18>
-                                                            &nbsp;{{rank_diff|abs}}
-                                                        {% else %}
-                                                            <img src="{% static 'img/ico/rating/dash.png' %}" width=20 height=20>
-                                                        {% endif %}
-                                                    {% else %}
-                                                        <img src="{% static 'img/ico/rating/new.png' %}" width=25 height=25>
-                                                    {% endif %}
-                                                    {% endwith %}
-                                                    {% endwith %}
-                                                {% endif %}
-                                            </span>
-                                        </div>
-                                    </td>
-
-                                    <td class="rating-row pr-1 border-right">
-                                        <div class="media pt-1">
-                                            <img src="{{ rating_entry.team.logo.url }}" class="align-self-start mr-1"
-                                                 alt="{{ rating_entry.team.title }}" width="24">
-                                            <div class="media-body">
-                                                <h6 class="mt-0" style="font-size: 20px">
-                                                    <a href="{{ rating_entry.team.get_absolute_url }}">{{ rating_entry.team.title }}</a>
-                                                </h6>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    {% for season in seasons_rating %}
-                                        <td class="rating-row border-right">
+                                {% for rating_entry in filter.qs %}
+                                    <tr>
+                                        <td class="rating-row pr-1 border-right">
                                             <div>
-                                                {% get_season_rating rating_entry.team season seasons_rating as season_rating %}
-                                                {% if season_rating is not None %}
-                                                    <span>{{season_rating|floatformat:2}}</span>
-                                                {% else %}
-                                                    <span>—</span>
-                                                {% endif %}
+                                                <span style="font-size: 18px">
+                                                    {{rating_entry.rank}}&nbsp;&nbsp;
+                                                    {% if previous_rating %}
+                                                        {% with previous_rank=rating_entry.team|previous_rating_rank:previous_rating %}
+                                                            {% with rank_diff=previous_rank|sub:rating_entry.rank %}
+                                                                {% if previous_rank %}
+                                                                    {% if rank_diff > 0 %}
+                                                                        <img src="{% static 'img/ico/rating/arrow-up.png' %}" width=18 height=18>
+                                                                        &nbsp;{{rank_diff}}
+                                                                    {% elif rank_diff < 0 %}
+                                                                        <img src="{% static 'img/ico/rating/arrow-down.png' %}" width=18 height=18>
+                                                                        &nbsp;{{rank_diff|abs}}
+                                                                    {% else %}
+                                                                        <img src="{% static 'img/ico/rating/dash.png' %}" width=20 height=20>
+                                                                    {% endif %}
+                                                                {% else %}
+                                                                    <img src="{% static 'img/ico/rating/new.png' %}" width=25 height=25>
+                                                                {% endif %}
+                                                            {% endwith %}
+                                                        {% endwith %}
+                                                    {% endif %}
+                                                </span>
                                             </div>
                                         </td>
-                                    {% endfor %}
 
-                                    <td class="rating-row">
-                                        <div>
-                                            <span style="font-weight: 700">{{rating_entry.total_points|floatformat:2}}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
+                                        <td class="rating-row pr-1 border-right">
+                                            <div class="media pt-1">
+                                                <img src="{{ rating_entry.team.logo.url }}" class="align-self-start mr-1"
+                                                     alt="{{ rating_entry.team.title }}" width="24">
+                                                <div class="media-body">
+                                                    <h6 class="mt-0" style="font-size: 20px">
+                                                        <a href="{{ rating_entry.team.get_absolute_url }}">{{ rating_entry.team.title }}</a>
+                                                    </h6>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {% for season in seasons_rating %}
+                                            <td class="rating-row border-right">
+                                                <div>
+                                                    {% get_season_rating rating_entry.team season seasons_rating as season_rating %}
+                                                    {% if season_rating is not None %}
+                                                        <span>{{season_rating|floatformat:2}}</span>
+                                                    {% else %}
+                                                        <span>—</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        {% endfor %}
+
+                                        <td class="rating-row">
+                                            <div>
+                                                <span style="font-weight: 700">{{rating_entry.total_points|floatformat:2}}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>

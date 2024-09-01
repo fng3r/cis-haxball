@@ -36,9 +36,9 @@
                                 {% for team in teams %}
                                     <a class="text-dark h6 mb-0 list-group-item list-group-item-action"
                                        href="{{ team.get_absolute_url }}"><img
-                                            src="{{ team.logo.url }}" alt="{{ team.title }}"
-                                            width="25" height="25"
-                                            class="mr-1">{{ team.title }}</a>
+                                        src="{{ team.logo.url }}" alt="{{ team.title }}"
+                                        width="25" height="25"
+                                        class="mr-1">{{ team.title }}</a>
 
 
                                 {% endfor %}
@@ -66,9 +66,9 @@
                                 {% for profile in profiles %}
                                     <a class="text-dark h6 mb-0 list-group-item list-group-item-action"
                                        href="{{ profile.get_absolute_url }}"><img
-                                            src="{{ profile.avatar.url }}" alt="{{ profile.name.username }}"
-                                            width="25" height="25"
-                                            class="mr-1">{{ profile.name }}</a>
+                                        src="{{ profile.avatar.url }}" alt="{{ profile.name.username }}"
+                                        width="25" height="25"
+                                        class="mr-1">{{ profile.name }}</a>
 
 
                                 {% endfor %}
@@ -96,7 +96,7 @@
                                 {% for post in posts %}
                                     <a class="mb-0 list-group-item list-group-item-action d-flex justify-content-between"
                                        href="{{ post.get_absolute_url }}"><span
-                                            class="h6 text-dark mb-0"> {{ post.title }}</span> <span
+                                        class="h6 text-dark mb-0"> {{ post.title }}</span> <span
                                             class="small">{{ post.created }}</span></a>
                                 {% endfor %}
                             </div>

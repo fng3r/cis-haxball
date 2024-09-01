@@ -18,7 +18,7 @@
                 <a type="button" href="{{ comment.get_absolute_url }}" class="btn btn-secondary btn-block text-right"
                    data-toggle="tooltip" data-placement="right" title="от {{ comment.author }}">
                     <div class="d-flex justify-content-between">{{ comment.content_object|truncatechars:22 }} <img
-                            src="{% static "img/ico/reply.png" %}" height="30" width="30"></div>
+                        src="{% static "img/ico/reply.png" %}" height="30" width="30"></div>
                 </a>
 
             {% endfor %}

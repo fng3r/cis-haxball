@@ -13,264 +13,264 @@
 {% block title %}Чемпионат | Переносы — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
-<div class="card mb-2 mt-2" style="border-radius: 10px;">
-    <h2 class="text-center my-2">
-        <i class="fa fa-calendar text-success" aria-hidden="true"></i> Переносы
-    </h2>
-    <div class="container-fluid p-0 mx-0">
-        <form method="get">
-            {{ filter.form }}
-            <button>Применить фильтр</button>
-        </form>
-        <div class="table-fix table-responsive">
-            <table id="postponements-table" class="table table-hover" style="max-width: 100%">
-                <thead class="thead-dark py-2 text-center">
-                    <tr>
-                        <th scope="col" class="col-sm-3 border-right">Команда</th>
-                        {% for i in ' '|rjust:filter.qs.0.get_postponement_slots.common_count %}
-                            <th scope="col" class="border-right">Перенос {{ forloop.counter }}</th>
-                        {% endfor %}
-                        {% for i in ' '|rjust:filter.qs.0.get_postponement_slots.common_count %}
-                            <th scope="col" class="border-right">Экстр. {{ forloop.counter }}</th>
-                        {% endfor %}
-                        {% for i in ' '|rjust:filter.qs.0.get_postponement_slots.extra_count %}
-                            <th scope="col" class="border-right">Платн. {{ forloop.counter }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for team in teams %}
-                        <tr style="font-weight: 700">
-                            <td class="p-2 border-right" style="text-align: center; font-size: 17px; vertical-align: center;">
-                                <img src="{{team.logo.url}}" alt="..." style="margin-right: 5px;" width="25" height="25">{{team.title}}
-                            </td>
-                            {% for postponement in team|postponements_in_leagues:filter.qs %}
-                                <td class="p-1 border-right" style="font-size: 14px; text-align: center;" height="80px">
-                                    {% if postponement is not None %}
-                                        {% with match=postponement.match %}
-                                        <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">
-                                            {{match.numb_tour.number}} тур<br>
-                                            <a href="{{match.get_absolute_url}}">
-                                                <img src="{{match.team_home.logo.url}}" alt="..." width="16" height="16">
-                                                {{match.team_home.short_title}} - {{match.team_guest.short_title}}
-                                                <img src="{{match.team_guest.logo.url}}" alt="..." width="16" height="16">
-                                            </a><br>
-                                            {{postponement.starts_at|date:'d.m'}}-{{postponement.ends_at|date:'d.m'}}
-                                            {% if postponement|can_be_cancelled_by_user:user %}
-                                                <a class="text-danger" data-toggle="modal"
-                                                   data-target="#cancel_postponement{{ postponement.id }}">
-                                                    <i class="fa fa-times" aria-hidden="true"
-                                                       style="font-size: 14px; cursor: pointer"></i>
-                                                </a>
-                                                <div class="modal fade" id="cancel_postponement{{ postponement.id }}"
-                                                     tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-                                                     aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header justify-content-center">
-                                                                <h4 class="modal-title">Отменить перенос?</h4>
-                                                            </div>
-                                                            <div class="modal-footer justify-content-center">
-                                                                <button type="button" class="btn btn-danger"
-                                                                        data-dismiss="modal">Нет, подождите
-                                                                </button>
-                                                                <form method="POST"
-                                                                      action="{% url 'tournament:cancel_postponement' postponement.id %}?tournament={{ filter.data.tournament }}">
-                                                                    {% csrf_token %}
-                                                                    <button type="submit"
-                                                                            class="btn btn-primary">
-                                                                        Да, я уверен
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        {% endwith %}
-                                    {% endif %}
-                                </td>
+    <div class="card mb-2 mt-2" style="border-radius: 10px;">
+        <h2 class="text-center my-2">
+            <i class="fa fa-calendar text-success" aria-hidden="true"></i> Переносы
+        </h2>
+        <div class="container-fluid p-0 mx-0">
+            <form method="get">
+                {{ filter.form }}
+                <button>Применить фильтр</button>
+            </form>
+            <div class="table-fix table-responsive">
+                <table id="postponements-table" class="table table-hover" style="max-width: 100%">
+                    <thead class="thead-dark py-2 text-center">
+                        <tr>
+                            <th scope="col" class="col-sm-3 border-right">Команда</th>
+                            {% for i in ' '|rjust:filter.qs.0.get_postponement_slots.common_count %}
+                                <th scope="col" class="border-right">Перенос {{ forloop.counter }}</th>
+                            {% endfor %}
+                            {% for i in ' '|rjust:filter.qs.0.get_postponement_slots.common_count %}
+                                <th scope="col" class="border-right">Экстр. {{ forloop.counter }}</th>
+                            {% endfor %}
+                            {% for i in ' '|rjust:filter.qs.0.get_postponement_slots.extra_count %}
+                                <th scope="col" class="border-right">Платн. {{ forloop.counter }}</th>
                             {% endfor %}
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    </thead>
 
-</div>
-
-{% if user|is_executive:filter.qs %}
-    {% postponements_form user=user leagues=filter.qs %}
-{% endif %}
-
-<div class="card mb-5" style="border-radius: 20px">
-    <div class="card-body card-body-comment">
-        <h4 class="card-title">Журнал событий ({{ postponements.paginator.count }})</h4>
-    </div>
-
-    <div class="comment-widgets">
-        {% for postponement in postponements %}
-
-            <div class="d-flex flex-row comment-row" id="postponement{{ postponement.id }}">
-                <div class="p-2">
-                    <span class="round">
-                        <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
-                            {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                                <img src="{{ avatar.url }}" alt="{{ postponement.taken_by.username }}" width="50">
-                            {% endthumbnail %}
-                        </a>
-                    </span>
-                </div>
-                <div class="comment-text w-100">
-                    <div class="d-flex justify-content-between">
-                        <div class="m-0 d-flex" style="font-size: 13pt; font-weight: 600;">
-
-                            {% for icon in postponement.taken_by.user_profile.user_icon.all %}
-                                <div class="mr-1" style="vertical-align: middle">
-                                    <img src="{{ icon.image.url }}" width="16px" height="16px"
-                                         title="{{ icon.description }}">
-                                </div>
-                            {% endfor %}
-                            <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
-                                {{ postponement.taken_by.username }}
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                    <div class="comment-footer">
-                        <span class="date text-muted small">
-                            <i class="fa fa-calendar text-primary" aria-hidden="true"></i>
-                            {{ postponement.taken_at|date:"d.m.y" }}
-                            <i class="fa fa-clock-o text-primary" aria-hidden="true"></i>
-                            {{ postponement.taken_at|time:"H:i" }}
-                        </span>
-                    </div>
-                    <div class="comment-body">
-                        <p></p>
-                        <div id="postponement-log-entry">
-                            <span>{{ postponement.match.numb_tour.number }} тур</span><br>
-                            <span>{{ postponement.match.team_home }} - {{ postponement.match.team_guest }}</span><br>
-                            <p class="postponements-log-text">
-                                {% if postponement.is_emergency %}
-                                    экстренный
-                                {% endif %}
-                                {% if postponement.teams.count > 1 %}
-                                    обоюдный перенос
-                                {% else %}
-                                    перенос на команду {{ postponement.teams.0.title }}
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                    <tbody>
+                        {% for team in teams %}
+                            <tr style="font-weight: 700">
+                                <td class="p-2 border-right" style="text-align: center; font-size: 17px; vertical-align: center;">
+                                    <img src="{{team.logo.url}}" alt="..." style="margin-right: 5px;" width="25" height="25">{{team.title}}
+                                </td>
+                                {% for postponement in team|postponements_in_leagues:filter.qs %}
+                                    <td class="p-1 border-right" style="font-size: 14px; text-align: center;" height="80px">
+                                        {% if postponement is not None %}
+                                            {% with match=postponement.match %}
+                                                <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">
+                                                    {{match.numb_tour.number}} тур<br>
+                                                    <a href="{{match.get_absolute_url}}">
+                                                        <img src="{{match.team_home.logo.url}}" alt="..." width="16" height="16">
+                                                        {{match.team_home.short_title}} - {{match.team_guest.short_title}}
+                                                        <img src="{{match.team_guest.logo.url}}" alt="..." width="16" height="16">
+                                                    </a><br>
+                                                    {{postponement.starts_at|date:'d.m'}}-{{postponement.ends_at|date:'d.m'}}
+                                                    {% if postponement|can_be_cancelled_by_user:user %}
+                                                        <a class="text-danger" data-toggle="modal"
+                                                           data-target="#cancel_postponement{{ postponement.id }}">
+                                                            <i class="fa fa-times" aria-hidden="true"
+                                                               style="font-size: 14px; cursor: pointer"></i>
+                                                        </a>
+                                                        <div class="modal fade" id="cancel_postponement{{ postponement.id }}"
+                                                             tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                             aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header justify-content-center">
+                                                                        <h4 class="modal-title">Отменить перенос?</h4>
+                                                                    </div>
+                                                                    <div class="modal-footer justify-content-center">
+                                                                        <button type="button" class="btn btn-danger"
+                                                                                data-dismiss="modal">Нет, подождите
+                                                                        </button>
+                                                                        <form method="POST"
+                                                                              action="{% url 'tournament:cancel_postponement' postponement.id %}?tournament={{ filter.data.tournament }}">
+                                                                            {% csrf_token %}
+                                                                            <button type="submit"
+                                                                                    class="btn btn-primary">
+                                                                                Да, я уверен
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endwith %}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            {% if postponement.is_cancelled %}
-                <div class="d-flex flex-row comment-row" style="padding-left: 100px"
-                     id="postponement_c{{ postponement.id }}">
+        </div>
+
+    </div>
+
+    {% if user|is_executive:filter.qs %}
+        {% postponements_form user=user leagues=filter.qs %}
+    {% endif %}
+
+    <div class="card mb-5" style="border-radius: 20px">
+        <div class="card-body card-body-comment">
+            <h4 class="card-title">Журнал событий ({{ postponements.paginator.count }})</h4>
+        </div>
+
+        <div class="comment-widgets">
+            {% for postponement in postponements %}
+
+                <div class="d-flex flex-row comment-row" id="postponement{{ postponement.id }}">
                     <div class="p-2">
                         <span class="round">
-                            <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
-                                {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                                    <img src="{{ avatar.url }}"
-                                         alt="{{ postponement.cancelled_by.username }}" width="50">
+                            <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
+                                {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                                    <img src="{{ avatar.url }}" alt="{{ postponement.taken_by.username }}" width="50">
                                 {% endthumbnail %}
                             </a>
                         </span>
                     </div>
-
                     <div class="comment-text w-100">
                         <div class="d-flex justify-content-between">
-                            <div class="d-inline-flex">
+                            <div class="m-0 d-flex" style="font-size: 13pt; font-weight: 600;">
 
-                                <div class="m-0 d-flex mr-2" style="font-size: 13pt; font-weight: 600;">
-                                    {% for icon in postponement.cancelled_by.user_profile.user_icon.all %}
-                                        <div class="mr-1" style="vertical-align: middle">
-
-                                            <img src="{{ icon.image.url }}" width="16px" height="16px"
-                                                 title="{{ icon.description }}">
-                                        </div>
-                                    {% endfor %}
-                                    <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
-                                        {{ postponement.cancelled_by.username }}
-                                    </a>
-                                </div>
+                                {% for icon in postponement.taken_by.user_profile.user_icon.all %}
+                                    <div class="mr-1" style="vertical-align: middle">
+                                        <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                             title="{{ icon.description }}">
+                                    </div>
+                                {% endfor %}
+                                <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
+                                    {{ postponement.taken_by.username }}
+                                </a>
 
                             </div>
+
                         </div>
+
                         <div class="comment-footer">
                             <span class="date text-muted small">
-                                <i class="fa fa-calendar text-primary"
-                                   aria-hidden="true"></i> {{ postponement.cancelled_at|date:"d.m.y" }}
-                                <i class="fa fa-clock-o text-primary"
-                                   aria-hidden="true"></i> {{ postponement.cancelled_at|time:"H:i" }}
+                                <i class="fa fa-calendar text-primary" aria-hidden="true"></i>
+                                {{ postponement.taken_at|date:"d.m.y" }}
+                                <i class="fa fa-clock-o text-primary" aria-hidden="true"></i>
+                                {{ postponement.taken_at|time:"H:i" }}
                             </span>
                         </div>
                         <div class="comment-body">
                             <p></p>
-                            <p>
-                                <span>Отмена переноса</span>
-                            </p>
-                            <p></p>
+                            <div id="postponement-log-entry">
+                                <span>{{ postponement.match.numb_tour.number }} тур</span><br>
+                                <span>{{ postponement.match.team_home }} - {{ postponement.match.team_guest }}</span><br>
+                                <p class="postponements-log-text">
+                                    {% if postponement.is_emergency %}
+                                        экстренный
+                                    {% endif %}
+                                    {% if postponement.teams.count > 1 %}
+                                        обоюдный перенос
+                                    {% else %}
+                                        перенос на команду {{ postponement.teams.0.title }}
+                                    {% endif %}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
+                {% if postponement.is_cancelled %}
+                    <div class="d-flex flex-row comment-row" style="padding-left: 100px"
+                         id="postponement_c{{ postponement.id }}">
+                        <div class="p-2">
+                            <span class="round">
+                                <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
+                                    {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                                        <img src="{{ avatar.url }}"
+                                             alt="{{ postponement.cancelled_by.username }}" width="50">
+                                    {% endthumbnail %}
+                                </a>
+                            </span>
+                        </div>
 
-            {% endif %}
-        {% endfor %}
-    </div>
+                        <div class="comment-text w-100">
+                            <div class="d-flex justify-content-between">
+                                <div class="d-inline-flex">
 
-    <div class="card-footer text-muted pb-0 pt-3">
-        {% if postponements.paginator.count > 2 %}
-            <nav aria-label="Page navigation" class="bot_nav_page m-0">
-                <ul class="pagination justify-content-center">
-                    {% with page=postponements %}
-                    {% if page.paginator.num_pages > 1 %}
+                                    <div class="m-0 d-flex mr-2" style="font-size: 13pt; font-weight: 600;">
+                                        {% for icon in postponement.cancelled_by.user_profile.user_icon.all %}
+                                            <div class="mr-1" style="vertical-align: middle">
 
-                        {% for page_number in page|pages_to_show %}
-                            {% if not page_number %}
-                                <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">...</a></li>
-                            {% elif page_number == page.number %}
-                                <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">{{ page_number }}</a></li>
-                            {% else %}
-                                <li class="page-item">
-                                    <a class="page-link"
-                                       href="{{ object.get_absolute_url }}?tournament={{ filter.data.tournament }}&page={{ page_number }}">{{ page_number }}</a>
-                                </li>
+                                                <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                                     title="{{ icon.description }}">
+                                            </div>
+                                        {% endfor %}
+                                        <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
+                                            {{ postponement.cancelled_by.username }}
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="comment-footer">
+                                <span class="date text-muted small">
+                                    <i class="fa fa-calendar text-primary"
+                                       aria-hidden="true"></i> {{ postponement.cancelled_at|date:"d.m.y" }}
+                                    <i class="fa fa-clock-o text-primary"
+                                       aria-hidden="true"></i> {{ postponement.cancelled_at|time:"H:i" }}
+                                </span>
+                            </div>
+                            <div class="comment-body">
+                                <p></p>
+                                <p>
+                                    <span>Отмена переноса</span>
+                                </p>
+                                <p></p>
+                            </div>
+                        </div>
+                    </div>
+
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="card-footer text-muted pb-0 pt-3">
+            {% if postponements.paginator.count > 2 %}
+                <nav aria-label="Page navigation" class="bot_nav_page m-0">
+                    <ul class="pagination justify-content-center">
+                        {% with page=postponements %}
+                            {% if page.paginator.num_pages > 1 %}
+
+                                {% for page_number in page|pages_to_show %}
+                                    {% if not page_number %}
+                                        <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">...</a></li>
+                                    {% elif page_number == page.number %}
+                                        <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">{{ page_number }}</a></li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                               href="{{ object.get_absolute_url }}?tournament={{ filter.data.tournament }}&page={{ page_number }}">{{ page_number }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
                             {% endif %}
-                        {% endfor %}
+                        {% endwith %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
 
-                    {% endif %}
-                    {% endwith %}
-                </ul>
-            </nav>
-        {% endif %}
-    </div>
-
-    {% if show_exceeded_limit_modal %}
-    <div class="modal fade" id="exceeded_limit_modal" tabindex="-1" role="dialog"
-         aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header justify-content-center">
-                    <h4 class="modal-title">{{ exceeded_limit_message }}</h4>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" style="width: 25%;"
-                            data-dismiss="modal">ОК
-                    </button>
+        {% if show_exceeded_limit_modal %}
+            <div class="modal fade" id="exceeded_limit_modal" tabindex="-1" role="dialog"
+                 aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header justify-content-center">
+                            <h4 class="modal-title">{{ exceeded_limit_message }}</h4>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" style="width: 25%;"
+                                    data-dismiss="modal">ОК
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
+
     </div>
-    {% endif %}
 
-</div>
-
-<script type="text/javascript" src="{% static 'scripts/PostponementScripts.js' %}"></script>
+    <script type="text/javascript" src="{% static 'scripts/PostponementScripts.js' %}"></script>
 {% endblock %}
 

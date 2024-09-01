@@ -2,32 +2,32 @@
 {% load static %}
 
 {% block postlist %}
-<div class="card my-2"
-     style="border-radius: 25px; background-image: url({% static "img/backgrounds/background1.png" %})">
+    <div class="card my-2"
+         style="border-radius: 25px; background-image: url({% static "img/backgrounds/background1.png" %})">
 
 
-    {% if user.is_authenticated %}
+        {% if user.is_authenticated %}
 
 
-    <div class="card-body">
-        <h3 class="text-center mt-1 mb-0"><i class="fa fa-list-alt text-primary" aria-hidden="true"></i>
+            <div class="card-body">
+                <h3 class="text-center mt-1 mb-0"><i class="fa fa-list-alt text-primary" aria-hidden="true"></i>
 
-            Создать пост в {{ category.title }}
-        </h3>
+                    Создать пост в {{ category.title }}
+                </h3>
 
-        <hr>
-            <form method="POST">
-                {% csrf_token %}
-                {{ form.media }}
-                {{ form.as_p }}
-                <button type="submit"> Отправить </button>
-            </form>
+                <hr>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form.media }}
+                    {{ form.as_p }}
+                    <button type="submit"> Отправить </button>
+                </form>
 
+
+            </div>
+        {% else %}
+            <h1 class="text-center text-danger">Только авторизованные пользоваватели могут создавать посты</h1>
+        {% endif %}
 
     </div>
-    {% else %}
-        <h1 class="text-center text-danger">Только авторизованные пользоваватели могут создавать посты</h1>
-    {% endif %}
-
-</div>
 {% endblock %}

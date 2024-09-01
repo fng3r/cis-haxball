@@ -6,7 +6,7 @@
     {% for post in liked_posts %}
         {% if post.votes.likes.count != 0 %}
             <li class="list-group-item"><a
-                    href="{{ post.get_absolute_url }}">{{ post.title|truncatechars:20 }}</a> {{ post.votes.likes.count }}</li>
+                href="{{ post.get_absolute_url }}">{{ post.title|truncatechars:20 }}</a> {{ post.votes.likes.count }}</li>
         {% endif %}
     {% endfor %}
 </ul>

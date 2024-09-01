@@ -136,15 +136,15 @@
                                 <h6 class="mb-0">Матчи</h6>
                                 <h4 class="text-warning">{{ all_matches_between.count }}</h4>
                                 <h6>Самый результативный матч: <a
-                                        href="{{ the_most_score.get_absolute_url }}">
+                                    href="{{ the_most_score.get_absolute_url }}">
                                     <img
-                                            src="{{ the_most_score.team_home.logo.url }}"
-                                            alt="{{ the_most_score.team_home.title }}"
-                                            width="20px">
+                                        src="{{ the_most_score.team_home.logo.url }}"
+                                        alt="{{ the_most_score.team_home.title }}"
+                                        width="20px">
                                     {{ the_most_score.score_home }}-{{ the_most_score.score_guest }}
                                     <img
-                                            src="{{ the_most_score.team_guest.logo.url }}"
-                                            alt="{{ the_most_score.team_guest.title }}" width="20px">
+                                        src="{{ the_most_score.team_guest.logo.url }}"
+                                        alt="{{ the_most_score.team_guest.title }}" width="20px">
                                 </a>
                                 </h6>
                             </div>
@@ -152,21 +152,21 @@
                         <div class="col-8">
                             <table class="table table-borderless table-stat">
                                 <tbody>
-                                <tr>
-                                    <td>Побед</td>
-                                    <td class="font-weight-bold">{{ win_home }}</td>
-                                    <td class="font-weight-bold">{{ win_guest }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Забитых мячей</td>
-                                    <td class="font-weight-bold">{{ score_home_all }}</td>
-                                    <td class="font-weight-bold">{{ score_guest_all }}</td>
-                                </tr>
-                                <tr>
-                                    <td>В среднем за матч</td>
-                                    <td class="font-weight-bold">{{ score_home_average }}</td>
-                                    <td class="font-weight-bold">{{ score_guest_average }}</td>
-                                </tr>
+                                    <tr>
+                                        <td>Побед</td>
+                                        <td class="font-weight-bold">{{ win_home }}</td>
+                                        <td class="font-weight-bold">{{ win_guest }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Забитых мячей</td>
+                                        <td class="font-weight-bold">{{ score_home_all }}</td>
+                                        <td class="font-weight-bold">{{ score_guest_all }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>В среднем за матч</td>
+                                        <td class="font-weight-bold">{{ score_home_average }}</td>
+                                        <td class="font-weight-bold">{{ score_guest_average }}</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -236,17 +236,17 @@
                     <!-- Показывать секцию с карточками только после 11 сезона, ранее информация о них содержалась в комментариях инспекторов под матчами -->
                     {% if match.league.championship.number > 14 %}
                         <h5>Нарушения</h5>
-                            <div class="row" style="text-align: left">
-                                <div class="col-sm-11">
-                                    <ul style="text-align: left">
-                                        {% for card in cards %}
-                                            <li>
-                                                {{ card.author }} ({{ card.team }}) - <b>{{ card|card_name }}</b> {{ card.card_reason }}
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
+                        <div class="row" style="text-align: left">
+                            <div class="col-sm-11">
+                                <ul style="text-align: left">
+                                    {% for card in cards %}
+                                        <li>
+                                            {{ card.author }} ({{ card.team }}) - <b>{{ card|card_name }}</b> {{ card.card_reason }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
                             </div>
+                        </div>
                     {% endif %}
 
                     {% if match.disqualifications.count > 0 %}
@@ -254,12 +254,12 @@
                         <div class="row" style="text-align: left">
                             <div class="col-sm-11">
                                 <ul>
-                                {% for disqualification in match.disqualifications.all %}
-                                    <li>
-                                        {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
-                                        Причина: {{ disqualification.reason }}
-                                    </li>
-                                {% endfor %}
+                                    {% for disqualification in match.disqualifications.all %}
+                                        <li>
+                                            {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
+                                            Причина: {{ disqualification.reason }}
+                                        </li>
+                                    {% endfor %}
                                 </ul>
                             </div>
                         </div>

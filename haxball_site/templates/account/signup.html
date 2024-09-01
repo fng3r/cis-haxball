@@ -76,11 +76,11 @@
 
                                 <p>&nbsp;</p>
 
-                                </p>
-                                <h4 id="list-item-2">Общие правила</h4>
-                                <p>
+                            </p>
+                            <h4 id="list-item-2">Общие правила</h4>
+                            <p>
                                 <p><span
-                                        style="font-size:14px"><strong>Запрещается публиковать информацию, содержащую:</strong></span>
+                                    style="font-size:14px"><strong>Запрещается публиковать информацию, содержащую:</strong></span>
                                 </p>
 
                                 <p><span style="font-size:14px">&mdash; чрезмерное количество жаргонных слов, грубые и нецензурные слова или выражения;</span>
@@ -98,7 +98,7 @@
                                 </p>
 
                                 <p><span
-                                        style="font-size:14px">&mdash; политическую, религиозную и иную пропаганду;</span>
+                                    style="font-size:14px">&mdash; политическую, религиозную и иную пропаганду;</span>
                                 </p>
 
                                 <p><span style="font-size:14px">&mdash; призывы к насилию или нарушению действующего законодательства.</span>
@@ -107,9 +107,9 @@
                                 <p><span style="font-size:14px"><strong>Наказание:</strong> редактирование или удаление информации, мьют или бан пользователя.</span>
                                 </p>
 
-                                </p>
-                                <h4 id="list-item-3">Форум</h4>
-                                <p>
+                            </p>
+                            <h4 id="list-item-3">Форум</h4>
+                            <p>
                                 <p><span style="font-size:14px"><strong>Запрещается:</strong></span></p>
 
                                 <p><span style="font-size:14px">&mdash; дублирование уже существующих тем;</span></p>
@@ -123,30 +123,30 @@
                                 <p><span style="font-size:14px"><strong>Наказание:</strong> удаление темы или перенос её в соответствующий раздел, лишение возможности создавать темы на форуме, мьют или бан пользователя.</span>
                                 </p>
 
-                                </p>
-                                <h4 id="list-item-4">Подтверждение</h4>
-                                <p>
+                            </p>
+                            <h4 id="list-item-4">Подтверждение</h4>
+                            <p>
                                 <div class="form-group form-check">
                                     <input type="checkbox" class="form-check-input" id="exampleCheck1"
                                            required="True">
                                     <label class="form-check-label" for="exampleCheck1">С правилами ознакомлен</label>
                                 </div>
-                                </p>
-                            </div>
+                            </p>
                         </div>
                     </div>
-
                 </div>
 
+            </div>
 
 
-                {% if redirect_field_value %}
-                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-                {% endif %}
-                <div class="d-flex flex-row justify-content-end mt-2">
-                    <button type="submit" class="btn btn-success">Зарегистрироваться</button>
-                </div>
-            </form>
-        </div>
+
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+            {% endif %}
+            <div class="d-flex flex-row justify-content-end mt-2">
+                <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+            </div>
+        </form>
+    </div>
     </div>
 {% endblock %}
