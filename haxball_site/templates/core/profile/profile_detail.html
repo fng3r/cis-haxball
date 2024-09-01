@@ -48,14 +48,14 @@
 
                             <a class="link-decoration-none" href="#">
                                 <h3 class="f-w-600 nickname-inline" style="display: inline-block; margin-top: 10px; margin-bottom: 7px; margin-right: 5px;">{{ profile.name }}
-                                {% for icon in profile.user_icon.all %}
-                                    <img src="{{ icon.image.url }}" width="25px" height="25px"
-                                         title="{{ icon.description }}"
-                                         class="mb-1">
-                                {% endfor %}
-                                {% if previous_nicknames.count > 0 %}
-                                    <div class="dropdown-toggle profile-triangle" style="font-size: 17px; display: inline-block;"></div>
-                                {% endif %}
+                                    {% for icon in profile.user_icon.all %}
+                                        <img src="{{ icon.image.url }}" width="25px" height="25px"
+                                             title="{{ icon.description }}"
+                                             class="mb-1">
+                                    {% endfor %}
+                                    {% if previous_nicknames.count > 0 %}
+                                        <div class="dropdown-toggle profile-triangle" style="font-size: 17px; display: inline-block;"></div>
+                                    {% endif %}
                                 </h3>
                             </a>
 
@@ -85,12 +85,12 @@
                             {% endif %}
                             <p class="mb-0">Репутация
                                 <span class="badge badge-pill {% if profile.karma >= 0 %}
-                                                            badge-success
-                                                        {% else %}
-                                                            badge-danger
-                                                        {% endif %}">
-                            {{ profile.karma }}
-                        </span>
+                                                 badge-success
+                                             {% else %}
+                                                 badge-danger
+                                             {% endif %}">
+                                    {{ profile.karma }}
+                                </span>
                             </p>
 
                             <p>
@@ -115,8 +115,8 @@
                             <p class="mb-0">
                                 {% if profile.vk %}
                                     <a href="https://vk.com/{{ profile.vk }}" target="_blank"><img
-                                            src="{% static "img/ico/vk_1.png" %}" height="41" width="41"
-                                            title="{{ profile.vk }}"></a>
+                                        src="{% static "img/ico/vk_1.png" %}" height="41" width="41"
+                                        title="{{ profile.vk }}"></a>
                                 {% endif %}
                                 {% if profile.discord %}
                                     <img src="{% static "img/ico/discord_1.png" %}" onclick="myFunction()" id=discord
@@ -125,16 +125,16 @@
                                 {% endif %}
                                 {% if profile.telegram %}
                                     <a href="https://t.me/{{ profile.telegram }}" target="_blank"><img
-                                            src="{% static "img/ico/tg_1.png" %}" height="41" width="41"
-                                            title="{{ profile.telegram }}"></a>
+                                        src="{% static "img/ico/tg_1.png" %}" height="41" width="41"
+                                        title="{{ profile.telegram }}"></a>
                                 {% endif %}
                             </p>
                         </div>
                     </div>
                     <div class="col-sm-8 bg-profile"
-                            {% if profile.background %}
-                         style="background-image:url({{ profile.background.url }}); background-size: cover; background-repeat: no-repeat;"
-                            {% endif %}>
+                         {% if profile.background %}
+                             style="background-image:url({{ profile.background.url }}); background-size: cover; background-repeat: no-repeat;"
+                         {% endif %}>
 
                         <div class="card-block">
 
@@ -148,12 +148,12 @@
                                     </li>
 
                                     {% if profile.name.username == user.username %}
-                                    <li>
-                                        <a href="{% url 'core:edit_profile' profile.slug profile.id %}"
-                                           class="text-warning small text-right"><i style="margin-left: 5px; margin-top: 10px; " class="fa fa-pencil"
-                                                                                    aria-hidden="true"></i></a>
+                                        <li>
+                                            <a href="{% url 'core:edit_profile' profile.slug profile.id %}"
+                                               class="text-warning small text-right"><i style="margin-left: 5px; margin-top: 10px; " class="fa fa-pencil"
+                                                                                     aria-hidden="true"></i></a>
 
-                                    </li>
+                                        </li>
                                     {% endif %}
                                     <li class="profile-tabs">
                                         <a class="tab-item-decoration" id="profile-achievements-tab" data-toggle="tab" href="#profile-tab-achievements" role="tab"
@@ -238,7 +238,7 @@
         {% endif %}
 
     </div>
-<script type="text/javascript" src="{% static 'scripts/ProfileScripts.js' %}"></script>
+    <script type="text/javascript" src="{% static 'scripts/ProfileScripts.js' %}"></script>
 {% endblock %}
 
 {% block comments %}

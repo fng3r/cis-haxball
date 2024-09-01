@@ -2,7 +2,6 @@
 {% load static %}
 {% block scripts %}
 
-    <!-- Аякс-скрипт проставления лайков-дизлайков к постам -->
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 
 {% endblock %}
@@ -31,9 +30,9 @@
         </div>
 
         {% if category.posts_in_category.all.count > 6 %}
-        <div class="card-footer text-muted pb-0 pt-3">
-            {% include "core/include/pagination.html" with page=posts %}
-        </div>
+            <div class="card-footer text-muted pb-0 pt-3">
+                {% include "core/include/pagination.html" with page=posts %}
+            </div>
         {% endif %}
     </div>
 {% endblock %}

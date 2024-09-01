@@ -5,7 +5,7 @@
 
 <div class="card" style="border-radius: 20px 20px 20px 20px;">
     <div class="card-header d-inline-flex mb-0 justify-content-center bg-for-online-head" style="border-radius: 20px 20px 0px 0;">
-            <h6 class="mb-0" style="font-size: 1rem">Сейчас онлайн: {{ users_online_count }}</h6>
+        <h6 class="mb-0" style="font-size: 1rem">Сейчас онлайн: {{ users_online_count }}</h6>
     </div>
     <div class="card-body p-0 bg-for-online-body" style="position: relative; height: 250px; overflow: auto; border-radius: 0px 0px 20px 20px;">
         <div class="btn-group-vertical w-100">
@@ -15,9 +15,9 @@
 
                     <i class="mr-1 fa fa-circle text-success" aria-hidden="true"></i>{{ user }}
                     <span>
-                    {% for icon in user.user_profile.user_icon.all %}
-                        <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                    {% endfor %}
+                        {% for icon in user.user_profile.user_icon.all %}
+                            <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                        {% endfor %}
                     </span>
                 </a>
             {% endfor %}

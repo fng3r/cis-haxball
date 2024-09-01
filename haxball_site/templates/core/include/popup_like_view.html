@@ -25,10 +25,10 @@
                     <div class="vote-like" id="vote-like{{comment.id}}">
                         {% for like in comment.likes %}
 
-                                <div class="voter-user">
-                                    <img class="voter-avatar" src="{{ like.user.user_profile.avatar.url }}" alt="...">
-                                    <p class="voter-nickname">{{like.user.username}}</p>
-                                </div>
+                            <div class="voter-user">
+                                <img class="voter-avatar" src="{{ like.user.user_profile.avatar.url }}" alt="...">
+                                <p class="voter-nickname">{{like.user.username}}</p>
+                            </div>
 
                         {% endfor %}
                     </div>
