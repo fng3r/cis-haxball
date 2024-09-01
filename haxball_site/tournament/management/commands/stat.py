@@ -253,8 +253,8 @@ class Command(BaseCommand):
                 dict_pl_g[p] = pl_goals
                 dict_pl_as[p] = pl_asissts
 
-        l = sorted(dict, key=lambda x: ochk_min[x], reverse=True)
-        for j, i in enumerate(l):
+        sorted_dict = sorted(dict, key=lambda x: ochk_min[x], reverse=True)
+        for j, i in enumerate(sorted_dict):
             minut = round(dict[i] / 60)
             print(j + 1, i, ochk_min[i], minut, dict_pl_g[i], dict_pl_as[i])
         print('')

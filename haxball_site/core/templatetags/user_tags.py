@@ -138,9 +138,9 @@ def show_last_activity(count=10):
 
         if comment.content_object in selected_objects:
             continue
-        else:
-            last_comments.append(comment)
-            selected_objects.add(comment.content_object)
+
+        last_comments.append(comment)
+        selected_objects.add(comment.content_object)
 
     return {'last_comments': last_comments}
 
@@ -199,9 +199,8 @@ def is_fresh(value, hours):
     x = timezone.now() - value
     if x.days >= 1:
         return False
-    else:
-        sec = 3600 * hours
-        return x.seconds < sec
+    sec = 3600 * hours
+    return x.seconds < sec
 
 
 # Фильтр для проверки юзера в объекте(Типа, если лайк уже ставил или диз)

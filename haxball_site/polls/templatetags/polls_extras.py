@@ -14,11 +14,7 @@ def polls_list(count, user):
 
 @register.filter
 def user_in_poll(user, poll):
-    a = poll.choices.all().filter(votes=user)
-    if a:
-        return True
-    else:
-        return False
+    return poll.choices.all().filter(votes=user).exists()
 
 
 @register.filter

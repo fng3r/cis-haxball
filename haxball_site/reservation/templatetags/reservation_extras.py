@@ -30,10 +30,7 @@ def teams_can_reserve(user):
 
 @register.filter
 def user_can_reserv(user):
-    if teams_can_reserve(user):
-        return True
-    else:
-        return False
+    return bool(teams_can_reserve(user))
 
 
 @register.inclusion_tag('reservation/reservation_form.html')
@@ -78,10 +75,7 @@ def match_can_delete(user, match):
         return False
     teams = teams_can_reserve(user)
     delt_time = match.match_reservation.time_date - timezone.now()
-    if ((match.team_home in teams) or (match.team_guest in teams)) and delt_time > timedelta(minutes=30):
-        return True
-    else:
-        return False
+    return bool((match.team_home in teams or match.team_guest in teams) and delt_time > timedelta(minutes=30))
 
 
 @register.filter
@@ -100,21 +94,17 @@ def cols_span(hosts):
 
 @register.filter
 def date_equal(date, day):
-    if date.date() == day:
-        return True
-    else:
-        return False
+    return date.date() == day
 
 
 @register.filter
 def round_name(tour, all_tours):
     if tour == all_tours:
         return 'Финал'
-    elif tour == all_tours - 1:
+    if tour == all_tours - 1:
         return '1/2 Финала'
-    elif tour == all_tours - 2:
+    if tour == all_tours - 2:
         return '1/4 Финала'
-    elif tour == all_tours - 3:
+    if tour == all_tours - 3:
         return '1/8 Финала'
-    else:
-        return '{} Раунд'.format(tour)
+    return '{} Раунд'.format(tour)

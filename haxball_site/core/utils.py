@@ -12,7 +12,8 @@ def get_comments_for_object(model, obj_id):
     prefetch_dislikes = Prefetch(
         'votes', queryset=LikeDislike.objects.dislikes().prefetch_related('user__user_profile'), to_attr='dislikes'
     )
-    comments = (
+
+    return (
         NewComment.objects.select_related('author__user_profile')
         .prefetch_related(
             'author__user_profile__user_icon',
@@ -24,8 +25,6 @@ def get_comments_for_object(model, obj_id):
         )
         .filter(content_type=ContentType.objects.get_for_model(model), object_id=obj_id, parent=None)
     )
-
-    return comments
 
 
 def get_paginated_comments(comments, page, per_page=20):

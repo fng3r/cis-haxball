@@ -159,11 +159,9 @@ def comment_edit(request, pk):
             comment = form.save(commit=False)
             comment.save()
             return redirect(obj.get_absolute_url())
-        else:
-            comment.delete()
-            return redirect(obj.get_absolute_url())
-    else:
-        form = NewCommentForm(instance=comment)
+        comment.delete()
+        return redirect(obj.get_absolute_url())
+    form = NewCommentForm(instance=comment)
 
     return render(request, 'core/post/edit_comment.html', {'comment_form': form})
 
@@ -179,8 +177,7 @@ def delete_comment(request, pk):
     ):
         comment.delete()
         return redirect(obj.get_absolute_url())
-    else:
-        return HttpResponse('Ошибка доступа или время истекло')
+    return HttpResponse('Ошибка доступа или время истекло')
 
 
 # Вьюха для фасткапов

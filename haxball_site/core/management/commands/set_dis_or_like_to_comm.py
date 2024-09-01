@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
         users = User.objects.all()
         voting_users = []
-        for i in range(count):
+        for _i in range(count):
             voting_users.append(random.choice(users))
         for i in voting_users:
             from_i = comment.votes.filter(user=i.id)

@@ -162,10 +162,10 @@ def remove_entry(request, pk):
             free_agent.deleted = timezone.now()
             free_agent.save()
             return redirect('tournament:free_agent')
-        else:
-            return HttpResponse('Ошибка доступа')
-    else:
-        redirect('tournament:free_agent')
+
+        return HttpResponse('Ошибка доступа')
+
+    return redirect('tournament:free_agent')
 
 
 def update_entry(request, pk):
@@ -175,10 +175,10 @@ def update_entry(request, pk):
             free_agent.created = timezone.now()
             free_agent.save()
             return redirect('tournament:free_agent')
-        else:
-            return HttpResponse('Ошибка доступа')
-    else:
-        redirect('tournament:free_agent')
+
+        return HttpResponse('Ошибка доступа')
+
+    return redirect('tournament:free_agent')
 
 
 def edit_team_profile(request, slug):
@@ -510,8 +510,8 @@ def cancel_postponement(request, pk):
         postponement.save()
 
         return redirect(reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament']))
-    else:
-        return HttpResponse('Ошибка доступа')
+
+    return HttpResponse('Ошибка доступа')
 
 
 def halloffame(request):

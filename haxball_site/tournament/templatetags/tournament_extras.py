@@ -36,10 +36,7 @@ def user_in_agents(user):
 @register.filter
 def can_add_entry(user):
     try:
-        if timezone.now() - user.user_free_agent.created > timezone.timedelta(hours=6):
-            return True
-        else:
-            return False
+        return timezone.now() - user.user_free_agent.created > timezone.timedelta(hours=6)
     except:
         return True
 
@@ -848,18 +845,17 @@ def pairs_in_round(tour):
                 i = pi.index(p)
         if i is not None:
             pi[i].append(m)
-    pi = sorted(pi, key=lambda x: x[2].id)
-    return pi
+
+    return sorted(pi, key=lambda x: x[2].id)
 
 
 @register.filter
 def team_score_in_match(team, match):
     if team == match.team_home:
         return match.score_home
-    elif team == match.team_guest:
+    if team == match.team_guest:
         return match.score_guest
-    else:
-        return None
+    return None
 
 
 @register.filter
@@ -881,14 +877,13 @@ def cup_round_name(tour: TourNumber):
     tours_count = tour.league.tours.count()
     if tour.number == tours_count:
         return 'Финал'
-    elif tour.number == tours_count - 1:
+    if tour.number == tours_count - 1:
         return '1/2'
-    elif tour.number == tours_count - 2:
+    if tour.number == tours_count - 2:
         return '1/4'
-    elif tour.number == tours_count - 3:
+    if tour.number == tours_count - 3:
         return '1/8'
-    else:
-        return '{} раунд'.format(tour.number)
+    return '{} раунд'.format(tour.number)
 
 
 @register.inclusion_tag('tournament/include/league_table.html')
@@ -902,35 +897,32 @@ def league_table(league: League):
 
 @register.filter
 def top_goalscorers(league):
-    players = (
+    return (
         Player.objects.select_related('team', 'name__user_profile')
         .filter(goals__match__league=league)
         .annotate(goals_c=Count('goals__match__league'))
         .order_by('-goals_c')
     )
-    return players
 
 
 @register.filter
 def top_assistent(league):
-    players = (
+    return (
         Player.objects.select_related('team', 'name__user_profile')
         .filter(assists__match__league=league)
         .annotate(ass_c=Count('assists__match__league'))
         .order_by('-ass_c')
     )
-    return players
 
 
 @register.filter
 def top_clean_sheets(league):
-    players = (
+    return (
         Player.objects.select_related('team', 'name__user_profile')
         .filter(event__match__league=league, event__event='CLN')
         .annotate(event_c=Count('event__match__league'))
         .order_by('-event_c')
     )
-    return players
 
 
 #  Капитан и ассистент для профиля команды(контактов)
@@ -978,8 +970,7 @@ def all_seasons(team):
 
 def sort_teams(league: League):
     lt = get_league_table(league)
-    teams = [i[0] for i in lt]
-    return teams
+    return [i[0] for i in lt]
 
 
 def get_league_table(league: League):

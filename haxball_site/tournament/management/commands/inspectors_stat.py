@@ -33,7 +33,7 @@ class Command(BaseCommand):
         for m in all_matches:
             all_goals += m.match_goal.count()
             all_events += m.match_substitutions.count() + m.match_event.count()
-            if m.inspector in inspectors.keys():
+            if m.inspector in inspectors:
                 inspectors[m.inspector].append(m)
             else:
                 inspectors[m.inspector] = []

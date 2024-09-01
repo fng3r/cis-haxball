@@ -356,7 +356,7 @@ class Match(models.Model):
     def scored_by(self, team):
         if team == self.team_home:
             return self.score_home
-        elif team == self.team_guest:
+        if team == self.team_guest:
             return self.score_guest
 
         raise TeamIsNotMatchParticipantError(team, self)
@@ -364,7 +364,7 @@ class Match(models.Model):
     def conceded_by(self, team):
         if team == self.team_home:
             return self.score_guest
-        elif team == self.team_guest:
+        if team == self.team_guest:
             return self.score_home
 
         raise TeamIsNotMatchParticipantError(team, self)
@@ -438,10 +438,9 @@ class MatchResult(models.Model):
     def get_result_from_scores(self):
         if self.match.score_home == self.match.score_guest:
             return MatchResult.DRAW
-        elif self.match.score_home > self.match.score_guest:
+        if self.match.score_home > self.match.score_guest:
             return MatchResult.HOME_WIN
-        else:
-            return MatchResult.AWAY_WIN
+        return MatchResult.AWAY_WIN
 
     def __str__(self):
         return self.get_value_display()

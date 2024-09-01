@@ -37,16 +37,15 @@ class ReservationList(ListView):
                 author=request.user, time_date=match_date, match_id=match_id, host_id=host_id
             )
             return redirect('reservation:host_reservation')
-        else:
-            return render(
-                request,
-                'reservation/reservation_list.html',
-                {
-                    'reservations': ReservationEntry.objects.filter(match__is_played=False).order_by('-time_date'),
-                    'active_hosts': ReservationHost.objects.filter(is_active=True),
-                    'message': 'Выбранное время занято!!',
-                },
-            )
+        return render(
+            request,
+            'reservation/reservation_list.html',
+            {
+                'reservations': ReservationEntry.objects.filter(match__is_played=False).order_by('-time_date'),
+                'active_hosts': ReservationHost.objects.filter(is_active=True),
+                'message': 'Выбранное время занято!!',
+            },
+        )
 
 
 class ReplaysList(ListView):
@@ -64,5 +63,4 @@ def delete_entry(request, pk):
     if (reserved_match.match.team_home in t) or (reserved_match.match.team_guest in t):
         reserved_match.delete()
         return redirect('reservation:host_reservation')
-    else:
-        return HttpResponse('Ошибка доступа')
+    return HttpResponse('Ошибка доступа')
