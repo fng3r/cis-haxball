@@ -3,7 +3,8 @@ from datetime import timedelta
 from django import template
 from django.db.models import Q
 from django.utils import timezone
-from tournament.models import Player, Team, League, TourNumber, Match
+from tournament.models import Match, Team
+
 from reservation.models import ReservationHost
 
 register = template.Library()
@@ -40,13 +41,17 @@ def reservation_form(user):
     teams = teams_can_reserve(user)
     today = timezone.now().date()
     tomorrow = today + timedelta(days=1)
-    matches_to_choose = \
-        (Match.objects
-            .filter((Q(team_home__in=teams) | Q(team_guest__in=teams)), is_played=False,
-                    league__championship__is_active=True, numb_tour__date_from__lte=tomorrow,
-                    match_reservation=None)
-            .distinct()
-            .order_by('league', 'numb_tour__number'))
+    matches_to_choose = (
+        Match.objects.filter(
+            (Q(team_home__in=teams) | Q(team_guest__in=teams)),
+            is_played=False,
+            league__championship__is_active=True,
+            numb_tour__date_from__lte=tomorrow,
+            match_reservation=None,
+        )
+        .distinct()
+        .order_by('league', 'numb_tour__number')
+    )
 
     hosts = ReservationHost.objects.filter(is_active=True)
 
@@ -59,7 +64,7 @@ def reservation_form(user):
         'date_tomorrow': tomorrow,
         'hours_list': hours_list,
         'minutes_list': minutes_list,
-        'hosts': hosts
+        'hosts': hosts,
     }
 
 
@@ -68,12 +73,12 @@ def match_can_delete(user, match):
     if user.is_anonymous:
         return False
     try:
-        a = user.user_player
+        user.user_player
     except:
         return False
-    t = teams_can_reserve(user)
+    teams = teams_can_reserve(user)
     delt_time = match.match_reservation.time_date - timezone.now()
-    if ((match.team_home in t) or (match.team_guest in t)) and delt_time > timedelta(minutes=30):
+    if ((match.team_home in teams) or (match.team_guest in teams)) and delt_time > timedelta(minutes=30):
         return True
     else:
         return False

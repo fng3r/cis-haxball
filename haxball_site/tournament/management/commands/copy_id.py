@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 
-from ...models import League, TourNumber, Match, Team, Player, Achievements
+from ...models import Achievements
 
 
 class Command(BaseCommand):

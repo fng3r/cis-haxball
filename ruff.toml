@@ -2,6 +2,7 @@ line-length = 120
 
 [lint]
 extend-select = ["E501", "I", "N"]
+ignore = ["E722"]
 
 [format]
 quote-style = "single"

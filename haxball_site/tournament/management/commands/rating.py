@@ -1,9 +1,9 @@
 import datetime
 
 from django.core.management.base import BaseCommand
-from django.db.models import Q, F
+from django.db.models import F, Q
 
-from ...models import Season, SeasonTeamRating, TeamRating, RatingVersion
+from ...models import RatingVersion, Season, SeasonTeamRating, TeamRating
 
 
 class Command(BaseCommand):
@@ -19,7 +19,7 @@ class Command(BaseCommand):
             for team in season_points:
                 SeasonTeamRating(season=season, team=team, points_for_matches=season_points[team]).save()
 
-            next_season = Season.objects.filter(number=season.number+1).first()
+            next_season = Season.objects.filter(number=season.number + 1).first()
             if not next_season:
                 break
             season = next_season
@@ -38,7 +38,9 @@ class Command(BaseCommand):
             while season_count < 6 and season.number > 5:
                 self.calculate_rating_points(overall_rating, season, season_count)
 
-                previous_season = Season.objects.filter(number__lt=season.number, title__contains='ЧР').order_by('-number').first()
+                previous_season = (
+                    Season.objects.filter(number__lt=season.number, title__contains='ЧР').order_by('-number').first()
+                )
                 if not previous_season:
                     break
 
@@ -77,8 +79,10 @@ class Command(BaseCommand):
             for team in teams:
                 matches = league.matches_in_league.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
 
-                wins = (matches.filter(team_home=team, score_home__gt=F('score_guest')).count() +
-                        matches.filter(team_guest=team, score_guest__gt=F('score_home')).count())
+                wins = (
+                    matches.filter(team_home=team, score_home__gt=F('score_guest')).count()
+                    + matches.filter(team_guest=team, score_guest__gt=F('score_home')).count()
+                )
                 draws = matches.filter(Q(team_home=team) | Q(team_guest=team), score_home=F('score_guest')).count()
                 points = (wins * 1 + draws * 0.5) * league_weight
                 if team not in season_rating:
@@ -89,7 +93,11 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_league_weight(league):
-        if league.title == 'Высшая лига' or league.title == 'Единая лига' or league.title.startswith('Кубок Высшей лиги'):
+        if (
+            league.title == 'Высшая лига'
+            or league.title == 'Единая лига'
+            or league.title.startswith('Кубок Высшей лиги')
+        ):
             return 1
         if league.title == 'Кубок России' or league.title.startswith('Лига Чемпионов'):
             return 0.75

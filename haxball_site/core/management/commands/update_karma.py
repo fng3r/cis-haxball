@@ -1,13 +1,19 @@
-from core.models import Profile, NewComment, Post
-from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
+from django.core.management.base import BaseCommand, CommandError
+
+from core.models import NewComment, Post, Profile
 
 
 class Command(BaseCommand):
     help = 'The Zen of Python'
 
     def add_arguments(self, parser):
-        parser.add_argument('only_for', default=0, nargs='?', type=str, )
+        parser.add_argument(
+            'only_for',
+            default=0,
+            nargs='?',
+            type=str,
+        )
 
     def handle(self, *args, **options):
         if options['only_for'] == 0:
@@ -18,13 +24,16 @@ class Command(BaseCommand):
                 samo = 0
                 for comment in NewComment.objects.filter(author=profile.name):
                     s += comment.votes.sum_rating()
-                    samo += comment.votes.filter(user=profile.name, vote=1).count() - comment.votes.filter(
-                        user=profile.name,
-                        vote=-1).count()
+                    samo += (
+                        comment.votes.filter(user=profile.name, vote=1).count()
+                        - comment.votes.filter(user=profile.name, vote=-1).count()
+                    )
                 for post in Post.objects.filter(author=profile.name):
                     s += post.votes.sum_rating()
-                    samo += post.votes.filter(user=profile.name, vote=1).count() - post.votes.filter(user=profile.name,
-                                                                                                     vote=-1).count()
+                    samo += (
+                        post.votes.filter(user=profile.name, vote=1).count()
+                        - post.votes.filter(user=profile.name, vote=-1).count()
+                    )
                 profile.karma = s - samo
                 profile.save(update_fields=['karma'])
                 print('{} установлена карма {}'.format(profile.name, profile.karma))
@@ -40,13 +49,16 @@ class Command(BaseCommand):
             samo = 0
             for comment in NewComment.objects.filter(author=profile.name):
                 s += comment.votes.sum_rating()
-                samo += comment.votes.filter(user=profile.name, vote=1).count() - comment.votes.filter(
-                    user=profile.name,
-                    vote=-1).count()
+                samo += (
+                    comment.votes.filter(user=profile.name, vote=1).count()
+                    - comment.votes.filter(user=profile.name, vote=-1).count()
+                )
             for post in Post.objects.filter(author=profile.name):
                 s += post.votes.sum_rating()
-                samo += post.votes.filter(user=profile.name, vote=1).count() - post.votes.filter(user=profile.name,
-                                                                                                 vote=-1).count()
+                samo += (
+                    post.votes.filter(user=profile.name, vote=1).count()
+                    - post.votes.filter(user=profile.name, vote=-1).count()
+                )
             profile.karma = s - samo
             profile.save(update_fields=['karma'])
             print('{} установлена карма {}'.format(profile.name, profile.karma))

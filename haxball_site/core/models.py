@@ -2,11 +2,10 @@ import collections
 
 from autoslug import AutoSlugField
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Sum, Max, Q
+from django.db.models import Max, Sum
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -15,7 +14,6 @@ from model_utils import FieldTracker
 
 
 class MyQuerySet(models.query.QuerySet):
-
     def delete(self):
         for obj in self:
             obj.delete()
@@ -47,19 +45,15 @@ class LikeDislikeManager(models.Manager):
         return MyQuerySet(self.model, using=self._db)
 
 
-
 # Модель для лайк-дизлайк системы
 class LikeDislike(models.Model):
     LIKE = 1
     DISLIKE = -1
 
-    VOTES = (
-        (DISLIKE, 'Не нравится'),
-        (LIKE, 'Нравится')
-    )
+    VOTES = ((DISLIKE, 'Не нравится'), (LIKE, 'Нравится'))
 
-    vote = models.SmallIntegerField(verbose_name="Голос", choices=VOTES)
-    user = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.CASCADE)
+    vote = models.SmallIntegerField(verbose_name='Голос', choices=VOTES)
+    user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE)
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -78,7 +72,7 @@ class LikeDislike(models.Model):
 
     class Meta:
         verbose_name = 'Лайк/дизлайк голос'
-        verbose_name_plural = "Лайк/дизлайк голоса"
+        verbose_name_plural = 'Лайк/дизлайк голоса'
 
 
 # Огромный раздел форума в котором категории создаются админами
@@ -90,7 +84,7 @@ class Themes(models.Model):
 
     class Meta:
         verbose_name = 'Раздел форума'
-        verbose_name_plural = "Разделы форума"
+        verbose_name_plural = 'Разделы форума'
 
 
 # Модель для категории поста(Новость, Фасткап, Регламент, Турнир, Трансляция, Архив, общение...)
@@ -101,8 +95,14 @@ class Category(models.Model):
     slug = models.SlugField(max_length=250, unique=True)
     description = models.TextField('Описание категории', blank=True)
     is_official = models.BooleanField(default=True, verbose_name='Официальная')
-    theme = models.ForeignKey(Themes, verbose_name='Тема на форуме', on_delete=models.CASCADE, blank=True, null=True,
-                              related_name='category_in_theme')
+    theme = models.ForeignKey(
+        Themes,
+        verbose_name='Тема на форуме',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='category_in_theme',
+    )
 
     def __str__(self):
         return self.title
@@ -124,8 +124,9 @@ class NewComment(models.Model):
     body = models.TextField('Текст комментария')
     created = models.DateTimeField('Создан', default=timezone.now)
     edited = models.DateTimeField('Изменен', blank=True, null=True)
-    parent = models.ForeignKey('self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True,
-                               related_name="childs")
+    parent = models.ForeignKey(
+        'self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True, related_name='childs'
+    )
     votes = GenericRelation(LikeDislike, related_query_name='n_comments')
     version = models.PositiveSmallIntegerField('Версия', default=1)
 
@@ -177,14 +178,18 @@ class NewComment(models.Model):
 class CommentHistoryItem(models.Model):
     body = models.TextField('Текст комментария')
     created = models.DateTimeField('Дата')
-    comment = models.ForeignKey(NewComment, verbose_name='Базовый комментарий', on_delete=models.CASCADE,
-                                related_name="comment_history")
+    comment = models.ForeignKey(
+        NewComment, verbose_name='Базовый комментарий', on_delete=models.CASCADE, related_name='comment_history'
+    )
     version = models.PositiveSmallIntegerField('Версия', default=1)
 
     class Meta:
         verbose_name = ''
         verbose_name_plural = 'История комментариев'
-        ordering = ('-comment__id', '-created',)
+        ordering = (
+            '-comment__id',
+            '-created',
+        )
 
     @receiver(post_save, sender=NewComment)
     def create_comment_history_item(sender, instance, created, **kwargs):
@@ -192,8 +197,9 @@ class CommentHistoryItem(models.Model):
             previous_created = instance.tracker.previous('edited') or instance.created
             previous_comment = instance.tracker.previous('body')
             previous_version = instance.tracker.previous('version')
-            CommentHistoryItem(body=previous_comment, created=previous_created,
-                               comment=instance, version=previous_version).save()
+            CommentHistoryItem(
+                body=previous_comment, created=previous_created, comment=instance, version=previous_version
+            ).save()
 
     def __str__(self):
         return 'Версия комментария #{}'.format(self.version)
@@ -202,18 +208,24 @@ class CommentHistoryItem(models.Model):
 # Модель для поста
 class Post(models.Model):
     title = models.CharField('Заголовок', max_length=256)
-    category = models.ForeignKey(Category, verbose_name='Категория поста', on_delete=models.SET_NULL, blank=True,
-                                 null=True, related_name='posts_in_category')
+    category = models.ForeignKey(
+        Category,
+        verbose_name='Категория поста',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='posts_in_category',
+    )
     author = models.ForeignKey(User, verbose_name='Автор', on_delete=models.CASCADE, related_name='blog_posts')
     slug = models.SlugField(max_length=250)
-    body = models.TextField("Текст поста")
+    body = models.TextField('Текст поста')
     publish = models.DateTimeField('Время публикации', default=timezone.now)
-    created = models.DateTimeField("Создано", auto_now_add=True)
-    updated = models.DateTimeField("Изменено", auto_now=True)
-    important = models.BooleanField("Закрепленный пост", default=False)
+    created = models.DateTimeField('Создано', auto_now_add=True)
+    updated = models.DateTimeField('Изменено', auto_now=True)
+    important = models.BooleanField('Закрепленный пост', default=False)
     votes = GenericRelation(LikeDislike, related_query_name='posts')
     views = models.PositiveIntegerField(default=0)
-    commentable = models.BooleanField("Комментируемая запись", default=True)
+    commentable = models.BooleanField('Комментируемая запись', default=True)
     comments = GenericRelation(NewComment, related_query_name='post_comments')
 
     def get_absolute_url(self):
@@ -237,8 +249,9 @@ class Comment(models.Model):
     author = models.ForeignKey(User, verbose_name='Автор', related_name='comments_by_user', on_delete=models.CASCADE)
     body = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey('self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True,
-                               related_name="childs")
+    parent = models.ForeignKey(
+        'self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True, related_name='childs'
+    )
     votes = GenericRelation(LikeDislike, related_query_name='comments')
 
     class Meta:
@@ -250,7 +263,7 @@ class Comment(models.Model):
         return 'Комментарий от {} к {}'.format(self.author, self.post.title)
 
     def is_parent(self):
-        return self.parent == None
+        return self.parent is None
 
     def has_childs(self):
         return self.childs.count() > 0
@@ -277,7 +290,9 @@ def bfs(root):
 
 # Модель ip-адресов пользователя
 class IPAdress(models.Model):
-    name = models.ForeignKey(User, verbose_name='Пользователь', related_name='user_ips', on_delete=models.SET_NULL, null=True)
+    name = models.ForeignKey(
+        User, verbose_name='Пользователь', related_name='user_ips', on_delete=models.SET_NULL, null=True
+    )
     ip = models.GenericIPAddressField()
     created = models.DateTimeField('Первый заход', auto_now_add=True)
     update = models.DateTimeField('Последний заход', default=timezone.now)
@@ -307,8 +322,9 @@ class UserActivity(models.Model):
 
 # Модель для профиля пользователя
 class Profile(models.Model):
-    name = models.OneToOneField(User, verbose_name='Пользователь', on_delete=models.CASCADE,
-                                related_name='user_profile')
+    name = models.OneToOneField(
+        User, verbose_name='Пользователь', on_delete=models.CASCADE, related_name='user_profile'
+    )
     slug = AutoSlugField(always_update=True, populate_from='name')
     avatar = models.ImageField('Аватар', upload_to='users_avatars/', default='users_avatars/default/default.png')
     background = models.ImageField('Фон профиля', upload_to='users_background/', blank=True, null=True)
@@ -321,7 +337,7 @@ class Profile(models.Model):
     views = models.PositiveIntegerField(default=0)
     karma = models.SmallIntegerField(default=0)
     comments = GenericRelation(NewComment, related_query_name='profile_comments')
-    commentable = models.BooleanField("Комментируемый профиль", default=True)
+    commentable = models.BooleanField('Комментируемый профиль', default=True)
     can_vote = models.BooleanField('Может голосовать', default=True)
     can_comment = models.BooleanField('Может комментировать', default=True)
 
@@ -347,7 +363,9 @@ class Profile(models.Model):
 
 class UserIcon(models.Model):
     title = models.CharField('Название', max_length=256)
-    priority = models.SmallIntegerField(default=1,)
+    priority = models.SmallIntegerField(
+        default=1,
+    )
     description = models.CharField('Описание(при наведении)', max_length=100, blank=True)
     image = models.ImageField('Иконка', upload_to='user_icon/', blank=True, null=True)
     user = models.ManyToManyField(Profile, related_name='user_icon', blank=True, null=True)
@@ -389,13 +407,11 @@ class Subscription(models.Model):
     TIER_1 = 1
     TIER_2 = 2
 
-    TIERS = (
-        (TIER_1, 'Tier 1'),
-        (TIER_2, 'Tier 2')
-    )
+    TIERS = ((TIER_1, 'Tier 1'), (TIER_2, 'Tier 2'))
 
-    user = models.ForeignKey(User, verbose_name='Пользователь', related_name='subscriptions',
-                             on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(
+        User, verbose_name='Пользователь', related_name='subscriptions', on_delete=models.SET_NULL, null=True
+    )
     starts_at = models.DateTimeField('Дата начала', default=timezone.now)
     expires_at = models.DateTimeField('Дата окончания')
     tier = models.PositiveSmallIntegerField('Тир подписки', choices=TIERS, default=TIER_1)

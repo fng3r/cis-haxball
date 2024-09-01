@@ -3,9 +3,30 @@ from django.contrib import admin
 from django.db.models import Q
 from django.urls import resolve
 
-from .models import FreeAgent, Player, League, Team, Match, Goal, OtherEvents, Substitution, Season, PlayerTransfer, \
-    TourNumber, Nation, Achievements, TeamAchievement, AchievementCategory, Disqualification, Postponement, \
-    PostponementSlots, SeasonTeamRating, RatingVersion, TeamRating, MatchResult
+from .models import (
+    AchievementCategory,
+    Achievements,
+    Disqualification,
+    FreeAgent,
+    Goal,
+    League,
+    Match,
+    MatchResult,
+    Nation,
+    OtherEvents,
+    Player,
+    PlayerTransfer,
+    Postponement,
+    PostponementSlots,
+    RatingVersion,
+    Season,
+    SeasonTeamRating,
+    Substitution,
+    Team,
+    TeamAchievement,
+    TeamRating,
+    TourNumber,
+)
 
 
 @admin.register(FreeAgent)
@@ -22,32 +43,58 @@ class AchievmentCategoryAdmin(admin.ModelAdmin):
 class AchievementsAdmin(admin.ModelAdmin):
     list_display = ('id', 'position_number', 'title', 'description', 'category', 'image', 'mini_image')
     filter_horizontal = ('player',)
-    search_fields = ('title__icontains', 'description__icontains',)
+    search_fields = (
+        'title__icontains',
+        'description__icontains',
+    )
 
 
 @admin.register(TeamAchievement)
 class TeamAchievementAdmin(admin.ModelAdmin):
     list_display = ('id', 'season', 'title', 'description', 'players_raw_list', 'position_number', 'image')
     filter_horizontal = ('team',)
-    search_fields = ('title__icontains', 'description__icontains',)
+    search_fields = (
+        'title__icontains',
+        'description__icontains',
+    )
 
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'nickname', 'team', 'player_nation', 'role',)
+    list_display = (
+        'name',
+        'nickname',
+        'team',
+        'player_nation',
+        'role',
+    )
     raw_id_fields = ('name',)
     list_filter = ('role', 'team', 'name')
-    search_fields = ('nickname', 'name__username',)
+    search_fields = (
+        'nickname',
+        'name__username',
+    )
 
 
 @admin.register(PlayerTransfer)
 class PlayerTransferAdmin(admin.ModelAdmin):
     list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join', 'is_technical')
-    list_filter = ('trans_player', 'from_team', 'to_team',)
-    search_fields = ('trans_player__nickname', 'from_team__title', 'to_team__title',)
+    list_filter = (
+        'trans_player',
+        'from_team',
+        'to_team',
+    )
+    search_fields = (
+        'trans_player__nickname',
+        'from_team__title',
+        'to_team__title',
+    )
     readonly_fields = ('is_technical',)
     raw_id_fields = ('trans_player',)
-    ordering = ('-date_join', '-id',)
+    ordering = (
+        '-date_join',
+        '-id',
+    )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'from_team' or db_field.name == 'to_team':
@@ -67,7 +114,11 @@ class PlayerInline(admin.StackedInline):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('title', 'short_title', 'owner',)
+    list_display = (
+        'title',
+        'short_title',
+        'owner',
+    )
     search_fields = ('title',)
     inlines = [PlayerInline]
 
@@ -89,10 +140,12 @@ class DisqualificationAdmin(admin.ModelAdmin):
 
     def get_tours(self, model):
         return ', '.join(map(lambda t: str(t), model.tours.all()))
+
     get_tours.short_description = 'Туры'
 
     def get_lifted_tours(self, model):
         return ', '.join(map(lambda t: str(t), model.lifted_tours.all()))
+
     get_lifted_tours.short_description = 'Отмененные туры'
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -103,7 +156,7 @@ class DisqualificationAdmin(admin.ModelAdmin):
 
 class AlwaysChangedModelForm(forms.ModelForm):
     def has_changed(self):
-        """ Should returns True if data differs from initial.
+        """Should returns True if data differs from initial.
         By always returning true even unchanged inlines will get validated and saved."""
         return True
 
@@ -120,8 +173,18 @@ class PostponementSlotsInline(admin.TabularInline):
 
 @admin.register(Postponement)
 class PostponementAdmin(admin.ModelAdmin):
-    list_display = ('match', 'is_emergency', 'get_teams', 'starts_at', 'ends_at', 'taken_at', 'taken_by',
-                    'is_cancelled', 'cancelled_at', 'cancelled_by')
+    list_display = (
+        'match',
+        'is_emergency',
+        'get_teams',
+        'starts_at',
+        'ends_at',
+        'taken_at',
+        'taken_by',
+        'is_cancelled',
+        'cancelled_at',
+        'cancelled_by',
+    )
     filter_horizontal = ('teams',)
     raw_id_fields = ('match', 'taken_by', 'cancelled_by')
     # autocomplete_fields = ('taken_by', 'cancelled_by')
@@ -130,16 +193,20 @@ class PostponementAdmin(admin.ModelAdmin):
 
     def get_teams(self, model):
         return ', '.join(map(lambda t: str(t), model.teams.all()))
+
     get_teams.short_description = 'На кого взят перенос'
 
     def is_cancelled(self, model):
         return model.is_cancelled
+
     is_cancelled.short_description = 'Отменен'
     is_cancelled.boolean = True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'match':
-            kwargs['queryset'] = Match.objects.filter(league__championship__is_active=True).order_by('numb_tour__number')
+            kwargs['queryset'] = Match.objects.filter(league__championship__is_active=True).order_by(
+                'numb_tour__number'
+            )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -166,8 +233,8 @@ class GoalInline(admin.StackedInline):
             match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
         except:
             not_found = True
-        if db_field.name == "team" and not not_found:
-            kwargs["queryset"] = Team.objects.filter(Q(home_matches=match) | Q(guest_matches=match)).distinct()
+        if db_field.name == 'team' and not not_found:
+            kwargs['queryset'] = Team.objects.filter(Q(home_matches=match) | Q(guest_matches=match)).distinct()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -182,8 +249,8 @@ class SubstitutionInline(admin.StackedInline):
             match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
         except:
             not_found = True
-        if db_field.name == "team" and not not_found:
-            kwargs["queryset"] = Team.objects.filter(Q(home_matches=match) | Q(guest_matches=match)).distinct()
+        if db_field.name == 'team' and not not_found:
+            kwargs['queryset'] = Team.objects.filter(Q(home_matches=match) | Q(guest_matches=match)).distinct()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -193,13 +260,13 @@ class DisqualificationInline(admin.StackedInline):
     filter_horizontal = ('tours',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "team":
-            kwargs["queryset"] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
+        if db_field.name == 'team':
+            kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == "tours":
-            kwargs["queryset"] = TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
+        if db_field.name == 'tours':
+            kwargs['queryset'] = TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
@@ -211,11 +278,11 @@ class EventInline(admin.StackedInline):
         resolved = resolve(request.path_info)
         not_found = False
         try:
-            match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
+            self.parent_model.objects.get(id=resolved.kwargs['object_id'])
         except:
             not_found = True
-        if db_field.name == "team" and not not_found:
-            kwargs["queryset"] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
+        if db_field.name == 'team' and not not_found:
+            kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -227,44 +294,77 @@ class MatchResultInline(admin.TabularInline):
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = (
-        'league', 'numb_tour', 'team_home', 'score_home', 'team_guest', 'score_guest', 'is_played', 'result',
-        'updated', 'inspector', 'id',)
+        'league',
+        'numb_tour',
+        'team_home',
+        'score_home',
+        'team_guest',
+        'score_guest',
+        'is_played',
+        'result',
+        'updated',
+        'inspector',
+        'id',
+    )
     search_fields = ('team_home__title', 'team_guest__title')
-    filter_horizontal = ('team_home_start', 'team_guest_start',)
+    filter_horizontal = (
+        'team_home_start',
+        'team_guest_start',
+    )
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         # Берём из пути id матча
         resolved = resolve(request.path_info)
-        
+
         if db_field.name == 'team_home_start':
             # Игроки команды хозяев
-            t = Team.objects.filter(home_matches=resolved.kwargs.get("object_id")).first()
-            kwargs["queryset"] = Player.objects.filter(team=t)
+            t = Team.objects.filter(home_matches=resolved.kwargs.get('object_id')).first()
+            kwargs['queryset'] = Player.objects.filter(team=t)
         if db_field.name == 'team_guest_start':
             # Игроки команды гостей
-            t = Team.objects.filter(guest_matches=resolved.kwargs.get("object_id")).first()
-            kwargs["queryset"] = Player.objects.filter(team=t)
+            t = Team.objects.filter(guest_matches=resolved.kwargs.get('object_id')).first()
+            kwargs['queryset'] = Player.objects.filter(team=t)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     list_filter = ('numb_tour__number', 'league', 'inspector', 'is_played')
     fieldsets = (
-        ('Основная инфа', {
-            'fields': (('league', 'is_played', 'match_date', 'numb_tour',),)
-        }),
-        (None, {
-            'fields': (('team_home', 'team_guest', 'replay_link',),)
-        }),
-        (None, {
-            'fields': (('score_home', 'score_guest', 'inspector', 'replay_link_second'),)
-        }),
-        ('Составы', {
-            'classes': ('grp-collapse grp-closed',),
-            'fields': ('team_home_start', 'team_guest_start',)
-        }),
-        ('Комментарий:', {
-            'classes': ('grp-collapse grp-closed',),
-            'fields': ('comment',)
-        })
+        (
+            'Основная инфа',
+            {
+                'fields': (
+                    (
+                        'league',
+                        'is_played',
+                        'match_date',
+                        'numb_tour',
+                    ),
+                )
+            },
+        ),
+        (
+            None,
+            {
+                'fields': (
+                    (
+                        'team_home',
+                        'team_guest',
+                        'replay_link',
+                    ),
+                )
+            },
+        ),
+        (None, {'fields': (('score_home', 'score_guest', 'inspector', 'replay_link_second'),)}),
+        (
+            'Составы',
+            {
+                'classes': ('grp-collapse grp-closed',),
+                'fields': (
+                    'team_home_start',
+                    'team_guest_start',
+                ),
+            },
+        ),
+        ('Комментарий:', {'classes': ('grp-collapse grp-closed',), 'fields': ('comment',)}),
     )
     inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
@@ -281,7 +381,11 @@ class SubstitutionAdmin(admin.ModelAdmin):
 
 @admin.register(OtherEvents)
 class OtherEventsAdmin(admin.ModelAdmin):
-    list_display = ('event', 'match', 'author',)
+    list_display = (
+        'event',
+        'match',
+        'author',
+    )
 
 
 @admin.register(TourNumber)
@@ -291,6 +395,7 @@ class MatchTourAdmin(admin.ModelAdmin):
 
     def is_actual(self, model):
         return model.is_actual
+
     is_actual.short_description = 'Актуальный'
     is_actual.boolean = True
 

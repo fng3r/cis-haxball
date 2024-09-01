@@ -1,5 +1,5 @@
-from django import forms
 from colorfield.widgets import ColorWidget
+from django import forms
 
 from .models import FreeAgent, Team
 
@@ -18,4 +18,3 @@ class EditTeamProfileForm(forms.ModelForm):
             'color_1': ColorWidget,
             'color_2': ColorWidget,
         }
-

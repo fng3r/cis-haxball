@@ -3,31 +3,34 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Max
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import DetailView, ListView
 from django.views.generic.base import View
 from pytils.translit import slugify
+from tournament.models import Achievements, Team
 
-from .forms import EditProfileForm, PostForm, NewCommentForm
-from .models import Post, Profile, LikeDislike, Category, Themes, NewComment, UserNicknameHistoryItem
+from .forms import EditProfileForm, NewCommentForm, PostForm
+from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments
-from tournament.models import Team, Achievements
-
 
 
 # Вьюха для списка постов
 class PostListView(ListView):
-    queryset = Post.objects \
-        .select_related('category', 'author__user_profile') \
-        .prefetch_related('comments', 'votes') \
-        .filter(category__is_official=True) \
-        .order_by('-important', '-publish',)
+    queryset = (
+        Post.objects.select_related('category', 'author__user_profile')
+        .prefetch_related('comments', 'votes')
+        .filter(category__is_official=True)
+        .order_by(
+            '-important',
+            '-publish',
+        )
+    )
     context_object_name = 'posts'
     paginate_by = 7
     template_name = 'core/post/list.html'
@@ -80,7 +83,8 @@ class CategoryListView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post_list = self.object.posts_in_category.annotate(
-            last_activity=Coalesce(Max('comments__created'), 'created')).order_by('-last_activity')
+            last_activity=Coalesce(Max('comments__created'), 'created')
+        ).order_by('-last_activity')
 
         paginat = Paginator(post_list, 6)
         page = self.request.GET.get('page')
@@ -168,9 +172,11 @@ def comment_edit(request, pk):
 def delete_comment(request, pk):
     comment = get_object_or_404(NewComment, pk=pk)
     obj = comment.content_object
-    if request.method == 'POST' and \
-            ((request.user == comment.author and timezone.now() - comment.created < timezone.timedelta(
-                minutes=10)) or request.user.is_superuser or request.user == obj.name):
+    if request.method == 'POST' and (
+        (request.user == comment.author and timezone.now() - comment.created < timezone.timedelta(minutes=10))
+        or request.user.is_superuser
+        or request.user == obj.name
+    ):
         comment.delete()
         return redirect(obj.get_absolute_url())
     else:
@@ -202,7 +208,7 @@ class AdminListView(ListView):
             a.append([i, s, i.id])
 
     c = sorted(a, key=lambda x: x[1], reverse=True)
-    
+
     queryset = [i[0] for i in c]
     context_object_name = 'users'
     template_name = 'core/admins/admin_list.html'
@@ -289,7 +295,7 @@ class AddCommentView(View):
         if request.method == 'POST':
             comment_form = NewCommentForm(data=request.POST)
             new_com = comment_form.save(commit=False)
-            if request.POST.get("parent", None):
+            if request.POST.get('parent', None):
                 new_com.parent_id = int(request.POST.get('parent'))
             new_com.object_id = obj.id
             new_com.author = request.user
@@ -326,11 +332,11 @@ class VotesView(View):
         author_profile = obj.author.user_profile
         # GenericForeignKey не поддерживает метод get_or_create
         try:
-            likedislike = LikeDislike.objects.get(content_type=ContentType.objects.get_for_model(obj), object_id=obj.id,
-                                                  user=request.user)
+            likedislike = LikeDislike.objects.get(
+                content_type=ContentType.objects.get_for_model(obj), object_id=obj.id, user=request.user
+            )
 
             if likedislike.vote is not self.vote_type:
-
                 if obj.author != request.user:
                     author_profile.karma -= likedislike.vote
                     author_profile.karma += self.vote_type
@@ -354,13 +360,15 @@ class VotesView(View):
             result = True
 
         return HttpResponse(
-            json.dumps({
-                "result": result,
-                "like_count": obj.votes.likes().count(),
-                "dislike_count": obj.votes.dislikes().count(),
-                "sum_rating": obj.votes.sum_rating()
-            }),
-            content_type="application/json"
+            json.dumps(
+                {
+                    'result': result,
+                    'like_count': obj.votes.likes().count(),
+                    'dislike_count': obj.votes.dislikes().count(),
+                    'sum_rating': obj.votes.sum_rating(),
+                }
+            ),
+            content_type='application/json',
         )
 
 
@@ -369,5 +377,8 @@ def search_result(request):
     profile_list = Profile.objects.filter(name__username__icontains=a)
     team_list = Team.objects.filter(title__icontains=a)
     post_list = Post.objects.filter(title__icontains=a)
-    return render(request, 'core/search_result/search_result.html',
-                  {'profiles': profile_list, 'teams': team_list, 'posts': post_list})
+    return render(
+        request,
+        'core/search_result/search_result.html',
+        {'profiles': profile_list, 'teams': team_list, 'posts': post_list},
+    )

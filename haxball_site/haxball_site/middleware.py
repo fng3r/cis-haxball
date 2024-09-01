@@ -1,9 +1,8 @@
+from core.models import IPAdress, UserActivity
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 from haxball_site import settings
-from core.models import IPAdress, UserActivity
-
 
 ID_TOKEN_COOKIE_NAME = 'idtoken'
 
@@ -50,12 +49,14 @@ class UserTrackingMiddleware:
             return response
 
         if is_new_user_token:
-            response.set_cookie(ID_TOKEN_COOKIE_NAME, user_token, samesite='Lax',
-                                expires=timezone.now() + timezone.timedelta(days=365))
+            response.set_cookie(
+                ID_TOKEN_COOKIE_NAME, user_token, samesite='Lax', expires=timezone.now() + timezone.timedelta(days=365)
+            )
 
         try:
-            user_activity = UserActivity.objects.get(user=request.user, ip=user_ip, user_agent=user_agent,
-                                                     id_token=user_token)
+            user_activity = UserActivity.objects.get(
+                user=request.user, ip=user_ip, user_agent=user_agent, id_token=user_token
+            )
             user_activity.last_seen = timezone.now()
             user_activity.save(update_fields=['last_seen'])
         except:
