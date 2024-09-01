@@ -19,10 +19,12 @@ class ReservationHost(models.Model):
 
 
 class ReservationEntry(models.Model):
-    author = models.ForeignKey(User, verbose_name='Автор заявки', on_delete=models.CASCADE,
-                               related_name='user_reservation_authors')
-    match = models.OneToOneField(Match, verbose_name='На какой матч', on_delete=models.CASCADE,
-                                 related_name='match_reservation')
+    author = models.ForeignKey(
+        User, verbose_name='Автор заявки', on_delete=models.CASCADE, related_name='user_reservation_authors'
+    )
+    match = models.OneToOneField(
+        Match, verbose_name='На какой матч', on_delete=models.CASCADE, related_name='match_reservation'
+    )
     time_date = models.DateTimeField('На какое время')
 
     host = models.ForeignKey(ReservationHost, verbose_name='На каком хосте', on_delete=models.SET_NULL, null=True)
@@ -38,13 +40,15 @@ class ReservationEntry(models.Model):
 
 
 class Replay(models.Model):
-    name = models.CharField(verbose_name='Название реплея',max_length=256)
-    description = models.TextField(verbose_name='Описание',blank=True, null=True)
-    file = models.FileField(upload_to='hbr', )
-    author = models.ForeignKey(User,verbose_name='Выложил', on_delete=models.SET_NULL, null=True,
-                               related_name='uploaded_replays')
+    name = models.CharField(verbose_name='Название реплея', max_length=256)
+    description = models.TextField(verbose_name='Описание', blank=True, null=True)
+    file = models.FileField(
+        upload_to='hbr',
+    )
+    author = models.ForeignKey(
+        User, verbose_name='Выложил', on_delete=models.SET_NULL, null=True, related_name='uploaded_replays'
+    )
     created = models.DateTimeField(auto_now_add=True)
-
 
     def __str__(self):
         return 'Реплей {} от {}'.format(self.name, self.author)

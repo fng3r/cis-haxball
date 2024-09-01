@@ -2,18 +2,17 @@ from datetime import date
 from typing import Optional
 
 from colorfield.fields import ColorField
+from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from model_utils import FieldTracker
 from smart_selects.db_fields import ChainedForeignKey
-
-from core.models import NewComment
 
 
 class TeamIsNotMatchParticipantError(Exception):
@@ -37,10 +36,10 @@ class FreeAgent(models.Model):
     POSITION = (
         (TOP_FORWARD, 'Верхний нападающий'),
         (BOT_FORWARD, 'Нижний нападающий'),
-        (FORWARD, "Нападающий"),
+        (FORWARD, 'Нападающий'),
         (DEF_MIDDLE, 'Опорник'),
         (GOALKEEPER, 'Вратарь'),
-        (BACK, "Задняя линия"),
+        (BACK, 'Задняя линия'),
         (DM_FWD, 'Нападающий/Опорник'),
         (GK_FWD, 'Нападающий/Вратарь'),
         (ANY, 'Любая'),
@@ -53,12 +52,9 @@ class FreeAgent(models.Model):
     def __str__(self):
         return 'CA {}'.format(self.player.username)
 
-    def player_pos(self):
-        return self.player_positions.positions
-
     class Meta:
         verbose_name = 'Свободный агент'
-        verbose_name_plural = "Свободные агенты"
+        verbose_name_plural = 'Свободные агенты'
 
 
 class Season(models.Model):
@@ -67,11 +63,12 @@ class Season(models.Model):
     number = models.SmallIntegerField('Номер сезона')
     is_active = models.BooleanField('Текущий')
     created = models.DateTimeField('Создана', auto_now_add=True)
-    is_round_robin = models.BooleanField('Круговой розыгрыш',
-                                         help_text='Галочка, если обычный ЧР, если нету - ЛЧ или иже с ним',
-                                         default=True)
-    bound_season = models.ForeignKey('self', verbose_name='Связанный сезон',
-                                     null=True, blank=True, on_delete=models.SET_NULL)
+    is_round_robin = models.BooleanField(
+        'Круговой розыгрыш', help_text='Галочка, если обычный ЧР, если нету - ЛЧ или иже с ним', default=True
+    )
+    bound_season = models.ForeignKey(
+        'self', verbose_name='Связанный сезон', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     def __str__(self):
         return self.title
@@ -85,14 +82,18 @@ class Season(models.Model):
 class Team(models.Model):
     title = models.CharField('Название', max_length=128)
     slug = models.SlugField('слаг', max_length=250)
-    date_found = models.DateField('Дата основания', default=date.today, )
+    date_found = models.DateField(
+        'Дата основания',
+        default=date.today,
+    )
     short_title = models.CharField('Сокращение', help_text='До 10 символов', max_length=11)
     logo = models.ImageField('Логотип', upload_to='team_logos/', default='team_logos/default.png')
     color_1 = ColorField(default='#FFFFFF', verbose_name='Цвет 1')
     color_2 = ColorField(default='#FFFFFF', verbose_name='Цвет 2')
     color_table = ColorField(default='#FFFFFF', verbose_name='Цвет Таблички')
-    owner = models.ForeignKey(User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL,
-                              related_name='team_owner')
+    owner = models.ForeignKey(
+        User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='team_owner'
+    )
     office_link = models.URLField('Офис', blank=True)
     rating = models.SmallIntegerField('Рейтинг команды', blank=True, null=True)
 
@@ -103,10 +104,11 @@ class Team(models.Model):
         return self.leagues.filter(championship__is_active=True)
 
     def get_postponements(self, leagues):
-        return (self.postponements
-            .filter(cancelled_at__isnull=True, match__league__in=leagues)
+        return (
+            self.postponements.filter(cancelled_at__isnull=True, match__league__in=leagues)
             .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
-            .order_by('taken_at'))
+            .order_by('taken_at')
+        )
 
     def __str__(self):
         return '{}'.format(self.title)
@@ -117,17 +119,19 @@ class Team(models.Model):
 
 
 class League(models.Model):
-    championship = models.ForeignKey(Season, verbose_name='Сезон', related_name='tournaments_in_season', null=True,
-                                     on_delete=models.CASCADE)
+    championship = models.ForeignKey(
+        Season, verbose_name='Сезон', related_name='tournaments_in_season', null=True, on_delete=models.CASCADE
+    )
     title = models.CharField('Название турнира', max_length=128)
     is_cup = models.BooleanField('Кубок', help_text='галочка, если кубок', default=False)
-    priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив',
-                                        blank=True)
+    priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
     slug = models.SlugField(max_length=250)
     created = models.DateTimeField('Создана', auto_now_add=True)
-    teams = models.ManyToManyField(Team, related_name='leagues', related_query_name='leagues', verbose_name='Команды в лиге')
+    teams = models.ManyToManyField(
+        Team, related_name='leagues', related_query_name='leagues', verbose_name='Команды в лиге'
+    )
     comments = GenericRelation(NewComment, related_query_name='league_comments')
-    commentable = models.BooleanField("Комментируемый турнир", default=True)
+    commentable = models.BooleanField('Комментируемый турнир', default=True)
 
     def __str__(self):
         return '{}, {}'.format(self.title, self.championship)
@@ -145,7 +149,10 @@ class League(models.Model):
 
 
 class Nation(models.Model):
-    country = models.CharField('Страна', max_length=100, )
+    country = models.CharField(
+        'Страна',
+        max_length=100,
+    )
     flag = models.ImageField('Флаг', upload_to='country_flag/')
 
     def __str__(self):
@@ -157,37 +164,38 @@ class Nation(models.Model):
 
 
 class Player(models.Model):
-    name = models.OneToOneField(User, verbose_name='Пользователь', null=True, blank=True,
-                                on_delete=models.SET_NULL,
-                                related_name='user_player')
+    name = models.OneToOneField(
+        User, verbose_name='Пользователь', null=True, blank=True, on_delete=models.SET_NULL, related_name='user_player'
+    )
 
-    nickname = models.CharField('Никнейм игрока', max_length=150, )
+    nickname = models.CharField(
+        'Никнейм игрока',
+        max_length=150,
+    )
 
     FORWARD = 'FW'
     DEF_MIDDLE = 'DM'
     GOALKEEPER = 'GK'
     POSITIONS = (
-        (FORWARD, "Нападающий"),
+        (FORWARD, 'Нападающий'),
         (DEF_MIDDLE, 'Опорник'),
         (GOALKEEPER, 'Вратарь'),
     )
-    position = models.CharField("Позиция", max_length=2, choices=POSITIONS, null=True, blank=True)
+    position = models.CharField('Позиция', max_length=2, choices=POSITIONS, null=True, blank=True)
 
-    team = models.ForeignKey(Team, verbose_name='Команда', related_name='players_in_team', blank=True, null=True,
-                             on_delete=models.SET_NULL)
+    team = models.ForeignKey(
+        Team, verbose_name='Команда', related_name='players_in_team', blank=True, null=True, on_delete=models.SET_NULL
+    )
 
-    player_nation = models.ForeignKey(Nation, verbose_name='Национальность', related_name='country_players', null=True,
-                                      on_delete=models.SET_NULL)
+    player_nation = models.ForeignKey(
+        Nation, verbose_name='Национальность', related_name='country_players', null=True, on_delete=models.SET_NULL
+    )
     JUST_PLAYER = 'PL'
     CAPTAIN = 'C'
     ASSISTENT = 'AC'
-    ROLES = [
-        (JUST_PLAYER, 'Игрок'),
-        (CAPTAIN, 'Капитан'),
-        (ASSISTENT, 'Ассистент')
-    ]
+    ROLES = [(JUST_PLAYER, 'Игрок'), (CAPTAIN, 'Капитан'), (ASSISTENT, 'Ассистент')]
 
-    role = models.CharField("Должность", max_length=2, choices=ROLES, default=JUST_PLAYER)
+    role = models.CharField('Должность', max_length=2, choices=ROLES, default=JUST_PLAYER)
 
     @receiver(post_save, sender=User)
     def create_comment_history_item(sender, instance, created, **kwargs):
@@ -230,40 +238,72 @@ class TourNumber(models.Model):
 
 
 class Match(models.Model):
-    league = models.ForeignKey(League, verbose_name='В лиге', related_name='matches_in_league',
-                               related_query_name='matches_in_league', on_delete=models.CASCADE)
-    numb_tour = ChainedForeignKey(TourNumber, chained_field='league', chained_model_field='league',
-                                  verbose_name='Номер тура', related_name='tour_matches',
-                                  on_delete=models.CASCADE, null=True, )
+    league = models.ForeignKey(
+        League,
+        verbose_name='В лиге',
+        related_name='matches_in_league',
+        related_query_name='matches_in_league',
+        on_delete=models.CASCADE,
+    )
+    numb_tour = ChainedForeignKey(
+        TourNumber,
+        chained_field='league',
+        chained_model_field='league',
+        verbose_name='Номер тура',
+        related_name='tour_matches',
+        on_delete=models.CASCADE,
+        null=True,
+    )
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
     replay_link_second = models.URLField('Ссылка на реплей(2ой, если два)', blank=True, null=True)
-    inspector = models.ForeignKey(User, verbose_name='Проверил', limit_choices_to={'is_staff': True},
-                                  on_delete=models.SET_NULL, null=True, blank=True)
+    inspector = models.ForeignKey(
+        User,
+        verbose_name='Проверил',
+        limit_choices_to={'is_staff': True},
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     updated = models.DateTimeField('Обновлено', auto_now=True)
-    team_home = ChainedForeignKey(Team, chained_field='league', chained_model_field='leagues', on_delete=models.CASCADE,
-                                  related_name='home_matches', verbose_name='Хозяева')
-    team_guest = ChainedForeignKey(Team, chained_field='league', chained_model_field='leagues',
-                                   on_delete=models.CASCADE,
-                                   related_name='guest_matches', verbose_name='Гости')
+    team_home = ChainedForeignKey(
+        Team,
+        chained_field='league',
+        chained_model_field='leagues',
+        on_delete=models.CASCADE,
+        related_name='home_matches',
+        verbose_name='Хозяева',
+    )
+    team_guest = ChainedForeignKey(
+        Team,
+        chained_field='league',
+        chained_model_field='leagues',
+        on_delete=models.CASCADE,
+        related_name='guest_matches',
+        verbose_name='Гости',
+    )
 
     score_home = models.SmallIntegerField('Забито хозявами', default=0)
     score_guest = models.SmallIntegerField('Забито гостями', default=0)
 
-    team_home_start = models.ManyToManyField(Player, related_name='player_in_start_home',
-                                             verbose_name='Состав хозяев', blank=True)
-    team_guest_start = models.ManyToManyField(Player, related_name='player_in_start_guest',
-                                              verbose_name='Состав Гостей', blank=True)
+    team_home_start = models.ManyToManyField(
+        Player, related_name='player_in_start_home', verbose_name='Состав хозяев', blank=True
+    )
+    team_guest_start = models.ManyToManyField(
+        Player, related_name='player_in_start_guest', verbose_name='Состав Гостей', blank=True
+    )
 
     is_played = models.BooleanField('Сыгран', default=False)
 
     comment = models.TextField('Комментарий к матчу', max_length=1024, blank=True, null=True)
 
     comments = GenericRelation(NewComment, related_query_name='match_comments')
-    commentable = models.BooleanField("Комментируемый матч", default=True)
+    commentable = models.BooleanField('Комментируемый матч', default=True)
 
     def cards(self):
-        return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by('team')
+        return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by(
+            'team'
+        )
 
     @property
     def can_be_postponed(self):
@@ -279,8 +319,9 @@ class Match(models.Model):
 
         start_datetime = timezone.datetime.combine(start_date, timezone.datetime.min.time())
         # match can be postponed during 12h since tour/previous postponement end date
-        end_datetime = (timezone.datetime.combine(end_date, timezone.datetime.min.time()) +
-                        timezone.timedelta(days=1, hours=12))
+        end_datetime = timezone.datetime.combine(end_date, timezone.datetime.min.time()) + timezone.timedelta(
+            days=1, hours=12
+        )
 
         return start_datetime.timestamp() <= timezone.now().timestamp() <= end_datetime.timestamp()
 
@@ -306,14 +347,16 @@ class Match(models.Model):
         return self.result.value == MatchResult.DRAW
 
     def is_tech_defeat(self):
-        return self.result.value == MatchResult.HOME_DEF_WIN or \
-               self.result.value == MatchResult.AWAY_DEF_WIN or \
-               self.result.value == MatchResult.MUTUAL_TECH_DEFEAT
+        return (
+            self.result.value == MatchResult.HOME_DEF_WIN
+            or self.result.value == MatchResult.AWAY_DEF_WIN
+            or self.result.value == MatchResult.MUTUAL_TECH_DEFEAT
+        )
 
     def scored_by(self, team):
         if team == self.team_home:
             return self.score_home
-        elif team == self.team_guest:
+        if team == self.team_guest:
             return self.score_guest
 
         raise TeamIsNotMatchParticipantError(team, self)
@@ -321,7 +364,7 @@ class Match(models.Model):
     def conceded_by(self, team):
         if team == self.team_home:
             return self.score_guest
-        elif team == self.team_guest:
+        if team == self.team_guest:
             return self.score_home
 
         raise TeamIsNotMatchParticipantError(team, self)
@@ -330,8 +373,9 @@ class Match(models.Model):
         return reverse('tournament:match_detail', args=[self.id])
 
     def __str__(self):
-        return 'Матч {} - {}, {} тур'.format(self.team_home.short_title, self.team_guest.short_title,
-                                             self.numb_tour.number)
+        return 'Матч {} - {}, {} тур'.format(
+            self.team_home.short_title, self.team_guest.short_title, self.numb_tour.number
+        )
 
     class Meta:
         verbose_name = 'Матч'
@@ -353,16 +397,20 @@ class MatchResult(models.Model):
         (AWAY_WIN, 'Победа гостей'),
         (HOME_DEF_WIN, 'ТП гостям'),
         (AWAY_DEF_WIN, 'ТП хозяевам'),
-        (MUTUAL_TECH_DEFEAT, 'Обоюдное ТП')
+        (MUTUAL_TECH_DEFEAT, 'Обоюдное ТП'),
     ]
 
-    match = models.OneToOneField(Match, verbose_name='Матч', related_name='result',
-                                 primary_key=True, on_delete=models.CASCADE)
+    match = models.OneToOneField(
+        Match, verbose_name='Матч', related_name='result', primary_key=True, on_delete=models.CASCADE
+    )
     value = models.CharField(verbose_name='Результат', choices=results, null=False, blank=False)
-    set_manually = models.BooleanField('Указать вручную', default=False,
-                                       help_text='По умолчанию результат определяется автоматически на основе ' +
-                                                 'итогового счета. Использовать только в том случае, если нужно ' +
-                                                 'вручную разметить результат (ТП/обоюдное ТП)')
+    set_manually = models.BooleanField(
+        'Указать вручную',
+        default=False,
+        help_text='По умолчанию результат определяется автоматически на основе '
+        + 'итогового счета. Использовать только в том случае, если нужно '
+        + 'вручную разметить результат (ТП/обоюдное ТП)',
+    )
     winner = models.ForeignKey(Team, verbose_name='Победитель', on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -390,10 +438,9 @@ class MatchResult(models.Model):
     def get_result_from_scores(self):
         if self.match.score_home == self.match.score_guest:
             return MatchResult.DRAW
-        elif self.match.score_home > self.match.score_guest:
+        if self.match.score_home > self.match.score_guest:
             return MatchResult.HOME_WIN
-        else:
-            return MatchResult.AWAY_WIN
+        return MatchResult.AWAY_WIN
 
     def __str__(self):
         return self.get_value_display()
@@ -405,16 +452,33 @@ class MatchResult(models.Model):
 
 
 class Goal(models.Model):
-    match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_goal', null=True, blank=True,
-                              on_delete=models.CASCADE)
+    match = models.ForeignKey(
+        Match, verbose_name='Матч', related_name='match_goal', null=True, blank=True, on_delete=models.CASCADE
+    )
 
-    team = models.ForeignKey(Team, verbose_name='Команда забила', related_name='goals', null=True,
-                             on_delete=models.SET_NULL)
+    team = models.ForeignKey(
+        Team, verbose_name='Команда забила', related_name='goals', null=True, on_delete=models.SET_NULL
+    )
 
-    author = ChainedForeignKey(Player, chained_field='team', chained_model_field='team', verbose_name='Автор гола',
-                               related_name='goals', null=True, on_delete=models.CASCADE)
-    assistent = ChainedForeignKey(Player, chained_field='team', chained_model_field='team', verbose_name='Ассистент',
-                                  related_name='assists', blank=True, null=True, on_delete=models.CASCADE)
+    author = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Автор гола',
+        related_name='goals',
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    assistent = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Ассистент',
+        related_name='assists',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     time_min = models.SmallIntegerField('Минута')
     time_sec = models.SmallIntegerField('Секунда')
 
@@ -438,7 +502,9 @@ class Goal(models.Model):
         super(Goal, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return 'на {:02d}:{:02d} от {}({}) в {}'.format(self.time_min, self.time_sec, self.author, self.assistent, self.match)
+        return 'на {:02d}:{:02d} от {}({}) в {}'.format(
+            self.time_min, self.time_sec, self.author, self.assistent, self.match
+        )
 
     class Meta:
         verbose_name = 'Гол'
@@ -447,18 +513,32 @@ class Goal(models.Model):
 
 
 class Substitution(models.Model):
-    match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_substitutions', null=True,
-                              on_delete=models.CASCADE)
+    match = models.ForeignKey(
+        Match, verbose_name='Матч', related_name='match_substitutions', null=True, on_delete=models.CASCADE
+    )
 
-    team = models.ForeignKey(Team, verbose_name='Замена в команде', related_name='team_substitution', null=True,
-                             on_delete=models.SET_NULL)
+    team = models.ForeignKey(
+        Team, verbose_name='Замена в команде', related_name='team_substitution', null=True, on_delete=models.SET_NULL
+    )
 
-    player_out = ChainedForeignKey(Player, chained_field='team', chained_model_field='team', verbose_name='Ушёл',
-                                   related_name='replaced', null=True,
-                                   on_delete=models.CASCADE)
-    player_in = ChainedForeignKey(Player, chained_field='team', chained_model_field='team', verbose_name='Вышел',
-                                  related_name='join_game', null=True,
-                                  on_delete=models.CASCADE)
+    player_out = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Ушёл',
+        related_name='replaced',
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    player_in = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Вышел',
+        related_name='join_game',
+        null=True,
+        on_delete=models.CASCADE,
+    )
     time_min = models.SmallIntegerField('Минута')
     time_sec = models.SmallIntegerField('Секунда')
 
@@ -471,17 +551,36 @@ class Substitution(models.Model):
 
 
 class Disqualification(models.Model):
-    match = models.ForeignKey(Match, verbose_name='Матч', related_name="disqualifications", null=False, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, verbose_name='Команда', related_name='disqualifications', null=False,
-                             on_delete=models.CASCADE)
-    player = ChainedForeignKey(Player, verbose_name='Игрок', chained_field='team', chained_model_field='team',
-                               related_name='disqualifications', null=False, on_delete=models.CASCADE)
+    match = models.ForeignKey(
+        Match, verbose_name='Матч', related_name='disqualifications', null=False, on_delete=models.CASCADE
+    )
+    team = models.ForeignKey(
+        Team, verbose_name='Команда', related_name='disqualifications', null=False, on_delete=models.CASCADE
+    )
+    player = ChainedForeignKey(
+        Player,
+        verbose_name='Игрок',
+        chained_field='team',
+        chained_model_field='team',
+        related_name='disqualifications',
+        null=False,
+        on_delete=models.CASCADE,
+    )
     reason = models.CharField('Причина дисквалификации', max_length=150, null=True)
-    tours = models.ManyToManyField(TourNumber, verbose_name='Туры', related_name='disqualifications', null=False,
-                                   help_text='Туры, на которые распостраняется дисквалификация')
-    lifted_tours = models.ManyToManyField(TourNumber, verbose_name='Отмененные туры', blank=True,
-                                          help_text='Туры, на которые дисквалификация была снята. Должно являться '
-                                                    'подмножеством списка туров, на которые дисквалификация была выдана')
+    tours = models.ManyToManyField(
+        TourNumber,
+        verbose_name='Туры',
+        related_name='disqualifications',
+        null=False,
+        help_text='Туры, на которые распостраняется дисквалификация',
+    )
+    lifted_tours = models.ManyToManyField(
+        TourNumber,
+        verbose_name='Отмененные туры',
+        blank=True,
+        help_text='Туры, на которые дисквалификация была снята. Должно являться '
+        'подмножеством списка туров, на которые дисквалификация была выдана',
+    )
     created = models.DateTimeField('Выдана', auto_now_add=True)
 
     class Meta:
@@ -490,8 +589,9 @@ class Disqualification(models.Model):
         verbose_name_plural = 'Дисквалификации'
 
     def __str__(self):
-        return "{} ({} - {})".format(self.player.nickname, self.match.team_home.short_title,
-                                     self.match.team_guest.short_title)
+        return '{} ({} - {})'.format(
+            self.player.nickname, self.match.team_home.short_title, self.match.team_guest.short_title
+        )
 
 
 class OtherEventsQuerySet(models.QuerySet):
@@ -512,15 +612,23 @@ class OtherEventsQuerySet(models.QuerySet):
 
 
 class OtherEvents(models.Model):
-    match = models.ForeignKey(Match, verbose_name='Матч', related_name='match_event', null=True,
-                              on_delete=models.CASCADE)
+    match = models.ForeignKey(
+        Match, verbose_name='Матч', related_name='match_event', null=True, on_delete=models.CASCADE
+    )
 
-    team = models.ForeignKey(Team, verbose_name='Команда', related_name='team_events', null=True,
-                             on_delete=models.SET_NULL)
+    team = models.ForeignKey(
+        Team, verbose_name='Команда', related_name='team_events', null=True, on_delete=models.SET_NULL
+    )
 
-    author = ChainedForeignKey(Player, chained_field='team', chained_model_field='team', verbose_name='Автор',
-                               related_name='event', null=True,
-                               on_delete=models.CASCADE)
+    author = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Автор',
+        related_name='event',
+        null=True,
+        on_delete=models.CASCADE,
+    )
     time_min = models.SmallIntegerField('Минута')
     time_sec = models.SmallIntegerField('Секунда')
 
@@ -537,9 +645,13 @@ class OtherEvents(models.Model):
 
     event = models.CharField(max_length=3, choices=EVENT, default=CLEAN_SHEET, verbose_name='Тип события')
     card_reason = models.CharField(
-        max_length=300, verbose_name="За что выдана карточка", null=True, blank=True,
+        max_length=300,
+        verbose_name='За что выдана карточка',
+        null=True,
+        blank=True,
         help_text='Только для карточек. Указывать в формате "за нарушение гл. 1 ст. 2 ч. 3 Регламента..." '
-                  'для корректного отображения на странице матча')
+        'для корректного отображения на странице матча',
+    )
 
     objects = OtherEventsQuerySet.as_manager()
 
@@ -571,17 +683,30 @@ class OtherEvents(models.Model):
 
 class PlayerTransfer(models.Model):
     trans_player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='teams_all', verbose_name='Игрок')
-    from_team = models.ForeignKey(Team, verbose_name='Из команды', related_name='outgoing_transfers',
-                                  on_delete=models.SET_NULL, blank=True, null=True)
-    to_team = models.ForeignKey(Team, verbose_name='В команду', related_name='incoming_transfers',
-                                on_delete=models.CASCADE, blank=True, null=True)
+    from_team = models.ForeignKey(
+        Team,
+        verbose_name='Из команды',
+        related_name='outgoing_transfers',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    to_team = models.ForeignKey(
+        Team,
+        verbose_name='В команду',
+        related_name='incoming_transfers',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
     date_join = models.DateField(default=None)
-    season_join = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name='В каком сезоне',
-                                    related_name='transfers')
+    season_join = models.ForeignKey(
+        Season, on_delete=models.CASCADE, verbose_name='В каком сезоне', related_name='transfers'
+    )
     is_technical = models.BooleanField(
         'Технический',
         default=False,
-        help_text='Используется для того, чтобы помечать трансферы по сбросу всех игроков в СА перед началом сезона'
+        help_text='Используется для того, чтобы помечать трансферы по сбросу всех игроков в СА перед началом сезона',
     )
 
     tracker = FieldTracker(['to_team'])
@@ -605,18 +730,30 @@ class PlayerTransfer(models.Model):
 
 
 class Postponement(models.Model):
-    match = models.ForeignKey(Match, verbose_name='Матч', related_name='postponements',
-                              null=False, on_delete=models.CASCADE)
+    match = models.ForeignKey(
+        Match, verbose_name='Матч', related_name='postponements', null=False, on_delete=models.CASCADE
+    )
     is_emergency = models.BooleanField('Экстренный', default=False)
     teams = models.ManyToManyField(Team, verbose_name='На кого взят перенос', related_name='postponements')
     starts_at = models.DateField('Дата старта переноса', null=False, blank=False)
     ends_at = models.DateField('Дата окончания переноса', null=False, blank=False)
     taken_at = models.DateTimeField('Дата офомления переноса', default=timezone.now)
-    taken_by = models.ForeignKey(User, verbose_name='Кем оформлен перенос', related_name='taken_postponements',
-                                 null=True, on_delete=models.SET_NULL)
+    taken_by = models.ForeignKey(
+        User,
+        verbose_name='Кем оформлен перенос',
+        related_name='taken_postponements',
+        null=True,
+        on_delete=models.SET_NULL,
+    )
     cancelled_at = models.DateTimeField('Дата отмены переноса', null=True, blank=True)
-    cancelled_by = models.ForeignKey(User, verbose_name='Кем отменен перенос', related_name='cancelled_postponements',
-                                     null=True, blank=True, on_delete=models.SET_NULL)
+    cancelled_by = models.ForeignKey(
+        User,
+        verbose_name='Кем отменен перенос',
+        related_name='cancelled_postponements',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     @property
     def is_mutual(self):
@@ -635,10 +772,13 @@ class Postponement(models.Model):
         return self.match.league
 
     def __str__(self):
-        return 'Переноса матча {} - {}, {} тур ({} - {})'.format(self.match.team_home, self.match.team_guest,
-                                                                 self.match.numb_tour.number,
-                                                                 self.starts_at.strftime("%d.%m"),
-                                                                 self.ends_at.strftime("%d.%m"))
+        return 'Переноса матча {} - {}, {} тур ({} - {})'.format(
+            self.match.team_home,
+            self.match.team_guest,
+            self.match.numb_tour.number,
+            self.starts_at.strftime('%d.%m'),
+            self.ends_at.strftime('%d.%m'),
+        )
 
     class Meta:
         verbose_name = 'Перенос'
@@ -646,8 +786,14 @@ class Postponement(models.Model):
 
 
 class PostponementSlots(models.Model):
-    league = models.ForeignKey(League, verbose_name='Турнир', related_name='postponement_slots',
-                               null=False, blank=False, on_delete=models.CASCADE)
+    league = models.ForeignKey(
+        League,
+        verbose_name='Турнир',
+        related_name='postponement_slots',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
+    )
     common_count = models.PositiveSmallIntegerField('Количество обычных переносов', default=3)
     emergency_count = models.PositiveSmallIntegerField('Количество экстренных переносов', default=3)
     extra_count = models.PositiveSmallIntegerField('Количество дополнительных (платных) переносов', default=3)
@@ -685,8 +831,13 @@ class Achievements(models.Model):
     mini_image = models.ImageField('Изображение медальки в комменты', upload_to='medals/', null=True)
     player = models.ManyToManyField(Player, verbose_name='Игрок', related_name='achievements', blank=True, null=True)
     position_number = models.SmallIntegerField('Позиция', default=0)
-    category = models.ForeignKey(AchievementCategory, verbose_name='Категория', related_name='player_achievements',
-                                 on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(
+        AchievementCategory,
+        verbose_name='Категория',
+        related_name='player_achievements',
+        on_delete=models.SET_NULL,
+        null=True,
+    )
 
     def __str__(self):
         return self.title

@@ -1,0 +1,8 @@
+line-length = 120
+
+[lint]
+extend-select = ["E501", "I", "N", "SIM", "RET"]
+ignore = ["E722", "SIM108"]
+
+[format]
+quote-style = "single"

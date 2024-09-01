@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-
     'online_users',
     'allauth',
     'allauth.account',
@@ -91,7 +90,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'haxball_site.context_processors.running_line_context'
+                'haxball_site.context_processors.running_line_context',
             ],
         },
     },
@@ -112,9 +111,7 @@ if DEBUG:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-            'OPTIONS': {
-                'timeout': 30
-            }
+            'OPTIONS': {'timeout': 30},
         }
     }
 else:
@@ -212,7 +209,7 @@ else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = '/home/site/media'
 
-CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_UPLOAD_PATH = 'uploads/'
 
 LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
@@ -236,8 +233,7 @@ SUMMERNOTE_CONFIG = {
         'airMode': False,
         'width': '100%',
         'height': '200',
-        'js': {
-        },
+        'js': {},
         'codemirror': {
             'mode': 'htmlmixed',
             'lineNumbers': 'true',
@@ -245,32 +241,20 @@ SUMMERNOTE_CONFIG = {
             'theme': 'monokai',
         },
         'toolbar': [
-            # ['style', ['style']],
             ['font', ['bold', 'underline', 'clear']],
             ['insert', ['link', 'picture', 'video']],
-            # ['fontname', ['fontname']],
         ],
-
     },
-    'js': (
-        '/static/summernote-ext-print.js',
-    ),
-    'js_for_inplace': (
-        '/static/summernote-ext-print.js',
-    ),
-    'css': (
-        '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.40.0/theme/base16-dark.min.css',
-    ),
-    'css_for_inplace': (
-        '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.40.0/theme/base16-dark.min.css',
-    ),
+    'js': ('/static/summernote-ext-print.js',),
+    'js_for_inplace': ('/static/summernote-ext-print.js',),
+    'css': ('//cdnjs.cloudflare.com/ajax/libs/codemirror/5.40.0/theme/base16-dark.min.css',),
+    'css_for_inplace': ('//cdnjs.cloudflare.com/ajax/libs/codemirror/5.40.0/theme/base16-dark.min.css',),
     'codemirror': {
         'theme': 'base16-dark',
         'mode': 'htmlmixed',
         'lineNumbers': 'true',
     },
     'lazy': False,
-
 }
 
 CKEDITOR_CONFIGS = {
@@ -278,93 +262,142 @@ CKEDITOR_CONFIGS = {
         'skin': 'moono',
         'height': 400,
         'width': '100%',
-        'toolbar_Basic': [
-            ['Source', '-', 'Bold', 'Italic']
-        ],
+        'toolbar_Basic': [['Source', '-', 'Bold', 'Italic']],
         'toolbar_YourCustomToolbarConfig': [
             {'name': 'document', 'items': ['Source', '-', 'Save', 'NewPage', 'Preview', 'Print', '-', 'Templates']},
             {'name': 'clipboard', 'items': ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo']},
             {'name': 'editing', 'items': ['Find', 'Replace', '-', 'SelectAll']},
-            {'name': 'forms',
-             'items': ['Form', 'Checkbox', 'Radio', 'TextField', 'Textarea', 'Select', 'Button', 'ImageButton',
-                       'HiddenField']},
+            {
+                'name': 'forms',
+                'items': [
+                    'Form',
+                    'Checkbox',
+                    'Radio',
+                    'TextField',
+                    'Textarea',
+                    'Select',
+                    'Button',
+                    'ImageButton',
+                    'HiddenField',
+                ],
+            },
             '/',
-            {'name': 'basicstyles',
-             'items': ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat']},
-            {'name': 'paragraph',
-             'items': ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-',
-                       'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock', '-', 'BidiLtr', 'BidiRtl',
-                       'Language']},
+            {
+                'name': 'basicstyles',
+                'items': ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
+            },
+            {
+                'name': 'paragraph',
+                'items': [
+                    'NumberedList',
+                    'BulletedList',
+                    '-',
+                    'Outdent',
+                    'Indent',
+                    '-',
+                    'Blockquote',
+                    'CreateDiv',
+                    '-',
+                    'JustifyLeft',
+                    'JustifyCenter',
+                    'JustifyRight',
+                    'JustifyBlock',
+                    '-',
+                    'BidiLtr',
+                    'BidiRtl',
+                    'Language',
+                ],
+            },
             {'name': 'links', 'items': ['Link', 'Unlink', 'Anchor']},
-            {'name': 'insert',
-             'items': ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe']},
+            {
+                'name': 'insert',
+                'items': ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe'],
+            },
             '/',
             {'name': 'styles', 'items': ['Styles', 'Format', 'Font', 'FontSize']},
             {'name': 'colors', 'items': ['TextColor', 'BGColor']},
             {'name': 'tools', 'items': ['Maximize', 'ShowBlocks']},
             {'name': 'about', 'items': ['About', 'Spoiler']},
             '/',  # put this to force next toolbar on new line
-            {'name': 'yourcustomtools', 'items': [
-                # put the name of your editor.ui.addButton here
-                'Preview',
-                'Maximize',
-                'Youtube'
-            ]},
+            {
+                'name': 'yourcustomtools',
+                'items': [
+                    # put the name of your editor.ui.addButton here
+                    'Preview',
+                    'Maximize',
+                    'Youtube',
+                ],
+            },
         ],
         'toolbar': 'YourCustomToolbarConfig',  # put selected toolbar config here
         'tabSpaces': 4,
-        'extraPlugins': ','.join([
-            'uploadimage',  # the upload image feature
-            # your extra plugins here
-            'div',
-            'autolink',
-            'autoembed',
-            'embedsemantic',
-            'autogrow',
-            'spoiler',
-            # 'devtools',
-            'widget',
-            'lineutils',
-            'clipboard',
-            'dialog',
-            'dialogui',
-            'elementspath',
-            'youtube'
-        ]),
+        'extraPlugins': ','.join(
+            [
+                'uploadimage',
+                'div',
+                'autolink',
+                'autoembed',
+                'embedsemantic',
+                'autogrow',
+                'spoiler',
+                'widget',
+                'lineutils',
+                'clipboard',
+                'dialog',
+                'dialogui',
+                'elementspath',
+                'youtube',
+            ]
+        ),
     },
     'comment': {
         'skin': 'moono-lisa',
-        "removePlugins": "stylesheetparser",
+        'removePlugins': 'stylesheetparser',
         'allowedContent': True,
         'height': 200,
         'width': '99%',
         'toolbar': [
-            ['Bold', 'Italic', 'Underline', 'Strike',
-             '-', 'Link', 'Unlink', 'Image', 'Youtube', 'Html5video', 'Smiley',
-             '-', 'NumberedList', 'BulletedList',
-             '-', 'Undo', 'Redo'
+            [
+                'Bold',
+                'Italic',
+                'Underline',
+                'Strike',
+                '-',
+                'Link',
+                'Unlink',
+                'Image',
+                'Youtube',
+                'Html5video',
+                'Smiley',
+                '-',
+                'NumberedList',
+                'BulletedList',
+                '-',
+                'Undo',
+                'Redo',
             ]
         ],
         # 'plugins': [],
-
-        'extraPlugins': ','.join([
-            'uploadimage',  # the upload image feature
-            # 'autoimage',
-            # your extra plugins here
-            'div',
-            'autolink',
-            'embedsemantic',
-            'autogrow',
-            'widget',
-            'lineutils',
-            'clipboard',
-            'dialog',
-            'dialogui',
-            'elementspath',
-            'youtube',
-            'html5video'
-        ])
-    }
+        'extraPlugins': ','.join(
+            [
+                'uploadimage',  # the upload image feature
+                # 'autoimage',
+                # your extra plugins here
+                'div',
+                'autolink',
+                'embedsemantic',
+                'autogrow',
+                'widget',
+                'lineutils',
+                'clipboard',
+                'dialog',
+                'dialogui',
+                'elementspath',
+                'youtube',
+                'html5video',
+            ]
+        ),
+    },
 }
 
 INTERNAL_IPS = config('INTERNAL_IPS', cast=str.split)

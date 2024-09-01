@@ -4,13 +4,14 @@ from django import template
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Page
-from django.db.models import Count, Q, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from online_users.models import OnlineUserActivity
+from tournament.models import League, Player, PlayerTransfer, Team
 
-from ..models import Post, NewComment, Subscription
-from tournament.models import Team, League, Player, PlayerTransfer
 from haxball_site import settings
+
+from ..models import NewComment, Post, Subscription
 
 register = template.Library()
 
@@ -86,10 +87,13 @@ def user_last_activity(user):
 @register.inclusion_tag('core/include/forum/last_activity_in_category.html')
 def forum_last_activity(category):
     last_post = Post.objects.filter(category=category).order_by('-created').first()
-    last_comment = NewComment.objects \
-        .filter(content_type=ContentType.objects.get_for_model(Post), post_comments__category=category) \
-        .order_by('-created') \
+    last_comment = (
+        NewComment.objects.filter(
+            content_type=ContentType.objects.get_for_model(Post), post_comments__category=category
+        )
+        .order_by('-created')
         .first()
+    )
 
     if last_comment is None and last_post is None:
         return {'last_act': None}
@@ -107,13 +111,13 @@ def forum_last_activity(category):
 # Сайдбар для пользователей онлайн(по дефолту 15 минут)
 @register.inclusion_tag('core/include/sidebar_for_users.html')
 def show_users_online():
-    user_activity_objects = OnlineUserActivity.get_user_activities(time_delta=timezone.timedelta(minutes=5)) \
-        .select_related('user__user_profile')
+    user_activity_objects = OnlineUserActivity.get_user_activities(
+        time_delta=timezone.timedelta(minutes=5)
+    ).select_related('user__user_profile')
     users_online_count = user_activity_objects.count()
     users_online = (user.user for user in user_activity_objects)
 
-    return {'users_online': users_online,
-            'users_online_count': users_online_count}
+    return {'users_online': users_online, 'users_online_count': users_online_count}
 
 
 # Сайд-бар для last activity (выводит последние оставленные комментарии
@@ -121,10 +125,11 @@ def show_users_online():
 @register.inclusion_tag('core/include/sidebar_for_last_activity.html')
 def show_last_activity(count=10):
     # Последняя активность ваще везде-везде
-    latest_comments = NewComment.objects \
-                        .select_related('author') \
-                        .prefetch_related('content_object', 'content_object__comments') \
-                        .order_by('-created')[:150]
+    latest_comments = (
+        NewComment.objects.select_related('author')
+        .prefetch_related('content_object', 'content_object__comments')
+        .order_by('-created')[:150]
+    )
     selected_objects = set()
     last_comments = []
     for comment in latest_comments:
@@ -133,9 +138,9 @@ def show_last_activity(count=10):
 
         if comment.content_object in selected_objects:
             continue
-        else:
-            last_comments.append(comment)
-            selected_objects.add(comment.content_object)
+
+        last_comments.append(comment)
+        selected_objects.add(comment.content_object)
 
     return {'last_comments': last_comments}
 
@@ -148,42 +153,42 @@ def show_top_comments(count=5):
     day = my_date.day
     month = my_date.month
 
-    comments = NewComment.objects \
-        .select_related('author') \
-        .prefetch_related('votes', 'content_object', 'content_object__comments') \
-        .annotate(likes_count=Count('votes', filter=Q(votes__vote__gt=0))) \
+    comments = (
+        NewComment.objects.select_related('author')
+        .prefetch_related('votes', 'content_object', 'content_object__comments')
+        .annotate(likes_count=Count('votes', filter=Q(votes__vote__gt=0)))
         .annotate(dislikes_count=Count('votes', filter=Q(votes__vote__lt=0)))
+    )
 
-    top_com_today = comments \
-        .filter(created__year=year, created__month=month, created__day=day) \
-        .order_by('-likes_count')[:count]
-    top_com_month = comments \
-        .filter(created__year=year, created__month=month) \
-        .order_by('-likes_count')[:count]
-    top_com_year = comments \
-        .filter(created__year=year) \
-        .order_by('-likes_count')[:count]
+    top_com_today = comments.filter(created__year=year, created__month=month, created__day=day).order_by(
+        '-likes_count'
+    )[:count]
+    top_com_month = comments.filter(created__year=year, created__month=month).order_by('-likes_count')[:count]
+    top_com_year = comments.filter(created__year=year).order_by('-likes_count')[:count]
 
     week_start = my_date - timezone.timedelta(days=day_of_week - 1, hours=my_date.hour, minutes=my_date.minute)
 
     week_end = my_date + timezone.timedelta(days=7 - day_of_week, hours=23 - my_date.hour, minutes=60 - my_date.minute)
-    top_com_week = comments \
-        .filter(created__gt=week_start, created__lt=week_end) \
-        .order_by('-likes_count')[:count]
+    top_com_week = comments.filter(created__gt=week_start, created__lt=week_end).order_by('-likes_count')[:count]
 
-    return {'top_comments_day': top_com_today,
-            'top_comments_month': top_com_month,
-            'top_comments_year': top_com_year,
-            'top_comments_week': top_com_week, }
+    return {
+        'top_comments_day': top_com_today,
+        'top_comments_month': top_com_month,
+        'top_comments_year': top_com_year,
+        'top_comments_week': top_com_week,
+    }
 
 
 # Сайд-бар для отображеня топа лайков постов за всё время
 # (Потом надо будет переделать, чтобы в параметр передавать за какое время, для переключения)
 @register.inclusion_tag('core/include/sidebar_for_likes.html')
 def show_post_with_top_likes(count=5):
-    posts = Post.objects.annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0))).annotate(
-        dislike_count=Count('votes', filter=Q(votes__vote__lt=0))).filter(created__year=2020).order_by('-like_count')[
-            :count]
+    posts = (
+        Post.objects.annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0)))
+        .annotate(dislike_count=Count('votes', filter=Q(votes__vote__lt=0)))
+        .filter(created__year=2020)
+        .order_by('-like_count')[:count]
+    )
 
     return {'liked_posts': posts}
 
@@ -194,9 +199,8 @@ def is_fresh(value, hours):
     x = timezone.now() - value
     if x.days >= 1:
         return False
-    else:
-        sec = 3600 * hours
-        return x.seconds < sec
+    sec = 3600 * hours
+    return x.seconds < sec
 
 
 # Фильтр для проверки юзера в объекте(Типа, если лайк уже ставил или диз)
@@ -264,9 +268,11 @@ def can_view_likes_details(user: User):
 @register.inclusion_tag('core/include/teams_in_navbar.html')
 def teams_in_navbar():
     primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
-    leagues = League.objects.filter(title__in=primary_leagues, championship__is_active=True) \
-        .prefetch_related(Prefetch('teams', queryset=Team.objects.order_by('title'))) \
+    leagues = (
+        League.objects.filter(title__in=primary_leagues, championship__is_active=True)
+        .prefetch_related(Prefetch('teams', queryset=Team.objects.order_by('title')))
         .order_by('priority')
+    )
 
     return {'leagues': leagues}
 
@@ -314,9 +320,10 @@ def pages_to_show(page: Page):
 @register.inclusion_tag('core/include/sidebar_for_transfers.html')
 def show_last_transfers():
     from_date = datetime(2024, 3, 13)
-    last_transfers = PlayerTransfer.objects \
-        .select_related('trans_player__name__user_profile', 'from_team', 'to_team') \
-        .filter(season_join__is_active=True, date_join__gte=from_date, is_technical=False) \
+    last_transfers = (
+        PlayerTransfer.objects.select_related('trans_player__name__user_profile', 'from_team', 'to_team')
+        .filter(season_join__is_active=True, date_join__gte=from_date, is_technical=False)
         .order_by('-date_join', '-id')[:5]
+    )
 
     return {'transfers': last_transfers}

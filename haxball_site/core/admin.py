@@ -1,12 +1,25 @@
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
-from django.contrib.admin import StackedInline
-from django.utils.html import escape, mark_safe
-from django_summernote.fields import SummernoteTextFormField
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import StackedInline
+from django.urls import reverse
+from django.utils.html import escape, mark_safe
+from django_summernote.fields import SummernoteTextFormField
 
-from .models import *
-
+from .models import (
+    Category,
+    CommentHistoryItem,
+    IPAdress,
+    LikeDislike,
+    NewComment,
+    Post,
+    Profile,
+    Subscription,
+    Themes,
+    UserActivity,
+    UserIcon,
+    UserNicknameHistoryItem,
+)
 
 # Register your models here.
 
@@ -36,16 +49,25 @@ class CommentHistoryItemInline(StackedInline):
 
 @admin.register(CommentHistoryItem)
 class CommentHistoryItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'created', 'version', 'link_to_comment', 'get_author', 'body',)
+    list_display = (
+        'id',
+        'created',
+        'version',
+        'link_to_comment',
+        'get_author',
+        'body',
+    )
     list_filter = ('comment__author',)
 
     def get_author(self, model):
         return model.comment.author
+
     get_author.short_description = 'Автор'
 
     def link_to_comment(self, model):
         link = reverse('admin:core_newcomment_change', args=[model.comment.id])
         return mark_safe(f'<a href="{link}">{escape(model.comment.__str__())}</a>')
+
     link_to_comment.short_description = 'Базовый комментарий'
 
     def has_add_permission(self, request):
@@ -65,7 +87,17 @@ class NewCommentAdminForm(forms.ModelForm):
 
 @admin.register(NewComment)
 class NewCommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'author', 'parent', 'created', 'edited', 'body', 'content_type', 'object_id', 'content_object')
+    list_display = (
+        'id',
+        'author',
+        'parent',
+        'created',
+        'edited',
+        'body',
+        'content_type',
+        'object_id',
+        'content_object',
+    )
     list_filter = ('created', 'author')
     search_fields = ('body',)
     inlines = [CommentHistoryItemInline]
@@ -85,13 +117,10 @@ class PostAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'author', 'views', 'category', 'created', 'updated', 'important')
     list_filter = ('created', 'author')
     search_fields = ('title', 'body')
-    # slug = AutoSlugField(populate_from='title', unique_for_date='publish')
     prepopulated_fields = {'slug': ('title',)}
     raw_id_fields = ('author',)
     form = PostAdminForm
     list_editable = ('important',)
-
-    # inlines = [CommentInline]
 
 
 @admin.register(Profile)
@@ -99,7 +128,6 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'background', 'karma', 'views', 'can_comment')
     list_filter = ('id', 'name')
     list_display_links = ('name',)
-    #readonly_fields = ('karma',)
 
 
 @admin.register(Themes)
@@ -109,7 +137,10 @@ class ThemesAdmin(admin.ModelAdmin):
 
 @admin.register(UserIcon)
 class UserIconAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description',)
+    list_display = (
+        'title',
+        'description',
+    )
     filter_horizontal = ('user',)
 
 
@@ -146,12 +177,12 @@ class UserActivityAdmin(admin.ModelAdmin):
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'starts_at', 'expires_at', 'tier', 'is_active', 'disabled')
     list_filter = ('user', 'tier', 'disabled')
-    # autocomplete_fields = ('user',)
     raw_id_fields = ('user',)
     search_fields = ('user__username',)
 
     def is_active(self, model):
         return model.is_active()
+
     is_active.boolean = True
     is_active.short_description = 'Активна'
 
@@ -159,6 +190,5 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(UserNicknameHistoryItem)
 class UserNicknameHistoryItemAdmin(admin.ModelAdmin):
     list_display = ('user', 'nickname', 'edited')
-    # autocomplete_fields = ('user',)
     raw_id_fields = ('user',)
     search_fields = ('user__username', 'nickname')

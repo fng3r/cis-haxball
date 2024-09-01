@@ -1,8 +1,21 @@
 from django.urls import path
 
-from .views import FreeAgentList, remove_entry, update_entry, TeamDetail, TeamList, LeagueDetail, MatchDetail, \
-    edit_team_profile, halloffame, DisqualificationsList, PostponementsList, cancel_postponement, \
-    TransfersList, TeamRatingView
+from .views import (
+    DisqualificationsList,
+    FreeAgentList,
+    LeagueDetail,
+    MatchDetail,
+    PostponementsList,
+    TeamDetail,
+    TeamList,
+    TeamRatingView,
+    TransfersList,
+    cancel_postponement,
+    edit_team_profile,
+    halloffame,
+    remove_entry,
+    update_entry,
+)
 
 app_name = 'tournament'
 

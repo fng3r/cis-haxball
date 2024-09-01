@@ -13,14 +13,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+from ckeditor_uploader import views as ckuploader_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
-from django.urls import path, re_path, include
+from django.urls import include, path, re_path
 from django.views.decorators.cache import never_cache
-from ckeditor_uploader import views as ckuploader_views
-from debug_toolbar.toolbar import debug_toolbar_urls
 
 urlpatterns = [
     path('grappelli/', include('grappelli.urls')),

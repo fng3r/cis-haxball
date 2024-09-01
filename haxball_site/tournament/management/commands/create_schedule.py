@@ -3,7 +3,8 @@ import random
 
 from django.core.management.base import BaseCommand
 
-from ...models import League, TourNumber, Match
+from ...models import League, Match, TourNumber
+
 
 class Command(BaseCommand):
     help = 'The Zen of Python'
@@ -62,13 +63,15 @@ class Command(BaseCommand):
         for i in range(1, n):
             tour_number = i
             (tour_date_start, tour_date_end) = self.tour_dates[i]
-            tour = TourNumber.objects.create(number=tour_number, league=league,
-                                             date_from=tour_date_start, date_to=tour_date_end)
+            tour = TourNumber.objects.create(
+                number=tour_number, league=league, date_from=tour_date_start, date_to=tour_date_end
+            )
             if has_return_matches:
                 reverse_tour_number = n + i - 1
                 (tour_date_start, tour_date_end) = self.tour_dates[reverse_tour_number]
-                tour_reverse = TourNumber.objects.create(number=reverse_tour_number, league=league,
-                                                         date_from=tour_date_start, date_to=tour_date_end)
+                tour_reverse = TourNumber.objects.create(
+                    number=reverse_tour_number, league=league, date_from=tour_date_start, date_to=tour_date_end
+                )
             print(f'                 Тур {tour}')
             for j in range(half):
                 team_home = teams[j]
@@ -81,8 +84,9 @@ class Command(BaseCommand):
                     (team_home, team_guest) = (team_guest, team_home)
                 match = Match.objects.create(team_home=team_home, team_guest=team_guest, numb_tour=tour, league=league)
                 if has_return_matches:
-                    match_reverse = Match.objects.create(team_guest=team_home, team_home=team_guest,
-                                                         numb_tour=tour_reverse, league=league)
+                    Match.objects.create(
+                        team_guest=team_home, team_home=team_guest, numb_tour=tour_reverse, league=league
+                    )
                 print(f'          {match.team_home.title} - {match.team_guest.title}')
 
             # rotate teams n // 2 times

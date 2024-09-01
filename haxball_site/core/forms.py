@@ -1,9 +1,7 @@
-from ckeditor.widgets import CKEditorWidget
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
-from django_summernote.fields import SummernoteTextFormField
 
-from .models import Comment, Profile, Post, NewComment
+from .models import NewComment, Post, Profile
 
 
 class NewCommentForm(forms.ModelForm):
