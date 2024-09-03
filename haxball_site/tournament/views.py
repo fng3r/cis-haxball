@@ -428,7 +428,7 @@ class PostponementsList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filter = LeagueByTitleFilter(
-            self.request.GET or {'tournament': 'Высшая лига'},
+            {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
             queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
         )
         leagues = filter.qs
@@ -473,14 +473,13 @@ class PostponementsList(ListView):
             teams = [Team.objects.get(pk=team_id)]
         is_emergency = type == 'emergency'
         total_slots_count = match.league.get_postponement_slots().total_count
+        tournament = request.GET.get('tournament', 'Высшая лига')
         for team in teams:
             team_postponements = team.get_postponements(leagues=[match.league])
             if team_postponements.count() + 1 > total_slots_count:
                 request.session['show_exceeded_limit_modal'] = True
-                request.session['exceeded_limit_message'] = 'Команда {} исчерпала лимит переносов'.format(team.title)
-                return redirect(
-                    reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament'])
-                )
+                request.session['exceeded_limit_message'] = f'Команда {team.title} исчерпала лимит переносов'
+                return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
         taken_by = request.user
         match_expiration_date = match.numb_tour.date_to
         if match.is_postponed:
@@ -494,7 +493,7 @@ class PostponementsList(ListView):
         )
         postponement.teams.set(teams)
 
-        return redirect(reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament']))
+        return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
 
 
 @require_POST
