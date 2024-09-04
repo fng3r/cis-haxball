@@ -265,6 +265,38 @@ def can_view_likes_details(user: User):
     return subscriptions.count() > 0
 
 
+@register.filter
+def get_likes(comment: NewComment):
+    if hasattr(comment, 'likes'):
+        return comment.likes
+
+    return comment.votes.likes()
+
+
+@register.filter
+def get_dislikes(comment: NewComment):
+    if hasattr(comment, 'dislikes'):
+        return comment.dislikes
+
+    return comment.votes.dislikes()
+
+
+@register.filter
+def likes_count(comment: NewComment):
+    if hasattr(comment, 'likes'):
+        return len(comment.likes)
+
+    return comment.votes.likes().count()
+
+
+@register.filter
+def dislikes_count(comment: NewComment):
+    if hasattr(comment, 'dislikes'):
+        return len(comment.dislikes)
+
+    return comment.votes.dislikes().count()
+
+
 @register.inclusion_tag('core/include/teams_in_navbar.html')
 def teams_in_navbar():
     primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']

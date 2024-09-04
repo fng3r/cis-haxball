@@ -1,18 +1,35 @@
-<head>{{ comment_form.media }}</head>
+{% load static %}
+{% load user_tags %}
 
-<form action="{% url 'core:add_comment_profile' object.id %}" method="post" id="addcomment" class="text-center">
-    {% csrf_token %}
-    <!--<input type="hidden" name="page" value="{# page #}">-->
-    <input type="hidden" name="parent" id="contactparent" value="">
+<form id="addcomment" class="text-center"
+      {% if object|get_class == 'Profile' %}
+        hx-post="{% url 'core:add_comment_profile' object.id %}"
+      {% elif object|get_class == 'League' %}
+        hx-post="{% url 'core:add_comment_league' object.id %}"
+      {% elif object|get_class == 'Post' %}
+        hx-post="{% url 'core:add_comment_post' object.id %}"
+      {% elif object|get_class == 'Match' %}
+        hx-post="{% url 'core:add_comment_match' object.id %}"
+      {% endif %}
+      hx-trigger="submit"
+      hx-target="#comments-container"
+      hx-swap="outerHTML scroll:top"
+      hx-on::config-request="event.detail.parameters['body'] = CKEDITOR.instances['id_body'].getData()"
+      hx-on::before-request="this.style.filter = 'blur(2px)';"
+      hx-on::after-request="CKEDITOR.instances['id_body'].setData(''); this.style.filter = 'none';"
+      hx-disabled-elt="find button[type=submit]">
 
-    <div class="form-group mt-2 ml-1">
-        {{ comment_form.body }}
-        <!-- <textarea class="form-control border" rows="3" name="body"
-                   id="contactcomment" required="" rows="2" placeholder="Оставьте Ваш комментарий"></textarea> -->
-    </div>
+  {{ comment_form.media }}
+  <input type="hidden" name="parent" id="contactparent" value="">
 
-    <div align="right">
-        <!--Отправить</input>-->
-        <input type="submit" class="btn btn-primary mr-2">
-    </div>
+  <div class="form-group mt-2 ml-1">
+    {{ comment_form.body }}
+  </div>
+
+  <div align="right">
+    <button type="submit" class="btn btn-primary mr-2" hx-disabled-elt="this">Отправить</button>
+  </div>
+
+  <img id="comments-indicator" class="htmx-indicator" src="{% static 'svg-loaders/bars.svg' %}"
+       style="position: absolute; left: 45%; top: 45%;">
 </form>

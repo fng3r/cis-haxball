@@ -16,11 +16,6 @@ document.querySelectorAll('.popup-tab').forEach(popupTab => {
         document.getElementById('vote-' + x).style.display = 'block';
         document.getElementById('vote-dis' + x).style.display = 'none';
 
-        /*popupTabLike.style.boxShadow = '0px 0px 5px #00FF00';
-        popupTabDisLike.style.boxShadow = '0px 0px 3px #fbd784';
-        $('.vote-dislike').fadeOut(0);
-        $('.vote-like').fadeIn(0);*/
-
     });
 
     popupTabDisLike.addEventListener("click", function(event){

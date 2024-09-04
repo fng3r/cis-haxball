@@ -176,7 +176,19 @@ def delete_comment(request, pk):
         or request.user == obj.name
     ):
         comment.delete()
-        return redirect(obj.get_absolute_url())
+
+        comments_obj = get_comments_for_object(obj, obj.id)
+        comments = get_paginated_comments(comments_obj, 1)
+
+        context = {}
+        context['object'] = obj
+        context['page'] = 1
+        context['comments'] = comments
+        comment_form = NewCommentForm()
+        context['comment_form'] = comment_form
+
+        return render(request, 'core/include/new_comments.html#comments-container', context)
+
     return HttpResponse('Ошибка доступа или время истекло')
 
 
@@ -298,7 +310,19 @@ class AddCommentView(View):
             new_com.author = request.user
             new_com.content_type = ContentType.objects.get_for_model(obj)
             new_com.save()
-            return redirect(obj.get_absolute_url())
+
+            comments_obj = get_comments_for_object(self.model, obj.id)
+            comments = get_paginated_comments(comments_obj, 1)
+
+            context = {}
+            context['object'] = obj
+            context['page'] = 1
+            context['comments'] = comments
+            comment_form = NewCommentForm()
+            context['comment_form'] = comment_form
+
+            return render(request, 'core/include/new_comments.html#comments-container', context)
+        return None
 
 
 class EditMyProfile(DetailView, View):
@@ -343,9 +367,6 @@ class VotesView(View):
                 likedislike.save(update_fields=['vote'])
                 result = True
             else:
-                # if obj.author != request.user:
-                #    author_profile.karma -= likedislike.vote
-                #    author_profile.save(update_fields=['karma'])
                 likedislike.delete()
                 result = False
 
@@ -355,6 +376,9 @@ class VotesView(View):
                 obj.author.user_profile.karma += self.vote_type
                 obj.author.user_profile.save(update_fields=['karma'])
             result = True
+
+        if request.htmx:
+            return render(request, 'core/include/like_dislike_comment.html', {'comment': obj})
 
         return HttpResponse(
             json.dumps(

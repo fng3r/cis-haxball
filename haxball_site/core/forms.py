@@ -5,7 +5,7 @@ from .models import NewComment, Post, Profile
 
 
 class NewCommentForm(forms.ModelForm):
-    body = forms.CharField(label='Пост', widget=CKEditorUploadingWidget(config_name='comment'))
+    body = forms.CharField(label='Пост', widget=CKEditorUploadingWidget(config_name='comment'), required=True)
 
     class Meta:
         model = NewComment
