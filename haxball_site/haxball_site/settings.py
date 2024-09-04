@@ -27,14 +27,12 @@ SECRET_KEY = config('APP_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('APP_DEBUG', cast=bool, default=False)
 
-if DEBUG:
-    ALLOWED_HOSTS = []
-else:
-    ALLOWED_HOSTS = config('APP_ALLOWED_HOSTS', cast=str.split)
+ALLOWED_HOSTS = config('APP_ALLOWED_HOSTS', cast=str.split)
 
 # Application definition
 
 INSTALLED_APPS = [
+    'template_partials',
     'core.apps.CoreConfig',
     'tournament.apps.TournamentConfig',
     'polls.apps.PollsConfig',
@@ -61,6 +59,7 @@ INSTALLED_APPS = [
     'mathfilters',
     'debug_toolbar',
     'django_extensions',
+    'django_htmx'
 ]
 
 MIDDLEWARE = [
@@ -68,6 +67,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_htmx.middleware.HtmxMiddleware',
     'haxball_site.middleware.UserTrackingMiddleware',
     'online_users.middleware.OnlineNowMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -92,6 +92,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'haxball_site.context_processors.running_line_context',
             ],
+            'builtins': ['template_partials.templatetags.partials'],
         },
     },
 ]
