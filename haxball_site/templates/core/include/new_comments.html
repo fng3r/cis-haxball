@@ -86,7 +86,7 @@
 
                     <div class="card-footer text-muted pb-0 pt-3">
                         {% if object.comments.count > 2 %}
-                            {% include "core/include/pagination.html" with page=comments %}
+                            {% include "core/include/pagination.html" with page=comments paginated_type="comments" %}
                         {% endif %}
                     </div>
 

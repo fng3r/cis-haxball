@@ -8,8 +8,8 @@
         hx-target="#comments-container"
         hx-swap="outerHTML scroll:top"
         hx-on::config-request="event.detail.parameters['body'] = CKEDITOR.instances['id_body'].getData()"
-        hx-on::before-request="this.style.filter = 'blur(2px)';"
-        hx-on::after-request="CKEDITOR.instances['id_body'].setData(''); this.style.filter = 'none';"
+        hx-on::before-request="document.getElementById('cke_id_body').style.filter = 'blur(1px)';"
+        hx-on::after-request="CKEDITOR.instances['id_body'].setData(''); document.getElementById('cke_id_body').style.filter = 'none';"
         hx-disabled-elt="find button[type=submit]">
 
     {{ comment_form.media }}
@@ -20,10 +20,9 @@
     </div>
 
     <div align="right">
+      <img class="htmx-indicator mr-2" height="24" src="{% static 'svg-loaders/bars.svg' %}">
       <button type="submit" class="btn btn-primary mr-2" hx-disabled-elt="this">Отправить</button>
     </div>
 
-    <img id="comments-indicator" class="htmx-indicator" src="{% static 'svg-loaders/bars.svg' %}"
-         style="position: absolute; left: 45%; top: 45%;">
   </form>
 {% endwith %}

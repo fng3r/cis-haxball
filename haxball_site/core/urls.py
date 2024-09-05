@@ -29,7 +29,8 @@ urlpatterns = [
     path('forum/<slug:slug>', views.CategoryListView.as_view(), name='forum_category'),
     # Ссылка на создание нового поста на форуме
     path('forum/<slug:slug>/add_post', views.post_new, name='new_post'),
-    # Создание нового "Правильного комментария" к профилю
+    path('comments/<int:ct>/<int:pk>', views.CommentsListView.as_view(), name='comments'),
+    # Создание нового комментария
     path('add_comment/<int:ct>/<int:pk>', views.AddCommentView.as_view(), name='add_comment'),
     # Редактирование комментария
     path('post/edit_comment/<int:pk>', views.comment_edit, name='edit_comment'),

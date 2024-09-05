@@ -243,33 +243,50 @@ class ProfileDetail(DetailView):
         return context
 
 
+class CommentsListView(ListView):
+    def get(self, request, ct, pk):
+        content_type = ContentType.objects.get(pk=ct)
+        model = content_type.model_class()
+        page = request.GET.get('page')
+        object_comments = get_comments_for_object(model, pk)
+        comments = get_paginated_comments(object_comments, page)
+        obj = model.objects.get(pk=pk)
+        print(object)
+        print(comments)
+
+        context = {
+            'object': obj,
+            'comments': comments,
+        }
+
+        return render(request, 'core/include/new_comments.html#comments-container', context)
+
+
 class AddCommentView(View):
     def post(self, request, ct, pk):
         content_type = ContentType.objects.get(pk=ct)
         model = content_type.model_class()
         obj = model.objects.get(id=pk)
-        if request.method == 'POST':
-            comment_form = NewCommentForm(data=request.POST)
-            new_com = comment_form.save(commit=False)
-            if request.POST.get('parent', None):
-                new_com.parent_id = int(request.POST.get('parent'))
-            new_com.object_id = obj.id
-            new_com.author = request.user
-            new_com.content_type = content_type
-            new_com.save()
+        comment_form = NewCommentForm(data=request.POST)
+        new_com = comment_form.save(commit=False)
+        if request.POST.get('parent', None):
+            new_com.parent_id = int(request.POST.get('parent'))
+        new_com.object_id = obj.id
+        new_com.author = request.user
+        new_com.content_type = content_type
+        new_com.save()
 
-            comments_obj = get_comments_for_object(model, obj.id)
-            comments = get_paginated_comments(comments_obj, 1)
+        comments_obj = get_comments_for_object(model, obj.id)
+        comments = get_paginated_comments(comments_obj, 1)
 
-            context = {
-                'object': obj,
-                'page': 1,
-                'comments': comments,
-                'comment_form': comment_form,
-            }
+        context = {
+            'object': obj,
+            'page': 1,
+            'comments': comments,
+            'comment_form': comment_form,
+        }
 
-            return render(request, 'core/include/new_comments.html#comments-container', context)
-        return None
+        return render(request, 'core/include/new_comments.html#comments-container', context)
 
 
 # edit comment
