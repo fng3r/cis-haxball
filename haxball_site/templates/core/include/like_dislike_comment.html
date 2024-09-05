@@ -8,39 +8,39 @@
 
 <ul class="list-group list-group-horizontal-md d-inline-flex">
     {% if user.is_authenticated and user.user_profile.can_vote %}
-        <li class="action-like fa fa-thumbs-up {% if comment.likes|user_in_list:user %}text-success{% endif %}"
+        <li class="action-like fa fa-thumbs-up {% if comment|get_likes|user_in_list:user %}text-success{% endif %}"
             data-id="{{ comment.id }}"
             data-type="comment" data-action="like" id="lcomment{{ comment.id }}">
 
-            <span data-count="like">{{ comment.likes|length }}</span>
+            <span data-count="like">{{ comment|likes_count }}</span>
         </li>
 
-        <li class="action-dislike fa fa-thumbs-down {% if comment.dislikes|user_in_list:user %}text-danger{% endif %}"
+        <li class="action-dislike fa fa-thumbs-down {% if comment|get_dislikes|user_in_list:user %}text-danger{% endif %}"
             data-id="{{ comment.id }}"
             data-type="comment" data-action="dislike" id="dcomment{{ comment.id }}">
 
-            <span data-count="dislike">{{ comment.dislikes|length }}</span>
+            <span data-count="dislike">{{ comment|dislikes_count }}</span>
         </li>
     {% elif user.is_authenticated and not user.user_profile.can_vote %}
         <li class="action-like fa fa-thumbs-up" onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')">
-            <span data-count="like">{{ comment.likes|length }}</span>
+            <span data-count="like">{{ comment|likes_count }}</span>
         </li>
 
         <li class="action-dislike fa fa-thumbs-down" onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')">
-            <span data-count="dislike">{{ comment.dislikes|length }}</span>
+            <span data-count="dislike">{{ comment|dislikes_count }}</span>
         </li>
     {% else %}
         <li class="action-like fa fa-thumbs-up" data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
-            <span data-count="like">{{ comment.likes|length }}</span>
+            <span data-count="like">{{ comment|likes_count }}</span>
         </li>
 
         <li class="action-dislike fa fa-thumbs-down" data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
 
-            <span data-count="dislike">{{ comment.dislikes|length }}</span>
+            <span data-count="dislike">{{ comment|dislikes_count }}</span>
         </li>
     {% endif %}
 
-    {% if comment.likes|length > 0 or comment.dislikes|length > 0 %}
+    {% if comment|likes_count > 0 or comment|dislikes_count > 0 %}
         {% if user|can_view_likes_details %}
             <li class="like-stats-button fa fa-list" data-toggle="modal" data-target="#popupLikeDislike-{{comment.id}}">
                 <span data-count="like"></span>
