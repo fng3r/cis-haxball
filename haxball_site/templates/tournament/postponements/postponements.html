@@ -162,7 +162,7 @@
                                     {% if postponement.teams.count > 1 %}
                                         обоюдный перенос
                                     {% else %}
-                                        перенос на команду {{ postponement.teams.0.title }}
+                                        перенос на команду {{ postponement.teams.all.0.title }}
                                     {% endif %}
                                 </p>
                             </div>

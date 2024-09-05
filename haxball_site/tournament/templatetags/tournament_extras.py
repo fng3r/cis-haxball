@@ -1079,9 +1079,7 @@ def get_league_table(league: League):
                 losses[i] = losses_count
                 draws[i] = draws_count
             table = zip(mini_table, matches_played, wins, draws, losses, scored, conceded, goal_diff, points)
-            sorted_table = sorted(table, key=lambda x: x[5], reverse=True)
-            sorted_table = sorted(sorted_table, key=lambda x: x[7], reverse=True)
-            lss = sorted(sorted_table, key=lambda x: x[8], reverse=True)
+            lss = sorted(table, key=lambda x: (x[8], x[7], x[5]), reverse=True)
             for lll in lss:
                 for h in mini_res:
                     if lll[0] == h[0]:

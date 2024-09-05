@@ -5,7 +5,8 @@ from functools import reduce
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch, Q, OuterRef, Subquery, F, FloatField
+from django.db.models.functions import Coalesce, Cast
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -403,9 +404,7 @@ class LeagueByTitleFilter(FilterSet):
         ('Высшая лига', 'Высшая лига'),
         ('Первая лига', 'Первая лига'),
         ('Вторая лига', 'Вторая лига'),
-        ('Кубок Высшей лиги – Группа', 'Кубок Высшей лиги'),
-        ('Кубок Первой лиги – Группа', 'Кубок Первой лиги'),
-        ('Кубок Второй лиги – Группа', 'Кубок Второй лиги'),
+        ('Кубок лиги – Группа', 'Кубок лиги'),
     )
 
     tournament = ChoiceFilter(
@@ -430,7 +429,7 @@ class PostponementsList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filter = LeagueByTitleFilter(
-            self.request.GET or {'tournament': 'Высшая лига'},
+            {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
             queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
         )
         leagues = filter.qs
@@ -475,14 +474,13 @@ class PostponementsList(ListView):
             teams = [Team.objects.get(pk=team_id)]
         is_emergency = type == 'emergency'
         total_slots_count = match.league.get_postponement_slots().total_count
+        tournament = request.GET.get('tournament', 'Высшая лига')
         for team in teams:
             team_postponements = team.get_postponements(leagues=[match.league])
             if team_postponements.count() + 1 > total_slots_count:
                 request.session['show_exceeded_limit_modal'] = True
-                request.session['exceeded_limit_message'] = 'Команда {} исчерпала лимит переносов'.format(team.title)
-                return redirect(
-                    reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament'])
-                )
+                request.session['exceeded_limit_message'] = f'Команда {team.title} исчерпала лимит переносов'
+                return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
         taken_by = request.user
         match_expiration_date = match.numb_tour.date_to
         if match.is_postponed:
@@ -496,7 +494,7 @@ class PostponementsList(ListView):
         )
         postponement.teams.set(teams)
 
-        return redirect(reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament']))
+        return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
 
 
 @require_POST
@@ -522,72 +520,88 @@ def halloffame(request):
 
 
 def players_halloffame():
+    players = Player.objects.select_related('team', 'name__user_profile')
+
     top_goalscorers = (
-        Player.objects.annotate(goals_count=Count('goals__match__league'))
+        players.annotate(goals_count=Count('goals__match__league'))
         .filter(goals_count__gt=0)
         .order_by('-goals_count')
     )
 
     top_assistants = (
-        Player.objects.annotate(assists_count=Count('assists__match__league'))
+        players.annotate(assists_count=Count('assists__match__league'))
         .filter(assists_count__gt=0)
         .order_by('-assists_count')
     )
 
     top_cs = (
-        Player.objects.filter(event__event=OtherEvents.CLEAN_SHEET)
+        players.filter(event__event=OtherEvents.CLEAN_SHEET)
         .annotate(cs_count=Count('event__match__league'))
         .filter(cs_count__gt=0)
         .order_by('-cs_count')
     )
 
     top_ogs = (
-        Player.objects.filter(event__event=OtherEvents.OWN_GOAL)
+        players.filter(event__event=OtherEvents.OWN_GOAL)
         .annotate(og_count=Count('event__match__league'))
         .filter(og_count__gt=0)
         .order_by('-og_count')
     )
 
     top_yellow_cards = (
-        Player.objects.filter(event__event=OtherEvents.YELLOW_CARD)
+        players.filter(event__event=OtherEvents.YELLOW_CARD)
         .annotate(yellow_cards_count=Count('event__match__league'))
         .filter(yellow_cards_count__gt=0)
         .order_by('-yellow_cards_count')
     )
 
     top_red_cards = (
-        Player.objects.filter(event__event=OtherEvents.RED_CARD)
+        players.filter(event__event=OtherEvents.RED_CARD)
         .annotate(red_cards_count=Count('event__match__league'))
         .filter(red_cards_count__gt=0)
         .order_by('-red_cards_count')
     )
 
-    player_matches = []
-    subs_in = []
-    subs_out = []
-    for player in Player.objects.all():
-        matches = (
-            Match.objects.filter(team_guest_start=player).count()
-            + Match.objects.filter(team_home_start=player).count()
-            + Match.objects.filter(
-                ~(Q(team_guest_start=player) | Q(team_home_start=player)), match_substitutions__player_in=player
-            )
-            .distinct()
-            .count()
-        )
-        if matches > 0:
-            player_matches.append([player, matches])
-        player_subs_in = Substitution.objects.filter(player_in=player).count()
-        if player_subs_in > 0:
-            subs_in.append([player, player_subs_in])
+    top_subs_in = (
+        players
+        .annotate(subs_in_count=Count('join_game__player_in'))
+        .filter(subs_in_count__gt=0)
+        .order_by('-subs_in_count')
+    )
 
-        player_subs_out = Substitution.objects.filter(player_out=player).count()
-        if player_subs_out > 0:
-            subs_out.append([player, player_subs_out])
+    top_subs_out = (
+        players
+        .annotate(subs_out_count=Count('replaced__player_out'))
+        .filter(subs_out_count__gt=0)
+        .order_by('-subs_out_count')
+    )
 
-    sorted_matches = sorted(player_matches, key=lambda x: x[1], reverse=True)
-    sorted_subs_in = sorted(subs_in, key=lambda x: x[1], reverse=True)
-    sorted_subs_out = sorted(subs_out, key=lambda x: x[1], reverse=True)
+    home_matches_subquery = (
+        Match.objects.filter(team_home_start=OuterRef('id'), is_played=True)
+        .order_by().values('team_home_start')
+        .annotate(c=Count('*')).values('c')
+    )
+    guest_matches_subquery = (
+        Match.objects.filter(team_guest_start=OuterRef('id'), is_played=True)
+        .order_by().values('team_guest_start')
+        .annotate(c=Count('*')).values('c')
+    )
+
+    sub_matches_subquery = (
+        Match.objects.filter(~(Q(team_guest_start=OuterRef('id')) | Q(team_home_start=OuterRef('id'))),
+                             match_substitutions__player_in=OuterRef('id'), is_played=True)
+        .order_by().values('match_substitutions__player_in')
+        .annotate(c=Count('*')).values('c')
+    )
+
+    top_matches = (
+        players
+        .annotate(home_matches_count=Coalesce(Subquery(home_matches_subquery), 0),
+                  guest_matches_count=Coalesce(Subquery(guest_matches_subquery), 0),
+                  sub_matches_count=Coalesce(Subquery(sub_matches_subquery), 0),
+                  matches_count=F('home_matches_count') + F('guest_matches_count') + F('sub_matches_count'))
+        .filter(matches_count__gt=0)
+        .order_by('-matches_count'))
 
     return {
         'goals': top_goalscorers,
@@ -596,9 +610,9 @@ def players_halloffame():
         'yellow_cards': top_yellow_cards,
         'red_cards': top_red_cards,
         'ogs': top_ogs,
-        'player_matches': sorted_matches,
-        'subs_in': sorted_subs_in,
-        'subs_out': sorted_subs_out,
+        'player_matches': top_matches,
+        'subs_in': top_subs_in,
+        'subs_out': top_subs_out,
     }
 
 
@@ -643,28 +657,38 @@ def teams_halloffame():
         .order_by('-red_cards_count')
     )
 
-    team_matches = []
-    team_wins = []
-    team_winrates = []
-    subs = []
-    for team in Team.objects.all():
-        matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True).count()
-        wins = Match.objects.filter(result__winner=team, is_played=True).count()
-        winrate = wins / (matches or 1) * 100
-        if matches > 0:
-            team_matches.append([team, matches])
-        if wins > 0:
-            team_wins.append([team, wins])
-        if winrate > 0:
-            team_winrates.append([team, winrate])
-        teams_subs = Substitution.objects.filter(team=team).count()
-        if teams_subs > 0:
-            subs.append([team, teams_subs])
+    top_subs = (
+        Team.objects
+        .annotate(subs_count=Count('substitutions'))
+        .filter(subs_count__gt=0)
+        .order_by('-subs_count')
+    )
 
-    sorted_matches = sorted(team_matches, key=lambda x: x[1], reverse=True)
-    sorted_wins = sorted(team_wins, key=lambda x: x[1], reverse=True)
-    sorted_winrates = sorted(team_winrates, key=lambda x: x[1], reverse=True)
-    sorted_subs = sorted(subs, key=lambda x: x[1], reverse=True)
+    home_matches_subquery = (
+        Match.objects.filter(team_home=OuterRef('id'))
+        .order_by().values('team_home')
+        .annotate(c=Count('*')).values('c')
+    )
+    guest_matches_subquery = (
+        Match.objects.filter(team_guest=OuterRef('id'))
+        .order_by().values('team_guest')
+        .annotate(c=Count('*')).values('c')
+    )
+
+    matches = (
+        Team.objects
+        .annotate(home_matches_count=Coalesce(Subquery(home_matches_subquery), 0),
+                  guest_matches_count=Coalesce(Subquery(guest_matches_subquery), 0),
+                  matches_count=F('home_matches_count') + F('guest_matches_count'))
+        .filter(matches_count__gt=0)
+        .annotate(wins_count=Count('won_matches'),
+                  winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100)
+        .order_by()
+    )
+
+    top_matches = matches.order_by('-matches_count')
+    top_wins = matches.order_by('-wins_count')
+    top_winrate = matches.filter(matches_count__gt=10).order_by('-winrate')
 
     return {
         'goals': top_goalscorers,
@@ -673,11 +697,12 @@ def teams_halloffame():
         'yellow_cards': top_yellow_cards,
         'red_cards': top_red_cards,
         'ogs': top_ogs,
-        'team_matches': sorted_matches,
-        'wins': sorted_wins,
-        'winrates': sorted_winrates,
-        'subs': sorted_subs,
+        'team_matches': top_matches,
+        'wins': top_wins,
+        'winrates': top_winrate,
+        'subs': top_subs,
     }
+
 
 
 class TeamRatingFilter(FilterSet):
