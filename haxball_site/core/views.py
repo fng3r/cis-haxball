@@ -139,59 +139,6 @@ def post_edit(request, slug, pk):
     return render(request, 'core/forum/add_post.html', {'form': form})
 
 
-# edit comment
-def comment_edit(request, pk):
-    comment = get_object_or_404(NewComment, pk=pk)
-    obj = comment.content_type.get_object_for_this_type(pk=comment.object_id)
-    if not request.user.is_superuser:
-        if request.user != comment.author:
-            return HttpResponse('Ошибка доступа')
-
-        if not can_edit(comment):
-            return HttpResponse('Время на редактирование комментария истекло')
-
-        if exceeds_edit_limit(comment):
-            return HttpResponse('Достигнут лимит на количество изменений комментария')
-
-    if request.method == 'POST':
-        form = NewCommentForm(request.POST, instance=comment)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.save()
-            return redirect(obj.get_absolute_url())
-        comment.delete()
-        return redirect(obj.get_absolute_url())
-    form = NewCommentForm(instance=comment)
-
-    return render(request, 'core/post/edit_comment.html', {'comment_form': form})
-
-
-# Удаление комментария
-def delete_comment(request, pk):
-    comment = get_object_or_404(NewComment, pk=pk)
-    obj = comment.content_object
-    if request.method == 'POST' and (
-        (request.user == comment.author and timezone.now() - comment.created < timezone.timedelta(minutes=10))
-        or request.user.is_superuser
-        or request.user == obj.name
-    ):
-        comment.delete()
-
-        comments_obj = get_comments_for_object(obj, obj.id)
-        comments = get_paginated_comments(comments_obj, 1)
-
-        context = {}
-        context['object'] = obj
-        context['page'] = 1
-        context['comments'] = comments
-        comment_form = NewCommentForm()
-        context['comment_form'] = comment_form
-
-        return render(request, 'core/include/new_comments.html#comments-container', context)
-
-    return HttpResponse('Ошибка доступа или время истекло')
-
-
 # Вьюха для фасткапов
 class FastcupView(ListView):
     try:
@@ -297,10 +244,10 @@ class ProfileDetail(DetailView):
 
 
 class AddCommentView(View):
-    model = None
-
-    def post(self, request, pk):
-        obj = self.model.objects.get(id=pk)
+    def post(self, request, ct, pk):
+        content_type = ContentType.objects.get(pk=ct)
+        model = content_type.model_class()
+        obj = model.objects.get(id=pk)
         if request.method == 'POST':
             comment_form = NewCommentForm(data=request.POST)
             new_com = comment_form.save(commit=False)
@@ -308,21 +255,74 @@ class AddCommentView(View):
                 new_com.parent_id = int(request.POST.get('parent'))
             new_com.object_id = obj.id
             new_com.author = request.user
-            new_com.content_type = ContentType.objects.get_for_model(obj)
+            new_com.content_type = content_type
             new_com.save()
 
-            comments_obj = get_comments_for_object(self.model, obj.id)
+            comments_obj = get_comments_for_object(model, obj.id)
             comments = get_paginated_comments(comments_obj, 1)
 
-            context = {}
-            context['object'] = obj
-            context['page'] = 1
-            context['comments'] = comments
-            comment_form = NewCommentForm()
-            context['comment_form'] = comment_form
+            context = {
+                'object': obj,
+                'page': 1,
+                'comments': comments,
+                'comment_form': comment_form,
+            }
 
             return render(request, 'core/include/new_comments.html#comments-container', context)
         return None
+
+
+# edit comment
+def comment_edit(request, pk):
+    comment = get_object_or_404(NewComment, pk=pk)
+    obj = comment.content_type.get_object_for_this_type(pk=comment.object_id)
+    if not request.user.is_superuser:
+        if request.user != comment.author:
+            return HttpResponse('Ошибка доступа')
+
+        if not can_edit(comment):
+            return HttpResponse('Время на редактирование комментария истекло')
+
+        if exceeds_edit_limit(comment):
+            return HttpResponse('Достигнут лимит на количество изменений комментария')
+
+    if request.method == 'POST':
+        form = NewCommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.save()
+            return redirect(obj.get_absolute_url())
+        comment.delete()
+        return redirect(obj.get_absolute_url())
+    form = NewCommentForm(instance=comment)
+
+    return render(request, 'core/post/edit_comment.html', {'comment_form': form})
+
+
+# Удаление комментария
+def delete_comment(request, pk):
+    comment = get_object_or_404(NewComment, pk=pk)
+    obj = comment.content_object
+    if request.method == 'POST' and (
+        (request.user == comment.author and timezone.now() - comment.created < timezone.timedelta(minutes=10))
+        or request.user.is_superuser
+        or request.user == obj.name
+    ):
+        comment.delete()
+
+        comments_obj = get_comments_for_object(obj, obj.id)
+        comments = get_paginated_comments(comments_obj, 1)
+
+        context = {}
+        context['object'] = obj
+        context['page'] = 1
+        context['comments'] = comments
+        comment_form = NewCommentForm()
+        context['comment_form'] = comment_form
+
+        return render(request, 'core/include/new_comments.html#comments-container', context)
+
+    return HttpResponse('Ошибка доступа или время истекло')
 
 
 class EditMyProfile(DetailView, View):

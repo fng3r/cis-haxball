@@ -1,35 +1,29 @@
 {% load static %}
 {% load user_tags %}
 
-<form id="addcomment" class="text-center"
-      {% if object|get_class == 'Profile' %}
-        hx-post="{% url 'core:add_comment_profile' object.id %}"
-      {% elif object|get_class == 'League' %}
-        hx-post="{% url 'core:add_comment_league' object.id %}"
-      {% elif object|get_class == 'Post' %}
-        hx-post="{% url 'core:add_comment_post' object.id %}"
-      {% elif object|get_class == 'Match' %}
-        hx-post="{% url 'core:add_comment_match' object.id %}"
-      {% endif %}
-      hx-trigger="submit"
-      hx-target="#comments-container"
-      hx-swap="outerHTML scroll:top"
-      hx-on::config-request="event.detail.parameters['body'] = CKEDITOR.instances['id_body'].getData()"
-      hx-on::before-request="this.style.filter = 'blur(2px)';"
-      hx-on::after-request="CKEDITOR.instances['id_body'].setData(''); this.style.filter = 'none';"
-      hx-disabled-elt="find button[type=submit]">
+{% with content_type=object|content_type %}
+  <form id="addcomment" class="text-center"
+        hx-post="{% url 'core:add_comment' content_type.pk object.id %}"
+        hx-trigger="submit"
+        hx-target="#comments-container"
+        hx-swap="outerHTML scroll:top"
+        hx-on::config-request="event.detail.parameters['body'] = CKEDITOR.instances['id_body'].getData()"
+        hx-on::before-request="this.style.filter = 'blur(2px)';"
+        hx-on::after-request="CKEDITOR.instances['id_body'].setData(''); this.style.filter = 'none';"
+        hx-disabled-elt="find button[type=submit]">
 
-  {{ comment_form.media }}
-  <input type="hidden" name="parent" id="contactparent" value="">
+    {{ comment_form.media }}
+    <input type="hidden" name="parent" id="contactparent" value="">
 
-  <div class="form-group mt-2 ml-1">
-    {{ comment_form.body }}
-  </div>
+    <div class="form-group mt-2 ml-1">
+      {{ comment_form.body }}
+    </div>
 
-  <div align="right">
-    <button type="submit" class="btn btn-primary mr-2" hx-disabled-elt="this">Отправить</button>
-  </div>
+    <div align="right">
+      <button type="submit" class="btn btn-primary mr-2" hx-disabled-elt="this">Отправить</button>
+    </div>
 
-  <img id="comments-indicator" class="htmx-indicator" src="{% static 'svg-loaders/bars.svg' %}"
-       style="position: absolute; left: 45%; top: 45%;">
-</form>
+    <img id="comments-indicator" class="htmx-indicator" src="{% static 'svg-loaders/bars.svg' %}"
+         style="position: absolute; left: 45%; top: 45%;">
+  </form>
+{% endwith %}
