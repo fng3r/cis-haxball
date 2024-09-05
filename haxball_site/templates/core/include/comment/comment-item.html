@@ -70,8 +70,13 @@
 
                 <a href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ comment.id }}">#{{ comment.id }}</a>
                 {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
-                    <a href="{% url 'core:edit_comment' comment.id %}" class="text-warning" title="Редактировать">
-                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                    <a class="text-warning" title="Редактировать"
+                       hx-trigger="click"
+                       hx-get="{% url 'core:edit_comment' comment.id %}"
+                       hx-target="#r{{ comment.id }}"
+                       hx-swap="outerHTML">
+                        <i class="fa fa-pencil" aria-hidden="true">
+                        </i>
                     </a>
                 {% endif %}
 

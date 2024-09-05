@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Max
+from django.db.models import Max, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -14,7 +14,7 @@ from django.views.generic.base import View
 from pytils.translit import slugify
 from tournament.models import Achievements, Team
 
-from .forms import EditProfileForm, NewCommentForm, PostForm
+from .forms import EditProfileForm, NewCommentForm, PostForm, EditCommentForm
 from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments
@@ -289,31 +289,73 @@ class AddCommentView(View):
         return render(request, 'core/include/new_comments.html#comments-container', context)
 
 
-# edit comment
-def comment_edit(request, pk):
-    comment = get_object_or_404(NewComment, pk=pk)
-    obj = comment.content_type.get_object_for_this_type(pk=comment.object_id)
-    if not request.user.is_superuser:
-        if request.user != comment.author:
-            return HttpResponse('Ошибка доступа')
+class EditCommentView(View):
+    def get(self, request, pk):
+        comment = get_object_or_404(NewComment, pk=pk)
+        if not request.user.is_superuser:
+            if request.user != comment.author:
+                return HttpResponse('Ошибка доступа')
 
-        if not can_edit(comment):
-            return HttpResponse('Время на редактирование комментария истекло')
+            if not can_edit(comment):
+                return HttpResponse('Время на редактирование комментария истекло')
 
-        if exceeds_edit_limit(comment):
-            return HttpResponse('Достигнут лимит на количество изменений комментария')
+            if exceeds_edit_limit(comment):
+                return HttpResponse('Достигнут лимит на количество изменений комментария')
 
-    if request.method == 'POST':
-        form = NewCommentForm(request.POST, instance=comment)
+        form = EditCommentForm({'edit_body': comment.body})
+
+        return render(
+            request,
+            'core/post/edit_comment.html',
+            {
+                'comment_form': form,
+                'comment': comment,
+            }
+        )
+
+    def post(self, request, pk):
+        comment = get_object_or_404(NewComment, pk=pk)
+        form = EditCommentForm(request.POST)
         if form.is_valid():
-            comment = form.save(commit=False)
+            comment.body = form.cleaned_data['edit_body']
             comment.save()
-            return redirect(obj.get_absolute_url())
-        comment.delete()
-        return redirect(obj.get_absolute_url())
-    form = NewCommentForm(instance=comment)
 
-    return render(request, 'core/post/edit_comment.html', {'comment_form': form})
+        return render(
+            request,
+            'core/include/comment/comment-item.html',
+            {
+                'comment': comment,
+                'object': comment.content_object
+            }
+        )
+
+
+def get_comment(request, pk):
+    prefetch_likes = Prefetch(
+        'votes', queryset=LikeDislike.objects.likes().prefetch_related('user__user_profile'), to_attr='likes'
+    )
+    prefetch_dislikes = Prefetch(
+        'votes', queryset=LikeDislike.objects.dislikes().prefetch_related('user__user_profile'), to_attr='dislikes'
+    )
+    comment = (
+        NewComment.objects
+        .select_related('author__user_profile')
+        .prefetch_related(
+            'author__user_profile__user_icon',
+            prefetch_likes,
+            prefetch_dislikes,
+        )
+        .get(pk=pk)
+    )
+
+    return render(
+        request,
+        'core/include/comment/comment-item.html',
+        {
+            'comment': comment,
+            'object': comment.content_object
+        }
+    )
 
 
 # Удаление комментария

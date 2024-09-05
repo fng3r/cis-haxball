@@ -6,7 +6,7 @@
         hx-post="{% url 'core:add_comment' content_type.pk object.id %}"
         hx-trigger="submit"
         hx-target="#comments-container"
-        hx-swap="outerHTML scroll:top"
+        hx-swap="outerHTML"
         hx-on::config-request="event.detail.parameters['body'] = CKEDITOR.instances['id_body'].getData()"
         hx-on::before-request="document.getElementById('cke_id_body').style.filter = 'blur(1px)';"
         hx-on::after-request="CKEDITOR.instances['id_body'].setData(''); document.getElementById('cke_id_body').style.filter = 'none';"
@@ -21,7 +21,7 @@
 
     <div align="right">
       <img class="htmx-indicator mr-2" height="24" src="{% static 'svg-loaders/bars.svg' %}">
-      <button type="submit" class="btn btn-primary mr-2" hx-disabled-elt="this">Отправить</button>
+      <button type="submit" class="btn btn-primary mr-2">Отправить</button>
     </div>
 
   </form>

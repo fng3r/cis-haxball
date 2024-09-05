@@ -1,41 +1,44 @@
-{% extends "core/home.html" %}
-
 {% block title %}
     {{ post.title }}
 {% endblock %}
 {% load static %}
 {% load user_tags %}
-{% block styles %}
-    {{ comment_form.media }}
-    <link rel="stylesheet" type="text/css" href="{% static "core/core.css" %}">
-    <link rel="stylesheet" type="text/css" href="{% static "ckeditor/ckeditor/plugins/spoiler/spoiler.css" %}">
 
-    <style>
-        .django-ckeditor-widget{
-            display: block !important;
-        }
-    </style>
-{% endblock %}
 
-{% block comments %}
-    <div class="mt-3">
-        <div class="card mb-2 py-2 px-1" style="border-radius: 20px">
-            <div class="ml-1">
-                <h5 class="mb-1">Изменить комменатарий</h5>
-                {% partialdef edit-comment inline=True %}
-                    <form method="POST" id="#editcomment">
-                        {% csrf_token %}
+<div class="mt-3" id="edit-comment-form-container">
+    <div class="card mb-2 py-2 px-1" style="border-radius: 20px">
+        <div class="ml-1">
+            <h5 class="mb-1">Изменить комменатарий</h5>
+            <form id="edit-comment-form"
+                  hx-target="#edit-comment-form-container"
+                  hx-swap="outerHTML"
+                  hx-indicator="#edit-comment-indicator"
+                  hx-disabled-elt="#edit-comment-form button">
 
-                        {{ comment_form.media }}
-                        {{ comment_form.body }}
-                        <div align="right">
-                            <button type="submit" class="btn btn-primary mt-2 mr-2">Отправить</button>
-                        </div>
-                    </form>
-                {% endpartialdef %}
-            </div>
+                {{ comment_form.media }}
+                <div class="form-group mt-2 ml-1">
+                    {{ comment_form.edit_body }}
+                </div>
+
+                <div align="right">
+                    <img id="edit-comment-indicator" class="htmx-indicator mr-2"
+                         src="{% static 'svg-loaders/bars.svg' %}" height="24">
+
+                    <button class="btn btn-secondary mr-2" hx-get="{% url 'core:comment' comment.id %}">
+                        Отменить
+                    </button>
+
+                    <button type="submit" class="btn btn-primary mr-2"
+                            hx-post="{% url 'core:edit_comment' comment.id %}"
+                            hx-on::config-request="event.detail.parameters['edit_body'] = CKEDITOR.instances['id_edit_body'].getData();"
+                            hx-on::before-request="document.getElementById('cke_id_edit_body').style.filter = 'blur(1px)';">
+                        Отправить
+                    </button>
+                </div>
+            </form>
+
 
         </div>
-    </div>
 
-{% endblock %}
+    </div>
+</div>

@@ -30,10 +30,11 @@ urlpatterns = [
     # Ссылка на создание нового поста на форуме
     path('forum/<slug:slug>/add_post', views.post_new, name='new_post'),
     path('comments/<int:ct>/<int:pk>', views.CommentsListView.as_view(), name='comments'),
+    path('comment/<int:pk>', views.get_comment, name='comment'),
     # Создание нового комментария
     path('add_comment/<int:ct>/<int:pk>', views.AddCommentView.as_view(), name='add_comment'),
     # Редактирование комментария
-    path('post/edit_comment/<int:pk>', views.comment_edit, name='edit_comment'),
+    path('post/edit_comment/<int:pk>', views.EditCommentView.as_view(), name='edit_comment'),
     # Удаление комментария
     path('delete_comment/<int:pk>', views.delete_comment, name='delete_comment'),
     # Редактирование поста, если создан пользователем

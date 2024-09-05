@@ -107,25 +107,25 @@ USE_DJANGO_JQUERY = True
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-if DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-            'OPTIONS': {'timeout': 30},
-        }
+# if DEBUG:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#             'OPTIONS': {'timeout': 30},
+#         }
+#     }
+# else:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST'),
-            'PORT': config('DB_PORT'),
-        }
-    }
+}
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -378,12 +378,8 @@ CKEDITOR_CONFIGS = {
                 'Redo',
             ]
         ],
-        # 'plugins': [],
-        'extraPlugins': ','.join(
-            [
-                'uploadimage',  # the upload image feature
-                # 'autoimage',
-                # your extra plugins here
+        'extraPlugins': [
+                'uploadimage',
                 'div',
                 'autolink',
                 'embedsemantic',
@@ -396,8 +392,7 @@ CKEDITOR_CONFIGS = {
                 'elementspath',
                 'youtube',
                 'html5video',
-            ]
-        ),
+        ]
     },
 }
 
