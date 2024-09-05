@@ -287,10 +287,10 @@ class Match(models.Model):
     score_guest = models.SmallIntegerField('Забито гостями', default=0)
 
     team_home_start = models.ManyToManyField(
-        Player, related_name='player_in_start_home', verbose_name='Состав хозяев', blank=True
+        Player, related_name='home_matches', verbose_name='Состав хозяев', blank=True
     )
     team_guest_start = models.ManyToManyField(
-        Player, related_name='player_in_start_guest', verbose_name='Состав Гостей', blank=True
+        Player, related_name='guest_matches', verbose_name='Состав Гостей', blank=True
     )
 
     is_played = models.BooleanField('Сыгран', default=False)
@@ -411,7 +411,8 @@ class MatchResult(models.Model):
         + 'итогового счета. Использовать только в том случае, если нужно '
         + 'вручную разметить результат (ТП/обоюдное ТП)',
     )
-    winner = models.ForeignKey(Team, verbose_name='Победитель', on_delete=models.CASCADE, null=True, blank=True)
+    winner = models.ForeignKey(Team, verbose_name='Победитель', related_name='won_matches',
+                               on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.set_manually:  # determine result automatically if it is not specified explicitly
@@ -518,7 +519,7 @@ class Substitution(models.Model):
     )
 
     team = models.ForeignKey(
-        Team, verbose_name='Замена в команде', related_name='team_substitution', null=True, on_delete=models.SET_NULL
+        Team, verbose_name='Замена в команде', related_name='substitutions', null=True, on_delete=models.SET_NULL
     )
 
     player_out = ChainedForeignKey(
