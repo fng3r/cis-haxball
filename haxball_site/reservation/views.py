@@ -1,24 +1,26 @@
 from datetime import datetime, time, timedelta
-from dbm import error
 
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
-from django_htmx.http import trigger_client_event
 
 from .models import Replay, ReservationEntry, ReservationHost
 from .templatetags.reservation_extras import teams_can_reserve
 
 
 class ReservationList(ListView):
+    template_name = 'reservation/reservation_list.html'
+
     def get(self, request, **kwargs):
-        reservations = ReservationEntry.objects.filter(match__is_played=False).order_by('-time_date')
+        reservations = ReservationEntry.objects.filter(match__is_played=False).order_by('time_date')
         active_hosts = ReservationHost.objects.filter(is_active=True)
+
+        if request.htmx:
+            self.template_name = 'reservation/reservation_list.html#content-container'
 
         return render(
             request,
-            'reservation/reservation_list.html',
+            self.template_name,
             {
                 'reservations': reservations,
                 'active_hosts': active_hosts,
@@ -39,38 +41,22 @@ class ReservationList(ListView):
 
         reserved = ReservationEntry.objects.filter(time_date__range=[prev_match_date, next_match_date], host_id=host_id)
         error_message = None
-        if reserved.count() == 0:
+        if not reserved.exists():
             ReservationEntry.objects.create(
                 author=request.user, time_date=match_date, match_id=match_id, host_id=host_id
             )
         else:
-            error_message = 'Выбранное время занято!!'
+            error_message = 'Выбранное время занято!'
 
-        response = render(
+        return render(
             request,
-            'reservation/reservation_list.html#reservations-table',
+            'reservation/reservation_list.html#content-container',
             {
-                'reservations': ReservationEntry.objects.filter(match__is_played=False).order_by('-time_date'),
+                'reservations': ReservationEntry.objects.filter(match__is_played=False).order_by('time_date'),
                 'active_hosts': ReservationHost.objects.filter(is_active=True),
                 'error_message': error_message,
             },
         )
-
-        if error_message:
-            return response
-
-        return trigger_client_event(
-            response,
-            'reservationsChanged'
-        )
-
-
-def get_reservation_form(request):
-    return render(
-        request,
-        'reservation/reservation_list.html#reservations-form',
-        {},
-    )
 
 
 class ReplaysList(ListView):
@@ -91,20 +77,12 @@ def delete_entry(request, pk):
     else:
         error_message = 'Ошибка доступа'
 
-    response = render(
+    return render(
         request,
-        'reservation/reservation_list.html#reservations-table',
+        'reservation/reservation_list.html#content-container',
         {
-            'reservations': ReservationEntry.objects.filter(match__is_played=False).order_by('-time_date'),
+            'reservations': ReservationEntry.objects.filter(match__is_played=False).order_by('time_date'),
             'active_hosts': ReservationHost.objects.filter(is_active=True),
             'error_message': error_message,
         },
-    )
-
-    if error_message:
-        return response
-
-    return trigger_client_event(
-        response,
-        'reservationsChanged'
     )
