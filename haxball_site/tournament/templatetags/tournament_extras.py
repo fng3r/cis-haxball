@@ -1222,21 +1222,22 @@ def can_be_cancelled_by_user(postponement: Postponement, user: User):
 
 
 @register.inclusion_tag('tournament/postponements/postponements_form.html')
-def postponements_form(user: User, leagues: QuerySet):
+def postponements_form(user: User, leagues: QuerySet, tournament: str):
     teams = get_user_teams(user)
 
-    # Выбираем все матчи игрока, которые уже можно играть, но котоыре еще не были сыграны
+    # Выбираем все матчи игрока, которые уже можно играть, но которые еще не были сыграны
     matches = Match.objects.filter(
         Q(team_home__in=teams) | Q(team_guest__in=teams),
         league__in=leagues,
         is_played=False,
         numb_tour__date_from__lte=timezone.now().date(),
     )
-    available_matches = [match for match in matches.all() if match.can_be_postponed]
+    available_matches = [match for match in matches if match.can_be_postponed]
 
     return {
         'matches': available_matches,
         'user': user,
+        'tournament': tournament
     }
 
 

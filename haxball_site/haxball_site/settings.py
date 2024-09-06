@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     'mathfilters',
     'debug_toolbar',
     'django_extensions',
-    'django_htmx'
+    'django_htmx',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

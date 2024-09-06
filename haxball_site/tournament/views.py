@@ -423,45 +423,36 @@ class PostponementsList(ListView):
         .prefetch_related('teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon')
         .order_by('-taken_at')
     )
-    context_object_name = 'all_postponements'
     template_name = 'tournament/postponements/postponements.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get(self, request, **kwargs):
         filter = LeagueByTitleFilter(
             {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
             queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
         )
         leagues = filter.qs
         teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
-        postponements = context['all_postponements'].filter(match__league__in=leagues)
+        postponements = self.queryset.filter(match__league__in=leagues)
 
         paginator = Paginator(postponements, 20)
         page = self.request.GET.get('page')
 
-        try:
-            postponements = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer deliver the first page
-            postponements = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range deliver last page of results
-            postponements = paginator.page(paginator.num_pages)
+        postponements = paginator.get_page(page)
 
-        context['postponements'] = postponements
-        context['teams'] = teams
-        context['filter'] = filter
-        if self.request.session.get('show_exceeded_limit_modal'):
-            context['show_exceeded_limit_modal'] = True
-            context['exceeded_limit_message'] = self.request.session.get('exceeded_limit_message')
-            self.request.session['show_exceeded_limit_modal'] = False
-            self.request.session['exceeded_limit_message'] = ''
+        context = {
+            'postponements': postponements,
+            'teams': teams,
+            'filter': filter,
+            'error_message': request.GET.get('error_message'),
+        }
 
-        return context
+        if request.htmx:
+            return render(request, 'tournament/postponements/postponements.html#content-container', context)
+
+        return render(self.request, self.template_name, context)
 
     def post(self, request):
         data = request.POST
-
         match_id = int(data['match_id'])
         match = Match.objects.get(pk=match_id)
         team = data['team']
@@ -473,14 +464,19 @@ class PostponementsList(ListView):
             team_id = int(team)
             teams = [Team.objects.get(pk=team_id)]
         is_emergency = type == 'emergency'
-        total_slots_count = match.league.get_postponement_slots().total_count
-        tournament = request.GET.get('tournament', 'Высшая лига')
+        slots = match.league.get_postponement_slots()
+        tournament = data.get('tournament')
         for team in teams:
-            team_postponements = team.get_postponements(leagues=[match.league])
-            if team_postponements.count() + 1 > total_slots_count:
-                request.session['show_exceeded_limit_modal'] = True
-                request.session['exceeded_limit_message'] = f'Команда {team.title} исчерпала лимит переносов'
-                return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
+            all_postponements = team.get_postponements(leagues=[match.league])
+            emergency_postponements = all_postponements.filter(is_emergency=True)
+            if (all_postponements.count() + 1 > slots.total_count or
+                    (is_emergency and emergency_postponements.count() + 1 > slots.emergency_count + slots.extra_count)):
+                exceeded_limit_message = f'Команда {team.title} исчерпала лимит переносов'
+                return redirect(
+                    reverse('tournament:postponements') +
+                    f'?tournament={tournament}&error_message={exceeded_limit_message}'
+                )
+
         taken_by = request.user
         match_expiration_date = match.numb_tour.date_to
         if match.is_postponed:
@@ -497,8 +493,35 @@ class PostponementsList(ListView):
         return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
 
 
+class PostponementsEvents(ListView):
+    def get(self, request, **kwargs):
+        filter = LeagueByTitleFilter(
+            {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
+            queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
+        )
+        leagues = filter.qs
+        all_postponements = (
+            Postponement.objects.filter(match__league__championship__is_active=True, match__league__in=leagues)
+            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
+            .prefetch_related('teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon')
+            .order_by('-taken_at')
+        )
+
+        paginator = Paginator(all_postponements, 20)
+        page = self.request.GET.get('page')
+        postponements = paginator.get_page(page)
+
+        context = {
+            'postponements': postponements,
+            'filter': filter,
+        }
+
+        return render(request, 'tournament/postponements/postponements.html#postponements-events', context)
+
+
 @require_POST
 def cancel_postponement(request, pk):
+    data = request.POST
     postponement = get_object_or_404(Postponement, pk=pk)
     user_teams = get_user_teams(request.user)
 
@@ -507,9 +530,12 @@ def cancel_postponement(request, pk):
         postponement.cancelled_by = request.user
         postponement.save()
 
-        return redirect(reverse('tournament:postponements') + '?tournament={}'.format(request.GET['tournament']))
+        return redirect(reverse('tournament:postponements') + f'?tournament={data["tournament"]}')
 
-    return HttpResponse('Ошибка доступа')
+    error_message = 'Ошибка доступа'
+    return redirect(
+        reverse('tournament:postponements') + f'?tournament={data["tournament"]}&error_message={error_message}'
+    )
 
 
 def halloffame(request):

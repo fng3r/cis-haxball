@@ -14,7 +14,7 @@ from .views import (
     edit_team_profile,
     halloffame,
     remove_entry,
-    update_entry,
+    update_entry, PostponementsEvents,
 )
 
 app_name = 'tournament'
@@ -23,6 +23,7 @@ urlpatterns = [
     # Зал славы
     path('hall_of_fame', halloffame, name='hall_of_fame'),
     path('postponements', PostponementsList.as_view(), name='postponements'),
+    path('postponements/events', PostponementsEvents.as_view(), name='postponements_events'),
     path('postponements/<int:pk>/cancel', cancel_postponement, name='cancel_postponement'),
     path('team_rating', TeamRatingView.as_view(), name='team_rating'),
     path('free_agents/', FreeAgentList.as_view(), name='free_agent'),
