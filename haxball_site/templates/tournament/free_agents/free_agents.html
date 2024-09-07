@@ -1,0 +1,139 @@
+{% extends "core/home.html" %}
+{% load static %}
+{% load tournament_extras %}
+
+{% block scripts %}
+    <script>
+        function myFunction(Element) {
+            navigator.clipboard.writeText(Element.title);
+            alert("Скопировано " + Element.title);
+        }
+    </script>
+{% endblock %}
+{% block title %}Чемпионат | Свободные агенты — CIS-HAXBALL{% endblock %}
+{% block profile_of_user %}
+    <link rel="stylesheet" type="text/css" href="{% static "tournament/free_agent/free_agent_list.css" %}">
+
+    {% partialdef content-container inline=True %}
+        <div id="content-container">
+            <div class="card mb-2 mt-2" style="border-radius: 10px">
+                <h2 class="text-center my-2">
+                    <i class="fa fa-search-plus text-success" aria-hidden="true"></i>
+                    Поиск команды/игроков
+                </h2>
+
+                {% include 'alerts.html' %}
+
+                <div class="container-fluid p-0 mx-0">
+                    <div class="table-fix table-responsive">
+                        <table class="table table-hover" style="max-width: 100%">
+                            <thead class="thead-dark py-2 text-center">
+                                <tr>
+                                    <th scope="col">Игрок</th>
+                                    <th scope="col">Позиция</th>
+                                    <th scope="col">Контакты</th>
+                                    <th scope="col">Комментарий</th>
+                                    <th scope="col">Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% include 'tournament/free_agents/partials/free_agents_list.html' %}
+                            </tbody>
+                        </table>
+                        <img id="scroll-indicator" class="htmx-indicator"
+                             src="{% static 'img/svg-loaders/bars.svg' %}" height="32"
+                             style="position: absolute; left: 50%; bottom: 0;">
+                    </div>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+
+                {% if not user|user_in_agents and user|can_add_entry %}
+                    <div class="card bg-c-lite-unknown mb-2" style="border-radius: 30px">
+                        <form method="POST" class="row px-3 py-2"
+                              hx-post="{% url 'tournament:free_agents' %}"
+                              hx-trigger="submit"
+                              hx-target="#content-container"
+                              hx-swap="outerHTML"
+                              hx-disabled-elt="find button">
+                            <div class="form-group col-3">
+                                <label for="pos_main" class="text-center h6 mb-1">Позиция</label>
+                                <select id="pos_main" class="form-control" name="position_main">
+                                    <option selected value="Любая">Любая</option>
+                                    <option value="Нападающий">Нападающий</option>
+                                    <option value="Опорник">Опорник</option>
+                                    <option value="Вратарь">Вратарь</option>
+                                    <option value="Верхний нападающий">Верхний нападающий</option>
+                                    <option value="Нижний нападающий">Нижний нападающий</option>
+                                    <option value="Нападающий/опорник">Нападающий/Опорник</option>
+                                    <option value="Нападающий/вратарь">Нападающий/Вратарь</option>
+                                    <option value="Задняя линия">Задняя линия</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group col-9">
+                                <label for="description" class="mb-1 h6">Краткий комментарий</label>
+                                <input id="description" type="text" class="form-control" name="description">
+                            </div>
+
+                            <div class="d-flex justify-content-end w-100">
+                                <img class="htmx-indicator mr-2 mt-1"
+                                     src="{% static 'img/svg-loaders/bars-white.svg' %}" height="24">
+                                <button type="submit" class="btn btn-primary mr-3 mt-n1">Оставить заявку</button>
+                            </div>
+                        </form>
+                    </div>
+                {% elif user|user_in_agents %}
+                    <div class="w-100 d-inline-flex justify-content-end">
+                        <img id="free-agents-actions-indicator" class="htmx-indicator mt-3 mr-2"
+                             src="{% static 'img/svg-loaders/bars-white.svg' %}" height="24">
+
+                        <div class="d-inline-flex justify-content-end bg-c-lite-unknown py-2 px-3"
+                             style="border-radius: 30px"
+                             hx-indicator="#free-agents-actions-indicator">
+
+                            <form hx-post="{% url 'tournament:remove_entry' user.user_free_agent.id %}"
+                                  hx-trigger="submit"
+                                  hx-target="#content-container"
+                                  hx-swap="outerHTML"
+                                  hx-disabled-elt="find button">
+                                <button type="submit" class="btn btn-primary mr-1">
+                                    <i class="fa fa-times text-danger" aria-hidden="true"></i>
+                                    Снять заявку
+                                </button>
+                            </form>
+
+                            <form hx-post="{% url 'tournament:update_entry' user.user_free_agent.id %}"
+                                  hx-trigger="submit"
+                                  hx-target="#content-container"
+                                  hx-swap="outerHTML"
+                                  hx-disabled-elt="find button">
+                                <button type="submit" class="btn btn-success ml-1"
+                                        {% if not user|can_add_entry %}
+                                            disabled
+                                            title="Сможете через {{ user|date_can|timeuntil }}"
+                                            style="cursor: pointer"
+                                        {% endif %}
+                                >
+                                    <i class="fa fa-arrow-up text-warning" aria-hidden="true"
+                                       {% if not user|can_add_entry %}onclick="alert('Вы не можете поднять заявку, т.к. только' +
+                                                                                   ' недавно создали или подняли заявку. Следущее обновление возможно ' +
+                                                                                   'через {{ user|date_can|timeuntil }}. Если вы снимете свою заявку, то создать новую будет возможно через это же время.');"
+                                       {% endif %}>
+                                    </i>
+                                    Поднять заявку
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="w-100 text-center bg-c-lite-unknown p-3" style="border-radius: 30px">
+                        <h6 class="mb-0">Вы сможете оставить заявку через {{ user|date_can|timeuntil }}</h6>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endpartialdef content-container %}
+
+{% endblock %}

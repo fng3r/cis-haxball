@@ -127,32 +127,38 @@ class TransfersList(ListView):
 class FreeAgentList(ListView):
     queryset = FreeAgent.objects.select_related('player__user_profile').filter(is_active=True).order_by('-created')
     context_object_name = 'agents'
-    template_name = 'tournament/free_agent/free_agents_list.html'
+    template_name = 'tournament/free_agents/free_agents.html'
+    paginate_by = 20
+
+    def get(self, request, **kwargs):
+        paginator = Paginator(self.queryset, self.paginate_by)
+        page = request.GET.get('page', 1)
+        free_agents = paginator.get_page(page)
+        context = {'agents': free_agents}
+
+        if request.htmx:
+            return render(request, 'tournament/free_agents/partials/free_agents_list.html', context)
+
+        return render(request, self.template_name, context)
 
     def post(self, request):
-        if request.method == 'POST':
-            try:
-                fa = FreeAgent.objects.get(player=request.user)
-                fa_form = FreeAgentForm(data=request.POST, instance=fa)
-                if fa_form.is_valid():
-                    fa = fa_form.save(commit=False)
-                    fa.created = timezone.now()
-                    fa.is_active = True
-                    fa.save()
+        free_agent = FreeAgent.objects.filter(player=request.user).first()
+        if free_agent:
+            fa_form = FreeAgentForm(data=request.POST, instance=free_agent)
+        else:
+            fa_form = FreeAgentForm(data=request.POST)
+        if fa_form.is_valid():
+            free_agent = fa_form.save(commit=False)
+            free_agent.created = timezone.now()
+            free_agent.is_active = True
+            free_agent.player = request.user
+            free_agent.save()
 
-                    return redirect('tournament:free_agent')
-            except:
-                fa_form = FreeAgentForm(data=request.POST)
-                if fa_form.is_valid():
-                    fa = fa_form.save(commit=False)
-                    fa.player = request.user
-                    fa.created = timezone.now()
-                    fa.is_active = True
-                    fa.save()
+        paginator = Paginator(self.queryset, self.paginate_by)
+        free_agents = paginator.get_page(1)
+        context = {'agents': free_agents}
 
-                    return redirect('tournament:free_agent')
-
-        return redirect('tournament:free_agent')
+        return render(request, 'tournament/free_agents/free_agents.html#content-container', context)
 
 
 def remove_entry(request, pk):
@@ -162,11 +168,15 @@ def remove_entry(request, pk):
             free_agent.is_active = False
             free_agent.deleted = timezone.now()
             free_agent.save()
-            return redirect('tournament:free_agent')
+        else:
+            messages.error(request, 'Ошибка доступа')
 
-        return HttpResponse('Ошибка доступа')
+    all_agents = FreeAgent.objects.select_related('player__user_profile').filter(is_active=True).order_by('-created')
+    paginator = Paginator(all_agents, 20)
+    free_agents = paginator.get_page(1)
+    context = {'agents': free_agents}
 
-    return redirect('tournament:free_agent')
+    return render(request, 'tournament/free_agents/free_agents.html#content-container', context)
 
 
 def update_entry(request, pk):
@@ -175,11 +185,15 @@ def update_entry(request, pk):
         if request.user == free_agent.player:
             free_agent.created = timezone.now()
             free_agent.save()
-            return redirect('tournament:free_agent')
+        else:
+            messages.error(request, 'Ошибка доступа')
 
-        return HttpResponse('Ошибка доступа')
+    all_agents = FreeAgent.objects.select_related('player__user_profile').filter(is_active=True).order_by('-created')
+    paginator = Paginator(all_agents, 20)
+    free_agents = paginator.get_page(1)
+    context = {'agents': free_agents}
 
-    return redirect('tournament:free_agent')
+    return render(request, 'tournament/free_agents/free_agents.html#content-container', context)
 
 
 def edit_team_profile(request, slug):
