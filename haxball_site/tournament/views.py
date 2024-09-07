@@ -756,7 +756,6 @@ def teams_halloffame():
     }
 
 
-
 class TeamRatingFilter(FilterSet):
     version = ModelChoiceFilter(
         queryset=RatingVersion.objects.select_related('related_season').all(), label='Версия', empty_label=None
@@ -769,14 +768,12 @@ class TeamRatingFilter(FilterSet):
 
 class TeamRatingView(ListView):
     queryset = TeamRating.objects.select_related('team').all()
-    context_object_name = 'team_rating'
     template_name = 'tournament/team_rating.html'
     latest_rating_version = RatingVersion.objects.order_by('-number').first()
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        params = self.request.GET or {'version': self.latest_rating_version.number}
-        context['filter'] = TeamRatingFilter(params, queryset=self.queryset)
+    def get(self, request,  **kwargs):
+        params = request.GET or {'version': self.latest_rating_version.number}
+        filter = TeamRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
         source_season = (
             RatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
@@ -791,13 +788,21 @@ class TeamRatingView(ListView):
         seasons_weights = self.get_seasons_weights(source_season, earliest_season_taken_into_account)
         seasons = list(sorted(seasons_weights, key=lambda s: s.number))
         weighted_seasons_rating = self.get_weighted_seasons_rating(seasons, seasons_weights)
-        context['seasons_rating'] = weighted_seasons_rating
-        context['seasons_weights'] = seasons_weights
 
         previous_rating_version = TeamRating.objects.select_related('team').filter(version__number=selected_version - 1)
-        context['previous_rating'] = {item.team: item.rank for item in previous_rating_version.all()}
+        previous_rating = {item.team: item.rank for item in previous_rating_version.all()}
 
-        return context
+        context = {
+            'seasons_rating': weighted_seasons_rating,
+            'seasons_weights': seasons_weights,
+            'previous_rating': previous_rating,
+            'filter': filter,
+        }
+
+        if request.htmx:
+            return render(request, 'tournament/partials/team_rating_table.html', context)
+
+        return render(request, self.template_name, context)
 
     @staticmethod
     def get_seasons_weights(source_season, earliest_season):
