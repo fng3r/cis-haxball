@@ -114,14 +114,19 @@ class TransfersList(ListView):
         .filter(date_join__gte=from_date, is_technical=False)
         .order_by('-date_join', '-id')
     )
-    context_object_name = 'transfers'
-    template_name = 'tournament/transfers/transfers_list.html'
+    template_name = 'tournament/transfers/transfers.html'
+    paginate_by = 25
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['filter'] = TransferFilter(self.request.GET, queryset=self.queryset)
+    def get(self, request, **kwargs):
+        filter = TransferFilter(request.GET, queryset=self.queryset)
+        paginator = Paginator(filter.qs, self.paginate_by)
+        page = request.GET.get('page')
+        transfers = paginator.get_page(page)
 
-        return context
+        if request.htmx:
+            return render(request, 'tournament/transfers/partials/transfers_list.html', {'transfers': transfers})
+
+        return render(request, self.template_name, {'transfers': transfers, 'filter': filter})
 
 
 class FreeAgentList(ListView):
