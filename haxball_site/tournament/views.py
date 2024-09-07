@@ -77,14 +77,23 @@ class DisqualificationsList(ListView):
         .filter(match__league__championship__number__gt=14)
         .order_by('-created')
     )
-    context_object_name = 'disqualifications'
-    template_name = 'tournament/disqualification/disqualifications_list.html'
+    template_name = 'tournament/disqualification/disqualifications.html'
+    paginate_by = 25
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['filter'] = DisqualificationFilter(self.request.GET, queryset=self.queryset)
+    def get(self, request, **kwargs):
+        filter = DisqualificationFilter(request.GET, queryset=self.queryset)
+        paginator = Paginator(filter.qs, self.paginate_by)
+        page = request.GET.get('page')
+        disqualifications = paginator.get_page(page)
 
-        return context
+        if request.htmx:
+            return render(
+                request,
+                'tournament/disqualification/partials/disqualifications_list.html',
+                {'disqualifications': disqualifications}
+            )
+
+        return render(request, self.template_name, {'disqualifications': disqualifications, 'filter': filter})
 
 
 class TransferFilter(DefaultFilterSet):
@@ -124,7 +133,11 @@ class TransfersList(ListView):
         transfers = paginator.get_page(page)
 
         if request.htmx:
-            return render(request, 'tournament/transfers/partials/transfers_list.html', {'transfers': transfers})
+            return render(
+                request,
+                'tournament/transfers/partials/transfers_list.html',
+                {'transfers': transfers}
+            )
 
         return render(request, self.template_name, {'transfers': transfers, 'filter': filter})
 
