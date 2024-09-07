@@ -4,9 +4,10 @@ from functools import reduce
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Count, Prefetch, Q, OuterRef, Subquery, F, FloatField
-from django.db.models.functions import Coalesce, Cast
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Count, F, FloatField, OuterRef, Prefetch, Q, Subquery
+from django.db.models.functions import Cast, Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -28,7 +29,6 @@ from .models import (
     RatingVersion,
     Season,
     SeasonTeamRating,
-    Substitution,
     Team,
     TeamRating,
 )
@@ -443,7 +443,6 @@ class PostponementsList(ListView):
             'postponements': postponements,
             'teams': teams,
             'filter': filter,
-            'error_message': request.GET.get('error_message'),
         }
 
         if request.htmx:
@@ -471,11 +470,9 @@ class PostponementsList(ListView):
             emergency_postponements = all_postponements.filter(is_emergency=True)
             if (all_postponements.count() + 1 > slots.total_count or
                     (is_emergency and emergency_postponements.count() + 1 > slots.emergency_count + slots.extra_count)):
-                exceeded_limit_message = f'Команда {team.title} исчерпала лимит переносов'
-                return redirect(
-                    reverse('tournament:postponements') +
-                    f'?tournament={tournament}&error_message={exceeded_limit_message}'
-                )
+                messages.error(request, f'Команда {team.title} исчерпала лимит переносов')
+
+                return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
 
         taken_by = request.user
         match_expiration_date = match.numb_tour.date_to
@@ -529,13 +526,10 @@ def cancel_postponement(request, pk):
         postponement.cancelled_at = timezone.now()
         postponement.cancelled_by = request.user
         postponement.save()
+    else:
+        messages.error(request, 'Ошибка доступа')
 
-        return redirect(reverse('tournament:postponements') + f'?tournament={data["tournament"]}')
-
-    error_message = 'Ошибка доступа'
-    return redirect(
-        reverse('tournament:postponements') + f'?tournament={data["tournament"]}&error_message={error_message}'
-    )
+    return redirect(reverse('tournament:postponements') + f'?tournament={data["tournament"]}')
 
 
 def halloffame(request):

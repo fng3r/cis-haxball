@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 from decouple import config
+from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
@@ -398,3 +399,14 @@ CKEDITOR_CONFIGS = {
 }
 
 INTERNAL_IPS = config('INTERNAL_IPS', cast=str.split)
+
+# This sets the mapping of message level to message tag, which is typically rendered as a CSS class in HTML.
+# https://docs.djangoproject.com/en/4.2/ref/settings/#message-tags
+# Customize tags with bootstrap alert classes
+MESSAGE_TAGS = {
+    messages.DEBUG: "alert-secondary",
+    messages.INFO: "alert-primary",
+    messages.SUCCESS: "alert-success",
+    messages.WARNING: "alert-warning",
+    messages.ERROR: "alert-danger",
+}

@@ -18,14 +18,8 @@
                 </h2>
 
                 <div id="reservations-table" class="container-fluid p-0 mx-0">
-                    {% if error_message %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <div class="font-weight-bold">{{ error_message }}</div>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    {% endif %}
+                    {% include 'alerts.html' %}
+
                     <div class="table-fix table-responsive">
                         <table class="table" style="max-width: 100%">
                             <thead class="thead-dark py-2 text-center">
