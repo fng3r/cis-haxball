@@ -665,12 +665,12 @@ def teams_halloffame():
     )
 
     home_matches_subquery = (
-        Match.objects.filter(team_home=OuterRef('id'))
+        Match.objects.filter(team_home=OuterRef('id'), is_played=True)
         .order_by().values('team_home')
         .annotate(c=Count('*')).values('c')
     )
     guest_matches_subquery = (
-        Match.objects.filter(team_guest=OuterRef('id'))
+        Match.objects.filter(team_guest=OuterRef('id'), is_played=True)
         .order_by().values('team_guest')
         .annotate(c=Count('*')).values('c')
     )
