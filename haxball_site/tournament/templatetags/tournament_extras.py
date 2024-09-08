@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, QuerySet, Subquery
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from markdown.extensions.smarty import substitutions
 
 from ..models import (
     Disqualification,
@@ -437,20 +438,46 @@ def team_statistics(team: Team):
         Substitution.objects.filter(team=team)
         .values(player=F('player_in'))
         .distinct()
-        .annotate(matches=Count('player_in'))
+        .annotate(matches=Count('match', distinct=True))
         .order_by('-matches')
     )
 
     all_team_matches = list(home_matches) + list(guest_matches) + list(sub_matches)
+
+    # find all matches where player was in start but then also appeared on the field as a substitute
+    # to eliminate duplicates while calculating total matches count per player
+    all_team_players = set((player_matches['player'] for player_matches in all_team_matches))
+    dup_matches_subqery = (
+        Match.objects
+        .filter(
+            Q(team_home_start=OuterRef('id')) | Q(team_guest_start=OuterRef('id')),
+            match_substitutions__player_in=OuterRef('id'),
+            is_played=True
+        )
+        .order_by()
+        .values('match_substitutions__player_in')
+        .annotate(c=Count('id', distinct=True))
+        .values('c')
+    )
+    dup_matches = (
+        Player.objects.filter(pk__in=all_team_players)
+        .values(player=F('id'))
+        .annotate(matches=Coalesce(Subquery(dup_matches_subqery), 0))
+    )
+    dup_matches_dict = {item['player']: item['matches'] for item in dup_matches}
+
     matches_by_player = defaultdict(int)
     for player_matches in all_team_matches:
         matches_by_player[player_matches['player']] += player_matches['matches']
+    for player in all_team_players:
+        if player in dup_matches_dict:
+            matches_by_player[player] -= dup_matches_dict[player]
 
-    (greatest_player, greatest_sub_in) = (None, None)
+    greatest_player = None
     if len(all_team_matches) > 0:
         greatest_player = sorted(matches_by_player.items(), key=lambda kv: kv[1], reverse=True)[0]
-    if len(sub_matches) > 0:
-        greatest_sub_in = sorted(sub_matches, key=lambda x: x['matches'], reverse=True)[0]
+
+    greatest_sub_in = sub_matches.first()
 
     other_stats['first_match'] = first_match
     other_stats['biggest_home_win'] = biggest_home_win
@@ -1248,7 +1275,6 @@ def get_user_teams(user: User):
     try:
         player = user.user_player
     except Exception as e:
-        print(e)
         return []
     teams = []
     if player.role == Player.CAPTAIN or player.role == Player.ASSISTENT:
