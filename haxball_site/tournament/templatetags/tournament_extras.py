@@ -217,32 +217,33 @@ def team_statistics(team: Team):
         league = match.league
         season = league.championship
 
-        stats_by_season[season][league][0] += 1
-        stats_by_season[season][league][1] = stats_by_season[season][league][1]
-        stats_by_season[season][league][2] = stats_by_season[season][league][2]
-        stats_by_season[season][league][3] = stats_by_season[season][league][3]
+        stats_by_league = stats_by_season[season][league]
+        stats_by_league['matches'] += 1
+        stats_by_league['wins'] = stats_by_league['wins']
+        stats_by_league['draws'] = stats_by_league['draws']
+        stats_by_league['losses'] = stats_by_league['losses']
         if match.winner == team:
-            stats_by_season[season][league][1] += 1
+            stats_by_league['wins'] += 1
         elif match.result == MatchResult.DRAW:
-            stats_by_season[season][league][2] += 1
+            stats_by_league['draws'] += 1
         else:
-            stats_by_season[season][league][3] += 1
-        stats_by_season[season][league][4] = 0
-        stats_by_season[season][league][5] += len(match.goals)
-        stats_by_season[season][league][6] += len(match.conceded_goals)
-        stats_by_season[season][league][7] += len(match.assists)
-        stats_by_season[season][league][8] += len(match.cs)
-        stats_by_season[season][league][9] += len(match.subs)
-        stats_by_season[season][league][10] += len(match.ogs)
-        stats_by_season[season][league][11] += len(match.yellow_cards)
-        stats_by_season[season][league][12] += len(match.red_cards)
+            stats_by_league['losses'] += 1
+        stats_by_league['winrate'] = 0
+        stats_by_league['goals'] += len(match.goals)
+        stats_by_league['conceded_goals'] += len(match.conceded_goals)
+        stats_by_league['assists'] += len(match.assists)
+        stats_by_league['cs'] += len(match.cs)
+        stats_by_league['subs'] += len(match.subs)
+        stats_by_league['ogs'] += len(match.ogs)
+        stats_by_league['yellow_cards'] += len(match.yellow_cards)
+        stats_by_league['red_cards'] += len(match.red_cards)
 
     for season in stats_by_season:
         for league in stats_by_season[season]:
             league_stats = stats_by_season[season][league]
-            league_matches = league_stats[0]
-            league_wins = league_stats[1]
-            league_stats[4] = float(league_wins) / (league_matches or 1) * 100
+            league_matches = league_stats['matches']
+            league_wins = league_stats['wins']
+            league_stats['winrate'] = float(league_wins) / (league_matches or 1) * 100
 
     all_wins = Match.objects.filter(Q(team_home=team) | Q(team_guest=team), result__winner=team, is_played=True)
     all_draws = Match.objects.filter(
@@ -321,19 +322,20 @@ def team_statistics(team: Team):
         for season in stats_by_season:
             for league in stats_by_season[season]:
                 league_stats = stats_by_season[season][league]
-                league_matches_count = league_stats[0]
+                league_matches_count = league_stats['matches']
                 if league_matches_count == 0:
                     continue
 
-                extra_stats_by_season[season][league][0] = league_stats[0]
-                extra_stats_by_season[season][league][5] = league_stats[5] / league_matches_count
-                extra_stats_by_season[season][league][6] = league_stats[6] / league_matches_count
-                extra_stats_by_season[season][league][7] = league_stats[7] / league_matches_count
-                extra_stats_by_season[season][league][8] = league_stats[8] / league_matches_count
-                extra_stats_by_season[season][league][9] = league_stats[9] / league_matches_count
-                extra_stats_by_season[season][league][10] = league_stats[10] / league_matches_count
-                extra_stats_by_season[season][league][11] = league_stats[11] / league_matches_count
-                extra_stats_by_season[season][league][12] = league_stats[12] / league_matches_count
+                extra_stats_by_league = extra_stats_by_season[season][league]
+                extra_stats_by_league['matches'] = league_stats['matches']
+                extra_stats_by_league['goals'] = league_stats['goals'] / league_matches_count
+                extra_stats_by_league['conceded_goals'] = league_stats['conceded_goals'] / league_matches_count
+                extra_stats_by_league['assists'] = league_stats['assists'] / league_matches_count
+                extra_stats_by_league['cs'] = league_stats['cs'] / league_matches_count
+                extra_stats_by_league['subs'] = league_stats['subs'] / league_matches_count
+                extra_stats_by_league['ogs'] = league_stats['ogs'] / league_matches_count
+                extra_stats_by_league['yellow_cards'] = league_stats['yellow_cards'] / league_matches_count
+                extra_stats_by_league['red_cards'] = league_stats['red_cards'] / league_matches_count
 
     other_stats = {}
 
@@ -580,16 +582,17 @@ def player_detailed_statistics(user: User):
         league = match.league
         season = league.championship
 
-        stats_by_season[season][team][league][0] += 1
-        stats_by_season[season][team][league][1] += len(match.goals)
-        stats_by_season[season][team][league][2] += len(match.assists)
-        stats_by_season[season][team][league][3] += len(match.goals) + len(match.assists)
-        stats_by_season[season][team][league][4] += len(match.cs)
-        stats_by_season[season][team][league][5] += len(match.subs_out)
-        stats_by_season[season][team][league][6] += len(match.subs_in)
-        stats_by_season[season][team][league][7] += len(match.ogs)
-        stats_by_season[season][team][league][8] += len(match.yellow_cards)
-        stats_by_season[season][team][league][9] += len(match.red_cards)
+        stats_by_league = stats_by_season[season][team][league]
+        stats_by_league['matches'] += 1
+        stats_by_league['goals'] += len(match.goals)
+        stats_by_league['assists'] += len(match.assists)
+        stats_by_league['goals_assists'] += len(match.goals) + len(match.assists)
+        stats_by_league['cs'] += len(match.cs)
+        stats_by_league['subs_out'] += len(match.subs_out)
+        stats_by_league['subs_in'] += len(match.subs_in)
+        stats_by_league['ogs'] += len(match.ogs)
+        stats_by_league['yellow_cards'] += len(match.yellow_cards)
+        stats_by_league['red_cards'] += len(match.red_cards)
 
     all_goals = Goal.objects.filter(author=player, match__is_played=True)
     all_assists = Goal.objects.filter(assistent=player, match__is_played=True)
@@ -653,20 +656,21 @@ def player_detailed_statistics(user: User):
             for team in stats_by_season[season]:
                 for league in stats_by_season[season][team]:
                     league_stats = stats_by_season[season][team][league]
-                    league_matches_count = league_stats[0]
+                    league_matches_count = league_stats['matches']
                     if league_matches_count == 0:
                         continue
 
-                    extra_stats_by_season[season][team][league][0] = league_stats[0]
-                    extra_stats_by_season[season][team][league][1] = league_stats[1] / league_matches_count
-                    extra_stats_by_season[season][team][league][2] = league_stats[2] / league_matches_count
-                    extra_stats_by_season[season][team][league][3] = league_stats[3] / league_matches_count
-                    extra_stats_by_season[season][team][league][4] = league_stats[4] / league_matches_count
-                    extra_stats_by_season[season][team][league][5] = league_stats[5] / league_matches_count
-                    extra_stats_by_season[season][team][league][6] = league_stats[6] / league_matches_count
-                    extra_stats_by_season[season][team][league][7] = league_stats[7] / league_matches_count
-                    extra_stats_by_season[season][team][league][8] = league_stats[8] / league_matches_count
-                    extra_stats_by_season[season][team][league][9] = league_stats[9] / league_matches_count
+                    extra_stats_by_league = extra_stats_by_season[season][team][league]
+                    extra_stats_by_league['matches'] = league_stats['matches']
+                    extra_stats_by_league['goals'] = league_stats['goals'] / league_matches_count
+                    extra_stats_by_league['assists'] = league_stats['assists'] / league_matches_count
+                    extra_stats_by_league['goals_assists'] = league_stats['goals_assists'] / league_matches_count
+                    extra_stats_by_league['cs'] = league_stats['cs'] / league_matches_count
+                    extra_stats_by_league['subs_out'] = league_stats['subs_out'] / league_matches_count
+                    extra_stats_by_league['subs_in'] = league_stats['subs_in'] / league_matches_count
+                    extra_stats_by_league['ogs'] = league_stats['ogs'] / league_matches_count
+                    extra_stats_by_league['yellow_cards'] = league_stats['yellow_cards'] / league_matches_count
+                    extra_stats_by_league['red_cards'] = league_stats['red_cards'] / league_matches_count
 
     first_match = (
         Match.objects.filter(
