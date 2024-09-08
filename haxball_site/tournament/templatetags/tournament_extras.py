@@ -224,7 +224,7 @@ def team_statistics(team: Team):
         stats_by_league['losses'] = stats_by_league['losses']
         if match.winner == team:
             stats_by_league['wins'] += 1
-        elif match.result == MatchResult.DRAW:
+        elif match.is_draw():
             stats_by_league['draws'] += 1
         else:
             stats_by_league['losses'] += 1
