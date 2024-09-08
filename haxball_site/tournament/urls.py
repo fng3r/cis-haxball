@@ -5,6 +5,7 @@ from .views import (
     FreeAgentList,
     LeagueDetail,
     MatchDetail,
+    PostponementsEvents,
     PostponementsList,
     TeamDetail,
     TeamList,
@@ -13,8 +14,9 @@ from .views import (
     cancel_postponement,
     edit_team_profile,
     halloffame,
+    player_detailed_statistics,
     remove_entry,
-    update_entry, PostponementsEvents,
+    update_entry,
 )
 
 app_name = 'tournament'
@@ -36,4 +38,5 @@ urlpatterns = [
     path('transfers', TransfersList.as_view(), name='transfers'),
     path('<slug:slug>', LeagueDetail.as_view(), name='league'),
     path('match/<int:pk>', MatchDetail.as_view(), name='match_detail'),
+    path('player_stats/<int:pk>', player_detailed_statistics, name='player_stats'),
 ]

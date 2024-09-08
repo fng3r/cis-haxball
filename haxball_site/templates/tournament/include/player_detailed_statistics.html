@@ -3,10 +3,7 @@
 {% load i18n %}
 {% load tournament_extras %}
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
-</style>
+
 <style>
     .table td, .table th {
         padding: 0.5rem;
@@ -26,427 +23,429 @@
     }
 </style>
 
-<div class="p-0">
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="general-stats-tab" data-toggle="tab" href="#general-stats" role="tab"
-               aria-controls="general-stats-tab" aria-selected="true">Общее</a>
-        </li>
+<div class="card">
+    <div class="p-0">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="general-stats-tab" data-toggle="tab" href="#general-stats" role="tab"
+                   aria-controls="general-stats-tab" aria-selected="true">Общее</a>
+            </li>
 
-        <li class="nav-item">
-            <a class="nav-link" id="avg-stats-tab" data-toggle="tab" href="#avg-stats" role="tab"
-               aria-controls="avg-stats-tab" aria-selected="false">"Топ"</a>
-        </li>
-    </ul>
-</div>
-
-<div class="tab-content profile-tab" id="content">
-    <div class="tab-pane fade show active pr-2" id="general-stats" role="tabpanel" aria-labelledby="general-stats-tab">
-
-        <table class="table table-striped">
-            <thead>
-                <tr class="text">
-                    <th scope="col" class="h6" style="font-weight: 800;">Сезон</th>
-                    <th scope="col" class="h6" style="font-weight: 800;">Команда</th>
-                    <th scope="col" class="h6" style="font-weight: 800;">Турнир</th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/jersey.PNG" %}"
-                            title="Матчей сыграно">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/ball-alt.PNG" %}"
-                            title="Забито">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
-                            title="Голевые передачи">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/ball-alt.PNG" %}"
-                            title="Забито" width="16" height="16">
-                        +
-                        <img
-                            src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
-                            title="Голевые передачи" width="16" height="16">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/gloves-alt2.PNG" %}"
-                            title="Сухие таймы">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/sub-out-alt.PNG" %}"
-                            title="Заменён">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/sub-in-alt.PNG" %}"
-                            title="Вышел на замену">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img src="{% static "img/ico/statistic/dont-do.PNG" %}"
-                             title="Автоголы">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/yellow-card.PNG" %}"
-                            title="Жёлтые карточки">
-                    </th>
-                    <th scope="col" class="text-center"><img
-                        src="{% static "img/ico/statistic/red-card.PNG" %}"
-                        title="Красные карточки">
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-
-                {% for season, team_stats in stats|sorted_by_season %}
-                    <tr>
-                        <td class="h6 text" rowspan="{{ stats|player_stats_rows_count:season}}" style="font-weight: 700;">{{ season }}</td>
-
-                        {% for team, league_stats in team_stats|dd_items %}
-                            <td rowspan="{{ league_stats|length }}" class="text">
-                                <img src="{{ team.logo.url }}" alt="{{ team.title }}"
-                                     class="mr-1" style="vertical-align: bottom;">
-                                <a class="team_link font-weight-bolder" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
-
-                            </td>
-                            {% for league, stats in league_stats|sorted_by_league %}
-                                <td class="text" style="font-size: 11pt; font-weight: 600;"><a href="{{ league.get_absolute_url }}">{{ league.title }}</a></td>
-                                {% for _, single_stat in stats|dd_items %}
-                                    <td class="text-center number">{{ single_stat }}</td>
-                                {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        {% endfor %}
-
-                {% endfor %}
-
-                <tr>
-                    <th colspan="3" class="text-center text">
-                    </th>
-                    {% for single_stat in overall_stats %}
-                        <td class="text-center font-weight-bolder number">{{ single_stat|floatformat:0 }} </td>
-                    {% endfor %}
-                </tr>
-
-            </tbody>
-        </table>
-
-        <table class="table table-striped">
-            <thead>
-                <tr class="text">
-                    <th scope="col" class="h6" style="font-weight: 800;">Сезон</th>
-                    <th scope="col" class="h6" style="font-weight: 800;">Команда</th>
-                    <th scope="col" class="h6" style="font-weight: 800;">Турнир</th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/jersey.PNG" %}"
-                            title="Матчей сыграно">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/ball-alt.PNG" %}"
-                            title="Забито (в среднем за матч)">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
-                            title="Голевые передачи (в среднем за матч)">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/ball-alt.PNG" %}"
-                            title="Забито" width="16" height="16">
-                        +
-                        <img
-                            src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
-                            title="Голевые передачи" width="16" height="16">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/gloves-alt2.PNG" %}"
-                            title="Сухие таймы (в среднем за матч)">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/sub-out-alt.PNG" %}"
-                            title="Заменён (в среднем за матч)">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/sub-in-alt.PNG" %}"
-                            title="Вышел на замену (в среднем за матч)">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img src="{% static "img/ico/statistic/dont-do.PNG" %}"
-                             title="Автоголы (в среднем за матч)">
-                    </th>
-                    <th scope="col" class="text-center">
-                        <img
-                            src="{% static "img/ico/statistic/yellow-card.PNG" %}"
-                            title="Жёлтые карточки (в среднем за матч)">
-                    </th>
-                    <th scope="col" class="text-center"><img
-                        src="{% static "img/ico/statistic/red-card.PNG" %}"
-                        title="Красные карточки (в среднем за матч)">
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for season, team_stats in extra_stats|sorted_by_season %}
-                    <tr>
-                        <td class="h6 text" rowspan="{{ extra_stats|player_stats_rows_count:season }}" style="font-weight: 700;">{{ season }}</td>
-
-                        {% for team, league_stats in team_stats|dd_items %}
-                            <td rowspan="{{ league_stats|length }}" class="text">
-                                <img src="{{ team.logo.url }}" alt="{{ team.title }}"
-                                     class="mr-1" style="vertical-align: bottom;">
-                                <a class="team_link font-weight-bolder" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
-
-                            </td>
-                            {% for league, stats in league_stats|sorted_by_league %}
-                                <td class="text" style="font-size: 11pt; font-weight: 600;"><a href="{{ league.get_absolute_url }}">{{ league.title }}</a></td>
-                                {% for _, single_stat in stats|dd_items %}
-                                    <td class="text-center number">
-                                        {% if forloop.counter == 1 or single_stat == 0 %}
-                                            {{ single_stat|floatformat:0 }}
-                                        {% else %}
-                                            {{ single_stat|floatformat:2 }}
-                                        {% endif %}
-                                    </td>
-                                {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        {% endfor %}
-
-                {% endfor %}
-
-                <tr>
-                    <th colspan="3" class="text-center text">
-                    </th>
-                    {% for single_stat in overall_extra_stats %}
-                        <td class="text-center font-weight-bolder number">
-                            {% if forloop.counter == 1 or single_stat == 0 %}
-                                {{ single_stat|floatformat:0 }}
-                            {% else %}
-                                {{ single_stat|floatformat:2 }}
-                            {% endif %}
-                        </td>
-                    {% endfor %}
-                </tr>
-
-            </tbody>
-        </table>
+            <li class="nav-item">
+                <a class="nav-link" id="avg-stats-tab" data-toggle="tab" href="#avg-stats" role="tab"
+                   aria-controls="avg-stats-tab" aria-selected="false">"Топ"</a>
+            </li>
+        </ul>
     </div>
 
-    <div class="tab-pane fade pr-2" id="avg-stats" role="tabpanel" aria-labelledby="avg-stats-tab">
-        <table class="table table-striped">
-            <tbody style="font-size: 18px">
-                <tr class="border-bottom">
-                    {% with match=other_stats.first_match %}
-                        <th scope="row" class="col-sm-4">
-                            Первый матч
+    <div class="tab-content profile-tab" id="content">
+        <div class="tab-pane fade show active pr-2" id="general-stats" role="tabpanel" aria-labelledby="general-stats-tab">
+
+            <table class="table table-striped">
+                <thead>
+                    <tr class="text">
+                        <th scope="col" class="h6" style="font-weight: 800;">Сезон</th>
+                        <th scope="col" class="h6" style="font-weight: 800;">Команда</th>
+                        <th scope="col" class="h6" style="font-weight: 800;">Турнир</th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/jersey.PNG" %}"
+                                title="Матчей сыграно">
                         </th>
-                        <td class="text-left">
-                            {% if match %}
-                                <img src="{{match.team_home.logo.url}}" width=20 height=20>
-                                {{ match.team_home.title }}
-                                <a href="{{match.get_absolute_url}}">
-                                    {{ match.score_home }}:{{ match.score_guest }}
-                                </a>
-                                {{ match.team_guest.title }}
-                                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-                                ({{ match.league.championship }})
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with goal=other_stats.fastest_goal match=other_stats.fastest_goal.match %}
-                        <th scope="row" class="col-sm-4">
-                            Самый быстрый гол
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/ball-alt.PNG" %}"
+                                title="Забито">
                         </th>
-                        <td class="text-left">
-                            {% if goal %}
-                                {{ goal|goal_time }} -
-                                <img src="{{match.team_home.logo.url}}" width=20 height=20>
-                                {{ match.team_home.title }}
-                                <a href="{{match.get_absolute_url}}">
-                                    {{ match.score_home }}:{{ match.score_guest }}
-                                </a>
-                                {{ match.team_guest.title }}
-                                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-                                ({{ match.league }})
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with goal=other_stats.latest_goal match=other_stats.latest_goal.match %}
-                        <th scope="row" class="col-sm-4">
-                            Самый поздний гол
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
+                                title="Голевые передачи">
                         </th>
-                        <td class="text-left">
-                            {% if goal %}
-                                {{ goal|goal_time }} -
-                                <img src="{{match.team_home.logo.url}}" width=20 height=20>
-                                {{ match.team_home.title }}
-                                <a href="{{match.get_absolute_url}}">
-                                    {{ match.score_home }}:{{ match.score_guest }}
-                                </a>
-                                {{ match.team_guest.title }}
-                                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-                                ({{ match.league }})
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with match=other_stats.most_goals_in_match %}
-                        <th scope="row" class="col-sm-4">
-                            Больше всего голов за матч
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/ball-alt.PNG" %}"
+                                title="Забито" width="16" height="16">
+                            +
+                            <img
+                                src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
+                                title="Голевые передачи" width="16" height="16">
                         </th>
-                        <td class="text-left">
-                            {% if match %}
-                                {{ match.goals }} -
-                                <img src="{{match.team_home.logo.url}}" width=20 height=20>
-                                {{ match.team_home.title }}
-                                <a href="{{match.get_absolute_url}}">
-                                    {{ match.score_home }}:{{ match.score_guest }}
-                                </a>
-                                {{ match.team_guest.title }}
-                                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-                                ({{ match.league }})
-                            {% else %}
-                                0
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with match=other_stats.most_assists_in_match %}
-                        <th scope="row" class="col-sm-4">
-                            Больше всего голевых передач за матч
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/gloves-alt2.PNG" %}"
+                                title="Сухие таймы">
                         </th>
-                        <td class="text-left">
-                            {% if match %}
-                                {{ match.assists }} -
-                                <img src="{{match.team_home.logo.url}}" width=20 height=20>
-                                {{ match.team_home.title }}
-                                <a href="{{match.get_absolute_url}}">
-                                    {{ match.score_home }}:{{ match.score_guest }}
-                                </a>
-                                {{ match.team_guest.title }}
-                                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-                                ({{ match.league }})
-                            {% else %}
-                                0
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with match=other_stats.most_goals_assists_in_match %}
-                        <th scope="row" class="col-sm-4">
-                            Больше всего результативных действий за матч
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/sub-out-alt.PNG" %}"
+                                title="Заменён">
                         </th>
-                        <td class="text-left">
-                            {% if match %}
-                                {{ match.actions }} -
-                                <img src="{{match.team_home.logo.url}}" width=20 height=20>
-                                {{ match.team_home.title }}
-                                <a href="{{match.get_absolute_url}}">
-                                    {{ match.score_home }}:{{ match.score_guest }}
-                                </a>
-                                {{ match.team_guest.title }}
-                                <img src="{{match.team_guest.logo.url}}" width=20 height=20>
-                                ({{ match.league }})
-                            {% else %}
-                                0
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with season=other_stats.most_goals_in_season %}
-                        <th scope="row" class="col-sm-4">
-                            Больше всего голов за сезон
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/sub-in-alt.PNG" %}"
+                                title="Вышел на замену">
                         </th>
-                        <td class="text-left">
-                            {% if season %}
-                                {{ season.goals }} ({{ season }})
-                            {% else %}
-                                0
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with season=other_stats.most_assists_in_season %}
-                        <th scope="row" class="col-sm-4">
-                            Больше всего голевых передач за сезон
+                        <th scope="col" class="text-center">
+                            <img src="{% static "img/ico/statistic/dont-do.PNG" %}"
+                                 title="Автоголы">
                         </th>
-                        <td class="text-left">
-                            {% if season %}
-                                {{ season.assists }} ({{ season }})
-                            {% else %}
-                                0
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with season=other_stats.most_goals_assists_in_season %}
-                        <th scope="row" class="col-sm-4">
-                            Больше всего результативных действий за сезон
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/yellow-card.PNG" %}"
+                                title="Жёлтые карточки">
                         </th>
-                        <td class="text-left">
-                            {% if season %}
-                                {{ season.actions }} ({{ season }})
-                            {% else %}
-                                0
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
-
-                <tr class="border-bottom">
-                    {% with season=other_stats.most_cs_in_season %}
-                        <th scope="row" class="col-sm-4">
-                            Больше всего "сухарей" за сезон
+                        <th scope="col" class="text-center"><img
+                            src="{% static "img/ico/statistic/red-card.PNG" %}"
+                            title="Красные карточки">
                         </th>
-                        <td class="text-left">
-                            {% if season %}
-                                {{ season.cs }} ({{ season }})
-                            {% else %}
-                                0
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                </tr>
+                    </tr>
+                </thead>
+                <tbody>
 
-            </tbody>
-        </table>
+                    {% for season, team_stats in stats|sorted_by_season %}
+                        <tr>
+                            <td class="h6 text" rowspan="{{ stats|player_stats_rows_count:season}}" style="font-weight: 700;">{{ season }}</td>
 
+                            {% for team, league_stats in team_stats|dd_items %}
+                                <td rowspan="{{ league_stats|length }}" class="text">
+                                    <img src="{{ team.logo.url }}" alt="{{ team.title }}"
+                                         class="mr-1" style="vertical-align: bottom;">
+                                    <a class="team_link font-weight-bolder" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
+
+                                </td>
+                                {% for league, stats in league_stats|sorted_by_league %}
+                                    <td class="text" style="font-size: 11pt; font-weight: 600;"><a href="{{ league.get_absolute_url }}">{{ league.title }}</a></td>
+                                    {% for _, single_stat in stats|dd_items %}
+                                        <td class="text-center number">{{ single_stat }}</td>
+                                    {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+
+                    {% endfor %}
+
+                    <tr>
+                        <th colspan="3" class="text-center text">
+                        </th>
+                        {% for single_stat in overall_stats %}
+                            <td class="text-center font-weight-bolder number">{{ single_stat|floatformat:0 }} </td>
+                        {% endfor %}
+                    </tr>
+
+                </tbody>
+            </table>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr class="text">
+                        <th scope="col" class="h6" style="font-weight: 800;">Сезон</th>
+                        <th scope="col" class="h6" style="font-weight: 800;">Команда</th>
+                        <th scope="col" class="h6" style="font-weight: 800;">Турнир</th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/jersey.PNG" %}"
+                                title="Матчей сыграно">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/ball-alt.PNG" %}"
+                                title="Забито (в среднем за матч)">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
+                                title="Голевые передачи (в среднем за матч)">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/ball-alt.PNG" %}"
+                                title="Забито" width="16" height="16">
+                            +
+                            <img
+                                src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}"
+                                title="Голевые передачи" width="16" height="16">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/gloves-alt2.PNG" %}"
+                                title="Сухие таймы (в среднем за матч)">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/sub-out-alt.PNG" %}"
+                                title="Заменён (в среднем за матч)">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/sub-in-alt.PNG" %}"
+                                title="Вышел на замену (в среднем за матч)">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img src="{% static "img/ico/statistic/dont-do.PNG" %}"
+                                 title="Автоголы (в среднем за матч)">
+                        </th>
+                        <th scope="col" class="text-center">
+                            <img
+                                src="{% static "img/ico/statistic/yellow-card.PNG" %}"
+                                title="Жёлтые карточки (в среднем за матч)">
+                        </th>
+                        <th scope="col" class="text-center"><img
+                            src="{% static "img/ico/statistic/red-card.PNG" %}"
+                            title="Красные карточки (в среднем за матч)">
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for season, team_stats in extra_stats|sorted_by_season %}
+                        <tr>
+                            <td class="h6 text" rowspan="{{ extra_stats|player_stats_rows_count:season }}" style="font-weight: 700;">{{ season }}</td>
+
+                            {% for team, league_stats in team_stats|dd_items %}
+                                <td rowspan="{{ league_stats|length }}" class="text">
+                                    <img src="{{ team.logo.url }}" alt="{{ team.title }}"
+                                         class="mr-1" style="vertical-align: bottom;">
+                                    <a class="team_link font-weight-bolder" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
+
+                                </td>
+                                {% for league, stats in league_stats|sorted_by_league %}
+                                    <td class="text" style="font-size: 11pt; font-weight: 600;"><a href="{{ league.get_absolute_url }}">{{ league.title }}</a></td>
+                                    {% for _, single_stat in stats|dd_items %}
+                                        <td class="text-center number">
+                                            {% if forloop.counter == 1 or single_stat == 0 %}
+                                                {{ single_stat|floatformat:0 }}
+                                            {% else %}
+                                                {{ single_stat|floatformat:2 }}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+
+                    {% endfor %}
+
+                    <tr>
+                        <th colspan="3" class="text-center text">
+                        </th>
+                        {% for single_stat in overall_extra_stats %}
+                            <td class="text-center font-weight-bolder number">
+                                {% if forloop.counter == 1 or single_stat == 0 %}
+                                    {{ single_stat|floatformat:0 }}
+                                {% else %}
+                                    {{ single_stat|floatformat:2 }}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-pane fade pr-2" id="avg-stats" role="tabpanel" aria-labelledby="avg-stats-tab">
+            <table class="table table-striped">
+                <tbody style="font-size: 18px">
+                    <tr class="border-bottom">
+                        {% with match=other_stats.first_match %}
+                            <th scope="row" class="col-sm-4">
+                                Первый матч
+                            </th>
+                            <td class="text-left">
+                                {% if match %}
+                                    <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                                    {{ match.team_home.title }}
+                                    <a href="{{match.get_absolute_url}}">
+                                        {{ match.score_home }}:{{ match.score_guest }}
+                                    </a>
+                                    {{ match.team_guest.title }}
+                                    <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                                    ({{ match.league.championship }})
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with goal=other_stats.fastest_goal match=other_stats.fastest_goal.match %}
+                            <th scope="row" class="col-sm-4">
+                                Самый быстрый гол
+                            </th>
+                            <td class="text-left">
+                                {% if goal %}
+                                    {{ goal|goal_time }} -
+                                    <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                                    {{ match.team_home.title }}
+                                    <a href="{{match.get_absolute_url}}">
+                                        {{ match.score_home }}:{{ match.score_guest }}
+                                    </a>
+                                    {{ match.team_guest.title }}
+                                    <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                                    ({{ match.league }})
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with goal=other_stats.latest_goal match=other_stats.latest_goal.match %}
+                            <th scope="row" class="col-sm-4">
+                                Самый поздний гол
+                            </th>
+                            <td class="text-left">
+                                {% if goal %}
+                                    {{ goal|goal_time }} -
+                                    <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                                    {{ match.team_home.title }}
+                                    <a href="{{match.get_absolute_url}}">
+                                        {{ match.score_home }}:{{ match.score_guest }}
+                                    </a>
+                                    {{ match.team_guest.title }}
+                                    <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                                    ({{ match.league }})
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with match=other_stats.most_goals_in_match %}
+                            <th scope="row" class="col-sm-4">
+                                Больше всего голов за матч
+                            </th>
+                            <td class="text-left">
+                                {% if match %}
+                                    {{ match.goals }} -
+                                    <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                                    {{ match.team_home.title }}
+                                    <a href="{{match.get_absolute_url}}">
+                                        {{ match.score_home }}:{{ match.score_guest }}
+                                    </a>
+                                    {{ match.team_guest.title }}
+                                    <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                                    ({{ match.league }})
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with match=other_stats.most_assists_in_match %}
+                            <th scope="row" class="col-sm-4">
+                                Больше всего голевых передач за матч
+                            </th>
+                            <td class="text-left">
+                                {% if match %}
+                                    {{ match.assists }} -
+                                    <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                                    {{ match.team_home.title }}
+                                    <a href="{{match.get_absolute_url}}">
+                                        {{ match.score_home }}:{{ match.score_guest }}
+                                    </a>
+                                    {{ match.team_guest.title }}
+                                    <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                                    ({{ match.league }})
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with match=other_stats.most_goals_assists_in_match %}
+                            <th scope="row" class="col-sm-4">
+                                Больше всего результативных действий за матч
+                            </th>
+                            <td class="text-left">
+                                {% if match %}
+                                    {{ match.actions }} -
+                                    <img src="{{match.team_home.logo.url}}" width=20 height=20>
+                                    {{ match.team_home.title }}
+                                    <a href="{{match.get_absolute_url}}">
+                                        {{ match.score_home }}:{{ match.score_guest }}
+                                    </a>
+                                    {{ match.team_guest.title }}
+                                    <img src="{{match.team_guest.logo.url}}" width=20 height=20>
+                                    ({{ match.league }})
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with season=other_stats.most_goals_in_season %}
+                            <th scope="row" class="col-sm-4">
+                                Больше всего голов за сезон
+                            </th>
+                            <td class="text-left">
+                                {% if season %}
+                                    {{ season.goals }} ({{ season }})
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with season=other_stats.most_assists_in_season %}
+                            <th scope="row" class="col-sm-4">
+                                Больше всего голевых передач за сезон
+                            </th>
+                            <td class="text-left">
+                                {% if season %}
+                                    {{ season.assists }} ({{ season }})
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with season=other_stats.most_goals_assists_in_season %}
+                            <th scope="row" class="col-sm-4">
+                                Больше всего результативных действий за сезон
+                            </th>
+                            <td class="text-left">
+                                {% if season %}
+                                    {{ season.actions }} ({{ season }})
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                    <tr class="border-bottom">
+                        {% with season=other_stats.most_cs_in_season %}
+                            <th scope="row" class="col-sm-4">
+                                Больше всего "сухарей" за сезон
+                            </th>
+                            <td class="text-left">
+                                {% if season %}
+                                    {{ season.cs }} ({{ season }})
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
+                        {% endwith %}
+                    </tr>
+
+                </tbody>
+            </table>
+
+        </div>
     </div>
 </div>

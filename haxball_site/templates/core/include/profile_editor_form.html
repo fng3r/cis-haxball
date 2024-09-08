@@ -1,47 +1,53 @@
 {% load static %}
-
 {% load user_tags %}
-<div class="card" style="padding: 10px; background-color: #e2e3e5">
-    <form action={% url 'core:edit_profile' element.slug element.id %} method="post" enctype="multipart/form-data">
-        {% csrf_token %}
 
-        <hr>
-        <div class="card user-card-full">
-            <div class="row m-l-0 m-r-0">
-                <div class="col-sm-4 bg-c-lite-green user-profile">
-                    <div class="card-block text-center text-white">
-                        <div class="m-b-10"><img src="{{ profile.avatar.url }}" width="100%" height="100%"
-                                                 class="img-radius" alt="User-Profile-Image">
-                            <label for="avatar-file">
-                                <i class="fa fa-paperclip" aria-hidden="true"></i> Аватар
-                                <input id="avatar-file" type="file" name="avatar" accept="image/*">
-                            </label>
+{% if user == profile.name %}
 
-                            {% if profile.name|can_edit_profile_bg %}
-                                <label for="bg-file">
-                                    <i class="fa fa-paperclip" aria-hidden="true"></i> Фон
-                                    <input id="bg-file" type="file" name="background" />
+    <div id="edit-profile-form-container" class="card mt-2">
+        <h4 class="text-center mb-0 pl-2 pt-1 pb-2 border-bottom">Редактирование профиля</h4>
+
+        <form method="post"
+              enctype="multipart/form-data"
+              hx-post="{% url 'core:edit_profile' profile.slug profile.id %}"
+              hx-trigger="submit"
+              hx-target="#edit-profile-form-container"
+              hx-swap="outerHTML"
+              hx-disabled-elt="find button">
+
+            <div class="card user-card-full">
+                <div class="row m-l-0 m-r-0">
+                    <div class="col-sm-4 bg-c-lite-green user-profile">
+                        <div class="card-block text-center text-white">
+                            <div class="m-b-10">
+                                <img src="{{ profile.avatar.url }}" width="100%" height="100%"
+                                     class="img-radius" alt="User-Profile-Image">
+                                <label for="avatar-file">
+                                    <i class="fa fa-paperclip" aria-hidden="true"></i> Аватар
+                                    <input id="avatar-file" type="file" name="avatar" accept="image/*">
                                 </label>
 
-                                <label for="bg-removed">
-                                    Удалить фон
-                                    <input id="bg-removed" type="checkbox" name="bg-removed">
-                                </label>
-                            {% endif %}
-                        </div>
-                        <h4 class="f-w-600">{{ profile.name }}
+                                {% if profile.name|can_edit_profile_bg %}
+                                    <label for="bg-file">
+                                        <i class="fa fa-paperclip" aria-hidden="true"></i> Фон
+                                        <input id="bg-file" type="file" name="background" />
+                                    </label>
+
+                                    <label for="bg-removed">
+                                        Удалить фон
+                                        <input id="bg-removed" type="checkbox" name="bg-removed">
+                                    </label>
+                                {% endif %}
+                            </div>
+                            <h4 class="f-w-600">{{ profile.name }}
                             {% if profile.name.is_superuser %}
                                 <img src="{% static "img/ico/crown.png" %}" height="16"
                                      width="16" title="Король ёпт"></h4>
                             {% endif %}
                             <p class="mb-1">Без команды</p>
-                            <p>Рейтинг <span class="badge badge-pill {% if profile.karma >= 0 %}
-                                                    badge-success
-                                                {% else %}
-                                                    badge-danger
-                                                {% endif %}">
-                            {{ profile.karma }}
-                        </span>
+                            <p>Рейтинг
+                                <span class="badge badge-pill {% if profile.karma >= 0 %} badge-success {% else %} badge-danger {% endif %}">
+                                    {{ profile.karma }}
+                                </span>
                             </p>
                             <p>
                                 <input type="checkbox" class="form-check-input" id="commentableCheck" name="commentable"
@@ -53,7 +59,9 @@
                     <div class="col-sm-8">
                         <div class="card-block">
                             <h5 class="m-b-20 p-b-5 b-b-default f-w-600">Основная информация
-                                <button type="submit" class="btn btn-primary" style="margin-right: 20px">Отправить</button>
+                                <button type="submit" class="btn btn-primary ml-1 mr-2" style="margin-right: 20px">Сохранить</button>
+                                <img id="edit-comment-indicator" class="htmx-indicator"
+                                     src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
                             </h5>
                             <div class="row">
                                 <div class="col-sm-6">
@@ -68,7 +76,7 @@
                                     <p class="m-b-10 f-w-600">Дата рождения</p>
                                     <h6 class="text-muted f-w-400">
                                         <input type="date" id="start" name="born_date"
-                                               value="{{ element.born_date|date:"Y-m-d" }}"
+                                               value="{{ profile.born_date|date:"Y-m-d" }}"
                                                min="1966-01-01"
                                                max="2020-07-17">
                                     </h6>
@@ -127,7 +135,7 @@
                                     <h6 class="text-muted f-w-400">
                                         <textarea class="form-control border" rows="3" name="about"
                                                   id="contactcomment"
-                                                  rows="2">{{ element.about }}</textarea>
+                                                  rows="2">{{ profile.about }}</textarea>
                                     </h6>
                                 </div>
                             </div>
@@ -137,55 +145,6 @@
                 </div>
             </div>
 
-
-        <!-- OLD FORM -->
-
         </form>
     </div>
-
-<!--
-        <hr>
-        <div class="profile" style="padding: 20px; background-color: #95999c">
-            <div class="d-flex justify-content-between bd-highlight mb-3">
-                <div class="d-flex justify-content-start"><h2>{{ profile.name }}</h2></div>
-
-            </div>
-
-            {% if element.avatar %}
-                <img src="{{ element.avatar.url }}" class="rounded-circle float-left" width="200" height="200">
-            {% else %}
-                <img src="{% static 'img/no_avatar.png' %}" class="rounded-circle float-left" width="200" height="200">
-            {% endif %}
-            <input type="file" name="avatar" accept="image/*">
-            <ul class="list-group list-group-flush" style="padding: 20px">
-                <li class="list-group-item"><b>Дата регистрации: </b> {{ element.name.date_joined }}</li>
-                <li class="list-group-item"><b>Дата рождения: </b> <input type="date" id="start" name="born_date"
-                                                                          value="{{ element.born_date|date:"Y-m-d" }}"
-                                                                          min="1966-01-01"
-                                                                          max="2020-07-17"> {{ element.born_date|date:"Y-m-d" }}
-                </li>
-                <li class="list-group-item"><b>Последний вход: </b></li>
-                <li class="list-group-item"><b>Способы связи: </b> <a href="https://vk.com/wafflya95">Вк</a></li>
-                <li class="list-group-item"><b>Команда:</b> Без команды</li>
-            </ul>
-
-            <div class="card">
-                <div class="card-header">
-                    <b>Информация обо мне:</b>
-                </div>
-                <div class="card-body">
-                  <textarea class="form-control border" rows="3" name="about"
-                            id="contactcomment" rows="2">{{ element.about }}</textarea>
-                </div>
-            </div>
-        </div>
-        <hr>
-
-        <div class="form-group editContent">
-
-
-            <div align="right">
-                <button type="submit" class="btn btn-primary" style="margin-right: 20px">Отправить</button>
-            </div>
-        </div>
--->
+{% endif %}

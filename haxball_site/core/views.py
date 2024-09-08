@@ -205,28 +205,24 @@ class PostDetailView(DetailView):
 
 
 # Вьюха для профиля пользователя MultipleObjectMixin
-class ProfileDetail(DetailView):
-    model = Profile
-    context_object_name = 'profile'
+class ProfileDetail(View):
     template_name = 'core/profile/profile_detail.html'
 
-    def get_queryset(self):
-        return super().get_queryset().select_related('name__user_player__team')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        profile = context['profile']
+    def get(self, request, pk, slug):
+        profile = Profile.objects.select_related('name__user_player__team').get(pk=pk)
         profile.views += 1
         profile.save(update_fields=['views'])
 
-        page = self.request.GET.get('page')
+        page = request.GET.get('page')
         comments_obj = get_comments_for_object(Profile, profile.id)
         comments = get_paginated_comments(comments_obj, page)
 
-        context['page'] = page
-        context['comments'] = comments
-        comment_form = NewCommentForm()
-        context['comment_form'] = comment_form
+        context = {
+            'profile': profile,
+            'page': page,
+            'comments': comments,
+            'comment_form': NewCommentForm(),
+        }
 
         all_achievements = Achievements.objects.select_related('category').filter(player__name=profile.name)
         achievements_by_category = {}
@@ -240,7 +236,10 @@ class ProfileDetail(DetailView):
         context['achievements_by_category'] = achievements_by_category.items()
         context['previous_nicknames'] = UserNicknameHistoryItem.objects.filter(user=profile.name).order_by('-edited')
 
-        return context
+        if request.htmx:
+            return render(request, 'core/profile/profile_detail.html#profile-container', context)
+
+        return render(request, self.template_name, context)
 
 
 class CommentsListView(ListView):
@@ -251,8 +250,6 @@ class CommentsListView(ListView):
         object_comments = get_comments_for_object(model, pk)
         comments = get_paginated_comments(object_comments, page)
         obj = model.objects.get(pk=pk)
-        print(object)
-        print(comments)
 
         context = {
             'object': obj,
@@ -387,7 +384,7 @@ def delete_comment(request, pk):
 class EditMyProfile(DetailView, View):
     model = Profile
     context_object_name = 'profile'
-    template_name = 'core/profile/profile_edit.html'
+    template_name = 'core/include/profile_editor_form.html'
 
     def post(self, request, pk, slug):
         profile = Profile.objects.get(slug=slug, id=pk)
