@@ -24,11 +24,11 @@
                     <img id="edit-comment-indicator" class="htmx-indicator mr-2"
                          src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
 
-                    <button class="btn btn-secondary mr-2" hx-get="{% url 'core:comment' comment.id %}">
+                    <button @click="editingComment = false" class="btn btn-secondary mr-2" hx-get="{% url 'core:comment' comment.id %}">
                         Отменить
                     </button>
 
-                    <button type="submit" class="btn btn-primary mr-2"
+                    <button @click="editingComment = false" type="submit" class="btn btn-primary mr-2"
                             hx-post="{% url 'core:edit_comment' comment.id %}"
                             hx-on::config-request="event.detail.parameters['edit_body'] = CKEDITOR.instances['id_edit_body'].getData();"
                             hx-on::before-request="document.getElementById('cke_id_edit_body').style.filter = 'blur(1px)';">

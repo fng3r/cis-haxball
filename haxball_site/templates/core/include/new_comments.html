@@ -12,14 +12,6 @@
         }
     </style>
 {% endblock %}
-{% block scripts %}
-    <script>
-        function ChangeText(Element) {
-            if (Element.innerHTML == '<i class="fa fa-chevron-up"></i>Скрыть ответы') Element.innerHTML = '<i class="fa fa-chevron-down"></i>Показать ответы';
-            else Element.innerHTML = '<i class="fa fa-chevron-up"></i>Скрыть ответы';
-        }
-    </script>
-{% endblock %}
 
 
 <div class="row mt-2">
@@ -28,10 +20,10 @@
         {% partialdef comment-form-container inline=True %}
             {% with content_type=object|content_type %}
                 <div id="comment-form-container" class="card mb-2 py-2 px-1" style="border-radius: 20px"
-                     hx-get="{% url 'core:add_comment' content_type.pk object.id %}"
-                     hx-swap="outerHTML"
-                     hx-trigger="commentableChanged from:body">
-                    {% if object.commentable %}
+                     x-data="{commentable: '{{object.commentable}}' === 'True' }"
+                     @commentable-changed.window="commentable = $event.detail.commentable">
+
+                    <div x-show="commentable">
                         {% if user.is_authenticated and user.user_profile.can_comment %}
                             {% include 'core/include/new_form_comment.html' %}
                         {% elif user.is_authenticated and not user.user_profile.can_comment %}
@@ -44,7 +36,8 @@
                                     Войдите</a>, чтобы оставить комментарий
                             </h6>
                         {% endif %}
-                    {% else %}
+                    </div>
+                    <div x-show="!commentable">
                         <h5 class="text-center">
                             {% if object|get_class == 'Profile' %}
                                 Пользователь закрыл свой профиль
@@ -52,7 +45,8 @@
                                 Комментарии закрыты
                             {% endif %}
                         </h5>
-                    {% endif %}
+                    </div>
+
                 </div>
             {% endwith %}
         {% endpartialdef comment-form-container %}
@@ -67,7 +61,7 @@
                             <h6 class="card-subtitle">Здесь пока пусто, не хочешь быть первым?</h6>
                         {% endif %}
                     </div>
-                    <div class="comment-widgets">
+                    <div class="comment-widgets" x-data="{editingComment: false}">
                         {% for comment in comments %}
 
                             {% if comment.is_parent %}

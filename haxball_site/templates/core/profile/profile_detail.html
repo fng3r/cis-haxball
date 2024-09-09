@@ -59,30 +59,37 @@
                                 <div class="card-block text-center text-white">
                                     <div class="profile-avatar" style="background-image: url({{ profile.avatar.url }}); width: 90%; height: 280px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover"></div>
 
-                                    <a class="link-decoration-none" href="#">
-                                        <h3 class="f-w-600 nickname-inline" style="display: inline-block; margin-top: 10px; margin-bottom: 7px; margin-right: 5px;">{{ profile.name }}
-                                            {% for icon in profile.user_icon.all %}
-                                                <img src="{{ icon.image.url }}" width="25px" height="25px"
-                                                     title="{{ icon.description }}"
-                                                     class="mb-1">
-                                            {% endfor %}
-                                            {% if previous_nicknames.count > 0 %}
-                                                <div class="dropdown-toggle profile-triangle" style="font-size: 17px; display: inline-block;"></div>
-                                            {% endif %}
-                                        </h3>
-                                    </a>
-
-                                    {% if previous_nicknames.count > 0 %}
-
-                                        <div style="position: relative; top: 0; left: 0;">
-                                            <div class="nicknames-history">
-                                                {% for nickname in previous_nicknames %}
-                                                    <p class="nicknames-history-item" style="margin-bottom: 3px; margin-top: 3px;">{{nickname.nickname}}</p>
+                                    <div x-data="{showNicknamesHistory: false}">
+                                        <a class="link-decoration-none" href="#">
+                                            <h3 class="f-w-600 nickname-inline" style="display: inline-block; margin-top: 10px; margin-bottom: 7px; margin-right: 5px;">{{ profile.name }}
+                                                {% for icon in profile.user_icon.all %}
+                                                    <img src="{{ icon.image.url }}" width="25px" height="25px"
+                                                         title="{{ icon.description }}"
+                                                         class="mb-1">
                                                 {% endfor %}
-                                            </div>
-                                        </div>
+                                                {% if previous_nicknames.count > 0 %}
+                                                    <div @click="showNicknamesHistory = !showNicknamesHistory"
+                                                         class="dropdown-toggle profile-triangle ml-n1">
+                                                    </div>
+                                                {% endif %}
+                                            </h3>
+                                        </a>
 
-                                    {% endif %}
+                                        {% if previous_nicknames.count > 0 %}
+
+                                            <div x-show="showNicknamesHistory" x-transition.duration.200ms
+                                                 @click.outside="showNicknamesHistory = false"
+                                                 style="position: relative; top: 0; left: 0;">
+                                                <div class="nicknames-history">
+                                                    {% for nickname in previous_nicknames %}
+                                                        <p class="nicknames-history-item" style="margin-bottom: 3px; margin-top: 3px;">{{nickname.nickname}}</p>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+                                        {% endif %}
+                                    </div>
+
 
                                     {% if profile.name.user_player.team %}
                                         <p class="mb-1">

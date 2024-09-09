@@ -241,7 +241,9 @@ class ProfileDetail(View):
             response = render(request, 'core/profile/profile_detail.html#profile-container', context)
             commentable_changed = request.GET.get('commentableChanged', False)
             if commentable_changed:
-                response = trigger_client_event(response, 'commentableChanged')
+                response = trigger_client_event(
+                    response, 'commentableChanged', {'commentable': profile.commentable}
+                )
 
             return response
 
