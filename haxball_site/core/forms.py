@@ -21,9 +21,11 @@ class EditCommentForm(forms.ModelForm):
 
 
 class EditProfileForm(forms.ModelForm):
+    remove_bg = forms.BooleanField(label='Удалить фон', required=False)
+
     class Meta:
         model = Profile
-        fields = ('about', 'born_date', 'avatar', 'city', 'vk', 'discord', 'telegram', 'commentable')
+        fields = ('about', 'born_date', 'avatar', 'city', 'vk', 'discord', 'telegram', 'commentable', 'remove_bg')
 
 
 class PostForm(forms.ModelForm):

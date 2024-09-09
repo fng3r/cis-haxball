@@ -11,7 +11,7 @@ urlpatterns = [
     path('', views.PostListView.as_view(), name='home'),
     path('post/<int:pk>/<slug:slug>', views.PostDetailView.as_view(), name='post_detail'),
     path('profile/<int:pk>/<slug:slug>/', views.ProfileDetail.as_view(), name='profile_detail'),
-    path('profile/<slug:slug>/<int:pk>/edit', views.EditMyProfile.as_view(), name='edit_profile'),
+    path('profile/<slug:slug>/<int:pk>/edit', views.EditProfile.as_view(), name='edit_profile'),
     path('anime/', views.anime_view, name='anime'),
     #  Путь к фасткапам
     path('fastcups/', views.FastcupView.as_view(), name='fastcups'),

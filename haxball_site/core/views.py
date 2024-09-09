@@ -11,10 +11,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import View
+from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
 from tournament.models import Achievements, Team
 
-from .forms import EditProfileForm, NewCommentForm, PostForm, EditCommentForm
+from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments
@@ -237,7 +238,12 @@ class ProfileDetail(View):
         context['previous_nicknames'] = UserNicknameHistoryItem.objects.filter(user=profile.name).order_by('-edited')
 
         if request.htmx:
-            return render(request, 'core/profile/profile_detail.html#profile-container', context)
+            response = render(request, 'core/profile/profile_detail.html#profile-container', context)
+            commentable_changed = request.GET.get('commentableChanged', False)
+            if commentable_changed:
+                response = trigger_client_event(response, 'commentableChanged')
+
+            return response
 
         return render(request, self.template_name, context)
 
@@ -260,6 +266,19 @@ class CommentsListView(ListView):
 
 
 class AddCommentView(View):
+    def get(self, request, ct, pk):
+        content_type = ContentType.objects.get(pk=ct)
+        model = content_type.model_class()
+        obj = model.objects.get(id=pk)
+        comment_form = NewCommentForm()
+
+        context = {
+            'object': obj,
+            'comment_form': comment_form,
+        }
+
+        return render(request, 'core/include/new_comments.html#comment-form-container', context)
+
     def post(self, request, ct, pk):
         content_type = ContentType.objects.get(pk=ct)
         model = content_type.model_class()
@@ -381,7 +400,7 @@ def delete_comment(request, pk):
     return HttpResponse('Ошибка доступа или время истекло')
 
 
-class EditMyProfile(DetailView, View):
+class EditProfile(DetailView, View):
     model = Profile
     context_object_name = 'profile'
     template_name = 'core/include/profile_editor_form.html'
@@ -389,14 +408,19 @@ class EditMyProfile(DetailView, View):
     def post(self, request, pk, slug):
         profile = Profile.objects.get(slug=slug, id=pk)
         profile_form = EditProfileForm(request.POST, instance=profile)
+        commentable = profile.commentable
         if profile_form.is_valid():
             if 'avatar' in request.FILES:
                 profile.avatar = request.FILES['avatar']
             if 'background' in request.FILES:
                 profile.background = request.FILES['background']
-            if request.POST.get('bg-removed') == 'on':
+            if profile_form.cleaned_data['remove_bg']:
                 profile.background = None
-            profile_form.save()
+
+            updated_profile = profile_form.save()
+            if commentable != updated_profile.commentable:
+                return redirect(profile.get_absolute_url() + '?commentableChanged=true')
+
         return redirect(profile.get_absolute_url())
 
 
