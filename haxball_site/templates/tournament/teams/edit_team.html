@@ -1,34 +1,25 @@
-{% extends "core/home.html" %}
 {% load static %}
-{% load tournament_extras %}
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "tournament/teams/team_page.css" %}">
 
-
-{% endblock %}
-
-{% block title %}Чемпионат | Редактировать команду {{ team.title }} — CIS-HAXBALL {% endblock %}
-{% block profile_of_user %}
-    {% if user.is_authenticated %}
-
-        <div class="card mt-2">
-            <div class="card-header">
-                <h5>Изменить команду</h5> {{ team.title }}
-            </div>
-            <div class="card-body">
-                {{ form.media }}
-                <form method="POST">
-                    {% csrf_token %}
-
-                    {{ form.as_p }}
-                    <div class="d-flex justify-content-end">
-                        <button class="btn btn-primary" type="submit">Отправить</button>
-                    </div>
-                </form>
-            </div>
+{% if user.is_authenticated %}
+    <div id="team-form-container" class="card mt-2">
+        <div class="card-header">
+            <h5>Изменить команду {{ team.title }}</h5>
         </div>
+        <div class="card-body">
+            {{ form.media }}
+            <form method="POST"
+                  hx-post="{% url 'tournament:edit_team' team.slug %}"
+                  hx-trigger="submit"
+                  hx-target="#team-form-container"
+                  hx-swap="outerHTML"
+                  hx-disabled-elt="find button">
+                {{ form.as_p }}
+                <div class="d-flex justify-content-end">
+                    <img class="htmx-indicator mr-2 mt-2" height="24" src="{% static 'img/svg-loaders/bars.svg' %}">
+                    <button class="btn btn-primary" type="submit">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-
-    {% endif %}
-
-{% endblock %}
+{% endif %}
