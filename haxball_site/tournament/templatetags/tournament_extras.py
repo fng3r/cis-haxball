@@ -637,7 +637,6 @@ def get_user_teams(user: User):
     try:
         player = user.user_player
     except Exception as e:
-        print(e)
         return []
     teams = []
     if player.role == Player.CAPTAIN or player.role == Player.ASSISTENT:
