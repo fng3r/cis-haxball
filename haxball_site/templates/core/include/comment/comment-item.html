@@ -80,7 +80,7 @@
                     </a>
                 {% endif %}
 
-                {% if user.is_superuser or comment.author or comment.content_object.name == user %}
+                {% if user.is_superuser or comment.author == user or comment.content_object.name == user %}
                     <a :style="editingComment && {'pointer-events': 'none'}" class="text-danger" data-toggle="modal"
                        data-target="#deleter{{ comment.id }}">
                         <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
