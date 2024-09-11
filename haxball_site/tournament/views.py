@@ -334,7 +334,7 @@ class MatchDetail(DetailView):
             | Q(team_guest=match.team_home, team_home=match.team_guest, is_played=True)
         ).select_related('team_home', 'team_guest')
 
-        substitutes = {match.team_home: [], match.team_guest: []}
+        substitutes = {match.team_home: set(), match.team_guest: set()}
         team_home_start = match.team_home_start.all()
         team_guest_start = match.team_guest_start.all()
         substitutions = match.match_substitutions.select_related(
@@ -348,7 +348,7 @@ class MatchDetail(DetailView):
             team = substitution.team
             player_in = substitution.player_in
             if player_in not in team_home_start and player_in not in team_guest_start:
-                substitutes[team].append(player_in)
+                substitutes[team].add(player_in)
         context['team_home_substitutes'] = substitutes[match.team_home]
         context['team_guest_substitutes'] = substitutes[match.team_guest]
 
