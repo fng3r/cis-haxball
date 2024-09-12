@@ -23,7 +23,7 @@
                      x-data="{commentable: '{{object.commentable}}' === 'True' }"
                      @commentable-changed.window="commentable = $event.detail.commentable">
 
-                    <div x-show="commentable">
+                    <div x-show="commentable" x-cloak>
                         {% if user.is_authenticated and user.user_profile.can_comment %}
                             {% include 'core/include/new_form_comment.html' %}
                         {% elif user.is_authenticated and not user.user_profile.can_comment %}
@@ -37,7 +37,7 @@
                             </h6>
                         {% endif %}
                     </div>
-                    <div x-show="!commentable">
+                    <div x-show="!commentable" x-cloak>
                         <h5 class="text-center">
                             {% if object|get_class == 'Profile' %}
                                 Пользователь закрыл свой профиль

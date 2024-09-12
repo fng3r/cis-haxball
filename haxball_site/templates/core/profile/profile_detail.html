@@ -77,7 +77,7 @@
 
                                         {% if previous_nicknames.count > 0 %}
 
-                                            <div x-show="showNicknamesHistory" x-transition.duration.200ms
+                                            <div x-show="showNicknamesHistory" x-transition.duration.200ms x-cloak
                                                  @click.outside="showNicknamesHistory = false"
                                                  style="position: relative; top: 0; left: 0;">
                                                 <div class="nicknames-history">
