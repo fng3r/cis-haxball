@@ -32,16 +32,18 @@ from .models import (
 @admin.register(FreeAgent)
 class FreeAgentAdmin(admin.ModelAdmin):
     list_display = ('id', 'player', 'position_main', 'description', 'is_active', 'created', 'deleted')
+    search_fields = ('player__username',)
 
 
 @admin.register(AchievementCategory)
-class AchievmentCategoryAdmin(admin.ModelAdmin):
+class AchievementCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'description', 'order')
 
 
 @admin.register(Achievements)
 class AchievementsAdmin(admin.ModelAdmin):
     list_display = ('id', 'position_number', 'title', 'description', 'category', 'image', 'mini_image')
+    list_filter = ('category',)
     filter_horizontal = ('player',)
     search_fields = (
         'title__icontains',
@@ -130,27 +132,38 @@ class SeasonAdmin(admin.ModelAdmin):
 
 @admin.register(Nation)
 class NationAdmin(admin.ModelAdmin):
-    list_display = ('country',)
+    list_display = ('country', 'flag')
+    search_fields = ('country',)
 
 
 @admin.register(Disqualification)
 class DisqualificationAdmin(admin.ModelAdmin):
     list_display = ('match', 'team', 'player', 'reason', 'get_tours', 'get_lifted_tours', 'created')
+    list_filter = ('match__league', 'team', 'player')
+    search_fields = ('player__nickname',)
     filter_horizontal = ('tours', 'lifted_tours')
 
     def get_tours(self, model):
         return ', '.join(map(lambda t: str(t), model.tours.all()))
-
     get_tours.short_description = 'Туры'
 
     def get_lifted_tours(self, model):
         return ', '.join(map(lambda t: str(t), model.lifted_tours.all()))
-
     get_lifted_tours.short_description = 'Отмененные туры'
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == 'tours' or db_field.name == 'lifted_tours':
+        resolved = resolve(request.path_info)
+        disqualification = None
+        if 'object_id' in resolved.kwargs:
+            disqualification = Disqualification.objects.filter(pk=resolved.kwargs['object_id']).first()
+
+        if db_field.name == 'tours':
             kwargs['queryset'] = TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
+        elif db_field.name == 'lifted_tours':
+            if disqualification:
+                kwargs['queryset'] = disqualification.tours.all()
+            else:
+                TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
@@ -187,7 +200,6 @@ class PostponementAdmin(admin.ModelAdmin):
     )
     filter_horizontal = ('teams',)
     raw_id_fields = ('match', 'taken_by', 'cancelled_by')
-    # autocomplete_fields = ('taken_by', 'cancelled_by')
     list_filter = ('match__league', 'is_emergency')
     search_fields = ('match__team_home__title', 'match__team_guest__title')
 
@@ -218,6 +230,8 @@ class PostponementAdmin(admin.ModelAdmin):
 @admin.register(League)
 class LeagueAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'is_cup', 'priority', 'championship', 'created')
+    list_filter = ('championship',)
+    search_fields = ('title',)
     filter_horizontal = ('teams',)
     inlines = [PostponementSlotsInline]
 
