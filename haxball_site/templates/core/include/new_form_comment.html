@@ -1,18 +1,28 @@
-<head>{{ comment_form.media }}</head>
+{% load static %}
+{% load user_tags %}
 
-<form action="{% url 'core:add_comment_profile' object.id %}" method="post" id="addcomment" class="text-center">
-    {% csrf_token %}
-    <!--<input type="hidden" name="page" value="{# page #}">-->
+{% with content_type=object|content_type %}
+  <form id="addcomment" class="text-center"
+        hx-post="{% url 'core:add_comment' content_type.pk object.id %}"
+        hx-trigger="submit"
+        hx-target="#comments-container"
+        hx-swap="outerHTML"
+        hx-on::config-request="event.detail.parameters['body'] = CKEDITOR.instances['id_body'].getData()"
+        hx-on::before-request="document.getElementById('cke_id_body').style.filter = 'blur(1px)';"
+        hx-on::after-request="CKEDITOR.instances['id_body'].setData(''); document.getElementById('cke_id_body').style.filter = 'none';"
+        hx-disabled-elt="find button[type=submit]">
+
+    {{ comment_form.media }}
     <input type="hidden" name="parent" id="contactparent" value="">
 
     <div class="form-group mt-2 ml-1">
-        {{ comment_form.body }}
-        <!-- <textarea class="form-control border" rows="3" name="body"
-                   id="contactcomment" required="" rows="2" placeholder="Оставьте Ваш комментарий"></textarea> -->
+      {{ comment_form.body }}
     </div>
 
     <div align="right">
-        <!--Отправить</input>-->
-        <input type="submit" class="btn btn-primary mr-2">
+      <img class="htmx-indicator mr-2" height="24" src="{% static 'img/svg-loaders/bars.svg' %}">
+      <button type="submit" class="btn btn-primary mr-2">Отправить</button>
     </div>
-</form>
+
+  </form>
+{% endwith %}

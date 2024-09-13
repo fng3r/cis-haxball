@@ -29,7 +29,7 @@ def teams_can_reserve(user):
 
 
 @register.filter
-def user_can_reserv(user):
+def can_reserve_host(user):
     return bool(teams_can_reserve(user))
 
 

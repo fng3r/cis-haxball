@@ -4,17 +4,18 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Max
+from django.db.models import Max, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import View
+from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
 from tournament.models import Achievements, Team
 
-from .forms import EditProfileForm, NewCommentForm, PostForm
+from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments
@@ -139,47 +140,6 @@ def post_edit(request, slug, pk):
     return render(request, 'core/forum/add_post.html', {'form': form})
 
 
-# edit comment
-def comment_edit(request, pk):
-    comment = get_object_or_404(NewComment, pk=pk)
-    obj = comment.content_type.get_object_for_this_type(pk=comment.object_id)
-    if not request.user.is_superuser:
-        if request.user != comment.author:
-            return HttpResponse('Ошибка доступа')
-
-        if not can_edit(comment):
-            return HttpResponse('Время на редактирование комментария истекло')
-
-        if exceeds_edit_limit(comment):
-            return HttpResponse('Достигнут лимит на количество изменений комментария')
-
-    if request.method == 'POST':
-        form = NewCommentForm(request.POST, instance=comment)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.save()
-            return redirect(obj.get_absolute_url())
-        comment.delete()
-        return redirect(obj.get_absolute_url())
-    form = NewCommentForm(instance=comment)
-
-    return render(request, 'core/post/edit_comment.html', {'comment_form': form})
-
-
-# Удаление комментария
-def delete_comment(request, pk):
-    comment = get_object_or_404(NewComment, pk=pk)
-    obj = comment.content_object
-    if request.method == 'POST' and (
-        (request.user == comment.author and timezone.now() - comment.created < timezone.timedelta(minutes=10))
-        or request.user.is_superuser
-        or request.user == obj.name
-    ):
-        comment.delete()
-        return redirect(obj.get_absolute_url())
-    return HttpResponse('Ошибка доступа или время истекло')
-
-
 # Вьюха для фасткапов
 class FastcupView(ListView):
     try:
@@ -246,28 +206,24 @@ class PostDetailView(DetailView):
 
 
 # Вьюха для профиля пользователя MultipleObjectMixin
-class ProfileDetail(DetailView):
-    model = Profile
-    context_object_name = 'profile'
+class ProfileDetail(View):
     template_name = 'core/profile/profile_detail.html'
 
-    def get_queryset(self):
-        return super().get_queryset().select_related('name__user_player__team')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        profile = context['profile']
+    def get(self, request, pk, slug):
+        profile = Profile.objects.select_related('name__user_player__team').get(pk=pk)
         profile.views += 1
         profile.save(update_fields=['views'])
 
-        page = self.request.GET.get('page')
+        page = request.GET.get('page')
         comments_obj = get_comments_for_object(Profile, profile.id)
         comments = get_paginated_comments(comments_obj, page)
 
-        context['page'] = page
-        context['comments'] = comments
-        comment_form = NewCommentForm()
-        context['comment_form'] = comment_form
+        context = {
+            'profile': profile,
+            'page': page,
+            'comments': comments,
+            'comment_form': NewCommentForm(),
+        }
 
         all_achievements = Achievements.objects.select_related('category').filter(player__name=profile.name)
         achievements_by_category = {}
@@ -281,42 +237,192 @@ class ProfileDetail(DetailView):
         context['achievements_by_category'] = achievements_by_category.items()
         context['previous_nicknames'] = UserNicknameHistoryItem.objects.filter(user=profile.name).order_by('-edited')
 
-        return context
+        if request.htmx:
+            response = render(request, 'core/profile/profile_detail.html#profile-container', context)
+            commentable_changed = request.GET.get('commentableChanged', False)
+            if commentable_changed:
+                response = trigger_client_event(
+                    response, 'commentableChanged', {'commentable': profile.commentable}
+                )
+
+            return response
+
+        return render(request, self.template_name, context)
+
+
+class CommentsListView(ListView):
+    def get(self, request, ct, pk):
+        content_type = ContentType.objects.get(pk=ct)
+        model = content_type.model_class()
+        page = request.GET.get('page')
+        object_comments = get_comments_for_object(model, pk)
+        comments = get_paginated_comments(object_comments, page)
+        obj = model.objects.get(pk=pk)
+
+        context = {
+            'object': obj,
+            'comments': comments,
+        }
+
+        return render(request, 'core/include/new_comments.html#comments-container', context)
 
 
 class AddCommentView(View):
-    model = None
+    def get(self, request, ct, pk):
+        content_type = ContentType.objects.get(pk=ct)
+        model = content_type.model_class()
+        obj = model.objects.get(id=pk)
+        comment_form = NewCommentForm()
+
+        context = {
+            'object': obj,
+            'comment_form': comment_form,
+        }
+
+        return render(request, 'core/include/new_comments.html#comment-form-container', context)
+
+    def post(self, request, ct, pk):
+        content_type = ContentType.objects.get(pk=ct)
+        model = content_type.model_class()
+        obj = model.objects.get(id=pk)
+        comment_form = NewCommentForm(data=request.POST)
+        new_com = comment_form.save(commit=False)
+        if request.POST.get('parent', None):
+            new_com.parent_id = int(request.POST.get('parent'))
+        new_com.object_id = obj.id
+        new_com.author = request.user
+        new_com.content_type = content_type
+        new_com.save()
+
+        comments_obj = get_comments_for_object(model, obj.id)
+        comments = get_paginated_comments(comments_obj, 1)
+
+        context = {
+            'object': obj,
+            'page': 1,
+            'comments': comments,
+            'comment_form': comment_form,
+        }
+
+        return render(request, 'core/include/new_comments.html#comments-container', context)
+
+
+class EditCommentView(View):
+    def get(self, request, pk):
+        comment = get_object_or_404(NewComment, pk=pk)
+        if not request.user.is_superuser:
+            if request.user != comment.author:
+                return HttpResponse('Ошибка доступа')
+
+            if not can_edit(comment):
+                return HttpResponse('Время на редактирование комментария истекло')
+
+            if exceeds_edit_limit(comment):
+                return HttpResponse('Достигнут лимит на количество изменений комментария')
+
+        form = EditCommentForm({'edit_body': comment.body})
+
+        return render(
+            request,
+            'core/post/edit_comment.html',
+            {
+                'comment_form': form,
+                'comment': comment,
+            }
+        )
 
     def post(self, request, pk):
-        obj = self.model.objects.get(id=pk)
-        if request.method == 'POST':
-            comment_form = NewCommentForm(data=request.POST)
-            new_com = comment_form.save(commit=False)
-            if request.POST.get('parent', None):
-                new_com.parent_id = int(request.POST.get('parent'))
-            new_com.object_id = obj.id
-            new_com.author = request.user
-            new_com.content_type = ContentType.objects.get_for_model(obj)
-            new_com.save()
-            return redirect(obj.get_absolute_url())
+        comment = get_object_or_404(NewComment, pk=pk)
+        form = EditCommentForm(request.POST)
+        if form.is_valid():
+            comment.body = form.cleaned_data['edit_body']
+            comment.save()
+
+        return render(
+            request,
+            'core/include/comment/comment-item.html',
+            {
+                'comment': comment,
+                'object': comment.content_object
+            }
+        )
 
 
-class EditMyProfile(DetailView, View):
+def get_comment(request, pk):
+    prefetch_likes = Prefetch(
+        'votes', queryset=LikeDislike.objects.likes().prefetch_related('user__user_profile'), to_attr='likes'
+    )
+    prefetch_dislikes = Prefetch(
+        'votes', queryset=LikeDislike.objects.dislikes().prefetch_related('user__user_profile'), to_attr='dislikes'
+    )
+    comment = (
+        NewComment.objects
+        .select_related('author__user_profile')
+        .prefetch_related(
+            'author__user_profile__user_icon',
+            prefetch_likes,
+            prefetch_dislikes,
+        )
+        .get(pk=pk)
+    )
+
+    return render(
+        request,
+        'core/include/comment/comment-item.html',
+        {
+            'comment': comment,
+            'object': comment.content_object
+        }
+    )
+
+
+# Удаление комментария
+def delete_comment(request, pk):
+    comment = get_object_or_404(NewComment, pk=pk)
+    obj = comment.content_object
+    if request.method == 'POST' and (
+        (request.user == comment.author and timezone.now() - comment.created < timezone.timedelta(minutes=10))
+        or request.user.is_superuser
+        or request.user == obj.name
+    ):
+        comment.delete()
+
+        comments_obj = get_comments_for_object(obj, obj.id)
+        comments = get_paginated_comments(comments_obj, 1)
+
+        context = {}
+        context['object'] = obj
+        context['page'] = 1
+        context['comments'] = comments
+        comment_form = NewCommentForm()
+        context['comment_form'] = comment_form
+
+        return render(request, 'core/include/new_comments.html#comments-container', context)
+
+    return HttpResponse('Ошибка доступа или время истекло')
+
+
+class EditProfile(DetailView, View):
     model = Profile
     context_object_name = 'profile'
-    template_name = 'core/profile/profile_edit.html'
+    template_name = 'core/include/profile_editor_form.html'
 
     def post(self, request, pk, slug):
         profile = Profile.objects.get(slug=slug, id=pk)
         profile_form = EditProfileForm(request.POST, instance=profile)
+        commentable = profile.commentable
         if profile_form.is_valid():
             if 'avatar' in request.FILES:
                 profile.avatar = request.FILES['avatar']
             if 'background' in request.FILES:
                 profile.background = request.FILES['background']
-            if request.POST.get('bg-removed') == 'on':
+            if profile_form.cleaned_data['remove_bg']:
                 profile.background = None
-            profile_form.save()
+
+            updated_profile = profile_form.save()
+            if commentable != updated_profile.commentable:
+                return redirect(profile.get_absolute_url() + '?commentableChanged=true')
+
         return redirect(profile.get_absolute_url())
 
 
@@ -343,9 +449,6 @@ class VotesView(View):
                 likedislike.save(update_fields=['vote'])
                 result = True
             else:
-                # if obj.author != request.user:
-                #    author_profile.karma -= likedislike.vote
-                #    author_profile.save(update_fields=['karma'])
                 likedislike.delete()
                 result = False
 
@@ -355,6 +458,9 @@ class VotesView(View):
                 obj.author.user_profile.karma += self.vote_type
                 obj.author.user_profile.save(update_fields=['karma'])
             result = True
+
+        if request.htmx:
+            return render(request, 'core/include/like_dislike_comment.html', {'comment': obj})
 
         return HttpResponse(
             json.dumps(

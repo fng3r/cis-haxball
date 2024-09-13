@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 from decouple import config
+from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
@@ -32,6 +33,7 @@ ALLOWED_HOSTS = config('APP_ALLOWED_HOSTS', cast=str.split)
 # Application definition
 
 INSTALLED_APPS = [
+    'template_partials',
     'core.apps.CoreConfig',
     'tournament.apps.TournamentConfig',
     'polls.apps.PollsConfig',
@@ -58,6 +60,8 @@ INSTALLED_APPS = [
     'mathfilters',
     'debug_toolbar',
     'django_extensions',
+    'django_htmx',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_htmx.middleware.HtmxMiddleware',
     'haxball_site.middleware.UserTrackingMiddleware',
     'online_users.middleware.OnlineNowMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -89,6 +94,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'haxball_site.context_processors.running_line_context',
             ],
+            'builtins': ['template_partials.templatetags.partials'],
         },
     },
 ]
@@ -103,25 +109,25 @@ USE_DJANGO_JQUERY = True
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-if DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-            'OPTIONS': {'timeout': 30},
-        }
+# if DEBUG:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#             'OPTIONS': {'timeout': 30},
+#         }
+#     }
+# else:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST'),
-            'PORT': config('DB_PORT'),
-        }
-    }
+}
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -374,12 +380,8 @@ CKEDITOR_CONFIGS = {
                 'Redo',
             ]
         ],
-        # 'plugins': [],
-        'extraPlugins': ','.join(
-            [
-                'uploadimage',  # the upload image feature
-                # 'autoimage',
-                # your extra plugins here
+        'extraPlugins': [
+                'uploadimage',
                 'div',
                 'autolink',
                 'embedsemantic',
@@ -392,9 +394,19 @@ CKEDITOR_CONFIGS = {
                 'elementspath',
                 'youtube',
                 'html5video',
-            ]
-        ),
+        ]
     },
 }
 
 INTERNAL_IPS = config('INTERNAL_IPS', cast=str.split)
+
+# This sets the mapping of message level to message tag, which is typically rendered as a CSS class in HTML.
+# https://docs.djangoproject.com/en/4.2/ref/settings/#message-tags
+# Customize tags with bootstrap alert classes
+MESSAGE_TAGS = {
+    messages.DEBUG: "alert-secondary",
+    messages.INFO: "alert-primary",
+    messages.SUCCESS: "alert-success",
+    messages.WARNING: "alert-warning",
+    messages.ERROR: "alert-danger",
+}

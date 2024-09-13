@@ -22,31 +22,16 @@ def get_class(value):
 
 
 @register.filter
+def content_type(obj):
+    if not obj:
+        return None
+
+    return ContentType.objects.get_for_model(obj)
+
+
+@register.filter
 def subtract(value, arg):
     return value - arg
-
-
-# тег для поискса кармы юзера(профиля), будем писать в профиль
-# !!Пока что ищет ток по комментам карму, хз, могу допилить и по постам!
-# ! Добавил и по постам
-"""
-@register.inclusion_tag('core/include/profile/karma.html')
-def karma(profile):
-    s = 0
-    samo = 0
-    for comment in Comment.objects.filter(author=profile.name):
-        s += comment.votes.sum_rating()
-        samo += comment.votes.filter(user=profile.name, vote=1).count() - comment.votes.filter(user=profile.name,
-                                                                                               vote=-1).count()
-    for post in Post.objects.filter(author=profile.name):
-        s += post.votes.sum_rating()
-        samo += post.votes.filter(user=profile.name, vote=1).count() - post.votes.filter(user=profile.name,
-                                                                                         vote=-1).count()
-    print(profile.karma)
-    profile.karma = s - samo
-    profile.save(update_fields=['karma'])
-    return {'k': s - samo}
-"""
 
 
 # Упоролся и написал своё вычисление возраста 1 цифрой, т.к. встроенный

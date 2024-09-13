@@ -1,6 +1,6 @@
 .table-fix {
     overflow-y: auto;
-    height: 500px;
+    max-height: 700px;
 }
 
 .table-fix thead th {

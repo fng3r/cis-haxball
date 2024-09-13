@@ -11,8 +11,7 @@ urlpatterns = [
     path('', views.PostListView.as_view(), name='home'),
     path('post/<int:pk>/<slug:slug>', views.PostDetailView.as_view(), name='post_detail'),
     path('profile/<int:pk>/<slug:slug>/', views.ProfileDetail.as_view(), name='profile_detail'),
-    # path('comment/<int:id>/<slug:slug>', views.AddComment.as_view(), name='add_comment'),
-    path('profile/<slug:slug>/<int:pk>/edit', views.EditMyProfile.as_view(), name='edit_profile'),
+    path('profile/<slug:slug>/<int:pk>/edit', views.EditProfile.as_view(), name='edit_profile'),
     path('anime/', views.anime_view, name='anime'),
     #  Путь к фасткапам
     path('fastcups/', views.FastcupView.as_view(), name='fastcups'),
@@ -30,16 +29,12 @@ urlpatterns = [
     path('forum/<slug:slug>', views.CategoryListView.as_view(), name='forum_category'),
     # Ссылка на создание нового поста на форуме
     path('forum/<slug:slug>/add_post', views.post_new, name='new_post'),
-    # Создание нового "Правильного комментария" к профилю
-    path('add_comment/profile/<int:pk>', views.AddCommentView.as_view(model=Profile), name='add_comment_profile'),
-    # Создание нового "Правильного комментария" к лиге
-    path('add_comment/league/<int:pk>', views.AddCommentView.as_view(model=League), name='add_comment_league'),
-    # Создание нового "Правильного комментария" к посту
-    path('add_comment/post/<int:pk>', views.AddCommentView.as_view(model=Post), name='add_comment_post'),
-    # Создание нового "Правильного комментария" к матчу
-    path('add_comment/match/<int:pk>', views.AddCommentView.as_view(model=Match), name='add_comment_match'),
+    path('comments/<int:ct>/<int:pk>', views.CommentsListView.as_view(), name='comments'),
+    path('comment/<int:pk>', views.get_comment, name='comment'),
+    # Создание нового комментария
+    path('add_comment/<int:ct>/<int:pk>', views.AddCommentView.as_view(), name='add_comment'),
     # Редактирование комментария
-    path('post/edit_comment/<int:pk>', views.comment_edit, name='edit_comment'),
+    path('post/edit_comment/<int:pk>', views.EditCommentView.as_view(), name='edit_comment'),
     # Удаление комментария
     path('delete_comment/<int:pk>', views.delete_comment, name='delete_comment'),
     # Редактирование поста, если создан пользователем
@@ -55,13 +50,6 @@ urlpatterns = [
         login_required(views.VotesView.as_view(model=Post, vote_type=LikeDislike.DISLIKE)),
         name='post_dislike',
     ),
-    # Путь на самописный апи для обработку лайка/дизлайка Комментария через Ажакс-запрос
-    #    path('api/comment/<int:id>/like/',
-    #         login_required(views.VotesView.as_view(model=Comment, vote_type=LikeDislike.LIKE)),
-    #         name='comment_like'),
-    #   path('api/comment/<int:id>/dislike/',
-    #       login_required(views.VotesView.as_view(model=Comment, vote_type=LikeDislike.DISLIKE)),
-    #      name='comment_dislike'),
     path(
         'api/comment/<int:id>/like/',
         login_required(views.VotesView.as_view(model=NewComment, vote_type=LikeDislike.LIKE)),

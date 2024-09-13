@@ -1,0 +1,169 @@
+{% load static %}
+{% load user_tags %}
+{% load thumbnail %}
+
+
+<div class="d-flex flex-row comment-row" id="r{{ comment.id }}"
+     {% if not comment.is_parent %} style="padding-left: 100px" {% endif %}>
+
+    <div class="p-2">
+        <span class="round">
+            <a href="{{ comment.author.user_profile.get_absolute_url }}">
+                {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as im %}
+                    <img src="{{ im.url }}"
+                         alt="{{ comment.author.username }}" width="50">
+                {% endthumbnail %}
+
+            </a>
+        </span>
+    </div>
+    <div class="comment-text w-100">
+        <div class="d-flex justify-content-between">
+            <div class="d-inline-flex">
+
+                <div class="m-0 d-flex" style="font-size: 13pt; font-weight: 600;">
+
+                    {% for icon in comment.author.user_profile.user_icon.all %}
+                        <div class="mr-1" style="vertical-align: middle">
+                            <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                 title="{{ icon.description }}">
+                        </div>
+                    {% endfor %}
+                    <a href="{{ comment.author.user_profile.get_absolute_url }}">
+                        {{ comment.author.username }}
+                    </a>
+
+                    <div class="p-0 ml-1 small" style="margin-top: 2.25%">
+                        <span class="badge badge-pill
+                                     {% if comment.author.user_profile.karma >= 0 %}badge-success{% else %}badge-danger{% endif %}">{{ comment.author.user_profile.karma }}
+                        </span>
+                    </div>
+                </div>
+
+                {% if not comment.is_parent %}
+                    <i class="ml-2" style="align-self: flex-end; margin-bottom: 2px; font-size: 11pt;">
+                        ответил
+                    </i>
+
+                    <div class="m-0 d-flex ml-2" style="font-size: 13pt; font-weight: 600;">
+                        {% for icon in child_comment.parent.author.user_profile.user_icon.all %}
+                            <div class="mr-1" style="vertical-align: middle">
+
+                                <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                     title="{{ icon.description }}">
+                            </div>
+                        {% endfor %}
+                        <a href="{{ child_comment.parent.author.user_profile.get_absolute_url }}">
+                            {{ child_comment.parent.author.username }}
+                        </a>
+                    </div>
+                {% endif %}
+
+            </div>
+            <span>
+                {% comment %}
+                    {% for achievement in comment.author.user_player.achievements.all %}
+                        <img src="{{ achievement.mini_image.url }}" width="20px" height="20px"
+                             title="{{ achievement.description }}">
+                    {% endfor %}
+                {% endcomment %}
+
+                <a href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ comment.id }}">#{{ comment.id }}</a>
+                {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
+                    <a :style="editingComment && {'pointer-events': 'none'}" @click="editingComment = true" class="text-warning" title="Редактировать"
+                       hx-trigger="click"
+                       hx-get="{% url 'core:edit_comment' comment.id %}"
+                       hx-target="#r{{ comment.id }}"
+                       hx-swap="outerHTML">
+                        <i class="fa fa-pencil" aria-hidden="true">
+                        </i>
+                    </a>
+                {% endif %}
+
+                {% if user.is_superuser or comment.author == user or comment.content_object.name == user %}
+                    <a :style="editingComment && {'pointer-events': 'none'}" class="text-danger" data-toggle="modal"
+                       data-target="#deleter{{ comment.id }}">
+                        <i class="fa fa-times" aria-hidden="true" style="font-size: 20px"></i>
+                    </a>
+
+                    <div class="modal fade" id="deleter{{ comment.id }}" tabindex="-1"
+                         role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header justify-content-center">
+                                    <h4 class="modal-title">Удалить комментарий?</h4>
+                                </div>
+                                <div class="modal-footer justify-content-center">
+                                    <button type="button" class="btn btn-danger"
+                                            data-dismiss="modal">Нет, подождите</button>
+                                    <form method="POST"
+                                          hx-post="{% url 'core:delete_comment' comment.id %}"
+                                          hx-trigger="submit"
+                                          hx-target="#comments-container"
+                                          hx-swap="outerHTML"
+                                          hx-indicator="#delete-comment-indicator">
+                                        <button type="submit" class="btn btn-primary">Да, я уверен</button>
+                                    </form>
+
+                                    <img id="delete-comment-indicator" class="htmx-indicator ml-2"
+                                         src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% endif %}
+
+            </span>
+        </div>
+
+        <div class="comment-footer">
+            <span class="date text-muted small">
+                <i class="fa fa-calendar text-primary" aria-hidden="true"></i>
+                {{ comment.created|date:"d.m.y" }}
+                <i class="fa fa-clock-o text-primary" aria-hidden="true"></i>
+                {{ comment.created|time:"H:i" }}
+                {% if comment.edited %}
+                    {% if comment.edited.date == comment.created.date %}
+                        <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                           data-comment-edit-title='изм. {{comment.edited|time:"H:i"}}'></i>
+                    {% else %}
+                        <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                           data-comment-edit-title='изм. {{comment.edited|date:"d.m.y"}} {{comment.edited|time:"H:i"}}'></i>
+                    {% endif %}
+                {% endif %}
+            </span>
+
+            {% include 'core/include/like_dislike_comment.html' with comment=comment %}
+
+            <span class="action-icons">
+                {% if user.is_authenticated %}
+                    <a href="#addcomment"
+                       onclick="addComment('{{ comment.author.username }}','{{ comment.id }}')">
+                        <i class="fa fa-reply"></i>
+                    </a>
+                {% else %}
+                    <a data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
+                        <i class="fa fa-reply"></i>
+                    </a>
+                {% endif %}
+            </span>
+        </div>
+        <div class="comment-body mt-3">
+            {{ comment.body|safe }}
+        </div>
+
+        <div class="comment-footer" x-data="{showReplies: true}">
+            {% if comment.childs_count > 2 %}
+                <a href="#commentcollapse{{ comment.id }}" data-toggle="collapse"
+                   @click="showReplies = !showReplies"
+                   aria-expanded="true"
+                   aria-controls="commentcollapse{{ comment.id }}" class="small">
+                    <i class="fa" :class="showReplies ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    <span x-text="showReplies ? 'Скрыть ответы' : 'Показать ответы'"></span>
+                </a>
+                <small>({{ comment.childs_count }})</small>
+            {% endif %}
+        </div>
+    </div>
+</div>

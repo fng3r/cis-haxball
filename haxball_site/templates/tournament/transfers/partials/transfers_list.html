@@ -1,0 +1,70 @@
+{% load static %}
+
+{% for transfer in transfers %}
+    {% if forloop.last and transfers.number < transfers.paginator.num_pages %}
+        <tr hx-get="{% url 'tournament:transfers' %}?page={{ transfers.number|add:1 }}"
+            hx-trigger="intersect once"
+            hx-target="this"
+            hx-swap="afterend"
+            hx-include="#filter-form"
+            hx-indicator="#scroll-indicator">
+    {% else %}
+        <tr>
+    {% endif %}
+    <td class="transfer-row pl-2 pr-1" style="font-size: 18px;">
+        <div class="d-flex align-items-center">
+            <img src="{{ transfer.trans_player.name.user_profile.avatar.url }}" class="align-self-start mr-1"
+                 alt="{{ transfer.trans_player.nickname }}" width="30" height="30"
+                 style="border-radius: 100%; background-position: center center; background-repeat: no-repeat;">
+            <div class="media-body">
+                <h6 class="my-0">
+                    <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">{{ transfer.trans_player }}</a>
+                </h6>
+            </div>
+        </div>
+    </td>
+
+    <td class="transfer-row pl-2 pr-1">
+        <div class="d-flex align-items-center">
+            {% if transfer.from_team %}
+                <img src="{{ transfer.from_team.logo.url }}" class="align-self-start mr-1"
+                     alt="{{ transfer.from_team.title }}" width="30">
+                <div class="media-body">
+                    <h6 class="my-0">
+                        <a href="{{ transfer.from_team.get_absolute_url }}">{{ transfer.from_team.title }}</a>
+                    </h6>
+                </div>
+            {% else %}
+                <img src="{% static 'img/ico/free.png' %}" class="align-self-start mr-1"
+                     alt="{{ transfer.from_team.title }}" width="30">
+                <span>Свободный агент</span>
+            {% endif %}
+        </div>
+    </td>
+
+    <td class="transfer-row pl-2 pr-1">
+        <div class="d-flex align-items-center">
+            {% if transfer.to_team %}
+                <img src="{{ transfer.to_team.logo.url }}" class="align-self-start mr-1"
+                     alt="{{ transfer.to_team.title }}" width="30">
+                <div class="media-body">
+                    <h6 class="my-0">
+                        <a href="{{ transfer.to_team.get_absolute_url }}">{{ transfer.to_team.title }}</a>
+                    </h6>
+                </div>
+            {% else %}
+                <img src="{% static 'img/ico/free.png' %}" class="align-self-start mr-1"
+                     alt="{{ transfer.from_team.title }}" width="30" style="border-radius: 100%">
+                <span>Свободный агент</span>
+            {% endif %}
+        </div>
+    </td>
+
+    <td class="transfer-row">
+        <div style="font-size: 16px;">
+            {{ transfer.date_join|date:'d.m.y' }}
+        </div>
+    </td>
+
+    </tr>
+{% endfor %}

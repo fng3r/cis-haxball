@@ -128,6 +128,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'background', 'karma', 'views', 'can_comment')
     list_filter = ('id', 'name')
     list_display_links = ('name',)
+    search_fields = ('name__username',)
 
 
 @admin.register(Themes)

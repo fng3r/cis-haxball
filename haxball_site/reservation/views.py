@@ -1,7 +1,8 @@
 from datetime import datetime, time, timedelta
 
-from django.http import HttpResponse
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 
@@ -10,14 +11,23 @@ from .templatetags.reservation_extras import teams_can_reserve
 
 
 class ReservationList(ListView):
-    queryset = ReservationEntry.objects.filter(match__is_played=False).order_by('time_date')
-    context_object_name = 'reservations'
     template_name = 'reservation/reservation_list.html'
 
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super(ReservationList, self).get_context_data()
-        context['active_hosts'] = ReservationHost.objects.filter(is_active=True)
-        return context
+    def get(self, request, **kwargs):
+        reservations = ReservationEntry.objects.filter(match__is_played=False).order_by('time_date')
+        active_hosts = ReservationHost.objects.filter(is_active=True)
+
+        if request.htmx:
+            self.template_name = 'reservation/reservation_list.html#content-container'
+
+        return render(
+            request,
+            self.template_name,
+            {
+                'reservations': reservations,
+                'active_hosts': active_hosts,
+            },
+        )
 
     def post(self, request):
         data = request.POST
@@ -32,20 +42,14 @@ class ReservationList(ListView):
         next_match_date = match_date + timedelta(minutes=29)
 
         reserved = ReservationEntry.objects.filter(time_date__range=[prev_match_date, next_match_date], host_id=host_id)
-        if reserved.count() == 0:
+        if not reserved.exists():
             ReservationEntry.objects.create(
                 author=request.user, time_date=match_date, match_id=match_id, host_id=host_id
             )
-            return redirect('reservation:host_reservation')
-        return render(
-            request,
-            'reservation/reservation_list.html',
-            {
-                'reservations': ReservationEntry.objects.filter(match__is_played=False).order_by('-time_date'),
-                'active_hosts': ReservationHost.objects.filter(is_active=True),
-                'message': 'Выбранное время занято!!',
-            },
-        )
+        else:
+            messages.error(request, 'Выбранное время занято!')
+
+        return redirect(reverse('reservation:host_reservation'))
 
 
 class ReplaysList(ListView):
@@ -62,5 +66,7 @@ def delete_entry(request, pk):
 
     if (reserved_match.match.team_home in t) or (reserved_match.match.team_guest in t):
         reserved_match.delete()
-        return redirect('reservation:host_reservation')
-    return HttpResponse('Ошибка доступа')
+    else:
+        messages.error(request, 'Ошибка доступа')
+
+    return redirect(reverse('reservation:host_reservation'))

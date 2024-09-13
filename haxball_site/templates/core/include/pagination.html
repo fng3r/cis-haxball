@@ -1,6 +1,7 @@
+{% load static %}
 {% load user_tags %}
 
-<nav aria-label="Page navigation" class="bot_nav_page m-0">
+<nav id="pagination" aria-label="Page navigation" class="bot_nav_page m-0">
     <ul class="pagination justify-content-center">
 
         {% if page.paginator.num_pages > 1 %}
@@ -11,9 +12,27 @@
                 {% elif page_number == page.number %}
                     <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">{{ page_number }}</a></li>
                 {% else %}
-                    <li class="page-item"><a class="page-link" href="{{ object.get_absolute_url }}?page={{ page_number }}">{{ page_number }}</a></li>
+                    {% with content_type=object|content_type %}
+                        <li class="page-item">
+                            {% if paginated_type == 'comments' %}
+                                <a class="page-link"
+                                   href="#"
+                                   hx-get="{% url 'core:comments' content_type.pk object.id %}?page={{ page_number }}"
+                                   hx-push-url="?page={{ page_number }}"
+                                   hx-target="#comments-container"
+                                   hx-swap="outerHTML show:top"
+                                   hx-indicator="#page-indicator">
+                                    {{ page_number }}
+                                </a>
+                            {% else %}
+                                <a class="page-link" href="{{ object.get_absolute_url }}?page={{ page_number }}">{{ page_number }}</a>
+                            {% endif %}
+                        </li>
+                    {% endwith %}
                 {% endif %}
             {% endfor %}
+
+            <img id="page-indicator" height="24" class="htmx-indicator ml-2 mt-2" src="{% static 'img/svg-loaders/bars.svg' %}">
 
         {% endif %}
     </ul>

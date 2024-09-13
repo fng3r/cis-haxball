@@ -1,7 +1,15 @@
-<div class="card bg-c-lite-unknown mb-2" style="border-radius: 30px">
+{% load static %}
+
+
+<div class="card bg-c-lite-unknown mb-2" style="border-radius: 1rem">
     {% if matches %}
-        <form method="POST" class="row p-3">
-            {% csrf_token %}
+        <form id="reservation-form" class="row px-3 py-2"
+              hx-trigger="submit"
+              hx-post="{% url 'reservation:host_reservation' %}"
+              hx-target="#content-container"
+              hx-swap="outerHTML"
+              hx-disabled-elt="find button">
+
             <input type="hidden" name="author" value="{{ user.id }}">
             <div class="form-group text-center col-5">
                 <label for="match" class="h6 mb-1">Матч</label>
@@ -65,7 +73,9 @@
 
             </div>
 
-            <div class="d-flex justify-content-end w-100">
+            <div class="d-flex justify-content-end w-100 mb-1 mt-n1">
+                <img class="htmx-indicator mr-2 mt-2"
+                     src="{% static 'img/svg-loaders/bars-white.svg' %}" height="24">
                 <button type="submit" class="btn btn-primary mr-2 col-2">Забронировать хост</button>
             </div>
 
