@@ -154,7 +154,7 @@
         </div>
 
         <div class="comment-footer" x-data="{showReplies: true}">
-            {% if comment.childs_count > 2 %}
+            {% if comment.is_parent and comment.childs_count > 2 %}
                 <a href="#commentcollapse{{ comment.id }}" data-toggle="collapse"
                    @click="showReplies = !showReplies"
                    aria-expanded="true"
