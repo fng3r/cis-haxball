@@ -1,0 +1,113 @@
+<div class="card my-2">
+    <div class="card px-1 pt-1 pb-2">
+        <div id="matches-heading">
+            <h5 class="mb-0">
+                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#matches-collapse" aria-expanded="true" aria-controls="matches-collapse">
+                    Матчи
+                </button>
+            </h5>
+        </div>
+
+        <div id="matches-collapse" class="collapse show" aria-labelledby="matches-heading">
+            <div class="card-body">
+                {% for chart in matches_charts.bar_charts %}
+                    <div class="chart">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                <div class="row">
+                    {% for chart in matches_charts.pie_charts %}
+                        <div class="chart col-6">
+                            {{ chart|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card px-1 pb-2">
+        <div id="goals-heading">
+            <h5 class="mb-0">
+                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#goals-collapse" aria-expanded="true" aria-controls="goals-collapse">
+                    Результативные действия
+                </button>
+            </h5>
+        </div>
+
+        <div id="goals-collapse" class="collapse show" aria-labelledby="goals-heading">
+            <div class="card-body">
+                {% for chart in goals_assists_charts.bar_charts %}
+                    <div class="chart">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                <div class="row">
+                    {% for chart in goals_assists_charts.pie_charts %}
+                        <div class="chart col-6">
+                            {{ chart|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card px-1 pb-2">
+        <div id="cs-heading">
+            <h5 class="mb-0">
+                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#cs-collapse" aria-expanded="true" aria-controls="cs-collapse">
+                    Сухари
+                </button>
+            </h5>
+        </div>
+
+        <div id="cs-collapse" class="collapse show" aria-labelledby="cs-heading">
+            <div class="card-body">
+                {% for chart in cs_charts.bar_charts %}
+                    <div class="chart">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                <div class="row">
+                    {% for chart in cs_charts.pie_charts %}
+                        <div class="chart col-6">
+                            {{ chart|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card px-1 pb-2">
+        <div id="cards-heading">
+            <h5 class="mb-0">
+                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#cards-collapse" aria-expanded="true" aria-controls="cards-collapse">
+                    Карточки
+                </button>
+            </h5>
+        </div>
+
+        <div id="cards-collapse" class="collapse show" aria-labelledby="cs-heading">
+            <div class="card-body">
+                {% for chart in cards_charts.bar_charts %}
+                    <div class="chart">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                <div class="row">
+                    {% for chart in cards_charts.pie_charts %}
+                        <div class="chart col-6">
+                            {{ chart|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
