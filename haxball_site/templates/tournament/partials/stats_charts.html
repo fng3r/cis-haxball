@@ -1,23 +1,23 @@
-<div class="card my-2">
-    <div class="card px-1 pt-1 pb-2">
-        <div id="matches-heading">
+{% partialdef chart-category %}
+    <div class="card pt-1 pb-2">
+        <div id="{{name}}-heading">
             <h5 class="mb-0">
-                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#matches-collapse" aria-expanded="true" aria-controls="matches-collapse">
-                    Матчи
+                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#{{name}}-collapse" aria-expanded="true" aria-controls="{{name}}-collapse">
+                    {{ title }}
                 </button>
             </h5>
         </div>
 
-        <div id="matches-collapse" class="collapse show" aria-labelledby="matches-heading">
+        <div id="{{name}}-collapse" class="collapse show" aria-labelledby="{{name}}-heading">
             <div class="card-body">
-                {% for chart in matches_charts.bar_charts %}
+                {% for chart in charts.bar_charts %}
                     <div class="chart">
                         {{ chart|safe }}
                     </div>
                 {% endfor %}
 
                 <div class="row">
-                    {% for chart in matches_charts.pie_charts %}
+                    {% for chart in charts.pie_charts %}
                         <div class="chart col-6">
                             {{ chart|safe }}
                         </div>
@@ -26,88 +26,22 @@
             </div>
         </div>
     </div>
+{% endpartialdef %}
 
-    <div class="card px-1 pb-2">
-        <div id="goals-heading">
-            <h5 class="mb-0">
-                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#goals-collapse" aria-expanded="true" aria-controls="goals-collapse">
-                    Результативные действия
-                </button>
-            </h5>
-        </div>
+<div class="card my-2 px-2">
+    {% with name="matches" title="Матчи" charts=matches_charts %}
+        {% partial chart-category %}
+    {% endwith %}
 
-        <div id="goals-collapse" class="collapse show" aria-labelledby="goals-heading">
-            <div class="card-body">
-                {% for chart in goals_assists_charts.bar_charts %}
-                    <div class="chart">
-                        {{ chart|safe }}
-                    </div>
-                {% endfor %}
+    {% with name="goals-assists" title="Результативные действия" charts=goals_assists_charts %}
+        {% partial chart-category %}
+    {% endwith %}
 
-                <div class="row">
-                    {% for chart in goals_assists_charts.pie_charts %}
-                        <div class="chart col-6">
-                            {{ chart|safe }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
+    {% with name="cs" title="Сухари" charts=cs_charts %}
+        {% partial chart-category %}
+    {% endwith %}
 
-    <div class="card px-1 pb-2">
-        <div id="cs-heading">
-            <h5 class="mb-0">
-                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#cs-collapse" aria-expanded="true" aria-controls="cs-collapse">
-                    Сухари
-                </button>
-            </h5>
-        </div>
-
-        <div id="cs-collapse" class="collapse show" aria-labelledby="cs-heading">
-            <div class="card-body">
-                {% for chart in cs_charts.bar_charts %}
-                    <div class="chart">
-                        {{ chart|safe }}
-                    </div>
-                {% endfor %}
-
-                <div class="row">
-                    {% for chart in cs_charts.pie_charts %}
-                        <div class="chart col-6">
-                            {{ chart|safe }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card px-1 pb-2">
-        <div id="cards-heading">
-            <h5 class="mb-0">
-                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#cards-collapse" aria-expanded="true" aria-controls="cards-collapse">
-                    Карточки
-                </button>
-            </h5>
-        </div>
-
-        <div id="cards-collapse" class="collapse show" aria-labelledby="cs-heading">
-            <div class="card-body">
-                {% for chart in cards_charts.bar_charts %}
-                    <div class="chart">
-                        {{ chart|safe }}
-                    </div>
-                {% endfor %}
-
-                <div class="row">
-                    {% for chart in cards_charts.pie_charts %}
-                        <div class="chart col-6">
-                            {{ chart|safe }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
+    {% with name="cards" title="Карточки" charts=cards_charts %}
+        {% partial chart-category %}
+    {% endwith %}
 </div>
