@@ -175,7 +175,7 @@ class FreeAgentList(ListView):
             free_agent = fa_form.save(commit=False)
             free_agent.created = timezone.now()
             free_agent.is_active = True
-            free_agent.player = request.user
+            free_agent.team = request.user
             free_agent.save()
 
         paginator = Paginator(self.queryset, self.paginate_by)
@@ -1161,11 +1161,11 @@ def player_statistics_charts(request, pk):
     except:
         return HttpResponse(200)
 
-    stat_charts = StatCharts()
-    matches_charts = stat_charts.matches(player)
-    goals_assists_charts = stat_charts.goals_assists(player)
-    cs_charts = stat_charts.cs(player)
-    cards_charts = stat_charts.cards(player)
+    player_charts = StatCharts.for_player(player)
+    matches_charts = player_charts.matches()
+    goals_assists_charts = player_charts.goals_assists()
+    cs_charts = player_charts.cs()
+    cards_charts = player_charts.cards()
 
     context = {
         'matches_charts': matches_charts,
@@ -1174,7 +1174,7 @@ def player_statistics_charts(request, pk):
         'cards_charts': cards_charts,
     }
 
-    return render(request, 'tournament/partials/stats_charts.html', context)
+    return render(request, 'tournament/partials/player_stats_charts.html', context)
 
 
 def team_statistics(request, pk):
@@ -1526,3 +1526,22 @@ def team_statistics(request, pk):
     }
 
     return render(request, 'tournament/partials/team_statistics.html', context)
+
+
+def team_statistics_charts(request, pk):
+    team = Team.objects.filter(id=pk).first()
+
+    team_charts = StatCharts.for_team(team)
+    matches_charts = team_charts.matches()
+    goals_assists_charts = team_charts.goals_assists()
+    cs_charts = team_charts.cs()
+    cards_charts = team_charts.cards()
+
+    context = {
+        'matches_charts': matches_charts,
+        'goals_assists_charts': goals_assists_charts,
+        'cs_charts': cs_charts,
+        'cards_charts': cards_charts,
+    }
+
+    return render(request, 'tournament/partials/team_stats_charts.html', context)

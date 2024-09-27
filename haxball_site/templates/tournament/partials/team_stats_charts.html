@@ -1,0 +1,47 @@
+{% partialdef chart-category %}
+    <div class="card pt-2 pb-2 border-0">
+        <div id="{{name}}-heading">
+            <h5 class="mb-0">
+                <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#{{name}}-collapse" aria-expanded="true" aria-controls="{{name}}-collapse">
+                    {{ title }}
+                </button>
+            </h5>
+        </div>
+
+        <div id="{{name}}-collapse" class="collapse show" aria-labelledby="{{name}}-heading">
+            <div class="card-body">
+                {% for chart in charts.bar_charts %}
+                    <div class="chart">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                <div class="row">
+                    {% for chart in charts.pie_charts %}
+                        <div class="chart col-6">
+                            {{ chart|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endpartialdef %}
+
+<div class="card my-2 px-1 border-0">
+    {% with name="matches" title="Матчи" charts=matches_charts %}
+        {% partial chart-category %}
+    {% endwith %}
+
+    {% with name="goals-assists" title="Результативные действия" charts=goals_assists_charts %}
+        {% partial chart-category %}
+    {% endwith %}
+
+    {% with name="cs" title="Сухари" charts=cs_charts %}
+        {% partial chart-category %}
+    {% endwith %}
+
+    {% with name="cards" title="Карточки" charts=cards_charts %}
+        {% partial chart-category %}
+    {% endwith %}
+</div>
