@@ -1,8 +1,8 @@
 import plotly.express as px
-from django.db.models import Case, Count, F, FloatField, OuterRef, Q, Subquery, Value, When, Exists
+from django.db.models import Case, Count, Exists, F, FloatField, OuterRef, Q, Subquery, Value, When
 from django.db.models.functions import Cast, Coalesce
 
-from .models import Goal, Match, MatchResult, OtherEvents, Season, Player
+from .models import Goal, Match, MatchResult, OtherEvents, Player, Season
 
 
 class StatCharts:
@@ -33,15 +33,24 @@ class PlayerStatCharts:
         wdl_chart = Charts.wdl(seasons, wins, draws, losses)
         wdl_percentage_chart = Charts.wdl_percentage(seasons, wins, draws, losses)
 
+        total_season_chart = Charts.recap_chart('Сезоны', len(set(seasons)))
+        total_matches = sum(matches)
+        total_matches_chart = Charts.recap_chart('Матчи', total_matches)
+        total_winrate = sum(wins) / max(1, total_matches) * 100
+        total_winrate_chart = Charts.recap_chart('Процент побед', total_winrate, percentage=True)
+
         matches_by_team = self.pcs.get_matches_by_team()
         teams, matches = column_values_list(matches_by_team, 'team', 'matches')
         matches_by_team_chart = Charts.matches_by_team(teams, matches)
+
+        total_teams_chart = Charts.recap_chart('Команды', len(set(teams)))
 
         matches_by_tournament = self.pcs.get_matches_by_tournament()
         tournaments, matches = column_values_list(matches_by_tournament, 'tournament', 'matches')
         matches_by_tournament_chart = Charts.matches_by_tournament(tournaments, matches)
 
         return {
+            'recap_charts': [total_season_chart, total_matches_chart, total_teams_chart, total_winrate_chart],
             'bar_charts': [matches_chart, wdl_chart, wdl_percentage_chart],
             'pie_charts': [matches_by_team_chart, matches_by_tournament_chart],
         }
@@ -74,6 +83,9 @@ class PlayerStatCharts:
             'tournament', 'goals', 'assists', 'goals_assists'
         )
 
+        total_goals_chart = Charts.recap_chart('Голы', sum(goals))
+        total_assists_chart = Charts.recap_chart('Голевые передачи', sum(assists))
+
         goals_chart = Charts.goals_by_season(seasons, goals)
         goals_per_match_chart = Charts.goals_per_match_by_season(seasons, goals_per_match)
         goals_by_team_chart = Charts.goals_by_team(teams, goals_for_team)
@@ -92,6 +104,7 @@ class PlayerStatCharts:
                                                                                goals_assists_in_tournament)
 
         return {
+            'recap_charts': [total_goals_chart, total_assists_chart],
             'bar_charts': [
                 goals_chart, goals_per_match_chart,
                 assists_chart, assists_per_match_chart,
@@ -114,6 +127,8 @@ class PlayerStatCharts:
         cs_by_season_chart = Charts.cs_by_season(seasons, cs)
         cs_per_match_by_season_chart = Charts.cs_per_match_by_season(seasons, cs_per_match)
 
+        total_cs_chart = Charts.recap_chart('Сухие таймы', sum(cs))
+
         teams, cs = column_values_list(cs_by_team, 'team_title', 'cs')
         cs_by_team_chart = Charts.cs_by_team(teams, cs)
 
@@ -121,6 +136,7 @@ class PlayerStatCharts:
         cs_by_tournament_chart = Charts.cs_by_tournament(tournaments, cs)
 
         return {
+            'recap_charts': [total_cs_chart],
             'bar_charts': [cs_by_season_chart, cs_per_match_by_season_chart],
             'pie_charts': [cs_by_team_chart, cs_by_tournament_chart],
         }
@@ -153,6 +169,9 @@ class PlayerStatCharts:
         yellow_cards_by_team_chart = Charts.yellow_cards_by_team(teams, yellow_cards)
         red_cards_by_team_chart = Charts.red_cards_by_team(teams, red_cards)
 
+        total_yellow_cards_chart = Charts.recap_chart('Желтые карточки', sum(yellow_cards), color='yellow')
+        total_red_cards_chart = Charts.recap_chart('Красные карточки', sum(red_cards), color='red')
+
         tournaments, yellow_cards, red_cards = column_values_list(
             cards_by_tournament,
             'tournament', 'yellow_cards', 'red_cards'
@@ -161,6 +180,7 @@ class PlayerStatCharts:
         red_cards_by_tournament_chart = Charts.red_cards_by_tournament(tournaments, red_cards)
 
         return {
+            'recap_charts': [total_yellow_cards_chart, total_red_cards_chart],
             'bar_charts': [cards_by_season_chart, cards_per_match_by_season_chart],
             'pie_charts': [yellow_cards_by_team_chart, yellow_cards_by_tournament_chart,
                            red_cards_by_team_chart, red_cards_by_tournament_chart],
@@ -524,6 +544,12 @@ class TeamStatCharts:
         wdl_chart = Charts.wdl(seasons, wins, draws, losses)
         wdl_percentage_chart = Charts.wdl_percentage(seasons, wins, draws, losses)
 
+        total_season_chart = Charts.recap_chart('Сезоны', len(set(seasons)))
+        total_matches = sum(matches)
+        total_matches_chart = Charts.recap_chart('Матчи', total_matches)
+        total_winrate = sum(wins) / max(1, total_matches) * 100
+        total_winrate_chart = Charts.recap_chart('Процент побед', total_winrate, percentage=True)
+
         matches_in_league_by_season = self.tcs.get_matches_in_league_by_season()
         (
             seasons,
@@ -547,6 +573,7 @@ class TeamStatCharts:
         top_players_by_matches_chart = Charts.top_players_by_matches(players, matches_by_player)
 
         return {
+            'recap_charts': [total_season_chart, total_matches_chart, total_winrate_chart],
             'bar_charts': [matches_chart, wdl_chart, wdl_percentage_chart,
                            points_per_match_chart, top_players_by_matches_chart],
             'pie_charts': [matches_by_tournament_chart],
@@ -579,6 +606,9 @@ class TeamStatCharts:
             'tournament', 'goals', 'assists', 'goals_assists'
         )
 
+        total_goals_chart = Charts.recap_chart('Голы', sum(goals))
+        total_assists_chart = Charts.recap_chart('Голевые передачи', sum(assists))
+
         goals_chart = Charts.goals_by_season(seasons, goals, conceded_goals)
         goals_per_match_chart = Charts.goals_per_match_by_season(seasons, goals_per_match, conceded_goals_per_match)
         goals_by_tournament_chart = Charts.goals_by_tournament(tournaments, goals_in_tournament)
@@ -607,6 +637,7 @@ class TeamStatCharts:
         top_players_by_assists_per_match_chart = Charts.top_players_by_assists_per_match(players, assists_per_match)
 
         return {
+            'recap_charts': [total_goals_chart, total_assists_chart],
             'bar_charts': [
                 goals_chart, goals_per_match_chart,
                 goal_diff_chart, goal_diff_per_match_chart,
@@ -629,6 +660,8 @@ class TeamStatCharts:
         cs_by_season_chart = Charts.cs_by_season(seasons, cs)
         cs_per_match_by_season_chart = Charts.cs_per_match_by_season(seasons, cs_per_match)
 
+        total_cs_chart = Charts.recap_chart('Сухие таймы', sum(cs))
+
         tournaments, cs = column_values_list(cs_by_tournament, 'tournament', 'cs')
         cs_by_tournament_chart = Charts.cs_by_tournament(tournaments, cs)
 
@@ -641,6 +674,7 @@ class TeamStatCharts:
         top_players_by_cs_per_match_chart = Charts.top_players_by_cs_per_match(players, cs_per_match)
 
         return {
+            'recap_charts': [total_cs_chart],
             'bar_charts': [cs_by_season_chart, cs_per_match_by_season_chart,
                            top_players_by_cs_chart, top_players_by_cs_per_match_chart],
             'pie_charts': [cs_by_tournament_chart],
@@ -666,6 +700,9 @@ class TeamStatCharts:
             seasons, yellow_cards_per_match, red_cards_per_match
         )
 
+        total_yellow_cards_chart = Charts.recap_chart('Желтые карточки', sum(yellow_cards), color='yellow')
+        total_red_cards_chart = Charts.recap_chart('Красные карточки', sum(red_cards), color='red')
+
         tournaments, yellow_cards, red_cards = column_values_list(
             cards_by_tournament,
             'tournament', 'yellow_cards', 'red_cards'
@@ -682,6 +719,7 @@ class TeamStatCharts:
         top_players_by_red_cards_chart = Charts.top_players_by_red_cards(players, red_cards)
 
         return {
+            'recap_charts': [total_yellow_cards_chart, total_red_cards_chart],
             'bar_charts': [cards_by_season_chart, cards_per_match_by_season_chart,
                            top_players_by_yellow_cards_chart, top_players_by_red_cards_chart],
             'pie_charts': [yellow_cards_by_tournament_chart, red_cards_by_tournament_chart],
@@ -1249,6 +1287,28 @@ class Charts:
             add_no_data_annotation(fig)
 
         return fig
+
+    @staticmethod
+    def recap_chart(title, value, percentage=False, color=None):
+        color_discrete_sequence = None
+        if color:
+            color_discrete_sequence = [color]
+
+        fig = px.pie(
+            names=['name'],
+            values=[1],
+            title=title,
+            color_discrete_sequence=color_discrete_sequence,
+        )
+        fig.update_layout(height=250, margin_t=50, margin_b=20, hovermode=False, showlegend=False)
+        annotation_text = f'{value:.1f}%' if percentage else str(value)
+        fig.update_layout(
+            annotations=[
+                dict(text=annotation_text, x=0.5, y=0.5, xanchor='center', font_size=25, showarrow=False)
+            ])
+        fig.update_traces(textinfo='none', hole=0.95)
+
+        return Charts.render_to_html(fig)
     #endregion
 
     #region Matches
@@ -1349,6 +1409,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_matches(players, matches, nmin=10):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=matches,
@@ -1469,6 +1532,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_goals(players, goals, nmin=10):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=goals,
@@ -1481,6 +1547,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_goals_per_match(players, goals, nmin=10):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=goals,
@@ -1542,6 +1611,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_assists(players, assists, nmin=10):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=assists,
@@ -1554,6 +1626,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_assists_per_match(players, assists, nmin=10):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=assists,
@@ -1683,6 +1758,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_cs(players, cs, nmin=5):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=cs,
@@ -1694,6 +1772,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_cs_per_match(players, cs, nmin=5):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=cs,
@@ -1769,6 +1850,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_yellow_cards(players, cards, nmin=5):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=cards,
@@ -1803,6 +1887,9 @@ class Charts:
 
     @staticmethod
     def top_players_by_red_cards(players, cards, nmin=5):
+        if not players:
+            return None
+
         fig = Charts.bar(
             x=players,
             y=cards,
