@@ -9,21 +9,22 @@
         </div>
 
         <div id="{{name}}-collapse" class="collapse show" aria-labelledby="{{name}}-heading">
-            {% for chart in charts.bar_charts %}
-                <div class="chart">
-                    {{ chart|safe }}
-                </div>
-            {% endfor %}
-
-            <div class="row">
-                {% for chart in charts.pie_charts %}
-                    <div class="chart col-6">
+            <div class="card-body">
+                {% for chart in charts.bar_charts %}
+                    <div class="chart">
                         {{ chart|safe }}
                     </div>
                 {% endfor %}
+
+                <div class="row">
+                    {% for chart in charts.pie_charts %}
+                        <div class="chart col-6">
+                            {{ chart|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
-    </div>
     </div>
 {% endpartialdef %}
 
