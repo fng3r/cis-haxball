@@ -1,0 +1,39 @@
+<div class="card pt-2 pb-2 border-0">
+    <div id="summary-heading">
+        <h5 class="mb-0">
+            <button class="btn btn-secondary w-100" data-toggle="collapse" data-target="#summary-collapse" aria-expanded="true" aria-controls="summary-collapse">
+                Сводка
+            </button>
+        </h5>
+    </div>
+
+    <div id="summary-collapse" class="collapse show" aria-labelledby="summary-heading">
+        <div class="card-body">
+            <div class="row row-cols-3">
+                {% for chart in matches_charts.recap_charts %}
+                    <div class="chart col">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                {% for chart in goals_assists_charts.recap_charts %}
+                    <div class="chart col">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                {% for chart in cs_charts.recap_charts %}
+                    <div class="chart col">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+
+                {% for chart in cards_charts.recap_charts %}
+                    <div class="chart col">
+                        {{ chart|safe }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
