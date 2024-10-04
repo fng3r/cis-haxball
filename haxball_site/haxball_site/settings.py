@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -77,6 +78,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'haxball_site.urls'
@@ -120,7 +122,7 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # else:
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
@@ -169,9 +171,6 @@ USE_L10N = True
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    # ACCOUNT_EMAIL_REQUIRED = True
-    # ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
-    # ACCOUNT_EMAIL_VERIFICATION = True
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ACCOUNT_EMAIL_REQUIRED = True
@@ -181,14 +180,14 @@ else:
 if DEBUG:
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'BACKEND': 'django_prometheus.cache.backends.filebased.FileBasedCache',
             'LOCATION': os.path.join(BASE_DIR, 'mycache'),
         }
     }
 else:
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'BACKEND': 'django_prometheus.cache.backends.filebased.FileBasedCache',
             'LOCATION': '/var/tmp/django_cache',
         }
     }

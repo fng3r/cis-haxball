@@ -35,6 +35,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('summernote/', include('django_summernote.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
+    path('prometheus/', include('django_prometheus.urls')),
 ]
 
 if settings.URL_PREFIX:
