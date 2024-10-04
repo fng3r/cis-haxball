@@ -247,17 +247,15 @@ class TeamStatCharts:
             seasons,
             goals,
             conceded_goals,
-            goal_diff,
             goals_per_match,
             conceded_goals_per_match,
-            goal_diff_per_match,
             assists,
             assists_per_match,
             goals_assists_per_match,
         ) = column_values_list(
             goals_by_season,
-            'season_title', 'goals', 'conceded_goals', 'goal_diff',
-            'goals_per_match', 'conceded_goals_per_match', 'goal_diff_per_match',
+            'season_title', 'goals', 'conceded_goals',
+            'goals_per_match', 'conceded_goals_per_match',
             'assists', 'assists_per_match', 'goals_assists_per_match'
         )
 
@@ -272,9 +270,6 @@ class TeamStatCharts:
         goals_chart = Charts.goals_by_season(seasons, goals, conceded_goals)
         goals_per_match_chart = Charts.goals_per_match_by_season(seasons, goals_per_match, conceded_goals_per_match)
         goals_by_tournament_chart = Charts.goals_by_tournament(tournaments, goals_in_tournament)
-
-        goal_diff_chart = Charts.goal_diff_by_season(seasons, goal_diff)
-        goal_diff_per_match_chart = Charts.goal_diff_per_match_by_season(seasons, goal_diff_per_match)
 
         goals_by_player = self.tcs.get_top_players_by_goals()
         players, goals = column_values_list(goals_by_player, 'player', 'goals')
@@ -300,7 +295,6 @@ class TeamStatCharts:
             'recap_charts': [total_goals_chart, total_assists_chart],
             'bar_charts': [
                 goals_chart, goals_per_match_chart,
-                goal_diff_chart, goal_diff_per_match_chart,
                 assists_chart, assists_per_match_chart,
                 top_players_by_goals_chart, top_players_by_goals_per_match_chart,
                 top_players_by_assists_chart, top_players_by_assists_per_match_chart,
@@ -632,37 +626,6 @@ class Charts:
         if conceded_goals is not None:
             fig.update_layout(legend={'title': 'Голы'}, barmode='group')
             fig.update_traces(hovertemplate='Сезон=%{x}<br>Голы=%{y}')
-
-        return Charts.render_to_html(fig)
-
-    @staticmethod
-    def goal_diff_by_season(seasons, goal_diffs):
-        fig = Charts.bar(
-            x=seasons,
-            y=goal_diffs,
-            title='Разница мячей',
-            labels={'x': 'Сезон', 'y': 'Разница мячей'},
-            color=['green' if goal_diff > 0 else 'red' for goal_diff in goal_diffs],
-            color_discrete_map={'green': 'green', 'red': 'red'},
-        )
-        fig.update_layout(showlegend=False, yaxis_rangemode='normal')
-        fig.update_traces(hovertemplate='Сезон=%{x}<br>Разница мячей=%{y}<extra></extra>')
-
-        return Charts.render_to_html(fig)
-
-    @staticmethod
-    def goal_diff_per_match_by_season(seasons, goal_diffs):
-        fig = Charts.bar(
-            x=seasons,
-            y=goal_diffs,
-            title='Средняя разница мячей за матч',
-            labels={'x': 'Сезон', 'y': 'Разница мячей'},
-            color=['green' if goal_diff > 0 else 'red' for goal_diff in goal_diffs],
-            color_discrete_map={'green': 'green', 'red': 'red'},
-        )
-        fig.update_layout(showlegend=False, yaxis_rangemode='normal')
-        fig.update_traces(hovertemplate='Сезон=%{x}<br>Разница мячей=%{y}<extra></extra>')
-        fig.update_traces(texttemplate='%{y:.2f}', yhoverformat='.2f')
 
         return Charts.render_to_html(fig)
 
