@@ -7,7 +7,7 @@ from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Count, F, FloatField, OuterRef, Prefetch, Q, Subquery
+from django.db.models import Case, Count, F, FloatField, OuterRef, Prefetch, Q, Subquery, When
 from django.db.models.functions import Cast, Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,6 +18,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
 
+from .charts import StatCharts
 from .forms import EditTeamProfileForm, FreeAgentForm
 from .models import (
     Disqualification,
@@ -174,7 +175,7 @@ class FreeAgentList(ListView):
             free_agent = fa_form.save(commit=False)
             free_agent.created = timezone.now()
             free_agent.is_active = True
-            free_agent.player = request.user
+            free_agent.team = request.user
             free_agent.save()
 
         paginator = Paginator(self.queryset, self.paginate_by)
@@ -1150,7 +1151,30 @@ def player_detailed_statistics(request, pk):
         'other_stats': other_stats,
     }
 
-    return render(request, 'tournament/include/player_detailed_statistics.html', context)
+    return render(request, 'tournament/partials/player_detailed_statistics.html', context)
+
+
+def player_statistics_charts(request, pk):
+    user = User.objects.filter(id=pk).select_related('user_player').first()
+    try:
+        player = user.user_player
+    except:
+        return HttpResponse(200)
+
+    player_charts = StatCharts.for_player(player)
+    matches_charts = player_charts.matches()
+    goals_assists_charts = player_charts.goals_assists()
+    cs_charts = player_charts.cs()
+    cards_charts = player_charts.cards()
+
+    context = {
+        'matches_charts': matches_charts,
+        'goals_assists_charts': goals_assists_charts,
+        'cs_charts': cs_charts,
+        'cards_charts': cards_charts,
+    }
+
+    return render(request, 'tournament/partials/player_stats_charts.html', context)
 
 
 def team_statistics(request, pk):
@@ -1501,4 +1525,23 @@ def team_statistics(request, pk):
         'other_stats': other_stats,
     }
 
-    return render(request, 'tournament/include/team_statistics.html', context)
+    return render(request, 'tournament/partials/team_statistics.html', context)
+
+
+def team_statistics_charts(request, pk):
+    team = Team.objects.filter(id=pk).first()
+
+    team_charts = StatCharts.for_team(team)
+    matches_charts = team_charts.matches()
+    goals_assists_charts = team_charts.goals_assists()
+    cs_charts = team_charts.cs()
+    cards_charts = team_charts.cards()
+
+    context = {
+        'matches_charts': matches_charts,
+        'goals_assists_charts': goals_assists_charts,
+        'cs_charts': cs_charts,
+        'cards_charts': cards_charts,
+    }
+
+    return render(request, 'tournament/partials/team_stats_charts.html', context)

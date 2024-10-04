@@ -24,22 +24,32 @@
 </style>
 
 <div class="card">
-    <div class="p-0">
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
+    <div class="card-header p-0">
+        <ul class="nav nav-pills nav-fill" id="myTab" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active" id="general-stats-tab" data-toggle="tab" href="#general-stats" role="tab"
-                   aria-controls="general-stats-tab" aria-selected="true">Общее</a>
+                <a class="nav-link active" id="general-stats-tab" data-toggle="tab" href="#general-stats-panel" role="tab"
+                   aria-controls="general-stats-panel" aria-selected="true">Общее</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" id="avg-stats-tab" data-toggle="tab" href="#avg-stats" role="tab"
-                   aria-controls="avg-stats-tab" aria-selected="false">"Топ"</a>
+                <a class="nav-link" id="avg-stats-tab" data-toggle="tab" href="#avg-stats-panel" role="tab"
+                   aria-controls="avg-stats-panel" aria-selected="false">"Топ"</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" id="charts-tab" data-toggle="tab" href="#charts-panel" role="tab"
+                   aria-controls="charts-panel" aria-selected="false"
+                   hx-trigger="click once"
+                   hx-get="{% url 'tournament:player_stats_charts' user.id %}"
+                   hx-target="#charts-panel">
+                    Дашборд
+                </a>
             </li>
         </ul>
     </div>
 
     <div class="tab-content profile-tab" id="content">
-        <div class="tab-pane fade show active pr-2" id="general-stats" role="tabpanel" aria-labelledby="general-stats-tab">
+        <div class="tab-pane fade show active pr-2" id="general-stats-panel" role="tabpanel" aria-labelledby="general-stats-tab">
 
             <table class="table table-striped">
                 <thead>
@@ -243,7 +253,7 @@
             </table>
         </div>
 
-        <div class="tab-pane fade pr-2" id="avg-stats" role="tabpanel" aria-labelledby="avg-stats-tab">
+        <div class="tab-pane fade pr-2" id="avg-stats-panel" role="tabpanel" aria-labelledby="avg-stats-tab">
             <table class="table table-striped">
                 <tbody style="font-size: 18px">
                     <tr class="border-bottom">
@@ -447,5 +457,13 @@
             </table>
 
         </div>
+
+        <div class="tab-pane fade" id="charts-panel" role="tabpanel" aria-labelledby="charts-tab">
+            <div class="card container-fluid justify-content-center" style="min-height: 450px">
+                <img src="{% static 'img/svg-loaders/audio.svg' %}" height="96" class="mb-3">
+                <h3 class="text-center">Загружаем статистику...</h3>
+            </div>
+        </div>
+
     </div>
 </div>

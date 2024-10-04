@@ -1,0 +1,19 @@
+<div class="card my-2 px-1 border-0">
+    {% include 'tournament/partials/summary_chart_section.html' %}
+
+    {% with name="matches" title="Матчи" charts=matches_charts %}
+        {% include 'tournament/partials/chart_section.html' %}
+    {% endwith %}
+
+    {% with name="goals-assists" title="Результативные действия" charts=goals_assists_charts %}
+        {% include 'tournament/partials/chart_section.html' %}
+    {% endwith %}
+
+    {% with name="cs" title="Сухари" charts=cs_charts %}
+        {% include 'tournament/partials/chart_section.html' %}
+    {% endwith %}
+
+    {% with name="cards" title="Карточки" charts=cards_charts %}
+        {% include 'tournament/partials/chart_section.html' %}
+    {% endwith %}
+</div>

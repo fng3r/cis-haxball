@@ -205,13 +205,13 @@
 
                         </div>
                         <div class="col-sm-4">
-                            {% include "tournament/include/players_stats_summary.html" with players=match.team_home_start.all %}
+                            {% include "tournament/partials/players_stats_summary.html" with players=match.team_home_start.all %}
                         </div>
                         <div class="col-sm-3">
 
                         </div>
                         <div class="col-sm-4">
-                            {% include "tournament/include/players_stats_summary.html" with players=match.team_guest_start.all %}
+                            {% include "tournament/partials/players_stats_summary.html" with players=match.team_guest_start.all %}
                         </div>
 
                     </div>
@@ -222,13 +222,13 @@
 
                             </div>
                             <div class="col-sm-4">
-                                {% include "tournament/include/players_stats_summary.html" with players=team_home_substitutes %}
+                                {% include "tournament/partials/players_stats_summary.html" with players=team_home_substitutes %}
                             </div>
                             <div class="col-sm-3">
 
                             </div>
                             <div class="col-sm-4">
-                                {% include "tournament/include/players_stats_summary.html" with players=team_guest_substitutes %}
+                                {% include "tournament/partials/players_stats_summary.html" with players=team_guest_substitutes %}
                             </div>
                         </div>
                     {% endif %}

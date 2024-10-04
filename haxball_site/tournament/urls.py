@@ -15,8 +15,10 @@ from .views import (
     cancel_postponement,
     halloffame,
     player_detailed_statistics,
+    player_statistics_charts,
     remove_entry,
     team_statistics,
+    team_statistics_charts,
     update_entry,
 )
 
@@ -40,5 +42,7 @@ urlpatterns = [
     path('<slug:slug>', LeagueDetail.as_view(), name='league'),
     path('match/<int:pk>', MatchDetail.as_view(), name='match_detail'),
     path('player_stats/<int:pk>', player_detailed_statistics, name='player_stats'),
+    path('player_stats/<int:pk>/charts', player_statistics_charts, name='player_stats_charts'),
     path('team_stats/<int:pk>', team_statistics, name='team_stats'),
+    path('team_stats/<int:pk>/charts', team_statistics_charts, name='team_stats_charts'),
 ]
