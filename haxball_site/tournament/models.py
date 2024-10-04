@@ -6,7 +6,7 @@ from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.db.models import Q
+from django.db.models import Case, Q, Value, When
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -610,6 +610,28 @@ class OtherEventsQuerySet(models.QuerySet):
 
     def ogs(self):
         return self.filter(event=OtherEvents.OWN_GOAL)
+
+    def annotate_with_tournament(self):
+        return self.annotate(
+            tournament=Case(
+                When(
+                    Q(match__league__title__istartswith='Высшая') | Q(match__league__title__istartswith='Единая'),
+                    then=Value('Высшая лига')
+                ),
+                When(match__league__title__istartswith='Первая', then=Value('Первая лига')),
+                When(match__league__title__istartswith='Вторая', then=Value('Вторая лига')),
+                When(
+                    Q(match__league__title__istartswith='Кубок Высшей') |
+                    Q(match__league__title__istartswith='Кубок Первой') |
+                    Q(match__league__title__istartswith='Кубок Второй') |
+                    Q(match__league__title__istartswith='Кубок лиги'),
+                    then=Value('Кубок лиги')
+                ),
+                When(match__league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
+                When(match__league__title__istartswith='Кубок России', then=Value('Кубок России')),
+                default=Value('Unknown')
+            )
+        )
 
 
 class OtherEvents(models.Model):
