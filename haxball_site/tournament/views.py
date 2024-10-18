@@ -93,9 +93,11 @@ class CardFilter(FilterSet):
 class CardsList(ListView):
     queryset = (
         OtherEvents.objects.cards()
-        .select_related('team', 'author__name__user_profile', 'match__inspector__user_profile',
-                        'match__team_home', 'match__team_guest', 'match__league__championship')
-        .order_by('-match__match_date')
+        .select_related(
+            'team', 'author__name__user_profile', 'match__inspector__user_profile',
+            'match__team_home', 'match__team_guest', 'match__league__championship',
+        )
+        .order_by('-match__league__championship__number', '-match__match_date')
     )
     current_season = Season.objects.order_by('-number').first()
     template_name = 'tournament/card/cards.html'
@@ -117,26 +119,32 @@ class CardsList(ListView):
         return render(request, self.template_name, {'cards': cards, 'filter': filter})
 
 
-class DisqualificationFilter(DefaultFilterSet):
+class DisqualificationFilter(FilterSet):
     season = ModelChoiceFilter(
         field_name='match__league__championship',
         label='Сезон',
-        empty_label=None,
         queryset=Season.objects.filter(number__gt=14).order_by('-number'),
-        initial=Season.objects.order_by('-number').first(),
     )
     team = ModelChoiceFilter(queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
     player = ModelChoiceFilter(queryset=Player.objects.all())
+    inspector = ModelChoiceFilter(
+        field_name='match__inspector',
+        label='Инспектор',
+        queryset=User.objects.filter(
+            Exists(Match.objects.filter(inspector=OuterRef('pk'), league__championship__number__gt=14))
+        )
+    )
 
     class Meta:
         model = Disqualification
-        fields = ['season', 'team']
+        fields = ['season', 'team', 'player', 'inspector']
 
 
 class DisqualificationsList(ListView):
     queryset = (
         Disqualification.objects.select_related(
-            'team', 'match__team_home', 'match__team_guest', 'player__name__user_profile'
+            'team', 'player__name__user_profile', 'match__inspector__user_profile',
+            'match__team_home', 'match__team_guest', 'match__league__championship',
         )
         .prefetch_related('tours__league', 'lifted_tours__league')
         .filter(match__league__championship__number__gt=14)
