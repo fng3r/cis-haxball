@@ -597,7 +597,7 @@ class Disqualification(models.Model):
 
 class OtherEventsQuerySet(models.QuerySet):
     def cards(self):
-        return self.filter(event=Q(OtherEvents.YELLOW_CARD) | Q(OtherEvents.RED_CARD))
+        return self.filter(event__in=[OtherEvents.YELLOW_CARD, OtherEvents.RED_CARD])
 
     def yellow_cards(self):
         return self.filter(event=OtherEvents.YELLOW_CARD)
