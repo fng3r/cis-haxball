@@ -2,6 +2,13 @@ from django import forms
 from django.contrib import admin
 from django.db.models import Q
 from django.urls import resolve
+from polymorphic.admin import (
+    PolymorphicChildModelAdmin,
+    PolymorphicChildModelFilter,
+    PolymorphicInlineSupportMixin,
+    PolymorphicParentModelAdmin,
+    StackedPolymorphicInline,
+)
 
 from .models import (
     AchievementCategory,
@@ -9,6 +16,8 @@ from .models import (
     Disqualification,
     FreeAgent,
     Goal,
+    Group,
+    GroupStage,
     League,
     Match,
     MatchResult,
@@ -16,15 +25,18 @@ from .models import (
     OtherEvents,
     Player,
     PlayerTransfer,
+    PlayOffStage,
     Postponement,
     PostponementSlots,
     RatingVersion,
+    RegularStage,
     Season,
     SeasonTeamRating,
     Substitution,
     Team,
     TeamAchievement,
     TeamRating,
+    TournamentStage,
     TourNumber,
 )
 
@@ -227,13 +239,97 @@ class PostponementAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
+class TournamentStageInline(StackedPolymorphicInline):
+    class RegularStageInline(StackedPolymorphicInline.Child):
+        model = RegularStage
+        exclude = ('type',)
+        filter_horizontal = ('teams',)
+
+    class GroupStageInline(StackedPolymorphicInline.Child):
+        model = GroupStage
+        exclude = ('type',)
+        filter_horizontal = ('teams',)
+
+    class PlayOffStageInline(StackedPolymorphicInline.Child):
+        model = PlayOffStage
+        exclude = ('type',)
+        filter_horizontal = ('teams',)
+
+    model = TournamentStage
+    child_inlines = (
+        RegularStageInline,
+        GroupStageInline,
+        PlayOffStageInline,
+    )
+
+
+class GroupInline(admin.StackedInline):
+    model = Group
+    fields = ('stage', 'name', 'teams')
+    filter_horizontal = ('teams',)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        stage = None
+        if 'object_id' in resolved.kwargs:
+            stage = self.parent_model.objects.filter(pk=resolved.kwargs['object_id']).first()
+
+        if db_field.name == 'teams' and stage is not None:
+            kwargs['queryset'] = stage.teams if stage.teams.exists() else stage.league.teams
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(TournamentStage)
+class TournamentStageAdmin(PolymorphicParentModelAdmin):
+    base_model = TournamentStage
+    child_models = [RegularStage, GroupStage, PlayOffStage]
+    list_filter = ('league', PolymorphicChildModelFilter,)
+    list_display = ('get_stage_name', 'league')
+    list_display_links = ('get_stage_name',)
+
+    def get_stage_name(self, model):
+        return model.get_type_display()
+    get_stage_name.short_description = 'Этап'
+
+
+class TournamentStageChildBase(PolymorphicChildModelAdmin):
+    exclude = ('type',)
+    readonly_fields = ('league',)
+    filter_horizontal = ('teams',)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        stage = None
+        if 'object_id' in resolved.kwargs:
+            stage = TournamentStage.objects.filter(pk=resolved.kwargs['object_id']).first()
+
+        if db_field.name == 'teams' and stage is not None:
+            kwargs['queryset'] = stage.league.teams
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(RegularStage)
+class RegularStageAdmin(TournamentStageChildBase):
+   ...
+
+
+@admin.register(GroupStage)
+class GroupStageAdmin(TournamentStageChildBase):
+    inlines = [GroupInline]
+
+
+@admin.register(PlayOffStage)
+class PlayOffStageAdmin(TournamentStageChildBase):
+    ...
+
+
 @admin.register(League)
-class LeagueAdmin(admin.ModelAdmin):
+class LeagueAdmin(PolymorphicInlineSupportMixin, admin.ModelAdmin):
     list_display = ('title', 'slug', 'is_cup', 'priority', 'championship', 'created')
     list_filter = ('championship',)
     search_fields = ('title',)
     filter_horizontal = ('teams',)
-    inlines = [PostponementSlotsInline]
+    inlines = [PostponementSlotsInline, TournamentStageInline]
 
 
 class GoalInline(admin.StackedInline):
@@ -404,7 +500,7 @@ class OtherEventsAdmin(admin.ModelAdmin):
 
 @admin.register(TourNumber)
 class MatchTourAdmin(admin.ModelAdmin):
-    list_display = ('number', 'league', 'date_from', 'date_to', 'is_actual')
+    list_display = ('number', 'league', 'stage', 'group', 'date_from', 'date_to', 'is_actual')
     list_filter = ('league', 'number')
 
     def is_actual(self, model):

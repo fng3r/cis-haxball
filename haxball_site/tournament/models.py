@@ -12,6 +12,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from model_utils import FieldTracker
+from polymorphic.models import PolymorphicModel
 from smart_selects.db_fields import ChainedForeignKey
 
 
@@ -120,15 +121,24 @@ class Team(models.Model):
 
 class League(models.Model):
     championship = models.ForeignKey(
-        Season, verbose_name='Сезон', related_name='tournaments_in_season', null=True, on_delete=models.CASCADE
+        Season,
+        verbose_name='Сезон',
+        related_name='tournaments_in_season',
+        null=True,
+        on_delete=models.CASCADE,
     )
     title = models.CharField('Название турнира', max_length=128)
     is_cup = models.BooleanField('Кубок', help_text='галочка, если кубок', default=False)
-    priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
+    priority = models.SmallIntegerField(
+        'Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
     slug = models.SlugField(max_length=250)
     created = models.DateTimeField('Создана', auto_now_add=True)
     teams = models.ManyToManyField(
-        Team, related_name='leagues', related_query_name='leagues', verbose_name='Команды в лиге'
+        Team,
+        related_name='leagues',
+        related_query_name='leagues',
+        verbose_name='Команды в турнире',
+        blank=True,
     )
     comments = GenericRelation(NewComment, related_query_name='league_comments')
     commentable = models.BooleanField('Комментируемый турнир', default=True)
@@ -141,6 +151,12 @@ class League(models.Model):
 
     def get_absolute_url(self):
         return reverse('tournament:league', args=[self.slug])
+
+    def has_stages(self):
+        return self.stages.count() > 0
+
+    def is_multistage_league(self):
+        return self.stages.count() > 1
 
     class Meta:
         ordering = ['-created']
@@ -161,6 +177,105 @@ class Nation(models.Model):
     class Meta:
         verbose_name = 'Страна'
         verbose_name_plural = 'Страны'
+
+
+class TournamentStage(PolymorphicModel):
+    class StageType(models.TextChoices):
+        REGULAR = 'REG', 'Регулярка'
+        GROUPS = 'GROUPS', 'Групповой этап'
+        PLAYOFF = 'PO', 'Плей-офф'
+
+    type = models.CharField('Тип', max_length=10, choices=StageType.choices, null=False, blank=True)
+    league = models.ForeignKey(League, verbose_name='Турнир', related_name='stages', on_delete=models.CASCADE)
+    teams = models.ManyToManyField(Team, verbose_name='Команды', related_name='stages', blank=True)
+    order = models.PositiveSmallIntegerField('Порядок этапа')
+
+    def save(self, *args, **kwargs):
+        if not self.pk and not self.type:
+            self.type = self._type
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.league.title} - {self.get_type_display()}, {self.league.championship}'
+
+    class Meta:
+        verbose_name = 'Этап турнира'
+        verbose_name_plural = 'Этапы турнира'
+        ordering = ['league', 'order']
+
+
+class RegularStage(TournamentStage):
+    _type = TournamentStage.StageType.REGULAR
+
+    awarded_count = models.PositiveSmallIntegerField(
+        'Кол-во команд, награждаемых медалями',
+        choices=[(i,i) for i in range(1, 4)],
+        default=3,
+    )
+    promoted_count = models.PositiveSmallIntegerField(
+        'Кол-во команд, поднимающихся в лигу выше',
+        choices=[(i,i) for i in range(1, 5)],
+        default=4,
+        null=False,
+    )
+    relegated_count = models.PositiveSmallIntegerField(
+        'Кол-во команд, вылетающих в лигу ниже',
+        choices=[(i,i) for i in range(1, 5)],
+        default=2,
+        null=False,
+    )
+
+    class Meta:
+        verbose_name = 'Регулярка'
+
+
+class GroupStage(TournamentStage):
+    _type = TournamentStage.StageType.GROUPS
+
+    promoted_count = models.PositiveSmallIntegerField(
+        'Кол-во команд, проходящих в следующий этап',
+        choices=[(i,i) for i in range(1, 11)],
+    )
+    promoted_extra_count = models.PositiveSmallIntegerField(
+        'Кол-во команд, дополнительно проходящих в следующий этап',
+        choices=[(i,i) for i in range(1, 11)],
+    )
+
+    class Meta:
+        verbose_name = 'Групповой этап'
+
+
+class Group(models.Model):
+    stage = models.ForeignKey(
+        GroupStage,
+        verbose_name='Групповой этап',
+        related_name='groups',
+        on_delete=models.CASCADE
+    )
+    teams = models.ManyToManyField(Team, verbose_name='Команды', related_name='groups', blank=True)
+
+    name = models.CharField('Название группы', max_length=50)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Группа'
+        verbose_name_plural = 'Группы'
+
+
+class PlayOffStage(TournamentStage):
+    _type = TournamentStage.StageType.PLAYOFF
+
+    class PlayOffType(models.TextChoices):
+        SE = 'SE', 'Single-elimination'
+        DE = 'DE', 'Double-elimination'
+
+    playoff_type = models.CharField('Формат', choices=PlayOffType.choices, max_length=10)
+
+    class Meta:
+        verbose_name = 'Плей-офф'
 
 
 class Player(models.Model):
@@ -222,6 +337,24 @@ class TourNumber(models.Model):
     date_from = models.DateField('Дата тура с', default=date.today, blank=True, null=True)
     date_to = models.DateField('Дата тура по', default=date.today, blank=True, null=True)
     league = models.ForeignKey(League, verbose_name='В какой лиге', related_name='tours', on_delete=models.CASCADE)
+    stage = ChainedForeignKey(
+        TournamentStage,
+        chained_field='league',
+        chained_model_field='league',
+        verbose_name='Этап',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    group = ChainedForeignKey(
+        Group,
+        chained_field='stage',
+        chained_model_field='stage',
+        verbose_name='Группа',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     @property
     def is_actual(self):
@@ -229,12 +362,17 @@ class TourNumber(models.Model):
         return today >= self.date_from and self.tour_matches.filter(is_played=False).exists()
 
     def __str__(self):
-        return '{} тур ({})'.format(self.number, self.league.title)
+        if self.stage:
+            if self.stage.type == TournamentStage.StageType.PLAYOFF:
+                return f'{self.number} тур ({self.league.title} - {self.stage})'
+            elif self.stage.type == TournamentStage.StageType.GROUPS:
+                return f'{self.number} тур ({self.league.title} - {self.group})'
+        return f'{self.number} тур ({self.league.title})'
 
     class Meta:
         verbose_name = 'Тур'
         verbose_name_plural = 'Туры'
-        ordering = ['number']
+        ordering = ['stage__order', 'number']
 
 
 class Match(models.Model):

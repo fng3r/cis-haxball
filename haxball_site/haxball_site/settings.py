@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_htmx',
     'widget_tweaks',
+    'polymorphic',
 ]
 
 MIDDLEWARE = [
