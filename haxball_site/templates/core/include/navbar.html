@@ -37,6 +37,8 @@
                     Чемпионат
                 </a>
                 <div class="dropdown-menu">
+                    <h6 class="dropdown-header pl-3">Турниры</h6>
+
                     <a class="dropdown-item" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
 
                     <a class="dropdown-item" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
@@ -54,18 +56,24 @@
                         <a class="dropdown-item" href="{% url 'tournament:league' 's13-league-cup-play-off' %}">Плей-офф</a>
                     </div>
 
+                    <div class="dropdown-divider"></div>
+
                     <a class="dropdown-item" target="_blank"
                        href="https://docs.google.com/spreadsheets/d/1wr0TPXncAYEuTmE3XrrBrhPyQXcuyhU5QSZrEJGMEO0/edit?usp=sharing">
                         Календарь
                     </a>
 
                     <a class="dropdown-item" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
-
                     <a class="dropdown-item" href="{% url 'tournament:postponements' %}">Переносы</a>
 
+                    <a class="dropdown-item" href="{% url 'tournament:cards' %}">Карточки</a>
                     <a class="dropdown-item" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
+
                     <a class="dropdown-item" href="{% url 'core:post_detail' '918' 'transfers-13' %}">Трансферы</a>
                     <a class="dropdown-item" href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
+
+                    <div class="dropdown-divider"></div>
+
                     <a class="dropdown-item" href="{% url 'core:post_detail' '111' 'org_razdel' %}">Орг. раздел</a>
                     <a class="dropdown-item" href="{% url 'core:post_detail' '817' 'reglament-13' %}">Регламент</a>
 
