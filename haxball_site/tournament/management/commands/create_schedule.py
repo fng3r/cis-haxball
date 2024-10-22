@@ -7,7 +7,8 @@ from ...models import GroupStage, League, Match, RegularStage, TourNumber
 
 
 class Command(BaseCommand):
-    help = 'The Zen of Python'
+    help = 'Generate schedule using round-robin algorythm'
+
     tour_dates = {
         1: (datetime.date(2024, 9, 1), datetime.date(2024, 9, 3)),
         2: (datetime.date(2024, 9, 1), datetime.date(2024, 9, 6)),
@@ -15,22 +16,22 @@ class Command(BaseCommand):
         4: (datetime.date(2024, 9, 8), datetime.date(2024, 9, 10)),
         5: (datetime.date(2024, 9, 11), datetime.date(2024, 9, 13)),
         6: (datetime.date(2024, 9, 15), datetime.date(2024, 9, 17)),
-        # 7: (datetime.date(2024, 9, 15), datetime.date(2024, 9, 20)),
-        # 8: (datetime.date(2024, 9, 18), datetime.date(2024, 9, 20)),
-        # 9: (datetime.date(2024, 9, 22), datetime.date(2024, 9, 24)),
-        # 10: (datetime.date(2024, 9, 25), datetime.date(2024, 9, 27)),
-        # 11: (datetime.date(2024, 9, 29), datetime.date(2024, 10, 1)),
-        # 12: (datetime.date(2024, 10, 6), datetime.date(2024, 10, 8)),
-        # 13: (datetime.date(2024, 10, 9), datetime.date(2024, 10, 3)),
-        # 14: (datetime.date(2024, 10, 13), datetime.date(2024, 10, 15)),
-        # 15: (datetime.date(2024, 10, 13), datetime.date(2024, 10, 18)),
-        # 16: (datetime.date(2024, 10, 16), datetime.date(2024, 10, 18)),
-        # 17: (datetime.date(2024, 10, 20), datetime.date(2024, 10, 22)),
-        # 18: (datetime.date(2024, 10, 23), datetime.date(2024, 10, 25)),
-        # 19: (datetime.date(2024, 10, 27), datetime.date(2024, 10, 29)),
-        # 20: (datetime.date(2024, 9, 30), datetime.date(2024, 11, 1)),
-        # 21: (datetime.date(2024, 11, 3), datetime.date(2024, 11, 5)),
-        # 22: (datetime.date(2024, 11, 6), datetime.date(2024, 11, 8)),
+        7: (datetime.date(2024, 9, 15), datetime.date(2024, 9, 20)),
+        8: (datetime.date(2024, 9, 18), datetime.date(2024, 9, 20)),
+        9: (datetime.date(2024, 9, 22), datetime.date(2024, 9, 24)),
+        10: (datetime.date(2024, 9, 25), datetime.date(2024, 9, 27)),
+        11: (datetime.date(2024, 9, 29), datetime.date(2024, 10, 1)),
+        12: (datetime.date(2024, 10, 6), datetime.date(2024, 10, 8)),
+        13: (datetime.date(2024, 10, 9), datetime.date(2024, 10, 3)),
+        14: (datetime.date(2024, 10, 13), datetime.date(2024, 10, 15)),
+        15: (datetime.date(2024, 10, 13), datetime.date(2024, 10, 18)),
+        16: (datetime.date(2024, 10, 16), datetime.date(2024, 10, 18)),
+        17: (datetime.date(2024, 10, 20), datetime.date(2024, 10, 22)),
+        18: (datetime.date(2024, 10, 23), datetime.date(2024, 10, 25)),
+        19: (datetime.date(2024, 10, 27), datetime.date(2024, 10, 29)),
+        20: (datetime.date(2024, 9, 30), datetime.date(2024, 11, 1)),
+        21: (datetime.date(2024, 11, 3), datetime.date(2024, 11, 5)),
+        22: (datetime.date(2024, 11, 6), datetime.date(2024, 11, 8)),
     }
 
     def add_arguments(self, parser):
@@ -76,6 +77,7 @@ class Command(BaseCommand):
         for team in teams:
             if team is not None:
                 print(f'     {team.title}')
+
         print()
         print('     Перемешиваем')
         random.shuffle(teams)
@@ -85,35 +87,41 @@ class Command(BaseCommand):
 
         for i in range(1, n):
             tour_number = i
-            (tour_date_start, tour_date_end) = self.tour_dates[i]
+            tour_start_date, tour_end_date = self.tour_dates[i]
             tour = TourNumber.objects.create(
-                number=tour_number, league=league, stage=stage, group=group,
-                date_from=tour_date_start, date_to=tour_date_end,
+                number=tour_number, league=league, stage=stage,
+                date_from=tour_start_date, date_to=tour_end_date,
             )
             if has_return_matches:
-                reverse_tour_number = n + i - 1
-                (tour_date_start, tour_date_end) = self.tour_dates[reverse_tour_number]
-                tour_reverse = TourNumber.objects.create(
-                    number=reverse_tour_number, league=league, stage=stage, group=group,
-                    date_from=tour_date_start, date_to=tour_date_end,
+                reversed_tour_number = n + i - 1
+                tour_start_date, tour_end_date = self.tour_dates[reversed_tour_number]
+                reversed_tour = TourNumber.objects.create(
+                    number=reversed_tour_number, league=league, stage=stage,
+                    date_from=tour_start_date, date_to=tour_end_date,
                 )
 
             for j in range(half):
                 team_home = teams[j]
                 team_guest = teams[n - j - 1]
+
                 # skip matches with dummy team
                 if team_home is None or team_guest is None:
                     continue
                 # switch home/away for fixed (first) team
                 if j == 0 and i % 2 == 1:
                     (team_home, team_guest) = (team_guest, team_home)
-                match = Match.objects.create(team_home=team_home, team_guest=team_guest, numb_tour=tour, league=league)
+
+                Match.objects.create(
+                    team_home=team_home, team_guest=team_guest, numb_tour=tour,
+                    league=league, stage=stage, group=group
+                )
                 if has_return_matches:
                     Match.objects.create(
-                        team_guest=team_home, team_home=team_guest, numb_tour=tour_reverse, league=league
+                        team_guest=team_home, team_home=team_guest, numb_tour=reversed_tour,
+                        league=league, stage=stage, group=group
                     )
 
-            # rotate teams n // 2 times
+            # rotate teams n // 2 times, first team is always fixed
             for j in range(half):
                 teams.insert(1, teams.pop())
 

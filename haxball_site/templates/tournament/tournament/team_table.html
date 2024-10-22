@@ -227,10 +227,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <div class="collapse
-                                        {% if tour.is_actual %}
-                                            show
-                                        {% endif %}
+                            <div class="collapse {% if tour.is_actual %}show{% endif %}
                                         {% if forloop.last %}mt-0 mb-3{% else %}mt-3{% endif %}" id="tour{{ tour.number }}">
 
                                 {% for match in tour.tour_matches.all %}

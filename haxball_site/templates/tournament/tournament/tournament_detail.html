@@ -1,0 +1,89 @@
+{% extends "core/home.html" %}
+{% load static %}
+{% load cache %}
+{% load tournament_extras %}
+
+{% block scripts %}
+    <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
+{% endblock %}
+
+{% block title %}Чемпионат | {{ league.title }} — CIS-HAXBALL{% endblock %}
+{% block profile_of_user %}
+    {% cache 1 champ_table league.id %}
+
+        <div class="card mb-2 mt-2" style="border-radius: 25px">
+            <div class="card-header pb-0" style="border-radius: 25px 25px 0 0">
+                <h3 class="text-center">
+                    {{ league.title }}
+                </h3>
+                <div class="row">
+                    <ul class="nav nav-pills nav-fill" id="myTab" style="width: 100%;">
+                        {% for stage in league.stages.all %}
+                            <li class="nav-item" style="width: 33%;">
+                                <a class="nav-link h5 {% if forloop.first %}active{% endif %}"
+                                   id="table-tab-{{ forloop.counter }}" data-toggle="tab" href="#table-{{ forloop.counter }}" role="tab"
+                                   aria-controls="tournament-table-tab-{{ forloop.counter }}" aria-selected="true">
+                                    {% if league.is_multistage_league %}
+                                        {{ stage.get_type_display }}
+                                    {% else %}
+                                        {% if stage.is_playoff %}
+                                            Сетка
+                                        {% else %}
+                                            Таблица
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% endfor %}
+                        <li class="nav-item" style="width: 33%;">
+                            <a class="nav-link h5" id="detail-tab" data-toggle="tab" href="#detail_stat" role="tab"
+                               aria-controls="detail_stat-tab" aria-selected="false">Статистика</a>
+                        </li>
+                        <li class="nav-item" style="width: 33%;">
+                            <a class="nav-link h5" data-toggle="tab" href="#matches" role="tab"
+                               aria-controls="matches-tab" aria-selected="false">Матчи</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body text-center p-0">
+                <div class="tab-content" id="myTabContent">
+                    {% for stage in league.stages.all %}
+                        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+                             id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
+                            {% if stage.is_playoff %}
+                                {% cup_bracket stage %}
+                            {% else %}
+                                {% if stage.is_group_stage %}
+                                    <div class="mt-3">
+                                        {% for group in stage.groups.all %}
+                                            <div class="mb-4">
+                                                <h4>{{ group.name }}</h4>
+                                                {% tournament_table league stage group %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {% tournament_table league stage None %}
+                                {% endif %}
+                            {% endif %}
+
+                        </div>
+                    {% endfor %}
+
+                    <div class="tab-pane fade" id="detail_stat" role="tabpanel" aria-labelledby="detail_stat-tab">
+                        {% include 'tournament/tournament/partials/tournament_stats.html' %}
+                    </div>
+
+                    <div class="tab-pane fade" id="matches" role="tabpanel" aria-labelledby="matches-tab">
+                        {% include 'tournament/tournament/partials/tournament_schedule.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% endcache %}
+{% endblock %}
+{% block comments %}
+    {% include 'core/include/new_comments.html' with object=league comments=comments %}
+{% endblock %}

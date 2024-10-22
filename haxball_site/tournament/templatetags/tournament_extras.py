@@ -6,12 +6,14 @@ from django import template
 from django.contrib.auth.models import User
 from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, QuerySet, Subquery
 from django.db.models.functions import Coalesce
+from django.db.models.lookups import GreaterThan
 from django.utils import timezone
 
 from ..models import (
     Disqualification,
     FreeAgent,
     Goal,
+    Group,
     League,
     Match,
     OtherEvents,
@@ -21,6 +23,7 @@ from ..models import (
     Season,
     Substitution,
     Team,
+    TournamentStage,
     TourNumber,
 )
 
@@ -157,7 +160,8 @@ def get_team_players(team, current=False):
 
 
 def get_player_matches(player, team, for_current_season=False):
-    current_season_condition = Q(league__championship__is_active=True) if for_current_season else ~Q(pk__in=[])
+    always_true_condition = ~Q(pk__in=[])
+    current_season_condition = Q(league__championship__is_active=True) if for_current_season else always_true_condition
 
     return (
         Match.objects.filter(current_season_condition, team_guest=team, team_guest_start=player, is_played=True).count()
@@ -213,9 +217,14 @@ def events_sorted(match: Match):
 
 #   Фильтры для таблички лиги
 #   и теги
-@register.inclusion_tag('tournament/include/cup_table.html')
+@register.inclusion_tag('tournament/tournament/partials/cup_table.html')
 def cup_table(league):
     return {'league': league}
+
+
+@register.inclusion_tag('tournament/tournament/partials/cup_table.html')
+def cup_bracket(stage):
+    return {'league': stage}
 
 
 @register.filter
@@ -252,6 +261,7 @@ def team_score_in_match(team, match):
 
 @register.filter
 def round_name(tour, all_tours):
+    print(tour, all_tours)
     if tour == all_tours:
         return 'Финал'
     if tour == all_tours - 1:
@@ -278,10 +288,17 @@ def cup_round_name(tour: TourNumber):
     return '{} раунд'.format(tour.number)
 
 
-@register.inclusion_tag('tournament/include/league_table.html')
+@register.inclusion_tag('tournament/tournament/partials/league_table.html')
 def league_table(league: League):
     result = get_league_table(league)
     return {'teams': result}
+
+
+@register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
+def tournament_table(league: League, stage: TournamentStage, group: Optional[Group]):
+    result = get_league_table(league, stage, group)
+    print(result)
+    return {'teams': result, 'stage': stage}
 
 
 # Конец тегов и фильтров для таблицы лиги
@@ -335,7 +352,7 @@ def all_league_season(team, season):
 
 @register.filter
 def all_seasons(team):
-    return (
+     return (
         Season.objects.filter(tournaments_in_season__teams=team)
         .distinct()
         .prefetch_related(
@@ -351,7 +368,23 @@ def all_seasons(team):
                         .order_by('numb_tour'),
                         to_attr='team_matches',
                     ),
+                    Prefetch(
+                        'stages',
+                        queryset=TournamentStage.objects.filter(teams=team)
+                        .distinct()
+                        .prefetch_related(
+                            Prefetch(
+                                'matches',
+                                queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
+                                .select_related('team_home', 'team_guest', 'numb_tour')
+                                .order_by('numb_tour'),
+                                to_attr='team_matches',
+                            ),
+                        )
+                        .order_by('order')
+                    ),
                 )
+                .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
                 .order_by('-id'),
                 to_attr='team_leagues',
             ),
@@ -365,9 +398,13 @@ def sort_teams(league: League):
     return [i[0] for i in lt]
 
 
-def get_league_table(league: League):
-    teams = list(Team.objects.filter(leagues=league))
+def get_league_table(league: League, stage: TournamentStage = None, group: Group = None):
+    always_true = ~Q(pk__in=[])
+    stage_condition = Q(stages=stage) if stage is not None else always_true
+    group_condition = Q(groups=group) if group is not None else always_true
+    teams = list(Team.objects.filter(stage_condition, group_condition, leagues=league))
     teams_count = len(teams)
+
     points = [0 for _ in range(teams_count)]  # Количество очков
     goal_diff = [0 for _ in range(teams_count)]  # Разница мячей
     scored = [0 for _ in range(teams_count)]  # Мячей забито
@@ -378,8 +415,16 @@ def get_league_table(league: League):
     losses = [0 for _ in range(teams_count)]  # Поражений
     last_matches = [[] for _ in range(teams_count)]
     for i, team in enumerate(teams):
-        matches = Match.objects.select_related('team_home', 'team_guest', 'result__winner', 'numb_tour').filter(
-            (Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True
+        matches = (
+            Match.objects
+            .select_related('team_home', 'team_guest', 'result__winner', 'numb_tour')
+            .filter(
+                (Q(team_home=team) | Q(team_guest=team)),
+                league=league,
+                stage=stage,
+                group=group,
+                is_played=True,
+            )
         )
         matches_played[i] = matches.count()
 
@@ -489,14 +534,14 @@ def get_league_table(league: League):
 @register.filter
 def current_league(team):
     primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
-    try:
-        primary_league = League.objects.filter(
-            teams=team, title__in=primary_leagues, championship__is_active=True
-        ).first()
-        if not primary_league:
-            return League.objects.filter(teams=team, championship__is_active=True).first()
-    except:
-        return None
+    primary_league = League.objects.filter(
+        teams=team, title__in=primary_leagues, championship__is_active=True
+    ).first()
+
+    if primary_league is not None:
+        return primary_league
+
+    return League.objects.filter(teams=team, championship__is_active=True).first()
 
 
 @register.filter
@@ -505,17 +550,23 @@ def current_position(team):
     if not league:
         return '-'
 
+    teams = list(league.teams.all())
+    if team not in teams:
+        return '-'
+
     sorted_teams = list(sort_teams(league))
     return sorted_teams.index(team) + 1
 
 
 @register.filter
-def teams_in_league_count(team):
-    league = current_league(team)
-    if not league:
-        return '-'
+def group_matches(matches):
+    matches_by_group = {}
+    for match in matches:
+        if match.group not in matches_by_group:
+            matches_by_group[match.group] = []
+        matches_by_group[match.group].append(match)
 
-    return league.teams.count()
+    return matches_by_group
 
 
 @register.filter

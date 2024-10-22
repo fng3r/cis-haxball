@@ -1,0 +1,95 @@
+{% load mathfilters %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap');
+
+    .team-form a:hover {
+        font-size: 18px;
+        text-decoration: none;
+    }
+    .team-rows {
+        font-family: 'Roboto Slab', serif;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .team-name{
+        font-family: 'Roboto Slab', serif;
+        font-weight: 500;
+        font-size: 19px;
+    }
+    .team-table-league td {
+        padding-bottom: 7px;
+        padding-top: 7px;
+    }
+</style>
+
+<table class="table table-hover team-table-league">
+    <thead>
+        <tr style="font-size: 16px">
+            <th scope="col" class="font-weight-bold h5 pl-2">#</th>
+            <th scope="col">Команда</th>
+            <th scope="col">И</th>
+            <th scope="col">В</th>
+            <th scope="col">Н</th>
+            <th scope="col">П</th>
+            <th scope="col">ЗМ</th>
+            <th scope="col">ПМ</th>
+            <th scope="col">+/-</th>
+            <th scope="col">O</th>
+            <th scope="col">Форма</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for team in teams %}
+            {% if stage.type == 'REG' %}
+                <tr {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}bgcolor="#ffd700"{% endif %}
+                    {% if forloop.counter == 2 and forloop.counter <= stage.awarded_count %}bgcolor="silver"{% endif %}
+                    {% if forloop.counter == 3 and forloop.counter <= stage.awarded_count %}bgcolor="#ffa81c"{% endif %}
+                    class="team-rows"
+                >
+            {% else %}
+                <tr class="team-rows">
+            {% endif %}
+            <th scope="row" width="4%" class="pl-1" style="font-weight: 600; font-size: 20px;">
+                <div class="d-flex">
+                    {% if forloop.counter <= stage.promoted_count %}
+                        <span class="mr-2 my-n1" style="width: 5px; background: green"></span>
+                    {% elif forloop.counter <= stage.promoted_count|add:stage.promoted_extra_count %}
+                        <span class="mr-2 my-n1" style="width: 5px; background: #ffee00"></span>
+                    {% elif forloop.counter > teams|length|sub:stage.relegated_count %}
+                        <span class="mr-2 my-n1" style="width: 5px; background: red"></span>
+                    {% else %}
+                        <span class="mr-2 my-n1" style="width: 5px; "></span>
+                    {% endif %}
+                    {{ forloop.counter }}
+                </div>
+
+            </th>
+
+            <td class="team-name text-left px-0" width="34%">
+
+                <a class="text-dark" href="{{ team.0.get_absolute_url }}"><img
+                    src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28"
+                    class="mr-2">{% if team.0.title|length < 20 %}{{ team.0.title }}{% else %}{{ team.0.short_title }}{% endif %}</a>
+            </td>
+            <td width="6%">{{ team.1 }}</td>
+            <td width="6%">{{ team.2 }}</td>
+            <td width="6%">{{ team.3 }}</td>
+            <td width="6%">{{ team.4 }}</td>
+            <td width="6%">{{ team.5 }}</td>
+            <td width="6%">{{ team.6 }}</td>
+            <td width="6%" {% if team.7 > 0 %} class="text-success"
+                {% elif team.7 < 0 %}class="text-danger"{% endif %}>{{ team.7 }}</td>
+            <td width="6%" style="font-weight: 500">{{ team.8 }}</td>
+            <td class="team-form p-1" width="13%">{% for result in team.9 %}
+                <a href="{{ result.0.get_absolute_url }}"
+                   class="fa fa-circle {% if result.1 == 1 %} text-success {% elif result.1 == -1 %} text-danger {% elif result.1 == 0 %} text-secondary {% endif %}"
+                   title="Тур {{ result.0.numb_tour.number }}&#013;{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}">
+                </a>
+            {% endfor %}
+            </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

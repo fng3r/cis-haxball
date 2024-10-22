@@ -405,7 +405,9 @@ class MatchResultInline(admin.TabularInline):
 class MatchAdmin(admin.ModelAdmin):
     list_display = (
         'league',
-        'numb_tour',
+        'stage',
+        'get_tour',
+        'group',
         'team_home',
         'score_home',
         'team_guest',
@@ -416,11 +418,55 @@ class MatchAdmin(admin.ModelAdmin):
         'inspector',
         'id',
     )
+
+    def get_tour(self, model):
+        return f'{model.numb_tour.number} тур'
+    get_tour.short_description = 'Тур'
+    get_tour.admin_order_field = 'numb_tour__number'
+
     search_fields = ('team_home__title', 'team_guest__title')
     filter_horizontal = (
         'team_home_start',
         'team_guest_start',
     )
+
+    list_filter = ('numb_tour__number', 'league', 'stage', 'inspector', 'is_played')
+    fieldsets = (
+        (
+            'Основная инфа',
+            {
+                'fields': (
+                    ('league', 'stage', 'numb_tour', 'group'),
+                    ('match_date','is_played'),
+                )
+            },
+        ),
+        (
+            None,
+            {
+                'fields': (
+                    ('team_home', 'team_guest', ),
+                    ('score_home', 'score_guest'),
+                    ('inspector', 'replay_link', 'replay_link_second')
+                )
+            },
+        ),
+        (
+            'Составы',
+            {
+                'classes': ('grp-collapse grp-closed',),
+                'fields': ('team_home_start', 'team_guest_start'),
+            },
+        ),
+        (
+            'Комментарий:',
+            {
+                'classes': ('grp-collapse grp-closed',),
+                'fields': ('comment',),
+            }
+        ),
+    )
+    inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         # Берём из пути id матча
@@ -435,48 +481,6 @@ class MatchAdmin(admin.ModelAdmin):
             t = Team.objects.filter(guest_matches=resolved.kwargs.get('object_id')).first()
             kwargs['queryset'] = Player.objects.filter(team=t)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
-
-    list_filter = ('numb_tour__number', 'league', 'inspector', 'is_played')
-    fieldsets = (
-        (
-            'Основная инфа',
-            {
-                'fields': (
-                    (
-                        'league',
-                        'is_played',
-                        'match_date',
-                        'numb_tour',
-                    ),
-                )
-            },
-        ),
-        (
-            None,
-            {
-                'fields': (
-                    (
-                        'team_home',
-                        'team_guest',
-                        'replay_link',
-                    ),
-                )
-            },
-        ),
-        (None, {'fields': (('score_home', 'score_guest', 'inspector', 'replay_link_second'),)}),
-        (
-            'Составы',
-            {
-                'classes': ('grp-collapse grp-closed',),
-                'fields': (
-                    'team_home_start',
-                    'team_guest_start',
-                ),
-            },
-        ),
-        ('Комментарий:', {'classes': ('grp-collapse grp-closed',), 'fields': ('comment',)}),
-    )
-    inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
 
 @admin.register(Goal)
@@ -499,9 +503,9 @@ class OtherEventsAdmin(admin.ModelAdmin):
 
 
 @admin.register(TourNumber)
-class MatchTourAdmin(admin.ModelAdmin):
-    list_display = ('number', 'league', 'stage', 'group', 'date_from', 'date_to', 'is_actual')
-    list_filter = ('league', 'number')
+class TourAdmin(admin.ModelAdmin):
+    list_display = ('number', 'league', 'stage', 'date_from', 'date_to', 'is_actual')
+    list_filter = ('league', 'stage', 'number')
 
     def is_actual(self, model):
         return model.is_actual

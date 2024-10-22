@@ -278,12 +278,24 @@ class TeamList(ListView):
 class LeagueDetail(DetailView):
     context_object_name = 'league'
     model = League
-    template_name = 'tournament/premier_league/team_table.html'
+    template_name = 'tournament/tournament/team_table.html'
 
     def get_queryset(self):
         return (
-            super().get_queryset().prefetch_related('tours__tour_matches__team_home', 'tours__tour_matches__team_guest')
+            super().get_queryset().prefetch_related(
+                'stages',
+                'tours__tour_matches__team_home',
+                'tours__tour_matches__team_guest',
+                'tours__stage',
+            )
         )
+
+    def get_template_names(self, **kwargs):
+        league = self.get_context_data(**kwargs)['league']
+        if league.has_stages():
+            return 'tournament/tournament/tournament_detail.html'
+
+        return 'tournament/tournament/team_table.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1525,7 +1537,7 @@ def team_statistics(request, pk):
         'other_stats': other_stats,
     }
 
-    return render(request, 'tournament/partials/team_statistics.html', context)
+    return render(request, 'tournament/teams/partials/team_statistics.html', context)
 
 
 def team_statistics_charts(request, pk):

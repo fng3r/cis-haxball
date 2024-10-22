@@ -1,0 +1,86 @@
+{% load tournament_extras %}
+
+{% partialdef tour-matches %}
+    {% for match in matches %}
+        <div class="row">
+
+            <div class="col-5 text-right">
+                <h5><a class="text-dark" href="{{ match.team_home.get_absolute_url }}"
+                    >{{ match.team_home.title }}<img
+                        src="{{ match.team_home.logo.url }}"
+                        alt="{{ match.team_home.title }}"
+                        width="25" height="25"
+                        class="ml-1"></a></h5>
+            </div>
+            <div class="col-2">
+                {% if not match.is_played %}
+                    <a href="{{ match.get_absolute_url }}"><span class="h5">vs</span> </a>
+                {% else %}
+                    <a href="{{ match.get_absolute_url }}"
+                       class="h5">{{ match.score_home }}
+                        : {{ match.score_guest }}</a>
+                {% endif %}
+            </div>
+            <div class="col-5 text-left">
+                <h5>
+                    <a class="text-dark" href="{{ match.team_guest.get_absolute_url }}"
+                       class="h5"><img
+                        src="{{ match.team_guest.logo.url }}"
+                        alt="{{ match.team_guest.title }}" width="25" height="25"
+                        class="mr-1">{{ match.team_guest.title }}
+                    </a>
+                </h5>
+            </div>
+
+        </div>
+    {% endfor %}
+{% endpartialdef %}
+
+{% for stage in league.stages.all %}
+    {% if league.is_multistage_league %}
+        <h4 class="text-center mt-3 mb-1">{{ stage.get_type_display }}</h4>
+    {% endif %}
+
+    {% for tour in stage.tours.all %}
+        <div class="row">
+            <div class="col-12">
+                <p class="mb-0">
+                    <button class="btn btn-secondary mt-2 {% if forloop.last %}mb-3{% elif forloop.first %}mt-3{% endif %}"
+                            type="button" data-toggle="collapse"
+                            data-target="#stage-{{ stage.order }}-tour{{ tour.number }}" aria-expanded="false"
+                            aria-controls="stage-{{ stage.order }}-tour{{ tour.number }}" style="width: 90%">
+                        <span class="h5">
+                            {% if not stage.is_playoff %}
+                                Тур {{ tour.number }}
+                            {% else %}
+                                {{ tour.number|round_name:stage.tours.count }}
+                            {% endif %}
+                            ({{ tour.date_from|date:"d.m" }} - {{ tour.date_to|date:"d.m" }})
+                        </span>
+                    </button>
+                </p>
+            </div>
+        </div>
+        <div class="collapse {% if tour.is_actual %}show{% endif %}
+                    {% if forloop.last %}mt-0 mb-3{% else %}mt-3{% endif %}" id="stage-{{ stage.order }}-tour{{ tour.number }}">
+
+            {% if stage.is_group_stage %}
+                {% with matches_by_group=tour.tour_matches.all|group_matches %}
+                    {% for group, matches in matches_by_group.items %}
+                        <h4>{{ group.name }}</h4>
+                        {% with matches=matches %}
+                            {% partial tour-matches %}
+                        {% endwith %}
+                    {% endfor %}
+                {% endwith %}
+            {% else %}
+                {% with matches=tour.tour_matches.all %}
+                    {% partial tour-matches %}
+                {% endwith %}
+            {% endif %}
+
+
+
+        </div>
+    {% endfor %}
+{% endfor %}
