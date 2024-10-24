@@ -7,7 +7,7 @@ from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Case, Count, F, FloatField, OuterRef, Prefetch, Q, Subquery, When
+from django.db.models import Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Cast, Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -58,26 +58,93 @@ class DefaultFilterSet(FilterSet):
         super().__init__(data, *args, **kwargs)
 
 
-class DisqualificationFilter(DefaultFilterSet):
+class CardFilter(FilterSet):
     season = ModelChoiceFilter(
         field_name='match__league__championship',
         label='Сезон',
-        empty_label=None,
+        queryset=Season.objects.filter(number__gt=5).order_by('-number'),
+    )
+    team = ModelChoiceFilter(queryset=Team.objects.all())
+    player = ModelChoiceFilter(
+        field_name='author',
+        label='Игрок',
+        queryset=Player.objects.all(),
+    )
+    card_type = ChoiceFilter(
+        field_name='event',
+        label='Тип',
+        empty_label='Все',
+        choices = (
+            (OtherEvents.YELLOW_CARD, 'ЖК'),
+            (OtherEvents.RED_CARD, 'КК'),
+        )
+    )
+    inspector = ModelChoiceFilter(
+        field_name='match__inspector',
+        label='Инспектор',
+        queryset=User.objects.filter(Exists(Match.objects.filter(inspector=OuterRef('pk'))))
+    )
+
+    class Meta:
+        model = OtherEvents
+        fields = ['season', 'team', 'player', 'card_type', 'inspector']
+
+
+class CardsList(ListView):
+    queryset = (
+        OtherEvents.objects.cards()
+        .select_related(
+            'team', 'author__name__user_profile', 'match__inspector__user_profile',
+            'match__team_home', 'match__team_guest', 'match__league__championship',
+        )
+        .order_by('-match__league__championship__number', '-match__match_date')
+    )
+    current_season = Season.objects.order_by('-number').first()
+    template_name = 'tournament/card/cards.html'
+    paginate_by = 25
+
+    def get(self, request, **kwargs):
+        filter = CardFilter(request.GET, queryset=self.queryset)
+        paginator = Paginator(filter.qs, self.paginate_by)
+        page = request.GET.get('page')
+        cards = paginator.get_page(page)
+
+        if request.htmx:
+            return render(
+                request,
+                'tournament/card/partials/cards_list.html',
+                {'cards': cards}
+            )
+
+        return render(request, self.template_name, {'cards': cards, 'filter': filter})
+
+
+class DisqualificationFilter(FilterSet):
+    season = ModelChoiceFilter(
+        field_name='match__league__championship',
+        label='Сезон',
         queryset=Season.objects.filter(number__gt=14).order_by('-number'),
-        initial=Season.objects.order_by('-number').first(),
     )
     team = ModelChoiceFilter(queryset=Team.objects.filter(leagues__championship__number__gt=14).distinct())
     player = ModelChoiceFilter(queryset=Player.objects.all())
+    inspector = ModelChoiceFilter(
+        field_name='match__inspector',
+        label='Инспектор',
+        queryset=User.objects.filter(
+            Exists(Match.objects.filter(inspector=OuterRef('pk'), league__championship__number__gt=14))
+        )
+    )
 
     class Meta:
         model = Disqualification
-        fields = ['season', 'team']
+        fields = ['season', 'team', 'player', 'inspector']
 
 
 class DisqualificationsList(ListView):
     queryset = (
         Disqualification.objects.select_related(
-            'team', 'match__team_home', 'match__team_guest', 'player__name__user_profile'
+            'team', 'player__name__user_profile', 'match__inspector__user_profile',
+            'match__team_home', 'match__team_guest', 'match__league__championship',
         )
         .prefetch_related('tours__league', 'lifted_tours__league')
         .filter(match__league__championship__number__gt=14)

@@ -11,6 +11,12 @@
     {% else %}
         <tr>
     {% endif %}
+    <td>
+        <div style="font-size: 13px;">
+            {{ disqualification.match.league.championship.short_title }}
+        </div>
+    </td>
+
     <td class="disqualification-row pl-2 pr-1">
         <div class="media">
             <img src="{{ disqualification.team.logo.url }}" class="align-self-start mr-1"
@@ -71,6 +77,22 @@
                 {% endfor %}
             {% endif %}
         </div>
+    </td>
+
+    <td class="pl-2 pr-1">
+        {% if disqualification.match.inspector %}
+            <div class="media">
+                <img src="{{ disqualification.match.inspector.user_profile.avatar.url }}" class="align-self-start mr-1"
+                     alt="{{ disqualification.match.inspector.username }}" width="20" height="20" style="border-radius: 100%; background-position: center center; background-repeat: no-repeat;">
+                <div class="media-body">
+                    <h6 class="mt-0" style="font-size: 13px">
+                        <a href="{{ disqualification.inspector.name.user_profile.get_absolute_url }}">{{ disqualification.match.inspector.username }}</a>
+                    </h6>
+                </div>
+            </div>
+        {% else %}
+            —
+        {% endif %}
     </td>
     </tr>
 {% endfor %}

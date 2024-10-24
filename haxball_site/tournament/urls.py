@@ -19,7 +19,7 @@ from .views import (
     remove_entry,
     team_statistics,
     team_statistics_charts,
-    update_entry,
+    update_entry, CardsList,
 )
 
 app_name = 'tournament'
@@ -38,6 +38,7 @@ urlpatterns = [
     path('team/<slug:slug>/edit', EditTeamView.as_view(), name='edit_team'),
     path('teams/', TeamList.as_view(), name='team_list'),
     path('disqualifications', DisqualificationsList.as_view(), name='disqualifications'),
+    path('cards', CardsList.as_view(), name='cards'),
     path('transfers', TransfersList.as_view(), name='transfers'),
     path('<slug:slug>', LeagueDetail.as_view(), name='league'),
     path('match/<int:pk>', MatchDetail.as_view(), name='match_detail'),
