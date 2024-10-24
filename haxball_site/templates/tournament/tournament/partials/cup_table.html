@@ -1,4 +1,5 @@
 {% load tournament_extras %}
+
 <style>
     table {
         font-size: 14px;
@@ -9,64 +10,77 @@
         color: #010610;
     }
 </style>
-<div class="container">
-    <div class="row">
-        {% for tour in league.tours.all %}
-            <div class="col my-1">
-                <h5>{{ tour.number|round_name:league.tours.count }}</h5>
-            </div>
-        {% endfor %}
-    </div>
-    <div class="row">
-        {% for tour in league.tours.all %}
-            <div class="col flex-direction: column justify-content-between">
-                <div class="col d-flex flex-column justify-content-around" style="height: 100%">
-                    {% for pair in tour|pairs_in_round %}
-                        <table class="table border">
-                            <tbody>
-                                <tr class="py-1">
-                                    <td class="p-1 text-left">
-                                        <img src="{{ pair.0.logo.url }}" alt="{{ pair.0.title }}" width="24" height="24"
-                                             class="mr-1">
-                                        <a class="team_link" href="{{ pair.0.get_absolute_url }}">{{ pair.0.short_title }}</a>
-                                    </td>
-                                    <td class="p-1">
-                                        {% if pair.2.is_played %}
-                                            {{ pair.0|team_score_in_match:pair.2 }}
-                                        {% endif %}
-                                    </td>
-                                    {% if pair.3 %}
-                                        <td class="p-1">
-                                            {% if pair.3.is_played %}
-                                                {{ pair.0|team_score_in_match:pair.3 }}
-                                            {% endif %}
-                                        </td>
-                                    {% endif %}
-                                </tr>
-                                <tr class="py-1">
-                                    <td class="p-1 text-left">
-                                        <img src="{{ pair.1.logo.url }}" alt="{{ pair.1.title }}" width="24" height="24"
-                                             class="mr-1">
-                                        <a class="team_link" href="{{ pair.1.get_absolute_url }}">{{ pair.1.short_title }}</a>
-                                    </td>
-                                    <td class="p-1">
-                                        {% if pair.2.is_played %}
-                                            {{ pair.1|team_score_in_match:pair.2 }}
-                                        {% endif %}
-                                    </td>
-                                    {% if pair.3 %}
-                                        <td class="p-1">
-                                            {% if pair.3.is_played %}
-                                                {{ pair.1|team_score_in_match:pair.3 }}
-                                            {% endif %}
-                                        </td>
-                                    {% endif %}
-                                </tr>
-                            </tbody>
-                        </table>
-                    {% endfor %}
+
+<div class="container pt-1">
+    {% if bracket is not None %}
+        <h5>
+            {% if bracket == bracket_types.UPPER %}
+                Верхняя сетка
+            {% else %}
+                Нижняя сетка
+            {% endif %}
+        </h5>
+    {% endif %}
+
+    {% with tours=league.tours|tours_in_bracket:bracket %}
+        <div class="row">
+            {% for tour in tours %}
+                <div class="col my-1">
+                    <h5>{{ tour.number|round_name:tours.count }}</h5>
                 </div>
-            </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
+        <div class="row">
+            {% for tour in tours %}
+                <div class="col justify-content-between">
+                    <div class="col d-flex flex-column justify-content-around" style="height: 100%">
+                        {% for pair in tour|pairs_in_round %}
+                            <table class="table border">
+                                <tbody>
+                                    <tr class="py-1">
+                                        <td class="p-1 text-left">
+                                            <img src="{{ pair.0.logo.url }}" alt="{{ pair.0.title }}" width="24" height="24"
+                                                 class="mr-1">
+                                            <a class="team_link" href="{{ pair.0.get_absolute_url }}">{{ pair.0.short_title }}</a>
+                                        </td>
+                                        <td class="p-1">
+                                            {% if pair.2.is_played %}
+                                                {{ pair.0|team_score_in_match:pair.2 }}
+                                            {% endif %}
+                                        </td>
+                                        {% if pair.3 %}
+                                            <td class="p-1">
+                                                {% if pair.3.is_played %}
+                                                    {{ pair.0|team_score_in_match:pair.3 }}
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                    <tr class="py-1">
+                                        <td class="p-1 text-left">
+                                            <img src="{{ pair.1.logo.url }}" alt="{{ pair.1.title }}" width="24" height="24"
+                                                 class="mr-1">
+                                            <a class="team_link" href="{{ pair.1.get_absolute_url }}">{{ pair.1.short_title }}</a>
+                                        </td>
+                                        <td class="p-1">
+                                            {% if pair.2.is_played %}
+                                                {{ pair.1|team_score_in_match:pair.2 }}
+                                            {% endif %}
+                                        </td>
+                                        {% if pair.3 %}
+                                            <td class="p-1">
+                                                {% if pair.3.is_played %}
+                                                    {{ pair.1|team_score_in_match:pair.3 }}
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endwith %}
 </div>

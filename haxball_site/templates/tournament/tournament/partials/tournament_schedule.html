@@ -47,13 +47,18 @@
                 <p class="mb-0">
                     <button class="btn btn-secondary mt-2 {% if forloop.last %}mb-3{% elif forloop.first %}mt-3{% endif %}"
                             type="button" data-toggle="collapse"
-                            data-target="#stage-{{ stage.order }}-tour{{ tour.number }}" aria-expanded="false"
-                            aria-controls="stage-{{ stage.order }}-tour{{ tour.number }}" style="width: 90%">
+                            data-target="#stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}" aria-expanded="false"
+                            aria-controls="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}" style="width: 90%">
                         <span class="h5">
                             {% if not stage.is_playoff %}
-                                Тур {{ tour.number }}
+                                {{ tour.number }} тур
                             {% else %}
-                                {{ tour.number|round_name:stage.tours.count }}
+                                {% if tour.stage.playoff_type == 'DE' %}
+                                    {{ tour.get_bracket_display }},
+                                {% endif %}
+                                {% with tours_by_bracket=tour.stage.tours.all|bracket_tours:tour.bracket %}
+                                    {{ tour.number|round_name:tours_by_bracket.count }}
+                                {% endwith %}
                             {% endif %}
                             ({{ tour.date_from|date:"d.m" }} - {{ tour.date_to|date:"d.m" }})
                         </span>
@@ -61,8 +66,8 @@
                 </p>
             </div>
         </div>
-        <div class="collapse {% if tour.is_actual %}show{% endif %}
-                    {% if forloop.last %}mt-0 mb-3{% else %}mt-3{% endif %}" id="stage-{{ stage.order }}-tour{{ tour.number }}">
+        <div class="collapse {% if tour.is_actual %}show{% endif %} {% if forloop.last %}mt-0 mb-3{% else %}mt-3{% endif %}"
+             id="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}">
 
             {% if stage.is_group_stage %}
                 {% with matches_by_group=tour.tour_matches.all|group_matches %}

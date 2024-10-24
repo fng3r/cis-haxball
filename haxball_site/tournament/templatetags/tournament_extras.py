@@ -4,7 +4,7 @@ from typing import Optional
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, QuerySet, Subquery
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q, QuerySet, Subquery
 from django.db.models.functions import Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
@@ -19,6 +19,7 @@ from ..models import (
     OtherEvents,
     Player,
     PlayerTransfer,
+    PlayOffStage,
     Postponement,
     Season,
     Substitution,
@@ -219,12 +220,27 @@ def events_sorted(match: Match):
 #   и теги
 @register.inclusion_tag('tournament/tournament/partials/cup_table.html')
 def cup_table(league):
-    return {'league': league}
+    return {'league': league, 'bracket': None}
 
 
 @register.inclusion_tag('tournament/tournament/partials/cup_table.html')
-def cup_bracket(stage):
-    return {'league': stage}
+def cup_bracket(stage, bracket):
+    return {
+        'league': stage,
+        'bracket': bracket,
+        'bracket_types': {
+            'UPPER': PlayOffStage.Bracket.UPPER,
+            'LOWER': PlayOffStage.Bracket.LOWER,
+        }
+    }
+
+
+@register.filter
+def tours_in_bracket(tours, bracket):
+    if bracket is None:
+        return tours.all()
+
+    return tours.filter(bracket=bracket)
 
 
 @register.filter
@@ -261,7 +277,6 @@ def team_score_in_match(team, match):
 
 @register.filter
 def round_name(tour, all_tours):
-    print(tour, all_tours)
     if tour == all_tours:
         return 'Финал'
     if tour == all_tours - 1:
@@ -297,7 +312,6 @@ def league_table(league: League):
 @register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
 def tournament_table(league: League, stage: TournamentStage, group: Optional[Group]):
     result = get_league_table(league, stage, group)
-    print(result)
     return {'teams': result, 'stage': stage}
 
 
@@ -567,6 +581,23 @@ def group_matches(matches):
         matches_by_group[match.group].append(match)
 
     return matches_by_group
+
+
+@register.filter
+def bracket_matches(matches, bracket):
+    matches_by_bracket = {}
+    for match in matches:
+        bracket = match.numb_tour.get_bracket_display()
+        if bracket not in matches_by_bracket:
+            matches_by_bracket[bracket] = []
+        matches_by_bracket[bracket].append(match)
+
+    return matches_by_bracket
+
+
+@register.filter
+def bracket_tours(tours, bracket):
+    return tours.filter(bracket=bracket)
 
 
 @register.filter

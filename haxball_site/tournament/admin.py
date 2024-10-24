@@ -420,7 +420,13 @@ class MatchAdmin(admin.ModelAdmin):
     )
 
     def get_tour(self, model):
-        return f'{model.numb_tour.number} тур'
+        tour = model.numb_tour
+        bracket_postfix = (
+            f', {tour.get_bracket_display()}'
+            if model.league.is_multistage_league() and tour.bracket is not None
+            else ''
+        )
+        return f'{model.numb_tour.number} тур{bracket_postfix}'
     get_tour.short_description = 'Тур'
     get_tour.admin_order_field = 'numb_tour__number'
 
@@ -504,7 +510,7 @@ class OtherEventsAdmin(admin.ModelAdmin):
 
 @admin.register(TourNumber)
 class TourAdmin(admin.ModelAdmin):
-    list_display = ('number', 'league', 'stage', 'date_from', 'date_to', 'is_actual')
+    list_display = ('number', 'league', 'stage', 'bracket', 'date_from', 'date_to', 'is_actual')
     list_filter = ('league', 'stage', 'number')
 
     def is_actual(self, model):

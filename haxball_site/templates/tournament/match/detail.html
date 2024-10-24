@@ -1,6 +1,7 @@
 {% extends "core/home.html" %}
 {% load static %}
 {% load tournament_extras %}
+
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "tournament/teams/team_page.css" %}">
 
@@ -14,20 +15,37 @@
         }
     </style>
 {% endblock %}
+
 {% block scripts %}
-    <!-- Аякс-скрипт проставления лайков-дизлайков к постам -->
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
+
 {% block title %}Чемпионат | {{ match }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
     <div class="card mb-2 mt-2" style="border-radius: 25px">
         <div class="card-header text-center" style="border-radius: 25px">
-
             <h5>
                 <a href="{{ match.league.get_absolute_url }}">{{ match.league }}</a>
             </h5>
-            <h5>Тур {{ match.numb_tour.number }}</h5>
+
+            <h5>
+                {% if match.league.is_multistage_league and match.stage.is_playoff %}
+                    {{ match.stage.get_type_display }} -
+                {% endif %}
+                {% if match.stage.is_playoff %}
+                    {% if match.stage.playoff_type == 'DE' %}
+                        {{ match.numb_tour.get_bracket_display }},
+                    {% endif %}
+                    {{ match.numb_tour.number|round_name:match.stage.tours.count }}
+                {% else  %}
+                    {% if match.stage.is_group_stage %}
+                        {{ match.group }} -
+                    {% endif %}
+                    {{ match.numb_tour.number }} тур
+                {% endif %}
+            </h5>
+
             <div class="row">
 
                 <div class="col-5 px-0">

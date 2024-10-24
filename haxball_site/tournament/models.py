@@ -280,6 +280,10 @@ class PlayOffStage(TournamentStage):
         SE = 'SE', 'Single-elimination'
         DE = 'DE', 'Double-elimination'
 
+    class Bracket(models.IntegerChoices):
+        LOWER = 0, 'Нижняя сетка'
+        UPPER = 1, 'Верхняя сетка'
+
     playoff_type = models.CharField('Формат', choices=PlayOffType.choices, max_length=10)
 
     class Meta:
@@ -355,6 +359,12 @@ class TourNumber(models.Model):
         null=True,
         blank=True,
     )
+    bracket = models.PositiveSmallIntegerField(
+        'Сетка',
+        choices=PlayOffStage.Bracket.choices,
+        null=True,
+        blank=True
+    )
 
     @property
     def is_actual(self):
@@ -362,15 +372,22 @@ class TourNumber(models.Model):
         return today >= self.date_from and self.tour_matches.filter(is_played=False).exists()
 
     def __str__(self):
-        if self.league.is_multistage_league():
-            return f'{self.number} тур ({self.league.title} - {self.stage.get_type_display()})'
+        bracket_postfix = ''
+        if (self.stage and
+                self.stage.is_playoff and
+                self.stage.playoff_type == PlayOffStage.PlayOffType.DE and
+                self.bracket is not None):
+            bracket_postfix = f', {self.get_bracket_display()}'
 
-        return f'{self.number} тур ({self.league.title})'
+        if self.league.is_multistage_league():
+            return f'{self.number} тур ({self.league.title} - {self.stage.get_type_display()}{bracket_postfix})'
+
+        return f'{self.number} тур ({self.league.title}{bracket_postfix})'
 
     class Meta:
         verbose_name = 'Тур'
         verbose_name_plural = 'Туры'
-        ordering = ['stage__order', 'number']
+        ordering = ['stage__order', '-bracket', 'number']
 
 
 class Match(models.Model):
