@@ -1,6 +1,6 @@
 [project]
 name = "cis-haxball"
-version = "0.1.0"
+version = "1.0.0"
 description = "Website for holding HaxBall tournaments with social component"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -68,4 +68,11 @@ dependencies = [
     "urllib3==2.2.1",
     "wcwidth==0.2.5",
     "webencodings==0.5.1",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "djhtml==3.0.6",
+    "pre-commit==3.8.0",
+    "ruff==0.6.3",
 ]
