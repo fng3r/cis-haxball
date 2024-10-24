@@ -220,25 +220,18 @@ def cup_table(league):
 
 @register.filter
 def pairs_in_round(tour):
-    matches = Match.objects.filter(numb_tour=tour)
-    pairs = []
-    for m in matches:
-        pair = set()
-        pair.add(m.team_home)
-        pair.add(m.team_guest)
+    matches = Match.objects.filter(numb_tour=tour).order_by('id')
+    pairs = {}
+    for match in matches:
+        pair = frozenset((match.team_home, match.team_guest))
         if pair not in pairs:
-            pairs.append(pair)
-    pi = []
-    for p in pairs:
-        pi.append(sorted(list(p), key=lambda x: x.id))
-    for m in matches:
-        for p in pi:
-            if (p[0] == m.team_home and p[1] == m.team_guest) or (p[1] == m.team_home and p[0] == m.team_guest):
-                i = pi.index(p)
-        if i is not None:
-            pi[i].append(m)
+            pairs[pair] = []
+        pairs[pair].append(match)
 
-    return sorted(pi, key=lambda x: x[2].id)
+    return  {
+        (matches[0].team_home, matches[0].team_guest): matches  # there's guaranteed to be at least one match per pair
+        for pair, matches in sorted(pairs.items(), key=lambda x: min(m.id for m in x[1]))
+    }
 
 
 @register.filter
