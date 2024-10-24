@@ -1,0 +1,127 @@
+.pair {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 62px;
+  margin: 12px 0;
+}
+
+.pair .pair-top {
+  border-radius: 2px 2px 0 0;
+  border: 1px solid black;
+  background: #617894;
+}
+
+.pair .pair-bottom {
+  border-radius: 0 0 2px 2px;
+  border: 1px solid black;
+}
+
+.pair .team {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding-bottom: 0.25rem;
+}
+
+.team {
+  background: #638ab8;
+  color: #bcbcbc;
+}
+
+.team .score {
+  color: #dfdfdf;
+}
+
+.team .score:last-child {
+  padding-right: 0.25rem;
+}
+
+.team-link {
+    vertical-align: middle;
+    font-weight: 500;
+}
+
+.series-winner {
+  color: #ffffff;
+  z-index: 1;
+}
+
+.match-winner.score {
+  color: #00f9ff;
+}
+
+.team .name {
+  margin-right: auto;
+}
+
+.team .name a {
+  color: inherit;
+}
+
+.team span {
+  padding-left: 8px;
+}
+
+.team .score {
+  width: 32px;
+  font-size: 14px;
+}
+
+.team .seed {
+  font-size: 12px;
+  min-width: 10px;
+}
+
+.pair .team:first-child {
+  margin-bottom: -1px;
+}
+
+.pair-lines {
+  display: block;
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  margin-top: 0px;
+  right: -1px;
+}
+.pair-lines .line {
+  background: red;
+  position: absolute;
+}
+.pair-lines .line.one {
+  height: 1px;
+  width: 12px;
+}
+.pair-lines .line.two {
+  height: 44px;
+  width: 1px;
+  left: 11px;
+}
+.pair-lines.alt {
+  left: -12px;
+}
+
+.pair-lines .line {
+  background: #9199a4;
+}
+
+.pair:nth-child(even) .pair-lines .line.two {
+  transform: translate(0, -100%);
+}
+
+
+
+/*.theme-dark-trendy .score:before {*/
+/*  opacity: 0.25;*/
+/*  position: absolute;*/
+/*  z-index: 1;*/
+/*  content: "";*/
+/*  display: block;*/
+/*  background: black;*/
+/*  min-height: 50px;*/
+/*  min-width: 70px;*/
+/*  transform: translate(-12px, 0) rotate(25deg);*/
+/*}*/

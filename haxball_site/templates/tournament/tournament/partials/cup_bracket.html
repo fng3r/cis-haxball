@@ -1,0 +1,92 @@
+{% load static %}
+{% load tournament_extras %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'tournament/tournament/cup_bracket.css' %}">
+<style>
+    table {
+        font-size: 14px;
+    }
+</style>
+
+<div class="container pt-1 pb-2">
+    {% if bracket is not None %}
+        <h5>
+            {% if bracket == bracket_types.UPPER %}
+                Верхняя сетка
+            {% else %}
+                Нижняя сетка
+            {% endif %}
+        </h5>
+    {% endif %}
+
+    {% with tours=league.tours|tours_in_bracket:bracket %}
+        <div class="row">
+            {% for tour in tours %}
+                <div class="col my-1">
+                    <h5>{{ tour.number|round_name:tours.count }}</h5>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="row pr-2">
+
+            {% for tour in tours %}
+                <div class="col">
+                    <div class="col d-flex flex-column justify-content-around px-0" style="height: 100%">
+                        {% with pairs=tour|pairs_in_round %}
+                            {% for pair, matches in pairs.items %}
+                                {% with series_winner=pair|series_winner:matches %}
+                                    <div class="pair">
+                                        <div class="pair-top team {% if series_winner == pair.0 %}series-winner{% endif %}">
+                                            <span class="image">
+                                                <img src="{{ pair.0.logo.url }}" alt="{{ pair.0.title }}" width="24" height="24">
+                                            </span>
+                                            <span class="name">
+                                                <a class="team-link" href="{{ pair.0.get_absolute_url }}">{{ pair.0.short_title }}</a>
+                                            </span>
+                                            {% for match in matches %}
+                                                {% if match.is_played %}
+                                                    <span class="score {% if pair.0|is_match_winner:match %}match-winner{% endif %}">
+                                                        {{ pair.0|team_score_in_match:match }}
+                                                    </span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="pair-bottom team {% if series_winner == pair.1 %}series-winner{% endif %}">
+                                            <span class="image">
+                                                <img src="{{ pair.1.logo.url }}" alt="{{ pair.1.title }}" width="24" height="24">
+                                            </span>
+                                            <span class="name">
+                                                <a class="team-link" href="{{ pair.1.get_absolute_url }}">{{ pair.1.short_title }}</a>
+                                            </span>
+                                            {% for match in matches %}
+                                                {% if match.is_played %}
+                                                    <span class="score {% if pair.1|is_match_winner:match %}match-winner{% endif %}">
+                                                        {{ pair.1|team_score_in_match:match }}
+                                                    </span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+
+{#                                {% if not forloop.parentloop.last %}#}
+{#                                    <div class="pair-lines">#}
+{#                                        <div class="line one"></div>#}
+{#                                        <div class="line two"></div>#}
+{#                                    </div>#}
+{#                                {% endif %}#}
+{#                                {% if not forloop.parentloop.first %}#}
+{#                                    <div class="pair-lines alt">#}
+{#                                        <div class="line one"></div>#}
+{#                                    </div>#}
+{#                                {% endif %}#}
+                                    </div>
+                                {% endwith %}
+                            {% endfor %}
+                        {% endwith %}
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% endwith %}
+</div>

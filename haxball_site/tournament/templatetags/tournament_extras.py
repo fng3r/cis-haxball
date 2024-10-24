@@ -218,20 +218,17 @@ def events_sorted(match: Match):
 
 #   Фильтры для таблички лиги
 #   и теги
-@register.inclusion_tag('tournament/tournament/partials/cup_table.html')
+@register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
 def cup_table(league):
     return {'league': league, 'bracket': None}
 
 
-@register.inclusion_tag('tournament/tournament/partials/cup_table.html')
+@register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
 def cup_bracket(stage, bracket):
     return {
         'league': stage,
         'bracket': bracket,
-        'bracket_types': {
-            'UPPER': PlayOffStage.Bracket.UPPER,
-            'LOWER': PlayOffStage.Bracket.LOWER,
-        }
+        'bracket_types': PlayOffStage.Bracket,
     }
 
 
@@ -265,6 +262,32 @@ def team_score_in_match(team, match):
         return match.score_home
     if team == match.team_guest:
         return match.score_guest
+    return None
+
+
+@register.filter
+def is_match_winner(team, match):
+    return match.is_win(team)
+
+
+@register.filter
+def series_winner(teams, matches):
+    if not all((match.is_played for match in matches)):
+        return None
+
+    team1, team2 = teams
+    team1_series_score = 0
+    team2_series_score = 0
+    for match in matches:
+        team1_score = team_score_in_match(team1, match)
+        team2_score = team_score_in_match(team2, match)
+        team1_series_score += team1_score
+        team2_series_score += team2_score
+
+    if team1_series_score > team2_series_score:
+        return team1
+    if team2_series_score > team1_series_score:
+        return team2
     return None
 
 
