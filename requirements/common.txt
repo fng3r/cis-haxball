@@ -39,10 +39,10 @@ pandas==2.2.3
 parso==0.7.1
 pexpect==4.8.0
 pickleshare==0.7.5
-pillow==9.0.1
+pillow==10.4.0
 plotly==5.24.1
 prompt-toolkit==3.0.5
-psycopg2==2.8.5
+psycopg2==2.9.1
 ptyprocess==0.6.0
 Pygments==2.6.1
 python-decouple==3.8
