@@ -1,6 +1,7 @@
 {% extends "core/home.html" %}
 {% load static %}
 {% load reservation_extras %}
+{% load tournament_extras %}
 
 {% block styles %}
 
@@ -59,7 +60,7 @@
                                                                     <span class="font-weight-bold small"> {{ res.time_date|time:"H:i" }} | </span>
                                                                     <span class="small">
                                                                         {% if res.match.league.is_cup %}
-                                                                            {{ res.match.numb_tour.number|round_name:res.match.league.tours.count }}
+                                                                            {{ res.match.numb_tour|round_name:res.match.league.tours.count }}
                                                                             ,
                                                                         {% else %}
                                                                             {{ res.match.numb_tour.number }} тур

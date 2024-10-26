@@ -221,7 +221,7 @@
                                                 data-target="#tour{{ tour.number }}" aria-expanded="false"
                                                 aria-controls="tour{{ tour.number }}" style="width: 90%">
                                             <span class="h5">{% if not league.is_cup %}Тур {{ tour.number }}{% else %}
-                                                {{ tour.number|round_name:league.tours.count }}{% endif %}
+                                                {{ tour|round_name:league.tours.count }}{% endif %}
                                                 ({{ tour.date_from|date:"d.m" }} - {{ tour.date_to|date:"d.m" }})</span>
                                         </button>
                                     </p>

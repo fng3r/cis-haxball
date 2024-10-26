@@ -19,7 +19,7 @@
                 <td class="text-center h6 p0" style="width: 10%;">
                     {% if not league.has_stages %}
                         {% if league.is_cup %}
-                            {{ match.numb_tour.number|round_name:league.tours.count }}
+                            {{ match.numb_tour|round_name:league.tours.count }}
                         {% else %}
                             Тур {{ match.numb_tour.number }}
                         {% endif %}
@@ -32,7 +32,7 @@
                                          width="28" class="mr-1">
                                 {% endif %}
                                 <span>
-                                    {{ match.numb_tour.number|round_name:match.stage.tours.count }}
+                                    {{ match.numb_tour|round_name:match.stage.tours.count }}
                                 </span>
                             {% else %}
                                 Тур {{ match.numb_tour.number }}

@@ -8,7 +8,25 @@
     }
 </style>
 
-<div class="container pt-1 pb-2">
+{% partialdef pair-team %}
+    <div class="pair-{{ position }} team {% if team == series_winner %}series-winner{% endif %}">
+        <span class="image">
+            <img src="{{ team.logo.url }}" alt="{{ team.title }}" width="24" height="24">
+        </span>
+        <span class="name">
+            <a class="team-link" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
+        </span>
+        {% for match in matches %}
+            {% if match.is_played %}
+                <span class="score {% if team|is_match_winner:match %}match-winner{% endif %}">
+                    {{ team|team_score_in_match:match }}
+                </span>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endpartialdef %}
+
+<div class="container pt-1 pb-2" style="overflow-x: scroll">
     {% if bracket is not None %}
         <h5>
             {% if bracket == bracket_types.UPPER %}
@@ -19,74 +37,50 @@
         </h5>
     {% endif %}
 
-    {% with tours=league.tours|tours_in_bracket:bracket %}
-        <div class="row">
-            {% for tour in tours %}
-                <div class="col my-1">
-                    <h5>{{ tour.number|round_name:tours.count }}</h5>
-                </div>
-            {% endfor %}
-        </div>
-        <div class="row pr-2">
+    <div class="row flex-nowrap justify-content-left">
+        {% for tour in tours %}
+            <div class="col my-1" style="min-width:180px; max-width: 300px">
+                <h5>{{ tour|round_name:tours.count }}</h5>
+            </div>
+        {% endfor %}
+    </div>
 
-            {% for tour in tours %}
-                <div class="col">
-                    <div class="col d-flex flex-column justify-content-around px-0" style="height: 100%">
-                        {% with pairs=tour|pairs_in_round %}
-                            {% for pair, matches in pairs.items %}
-                                {% with series_winner=pair|series_winner:matches %}
-                                    <div class="pair">
-                                        <div class="pair-top team {% if series_winner == pair.0 %}series-winner{% endif %}">
-                                            <span class="image">
-                                                <img src="{{ pair.0.logo.url }}" alt="{{ pair.0.title }}" width="24" height="24">
-                                            </span>
-                                            <span class="name">
-                                                <a class="team-link" href="{{ pair.0.get_absolute_url }}">{{ pair.0.short_title }}</a>
-                                            </span>
-                                            {% for match in matches %}
-                                                {% if match.is_played %}
-                                                    <span class="score {% if pair.0|is_match_winner:match %}match-winner{% endif %}">
-                                                        {{ pair.0|team_score_in_match:match }}
-                                                    </span>
-                                                {% endif %}
-                                            {% endfor %}
+    <div class="row flex-nowrap pr-2 justify-content-left">
+        {% for tour in tours %}
+            <div class="col" style="min-width:180px; max-width: 300px">
+                <div class="col d-flex flex-column justify-content-around px-0" style="height: 100%;">
+                    {% with pairs_by_slot=tour|pairs_in_slots:tours show_connector=tour|show_connector:tours connector_line_height=tour|connector_line_height:tours %}
+                        {% for slot, pair in pairs_by_slot.items %}
+                            <div class="pair">
+                                {% if pair %}
+                                    {% with series_winner=pair.pair|series_winner:pair.matches %}
+                                        {% with position='top' team=pair.pair.0 matches=pair.matches series_winner=series_winner %}
+                                            {% partial pair-team %}
+                                        {% endwith %}
+
+                                        {% with position='bottom' team=pair.pair.1 matches=pair.matches series_winner=series_winner %}
+                                            {% partial pair-team %}
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% elif stage.show_empty_bracket_slots %}
+                                    <div class="pair-top team"></div>
+                                    <div class="pair-bottom team"></div>
+                                {% endif %}
+
+                                {% if show_connector %}
+                                    {% if pair or stage.show_empty_bracket_slots %}
+                                        <div class="pair-connector" style="--line-height: {{ connector_line_height }}px">
+                                            <div class="line line-one"></div>
+                                            <div class="line line-two"></div>
+                                            <div class="line line-three"></div>
                                         </div>
-                                        <div class="pair-bottom team {% if series_winner == pair.1 %}series-winner{% endif %}">
-                                            <span class="image">
-                                                <img src="{{ pair.1.logo.url }}" alt="{{ pair.1.title }}" width="24" height="24">
-                                            </span>
-                                            <span class="name">
-                                                <a class="team-link" href="{{ pair.1.get_absolute_url }}">{{ pair.1.short_title }}</a>
-                                            </span>
-                                            {% for match in matches %}
-                                                {% if match.is_played %}
-                                                    <span class="score {% if pair.1|is_match_winner:match %}match-winner{% endif %}">
-                                                        {{ pair.1|team_score_in_match:match }}
-                                                    </span>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </div>
-
-{#                                {% if not forloop.parentloop.last %}#}
-{#                                    <div class="pair-lines">#}
-{#                                        <div class="line one"></div>#}
-{#                                        <div class="line two"></div>#}
-{#                                    </div>#}
-{#                                {% endif %}#}
-{#                                {% if not forloop.parentloop.first %}#}
-{#                                    <div class="pair-lines alt">#}
-{#                                        <div class="line one"></div>#}
-{#                                    </div>#}
-{#                                {% endif %}#}
-                                    </div>
-                                {% endwith %}
-                            {% endfor %}
-                        {% endwith %}
-
-                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endwith %}
                 </div>
-            {% endfor %}
-        </div>
-
-    {% endwith %}
+            </div>
+        {% endfor %}
+    </div>
 </div>

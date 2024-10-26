@@ -284,7 +284,18 @@ class PlayOffStage(TournamentStage):
         LOWER = 0, 'Нижняя сетка'
         UPPER = 1, 'Верхняя сетка'
 
+    class WinnerDeterminator(models.TextChoices):
+        GOALS = 'GOALS', 'По сумме голов'
+        MATCHES = 'MATCHES', 'По сумме выигранных матчей'
+
     playoff_type = models.CharField('Формат', choices=PlayOffType.choices, max_length=10)
+    show_empty_bracket_slots = models.BooleanField('Показывать пустые слоты', default=False)
+    winner_determinator = models.CharField(
+        'Как определяется победитель',
+        choices=WinnerDeterminator.choices,
+        default=WinnerDeterminator.GOALS,
+        max_length=15,
+    )
 
     class Meta:
         verbose_name = 'Плей-офф'
@@ -346,6 +357,7 @@ class Player(models.Model):
 
 class TourNumber(models.Model):
     number = models.SmallIntegerField('Номер тура')
+    name = models.CharField('Название раунда (опционально)', max_length=30, null=True, blank=True)
     date_from = models.DateField('Дата тура с', default=date.today, blank=True, null=True)
     date_to = models.DateField('Дата тура по', default=date.today, blank=True, null=True)
     league = models.ForeignKey(League, verbose_name='В какой лиге', related_name='tours', on_delete=models.CASCADE)
@@ -427,6 +439,8 @@ class Match(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
+    bracket_slot = models.PositiveSmallIntegerField('Номер слота в сетке (сверху вниз)', default=0, null=False)
+
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
     replay_link_second = models.URLField('Ссылка на реплей(2ой, если два)', blank=True, null=True)

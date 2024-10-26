@@ -37,7 +37,7 @@
                     {% if match.stage.playoff_type == 'DE' %}
                         {{ match.numb_tour.get_bracket_display }},
                     {% endif %}
-                    {{ match.numb_tour.number|round_name:match.stage.tours.count }}
+                    {{ match.numb_tour|round_name:match.stage.tours.count }}
                 {% else  %}
                     {% if match.stage.is_group_stage %}
                         {{ match.group }} -

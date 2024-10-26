@@ -57,7 +57,7 @@
                                     {{ tour.get_bracket_display }},
                                 {% endif %}
                                 {% with tours_by_bracket=tour.stage.tours.all|bracket_tours:tour.bracket %}
-                                    {{ tour.number|round_name:tours_by_bracket.count }}
+                                    {{ tour|round_name:tours_by_bracket.count }}
                                 {% endwith %}
                             {% endif %}
                             ({{ tour.date_from|date:"d.m" }} - {{ tour.date_to|date:"d.m" }})
@@ -66,6 +66,7 @@
                 </p>
             </div>
         </div>
+
         <div class="collapse {% if tour.is_actual %}show{% endif %} {% if forloop.last %}mt-0 mb-3{% else %}mt-3{% endif %}"
              id="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}">
 
@@ -83,9 +84,6 @@
                     {% partial tour-matches %}
                 {% endwith %}
             {% endif %}
-
-
-
         </div>
     {% endfor %}
 {% endfor %}

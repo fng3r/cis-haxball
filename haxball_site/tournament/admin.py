@@ -408,6 +408,7 @@ class MatchAdmin(admin.ModelAdmin):
         'stage',
         'get_tour',
         'group',
+        'bracket_slot',
         'team_home',
         'score_home',
         'team_guest',
@@ -418,6 +419,7 @@ class MatchAdmin(admin.ModelAdmin):
         'inspector',
         'id',
     )
+    list_editable = ('bracket_slot', 'score_home', 'score_guest', 'is_played')
 
     def get_tour(self, model):
         tour = model.numb_tour
@@ -442,7 +444,7 @@ class MatchAdmin(admin.ModelAdmin):
             'Основная инфа',
             {
                 'fields': (
-                    ('league', 'stage', 'numb_tour', 'group'),
+                    ('league', 'stage', 'numb_tour', 'group', 'bracket_slot'),
                     ('match_date','is_played'),
                 )
             },
