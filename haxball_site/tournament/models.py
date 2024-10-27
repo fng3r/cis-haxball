@@ -301,6 +301,68 @@ class PlayOffStage(TournamentStage):
         verbose_name = 'Плей-офф'
 
 
+class PlayoffBracketSlotStub(models.Model):
+    playoff_stage = models.ForeignKey(
+        PlayOffStage,
+        verbose_name='Стадия ПО',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE
+    )
+    tour = ChainedForeignKey(
+        'TourNumber',
+        verbose_name='Раунд',
+        chained_field='playoff_stage',
+        chained_model_field='stage',
+        related_name='stubs',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE
+    )
+    slot = models.PositiveSmallIntegerField('Номер слота в раунде')
+    top_team = ChainedForeignKey(
+        Team,
+        verbose_name='Команд в верхней строчке слота',
+        chained_field='playoff_stage',
+        chained_model_field='stages',
+        related_name='stubs_top',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    top_team_placeholder = models.CharField(
+        'Плейсхолдер для команды в верхней строчке слота',
+        max_length=20,
+        null=True,
+        blank=True
+    )
+    bottom_team = ChainedForeignKey(
+        Team,
+        verbose_name='Команд в нижней строчке слота',
+        chained_field='playoff_stage',
+        chained_model_field='stages',
+        related_name='stubs_bottom',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    bottom_team_placeholder = models.CharField(
+        'Плейсхолдер для команды в нижней строчке слота',
+        max_length=20,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        bracket_prefix = f'{self.tour.get_bracket_display()}, ' if self.tour.bracket is not None else ''
+        return f'{bracket_prefix}{self.tour.number} тур - слот {self.slot}'
+
+    class Meta:
+        ordering = ('tour', 'slot')
+        verbose_name = 'Заглушка для слота сетки плей-офф'
+        verbose_name_plural = 'Заглушки для слотов сетки плей-офф'
+
+
 class Player(models.Model):
     name = models.OneToOneField(
         User, verbose_name='Пользователь', null=True, blank=True, on_delete=models.SET_NULL, related_name='user_player'
@@ -399,7 +461,7 @@ class TourNumber(models.Model):
     class Meta:
         verbose_name = 'Тур'
         verbose_name_plural = 'Туры'
-        ordering = ['stage__order', '-bracket', 'number']
+        ordering = ['league', 'stage__order', '-bracket', 'number']
 
 
 class Match(models.Model):

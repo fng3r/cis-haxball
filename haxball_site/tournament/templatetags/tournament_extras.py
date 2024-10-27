@@ -26,7 +26,7 @@ from ..models import (
     Substitution,
     Team,
     TournamentStage,
-    TourNumber,
+    TourNumber, PlayoffBracketSlotStub,
 )
 
 register = template.Library()
@@ -253,7 +253,7 @@ def bracket_tours(tours, bracket):
 
 
 @register.filter
-def bracket_slots(tours):
+def get_bracket_slots(tours):
     if tours.count() == 0:
         return []
 
@@ -270,9 +270,11 @@ def bracket_slots(tours):
 
 
 @dataclass
-class BracketPair:
+class BracketSlot:
+    number: int
     pair: tuple[Team, Team]
     matches: Iterable[Match]
+    stub: PlayoffBracketSlotStub
 
 
 @register.filter
@@ -285,37 +287,49 @@ def pairs_in_round(tour):
             pairs[pair] = []
         pairs[pair].append(match)
 
-    return [
+    return {
         # there's guaranteed to be at least one match per pair
-        BracketPair((matches[0].team_home, matches[0].team_guest), matches)
+        (matches[0].team_home, matches[0].team_guest): matches
         for pair, matches in sorted(pairs.items(), key=lambda x: min(m.id for m in x[1]))
-    ]
+    }
 
 
 @register.filter
-def pairs_in_slots(tour, tours):
+def tour_slots(tour, tours):
     pairs = pairs_in_round(tour)
-    slots_count = bracket_slots(tours)[tour.number-1]
-    pairs_by_slots = {}
+    slots_count = get_bracket_slots(tours)[tour.number - 1]
+    slots = []
     for slot in range(1, slots_count + 1):
-        pair = pair_in_slot(pairs, slot)
-        pairs_by_slots[slot] = pair
+        pair, matches = pair_in_slot(pairs, slot)
+        stub = slot_stub(tour, slot)
+        slots.append(BracketSlot(slot, pair, matches, stub))
 
-    return pairs_by_slots
+    return slots
 
 
 @register.filter
 def pair_in_slot(pairs, slot):
     for pair in pairs:
-        if any(match.bracket_slot == slot for match in pair.matches):
-            return pair
+        matches = pairs[pair]
+        if any(match.bracket_slot == slot for match in matches):
+            return pair, matches
+
+    return None, None
+
+
+@register.filter
+def slot_stub(tour, slot):
+    stubs = list(tour.stubs.all())
+    for stub in stubs:
+        if stub.slot == slot:
+            return stub
 
     return None
 
 
 @register.filter
 def has_more_slots_than_next_round(tour, tours):
-    slots = bracket_slots(tours)
+    slots = get_bracket_slots(tours)
     current_round_slots = slots[tour.number - 1]
     next_round_slots = slots[tour.number]
 
@@ -341,7 +355,7 @@ def connector_line_height(tour, tours):
 
     tour_number = 1
     gap = initial_gap
-    slots = bracket_slots(tours)
+    slots = get_bracket_slots(tours)
     while tour_number < tour.number:
         current_round_slots = slots[tour_number - 1]
         next_round_slots = slots[tour_number]

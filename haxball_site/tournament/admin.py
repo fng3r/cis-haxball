@@ -25,6 +25,7 @@ from .models import (
     OtherEvents,
     Player,
     PlayerTransfer,
+    PlayoffBracketSlotStub,
     PlayOffStage,
     Postponement,
     PostponementSlots,
@@ -318,9 +319,15 @@ class GroupStageAdmin(TournamentStageChildBase):
     inlines = [GroupInline]
 
 
+class PlayoffBracketSlotStubInline(admin.StackedInline):
+    model = PlayoffBracketSlotStub
+    extra = 1
+
+
 @admin.register(PlayOffStage)
 class PlayOffStageAdmin(TournamentStageChildBase):
-    ...
+    inlines = [PlayoffBracketSlotStubInline]
+
 
 
 @admin.register(League)
