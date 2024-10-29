@@ -1,3 +1,14 @@
+/* chromium-based */
+.draggable-container::-webkit-scrollbar { 
+  width: 0;
+  height: 0; 
+}
+
+/* ie 10+ */
+.draggable-container { 
+  -ms-overflow-style: none; 
+}
+
 .pair-container {
   height: 64px;
   margin: 12px 0;
