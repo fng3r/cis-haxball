@@ -228,9 +228,11 @@ def cup_table(league):
 @register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
 def cup_bracket(stage, bracket):
     tours = stage.tours.all() if bracket is None else stage.tours.filter(bracket=bracket)
+    slots = get_slots_by_tours(tours)
     return {
         'stage': stage,
         'tours': tours,
+        'slots_by_tour': slots,
         'bracket': bracket,
         'bracket_types': PlayOffStage.Bracket,
     }
@@ -252,7 +254,6 @@ def bracket_tours(tours, bracket):
     return tours.filter(bracket=bracket)
 
 
-@register.filter
 def get_bracket_slots(tours):
     if tours.count() == 0:
         return []
@@ -275,10 +276,15 @@ class BracketSlot:
     pair: tuple[Team, Team]
     matches: Iterable[Match]
     stub: PlayoffBracketSlotStub
+    label: str | None = None
+    
+    def is_empty(self):
+        return self.pair is None and self.stub is None
 
+        
 
 @register.filter
-def pairs_in_round(tour):
+def pairs_in_tour(tour):
     matches = Match.objects.filter(numb_tour=tour).order_by('id')
     pairs = {}
     for match in matches:
@@ -292,23 +298,45 @@ def pairs_in_round(tour):
         (matches[0].team_home, matches[0].team_guest): matches
         for pair, matches in sorted(pairs.items(), key=lambda x: min(m.id for m in x[1]))
     }
+    
+    
+def get_slots_by_tours(tours):
+    slots_by_tour = {}
+    count = 1
+    for tour in tours:
+        slots = get_tour_slots(tour, tours)
+        bracket = tour.bracket
+        match bracket:
+            case PlayOffStage.Bracket.UPPER:
+                bracket_prefix = 'U'
+            case PlayOffStage.Bracket.LOWER:
+                bracket_prefix = 'L'
+            case _:
+                bracket_prefix = ''
+            
+        for slot in slots:
+            if tour.number > 1 or not slot.is_empty():
+                slot.label = f'{bracket_prefix}{count}'
+                count += 1
+        slots_by_tour[tour] = slots
+        
+    return slots_by_tour.items()
 
 
-@register.filter
-def tour_slots(tour, tours):
-    pairs = pairs_in_round(tour)
+def get_tour_slots(tour, tours):
+    pairs = pairs_in_tour(tour)
+    stubs = list(tour.stubs.all())
     slots_count = get_bracket_slots(tours)[tour.number - 1]
     slots = []
     for slot in range(1, slots_count + 1):
-        pair, matches = pair_in_slot(pairs, slot)
-        stub = slot_stub(tour, slot)
+        pair, matches = get_pair_in_slot(pairs, slot)
+        stub = get_slot_stub(stubs, slot)
         slots.append(BracketSlot(slot, pair, matches, stub))
-
+        
     return slots
 
 
-@register.filter
-def pair_in_slot(pairs, slot):
+def get_pair_in_slot(pairs, slot):
     for pair in pairs:
         matches = pairs[pair]
         if any(match.bracket_slot == slot for match in matches):
@@ -317,19 +345,16 @@ def pair_in_slot(pairs, slot):
     return None, None
 
 
-@register.filter
-def slot_stub(tour, slot):
-    stubs = list(tour.stubs.all())
-    for stub in stubs:
-        if stub.slot == slot:
-            return stub
-
-    return None
+def get_slot_stub(stubs, slot):
+    return next((stub for stub in stubs if stub.slot == slot), None)
 
 
 @register.filter
 def has_more_slots_than_next_round(tour, tours):
     slots = get_bracket_slots(tours)
+    if tour.number >= len(slots):
+        return False
+    
     current_round_slots = slots[tour.number - 1]
     next_round_slots = slots[tour.number]
 
@@ -367,6 +392,9 @@ def connector_line_height(tour, tours):
 
 
 def is_old_champions_league_season(league):
+    match league:
+        case _:
+            return 0
     return league.title.startswith('Лига Чемпионов') and league.championship.number < 12
 
 
@@ -728,7 +756,7 @@ def team_squad_in_season(season_achievements):
 
 
 @register.filter
-def get(d: {}, key):
+def get(d: dict, key):
     return d[key]
 
 

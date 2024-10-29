@@ -2,11 +2,6 @@
 {% load tournament_extras %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'tournament/tournament/cup_bracket.css' %}">
-<style>
-    table {
-        font-size: 14px;
-    }
-</style>
 
 {% partialdef pair-team %}
     <div class="pair-{{ position }} team {% if team == series_winner %}series-winner{% endif %}">
@@ -41,7 +36,7 @@
     </div>
 {% endpartialdef %}
 
-<div class="container pt-1 pb-2" style="overflow-x: scroll">
+<div class="px-1 pt-1 pb-2" style="width: 99%; overflow-x: auto">
     {% if bracket is not None %}
         <h5>
             {% if bracket == bracket_types.UPPER %}
@@ -52,52 +47,61 @@
         </h5>
     {% endif %}
 
-    <div class="row flex-nowrap justify-content-left">
+    <div class="row flex-nowrap justify-content-left mx-0">
         {% for tour in tours %}
-            <div class="col my-1" style="min-width:180px; max-width: 300px">
+            <div class="col my-1" style="min-width:220px; max-width: 300px">
                 <h5>{{ tour|round_name:tours.count }}</h5>
             </div>
         {% endfor %}
     </div>
 
-    <div class="row flex-nowrap pr-2 justify-content-left">
-        {% for tour in tours %}
-            <div class="col" style="min-width:180px; max-width: 300px">
+    <div class="row flex-nowrap justify-content-left mx-0">
+        {% for tour, slots in slots_by_tour %}
+            <div class="col" style="min-width:220px; max-width: 300px">
                 <div class="col d-flex flex-column justify-content-around px-0" style="height: 100%;">
-                    {% with slots=tour|tour_slots:tours show_connector=tour|show_connector:tours connector_line_height=tour|connector_line_height:tours %}
+                    {% with show_connector=tour|show_connector:tours connector_line_height=tour|connector_line_height:tours %}
                         {% for slot in slots %}
-                            <div class="pair">
-                                {% if slot.pair %}
-                                    {% with series_winner=slot.pair|series_winner:slot.matches %}
-                                        {% with position='top' team=slot.pair.0 matches=slot.matches series_winner=series_winner %}
-                                            {% partial pair-team %}
-                                        {% endwith %}
-
-                                        {% with position='bottom' team=slot.pair.1 matches=slot.matches series_winner=series_winner %}
-                                            {% partial pair-team %}
-                                        {% endwith %}
-                                    {% endwith %}
-                                {% elif slot.stub %}
-                                    {% with position='top' team=slot.stub.top_team team_placeholder=slot.stub.top_team_placeholder %}
-                                        {% partial pair-team-stub %}
-                                    {% endwith %}
-
-                                    {% with position='bottom' team=slot.stub.bottom_team team_placeholder=slot.stub.bottom_team_placeholder %}
-                                        {% partial pair-team-stub %}
-                                    {% endwith %}
-                                {% elif not forloop.parentloop.first %}
-                                    <div class="pair-top team"></div>
-                                    <div class="pair-bottom team"></div>
-                                {% endif %}
-
-                                {% if show_connector %}
-                                    {% if slot.pair or slot.stub or not forloop.parentloop.first %}
-                                        <div class="pair-connector" style="--line-height: {{ connector_line_height }}px">
-                                            <div class="line line-one"></div>
-                                            <div class="line line-two"></div>
-                                            <div class="line line-three"></div>
+                            <div class="pair-container d-flex align-items-center">
+                                {% if slot.pair or slot.stub or not forloop.parentloop.first %}
+                                    {% if slot.label and stage.show_bracket_slot_labels %}
+                                        <div class="pair-label text-center mr-1">
+                                            {{ slot.label }}
                                         </div>
                                     {% endif %}
+                                    <div class="pair">
+                                        {% if slot.pair %}
+                                            {% with series_winner=slot.pair|series_winner:slot.matches %}
+                                                {% with position='top' team=slot.pair.0 matches=slot.matches series_winner=series_winner %}
+                                                    {% partial pair-team %}
+                                                {% endwith %}
+        
+                                                {% with position='bottom' team=slot.pair.1 matches=slot.matches series_winner=series_winner %}
+                                                    {% partial pair-team %}
+                                                {% endwith %}
+                                            {% endwith %}
+                                        {% elif slot.stub %}
+                                            {% with position='top' team=slot.stub.top_team team_placeholder=slot.stub.top_team_placeholder %}
+                                                {% partial pair-team-stub %}
+                                            {% endwith %}
+        
+                                            {% with position='bottom' team=slot.stub.bottom_team team_placeholder=slot.stub.bottom_team_placeholder %}
+                                                {% partial pair-team-stub %}
+                                            {% endwith %}
+                                        {% elif not forloop.parentloop.first %}
+                                            <div class="pair-top team"></div>
+                                            <div class="pair-bottom team"></div>
+                                        {% endif %}
+        
+                                        {% if show_connector %}
+                                            {% if slot.pair or slot.stub or not forloop.parentloop.first %}
+                                                <div class="pair-connector" style="--line-height: {{ connector_line_height }}px">
+                                                    <div class="line line-one"></div>
+                                                    <div class="line line-two"></div>
+                                                    <div class="line line-three"></div>
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
                                 {% endif %}
                             </div>
                         {% endfor %}

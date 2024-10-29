@@ -289,7 +289,7 @@ class PlayOffStage(TournamentStage):
         MATCHES = 'MATCHES', 'По сумме выигранных матчей'
 
     playoff_type = models.CharField('Формат', choices=PlayOffType.choices, max_length=10)
-    show_empty_bracket_slots = models.BooleanField('Показывать пустые слоты', default=False)
+    show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
     winner_determinator = models.CharField(
         'Как определяется победитель',
         choices=WinnerDeterminator.choices,
@@ -629,7 +629,7 @@ class Match(models.Model):
     class Meta:
         verbose_name = 'Матч'
         verbose_name_plural = 'Матчи'
-        ordering = ['-league', 'stage', 'numb_tour', 'id']
+        ordering = ['league', 'stage', 'numb_tour', 'id']
 
 
 class MatchResult(models.Model):
