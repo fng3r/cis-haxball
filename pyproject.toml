@@ -77,3 +77,13 @@ dev-dependencies = [
     "pre-commit==3.8.0",
     "ruff==0.6.3",
 ]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["E501", "I", "N", "SIM", "RET"]
+ignore = ["E722", "SIM108"]
+
+[tool.ruff.format]
+quote-style = "single"
