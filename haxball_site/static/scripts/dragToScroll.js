@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const elements = document.getElementsByClassName('draggable-container');
 
     for (const element of elements) {
-        let element = elements[i];
         element.style.cursor = 'grab';
 
         let pos = { top: 0, left: 0, x: 0, y: 0 };
