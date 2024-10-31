@@ -2,7 +2,15 @@ import textwrap
 
 from django.core.management.base import BaseCommand
 
-from ...models import Group, GroupStage, League, Match, PlayOffStage, RegularStage, TournamentStage, TourNumber
+from ...models import (
+    Group,
+    GroupStage,
+    League,
+    PlayOffStage,
+    PostponementSlots,
+    RegularStage,
+    TourNumber,
+)
 
 
 class Command(BaseCommand):
@@ -24,15 +32,30 @@ class Command(BaseCommand):
         group_title = options['group']
         stage_order = options['stage_order']
         
-        old_league = League.objects.get(title=old_tournament_title, championship__number=season_number)
-        new_slug = slug or f'{old_league.slug}_new'
+        
+        old_league = (
+            League.objects
+            .filter(title=old_tournament_title, championship__number=season_number)
+            .order_by('created')
+            .first()
+        )
+        print(f'Migrating "{old_league}" to the new format":')
+        wrapper = textwrap.TextWrapper(width=100, initial_indent='  - ', subsequent_indent=' '*4)
+        
+        new_slug = slug or f'{old_league.slug}_v2'
         new_league, _ = League.objects.get_or_create(
             title=new_tournament_title, championship=old_league.championship, slug=new_slug,
             defaults={'priority': old_league.priority, 'commentable': old_league.commentable}
         )
-                
-        print(f'Migrating "{old_league}" to the new format":')
-        wrapper = textwrap.TextWrapper(width=100, initial_indent='  - ', subsequent_indent=' '*4)
+        if season_number >= 15:
+            PostponementSlots.objects.get_or_create(
+                league = new_league,
+                defaults={
+                    'common_count': old_league.postponement_slots.common_count,
+                    'emergency_count': old_league.postponement_slots.emergency_count,
+                    'extra_count': old_league.postponement_slots.extra_count
+                }
+            )
         
         teams_count = old_league.teams.count()
         new_league.teams.add(*old_league.teams.all())
