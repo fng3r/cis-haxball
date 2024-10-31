@@ -243,17 +243,17 @@ class PostponementAdmin(admin.ModelAdmin):
 class TournamentStageInline(StackedPolymorphicInline):
     class RegularStageInline(StackedPolymorphicInline.Child):
         model = RegularStage
-        exclude = ('type',)
+        exclude = ('type', 'postponable',)
         filter_horizontal = ('teams',)
 
     class GroupStageInline(StackedPolymorphicInline.Child):
         model = GroupStage
-        exclude = ('type',)
+        exclude = ('type', 'postponable',)
         filter_horizontal = ('teams',)
 
     class PlayOffStageInline(StackedPolymorphicInline.Child):
         model = PlayOffStage
-        exclude = ('type',)
+        exclude = ('type', 'postponable',)
         filter_horizontal = ('teams',)
 
     model = TournamentStage
@@ -285,8 +285,9 @@ class TournamentStageAdmin(PolymorphicParentModelAdmin):
     base_model = TournamentStage
     child_models = [RegularStage, GroupStage, PlayOffStage]
     list_filter = ('league', PolymorphicChildModelFilter,)
-    list_display = ('get_stage_name', 'league')
+    list_display = ('get_stage_name', 'league', 'postponable',)
     list_display_links = ('get_stage_name',)
+    list_editable = ('postponable',)
 
     def get_stage_name(self, model):
         return model.get_type_display()
@@ -297,6 +298,12 @@ class TournamentStageChildBase(PolymorphicChildModelAdmin):
     exclude = ('type',)
     readonly_fields = ('league',)
     filter_horizontal = ('teams',)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj: # This is the case when object is already created
+            return ['league']
+        
+        return []
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)

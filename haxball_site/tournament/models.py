@@ -189,6 +189,7 @@ class TournamentStage(PolymorphicModel):
     league = models.ForeignKey(League, verbose_name='Турнир', related_name='stages', on_delete=models.CASCADE)
     teams = models.ManyToManyField(Team, verbose_name='Команды', related_name='stages', blank=True)
     order = models.PositiveSmallIntegerField('Порядок этапа')
+    postponable = models.BooleanField('Можно ли переносить матчи этапа', default=False, blank=True)
 
     @property
     def is_playoff(self):
@@ -201,6 +202,9 @@ class TournamentStage(PolymorphicModel):
     def save(self, *args, **kwargs):
         if not self.pk and not self.type:
             self.type = self._type
+            
+        if not self.pk:
+            self.postponable = self._postponable
 
         super().save(*args, **kwargs)
 
@@ -215,6 +219,7 @@ class TournamentStage(PolymorphicModel):
 
 class RegularStage(TournamentStage):
     _type = TournamentStage.StageType.REGULAR
+    _postponable = True
 
     awarded_count = models.PositiveSmallIntegerField(
         'Кол-во команд, награждаемых медалями',
@@ -239,6 +244,7 @@ class RegularStage(TournamentStage):
 
 class GroupStage(TournamentStage):
     _type = TournamentStage.StageType.GROUPS
+    _postponable = True
 
     promoted_count = models.PositiveSmallIntegerField(
         'Кол-во команд, проходящих в следующий этап',
@@ -276,6 +282,7 @@ class Group(models.Model):
 
 class PlayOffStage(TournamentStage):
     _type = TournamentStage.StageType.PLAYOFF
+    _postponable = False
 
     class PlayOffType(models.TextChoices):
         SE = 'SE', 'Single-elimination'
@@ -563,6 +570,9 @@ class Match(models.Model):
     @property
     def can_be_postponed(self):
         if self.is_played:
+            return False
+        
+        if self.stage and not self.stage.postponable:
             return False
 
         start_date = self.numb_tour.date_from
