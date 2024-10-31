@@ -147,7 +147,7 @@ class League(models.Model):
         return f'{self.title}, {self.championship}'
 
     def get_postponement_slots(self):
-        return self.postponement_slots.first()
+        return self.postponement_slots
 
     def get_absolute_url(self):
         return reverse('tournament:league', args=[self.slug])
@@ -205,7 +205,7 @@ class TournamentStage(PolymorphicModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.league.title} - {self.get_type_display()}'
+        return f'{self.league.title} – {self.get_type_display()}'
 
     class Meta:
         verbose_name = 'Этап турнира'
@@ -218,20 +218,19 @@ class RegularStage(TournamentStage):
 
     awarded_count = models.PositiveSmallIntegerField(
         'Кол-во команд, награждаемых медалями',
-        choices=[(i,i) for i in range(1, 4)],
+        choices=[(i,i) for i in range(0, 4)],
         default=3,
     )
     promoted_count = models.PositiveSmallIntegerField(
         'Кол-во команд, поднимающихся в лигу выше',
-        choices=[(i,i) for i in range(1, 5)],
+        choices=[(i,i) for i in range(0, 5)],
         default=4,
         null=False,
     )
     relegated_count = models.PositiveSmallIntegerField(
         'Кол-во команд, вылетающих в лигу ниже',
-        choices=[(i,i) for i in range(1, 5)],
+        choices=[(i,i) for i in range(0, 5)],
         default=2,
-        null=False,
     )
 
     class Meta:
@@ -244,10 +243,12 @@ class GroupStage(TournamentStage):
     promoted_count = models.PositiveSmallIntegerField(
         'Кол-во команд, проходящих в следующий этап',
         choices=[(i,i) for i in range(1, 11)],
+        default=2,
     )
     promoted_extra_count = models.PositiveSmallIntegerField(
         'Кол-во команд, дополнительно проходящих в следующий этап',
-        choices=[(i,i) for i in range(1, 11)],
+        choices=[(i,i) for i in range(0, 11)],
+        default=0,
     )
 
     class Meta:
@@ -288,7 +289,12 @@ class PlayOffStage(TournamentStage):
         GOALS = 'GOALS', 'По сумме голов'
         MATCHES = 'MATCHES', 'По сумме выигранных матчей'
 
-    playoff_type = models.CharField('Формат', choices=PlayOffType.choices, max_length=10)
+    playoff_type = models.CharField(
+        'Формат',
+        choices=PlayOffType.choices,
+        default=PlayOffType.SE,
+        max_length=10
+    )
     show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
     winner_determinator = models.CharField(
         'Как определяется победитель',
@@ -454,7 +460,7 @@ class TourNumber(models.Model):
             bracket_postfix = f', {self.get_bracket_display()}'
 
         if self.league.is_multistage_league():
-            return f'{self.number} тур ({self.league.title} - {self.stage.get_type_display()}{bracket_postfix})'
+            return f'{self.number} тур ({self.league.title} – {self.stage.get_type_display()}{bracket_postfix})'
 
         return f'{self.number} тур ({self.league.title}{bracket_postfix})'
 
@@ -505,7 +511,7 @@ class Match(models.Model):
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
-    replay_link_second = models.URLField('Ссылка на реплей(2ой, если два)', blank=True, null=True)
+    replay_link_second = models.URLField('Ссылка на реплей(2-й, если два)', blank=True, null=True)
     inspector = models.ForeignKey(
         User,
         verbose_name='Проверил',
@@ -821,12 +827,13 @@ class Disqualification(models.Model):
         TourNumber,
         verbose_name='Туры',
         related_name='disqualifications',
-        null=False,
+        blank=False,
         help_text='Туры, на которые распостраняется дисквалификация',
     )
     lifted_tours = models.ManyToManyField(
         TourNumber,
         verbose_name='Отмененные туры',
+        related_name='lifted_disqualifications',
         blank=True,
         help_text='Туры, на которые дисквалификация была снята. Должно являться '
         'подмножеством списка туров, на которые дисквалификация была выдана',
@@ -1058,7 +1065,7 @@ class Postponement(models.Model):
 
 
 class PostponementSlots(models.Model):
-    league = models.ForeignKey(
+    league = models.OneToOneField(
         League,
         verbose_name='Турнир',
         related_name='postponement_slots',
@@ -1075,7 +1082,7 @@ class PostponementSlots(models.Model):
         return self.common_count + self.emergency_count + self.extra_count
 
     def __str__(self):
-        return '{}'.format(self.league)
+        return f'{self.league} ({self.common_count}, {self.emergency_count}, {self.extra_count})'
 
     class Meta:
         verbose_name = 'Слоты переноса'

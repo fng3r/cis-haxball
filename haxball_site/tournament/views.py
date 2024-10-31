@@ -536,7 +536,7 @@ class LeagueByTitleFilter(FilterSet):
         ('Высшая лига', 'Высшая лига'),
         ('Первая лига', 'Первая лига'),
         ('Вторая лига', 'Вторая лига'),
-        ('Кубок Высшей лиги', 'Кубок Высшей лиги'),
+        ('Кубок лиги – Группа', 'Кубок лиги'),
     )
 
     tournament = ChoiceFilter(
@@ -560,9 +560,10 @@ class PostponementsList(ListView):
     def get(self, request, **kwargs):
         filter = LeagueByTitleFilter(
             {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
-            queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
+            queryset=League.objects.filter(championship__is_active=True).select_related('postponement_slots'),
         )
         leagues = filter.qs
+        print(filter.qs)
         teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
         postponements = self.queryset.filter(match__league__in=leagues)
 
@@ -626,7 +627,7 @@ class PostponementsEvents(ListView):
     def get(self, request, **kwargs):
         filter = LeagueByTitleFilter(
             {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
-            queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
+            queryset=League.objects.filter(championship__is_active=True).select_related('postponement_slots'),
         )
         leagues = filter.qs
         all_postponements = (
