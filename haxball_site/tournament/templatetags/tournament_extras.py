@@ -542,11 +542,11 @@ def all_seasons(team):
                 'tournaments_in_season',
                 queryset=League.objects.filter(teams=team)
                 .prefetch_related(
-                    'tours',
+                    'tours__league',
                     Prefetch(
                         'matches_in_league',
                         queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                        .select_related('team_home', 'team_guest', 'numb_tour')
+                        .select_related('team_home', 'team_guest', 'numb_tour__league')
                         .order_by('numb_tour'),
                         to_attr='team_matches',
                     ),
@@ -555,10 +555,11 @@ def all_seasons(team):
                         queryset=TournamentStage.objects.filter(teams=team)
                         .distinct()
                         .prefetch_related(
+                            'tours__league',
                             Prefetch(
                                 'matches',
                                 queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                                .select_related('team_home', 'team_guest', 'numb_tour')
+                                .select_related('team_home', 'team_guest', 'numb_tour__league')
                                 .order_by('numb_tour'),
                                 to_attr='team_matches',
                             ),

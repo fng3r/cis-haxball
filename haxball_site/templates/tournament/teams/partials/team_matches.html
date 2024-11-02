@@ -25,14 +25,18 @@
                         {% endif %}
                     {% else %}
                         <div class="d-flex flex-row justify-content-center align-items-center">
-                            {% if match.stage.is_playoff %}
-                                {% if match.stage.is_double_elimination %}
+                            {% if stage.is_playoff %}
+                                {% if stage.is_double_elimination %}
                                     <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
                                          title="{{ match.numb_tour.get_bracket_display }}"
                                          width="28" class="mr-1">
                                 {% endif %}
                                 <span>
-                                    {{ match.numb_tour|round_name:match.stage.tours.count }}
+                                    {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
+                                        {% with tours_count=tours_by_bracket|length %}
+                                            {{ match.numb_tour|round_name:tours_count }}
+                                        {% endwith %}
+                                    {% endwith %}
                                 </span>
                             {% else %}
                                 Тур {{ match.numb_tour.number }}
