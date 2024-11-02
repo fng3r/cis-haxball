@@ -151,9 +151,9 @@ class NewComment(models.Model):
             return self.get_root().get_absolute_url()
 
         commented_object = self.content_object
-        top_level_comments = list(self.content_object.comments.filter(parent=None))
-        index = top_level_comments.index(self)
-        page = (index // 25) + 1
+        # count how many top-level comments were left *after* current comment was created
+        index = commented_object.comments.filter(parent=None, id__gt=self.id).count()
+        page = (index // 20) + 1
         return '{}?page={}#r{}'.format(commented_object.get_absolute_url(), page, self.id)
 
     def get_root(self):

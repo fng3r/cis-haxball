@@ -65,8 +65,10 @@
                                 {% if tour.stage.is_double_elimination %}
                                     {{ tour.get_bracket_display }},
                                 {% endif %}
-                                {% with tours_by_bracket=tour.stage.tours.all|bracket_tours:tour.bracket %}
-                                    {{ tour|round_name:tours_by_bracket.count }}
+                                {% with tours_by_bracket=stage.tours|bracket_tours:tour.bracket %}
+                                    {% with tours_count=tours_by_bracket|length %}
+                                        {{ tour|round_name:tours_count }}
+                                    {% endwith %}
                                 {% endwith %}
                             {% endif %}
                             ({{ tour.date_from|date:"d.m" }} - {{ tour.date_to|date:"d.m" }})

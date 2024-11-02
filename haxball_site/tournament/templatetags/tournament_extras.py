@@ -228,7 +228,7 @@ def cup_table(league):
 
 @register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
 def cup_bracket(stage, bracket):
-    tours = stage.tours.all() if bracket is None else stage.tours.filter(bracket=bracket)
+    tours = bracket_tours(stage.tours, bracket)
     slots = get_slots_by_tours(tours)
     return {
         'stage': stage,
@@ -252,7 +252,7 @@ def group_matches(matches):
 
 @register.filter
 def bracket_tours(tours, bracket):
-    return tours.filter(bracket=bracket)
+    return [tour for tour in tours.all() if tour.bracket == bracket]
 
 
 @register.filter
@@ -261,7 +261,7 @@ def tours_ordered_by_date(tours, bracket):
 
 
 def get_bracket_slots(tours):
-    if tours.count() == 0:
+    if len(tours) == 0:
         return []
 
     bracket = tours[0].bracket
@@ -291,9 +291,8 @@ class BracketSlot:
 
 @register.filter
 def pairs_in_tour(tour):
-    matches = Match.objects.filter(numb_tour=tour).order_by('id')
     pairs = {}
-    for match in matches:
+    for match in tour.tour_matches.all():
         pair = frozenset((match.team_home, match.team_guest))
         if pair not in pairs:
             pairs[pair] = []
@@ -368,8 +367,8 @@ def has_more_slots_than_next_round(tour, tours):
 
 
 @register.filter
-def show_connector(tour, tours):
-    tours_total = tours.count()
+def show_connector(tour: TourNumber, tours: Iterable[TourNumber]):
+    tours_total = len(tours)
     if is_old_champions_league_season(tour.league):
         tours_total -= 1
 
@@ -377,11 +376,11 @@ def show_connector(tour, tours):
 
 
 @register.filter
-def connector_line_height(tour, tours):
+def connector_line_height(tour: TourNumber, tours: Iterable[TourNumber]):
     pair_height = 64
     initial_gap = 24
 
-    if tour.number == tours.count() or not has_more_slots_than_next_round(tour, tours):
+    if tour.number == len(tours) or not has_more_slots_than_next_round(tour, tours):
         return 0
 
     tour_number = 1
@@ -602,7 +601,7 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
             Match.objects
             .select_related('team_home', 'team_guest', 'result__winner', 'numb_tour')
             .filter(
-                (Q(team_home=team) | Q(team_guest=team)),
+                Q(team_home=team) | Q(team_guest=team),
                 league=league,
                 stage=stage,
                 group=group,
@@ -668,8 +667,12 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
             losses = [0 for _ in range(teams_count)]  # Поражений
             for i, team in enumerate(mini_table):
                 matches = []
-                matches_all = Match.objects.filter(
-                    (Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True
+                matches_all = (
+                    Match.objects
+                    .select_related('team_home', 'team_guest', 'result__winner', 'numb_tour')
+                    .filter(
+                        Q(team_home=team) | Q(team_guest=team), league=league, is_played=True
+                    )
                 )
                 for match in matches_all:
                     if (match.team_home in mini_table) and (match.team_guest in mini_table):

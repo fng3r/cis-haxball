@@ -351,6 +351,13 @@ class LeagueDetail(DetailView):
         return (
             super().get_queryset().prefetch_related(
                 'stages',
+                'stages__tours__stubs',
+                'stages__tours__league',
+                'stages__tours__tour_matches__team_home',
+                'stages__tours__tour_matches__team_guest',
+                'stages__tours__tour_matches__result__winner',
+                'stages__tours__tour_matches__group',
+                'stages__tours__tour_matches__stage',
                 'tours__tour_matches__team_home',
                 'tours__tour_matches__team_guest',
                 'tours__stage',
@@ -563,7 +570,6 @@ class PostponementsList(ListView):
             queryset=League.objects.filter(championship__is_active=True).select_related('postponement_slots'),
         )
         leagues = filter.qs
-        print(filter.qs)
         teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
         postponements = self.queryset.filter(match__league__in=leagues)
 

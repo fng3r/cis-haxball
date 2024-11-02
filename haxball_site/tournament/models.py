@@ -462,7 +462,7 @@ class TourNumber(models.Model):
     @property
     def is_actual(self):
         today = timezone.now().date()
-        return today >= self.date_from and self.tour_matches.filter(is_played=False).exists()
+        return today >= self.date_from and any(not match.is_played for match in self.tour_matches.all())
 
     def __str__(self):
         bracket_postfix = ''
