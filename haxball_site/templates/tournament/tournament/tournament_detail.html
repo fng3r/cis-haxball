@@ -52,16 +52,24 @@
                         <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
                              id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
                             {% if stage.is_playoff %}
-                                {% if stage.playoff_type == 'DE' %}
-                                    {% cup_bracket stage 1 %}
+                                {% if stage.is_double_elimination %}
+                                    <div id="bracket-upper" class="mt-2">
+                                        {% cup_bracket stage 1 %}
+                                    </div>
+
                                     <div class="dropdown-divider"></div>
-                                    {% cup_bracket stage 0 %}
+
+                                    <div id="bracket-lower">
+                                        {% cup_bracket stage 0 %}
+                                    </div>
                                 {% else %}
-                                    {% cup_bracket stage None %}
+                                    <div id="bracket">
+                                        {% cup_bracket stage None %}
+                                    </div>
                                 {% endif %}
                             {% else %}
                                 {% if stage.is_group_stage %}
-                                    <div class="mt-3">
+                                    <div class="mt-2">
                                         {% for group in stage.groups.all %}
                                             <div class="mb-4">
                                                 <h4>{{ group.name }}</h4>

@@ -1,12 +1,12 @@
 import datetime
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Count, Exists, OuterRef, Prefetch, Q, QuerySet, Subquery, Window
-from django.db.models.functions import Coalesce, DenseRank
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q, QuerySet, Subquery
+from django.db.models.functions import Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
 
@@ -20,13 +20,14 @@ from ..models import (
     OtherEvents,
     Player,
     PlayerTransfer,
+    PlayoffBracketSlotStub,
     PlayOffStage,
     Postponement,
     Season,
     Substitution,
     Team,
     TournamentStage,
-    TourNumber, PlayoffBracketSlotStub,
+    TourNumber,
 )
 
 register = template.Library()
@@ -254,6 +255,11 @@ def bracket_tours(tours, bracket):
     return tours.filter(bracket=bracket)
 
 
+@register.filter
+def tours_ordered_by_date(tours, bracket):
+    return tours.filter(bracket=bracket)
+
+
 def get_bracket_slots(tours):
     if tours.count() == 0:
         return []
@@ -392,9 +398,6 @@ def connector_line_height(tour, tours):
 
 
 def is_old_champions_league_season(league):
-    match league:
-        case _:
-            return 0
     return league.title.startswith('Лига Чемпионов') and league.championship.number < 12
 
 
@@ -412,8 +415,8 @@ def is_match_winner(team, match):
     return match.is_win(team)
 
 
-@register.filter
-def series_winner(teams, matches):
+@register.simple_tag
+def get_series_result(teams, matches):
     if not all((match.is_played for match in matches)):
         return None
 
@@ -433,11 +436,15 @@ def series_winner(teams, matches):
             elif team2_score > team1_score:
                 team2_series_score += 1
 
+    if team1_series_score == team2_series_score:
+        return None
+    
     if team1_series_score > team2_series_score:
-        return team1
-    if team2_series_score > team1_series_score:
-        return team2
-    return None
+        winner, loser = team1, team2
+    else:
+        winner, loser = team2, team1
+    
+    return {'winner': winner, 'loser': loser}
 
 
 @register.filter
@@ -472,7 +479,7 @@ def league_table(league: League):
 
 
 @register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
-def tournament_table(league: League, stage: TournamentStage, group: Optional[Group]):
+def tournament_table(league: League, stage: TournamentStage, group: Group | None):
     result = get_league_table(league, stage, group)
     return {'teams': result, 'stage': stage}
 
@@ -852,7 +859,7 @@ def postponements_form(user: User, leagues: QuerySet, tournament: str):
 def get_user_teams(user: User):
     try:
         player = user.user_player
-    except Exception as e:
+    except:
         return []
     teams = []
     if player.role == Player.CAPTAIN or player.role == Player.ASSISTENT:

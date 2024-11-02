@@ -309,6 +309,12 @@ class PlayOffStage(TournamentStage):
         default=WinnerDeterminator.GOALS,
         max_length=15,
     )
+    
+    def is_single_elimination(self):
+        return self.playoff_type == PlayOffStage.PlayOffType.SE
+    
+    def is_double_elimination(self):
+        return self.playoff_type == PlayOffStage.PlayOffType.DE
 
     class Meta:
         verbose_name = 'Плей-офф'
@@ -433,8 +439,8 @@ class Player(models.Model):
 class TourNumber(models.Model):
     number = models.SmallIntegerField('Номер тура')
     name = models.CharField('Название раунда (опционально)', max_length=30, null=True, blank=True)
-    date_from = models.DateField('Дата тура с', default=date.today, blank=True, null=True)
-    date_to = models.DateField('Дата тура по', default=date.today, blank=True, null=True)
+    date_from = models.DateField('Дата начала тура', default=date.today, blank=True, null=True)
+    date_to = models.DateField('Дата окончания тура', default=date.today, blank=True, null=True)
     league = models.ForeignKey(League, verbose_name='В какой лиге', related_name='tours', on_delete=models.CASCADE)
     stage = ChainedForeignKey(
         TournamentStage,
@@ -474,7 +480,7 @@ class TourNumber(models.Model):
     class Meta:
         verbose_name = 'Тур'
         verbose_name_plural = 'Туры'
-        ordering = ['league', 'stage__order', '-bracket', 'number']
+        ordering = ['league', 'stage__order', 'number', 'date_from']
 
 
 class Match(models.Model):
@@ -514,7 +520,7 @@ class Match(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
-    bracket_slot = models.PositiveSmallIntegerField('Номер слота в сетке (сверху вниз)', default=0, null=False)
+    bracket_slot = models.PositiveSmallIntegerField('Номер слота в сетке', default=0, null=False)
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)

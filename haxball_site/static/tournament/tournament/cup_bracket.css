@@ -54,20 +54,19 @@
 
 .team {
   background: #638ab8;
-  color: #cbcbcb;
-}
-
-.team.series-winner {
   color: #ffffff;
 }
 
+.team.series-loser {
+  color: #cbcbcb;
+}
+
 .team-link {
-    vertical-align: middle;
     font-weight: 500;
 }
 
 .team span {
-  padding-left: 6px;
+  padding-left: 4px;
 }
 
 .team .image {

@@ -26,7 +26,7 @@
                     {% else %}
                         <div class="d-flex flex-row justify-content-center align-items-center">
                             {% if match.stage.is_playoff %}
-                                {% if match.stage.playoff_type == 'DE' %}
+                                {% if match.stage.is_double_elimination %}
                                     <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
                                          title="{{ match.numb_tour.get_bracket_display }}"
                                          width="28" class="mr-1">

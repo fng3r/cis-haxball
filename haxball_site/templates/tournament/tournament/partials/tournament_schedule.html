@@ -4,30 +4,39 @@
     {% for match in matches %}
         <div class="row">
 
-            <div class="col-5 text-right">
-                <h5><a class="text-dark" href="{{ match.team_home.get_absolute_url }}"
-                    >{{ match.team_home.title }}<img
-                        src="{{ match.team_home.logo.url }}"
-                        alt="{{ match.team_home.title }}"
-                        width="25" height="25"
-                        class="ml-1"></a></h5>
+            <div class="col text-right">
+                <h5>
+                    <a class="text-dark" href="{{ match.team_home.get_absolute_url }}">
+                        {{ match.team_home.title }}
+                        <img src="{{ match.team_home.logo.url }}"
+                             alt="{{ match.team_home.title }}"
+                             width="25" height="25"
+                             class="ml-1">
+                    </a>
+                </h5>
             </div>
-            <div class="col-2">
+
+            <div class="col-1 px-0">
                 {% if not match.is_played %}
-                    <a href="{{ match.get_absolute_url }}"><span class="h5">vs</span> </a>
+                    <a href="{{ match.get_absolute_url }}">
+                        <span class="h5">vs</span>
+                    </a>
                 {% else %}
-                    <a href="{{ match.get_absolute_url }}"
-                       class="h5">{{ match.score_home }}
-                        : {{ match.score_guest }}</a>
+                    <a href="{{ match.get_absolute_url }}" class="h5">
+                        {{ match.score_home }} : {{ match.score_guest }}
+                    </a>
                 {% endif %}
             </div>
-            <div class="col-5 text-left">
+
+            <div class="col text-left">
                 <h5>
                     <a class="text-dark" href="{{ match.team_guest.get_absolute_url }}"
-                       class="h5"><img
-                        src="{{ match.team_guest.logo.url }}"
-                        alt="{{ match.team_guest.title }}" width="25" height="25"
-                        class="mr-1">{{ match.team_guest.title }}
+                       class="h5">
+                        <img src="{{ match.team_guest.logo.url }}"
+                             alt="{{ match.team_guest.title }}"
+                             width="25" height="25"
+                             class="mr-1">
+                        {{ match.team_guest.title }}
                     </a>
                 </h5>
             </div>
@@ -53,7 +62,7 @@
                             {% if not stage.is_playoff %}
                                 {{ tour.number }} тур
                             {% else %}
-                                {% if tour.stage.playoff_type == 'DE' %}
+                                {% if tour.stage.is_double_elimination %}
                                     {{ tour.get_bracket_display }},
                                 {% endif %}
                                 {% with tours_by_bracket=tour.stage.tours.all|bracket_tours:tour.bracket %}
