@@ -243,39 +243,6 @@ class Post(models.Model):
         ordering = ('-created',)
 
 
-# Модель для комментария
-class Comment(models.Model):
-    post = models.ForeignKey(Post, verbose_name='Место', on_delete=models.CASCADE, related_name='post_old_comments')
-    author = models.ForeignKey(User, verbose_name='Автор', related_name='comments_by_user', on_delete=models.CASCADE)
-    body = models.TextField()
-    created = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey(
-        'self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True, related_name='childs'
-    )
-    votes = GenericRelation(LikeDislike, related_query_name='comments')
-
-    class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
-        ordering = ('-created',)
-
-    def __str__(self):
-        return 'Комментарий от {} к {}'.format(self.author, self.post.title)
-
-    def is_parent(self):
-        return self.parent is None
-
-    def has_childs(self):
-        return self.childs.count() > 0
-
-    def all_childs(self):
-        return sorted(list(bfs(self)), key=lambda x: x.created)
-
-    def childs_count(self):
-        return len(list(bfs(self)))
-
-
-# Обход графа в ширину хе-хе, хоть где-то пригодилось)
 def bfs(root):
     visited = set()
     queue = collections.deque([root])
