@@ -219,11 +219,9 @@ def events_sorted(match: Match):
 
 
 #   Фильтры для таблички лиги и теги
-# @register.inclusion_tag('tournament/tournament/partials/cup_table.html')
-@register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
+@register.inclusion_tag('tournament/tournament/partials/cup_table.html')
 def cup_table(league):
-    # return {'league': league}
-    return cup_bracket(league, None)
+    return {'league': league}
 
 
 @register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')

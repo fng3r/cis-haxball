@@ -39,15 +39,15 @@
         {% for tour in league.tours.all %}
             <div class="col flex-direction: column justify-content-between">
                 <div class="col d-flex flex-column justify-content-around" style="height: 100%">
-                    {% with pairs=tour|pairs_in_round %}
-                        {% for pair in pairs %}
+                    {% with pairs=tour|pairs_in_tour %}
+                        {% for pair, matches in pairs.items %}
                             <table class="table border">
                                 <tbody>
-                                    {% with team=pair.pair.0 matches=pair.matches %}
+                                    {% with team=pair.0 matches=matches %}
                                         {% partial team-row  %}
                                     {% endwith %}
 
-                                    {% with team=pair.pair.1 matches=pair.matches %}
+                                    {% with team=pair.1 matches=matches %}
                                         {% partial team-row  %}
                                     {% endwith %}
                                 </tbody>
