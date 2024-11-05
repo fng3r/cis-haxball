@@ -433,7 +433,7 @@ class MatchAdmin(admin.ModelAdmin):
         'inspector',
         'id',
     )
-    list_editable = ('bracket_slot', 'score_home', 'score_guest', 'is_played')
+    list_editable = ('bracket_slot', 'is_played')
 
     def get_tour(self, model):
         tour = model.numb_tour

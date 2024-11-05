@@ -159,7 +159,7 @@ class League(models.Model):
         return self.stages.count() > 1
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['championship', '-created']
         verbose_name = 'Турнир'
         verbose_name_plural = 'Турниры'
 
@@ -213,7 +213,7 @@ class TournamentStage(PolymorphicModel):
 
     class Meta:
         verbose_name = 'Этап турнира'
-        verbose_name_plural = 'Этапы турнира'
+        verbose_name_plural = 'Этапы турниров'
         ordering = ['league', 'order']
 
 
