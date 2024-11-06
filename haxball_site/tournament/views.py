@@ -233,16 +233,13 @@ class FreeAgentList(ListView):
         return render(request, self.template_name, context)
 
     def post(self, request):
-        free_agent = FreeAgent.objects.filter(player=request.user).first()
-        if free_agent:
-            fa_form = FreeAgentForm(data=request.POST, instance=free_agent)
-        else:
-            fa_form = FreeAgentForm(data=request.POST)
+        fa = FreeAgent.objects.filter(player=request.user).first()
+        fa_form = FreeAgentForm(data=request.POST, instance=fa)
         if fa_form.is_valid():
             free_agent = fa_form.save(commit=False)
+            free_agent.player = request.user
             free_agent.created = timezone.now()
             free_agent.is_active = True
-            free_agent.team = request.user
             free_agent.save()
 
         paginator = Paginator(self.queryset, self.paginate_by)
@@ -252,7 +249,7 @@ class FreeAgentList(ListView):
         return render(request, 'tournament/free_agents/free_agents.html#content-container', context)
 
 
-def remove_entry(request, pk):
+def remove_free_agent_entry(request, pk):
     free_agent = get_object_or_404(FreeAgent, pk=pk)
     if request.method == 'POST':
         if request.user == free_agent.player:
@@ -270,7 +267,7 @@ def remove_entry(request, pk):
     return render(request, 'tournament/free_agents/free_agents.html#content-container', context)
 
 
-def update_entry(request, pk):
+def update_free_agent_entry(request, pk):
     free_agent = get_object_or_404(FreeAgent, pk=pk)
     if request.method == 'POST':
         if request.user == free_agent.player:

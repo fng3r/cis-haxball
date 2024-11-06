@@ -45,7 +45,9 @@ from .models import (
 @admin.register(FreeAgent)
 class FreeAgentAdmin(admin.ModelAdmin):
     list_display = ('id', 'player', 'position_main', 'description', 'is_active', 'created', 'deleted')
+    list_filter = ('is_active',)
     search_fields = ('player__username',)
+    ordering = ('-created',)
 
 
 @admin.register(AchievementCategory)

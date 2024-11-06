@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    CardsList,
     DisqualificationsList,
     EditTeamView,
     FreeAgentList,
@@ -16,10 +17,10 @@ from .views import (
     halloffame,
     player_detailed_statistics,
     player_statistics_charts,
-    remove_entry,
+    remove_free_agent_entry,
     team_statistics,
     team_statistics_charts,
-    update_entry, CardsList,
+    update_free_agent_entry,
 )
 
 app_name = 'tournament'
@@ -32,8 +33,8 @@ urlpatterns = [
     path('postponements/<int:pk>/cancel', cancel_postponement, name='cancel_postponement'),
     path('team_rating', TeamRatingView.as_view(), name='team_rating'),
     path('free_agents/', FreeAgentList.as_view(), name='free_agents'),
-    path('free_agents/remove/<int:pk>', remove_entry, name='remove_entry'),
-    path('free_agents/update/<int:pk>', update_entry, name='update_entry'),
+    path('free_agents/remove/<int:pk>', remove_free_agent_entry, name='remove_entry'),
+    path('free_agents/update/<int:pk>', update_free_agent_entry, name='update_entry'),
     path('team/<slug:slug>', TeamDetail.as_view(), name='team_detail'),
     path('team/<slug:slug>/edit', EditTeamView.as_view(), name='edit_team'),
     path('teams/', TeamList.as_view(), name='team_list'),

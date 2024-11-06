@@ -23,8 +23,6 @@ class TeamIsNotMatchParticipantError(Exception):
 
 
 class FreeAgent(models.Model):
-    player = models.OneToOneField(User, verbose_name='Игрок', on_delete=models.CASCADE, related_name='user_free_agent')
-    description = models.TextField('Комментарий к заявке', max_length=200, blank=True)
     TOP_FORWARD = 'Верхний нападающий'
     BOT_FORWARD = 'Нижний нападающий'
     FORWARD = 'Нападающий'
@@ -45,6 +43,9 @@ class FreeAgent(models.Model):
         (GK_FWD, 'Нападающий/Вратарь'),
         (ANY, 'Любая'),
     )
+    
+    player = models.OneToOneField(User, verbose_name='Игрок', on_delete=models.CASCADE, related_name='user_free_agent')
+    description = models.TextField('Комментарий к заявке', max_length=200, blank=True)
     position_main = models.CharField(max_length=40, choices=POSITION, default=ANY)
     created = models.DateTimeField('Оставлена', default=timezone.now)
     deleted = models.DateTimeField('Снята', auto_now_add=True)
