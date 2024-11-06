@@ -342,7 +342,7 @@ class TeamList(ListView):
 class LeagueDetail(DetailView):
     context_object_name = 'league'
     model = League
-    template_name = 'tournament/tournament/team_table.html'
+    template_name = 'tournament/tournament/tournament_detail.html'
 
     def get_queryset(self):
         return (
@@ -360,13 +360,6 @@ class LeagueDetail(DetailView):
                 'tours__stage',
             )
         )
-
-    def get_template_names(self, **kwargs):
-        league = self.get_context_data(**kwargs)['league']
-        if league.has_stages():
-            return 'tournament/tournament/tournament_detail.html'
-
-        return 'tournament/tournament/team_table.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

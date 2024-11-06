@@ -17,32 +17,24 @@
         {% for match in matches %}
             <tr>
                 <td class="text-center h6 p0" style="width: 10%;">
-                    {% if not league.has_stages %}
-                        {% if league.is_cup %}
-                            {{ match.numb_tour|round_name:league.tours.count }}
+                    <div class="d-flex flex-row justify-content-center align-items-center">
+                        {% if stage.is_playoff %}
+                            {% if stage.is_double_elimination %}
+                                <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
+                                     title="{{ match.numb_tour.get_bracket_display }}"
+                                     width="28" class="mr-1">
+                            {% endif %}
+                            <span>
+                                {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
+                                    {% with tours_count=tours_by_bracket|length %}
+                                        {{ match.numb_tour|round_name:tours_count }}
+                                    {% endwith %}
+                                {% endwith %}
+                            </span>
                         {% else %}
                             Тур {{ match.numb_tour.number }}
                         {% endif %}
-                    {% else %}
-                        <div class="d-flex flex-row justify-content-center align-items-center">
-                            {% if stage.is_playoff %}
-                                {% if stage.is_double_elimination %}
-                                    <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
-                                         title="{{ match.numb_tour.get_bracket_display }}"
-                                         width="28" class="mr-1">
-                                {% endif %}
-                                <span>
-                                    {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
-                                        {% with tours_count=tours_by_bracket|length %}
-                                            {{ match.numb_tour|round_name:tours_count }}
-                                        {% endwith %}
-                                    {% endwith %}
-                                </span>
-                            {% else %}
-                                Тур {{ match.numb_tour.number }}
-                            {% endif %}
-                        </div>
-                    {% endif %}
+                    </div>
                 </td>
                 <td class="text-right" style="width: 35%;">
                     {% if team == match.team_home %}

@@ -322,17 +322,11 @@
                                                        class="h5 text-center">{{ league.title }}</a>
                                                 </p>
 
-                                                {% if league.has_stages %}
-                                                    {% for stage in league.stages.all %}
-                                                        {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
-                                                            {% include 'tournament/teams/partials/team_matches.html' %}
-                                                        {% endwith %}
-                                                    {% endfor %}
-                                                {% else %}
-                                                    {% with matches=league.team_matches %}
+                                                {% for stage in league.stages.all %}
+                                                    {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
                                                         {% include 'tournament/teams/partials/team_matches.html' %}
                                                     {% endwith %}
-                                                {% endif %}
+                                                {% endfor %}
 
                                             {% endfor %}
                                         </div>

@@ -218,12 +218,6 @@ def events_sorted(match: Match):
     return events_by_time
 
 
-#   Фильтры для таблички лиги и теги
-@register.inclusion_tag('tournament/tournament/partials/cup_table.html')
-def cup_table(league):
-    return {'league': league}
-
-
 @register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
 def cup_bracket(stage, bracket):
     tours = bracket_tours(stage.tours, bracket)
@@ -467,12 +461,6 @@ def round_name(tour, all_tours):
 @register.filter
 def cup_round_name(tour: TourNumber):
     return round_name(tour, tour.league.tours.count())
-
-
-@register.inclusion_tag('tournament/tournament/partials/league_table.html')
-def league_table(league: League):
-    result = get_league_table(league)
-    return {'teams': result}
 
 
 @register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
