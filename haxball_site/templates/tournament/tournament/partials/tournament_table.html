@@ -1,4 +1,5 @@
 {% load mathfilters %}
+{% load tournament_extras %}
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap');
@@ -85,7 +86,7 @@
             <td class="team-form p-1" width="13%">{% for result in team.9 %}
                 <a href="{{ result.0.get_absolute_url }}"
                    class="fa fa-circle {% if result.1 == 1 %} text-success {% elif result.1 == -1 %} text-danger {% elif result.1 == 0 %} text-secondary {% endif %}"
-                   title="Тур {{ result.0.numb_tour.number }}&#013;{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}">
+                   title="{{ result.0.numb_tour|tour_name }}&#013;{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}">
                 </a>
             {% endfor %}
             </td>

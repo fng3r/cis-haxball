@@ -52,7 +52,7 @@
                         {% if match.league.is_cup %}
                             {{ match.numb_tour|cup_round_name }}.
                         {% else %}
-                            {{ match.numb_tour.number }} тур.
+                            {{ match.numb_tour|tour_name }}.
                         {% endif %}
                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                         {{ match.team_home.title }}

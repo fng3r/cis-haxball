@@ -439,6 +439,14 @@ def get_series_result(teams, matches):
 
 
 @register.filter
+def tour_name(tour: TourNumber):
+    if tour.name:
+        return tour.name
+    
+    return f'{tour.number} тур'
+
+
+@register.filter
 def round_name(tour, all_tours):
     if tour.name:
         return tour.name

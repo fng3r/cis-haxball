@@ -42,7 +42,7 @@
                     {% if match.stage.is_group_stage %}
                         {{ match.group }} -
                     {% endif %}
-                    {{ match.numb_tour.number }} тур
+                    {{ match.numb_tour|tour_name }}
                 {% endif %}
             </h5>
 

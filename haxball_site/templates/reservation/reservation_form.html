@@ -1,4 +1,5 @@
 {% load static %}
+{% load tournament_extras %}
 
 
 <div class="card bg-c-lite-unknown mb-2" style="border-radius: 1rem">
@@ -17,7 +18,7 @@
                 <select id="match" class="form-control" name="match">
                     {% for m in matches %}
                         <option {% if forloop.first %}selected{% endif %} value="{{ m.id }}">
-                            {{ m.numb_tour.number }} тур, {{ m.team_home.title }}-{{ m.team_guest.title }}
+                            {{ m.numb_tour|tour_name }}, {{ m.team_home.title }}-{{ m.team_guest.title }}
                         </option>
                     {% endfor %}
                 </select>

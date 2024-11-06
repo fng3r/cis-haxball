@@ -60,7 +60,7 @@
                             aria-controls="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}" style="width: 90%">
                         <span class="h5">
                             {% if not stage.is_playoff %}
-                                {{ tour.number }} тур
+                                {{ tour|tour_name }}
                             {% else %}
                                 {% if tour.stage.is_double_elimination %}
                                     {{ tour.get_bracket_display }},

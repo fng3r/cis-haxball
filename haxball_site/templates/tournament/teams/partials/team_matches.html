@@ -32,7 +32,7 @@
                                 {% endwith %}
                             </span>
                         {% else %}
-                            Тур {{ match.numb_tour.number }}
+                            {{ match.numb_tour|tour_name }}
                         {% endif %}
                     </div>
                 </td>

@@ -439,7 +439,7 @@ class Player(models.Model):
 
 class TourNumber(models.Model):
     number = models.SmallIntegerField('Номер тура')
-    name = models.CharField('Название раунда (опционально)', max_length=30, null=True, blank=True)
+    name = models.CharField('Название тура/раунда (опционально)', max_length=30, null=True, blank=True)
     date_from = models.DateField('Дата начала тура', default=date.today, blank=True, null=True)
     date_to = models.DateField('Дата окончания тура', default=date.today, blank=True, null=True)
     league = models.ForeignKey(League, verbose_name='В какой лиге', related_name='tours', on_delete=models.CASCADE)
