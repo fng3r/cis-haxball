@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Optional
 
 from colorfield.fields import ColorField
 from core.models import NewComment
@@ -18,7 +17,7 @@ from smart_selects.db_fields import ChainedForeignKey
 
 class TeamIsNotMatchParticipantError(Exception):
     def __init__(self, team, match):
-        message = 'Team {} is not a participant of the match {}'.format(team, match)
+        message = f'Team {team} is not a participant of the match {match}'
         super().__init__(message)
 
 
@@ -52,7 +51,7 @@ class FreeAgent(models.Model):
     is_active = models.BooleanField('Активно', default=True)
 
     def __str__(self):
-        return 'CA {}'.format(self.player.username)
+        return f'CA {self.player.username}'
 
     class Meta:
         verbose_name = 'Свободный агент'
@@ -113,7 +112,7 @@ class Team(models.Model):
         )
 
     def __str__(self):
-        return '{}'.format(self.title)
+        return f'{self.title}'
 
     class Meta:
         verbose_name = 'Команда'
@@ -428,7 +427,7 @@ class Player(models.Model):
                 player.save()
 
     def __str__(self):
-        return '{}'.format(self.nickname)
+        return f'{self.nickname}'
 
     class Meta:
         verbose_name = 'Игрок'
@@ -604,7 +603,7 @@ class Match(models.Model):
         return self.postponements.filter(cancelled_at__isnull=True).order_by('-ends_at').first()
 
     @property
-    def winner(self) -> Optional[Team]:
+    def winner(self) -> Team | None:
         if self.result:
             return self.result.winner
 
@@ -774,9 +773,7 @@ class Goal(models.Model):
         super(Goal, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return 'на {:02d}:{:02d} от {}({}) в {}'.format(
-            self.time_min, self.time_sec, self.author, self.assistent, self.match
-        )
+        return f'на {self.time_min:02d}:{self.time_sec:02d} от {self.author}({self.assistent}) в {self.match}'
 
     class Meta:
         verbose_name = 'Гол'
@@ -815,7 +812,7 @@ class Substitution(models.Model):
     time_sec = models.SmallIntegerField('Секунда')
 
     def __str__(self):
-        return 'в {:02d}:{:02d} {} на {}'.format(self.time_min, self.time_sec, self.player_out, self.player_in)
+        return f'в {self.time_min:02d}:{self.time_sec:02d} {self.player_out} на {self.player_in}'
 
     class Meta:
         verbose_name = 'Замена'
@@ -862,9 +859,7 @@ class Disqualification(models.Model):
         verbose_name_plural = 'Дисквалификации'
 
     def __str__(self):
-        return '{} ({} - {})'.format(
-            self.player.nickname, self.match.team_home.short_title, self.match.team_guest.short_title
-        )
+        return f'{self.player.nickname} ({self.match.team_home.short_title} - {self.match.team_guest.short_title})'
 
 
 class OtherEventsQuerySet(models.QuerySet):
@@ -969,7 +964,7 @@ class OtherEvents(models.Model):
         super(OtherEvents, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return '{:02d}:{:02d} {} в {}'.format(self.time_min, self.time_sec, self.event, self.match)
+        return f'{self.time_min:02d}:{self.time_sec:02d} {self.event} в {self.match}'
 
     class Meta:
         verbose_name = 'Событие'
@@ -1017,7 +1012,7 @@ class PlayerTransfer(models.Model):
         super(PlayerTransfer, self).save(*args, **kwargs)
 
     def __str__(self):
-        return 'Переход {} в команду {} (из {})'.format(self.trans_player, self.to_team, self.from_team)
+        return f'Переход {self.trans_player} в команду {self.to_team} (из {self.from_team})'
 
     class Meta:
         verbose_name = 'Трансфер'
@@ -1166,7 +1161,7 @@ class TeamRatingLeagueWeight(models.Model):
     weight = models.FloatField(verbose_name='Вес турнира')
 
     def __str__(self):
-        return '{} ({})'.format(self.league, self.weight)
+        return f'{self.league} ({self.weight})'
 
     class Meta:
         verbose_name = 'Коэффицент лиги в рейтинге'

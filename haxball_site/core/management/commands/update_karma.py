@@ -36,7 +36,7 @@ class Command(BaseCommand):
                     )
                 profile.karma = s - samo
                 profile.save(update_fields=['karma'])
-                print('{} установлена карма {}'.format(profile.name, profile.karma))
+                print(f'{profile.name} установлена карма {profile.karma}')
         else:
             print('Обновляем карму {}'.format(options['only_for']))
             try:
@@ -61,4 +61,4 @@ class Command(BaseCommand):
                 )
             profile.karma = s - samo
             profile.save(update_fields=['karma'])
-            print('{} установлена карма {}'.format(profile.name, profile.karma))
+            print(f'{profile.name} установлена карма {profile.karma}')

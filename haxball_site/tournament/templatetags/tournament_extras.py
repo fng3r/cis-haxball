@@ -1,7 +1,7 @@
 import datetime
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Iterable
 
 from django import template
 from django.contrib.auth.models import User
@@ -800,7 +800,7 @@ def get_lifted_string(disqualification: Disqualification):
 
 
 @register.filter
-def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Optional[Postponement]]:
+def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Postponement | None]:
     postponements = team.get_postponements(leagues)
     league = leagues.first()
     league_slots = league.get_postponement_slots()

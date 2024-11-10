@@ -1,9 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.urls import path
-from tournament.models import League, Match
 
 from . import views
-from .models import LikeDislike, NewComment, Post, Profile
+from .models import LikeDislike, NewComment, Post
 
 app_name = 'core'
 

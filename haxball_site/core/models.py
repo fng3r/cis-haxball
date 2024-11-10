@@ -144,7 +144,7 @@ class NewComment(models.Model):
         super(NewComment, self).save(*args, **kwargs)
 
     def __str__(self):
-        return 'Комментарий от {} к {}'.format(self.author, self.content_object)
+        return f'Комментарий от {self.author} к {self.content_object}'
 
     def get_absolute_url(self):
         if self.parent:
@@ -154,7 +154,7 @@ class NewComment(models.Model):
         # count how many top-level comments were left *after* current comment was created
         index = commented_object.comments.filter(parent=None, id__gt=self.id).count()
         page = (index // 20) + 1
-        return '{}?page={}#r{}'.format(commented_object.get_absolute_url(), page, self.id)
+        return f'{commented_object.get_absolute_url()}?page={page}#r{self.id}'
 
     def get_root(self):
         obj = self
@@ -202,7 +202,7 @@ class CommentHistoryItem(models.Model):
             ).save()
 
     def __str__(self):
-        return 'Версия комментария #{}'.format(self.version)
+        return f'Версия комментария #{self.version}'
 
 
 # Модель для поста
@@ -235,7 +235,7 @@ class Post(models.Model):
         return self.comments.annotate(Max('created'))
 
     def __str__(self):
-        return '{}: {}'.format(self.category, self.title)
+        return f'{self.category}: {self.title}'
 
     class Meta:
         verbose_name = 'Пост'
@@ -266,7 +266,7 @@ class IPAdress(models.Model):
     suspicious = models.BooleanField('Подозрительный', default=False)
 
     def __str__(self):
-        return '({}, {})'.format(self.name, self.ip)
+        return f'({self.name}, {self.ip})'
 
     class Meta:
         verbose_name = 'IP-Адрес'
@@ -321,7 +321,7 @@ class Profile(models.Model):
         return reverse('core:profile_detail', args=[self.id, self.slug])
 
     def __str__(self):
-        return 'Профиль {}'.format(self.name.username)
+        return f'Профиль {self.name.username}'
 
     class Meta:
         verbose_name = 'Профиль'

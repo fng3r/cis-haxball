@@ -106,4 +106,4 @@ class Command(BaseCommand):
         if league.title.startswith('Вторая лига') or league.title.startswith('Кубок Второй лиги'):
             return 0.25
 
-        raise ValueError('Unknown league: {}'.format(league.title))
+        raise ValueError(f'Unknown league: {league.title}')

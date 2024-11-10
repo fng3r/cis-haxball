@@ -1,9 +1,8 @@
 import random
 
-from PIL.ImImagePlugin import number
 from django.core.management.base import BaseCommand
 
-from ...models import League, Match, TourNumber, TournamentStage
+from ...models import League
 
 
 class Command(BaseCommand):
