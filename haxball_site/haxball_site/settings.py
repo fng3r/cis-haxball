@@ -222,6 +222,7 @@ SITE_ID = 1
 
 URL_PREFIX = config('APP_URL_PREFIX', default='')
 
+DELETE_COMMENT_TIME_LIMIT = config('APP_DELETE_COMMENT_TIME_LIMIT', default=60)
 EDIT_COMMENT_TIME_LIMIT = config('APP_EDIT_COMMENT_TIME_LIMIT', cast=int, default=180)
 EDIT_COMMENT_LIMIT = config('APP_EDIT_COMMENT_LIMIT', cast=int, default=5)
 

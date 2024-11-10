@@ -4,7 +4,6 @@ from django.contrib import admin
 from django.contrib.admin import StackedInline
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
-from django_summernote.fields import SummernoteTextFormField
 
 from .models import (
     Category,
@@ -78,7 +77,7 @@ class CommentHistoryItemAdmin(admin.ModelAdmin):
 
 
 class NewCommentAdminForm(forms.ModelForm):
-    body = SummernoteTextFormField(label='Комментарий')
+    body = forms.CharField(label='Комментарий', widget=CKEditorUploadingWidget(config_name='default'))
 
     class Meta:
         model = NewComment

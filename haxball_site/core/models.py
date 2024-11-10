@@ -13,26 +13,22 @@ from django.utils import timezone
 from model_utils import FieldTracker
 
 
-class MyQuerySet(models.query.QuerySet):
+class LikeDislikeQuerySet(models.QuerySet):
     def delete(self):
         for obj in self:
             obj.delete()
 
 
-# Менеджер модели лайк-дизлайк
 class LikeDislikeManager(models.Manager):
     use_for_related_fields = True
 
     def likes(self):
-        # Забираем queryset с записями больше 0
         return self.get_queryset().filter(vote__gt=0)
 
     def dislikes(self):
-        # Забираем queryset с записями меньше 0
         return self.get_queryset().filter(vote__lt=0)
 
     def sum_rating(self):
-        # Забираем суммарный рейтинг
         return self.get_queryset().aggregate(Sum('vote')).get('vote__sum') or 0
 
     def posts(self):
@@ -42,7 +38,7 @@ class LikeDislikeManager(models.Manager):
         return self.get_queryset().filter(content_type__model='comment').order_by('-comments__pub_date')
 
     def get_queryset(self):
-        return MyQuerySet(self.model, using=self._db)
+        return LikeDislikeQuerySet(self.model, using=self._db)
 
 
 # Модель для лайк-дизлайк системы
@@ -68,7 +64,7 @@ class LikeDislike(models.Model):
         super(LikeDislike, self).delete(*args, **kwargs)
 
     def get_query_set(self):
-        return MyQuerySet(self.model)
+        return LikeDislikeQuerySet(self.model)
 
     class Meta:
         verbose_name = 'Лайк/дизлайк голос'
@@ -115,19 +111,18 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
 
-# Модель для "правильных" комментариев
 class NewComment(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
-    author = models.ForeignKey(User, verbose_name='Автор', related_name='n_comments_by_user', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, verbose_name='Автор', related_name='comments_by_user', on_delete=models.CASCADE)
     body = models.TextField('Текст комментария')
     created = models.DateTimeField('Создан', default=timezone.now)
     edited = models.DateTimeField('Изменен', blank=True, null=True)
     parent = models.ForeignKey(
         'self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True, related_name='childs'
     )
-    votes = GenericRelation(LikeDislike, related_query_name='n_comments')
+    votes = GenericRelation(LikeDislike, related_query_name='comments')
     version = models.PositiveSmallIntegerField('Версия', default=1)
 
     tracker = FieldTracker()
