@@ -59,11 +59,11 @@
                                                                 <span style="font-size: smaller">
                                                                     <span class="font-weight-bold small"> {{ res.time_date|time:"H:i" }} | </span>
                                                                     <span class="small">
-                                                                        {% if res.match.league.is_cup %}
+                                                                        {% if res.match.stage.is_playoff %}
                                                                             {{ res.match.numb_tour|round_name:res.match.league.tours.count }}
                                                                             ,
                                                                         {% else %}
-                                                                            {{ res.match.numb_tour.number }} тур
+                                                                            {{ res.match.numb_tour|tour_name }}
                                                                         {% endif %}
                                                                     </span>
                                                                     <span class="font-weight-bold small">

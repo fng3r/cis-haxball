@@ -49,7 +49,7 @@
                 {% for match in latest_matches %}
                     <a class="match-link" href="{{match.get_absolute_url}}">
                         {{ match.league.title }},
-                        {% if match.league.is_cup %}
+                        {% if match.stage.is_playoff %}
                             {{ match.numb_tour|cup_round_name }}.
                         {% else %}
                             {{ match.numb_tour|tour_name }}.

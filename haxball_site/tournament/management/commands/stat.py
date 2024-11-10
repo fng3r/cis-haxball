@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            league = League.objects.get(championship__is_active=True, is_cup=False)
+            league = League.objects.get(championship__is_active=True)
         except:
             print('Ошибка выбора лиги')
         matches = Match.objects.filter(league=league, is_played=True)
