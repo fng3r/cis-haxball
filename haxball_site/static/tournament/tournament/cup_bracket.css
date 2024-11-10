@@ -1,12 +1,12 @@
-/* chromium-based */
-.draggable-container::-webkit-scrollbar { 
-  width: 0;
-  height: 0; 
-}
-
-/* ie 10+ */
 .draggable-container { 
-  -ms-overflow-style: none; 
+  /* ie 10+ */
+  -ms-overflow-style: none;
+
+  /* chromium-based */
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0; 
+  }
 }
 
 .pair-container {
@@ -26,17 +26,18 @@
   flex-direction: column;
   width: 100%;
   height: 64px;
-}
 
-.pair .pair-top {
-  border-radius: 2px 2px 0 0;
-  border: 1px solid black;
-  background: #617894;
-}
+  .pair-top {
+    border-radius: 2px 2px 0 0;
+    border: 1px solid black;
+    background: #617894;
+  }
 
-.pair .pair-bottom {
-  border-radius: 0 0 2px 2px;
-  border: 1px solid black;
+  .pair-bottom {
+    border-radius: 0 0 2px 2px;
+    border: 1px solid black;
+    background: #638ab8;
+  }
 }
 
 .pair .team {
@@ -46,54 +47,44 @@
   width: 100%;
   height: 100%;
   padding: 0.2rem 0.25rem;
-}
+  color: #ffffff;
 
-.pair .team:first-child {
-  margin-bottom: -2px;
+  &.series-loser {
+    color: #cbcbcb;
+  }
+
+  &:first-child {
+    margin-bottom: -2px;
+  }
 }
 
 .team {
-  background: #638ab8;
-  color: #ffffff;
-}
+  span {
+    padding-left: 4px;
+  }
 
-.team.series-loser {
-  color: #cbcbcb;
-}
+  .image {
+    padding-left: 2px;
+  }
 
-.team-link {
-    font-weight: 500;
-}
+  .name {
+    margin-right: auto;
 
-.team span {
-  padding-left: 4px;
-}
+    a {
+      font-weight: 500;
+      color: inherit;
+    }
+  }
 
-.team .image {
-  padding-left: 2px;
-}
+  .score {
+    width: 26px;
+    font-size: 14px;
+    color: #dfdfdf;
 
-.team .name {
-  margin-right: auto;
-}
-
-.team .name a {
-  color: inherit;
-}
-
-.team .score {
-  width: 26px;
-  font-size: 14px;
-  color: #dfdfdf;
-}
-
-.team .score.match-winner {
-  color: #00f9ff;
-}
-
-.team .seed {
-  font-size: 12px;
-  min-width: 10px;
+    &.match-winner {
+      color: #00f9ff;
+    }
+  }
 }
 
 .pair-connector {
@@ -103,35 +94,35 @@
   bottom: 0;
   margin-top: 0;
   right: -4px;
-}
 
-.pair-connector .line {
-  background: #9199a4;
-  position: absolute;
-}
+  .line {
+    background: #9199a4;
+    position: absolute;
+  }
 
-.pair-connector .line-one {
-  width: 12px;
-  height: 2px;
-}
+  .line-one {
+    width: 12px;
+    height: 2px;
+  }
+  
+  .line-two {
+    height: var(--line-height);
+    width: 2px;
+    left: 10px;
 
-.pair-connector .line-two {
-  height: var(--line-height);
-  width: 2px;
-  left: 10px;
-}
+    .pair-container:nth-child(even) & {
+      transform: translate(0, -100%);
+    }
+  }
+  
+  .line-three {
+    width: 12px;
+    height: 2px;
+    left: 10px;
+    top: var(--line-height);
 
-.pair-container:nth-child(even) .pair-connector .line-two {
-  transform: translate(0, -100%);
-}
-
-.pair-connector .line-three {
-  width: 12px;
-  height: 2px;
-  left: 10px;
-  top: var(--line-height);
-}
-
-.pair-container:nth-child(even) .pair-connector .line-three {
-  top: calc(var(--line-height) * -1);
+    .pair-container:nth-child(even) & {
+      top: calc(var(--line-height) * -1);
+    }
+  }
 }
