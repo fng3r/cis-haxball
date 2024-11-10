@@ -83,17 +83,14 @@ class Season(models.Model):
 class Team(models.Model):
     title = models.CharField('Название', max_length=128)
     slug = models.SlugField('слаг', max_length=250)
-    date_found = models.DateField(
-        'Дата основания',
-        default=date.today,
-    )
-    short_title = models.CharField('Сокращение', help_text='До 10 символов', max_length=11)
+    date_found = models.DateField('Дата основания', default=timezone.now)
+    short_title = models.CharField('Сокращение', help_text='До 5 символов', max_length=5)
     logo = models.ImageField('Логотип', upload_to='team_logos/', default='team_logos/default.png')
     color_1 = ColorField(default='#FFFFFF', verbose_name='Цвет 1')
     color_2 = ColorField(default='#FFFFFF', verbose_name='Цвет 2')
     color_table = ColorField(default='#FFFFFF', verbose_name='Цвет Таблички')
     owner = models.ForeignKey(
-        User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='team_owner'
+        User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='owner'
     )
     office_link = models.URLField('Офис', blank=True)
     rating = models.SmallIntegerField('Рейтинг команды', blank=True, null=True)
@@ -447,7 +444,7 @@ class TourNumber(models.Model):
         chained_model_field='league',
         related_name = 'tours',
         verbose_name='Этап',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
