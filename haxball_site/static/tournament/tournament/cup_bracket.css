@@ -51,6 +51,14 @@
 
   &.series-loser {
     color: #cbcbcb;
+
+    .name {
+      opacity: 0.8;
+    }
+
+    .image {
+      opacity: 0.65;
+    }
   }
 
   &:first-child {
@@ -111,7 +119,7 @@
     left: 10px;
 
     .pair-container:nth-child(even) & {
-      transform: translate(0, -100%);
+      top: calc(var(--line-height) * -1);
     }
   }
   
