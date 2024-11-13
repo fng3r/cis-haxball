@@ -885,6 +885,7 @@ class TeamRatingView(ListView):
         seasons_weights = self.get_seasons_weights(source_season, earliest_season_taken_into_account)
         seasons = list(sorted(seasons_weights, key=lambda s: s.number))
         weighted_seasons_rating = self.get_weighted_seasons_rating(seasons, seasons_weights)
+        selected_season_teams = [team for team in weighted_seasons_rating[source_season]]
 
         previous_rating_version = TeamRating.objects.select_related('team').filter(version__number=selected_version - 1)
         previous_rating = {item.team: item.rank for item in previous_rating_version.all()}
@@ -893,6 +894,7 @@ class TeamRatingView(ListView):
             'seasons_rating': weighted_seasons_rating,
             'seasons_weights': seasons_weights,
             'previous_rating': previous_rating,
+            'selected_season_teams': selected_season_teams,
             'filter': filter,
         }
 
@@ -902,22 +904,22 @@ class TeamRatingView(ListView):
         return render(request, self.template_name, context)
 
     @staticmethod
-    def get_seasons_weights(source_season, earliest_season):
+    def get_seasons_weights(source_season, earliest_season=None):
         weights = [1, 1, 1, 0.9, 0.8, 0.7]
-        season_weights = {source_season: 1}
-        season_count = 1
-        if earliest_season:
-            previous_seasons = (
-                Season.objects.select_related('bound_season')
-                .filter(number__gte=earliest_season.number, number__lt=source_season.number)
-                .order_by('-number')
-            )
-            for season in previous_seasons:
-                if season.title.startswith('ЧР'):
-                    season_weights[season] = weights[season_count]
-                    if season.bound_season:
-                        season_weights[season.bound_season] = weights[season_count]
-                    season_count += 1
+        season_weights = {}            
+        earliest_season = earliest_season or source_season
+        seasons = (
+            Season.objects.select_related('bound_season')
+            .filter(number__gte=earliest_season.number, number__lte=source_season.number)
+            .order_by('-number')
+        )
+        season_count = 0    
+        for season in seasons:
+            if season.title.startswith('ЧР'):
+                season_weights[season] = weights[season_count]
+                if season.bound_season:
+                    season_weights[season.bound_season] = weights[season_count]
+                season_count += 1
 
         return season_weights
 

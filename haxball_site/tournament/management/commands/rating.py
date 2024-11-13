@@ -8,13 +8,16 @@ from ...models import RatingVersion, Season, SeasonTeamRating, TeamRating
 
 class Command(BaseCommand):
     help = 'Calculate team rating'
+    
+    def add_arguments(self, parser):
+        parser.add_argument('source_season', type=int)
 
     def handle(self, *args, **options):
-        # take into account only those seasons which were held after season 4
-        source_season = Season.objects.get(number=6)
+        source_season_number = options['source_season']
+        source_season = Season.objects.get(number=source_season_number)
         season = source_season
 
-        while season.number < 16:
+        while season.number < 17:
             season_points = self.get_season_points(season)
             for team in season_points:
                 SeasonTeamRating(season=season, team=team, points_for_matches=season_points[team]).save()
@@ -24,9 +27,9 @@ class Command(BaseCommand):
                 break
             season = next_season
 
-        source_season_number = 6
-        version = 1
-        while source_season_number < 16:
+        last_version = RatingVersion.objects.order_by('-number').first()
+        version = last_version.number + 1 if last_version else 1
+        while source_season_number < 17:
             season_count = 0
             source_season = Season.objects.get(number=source_season_number)
             if not source_season.title.startswith('ЧР'):
@@ -93,17 +96,16 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_league_weight(league):
-        if (
-            league.title == 'Высшая лига'
-            or league.title == 'Единая лига'
-            or league.title.startswith('Кубок Высшей лиги')
-        ):
-            return 1
-        if league.title == 'Кубок России' or league.title.startswith('Лига Чемпионов'):
-            return 0.75
-        if league.title.startswith('Первая лига') or league.title.startswith('Кубок Первой лиги'):
-            return 0.5
-        if league.title.startswith('Вторая лига') or league.title.startswith('Кубок Второй лиги'):
-            return 0.25
+        match league.title:
+            case 'Высшая лига' | 'Единая лига' | 'Кубок Высшей лиги':
+                return 1
+            case 'Кубок России' | 'Лига Чемпионов':
+                return 0.75
+            case 'Первая лига' | 'Кубок Первой лиги' | 'Кубок лиги':
+                return 0.5
+            case t if t.startswith('Первая лига'):    
+                return 0.5
+            case 'Вторая лига' | 'Кубок Второй лиги':
+                return 0.25
 
         raise ValueError(f'Unknown league: {league.title}')
