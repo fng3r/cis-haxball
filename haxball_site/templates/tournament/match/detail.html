@@ -31,7 +31,7 @@
 
             <h5>
                 {% if match.league.is_multistage_league and match.stage.is_playoff %}
-                    {{ match.stage.get_type_display }} -
+                    {{ match.stage.stage_name }} -
                 {% endif %}
                 {% if match.stage.is_playoff %}
                     {% if match.stage.is_double_elimination %}

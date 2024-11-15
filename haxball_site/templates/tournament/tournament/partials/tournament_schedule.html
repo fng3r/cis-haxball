@@ -47,7 +47,7 @@
 
 {% for stage in league.stages.all %}
     {% if league.is_multistage_league %}
-        <h4 class="text-center mt-3 mb-1">{{ stage.get_type_display }}</h4>
+        <h4 class="text-center mt-3 mb-1">{{ stage.stage_name }}</h4>
     {% endif %}
 
     {% for tour in stage.tours.all %}

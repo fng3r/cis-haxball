@@ -17,18 +17,18 @@ class Command(BaseCommand):
         source_season = Season.objects.get(number=source_season_number)
         season = source_season
 
-        while season.number < 17:
-            season_points = self.get_season_points(season)
-            for team in season_points:
-                SeasonTeamRating(season=season, team=team, points_for_matches=season_points[team]).save()
+        # while season.number < 17:
+        #     season_points = self.get_season_points(season)
+        #     for team in season_points:
+        #         SeasonTeamRating(season=season, team=team, points_for_matches=season_points[team]).save()
 
-            next_season = Season.objects.filter(number=season.number + 1).first()
-            if not next_season:
-                break
-            season = next_season
+        #     next_season = Season.objects.filter(number=season.number + 1).first()
+        #     if not next_season:
+        #         break
+        #     season = next_season
 
         last_version = RatingVersion.objects.order_by('-number').first()
-        version = last_version.number + 1 if last_version else 1
+        version = 0
         while source_season_number < 17:
             season_count = 0
             source_season = Season.objects.get(number=source_season_number)
@@ -38,7 +38,7 @@ class Command(BaseCommand):
 
             season = source_season
             overall_rating = {}
-            while season_count < 6 and season.number > 5:
+            while season_count < 2 and season.number > 5:
                 self.calculate_rating_points(overall_rating, season, season_count)
 
                 previous_season = (
@@ -52,7 +52,7 @@ class Command(BaseCommand):
 
             ordered_rating = [(k, v) for k, v in sorted(overall_rating.items(), key=lambda item: item[1], reverse=True)]
 
-            rating_version = RatingVersion(number=version, date=datetime.date.today(), related_season=source_season)
+            rating_version = RatingVersion(number=version, date=datetime.date.today(), related_season=Season.objects.get(number=1))
             rating_version.save()
             for rank, entry in enumerate(ordered_rating, 1):
                 TeamRating(version=rating_version, rank=rank, team=entry[0], total_points=entry[1]).save()

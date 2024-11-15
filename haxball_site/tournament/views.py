@@ -871,16 +871,16 @@ class TeamRatingView(ListView):
     def get(self, request,  **kwargs):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = TeamRatingFilter(params, queryset=self.queryset)
-        selected_version = int(params['version'])
+        selected_version = 9
         source_season = (
             RatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
         )
         previous_seasons = Season.objects.filter(
-            number__lt=source_season.number, number__gt=5, title__contains='ЧР'
+            number__lt=source_season.number, number__gt=source_season.number - 2, title__contains='ЧР'
         ).order_by('-number')
         earliest_season_taken_into_account = None
         if previous_seasons.count() > 0:
-            earliest_season_taken_into_account = list(previous_seasons[:5])[-1]
+            earliest_season_taken_into_account = list(previous_seasons[:1])[-1]
 
         seasons_weights = self.get_seasons_weights(source_season, earliest_season_taken_into_account)
         seasons = list(sorted(seasons_weights, key=lambda s: s.number))

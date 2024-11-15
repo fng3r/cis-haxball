@@ -24,7 +24,7 @@
                                    id="table-tab-{{ forloop.counter }}" data-toggle="tab" href="#table-{{ forloop.counter }}" role="tab"
                                    aria-controls="tournament-table-tab-{{ forloop.counter }}" aria-selected="true">
                                     {% if league.is_multistage_league %}
-                                        {{ stage.get_type_display }}
+                                        {{ stage.stage_name }}
                                     {% else %}
                                         {% if stage.is_playoff %}
                                             Сетка

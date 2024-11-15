@@ -291,12 +291,12 @@ class TournamentStageAdmin(PolymorphicParentModelAdmin):
     base_model = TournamentStage
     child_models = [RegularStage, GroupStage, PlayOffStage]
     list_filter = ('league', PolymorphicChildModelFilter,)
-    list_display = ('get_stage_name', 'league', 'postponable',)
+    list_display = ('get_stage_name', 'order', 'league', 'postponable',)
     list_display_links = ('get_stage_name',)
     list_editable = ('postponable',)
 
     def get_stage_name(self, model):
-        return model.get_type_display()
+        return model.stage_name
     get_stage_name.short_description = 'Этап'
 
 

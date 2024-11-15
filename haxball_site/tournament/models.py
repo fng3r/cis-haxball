@@ -182,10 +182,15 @@ class TournamentStage(PolymorphicModel):
         PLAYOFF = 'PO', 'Плей-офф'
 
     type = models.CharField('Тип', max_length=10, choices=StageType.choices, null=False, blank=True)
+    name = models.CharField('Название (опционально)', max_length=50, null=True, blank=True)
     league = models.ForeignKey(League, verbose_name='Турнир', related_name='stages', on_delete=models.CASCADE)
     teams = models.ManyToManyField(Team, verbose_name='Команды', related_name='stages', blank=True)
     order = models.PositiveSmallIntegerField('Порядок этапа')
     postponable = models.BooleanField('Можно ли переносить матчи этапа', default=False, blank=True)
+    
+    @property
+    def stage_name(self):
+        return self.name or self.get_type_display()
 
     @property
     def is_playoff(self):
@@ -205,7 +210,7 @@ class TournamentStage(PolymorphicModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.league.title} – {self.get_type_display()}'
+        return f'{self.league.title} – {self.stage_name}'
 
     class Meta:
         verbose_name = 'Этап турнира'
@@ -469,7 +474,7 @@ class TourNumber(models.Model):
             bracket_postfix = f', {self.get_bracket_display()}'
 
         if self.league.is_multistage_league():
-            return f'{self.number} тур ({self.league.title} – {self.stage.get_type_display()}{bracket_postfix})'
+            return f'{self.number} тур ({self.league.title} – {self.stage.stage_name}{bracket_postfix})'
 
         return f'{self.number} тур ({self.league.title}{bracket_postfix})'
 
