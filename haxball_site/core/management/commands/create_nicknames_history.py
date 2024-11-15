@@ -25,10 +25,10 @@ class Command(BaseCommand):
                             user=user, nickname=nickname, edited=timezone.datetime(2024, 1, 1, nickname_index)
                         )
                         nickname_index += 1
-                        print('{}. {}: {}'.format(i, username, nickname), ' SUCCESS')
+                        print(f'{i}. {username}: {nickname}', ' SUCCESS')
                 except Exception as e:
                     errors += 1
-                    print('{}. {}: {}'.format(i, username, nickname), ' FAIL')
+                    print(f'{i}. {username}: {nickname}', ' FAIL')
                     print('ERROR: ', e)
                     # print('{}. {}'.format(errors, username))
                 i += 1

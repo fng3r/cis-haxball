@@ -233,16 +233,13 @@ class FreeAgentList(ListView):
         return render(request, self.template_name, context)
 
     def post(self, request):
-        free_agent = FreeAgent.objects.filter(player=request.user).first()
-        if free_agent:
-            fa_form = FreeAgentForm(data=request.POST, instance=free_agent)
-        else:
-            fa_form = FreeAgentForm(data=request.POST)
+        fa = FreeAgent.objects.filter(player=request.user).first()
+        fa_form = FreeAgentForm(data=request.POST, instance=fa)
         if fa_form.is_valid():
             free_agent = fa_form.save(commit=False)
+            free_agent.player = request.user
             free_agent.created = timezone.now()
             free_agent.is_active = True
-            free_agent.team = request.user
             free_agent.save()
 
         paginator = Paginator(self.queryset, self.paginate_by)
@@ -252,7 +249,7 @@ class FreeAgentList(ListView):
         return render(request, 'tournament/free_agents/free_agents.html#content-container', context)
 
 
-def remove_entry(request, pk):
+def remove_free_agent_entry(request, pk):
     free_agent = get_object_or_404(FreeAgent, pk=pk)
     if request.method == 'POST':
         if request.user == free_agent.player:
@@ -270,7 +267,7 @@ def remove_entry(request, pk):
     return render(request, 'tournament/free_agents/free_agents.html#content-container', context)
 
 
-def update_entry(request, pk):
+def update_free_agent_entry(request, pk):
     free_agent = get_object_or_404(FreeAgent, pk=pk)
     if request.method == 'POST':
         if request.user == free_agent.player:
@@ -345,11 +342,23 @@ class TeamList(ListView):
 class LeagueDetail(DetailView):
     context_object_name = 'league'
     model = League
-    template_name = 'tournament/premier_league/team_table.html'
+    template_name = 'tournament/tournament/tournament_detail.html'
 
     def get_queryset(self):
         return (
-            super().get_queryset().prefetch_related('tours__tour_matches__team_home', 'tours__tour_matches__team_guest')
+            super().get_queryset().prefetch_related(
+                'stages',
+                'stages__tours__stubs',
+                'stages__tours__league',
+                'stages__tours__tour_matches__team_home',
+                'stages__tours__tour_matches__team_guest',
+                'stages__tours__tour_matches__result__winner',
+                'stages__tours__tour_matches__group',
+                'stages__tours__tour_matches__stage',
+                'tours__tour_matches__team_home',
+                'tours__tour_matches__team_guest',
+                'tours__stage',
+            )
         )
 
     def get_context_data(self, **kwargs):
@@ -524,7 +533,7 @@ class LeagueByTitleFilter(FilterSet):
         ('Высшая лига', 'Высшая лига'),
         ('Первая лига', 'Первая лига'),
         ('Вторая лига', 'Вторая лига'),
-        ('Кубок лиги – Группа', 'Кубок лиги'),
+        ('Кубок лиги', 'Кубок лиги'),
     )
 
     tournament = ChoiceFilter(
@@ -548,7 +557,7 @@ class PostponementsList(ListView):
     def get(self, request, **kwargs):
         filter = LeagueByTitleFilter(
             {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
-            queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
+            queryset=League.objects.filter(championship__is_active=True).select_related('postponement_slots'),
         )
         leagues = filter.qs
         teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
@@ -614,7 +623,7 @@ class PostponementsEvents(ListView):
     def get(self, request, **kwargs):
         filter = LeagueByTitleFilter(
             {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
-            queryset=League.objects.filter(championship__is_active=True).prefetch_related('postponement_slots'),
+            queryset=League.objects.filter(championship__is_active=True).select_related('postponement_slots'),
         )
         leagues = filter.qs
         all_postponements = (
@@ -862,20 +871,21 @@ class TeamRatingView(ListView):
     def get(self, request,  **kwargs):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = TeamRatingFilter(params, queryset=self.queryset)
-        selected_version = int(params['version'])
+        selected_version = 9
         source_season = (
             RatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
         )
         previous_seasons = Season.objects.filter(
-            number__lt=source_season.number, number__gt=5, title__contains='ЧР'
+            number__lt=source_season.number, number__gt=source_season.number - 2, title__contains='ЧР'
         ).order_by('-number')
         earliest_season_taken_into_account = None
         if previous_seasons.count() > 0:
-            earliest_season_taken_into_account = list(previous_seasons[:5])[-1]
+            earliest_season_taken_into_account = list(previous_seasons[:1])[-1]
 
         seasons_weights = self.get_seasons_weights(source_season, earliest_season_taken_into_account)
         seasons = list(sorted(seasons_weights, key=lambda s: s.number))
         weighted_seasons_rating = self.get_weighted_seasons_rating(seasons, seasons_weights)
+        selected_season_teams = [team for team in weighted_seasons_rating[source_season]]
 
         previous_rating_version = TeamRating.objects.select_related('team').filter(version__number=selected_version - 1)
         previous_rating = {item.team: item.rank for item in previous_rating_version.all()}
@@ -884,6 +894,7 @@ class TeamRatingView(ListView):
             'seasons_rating': weighted_seasons_rating,
             'seasons_weights': seasons_weights,
             'previous_rating': previous_rating,
+            'selected_season_teams': selected_season_teams,
             'filter': filter,
         }
 
@@ -893,22 +904,22 @@ class TeamRatingView(ListView):
         return render(request, self.template_name, context)
 
     @staticmethod
-    def get_seasons_weights(source_season, earliest_season):
+    def get_seasons_weights(source_season, earliest_season=None):
         weights = [1, 1, 1, 0.9, 0.8, 0.7]
-        season_weights = {source_season: 1}
-        season_count = 1
-        if earliest_season:
-            previous_seasons = (
-                Season.objects.select_related('bound_season')
-                .filter(number__gte=earliest_season.number, number__lt=source_season.number)
-                .order_by('-number')
-            )
-            for season in previous_seasons:
-                if season.title.startswith('ЧР'):
-                    season_weights[season] = weights[season_count]
-                    if season.bound_season:
-                        season_weights[season.bound_season] = weights[season_count]
-                    season_count += 1
+        season_weights = {}            
+        earliest_season = earliest_season or source_season
+        seasons = (
+            Season.objects.select_related('bound_season')
+            .filter(number__gte=earliest_season.number, number__lte=source_season.number)
+            .order_by('-number')
+        )
+        season_count = 0    
+        for season in seasons:
+            if season.title.startswith('ЧР'):
+                season_weights[season] = weights[season_count]
+                if season.bound_season:
+                    season_weights[season.bound_season] = weights[season_count]
+                season_count += 1
 
         return season_weights
 
@@ -1592,7 +1603,7 @@ def team_statistics(request, pk):
         'other_stats': other_stats,
     }
 
-    return render(request, 'tournament/partials/team_statistics.html', context)
+    return render(request, 'tournament/teams/partials/team_statistics.html', context)
 
 
 def team_statistics_charts(request, pk):

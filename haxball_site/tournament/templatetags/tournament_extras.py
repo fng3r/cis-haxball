@@ -1,26 +1,32 @@
 import datetime
 from collections import defaultdict
-from typing import Optional
+from dataclasses import dataclass
+from typing import Iterable
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, QuerySet, Subquery
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q, QuerySet, Subquery
 from django.db.models.functions import Coalesce
+from django.db.models.lookups import GreaterThan
 from django.utils import timezone
 
 from ..models import (
     Disqualification,
     FreeAgent,
     Goal,
+    Group,
     League,
     Match,
     OtherEvents,
     Player,
     PlayerTransfer,
+    PlayoffBracketSlotStub,
+    PlayOffStage,
     Postponement,
     Season,
     Substitution,
     Team,
+    TournamentStage,
     TourNumber,
 )
 
@@ -157,7 +163,8 @@ def get_team_players(team, current=False):
 
 
 def get_player_matches(player, team, for_current_season=False):
-    current_season_condition = Q(league__championship__is_active=True) if for_current_season else ~Q(pk__in=[])
+    always_true_condition = ~Q(pk__in=[])
+    current_season_condition = Q(league__championship__is_active=True) if for_current_season else always_true_condition
 
     return (
         Match.objects.filter(current_season_condition, team_guest=team, team_guest_start=player, is_played=True).count()
@@ -211,27 +218,178 @@ def events_sorted(match: Match):
     return events_by_time
 
 
-#   Фильтры для таблички лиги
-#   и теги
-@register.inclusion_tag('tournament/include/cup_table.html')
-def cup_table(league):
-    return {'league': league}
+@register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
+def cup_bracket(stage, bracket):
+    tours = bracket_tours(stage.tours, bracket)
+    slots = get_slots_by_tours(tours)
+    return {
+        'stage': stage,
+        'tours': tours,
+        'slots_by_tour': slots,
+        'bracket': bracket,
+        'bracket_types': PlayOffStage.Bracket,
+    }
 
 
 @register.filter
-def pairs_in_round(tour):
-    matches = Match.objects.filter(numb_tour=tour).order_by('id')
-    pairs = {}
+def group_matches(matches):
+    matches_by_group = {}
     for match in matches:
+        if match.group not in matches_by_group:
+            matches_by_group[match.group] = []
+        matches_by_group[match.group].append(match)
+
+    return matches_by_group
+
+
+@register.filter
+def bracket_tours(tours, bracket):
+    return [tour for tour in tours.all() if tour.bracket == bracket]
+
+
+@register.filter
+def tours_ordered_by_date(tours, bracket):
+    return tours.filter(bracket=bracket)
+
+
+def get_bracket_slots(tours):
+    if len(tours) == 0:
+        return []
+
+    bracket = tours[0].bracket
+    slots = []
+    if bracket == PlayOffStage.Bracket.UPPER or is_old_champions_league_season(tours[0].league):
+        slots = [1] + [2**(tour.number-1) for tour in tours][:-1]
+    elif bracket == PlayOffStage.Bracket.LOWER:
+        slots = [2**(tour.number - tour.number // 2 - 1) for tour in tours]
+    elif bracket is None:
+        slots = [2**(tour.number-1) for tour in tours]
+
+    return slots[::-1]
+
+
+@dataclass
+class BracketSlot:
+    number: int
+    pair: tuple[Team, Team]
+    matches: Iterable[Match]
+    stub: PlayoffBracketSlotStub
+    label: str | None = None
+    
+    def is_empty(self):
+        return self.pair is None and self.stub is None
+
+        
+
+@register.filter
+def pairs_in_tour(tour):
+    pairs = {}
+    for match in tour.tour_matches.all():
         pair = frozenset((match.team_home, match.team_guest))
         if pair not in pairs:
             pairs[pair] = []
         pairs[pair].append(match)
 
-    return  {
-        (matches[0].team_home, matches[0].team_guest): matches  # there's guaranteed to be at least one match per pair
+    return {
+        # there's guaranteed to be at least one match per pair
+        (matches[0].team_home, matches[0].team_guest): matches
         for pair, matches in sorted(pairs.items(), key=lambda x: min(m.id for m in x[1]))
     }
+    
+    
+def get_slots_by_tours(tours):
+    slots_by_tour = {}
+    count = 1
+    for tour in tours:
+        slots = get_tour_slots(tour, tours)
+        bracket = tour.bracket
+        match bracket:
+            case PlayOffStage.Bracket.UPPER:
+                bracket_prefix = 'U'
+            case PlayOffStage.Bracket.LOWER:
+                bracket_prefix = 'L'
+            case _:
+                bracket_prefix = ''
+            
+        for slot in slots:
+            if tour.number > 1 or not slot.is_empty():
+                slot.label = f'{bracket_prefix}{count}'
+                count += 1
+        slots_by_tour[tour] = slots
+        
+    return slots_by_tour.items()
+
+
+def get_tour_slots(tour, tours):
+    pairs = pairs_in_tour(tour)
+    stubs = list(tour.stubs.all())
+    slots_count = get_bracket_slots(tours)[tour.number - 1]
+    slots = []
+    for slot in range(1, slots_count + 1):
+        pair, matches = get_pair_in_slot(pairs, slot)
+        stub = get_slot_stub(stubs, slot)
+        slots.append(BracketSlot(slot, pair, matches, stub))
+        
+    return slots
+
+
+def get_pair_in_slot(pairs, slot):
+    for pair in pairs:
+        matches = pairs[pair]
+        if any(match.bracket_slot == slot for match in matches):
+            return pair, matches
+
+    return None, None
+
+
+def get_slot_stub(stubs, slot):
+    return next((stub for stub in stubs if stub.slot == slot), None)
+
+
+@register.filter
+def has_more_slots_than_next_round(tour, tours):
+    slots = get_bracket_slots(tours)
+    if tour.number >= len(slots):
+        return False
+    
+    current_round_slots = slots[tour.number - 1]
+    next_round_slots = slots[tour.number]
+
+    return current_round_slots > next_round_slots
+
+
+@register.filter
+def show_connector(tour: TourNumber, tours: Iterable[TourNumber]):
+    tours_total = len(tours)
+    if is_old_champions_league_season(tour.league):
+        tours_total -= 1
+
+    return tour.number < tours_total
+
+
+@register.filter
+def connector_line_height(tour: TourNumber, tours: Iterable[TourNumber]):
+    pair_height = 64
+    initial_gap = 24
+
+    if tour.number == len(tours) or not has_more_slots_than_next_round(tour, tours):
+        return 0
+
+    tour_number = 1
+    gap = initial_gap
+    slots = get_bracket_slots(tours)
+    while tour_number < tour.number:
+        current_round_slots = slots[tour_number - 1]
+        next_round_slots = slots[tour_number]
+        if current_round_slots > next_round_slots:
+            gap = pair_height + 2*gap
+        tour_number += 1
+
+    return (pair_height + gap) // 2
+
+
+def is_old_champions_league_season(league):
+    return league.title.startswith('Лига Чемпионов') and league.championship.number < 12
 
 
 @register.filter
@@ -244,37 +402,80 @@ def team_score_in_match(team, match):
 
 
 @register.filter
+def is_match_winner(team, match):
+    return match.is_win(team)
+
+
+@register.simple_tag
+def get_series_result(teams, matches):
+    if not all((match.is_played for match in matches)):
+        return None
+
+    team1, team2 = teams
+    team1_series_score = 0
+    team2_series_score = 0
+    for match in matches:
+        team1_score = team_score_in_match(team1, match)
+        team2_score = team_score_in_match(team2, match)
+        winner_determinator = match.stage.winner_determinator if match.stage else PlayOffStage.WinnerDeterminator.GOALS
+        if winner_determinator == PlayOffStage.WinnerDeterminator.GOALS:
+            team1_series_score += team1_score
+            team2_series_score += team2_score
+        elif winner_determinator == PlayOffStage.WinnerDeterminator.MATCHES:
+            if team1_score > team2_score:
+                team1_series_score += 1
+            elif team2_score > team1_score:
+                team2_series_score += 1
+
+    if team1_series_score == team2_series_score:
+        return None
+    
+    if team1_series_score > team2_series_score:
+        winner, loser = team1, team2
+    else:
+        winner, loser = team2, team1
+    
+    return {'winner': winner, 'loser': loser}
+
+
+@register.filter
+def tour_name(tour: TourNumber):
+    if tour.name:
+        return tour.name
+    
+    return f'{tour.number} тур'
+
+
+@register.filter
 def round_name(tour, all_tours):
-    if tour == all_tours:
+    if tour.name:
+        return tour.name
+
+    if is_old_champions_league_season(tour.league):
+        all_tours -= 1
+
+    if tour.number == all_tours:
         return 'Финал'
-    if tour == all_tours - 1:
+    if tour.number == all_tours - 1:
         return '1/2 Финала'
-    if tour == all_tours - 2:
+    if tour.number == all_tours - 2:
         return '1/4 Финала'
-    if tour == all_tours - 3:
+    if tour.number == all_tours - 3:
         return '1/8 Финала'
 
-    return '{} Раунд'.format(tour)
+    return f'{tour.number} Раунд'
 
 
 @register.filter
 def cup_round_name(tour: TourNumber):
-    tours_count = tour.league.tours.count()
-    if tour.number == tours_count:
-        return 'Финал'
-    if tour.number == tours_count - 1:
-        return '1/2'
-    if tour.number == tours_count - 2:
-        return '1/4'
-    if tour.number == tours_count - 3:
-        return '1/8'
-    return '{} раунд'.format(tour.number)
+    print(tour, tour.stage.tours.count())
+    return round_name(tour, tour.stage.tours.count())
 
 
-@register.inclusion_tag('tournament/include/league_table.html')
-def league_table(league: League):
-    result = get_league_table(league)
-    return {'teams': result}
+@register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
+def tournament_table(league: League, stage: TournamentStage, group: Group | None):
+    result = get_league_table(league, stage, group)
+    return {'teams': result, 'stage': stage}
 
 
 # Конец тегов и фильтров для таблицы лиги
@@ -328,7 +529,7 @@ def all_league_season(team, season):
 
 @register.filter
 def all_seasons(team):
-    return (
+     return (
         Season.objects.filter(tournaments_in_season__teams=team)
         .distinct()
         .prefetch_related(
@@ -336,15 +537,32 @@ def all_seasons(team):
                 'tournaments_in_season',
                 queryset=League.objects.filter(teams=team)
                 .prefetch_related(
-                    'tours',
+                    'tours__league',
                     Prefetch(
                         'matches_in_league',
                         queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                        .select_related('team_home', 'team_guest', 'numb_tour')
+                        .select_related('team_home', 'team_guest', 'numb_tour__league')
                         .order_by('numb_tour'),
                         to_attr='team_matches',
                     ),
+                    Prefetch(
+                        'stages',
+                        queryset=TournamentStage.objects.filter(teams=team)
+                        .distinct()
+                        .prefetch_related(
+                            'tours__league',
+                            Prefetch(
+                                'matches',
+                                queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
+                                .select_related('team_home', 'team_guest', 'numb_tour__league')
+                                .order_by('numb_tour'),
+                                to_attr='team_matches',
+                            ),
+                        )
+                        .order_by('order')
+                    ),
                 )
+                .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
                 .order_by('-id'),
                 to_attr='team_leagues',
             ),
@@ -358,9 +576,13 @@ def sort_teams(league: League):
     return [i[0] for i in lt]
 
 
-def get_league_table(league: League):
-    teams = list(Team.objects.filter(leagues=league))
+def get_league_table(league: League, stage: TournamentStage = None, group: Group = None):
+    always_true = ~Q(pk__in=[])
+    stage_condition = Q(stages=stage) if stage is not None else always_true
+    group_condition = Q(groups=group) if group is not None else always_true
+    teams = list(Team.objects.filter(stage_condition, group_condition, leagues=league))
     teams_count = len(teams)
+
     points = [0 for _ in range(teams_count)]  # Количество очков
     goal_diff = [0 for _ in range(teams_count)]  # Разница мячей
     scored = [0 for _ in range(teams_count)]  # Мячей забито
@@ -371,8 +593,16 @@ def get_league_table(league: League):
     losses = [0 for _ in range(teams_count)]  # Поражений
     last_matches = [[] for _ in range(teams_count)]
     for i, team in enumerate(teams):
-        matches = Match.objects.select_related('team_home', 'team_guest', 'result__winner', 'numb_tour').filter(
-            (Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True
+        matches = (
+            Match.objects
+            .select_related('team_home', 'team_guest', 'result__winner', 'numb_tour')
+            .filter(
+                Q(team_home=team) | Q(team_guest=team),
+                league=league,
+                stage=stage,
+                group=group,
+                is_played=True,
+            )
         )
         matches_played[i] = matches.count()
 
@@ -433,8 +663,12 @@ def get_league_table(league: League):
             losses = [0 for _ in range(teams_count)]  # Поражений
             for i, team in enumerate(mini_table):
                 matches = []
-                matches_all = Match.objects.filter(
-                    (Q(team_home=team) | Q(team_guest=team)), league=league, is_played=True
+                matches_all = (
+                    Match.objects
+                    .select_related('team_home', 'team_guest', 'result__winner', 'numb_tour')
+                    .filter(
+                        Q(team_home=team) | Q(team_guest=team), league=league, is_played=True
+                    )
                 )
                 for match in matches_all:
                     if (match.team_home in mini_table) and (match.team_guest in mini_table):
@@ -482,14 +716,14 @@ def get_league_table(league: League):
 @register.filter
 def current_league(team):
     primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
-    try:
-        primary_league = League.objects.filter(
-            teams=team, title__in=primary_leagues, championship__is_active=True
-        ).first()
-        if not primary_league:
-            return League.objects.filter(teams=team, championship__is_active=True).first()
-    except:
-        return None
+    primary_league = League.objects.filter(
+        teams=team, title__in=primary_leagues, championship__is_active=True
+    ).first()
+
+    if primary_league is not None:
+        return primary_league
+
+    return League.objects.filter(teams=team, championship__is_active=True).first()
 
 
 @register.filter
@@ -498,17 +732,12 @@ def current_position(team):
     if not league:
         return '-'
 
-    sorted_teams = list(sort_teams(league))
-    return sorted_teams.index(team) + 1
-
-
-@register.filter
-def teams_in_league_count(team):
-    league = current_league(team)
-    if not league:
+    teams = list(league.teams.all())
+    if team not in teams:
         return '-'
 
-    return league.teams.count()
+    sorted_teams = list(sort_teams(league))
+    return sorted_teams.index(team) + 1
 
 
 @register.filter
@@ -533,7 +762,7 @@ def team_squad_in_season(season_achievements):
 
 
 @register.filter
-def get(d: {}, key):
+def get(d: dict, key):
     return d[key]
 
 
@@ -571,7 +800,7 @@ def get_lifted_string(disqualification: Disqualification):
 
 
 @register.filter
-def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Optional[Postponement]]:
+def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Postponement | None]:
     postponements = team.get_postponements(leagues)
     league = leagues.first()
     league_slots = league.get_postponement_slots()
@@ -629,7 +858,7 @@ def postponements_form(user: User, leagues: QuerySet, tournament: str):
 def get_user_teams(user: User):
     try:
         player = user.user_player
-    except Exception as e:
+    except:
         return []
     teams = []
     if player.role == Player.CAPTAIN or player.role == Player.ASSISTENT:

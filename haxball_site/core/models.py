@@ -13,26 +13,22 @@ from django.utils import timezone
 from model_utils import FieldTracker
 
 
-class MyQuerySet(models.query.QuerySet):
+class LikeDislikeQuerySet(models.QuerySet):
     def delete(self):
         for obj in self:
             obj.delete()
 
 
-# Менеджер модели лайк-дизлайк
 class LikeDislikeManager(models.Manager):
     use_for_related_fields = True
 
     def likes(self):
-        # Забираем queryset с записями больше 0
         return self.get_queryset().filter(vote__gt=0)
 
     def dislikes(self):
-        # Забираем queryset с записями меньше 0
         return self.get_queryset().filter(vote__lt=0)
 
     def sum_rating(self):
-        # Забираем суммарный рейтинг
         return self.get_queryset().aggregate(Sum('vote')).get('vote__sum') or 0
 
     def posts(self):
@@ -42,7 +38,7 @@ class LikeDislikeManager(models.Manager):
         return self.get_queryset().filter(content_type__model='comment').order_by('-comments__pub_date')
 
     def get_queryset(self):
-        return MyQuerySet(self.model, using=self._db)
+        return LikeDislikeQuerySet(self.model, using=self._db)
 
 
 # Модель для лайк-дизлайк системы
@@ -68,7 +64,7 @@ class LikeDislike(models.Model):
         super(LikeDislike, self).delete(*args, **kwargs)
 
     def get_query_set(self):
-        return MyQuerySet(self.model)
+        return LikeDislikeQuerySet(self.model)
 
     class Meta:
         verbose_name = 'Лайк/дизлайк голос'
@@ -115,19 +111,18 @@ class Category(models.Model):
         verbose_name_plural = 'Категории'
 
 
-# Модель для "правильных" комментариев
 class NewComment(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
-    author = models.ForeignKey(User, verbose_name='Автор', related_name='n_comments_by_user', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, verbose_name='Автор', related_name='comments_by_user', on_delete=models.CASCADE)
     body = models.TextField('Текст комментария')
     created = models.DateTimeField('Создан', default=timezone.now)
     edited = models.DateTimeField('Изменен', blank=True, null=True)
     parent = models.ForeignKey(
         'self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True, related_name='childs'
     )
-    votes = GenericRelation(LikeDislike, related_query_name='n_comments')
+    votes = GenericRelation(LikeDislike, related_query_name='comments')
     version = models.PositiveSmallIntegerField('Версия', default=1)
 
     tracker = FieldTracker()
@@ -144,17 +139,17 @@ class NewComment(models.Model):
         super(NewComment, self).save(*args, **kwargs)
 
     def __str__(self):
-        return 'Комментарий от {} к {}'.format(self.author, self.content_object)
+        return f'Комментарий от {self.author} к {self.content_object}'
 
     def get_absolute_url(self):
         if self.parent:
             return self.get_root().get_absolute_url()
 
         commented_object = self.content_object
-        top_level_comments = list(self.content_object.comments.filter(parent=None))
-        index = top_level_comments.index(self)
-        page = (index // 25) + 1
-        return '{}?page={}#r{}'.format(commented_object.get_absolute_url(), page, self.id)
+        # count how many top-level comments were left *after* current comment was created
+        index = commented_object.comments.filter(parent=None, id__gt=self.id).count()
+        page = (index // 20) + 1
+        return f'{commented_object.get_absolute_url()}?page={page}#r{self.id}'
 
     def get_root(self):
         obj = self
@@ -202,7 +197,7 @@ class CommentHistoryItem(models.Model):
             ).save()
 
     def __str__(self):
-        return 'Версия комментария #{}'.format(self.version)
+        return f'Версия комментария #{self.version}'
 
 
 # Модель для поста
@@ -235,7 +230,7 @@ class Post(models.Model):
         return self.comments.annotate(Max('created'))
 
     def __str__(self):
-        return '{}: {}'.format(self.category, self.title)
+        return f'{self.category}: {self.title}'
 
     class Meta:
         verbose_name = 'Пост'
@@ -266,7 +261,7 @@ class IPAdress(models.Model):
     suspicious = models.BooleanField('Подозрительный', default=False)
 
     def __str__(self):
-        return '({}, {})'.format(self.name, self.ip)
+        return f'({self.name}, {self.ip})'
 
     class Meta:
         verbose_name = 'IP-Адрес'
@@ -321,7 +316,7 @@ class Profile(models.Model):
         return reverse('core:profile_detail', args=[self.id, self.slug])
 
     def __str__(self):
-        return 'Профиль {}'.format(self.name.username)
+        return f'Профиль {self.name.username}'
 
     class Meta:
         verbose_name = 'Профиль'

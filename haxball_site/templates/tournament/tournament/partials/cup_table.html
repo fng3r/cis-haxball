@@ -31,7 +31,7 @@
     <div class="row">
         {% for tour in league.tours.all %}
             <div class="col my-1">
-                <h5>{{ tour.number|round_name:league.tours.count }}</h5>
+                <h5>{{ tour|round_name:league.tours.count }}</h5>
             </div>
         {% endfor %}
     </div>
@@ -39,7 +39,7 @@
         {% for tour in league.tours.all %}
             <div class="col flex-direction: column justify-content-between">
                 <div class="col d-flex flex-column justify-content-around" style="height: 100%">
-                    {% with pairs=tour|pairs_in_round %}
+                    {% with pairs=tour|pairs_in_tour %}
                         {% for pair, matches in pairs.items %}
                             <table class="table border">
                                 <tbody>

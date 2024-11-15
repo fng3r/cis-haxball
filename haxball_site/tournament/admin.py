@@ -1,7 +1,15 @@
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
+from django.http import HttpRequest
 from django.urls import resolve
+from polymorphic.admin import (
+    PolymorphicChildModelAdmin,
+    PolymorphicChildModelFilter,
+    PolymorphicInlineSupportMixin,
+    PolymorphicParentModelAdmin,
+    StackedPolymorphicInline,
+)
 
 from .models import (
     AchievementCategory,
@@ -9,6 +17,8 @@ from .models import (
     Disqualification,
     FreeAgent,
     Goal,
+    Group,
+    GroupStage,
     League,
     Match,
     MatchResult,
@@ -16,15 +26,19 @@ from .models import (
     OtherEvents,
     Player,
     PlayerTransfer,
+    PlayoffBracketSlotStub,
+    PlayOffStage,
     Postponement,
     PostponementSlots,
     RatingVersion,
+    RegularStage,
     Season,
     SeasonTeamRating,
     Substitution,
     Team,
     TeamAchievement,
     TeamRating,
+    TournamentStage,
     TourNumber,
 )
 
@@ -32,7 +46,9 @@ from .models import (
 @admin.register(FreeAgent)
 class FreeAgentAdmin(admin.ModelAdmin):
     list_display = ('id', 'player', 'position_main', 'description', 'is_active', 'created', 'deleted')
+    list_filter = ('is_active',)
     search_fields = ('player__username',)
+    ordering = ('-created',)
 
 
 @admin.register(AchievementCategory)
@@ -227,13 +243,113 @@ class PostponementAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
+class TournamentStageInline(StackedPolymorphicInline):
+    class RegularStageInline(StackedPolymorphicInline.Child):
+        model = RegularStage
+        exclude = ('type', 'postponable',)
+        filter_horizontal = ('teams',)
+
+    class GroupStageInline(StackedPolymorphicInline.Child):
+        model = GroupStage
+        exclude = ('type', 'postponable',)
+        filter_horizontal = ('teams',)
+
+    class PlayOffStageInline(StackedPolymorphicInline.Child):
+        model = PlayOffStage
+        exclude = ('type', 'postponable',)
+        filter_horizontal = ('teams',)
+
+    model = TournamentStage
+    child_inlines = (
+        RegularStageInline,
+        GroupStageInline,
+        PlayOffStageInline,
+    )
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class GroupInline(admin.StackedInline):
+    model = Group
+    fields = ('stage', 'name', 'teams')
+    filter_horizontal = ('teams',)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        stage = None
+        if 'object_id' in resolved.kwargs:
+            stage = self.parent_model.objects.filter(pk=resolved.kwargs['object_id']).first()
+
+        if db_field.name == 'teams' and stage is not None:
+            kwargs['queryset'] = stage.teams if stage.teams.exists() else stage.league.teams
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(TournamentStage)
+class TournamentStageAdmin(PolymorphicParentModelAdmin):
+    base_model = TournamentStage
+    child_models = [RegularStage, GroupStage, PlayOffStage]
+    list_filter = ('league', PolymorphicChildModelFilter,)
+    list_display = ('get_stage_name', 'order', 'league', 'postponable',)
+    list_display_links = ('get_stage_name',)
+    list_editable = ('postponable',)
+
+    def get_stage_name(self, model):
+        return model.stage_name
+    get_stage_name.short_description = 'Этап'
+
+
+class TournamentStageChildBase(PolymorphicChildModelAdmin):
+    exclude = ('type',)
+    readonly_fields = ('league',)
+    filter_horizontal = ('teams',)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj: # This is the case when object is already created
+            return ['league']
+        
+        return []
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        stage = None
+        if 'object_id' in resolved.kwargs:
+            stage = TournamentStage.objects.filter(pk=resolved.kwargs['object_id']).first()
+
+        if db_field.name == 'teams' and stage is not None:
+            kwargs['queryset'] = stage.league.teams
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(RegularStage)
+class RegularStageAdmin(TournamentStageChildBase):
+   ...
+
+
+@admin.register(GroupStage)
+class GroupStageAdmin(TournamentStageChildBase):
+    inlines = [GroupInline]
+
+
+class PlayoffBracketSlotStubInline(admin.StackedInline):
+    model = PlayoffBracketSlotStub
+    extra = 1
+
+
+@admin.register(PlayOffStage)
+class PlayOffStageAdmin(TournamentStageChildBase):
+    inlines = [PlayoffBracketSlotStubInline]
+
+
+
 @admin.register(League)
-class LeagueAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'is_cup', 'priority', 'championship', 'created')
+class LeagueAdmin(PolymorphicInlineSupportMixin, admin.ModelAdmin):
+    list_display = ('title', 'slug', 'priority', 'championship', 'created')
     list_filter = ('championship',)
     search_fields = ('title',)
     filter_horizontal = ('teams',)
-    inlines = [PostponementSlotsInline]
+    inlines = [PostponementSlotsInline, TournamentStageInline]
 
 
 class GoalInline(admin.StackedInline):
@@ -309,7 +425,10 @@ class MatchResultInline(admin.TabularInline):
 class MatchAdmin(admin.ModelAdmin):
     list_display = (
         'league',
-        'numb_tour',
+        'stage',
+        'get_tour',
+        'group',
+        'bracket_slot',
         'team_home',
         'score_home',
         'team_guest',
@@ -320,11 +439,62 @@ class MatchAdmin(admin.ModelAdmin):
         'inspector',
         'id',
     )
+    list_editable = ('bracket_slot', 'is_played')
+
+    def get_tour(self, model):
+        tour = model.numb_tour
+        bracket_postfix = (
+            f', {tour.get_bracket_display()}'
+            if model.league.is_multistage_league() and tour.bracket is not None
+            else ''
+        )
+        return f'{model.numb_tour.number} тур{bracket_postfix}'
+    get_tour.short_description = 'Тур'
+    get_tour.admin_order_field = 'numb_tour__number'
+
     search_fields = ('team_home__title', 'team_guest__title')
     filter_horizontal = (
         'team_home_start',
         'team_guest_start',
     )
+
+    list_filter = ('numb_tour__number', 'league', 'stage', 'inspector', 'is_played')
+    fieldsets = (
+        (
+            'Основная инфа',
+            {
+                'fields': (
+                    ('league', 'stage', 'numb_tour', 'group', 'bracket_slot'),
+                    ('match_date','is_played'),
+                )
+            },
+        ),
+        (
+            None,
+            {
+                'fields': (
+                    ('team_home', 'team_guest', ),
+                    ('score_home', 'score_guest'),
+                    ('inspector', 'replay_link', 'replay_link_second')
+                )
+            },
+        ),
+        (
+            'Составы',
+            {
+                'classes': ('grp-collapse grp-closed',),
+                'fields': ('team_home_start', 'team_guest_start'),
+            },
+        ),
+        (
+            'Комментарий:',
+            {
+                'classes': ('grp-collapse grp-closed',),
+                'fields': ('comment',),
+            }
+        ),
+    )
+    inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         # Берём из пути id матча
@@ -339,48 +509,6 @@ class MatchAdmin(admin.ModelAdmin):
             t = Team.objects.filter(guest_matches=resolved.kwargs.get('object_id')).first()
             kwargs['queryset'] = Player.objects.filter(team=t)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
-
-    list_filter = ('numb_tour__number', 'league', 'inspector', 'is_played')
-    fieldsets = (
-        (
-            'Основная инфа',
-            {
-                'fields': (
-                    (
-                        'league',
-                        'is_played',
-                        'match_date',
-                        'numb_tour',
-                    ),
-                )
-            },
-        ),
-        (
-            None,
-            {
-                'fields': (
-                    (
-                        'team_home',
-                        'team_guest',
-                        'replay_link',
-                    ),
-                )
-            },
-        ),
-        (None, {'fields': (('score_home', 'score_guest', 'inspector', 'replay_link_second'),)}),
-        (
-            'Составы',
-            {
-                'classes': ('grp-collapse grp-closed',),
-                'fields': (
-                    'team_home_start',
-                    'team_guest_start',
-                ),
-            },
-        ),
-        ('Комментарий:', {'classes': ('grp-collapse grp-closed',), 'fields': ('comment',)}),
-    )
-    inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
 
 
 @admin.register(Goal)
@@ -403,9 +531,9 @@ class OtherEventsAdmin(admin.ModelAdmin):
 
 
 @admin.register(TourNumber)
-class MatchTourAdmin(admin.ModelAdmin):
-    list_display = ('number', 'league', 'date_from', 'date_to', 'is_actual')
-    list_filter = ('league', 'number')
+class TourAdmin(admin.ModelAdmin):
+    list_display = ('number', 'league', 'stage', 'bracket', 'date_from', 'date_to', 'is_actual')
+    list_filter = ('league', 'stage', 'number')
 
     def is_actual(self, model):
         return model.is_actual

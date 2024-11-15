@@ -10,7 +10,7 @@ class ReservationHost(models.Model):
     is_active = models.BooleanField('Активный')
 
     def __str__(self):
-        return 'Хост {}'.format(self.name)
+        return f'Хост {self.name}'
 
     class Meta:
         verbose_name = 'Хост'
@@ -31,7 +31,7 @@ class ReservationEntry(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return 'Бронь матча {} на {}'.format(self.match, self.time_date.astimezone())
+        return f'Бронь матча {self.match} на {self.time_date.astimezone()}'
 
     class Meta:
         verbose_name = 'Бронь хоста'
@@ -51,7 +51,7 @@ class Replay(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return 'Реплей {} от {}'.format(self.name, self.author)
+        return f'Реплей {self.name} от {self.author}'
 
     class Meta:
         verbose_name = 'Реплей'

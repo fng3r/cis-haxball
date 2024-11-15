@@ -29,6 +29,7 @@ dependencies = [
     "django-mathfilters==1.0.0",
     "django-model-utils==4.5.1",
     "django-online-users==0.3",
+    "django-polymorphic==3.1.0",
     "django-smart-selects==1.6.0",
     "django-summernote==0.8.20.0",
     "django-template-partials==24.4",
@@ -76,3 +77,13 @@ dev-dependencies = [
     "pre-commit==3.8.0",
     "ruff==0.6.3",
 ]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["I", "N", "SIM", "RET", "E501", "UP007", "UP032"]
+ignore = ["E722", "SIM108"]
+
+[tool.ruff.format]
+quote-style = "single"

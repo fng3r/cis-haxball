@@ -8,7 +8,6 @@ from django.db.models import Max, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import View
 from django_htmx.http import trigger_client_event
@@ -17,7 +16,7 @@ from tournament.models import Achievements, Team
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
-from .templatetags.user_tags import can_edit, exceeds_edit_limit
+from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments
 
 
@@ -381,7 +380,7 @@ def delete_comment(request, pk):
     comment = get_object_or_404(NewComment, pk=pk)
     obj = comment.content_object
     if request.method == 'POST' and (
-        (request.user == comment.author and timezone.now() - comment.created < timezone.timedelta(minutes=10))
+        (request.user == comment.author and can_delete(comment))
         or request.user.is_superuser
         or request.user == obj.name
     ):
@@ -390,12 +389,12 @@ def delete_comment(request, pk):
         comments_obj = get_comments_for_object(obj, obj.id)
         comments = get_paginated_comments(comments_obj, 1)
 
-        context = {}
-        context['object'] = obj
-        context['page'] = 1
-        context['comments'] = comments
-        comment_form = NewCommentForm()
-        context['comment_form'] = comment_form
+        context = {
+            'object': obj,
+            'page': 1,
+            'comments': comments,
+            'comment_form': NewCommentForm(),
+        }
 
         return render(request, 'core/include/new_comments.html#comments-container', context)
 

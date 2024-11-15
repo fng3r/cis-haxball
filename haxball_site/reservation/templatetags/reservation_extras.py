@@ -80,11 +80,10 @@ def match_can_delete(user, match):
 
 @register.filter
 def match_dates(reserved):
-    datess = set()
+    dates = set()
     for i in reserved:
-        datess.add(i.time_date.date())
-    # dats = [datess]
-    return sorted(datess)
+        dates.add(i.time_date.date())
+    return sorted(dates)
 
 
 @register.filter
@@ -95,16 +94,3 @@ def cols_span(hosts):
 @register.filter
 def date_equal(date, day):
     return date.date() == day
-
-
-@register.filter
-def round_name(tour, all_tours):
-    if tour == all_tours:
-        return 'Финал'
-    if tour == all_tours - 1:
-        return '1/2 Финала'
-    if tour == all_tours - 2:
-        return '1/4 Финала'
-    if tour == all_tours - 3:
-        return '1/8 Финала'
-    return '{} Раунд'.format(tour)

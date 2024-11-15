@@ -3,11 +3,12 @@ import random
 
 from django.core.management.base import BaseCommand
 
-from ...models import League, Match, TourNumber
+from ...models import GroupStage, League, Match, RegularStage, TourNumber
 
 
 class Command(BaseCommand):
-    help = 'The Zen of Python'
+    help = 'Generate schedule using round-robin algorythm'
+
     tour_dates = {
         1: (datetime.date(2024, 9, 1), datetime.date(2024, 9, 3)),
         2: (datetime.date(2024, 9, 1), datetime.date(2024, 9, 6)),
@@ -35,24 +36,48 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('tournament', type=str)
+        parser.add_argument('-s', '--stage', type=str)
         parser.add_argument('-r', dest='has_return_matches', action='store_true')
 
     def handle(self, *args, **options):
         has_return_matches = options['has_return_matches']
         tournament_title = options['tournament']
+        stage_type = options['stage']
         league = League.objects.get(title=tournament_title, championship__is_active=True)
+        stage = league.stages.filter(type=stage_type).first()
 
-        teams = list(league.teams.all())
+        print(league.title)
+        if stage is None:
+            teams = list(league.teams.all())
+            self.generate_schedule(league, teams, has_return_matches)
+        else:
+            if isinstance(stage, RegularStage):
+                teams = list(stage.teams.all())
+                self.generate_schedule(league, teams, has_return_matches, stage)
+            elif isinstance(stage, GroupStage):
+                for group in stage.groups.all():
+                    teams = list(group.teams.all())
+                    self.generate_schedule(league, teams, has_return_matches, stage, group)
+            else:
+                raise Exception('Unknown stage type')
+
+        print('Генерация расписания завершена')
+
+
+    def generate_schedule(self, league, teams, has_return_matches, stage=None, group=None):
         # add dummy team when number of teams is odd
         if len(teams) % 2 == 1:
             teams.append(None)
         half = len(teams) // 2
         n = len(teams)
 
+        if group:
+            print(group)
         print('Список команд:')
         for team in teams:
             if team is not None:
                 print(f'     {team.title}')
+
         print()
         print('     Перемешиваем')
         random.shuffle(teams)
@@ -62,36 +87,47 @@ class Command(BaseCommand):
 
         for i in range(1, n):
             tour_number = i
-            (tour_date_start, tour_date_end) = self.tour_dates[i]
+            tour_start_date, tour_end_date = self.tour_dates[i]
             tour = TourNumber.objects.create(
-                number=tour_number, league=league, date_from=tour_date_start, date_to=tour_date_end
+                number=tour_number, league=league, stage=stage,
+                date_from=tour_start_date, date_to=tour_end_date,
             )
             if has_return_matches:
-                reverse_tour_number = n + i - 1
-                (tour_date_start, tour_date_end) = self.tour_dates[reverse_tour_number]
-                tour_reverse = TourNumber.objects.create(
-                    number=reverse_tour_number, league=league, date_from=tour_date_start, date_to=tour_date_end
+                reversed_tour_number = n + i - 1
+                tour_start_date, tour_end_date = self.tour_dates[reversed_tour_number]
+                reversed_tour = TourNumber.objects.create(
+                    number=reversed_tour_number, league=league, stage=stage,
+                    date_from=tour_start_date, date_to=tour_end_date,
                 )
-            print(f'                 Тур {tour}')
+
             for j in range(half):
                 team_home = teams[j]
                 team_guest = teams[n - j - 1]
+
                 # skip matches with dummy team
                 if team_home is None or team_guest is None:
                     continue
                 # switch home/away for fixed (first) team
                 if j == 0 and i % 2 == 1:
                     (team_home, team_guest) = (team_guest, team_home)
-                match = Match.objects.create(team_home=team_home, team_guest=team_guest, numb_tour=tour, league=league)
+
+                Match.objects.create(
+                    team_home=team_home, team_guest=team_guest, numb_tour=tour,
+                    league=league, stage=stage, group=group
+                )
                 if has_return_matches:
                     Match.objects.create(
-                        team_guest=team_home, team_home=team_guest, numb_tour=tour_reverse, league=league
+                        team_guest=team_home, team_home=team_guest, numb_tour=reversed_tour,
+                        league=league, stage=stage, group=group
                     )
-                print(f'          {match.team_home.title} - {match.team_guest.title}')
 
-            # rotate teams n // 2 times
+            # rotate teams n // 2 times, first team is always fixed
             for j in range(half):
                 teams.insert(1, teams.pop())
 
+        tours = TourNumber.objects.filter(league=league, stage=stage, group=group).order_by('number')
+        for tour in tours:
+            print(f'             {tour.number} тур')
+            for match in tour.tour_matches.all():
+                print(f'     {match.team_home.title} - {match.team_guest.title}')
         print()
-        print('     Генерация расписания завершена')
