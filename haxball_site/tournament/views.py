@@ -595,9 +595,13 @@ class PostponementsList(ListView):
         for team in teams:
             all_postponements = team.get_postponements(match.league)
             emergency_postponements = all_postponements.filter(is_emergency=True)
-            if (all_postponements.count() + 1 > slots.total_count or
-                    (is_emergency and emergency_postponements.count() + 1 > slots.emergency_count + slots.extra_count)):
-                messages.error(request, f'Команда {team.title} исчерпала лимит переносов')
+            if (all_postponements.count() + 1 > slots.common_count + slots.emergency_count or 
+                    (is_emergency and emergency_postponements.count() + 1 > slots.emergency_count)):
+                messages.error(
+                    request,
+                    f'Команда {team.title} исчерпала лимит переносов. Для покупки платного слота воспользуйтесь \
+                      соответствующей услугой, после чего свяжитесь с организаторами для оформления переноса.'
+                )
 
                 return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
 
