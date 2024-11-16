@@ -287,18 +287,6 @@ def dislikes_count(comment: NewComment):
     return comment.votes.dislikes().count()
 
 
-@register.inclusion_tag('core/include/teams_in_navbar.html')
-def teams_in_navbar():
-    primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
-    leagues = (
-        League.objects.filter(title__in=primary_leagues, championship__is_active=True)
-        .prefetch_related(Prefetch('teams', queryset=Team.objects.order_by('title')))
-        .order_by('priority')
-    )
-
-    return {'leagues': leagues}
-
-
 @register.filter
 def pages_to_show(page: Page):
     pages_show_count = 15
