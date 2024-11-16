@@ -98,9 +98,9 @@ class Team(models.Model):
     def get_active_leagues(self):
         return self.leagues.filter(championship__is_active=True)
 
-    def get_postponements(self, leagues):
+    def get_postponements(self, league):
         return (
-            self.postponements.filter(cancelled_at__isnull=True, match__league__in=leagues)
+            self.postponements.filter(cancelled_at__isnull=True, match__league=league)
             .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
             .order_by('taken_at')
         )

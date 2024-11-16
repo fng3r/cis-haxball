@@ -223,17 +223,17 @@ def can_edit_profile_bg(user: User):
 
 
 @register.filter
-def is_executive(user: User, leagues):
+def is_executive(user: User, league: League):
     try:
         player = user.user_player
     except:
         return False
 
-    has_team_in_leagues = Player.objects.filter(id=player.id, team__leagues__in=leagues).exists()
-    if has_team_in_leagues and (player.role == Player.CAPTAIN or player.role == Player.ASSISTENT):
+    has_team_in_league = Player.objects.filter(id=player.id, team__leagues=league).exists()
+    if has_team_in_league and player.role in (Player.CAPTAIN, Player.ASSISTENT):
         return True
 
-    is_owner = Team.objects.filter(owner=user, leagues__in=leagues).exists()
+    is_owner = Team.objects.filter(owner=user, leagues=league).exists()
 
     return is_owner
 

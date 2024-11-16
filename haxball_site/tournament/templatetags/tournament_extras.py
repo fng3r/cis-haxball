@@ -812,9 +812,8 @@ def get_lifted_string(disqualification: Disqualification):
 
 
 @register.filter
-def postponements_in_leagues(team: Team, leagues: QuerySet) -> list[Postponement | None]:
-    postponements = team.get_postponements(leagues)
-    league = leagues.first()
+def postponements_in_league(team: Team, league: League) -> list[Postponement | None]:
+    postponements = team.get_postponements(league)
     league_slots = league.get_postponement_slots()
     common_slots_count = league_slots.common_count
     total_slots_count = league_slots.total_count
@@ -848,13 +847,13 @@ def can_be_cancelled_by_user(postponement: Postponement, user: User):
 
 
 @register.inclusion_tag('tournament/postponements/postponements_form.html')
-def postponements_form(user: User, leagues: QuerySet, tournament: str):
+def postponements_form(user: User, league: League):
     teams = get_user_teams(user)
 
     # Выбираем все матчи игрока, которые уже можно играть, но которые еще не были сыграны
     matches = Match.objects.filter(
         Q(team_home__in=teams) | Q(team_guest__in=teams),
-        league__in=leagues,
+        league=league,
         is_played=False,
         numb_tour__date_from__lte=timezone.now().date(),
     )
@@ -863,7 +862,7 @@ def postponements_form(user: User, leagues: QuerySet, tournament: str):
     return {
         'matches': available_matches,
         'user': user,
-        'tournament': tournament
+        'league': league,
     }
 
 
