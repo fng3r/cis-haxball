@@ -45,13 +45,13 @@
                             <thead class="thead-dark py-2 text-center">
                                 <tr>
                                     <th scope="col" class="col-sm-2 col-lg-3 border-right">Команда</th>
-                                    {% for i in ''|rjust:filter.qs.0.get_postponement_slots.common_count %}
+                                    {% for i in ''|rjust:league.get_postponement_slots.common_count %}
                                         <th scope="col" class="border-right">Обычн. {{ forloop.counter }}</th>
                                     {% endfor %}
-                                    {% for i in ''|rjust:filter.qs.0.get_postponement_slots.emergency_count %}
+                                    {% for i in ''|rjust:league.get_postponement_slots.emergency_count %}
                                         <th scope="col" class="border-right">Экстр. {{ forloop.counter }}</th>
                                     {% endfor %}
-                                    {% for i in ''|rjust:filter.qs.0.get_postponement_slots.extra_count %}
+                                    {% for i in ''|rjust:league.get_postponement_slots.extra_count %}
                                         <th scope="col" class="border-right">Платн. {{ forloop.counter }}</th>
                                     {% endfor %}
                                 </tr>
@@ -63,7 +63,7 @@
                                         <td class="p-2 border-right" style="text-align: center; font-size: 17px; vertical-align: center;">
                                             <img src="{{team.logo.url}}" alt="..." style="margin-right: 5px;" width="25" height="25">{{team.title}}
                                         </td>
-                                        {% for postponement in team|postponements_in_leagues:filter.qs %}
+                                        {% for postponement in team|postponements_in_league:league %}
                                             <td class="p-1 border-right" style="font-size: 14px; text-align: center;" height="80px">
                                                 {% if postponement is not None %}
                                                     {% with match=postponement.match %}
@@ -98,7 +98,7 @@
                                                                                       hx-trigger="submit"
                                                                                       hx-target="#content-container"
                                                                                       hx-swap="outerHTML"
-                                                                                      hx-vals='{"tournament": "{{ filter.data.tournament }}"}'>
+                                                                                      hx-vals='{"tournament": "{{ league.id }}"}'>
                                                                                     <button type="submit" class="btn btn-primary">
                                                                                         Да, я уверен
                                                                                     </button>
@@ -124,8 +124,8 @@
 
             </div>
 
-            {% if user|is_executive:filter.qs %}
-                {% postponements_form user=user leagues=filter.qs tournament=filter.data.tournament %}
+            {% if user|is_executive:league %}
+                {% postponements_form user=user league=league %}
             {% endif %}
 
             {% partialdef postponements-events inline=True %}
@@ -262,7 +262,7 @@
                                                 {% else %}
                                                     <li class="page-item">
                                                         <a class="page-link" href="#"
-                                                           hx-get="{% url 'tournament:postponements_events' %}?tournament={{ filter.data.tournament }}&page={{ page_number }}"
+                                                           hx-get="{% url 'tournament:postponements_events' %}?tournament={{ league.id }}&page={{ page_number }}"
                                                            hx-target="#postponements-events"
                                                            hx-swap="outerHTML show:top"
                                                            hx-indicator="#paging-indicator">

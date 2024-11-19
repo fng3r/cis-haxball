@@ -528,24 +528,25 @@ class MatchDetail(DetailView):
         return context
 
 
-class LeagueByTitleFilter(FilterSet):
-    CHOICES = (
-        ('Высшая лига', 'Высшая лига'),
-        ('Первая лига', 'Первая лига'),
-        ('Вторая лига', 'Вторая лига'),
-        ('Кубок лиги', 'Кубок лиги'),
-    )
-
-    tournament = ChoiceFilter(
-        field_name='title', label='Турнир', empty_label=None, choices=CHOICES, lookup_expr='icontains'
+class PostponementFilter(FilterSet):
+    tournament = ModelChoiceFilter(
+        field_name='match__league',
+        label='Турнир',
+        queryset=(
+            League.objects
+            .annotate(stages_with_postponements=Count('stages', filter=Q(stages__postponable=True)))
+            .filter(championship__is_active=True, stages_with_postponements__gt=0)
+            .select_related('postponement_slots')
+        )
     )
 
     class Meta:
-        model = League
+        model = Postponement
         fields = ['tournament']
 
 
 class PostponementsList(ListView):
+    default_tournament = League.objects.filter(championship__is_active=True).order_by('priority').first()
     queryset = (
         Postponement.objects.filter(match__league__championship__is_active=True)
         .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
@@ -555,22 +556,19 @@ class PostponementsList(ListView):
     template_name = 'tournament/postponements/postponements.html'
 
     def get(self, request, **kwargs):
-        filter = LeagueByTitleFilter(
-            {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
-            queryset=League.objects.filter(championship__is_active=True).select_related('postponement_slots'),
-        )
-        leagues = filter.qs
-        teams = reduce(lambda acc, league: acc.union(league.teams.all()), leagues, set())
-        postponements = self.queryset.filter(match__league__in=leagues)
+        league_id = self.request.GET.get('tournament', None)
+        league = League.objects.get(pk=league_id) if league_id else self.default_tournament
+        filter = PostponementFilter({'tournament': league}, queryset=self.queryset)
 
-        paginator = Paginator(postponements, 20)
+        paginator = Paginator(filter.qs, 20)
         page = self.request.GET.get('page')
 
         postponements = paginator.get_page(page)
 
         context = {
+            'league': league,
             'postponements': postponements,
-            'teams': teams,
+            'teams': league.teams.all(),
             'filter': filter,
         }
 
@@ -595,11 +593,15 @@ class PostponementsList(ListView):
         slots = match.league.get_postponement_slots()
         tournament = data.get('tournament')
         for team in teams:
-            all_postponements = team.get_postponements(leagues=[match.league])
+            all_postponements = team.get_postponements(match.league)
             emergency_postponements = all_postponements.filter(is_emergency=True)
-            if (all_postponements.count() + 1 > slots.total_count or
-                    (is_emergency and emergency_postponements.count() + 1 > slots.emergency_count + slots.extra_count)):
-                messages.error(request, f'Команда {team.title} исчерпала лимит переносов')
+            if (all_postponements.count() + 1 > slots.common_count + slots.emergency_count or 
+                    (is_emergency and emergency_postponements.count() + 1 > slots.emergency_count)):
+                messages.error(
+                    request,
+                    f'Команда {team.title} исчерпала лимит переносов. Для покупки платного слота воспользуйтесь \
+                      соответствующей услугой, после чего свяжитесь с организаторами для оформления переноса.'
+                )
 
                 return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
 
@@ -621,13 +623,10 @@ class PostponementsList(ListView):
 
 class PostponementsEvents(ListView):
     def get(self, request, **kwargs):
-        filter = LeagueByTitleFilter(
-            {'tournament': self.request.GET.get('tournament', 'Высшая лига')},
-            queryset=League.objects.filter(championship__is_active=True).select_related('postponement_slots'),
-        )
-        leagues = filter.qs
+        league_id = self.request.GET['tournament']
+        league = League.objects.get(id=league_id)
         all_postponements = (
-            Postponement.objects.filter(match__league__championship__is_active=True, match__league__in=leagues)
+            Postponement.objects.filter(match__league__championship__is_active=True, match__league=league)
             .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
             .prefetch_related('teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon')
             .order_by('-taken_at')
@@ -639,7 +638,7 @@ class PostponementsEvents(ListView):
 
         context = {
             'postponements': postponements,
-            'filter': filter,
+            'league': league,
         }
 
         return render(request, 'tournament/postponements/postponements.html#postponements-events', context)
@@ -658,7 +657,7 @@ def cancel_postponement(request, pk):
     else:
         messages.error(request, 'Ошибка доступа')
 
-    return redirect(reverse('tournament:postponements') + f'?tournament={data["tournament"]}')
+    return redirect(reverse('tournament:postponements') + f'?tournament={data.get('tournament')}')
 
 
 def halloffame(request):

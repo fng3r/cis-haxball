@@ -1,5 +1,7 @@
 {% load static %}
 {% load user_tags %}
+{% load tournament_extras %}
+
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/include/navbar.css" %}">
 {% endblock %}
@@ -38,6 +40,8 @@
                 </a>
                 <div class="dropdown-menu">
                     <h6 class="dropdown-header pl-3">Турниры</h6>
+
+                    <a class="dropdown-item" href="{% url 'tournament:league' 'champions-league-s4' %}">Лига Чемпионов</a>
 
                     <a class="dropdown-item" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
 
