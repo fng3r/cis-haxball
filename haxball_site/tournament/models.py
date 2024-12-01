@@ -378,6 +378,35 @@ class PlayoffBracketSlotStub(models.Model):
         ordering = ('tour', 'slot')
         verbose_name = 'Заглушка для слота сетки плей-офф'
         verbose_name_plural = 'Заглушки для слотов сетки плей-офф'
+        
+        
+class TeamPenaltyPoints(models.Model):
+    stage = models.ForeignKey(
+        TournamentStage,
+        verbose_name='Этап турнира',
+        related_name='penalties',
+        on_delete=models.CASCADE
+    )
+    team = ChainedForeignKey(
+        Team,
+        verbose_name='Команда',
+        chained_field='stage',
+        chained_model_field='stages',
+        related_name='penalties',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
+    penalty_points = models.PositiveSmallIntegerField('Штрафные очки')
+
+    class Meta:
+        verbose_name = 'Штраф по очкам'
+        verbose_name_plural = 'Штрафы по очкам'
+        unique_together = ('stage', 'team')
+
+    def __str__(self):
+        return f'{self.team} (- {self.penalty_points} очк.)'
+
 
 
 class Player(models.Model):

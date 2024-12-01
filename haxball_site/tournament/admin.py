@@ -37,6 +37,7 @@ from .models import (
     Substitution,
     Team,
     TeamAchievement,
+    TeamPenaltyPoints,
     TeamRating,
     TournamentStage,
     TourNumber,
@@ -139,6 +140,11 @@ class TeamAdmin(admin.ModelAdmin):
     )
     search_fields = ('title',)
     inlines = [PlayerInline]
+    
+
+class TeamPenaltyPointsAdmin(admin.StackedInline):
+    model = TeamPenaltyPoints
+    extra = 1
 
 
 @admin.register(Season)
@@ -324,12 +330,12 @@ class TournamentStageChildBase(PolymorphicChildModelAdmin):
 
 @admin.register(RegularStage)
 class RegularStageAdmin(TournamentStageChildBase):
-   ...
+   inlines = [TeamPenaltyPointsAdmin]
 
 
 @admin.register(GroupStage)
 class GroupStageAdmin(TournamentStageChildBase):
-    inlines = [GroupInline]
+    inlines = [GroupInline, TeamPenaltyPointsAdmin]
 
 
 class PlayoffBracketSlotStubInline(admin.StackedInline):

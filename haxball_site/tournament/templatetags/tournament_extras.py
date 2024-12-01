@@ -26,6 +26,7 @@ from ..models import (
     Season,
     Substitution,
     Team,
+    TeamPenaltyPoints,
     TournamentStage,
     TourNumber,
 )
@@ -468,14 +469,14 @@ def round_name(tour, all_tours):
 
 @register.filter
 def cup_round_name(tour: TourNumber):
-    print(tour, tour.stage.tours.count())
     return round_name(tour, tour.stage.tours.count())
 
 
 @register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
 def tournament_table(league: League, stage: TournamentStage, group: Group | None):
-    result = get_league_table(league, stage, group)
-    return {'teams': result, 'stage': stage}
+    table = get_league_table(league, stage, group)
+    has_penalties = any(x[10] > 0 for x in table)
+    return {'teams': table, 'stage': stage, 'has_penalties': has_penalties}
 
 
 # Конец тегов и фильтров для таблицы лиги
@@ -584,6 +585,7 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
     teams_count = len(teams)
 
     points = [0 for _ in range(teams_count)]  # Количество очков
+    penalties = [0 for _ in range(teams_count)]  # Количество очков
     goal_diff = [0 for _ in range(teams_count)]  # Разница мячей
     scored = [0 for _ in range(teams_count)]  # Мячей забито
     conceded = [0 for _ in range(teams_count)]  # Мячей пропущено
@@ -605,6 +607,8 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
             )
         )
         matches_played[i] = matches.count()
+        penalty = TeamPenaltyPoints.objects.filter(stage=stage, team=team).first()
+        penalty_points = penalty.penalty_points if penalty else 0
 
         wins_count = 0
         draws_count = 0
@@ -626,7 +630,8 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
                 last_matches[i].append((match, -1))
 
         last_matches[i] = sorted(last_matches[i], key=lambda x: x[0].numb_tour.number)[-5:]
-        points[i] = wins_count * 3 + draws_count * 1
+        points[i] = wins_count * 3 + draws_count * 1 - penalty_points
+        penalties[i] = penalty_points 
         goal_diff[i] = goals_scored - goals_conceded
         scored[i] = goals_scored
         conceded[i] = goals_conceded
@@ -634,7 +639,7 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
         losses[i] = losses_count
         draws[i] = draws_count
 
-    table = zip(teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches)
+    table = zip(teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties)
     sorted_table = sorted(table, key=lambda x: (x[8], x[7], x[5]), reverse=True)
 
     result = []

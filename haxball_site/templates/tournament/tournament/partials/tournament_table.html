@@ -36,8 +36,11 @@
             <th scope="col">П</th>
             <th scope="col">ЗМ</th>
             <th scope="col">ПМ</th>
-            <th scope="col">+/-</th>
+            <th scope="col">РМ</th>
             <th scope="col">O</th>
+            {% if has_penalties %}
+                <th scope="col">Штр</th>
+            {% endif %}
             <th scope="col">Форма</th>
         </tr>
     </thead>
@@ -83,6 +86,15 @@
             <td width="6%" {% if team.7 > 0 %} class="text-success"
                 {% elif team.7 < 0 %}class="text-danger"{% endif %}>{{ team.7 }}</td>
             <td width="6%" style="font-weight: 500">{{ team.8 }}</td>
+            {% if has_penalties %}
+                <td width="3%">
+                    <span class="text-danger">
+                        {% if team.10 != 0 %}
+                            -{{ team.10 }}
+                        {% endif %}
+                    </span>
+                </td>
+            {% endif %}
             <td class="team-form p-1" width="13%">{% for result in team.9 %}
                 <a href="{{ result.0.get_absolute_url }}"
                    class="fa fa-circle {% if result.1 == 1 %} text-success {% elif result.1 == -1 %} text-danger {% elif result.1 == 0 %} text-secondary {% endif %}"
