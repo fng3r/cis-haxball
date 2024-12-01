@@ -532,6 +532,7 @@ class PostponementFilter(FilterSet):
     tournament = ModelChoiceFilter(
         field_name='match__league',
         label='Турнир',
+        empty_label=None,
         queryset=(
             League.objects
             .annotate(stages_with_postponements=Count('stages', filter=Q(stages__postponable=True)))
