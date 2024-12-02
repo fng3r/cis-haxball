@@ -122,6 +122,7 @@ class League(models.Model):
         on_delete=models.CASCADE,
     )
     title = models.CharField('Название турнира', max_length=128)
+    logo = models.ImageField('Логотип турнира', upload_to='tournament_logos/', null=True, blank=True)
     priority = models.SmallIntegerField(
         'Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
     slug = models.SlugField(max_length=250)

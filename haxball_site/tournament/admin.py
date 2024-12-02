@@ -351,7 +351,7 @@ class PlayOffStageAdmin(TournamentStageChildBase):
 
 @admin.register(League)
 class LeagueAdmin(PolymorphicInlineSupportMixin, admin.ModelAdmin):
-    list_display = ('title', 'slug', 'priority', 'championship', 'created')
+    list_display = ('title', 'slug', 'priority', 'championship', 'created', 'logo')
     list_filter = ('championship',)
     search_fields = ('title',)
     filter_horizontal = ('teams',)
