@@ -7,14 +7,17 @@
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
 
-{% block title %}Чемпионат | {{ league.title }} — CIS-HAXBALL{% endblock %}
+{% block title %}Чемпионат | {{ league.title }} ({{ league.championship.short_title }}) — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
     {% cache 1 champ_table league.id %}
 
         <div class="card mb-2 mt-2" style="border-radius: 25px">
             <div class="card-header pb-0" style="border-radius: 25px 25px 0 0">
                 <h3 class="text-center">
-                    {{ league.title }}
+                    {% if league.logo %}
+                        <img src="{{ league.logo.url }}" width="36" height="36">
+                    {% endif %}
+                    {{ league.title }} ({{ league.championship.short_title }})
                 </h3>
                 <div class="row">
                     <ul class="nav nav-pills nav-fill" id="myTab" style="width: 100%;">
