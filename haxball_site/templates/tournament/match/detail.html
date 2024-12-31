@@ -37,7 +37,7 @@
                     {% if match.stage.is_double_elimination %}
                         {{ match.numb_tour.get_bracket_display }},
                     {% endif %}
-                    {{ match.numb_tour|round_name:match.stage.tours.count }}
+                    {{ match.numb_tour|cup_round_name }}
                 {% else  %}
                     {% if match.stage.is_group_stage %}
                         {{ match.group }} -
