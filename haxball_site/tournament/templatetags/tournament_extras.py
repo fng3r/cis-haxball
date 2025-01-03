@@ -469,7 +469,7 @@ def round_name(tour, all_tours):
 
 @register.filter
 def cup_round_name(tour: TourNumber):
-    return round_name(tour, tour.stage.tours.count())
+    return round_name(tour, tour.stage.tours.filter(bracket=tour.bracket).count())
 
 
 @register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
