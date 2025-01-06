@@ -62,14 +62,16 @@ def all_time_squad_stats(team):
     return get_team_squad_stats(team, for_current_season=False)
 
 
-def get_team_squad_stats(team, for_current_season=False):
-    team_players = get_team_players(team, for_current_season)
-    players_matches = {pl: get_player_matches(pl, team, for_current_season) for pl in team_players}
-
-    current_season_condition = Q(match__league__championship__is_active=True) if for_current_season else ~Q(pk__in=[])
+def get_team_squad_stats(team, for_current_season=False, season=None):
+    if not season and for_current_season:
+        season = Season.objects.filter(is_active=True).first()
+    season_condition = Q(match__league__championship=season) if season else ~Q(pk__in=[])
+        
+    team_players = get_team_squad(team, for_current_season, season)
+    players_matches = {pl: get_player_matches(pl, team, season) for pl in team_players}
 
     goals_subquery = (
-        Goal.objects.filter(current_season_condition, team=team, author=OuterRef('id'))
+        Goal.objects.filter(season_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -77,7 +79,7 @@ def get_team_squad_stats(team, for_current_season=False):
     )
 
     assists_subquery = (
-        Goal.objects.filter(current_season_condition, team=team, assistent=OuterRef('id'))
+        Goal.objects.filter(season_condition, team=team, assistent=OuterRef('id'))
         .order_by()
         .values('assistent')
         .annotate(c=Count('*'))
@@ -85,7 +87,7 @@ def get_team_squad_stats(team, for_current_season=False):
     )
 
     subs_out_subquery = (
-        Substitution.objects.filter(current_season_condition, team=team, player_out=OuterRef('id'))
+        Substitution.objects.filter(season_condition, team=team, player_out=OuterRef('id'))
         .order_by()
         .values('player_out')
         .annotate(c=Count('*'))
@@ -93,7 +95,7 @@ def get_team_squad_stats(team, for_current_season=False):
     )
 
     subs_in_subquery = (
-        Substitution.objects.filter(current_season_condition, team=team, player_in=OuterRef('id'))
+        Substitution.objects.filter(season_condition, team=team, player_in=OuterRef('id'))
         .order_by()
         .values('player_in')
         .annotate(c=Count('*'))
@@ -102,7 +104,7 @@ def get_team_squad_stats(team, for_current_season=False):
 
     cs_subquery = (
         OtherEvents.objects.cs()
-        .filter(current_season_condition, team=team, author=OuterRef('id'))
+        .filter(season_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -111,7 +113,7 @@ def get_team_squad_stats(team, for_current_season=False):
 
     ogs_subquery = (
         OtherEvents.objects.ogs()
-        .filter(current_season_condition, team=team, author=OuterRef('id'))
+        .filter(season_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -120,7 +122,7 @@ def get_team_squad_stats(team, for_current_season=False):
 
     yellow_cards_subquery = (
         OtherEvents.objects.yellow_cards()
-        .filter(current_season_condition, team=team, author=OuterRef('id'))
+        .filter(season_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -129,7 +131,7 @@ def get_team_squad_stats(team, for_current_season=False):
 
     red_cards_subquery = (
         OtherEvents.objects.red_cards()
-        .filter(current_season_condition, team=team, author=OuterRef('id'))
+        .filter(season_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -150,28 +152,31 @@ def get_team_squad_stats(team, for_current_season=False):
     for player in players_stats:
         player.__setattr__('matches_c', players_matches[player])
 
-    if not for_current_season:
+    if not for_current_season and season is None:
         players_stats = list(filter(lambda stats: stats.matches_c > 0, players_stats))
 
     return sorted(players_stats, key=lambda player: player.matches_c, reverse=True)
 
 
-def get_team_players(team, current=False):
+def get_team_squad(team, current=False, season=None):
     if current:
         return team.players_in_team.all()
+    
+    season_condition = Q(season_join=season) if season else ~Q(season_join__in=[])
 
-    return Player.objects.filter(Exists(PlayerTransfer.objects.filter(to_team=team, trans_player=OuterRef('id'))))
+    return Player.objects.filter(
+        Exists(PlayerTransfer.objects.filter(season_condition, to_team=team, trans_player=OuterRef('id')))
+    )
 
 
-def get_player_matches(player, team, for_current_season=False):
-    always_true_condition = ~Q(pk__in=[])
-    current_season_condition = Q(league__championship__is_active=True) if for_current_season else always_true_condition
-
+def get_player_matches(player, team, season=None):
+    season_condition = Q(league__championship=season) if season else ~Q(pk__in=[])
+    
     return (
-        Match.objects.filter(current_season_condition, team_guest=team, team_guest_start=player, is_played=True).count()
-        + Match.objects.filter(current_season_condition, team_home=team, team_home_start=player, is_played=True).count()
+        Match.objects.filter(season_condition, team_guest=team, team_guest_start=player, is_played=True).count()
+        + Match.objects.filter(season_condition, team_home=team, team_home_start=player, is_played=True).count()
         + Match.objects.filter(
-            current_season_condition,
+            season_condition,
             ~(Q(team_guest_start=player) | Q(team_home_start=player)),
             is_played=True,
             match_substitutions__team=team,
@@ -523,13 +528,8 @@ def get_team_assistent(team):
     return Player.objects.filter(team=team, role='AC').select_related('name__user_profile')
 
 
-@register.filter
-def all_league_season(team, season):
-    return League.objects.filter(teams=team, championship=season).order_by('-id')
-
-
-@register.filter
-def all_seasons(team):
+@register.simple_tag
+def team_seasons(team):
      return (
         Season.objects.filter(tournaments_in_season__teams=team)
         .distinct()
