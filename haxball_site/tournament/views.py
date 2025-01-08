@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import reduce
+from typing import Any
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
@@ -38,7 +39,7 @@ from .models import (
     Team,
     TeamRating,
 )
-from .templatetags.tournament_extras import get_user_teams
+from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
 
 
 class DefaultFilterSet(FilterSet):
@@ -306,12 +307,21 @@ class EditTeamView(DetailView, View):
             return HttpResponse('Ошибка доступа')
 
         return redirect(team.get_absolute_url())
+        
 
 
 class TeamDetail(DetailView):
     model = Team
     context_object_name = 'team'
     template_name = 'tournament/teams/team_page.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        team = context['team']
+        team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
+        context['seasons'] = team_seasons
+        
+        return context
 
     def get_queryset(self):
         return (
@@ -1604,6 +1614,15 @@ def team_statistics(request, pk):
     }
 
     return render(request, 'tournament/teams/partials/team_statistics.html', context)
+
+
+def team_squad_statistics(request, pk):
+    team = Team.objects.get(pk=pk)
+    season_number = request.GET.get('season', None)
+    season = Season.objects.get(number=season_number) if season_number else None
+    stats = get_team_squad_stats(team, season=season)
+    
+    return render(request, 'tournament/teams/partials/team_squad_stats.html', {'team_squad': stats})
 
 
 def team_statistics_charts(request, pk):
