@@ -671,68 +671,68 @@ def cancel_postponement(request, pk):
     return redirect(reverse('tournament:postponements') + f'?tournament={data.get('tournament')}')
 
 
-def halloffame(request):
-    players = players_halloffame()
-    teams = teams_halloffame()
+def hall_of_fame(request):
+    players = players_hall_of_fame()
+    teams = teams_hall_of_fame()
 
-    return render(request, 'tournament/hall_of_fame.html', {'players': players, 'teams': teams})
+    return render(request, 'tournament/hall_of_fame/hall_of_fame.html', {'players_tops': players, 'teams_tops': teams})
 
 
-def players_halloffame():
+def players_hall_of_fame():
     players = Player.objects.select_related('team', 'name__user_profile')
 
     top_goalscorers = (
-        players.annotate(goals_count=Count('goals__match__league'))
-        .filter(goals_count__gt=0)
-        .order_by('-goals_count')
+        players.annotate(count=Count('goals__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_assistants = (
-        players.annotate(assists_count=Count('assists__match__league'))
-        .filter(assists_count__gt=0)
-        .order_by('-assists_count')
+        players.annotate(count=Count('assists__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_cs = (
         players.filter(event__event=OtherEvents.CLEAN_SHEET)
-        .annotate(cs_count=Count('event__match__league'))
-        .filter(cs_count__gt=0)
-        .order_by('-cs_count')
+        .annotate(count=Count('event__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_ogs = (
         players.filter(event__event=OtherEvents.OWN_GOAL)
-        .annotate(og_count=Count('event__match__league'))
-        .filter(og_count__gt=0)
-        .order_by('-og_count')
+        .annotate(count=Count('event__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_yellow_cards = (
         players.filter(event__event=OtherEvents.YELLOW_CARD)
-        .annotate(yellow_cards_count=Count('event__match__league'))
-        .filter(yellow_cards_count__gt=0)
-        .order_by('-yellow_cards_count')
+        .annotate(count=Count('event__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_red_cards = (
         players.filter(event__event=OtherEvents.RED_CARD)
-        .annotate(red_cards_count=Count('event__match__league'))
-        .filter(red_cards_count__gt=0)
-        .order_by('-red_cards_count')
+        .annotate(count=Count('event__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_subs_in = (
         players
-        .annotate(subs_in_count=Count('join_game__player_in'))
-        .filter(subs_in_count__gt=0)
-        .order_by('-subs_in_count')
+        .annotate(count=Count('join_game__player_in'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_subs_out = (
         players
-        .annotate(subs_out_count=Count('replaced__player_out'))
-        .filter(subs_out_count__gt=0)
-        .order_by('-subs_out_count')
+        .annotate(count=Count('replaced__player_out'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     home_matches_subquery = (
@@ -758,9 +758,9 @@ def players_halloffame():
         .annotate(home_matches_count=Coalesce(Subquery(home_matches_subquery), 0),
                   guest_matches_count=Coalesce(Subquery(guest_matches_subquery), 0),
                   sub_matches_count=Coalesce(Subquery(sub_matches_subquery), 0),
-                  matches_count=F('home_matches_count') + F('guest_matches_count') + F('sub_matches_count'))
-        .filter(matches_count__gt=0)
-        .order_by('-matches_count'))
+                  count=F('home_matches_count') + F('guest_matches_count') + F('sub_matches_count'))
+        .filter(count__gt=0)
+        .order_by('-count'))
 
     return {
         'goals': top_goalscorers,
@@ -769,58 +769,60 @@ def players_halloffame():
         'yellow_cards': top_yellow_cards,
         'red_cards': top_red_cards,
         'ogs': top_ogs,
-        'player_matches': top_matches,
+        'matches': top_matches,
         'subs_in': top_subs_in,
         'subs_out': top_subs_out,
     }
 
 
-def teams_halloffame():
+def teams_hall_of_fame():
     top_goalscorers = (
-        Team.objects.annotate(goals_count=Count('goals__match__league'))
-        .filter(goals_count__gt=0)
-        .order_by('-goals_count')
+        Team.objects
+        .annotate(count=Count('goals__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_assistants = (
-        Team.objects.annotate(assists_count=Count('goals__match__league', filter=Q(goals__assistent__isnull=False)))
-        .filter(assists_count__gt=0)
-        .order_by('-assists_count')
+        Team.objects
+        .annotate(count=Count('goals__match__league', filter=Q(goals__assistent__isnull=False)))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_cs = (
         Team.objects.filter(team_events__event=OtherEvents.CLEAN_SHEET)
-        .annotate(cs_count=Count('team_events__match__league'))
-        .filter(cs_count__gt=0)
-        .order_by('-cs_count')
+        .annotate(count=Count('team_events__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_ogs = (
         Team.objects.filter(team_events__event=OtherEvents.OWN_GOAL)
-        .annotate(og_count=Count('team_events__match__league'))
-        .filter(og_count__gt=0)
-        .order_by('-og_count')
+        .annotate(count=Count('team_events__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_yellow_cards = (
         Team.objects.filter(team_events__event=OtherEvents.YELLOW_CARD)
-        .annotate(yellow_cards_count=Count('team_events__match__league'))
-        .filter(yellow_cards_count__gt=0)
-        .order_by('-yellow_cards_count')
+        .annotate(count=Count('team_events__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_red_cards = (
         Team.objects.filter(team_events__event=OtherEvents.RED_CARD)
-        .annotate(red_cards_count=Count('team_events__match__league'))
-        .filter(red_cards_count__gt=0)
-        .order_by('-red_cards_count')
+        .annotate(count=Count('team_events__match__league'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     top_subs = (
         Team.objects
-        .annotate(subs_count=Count('substitutions'))
-        .filter(subs_count__gt=0)
-        .order_by('-subs_count')
+        .annotate(count=Count('substitutions'))
+        .filter(count__gt=0)
+        .order_by('-count')
     )
 
     home_matches_subquery = (
@@ -845,8 +847,8 @@ def teams_halloffame():
         .order_by()
     )
 
-    top_matches = matches.order_by('-matches_count')
-    top_wins = matches.order_by('-wins_count')
+    top_matches = matches.annotate(count=F('matches_count')).order_by('-count')
+    top_wins = matches.annotate(count=F('wins_count')).order_by('-count')
     top_winrate = matches.filter(matches_count__gt=10).order_by('-winrate')
 
     return {
@@ -856,7 +858,7 @@ def teams_halloffame():
         'yellow_cards': top_yellow_cards,
         'red_cards': top_red_cards,
         'ogs': top_ogs,
-        'team_matches': top_matches,
+        'matches': top_matches,
         'wins': top_wins,
         'winrates': top_winrate,
         'subs': top_subs,

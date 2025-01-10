@@ -14,7 +14,7 @@ from .views import (
     TeamRatingView,
     TransfersList,
     cancel_postponement,
-    halloffame,
+    hall_of_fame,
     player_detailed_statistics,
     player_statistics_charts,
     remove_free_agent_entry,
@@ -28,7 +28,7 @@ app_name = 'tournament'
 
 urlpatterns = [
     # Зал славы
-    path('hall_of_fame', halloffame, name='hall_of_fame'),
+    path('hall_of_fame', hall_of_fame, name='hall_of_fame'),
     path('postponements', PostponementsList.as_view(), name='postponements'),
     path('postponements/events', PostponementsEvents.as_view(), name='postponements_events'),
     path('postponements/<int:pk>/cancel', cancel_postponement, name='cancel_postponement'),

@@ -1,0 +1,47 @@
+{% load static %}
+
+<div class="col px-1">
+    <div class="card" style="border-radius: 25px;">
+        <div class="card-header px-1"
+             style="background: linear-gradient(to right, rgba(193, 243, 229, 0.7), rgba(91, 142, 241, 0.32)); border-radius: 25px 25px 0 0;">
+            <h5 class="mb-0 font-weight-bold">
+                {{ title }}
+                {% if icon_url %}
+                    <img src="{% static icon_url %}" width="24" height="24" title="{{ title }}">
+                {% elif icon_cls %}
+                    <i class="{{ icon_cls }}" title="Выходов на замену" aria-hidden="true" style="font-size: 21px"></i>
+                {% endif %}
+            </h5>
+        </div>
+
+        <div class="card-body p-0" style="position: relative; height: 525px; overflow: auto; border-radius: 0 0 25px 25px;">
+            <table class="table table-hover mb-0">
+                <tbody>
+                    {% for player in players %}
+                        <tr>
+                            <td width="16%" class="px-1 font-weight-bolder text-success">
+                                {% if player.team %}
+                                    <img src="{{ player.team.logo.url }}" width="25" height="25">
+                                {% else %}
+                                    <img src="{% static "img/ico/free_player.png" %}" width="25" height="25">
+                                {% endif %}
+                            </td>
+                            <td class="text-left pl-1">
+                                {% if player.name %}
+                                    <a class="text-dark h6" href="{{ player.name.user_profile.get_absolute_url }}">
+                                        {{ player.nickname }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-secondary h6">{{ player.nickname }}</span>
+                                {% endif %}
+                            </td>
+                            <td width="16%">
+                                <span class="font-weight-bold h6">{{ player.count }}</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

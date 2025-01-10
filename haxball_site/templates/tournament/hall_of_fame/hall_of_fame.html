@@ -1,0 +1,139 @@
+{% extends "core/home.html" %}
+{% load static %}
+{% load cache %}
+{% load tournament_extras %}
+
+{% block title %}Чемпионат | Зал славы — CIS-HAXBALL {% endblock %}
+{% block profile_of_user %}
+    {% cache 3 hall_of_fame_cache %}
+
+        <div class="card mb-4 mt-2" style="border-radius: 25px">
+            <div class="card-header pb-0" style="border-radius: 25px 25px 0 0">
+
+                <h1 class="text-center">Зал славы</h1>
+
+            </div>
+            <div class="card-body text-center p-0">
+                <div class="p-0" style="bottom: 0;">
+                    <ul class="nav nav-tabs" id="tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="players-tab" href="#players" data-toggle="tab"
+                               role="tab" aria-controls="players-tab" aria-selected="true">
+                                Игроки
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" id="teams-tab" href="#teams" data-toggle="tab"
+                               role="tab" aria-controls="teams-tab" aria-selected="false">
+                                Команды
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="tab-content" id="content">
+                    <div class="tab-pane fade active show" id="players" role="tabpanel" aria-labelledby="players-tab">
+                        <div class="container-fluid px-0">
+
+                            <div class="row row-cols-3 mx-0 mt-3">
+                                {% with title='Бомбардиры' icon_url='img/ico/ball_2.png' players=players_tops.goals %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Ассистенты' icon_url='img/ico/boot_ass_2.png' players=players_tops.assists %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' players=players_tops.clean_sheets %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="row row-cols-3 mx-0 mt-3">
+                                {% with title='Матчи' icon_url='img/ico/matches_icon.png' players=players_tops.matches %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Вышел на поле' icon_cls='fa fa-arrow-up text-success' players=players_tops.subs_in %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Ушел с поля' icon_cls='fa fa-arrow-down text-danger' players=players_tops.subs_out %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="row row-cols-3 mx-0 mt-3 mb-3">
+                                {% with title='Желтые карточки' icon_url='img/ico/yellow_card.png' players=players_tops.yellow_cards %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Красные карточки' icon_url='img/ico/red_card.png' players=players_tops.red_cards %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' players=players_tops.ogs %}
+                                    {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="teams" role="tabpanel" aria-labelledby="teams-tab">
+                        <div class="container-fluid px-0">
+
+                            <div class="row row-cols-3 mx-0 mt-3">
+                                {% with title='Бомбардиры' icon_url='img/ico/ball_2.png' teams=teams_tops.goals %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Ассистенты' icon_url='img/ico/boot_ass_2.png' teams=teams_tops.assists %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' teams=teams_tops.clean_sheets %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="row row-cols-3 mx-0 mt-3">
+                                {% with title='Матчи' icon_url='img/ico/matches_icon.png' teams=teams_tops.matches %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Победы' icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 teams=teams_tops.wins %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Процент побед' icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 teams=teams_tops.winrates %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="row row-cols-3 mx-0 mt-3">
+                                {% with title='Вышел на поле' icon_url='img/ico/statistic/sub.png' teams=teams_tops.subs %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Желтые карточки' icon_url='img/ico/yellow_card.png' teams=teams_tops.yellow_cards %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+
+                                {% with title='Красные карточки' icon_url='img/ico/red_card.png' teams=teams_tops.red_cards %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+                            </div>
+
+                            <div class="row row-cols-3 mx-0 mt-3 mb-3">
+                                {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' teams=teams_tops.ogs %}
+                                    {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endcache %}
+
+{% endblock %}
