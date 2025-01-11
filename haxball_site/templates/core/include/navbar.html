@@ -41,18 +41,6 @@
                 <div class="dropdown-menu">
                     <h6 class="dropdown-header pl-3">Турниры</h6>
 
-                    <a class="dropdown-item" href="{% url 'tournament:league' 'champions-league-s4' %}">Лига Чемпионов</a>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's13-second-league' %}">Вторая лига</a>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's13-russian-cup' %}">Кубок России</a>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's13-league-cup' %}">Кубок лиги</a>
-
                     <div class="dropdown-divider"></div>
 
                     <a class="dropdown-item" target="_blank"
@@ -194,6 +182,22 @@
                             <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-sl' %}">Вторая лига</a>
                         </div>
                     </div>
+
+                    <a class="dropdown-item submenu" href="#">ЧР #13</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-second-league' %}">Вторая лига</a>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-russian-cup' %}">Кубок России</a>
+
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-league-cup' %}">Кубок лиги</a>
+
+                    </div>
+
+                    <a class="dropdown-item" href="{% url 'tournament:league' 'champions-league-s4' %}">ЛЧ #4</a>
 
                 </div>
             </li>
