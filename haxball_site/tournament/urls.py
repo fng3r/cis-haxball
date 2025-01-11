@@ -17,10 +17,12 @@ from .views import (
     hall_of_fame,
     player_detailed_statistics,
     player_statistics_charts,
+    players_hall_of_fame,
     remove_free_agent_entry,
     team_squad_statistics,
     team_statistics,
     team_statistics_charts,
+    teams_hall_of_fame,
     update_free_agent_entry,
 )
 
@@ -29,6 +31,8 @@ app_name = 'tournament'
 urlpatterns = [
     # Зал славы
     path('hall_of_fame', hall_of_fame, name='hall_of_fame'),
+    path('hall_of_fame/players', players_hall_of_fame, name='players_hall_of_fame'),
+    path('hall_of_fame/teams', teams_hall_of_fame, name='teams_hall_of_fame'),
     path('postponements', PostponementsList.as_view(), name='postponements'),
     path('postponements/events', PostponementsEvents.as_view(), name='postponements_events'),
     path('postponements/<int:pk>/cancel', cancel_postponement, name='cancel_postponement'),

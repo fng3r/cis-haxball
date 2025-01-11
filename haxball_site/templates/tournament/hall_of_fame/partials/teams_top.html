@@ -16,17 +16,19 @@
                 <table class="table table-hover mb-0">
                     <tbody>
                         {% for team in teams %}
-                            <tr style="border-radius: 25px;">
-                                <td width="16%" class="px-1 font-weight-bold"
-                                    style="border-radius: 15px 0 0 15px;">
+                            <tr>
+                                <td class="pl-2 pr-0">
+                                    <span class="h6">{{ forloop.counter }}</span>
+                                </td>
+                                <td width="16%" class="px-1 font-weight-bold">
                                     <img src="{{ team.logo.url }}" width="25" height="25">
                                 </td>
-                                <td class="text-left pl-1">
+                                <td class="text-left pl-0">
                                     <a class="text-dark h6"
                                        href="{{ team.get_absolute_url }}">{{ team.title }}
                                     </a>
                                 </td>
-                                <td width="16%" style="border-radius: 0 15px 15px 0;">
+                                <td width="16%">
                                     <span class="font-weight-bold h6">
                                         {% if team.count %}
                                             {{ team.count }}

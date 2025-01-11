@@ -1,7 +1,5 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
-from functools import reduce
-from typing import Any
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
@@ -28,6 +26,7 @@ from .models import (
     League,
     Match,
     MatchResult,
+    Nation,
     OtherEvents,
     Player,
     PlayerTransfer,
@@ -671,84 +670,238 @@ def cancel_postponement(request, pk):
     return redirect(reverse('tournament:postponements') + f'?tournament={data.get('tournament')}')
 
 
+class HallOfFamePlayerFilter(FilterSet):
+    nation = ModelChoiceFilter(queryset=Nation.objects.all(), label='Страна', empty_label='Любая')
+    season = ModelChoiceFilter(queryset=Season.objects.filter(number__gt=5), label='Сезон', empty_label='Все')
+    tournament = ChoiceFilter(
+        choices=(
+            ('Высшая лига','Высшая лига'),
+            ('Единая лига','Единая лига'),
+            ('Первая лига','Первая лига'),
+            ('Вторая лига','Вторая лига'),
+            ('Кубок России','Кубок России'),
+            ('Лига Чемпионов','Лига Чемпионов'),
+            ('Кубок Высшей лиги','Кубок Высшей лиги'),
+            ('Кубок Первой лиги','Кубок Первой лиги'),
+            ('Кубок Второй лиги','Кубок Второй лиги'),
+            ('Кубок лиги','Кубок лиги'),
+        ),
+        label = 'Турнир',
+        empty_label = 'Все'
+    )
+    
+    
+class HallOfFameTeamFilter(FilterSet):
+    season = ModelChoiceFilter(queryset=Season.objects.filter(number__gt=5), label='Сезон', empty_label='Все')
+    tournament = ChoiceFilter(
+        choices=(
+            ('Высшая лига','Высшая лига'),
+            ('Единая лига','Единая лига'),
+            ('Первая лига','Первая лига'),
+            ('Вторая лига','Вторая лига'),
+            ('Кубок России','Кубок России'),
+            ('Лига Чемпионов','Лига Чемпионов'),
+            ('Кубок Высшей лиги','Кубок Высшей лиги'),
+            ('Кубок Первой лиги','Кубок Первой лиги'),
+            ('Кубок Второй лиги','Кубок Второй лиги'),
+            ('Кубок лиги','Кубок лиги'),
+        ),
+        label = 'Турнир',
+        empty_label = 'Все'
+    )
+
+
 def hall_of_fame(request):
-    players = players_hall_of_fame()
-    teams = teams_hall_of_fame()
+    nation_id = request.GET.get('nation', None)
+    nation = Nation.objects.get(id=nation_id) if nation_id else None
+    
+    season_id = request.GET.get('season', None)
+    seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
+    
+    tournament_name = request.GET.get('tournament', None)
+    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    
+    players = get_players_tops(seasons, tournaments, nation)
+    teams = get_teams_tops(seasons, tournaments)
 
-    return render(request, 'tournament/hall_of_fame/hall_of_fame.html', {'players_tops': players, 'teams_tops': teams})
+    return render(
+        request,
+        'tournament/hall_of_fame/hall_of_fame.html',
+        {
+            'players_tops': players,
+            'players_filter': HallOfFamePlayerFilter(request.GET, queryset=Player.objects.none()),
+            'teams_tops': teams,
+            'teams_filter': HallOfFameTeamFilter(request.GET, queryset=Team.objects.none()),
+        }
+    )
+    
+    
+def players_hall_of_fame(request):
+    nation_id = request.GET.get('nation', None)
+    nation = Nation.objects.get(id=nation_id) if nation_id else None
+    
+    season_id = request.GET.get('season', None)
+    seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
+    
+    tournament_name = request.GET.get('tournament', None)
+    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    
+    players = get_players_tops(seasons, tournaments, nation)
+    
+    return render(
+        request,
+        'tournament/hall_of_fame/hall_of_fame.html#players-hall-of-fame',
+        {
+            'players_tops': players,
+            'players_filter': HallOfFamePlayerFilter(request.GET, queryset=Player.objects.none()),
+        }
+    )
+    
+    
+def teams_hall_of_fame(request):
+    season_id = request.GET.get('season', None)
+    seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
+    
+    tournament_name = request.GET.get('tournament', None)
+    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    
+    teams = get_teams_tops(seasons, tournaments)
+    
+    return render(
+        request,
+        'tournament/hall_of_fame/hall_of_fame.html#teams-hall-of-fame',
+        {
+            'teams_tops': teams,
+            'teams_filter': HallOfFameTeamFilter(request.GET, queryset=Team.objects.none()),
+        }
+    )
 
 
-def players_hall_of_fame():
+def get_players_tops(seasons=None, tournaments=None, nation=None):
     players = Player.objects.select_related('team', 'name__user_profile')
+    if nation:
+        players = players.filter(player_nation=nation)
 
     top_goalscorers = (
-        players.annotate(count=Count('goals__match__league'))
+        players
+        .annotate(
+            count=Count(
+                'goals__match__league',
+                filter=Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_assistants = (
-        players.annotate(count=Count('assists__match__league'))
+        players
+        .annotate(
+            count=Count(
+                'assists__match__league',
+                filter=Q(assists__match__league__in=tournaments) & Q(assists__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_cs = (
-        players.filter(event__event=OtherEvents.CLEAN_SHEET)
-        .annotate(count=Count('event__match__league'))
+        players
+        .filter(event__event=OtherEvents.CLEAN_SHEET)
+        .annotate(
+            count=Count(
+                'event__match__league',
+                filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_ogs = (
-        players.filter(event__event=OtherEvents.OWN_GOAL)
-        .annotate(count=Count('event__match__league'))
+        players
+        .filter(event__event=OtherEvents.OWN_GOAL)
+        .annotate(
+            count=Count(
+                'event__match__league',
+                filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_yellow_cards = (
-        players.filter(event__event=OtherEvents.YELLOW_CARD)
-        .annotate(count=Count('event__match__league'))
+        players
+        .filter(event__event=OtherEvents.YELLOW_CARD)
+        .annotate(
+            count=Count(
+                'event__match__league',
+                filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_red_cards = (
         players.filter(event__event=OtherEvents.RED_CARD)
-        .annotate(count=Count('event__match__league'))
+        .annotate(
+            count=Count(
+                'event__match__league',
+                filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_subs_in = (
         players
-        .annotate(count=Count('join_game__player_in'))
+        .annotate(
+            count=Count(
+                'join_game__player_in',
+                filter=Q(join_game__match__league__in=tournaments) & Q(join_game__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_subs_out = (
         players
-        .annotate(count=Count('replaced__player_out'))
+        .annotate(
+            count=Count(
+                'replaced__player_out',
+                filter=Q(replaced__match__league__in=tournaments) & Q(replaced__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     home_matches_subquery = (
-        Match.objects.filter(team_home_start=OuterRef('id'), is_played=True)
+        Match.objects
+        .filter(team_home_start=OuterRef('id'), is_played=True,
+                league__in=tournaments, league__championship__in=seasons)
         .order_by().values('team_home_start')
         .annotate(c=Count('*')).values('c')
     )
     guest_matches_subquery = (
-        Match.objects.filter(team_guest_start=OuterRef('id'), is_played=True)
+        Match.objects
+        .filter(team_guest_start=OuterRef('id'), is_played=True,
+                league__in=tournaments, league__championship__in=seasons)
         .order_by().values('team_guest_start')
         .annotate(c=Count('*')).values('c')
     )
 
     sub_matches_subquery = (
-        Match.objects.filter(~(Q(team_guest_start=OuterRef('id')) | Q(team_home_start=OuterRef('id'))),
-                             match_substitutions__player_in=OuterRef('id'), is_played=True)
+        Match.objects
+        .filter(
+            ~(Q(team_guest_start=OuterRef('id')) | Q(team_home_start=OuterRef('id'))),
+            match_substitutions__player_in=OuterRef('id'), is_played=True,
+            league__in=tournaments, league__championship__in=seasons)
         .order_by().values('match_substitutions__player_in')
         .annotate(c=Count('*')).values('c')
     )
@@ -760,7 +913,8 @@ def players_hall_of_fame():
                   sub_matches_count=Coalesce(Subquery(sub_matches_subquery), 0),
                   count=F('home_matches_count') + F('guest_matches_count') + F('sub_matches_count'))
         .filter(count__gt=0)
-        .order_by('-count'))
+        .order_by('-count')
+    )
 
     return {
         'goals': top_goalscorers,
@@ -775,75 +929,125 @@ def players_hall_of_fame():
     }
 
 
-def teams_hall_of_fame():
+def get_teams_tops(seasons=None, tournaments=None):
     top_goalscorers = (
         Team.objects
-        .annotate(count=Count('goals__match__league'))
+        .annotate(
+            count=Count(
+                'goals__match__league',
+                filter=Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_assistants = (
         Team.objects
-        .annotate(count=Count('goals__match__league', filter=Q(goals__assistent__isnull=False)))
+        .annotate(
+            count=Count(
+                'goals__match__league',
+                filter=Q(goals__assistent__isnull=False) & Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_cs = (
-        Team.objects.filter(team_events__event=OtherEvents.CLEAN_SHEET)
-        .annotate(count=Count('team_events__match__league'))
+        Team.objects
+        .filter(team_events__event=OtherEvents.CLEAN_SHEET)
+        .annotate(
+            count=Count(
+                'team_events__match__league',
+                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_ogs = (
-        Team.objects.filter(team_events__event=OtherEvents.OWN_GOAL)
-        .annotate(count=Count('team_events__match__league'))
+        Team.objects
+        .filter(team_events__event=OtherEvents.OWN_GOAL)
+        .annotate(
+            count=Count(
+                'team_events__match__league',
+                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_yellow_cards = (
-        Team.objects.filter(team_events__event=OtherEvents.YELLOW_CARD)
-        .annotate(count=Count('team_events__match__league'))
+        Team.objects
+        .filter(team_events__event=OtherEvents.YELLOW_CARD)
+        .annotate(
+            count=Count(
+                'team_events__match__league',
+                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_red_cards = (
-        Team.objects.filter(team_events__event=OtherEvents.RED_CARD)
-        .annotate(count=Count('team_events__match__league'))
+        Team.objects
+        .filter(team_events__event=OtherEvents.RED_CARD)
+        .annotate(
+            count=Count(
+                'team_events__match__league',
+                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     top_subs = (
         Team.objects
-        .annotate(count=Count('substitutions'))
+        .annotate(
+            count=Count(
+                'substitutions',
+                filter=Q(substitutions__match__league__in=tournaments) & Q(substitutions__match__league__championship__in=seasons)
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
     )
 
     home_matches_subquery = (
-        Match.objects.filter(team_home=OuterRef('id'), is_played=True)
+        Match.objects
+        .filter(
+            team_home=OuterRef('id'), is_played=True,
+            league__in=tournaments, league__championship__in=seasons
+        )
         .order_by().values('team_home')
         .annotate(c=Count('*')).values('c')
     )
     guest_matches_subquery = (
-        Match.objects.filter(team_guest=OuterRef('id'), is_played=True)
+        Match.objects
+        .filter(
+            team_guest=OuterRef('id'), is_played=True,
+            league__in=tournaments, league__championship__in=seasons
+        )
         .order_by().values('team_guest')
         .annotate(c=Count('*')).values('c')
     )
 
     matches = (
         Team.objects
-        .annotate(home_matches_count=Coalesce(Subquery(home_matches_subquery), 0),
-                  guest_matches_count=Coalesce(Subquery(guest_matches_subquery), 0),
-                  matches_count=F('home_matches_count') + F('guest_matches_count'))
+        .annotate(
+            home_matches_count=Coalesce(Subquery(home_matches_subquery), 0),
+            guest_matches_count=Coalesce(Subquery(guest_matches_subquery), 0),
+            matches_count=F('home_matches_count') + F('guest_matches_count')
+        )
         .filter(matches_count__gt=0)
-        .annotate(wins_count=Count('won_matches'),
-                  winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100)
+        .annotate(
+            wins_count=Count('won_matches', filter=Q(won_matches__match__league__in=tournaments) & Q(won_matches__match__league__championship__in=seasons)),
+            winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100)
         .order_by()
     )
 

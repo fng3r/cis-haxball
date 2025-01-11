@@ -19,6 +19,9 @@
                 <tbody>
                     {% for player in players %}
                         <tr>
+                            <td class="pl-2 pr-0">
+                                <span class="h6">{{ forloop.counter }}</span>
+                            </td>
                             <td width="16%" class="px-1 font-weight-bolder text-success">
                                 {% if player.team %}
                                     <img src="{{ player.team.logo.url }}" width="25" height="25">
@@ -26,7 +29,7 @@
                                     <img src="{% static "img/ico/free_player.png" %}" width="25" height="25">
                                 {% endif %}
                             </td>
-                            <td class="text-left pl-1">
+                            <td class="text-left pl-0">
                                 {% if player.name %}
                                     <a class="text-dark h6" href="{{ player.name.user_profile.get_absolute_url }}">
                                         {{ player.nickname }}
