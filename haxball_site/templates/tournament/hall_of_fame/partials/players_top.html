@@ -18,18 +18,22 @@
             <table class="table table-hover mb-0">
                 <tbody>
                     {% for player in players %}
-                        <tr>
-                            <td class="pl-2 pr-0">
+                        <tr style="max-width: 300px">
+                            <td class="pl-2 pr-0" style="width: 10%">
                                 <span class="h6">{{ forloop.counter }}</span>
                             </td>
-                            <td width="16%" class="px-1 font-weight-bolder text-success">
-                                {% if player.team %}
-                                    <img src="{{ player.team.logo.url }}" width="25" height="25">
-                                {% else %}
-                                    <img src="{% static "img/ico/free_player.png" %}" width="25" height="25">
-                                {% endif %}
+                            <td class="pl-1 pr-0 font-weight-bolder text-success" style="width: 15%">
+                                <div class="d-flex">
+                                    <img src="{{ player.name.user_profile.avatar.url }}" width="25" height="25" class="d-inline">
+                                    {% if player.team %}
+                                        <img src="{{ player.team.logo.url }}" width="18" height="18" style="position: relative; left: -10px; bottom: -12px;">
+                                    {% else %}
+                                        <img src="{% static "img/ico/free_player.png" %}" width="20" height="20" style="position: relative; left: -10px; bottom: -12px;">
+                                    {% endif %}
+                                </div>
+
                             </td>
-                            <td class="text-left pl-0">
+                            <td class="text-left pl-0" style="width: 55%">
                                 {% if player.name %}
                                     <a class="text-dark h6" href="{{ player.name.user_profile.get_absolute_url }}">
                                         {{ player.nickname }}
@@ -38,7 +42,7 @@
                                     <span class="text-secondary h6">{{ player.nickname }}</span>
                                 {% endif %}
                             </td>
-                            <td width="16%">
+                            <td style="width: 13%" class="pl-2 pr-1">
                                 <span class="font-weight-bold h6">{{ player.count }}</span>
                             </td>
                         </tr>
