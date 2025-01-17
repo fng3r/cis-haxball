@@ -5,8 +5,8 @@ from typing import Iterable
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Count, Exists, OuterRef, Prefetch, Q, QuerySet, Subquery
-from django.db.models.functions import Coalesce
+from django.db.models import Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery
+from django.db.models.functions import Cast, Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
 
@@ -19,6 +19,7 @@ from ..models import (
     Match,
     OtherEvents,
     Player,
+    PlayerMatchStatistics,
     PlayerTransfer,
     PlayoffBracketSlotStub,
     PlayOffStage,
@@ -488,32 +489,203 @@ def tournament_table(league: League, stage: TournamentStage, group: Group | None
 
 
 @register.filter
-def top_goalscorers(league):
+def top_goalscorers(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
         .filter(goals__match__league=league)
-        .annotate(goals_c=Count('goals__match__league'))
-        .order_by('-goals_c')
+        .annotate(
+            count=Count('goals'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_goalscorers_per_match(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(goals__match__league=league)
+        .annotate(
+            goals_count=Count('goals'),
+            matches_count=Coalesce(get_player_matches_subquery(league), 0),
+            count=Cast(F('goals_count'), FloatField()) / F('matches_count'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .filter(matches_count__gte=3)
+        .order_by('-count')
     )
 
 
 @register.filter
-def top_assistent(league):
+def top_assistants(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
         .filter(assists__match__league=league)
-        .annotate(ass_c=Count('assists__match__league'))
-        .order_by('-ass_c')
+        .annotate(
+            count=Count('assists'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .order_by('-count')
     )
-
-
+    
+    
 @register.filter
-def top_clean_sheets(league):
+def top_assistants_per_match(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(assists__match__league=league)
+        .annotate(
+            assists_count=Count('assists'),
+            matches_count=Coalesce(get_player_matches_subquery(league), 0),
+            count=Cast(F('assists_count'), FloatField()) / F('matches_count'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .filter(matches_count__gte=3)
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_goals_assists(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), match__league=league)))
+        .annotate(
+            goals_count=Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')),
+            assists_count=Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')),
+            count=F('goals_count') + F('assists_count'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .filter(count__gt=0)
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_goals_assists_per_match(league: League):  
+    return (
+        Player.objects.select_related('name__user_profile')
+        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), match__league=league)))
+        .annotate(
+            goals_count=Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')),
+            assists_count=Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')),
+            matches_count=Coalesce(get_player_matches_subquery(league), 0),
+            count=Cast(F('goals_count') + F('assists_count'), FloatField()) / F('matches_count'),
+            
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .filter(count__gt=0, matches_count__gte=3)
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_clean_sheets(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
         .filter(event__match__league=league, event__event='CLN')
-        .annotate(event_c=Count('event__match__league'))
-        .order_by('-event_c')
+        .annotate(
+            count=Count('event__match__league'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_clean_sheets_per_match(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(event__match__league=league, event__event='CLN')
+        .annotate(
+            cs_count=Count('event__match__league'),
+            matches_count=Coalesce(get_player_matches_subquery(league), 0),
+            count=Cast(F('cs_count'), FloatField()) / F('matches_count'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .filter(matches_count__gte=3)
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_yellow_cards(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(event__match__league=league, event__event='YEL')
+        .annotate(
+            count=Count('event__match__league'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_yellow_cards_per_match(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(event__match__league=league, event__event='YEL')
+        .annotate(
+            yellow_cards_count=Count('event__match__league'),
+            matches_count=Coalesce(get_player_matches_subquery(league), 0),
+            count=Cast(F('yellow_cards_count'), FloatField()) / F('matches_count'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_red_cards(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(event__match__league=league, event__event='RED')
+        .annotate(
+            count=Count('event__match__league'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .order_by('-count')
+    )
+    
+    
+@register.filter
+def top_red_cards_per_match(league: League):
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(event__match__league=league, event__event='RED')
+        .annotate(
+            red_cards_count=Count('event__match__league'),
+            matches_count=Coalesce(get_player_matches_subquery(league), 0),
+            count=Cast(F('red_cards_count'), FloatField()) / F('matches_count'),
+            last_team_logo=get_player_last_team_logo_subquery(league)
+        )
+        .order_by('-count')
+    )
+
+
+def get_player_last_team_logo_subquery(league: League):
+    return Subquery(
+        PlayerTransfer.objects
+        .filter(
+            trans_player=OuterRef('id'),
+            season_join=league.championship,
+            to_team__leagues=league
+        )
+        .values('to_team__logo')
+        .order_by('-date_join')[:1]
+    )
+    
+    
+def get_player_matches_subquery(league: League):
+    return Subquery(
+        PlayerMatchStatistics.objects
+        .filter(player=OuterRef('id'), match__league=league)
+        .order_by()
+        .values('player')
+        .annotate(c=Count('id', distinct=True))
+        .values('c')
     )
 
 

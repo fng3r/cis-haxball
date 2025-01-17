@@ -749,6 +749,20 @@ class MatchResult(models.Model):
         ordering = ['value']
         verbose_name = 'Результат матча'
         verbose_name_plural = 'Результат матча'
+        
+        
+
+class PlayerMatchStatistics(models.Model):
+    match = models.ForeignKey(Match, verbose_name='Матч', null=False, blank=False, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, verbose_name='Игрок', null=False, related_name='match_stats', blank=False, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', null=False, blank=False, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, verbose_name='Лига', null=True, blank=False, on_delete=models.CASCADE)
+    
+    class Meta:
+        verbose_name = 'Статистика игрока в матче'
+        verbose_name_plural = 'Статистика игроков в матчах'
+        unique_together = ('match', 'player')
+        indexes = [models.Index(fields=['player', 'league'])]
 
 
 class Goal(models.Model):
