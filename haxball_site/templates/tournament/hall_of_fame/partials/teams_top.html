@@ -1,0 +1,47 @@
+{% load static %}
+
+<div class="col px-1">
+    <div class="card" style="border-radius: 25px;">
+        <div class="card-header px-1"
+             style="background: linear-gradient(to right, rgba(193, 243, 229, 0.7), rgba(91, 142, 241, 0.32)); border-radius: 25px 25px 0 0;">
+            <h5 class="mb-0 font-weight-bold">
+                {{ title }}
+                <img src="{% static icon_url %}"
+                     width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
+                     height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
+                     title="{{ title }}">
+            </div>
+
+            <div class="card-body p-0" style="position: relative; height: 515px; overflow: auto; border-radius: 0 0 25px 25px;">
+                <table class="table table-hover mb-0">
+                    <tbody>
+                        {% for team in teams %}
+                            <tr>
+                                <td class="pl-2 pr-0">
+                                    <span class="h6">{{ forloop.counter }}</span>
+                                </td>
+                                <td width="16%" class="px-1 font-weight-bold">
+                                    <img src="{{ team.logo.url }}" width="25" height="25">
+                                </td>
+                                <td class="text-left pl-0">
+                                    <a class="text-dark h6"
+                                       href="{{ team.get_absolute_url }}">{{ team.title }}
+                                    </a>
+                                </td>
+                                <td width="16%">
+                                    <span class="font-weight-bold h6">
+                                        {% if team.count %}
+                                            {{ team.count }}
+                                        {% else %}
+                                            {{ team.winrate|floatformat:1 }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
