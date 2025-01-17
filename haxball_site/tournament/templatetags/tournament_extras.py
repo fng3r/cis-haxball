@@ -505,14 +505,17 @@ def top_goalscorers(league: League):
 def top_goalscorers_per_match(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
-        .filter(goals__match__league=league)
+        .filter(
+            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+            goals__match__league=league
+        )
         .annotate(
             goals_count=Count('goals'),
             matches_count=Coalesce(get_player_matches_subquery(league), 0),
             count=Cast(F('goals_count'), FloatField()) / F('matches_count'),
             last_team_logo=get_player_last_team_logo_subquery(league)
         )
-        .filter(matches_count__gte=3)
+        .filter(count__gt=0, matches_count__gte=3)
         .order_by('-count')
     )
 
@@ -534,14 +537,17 @@ def top_assistants(league: League):
 def top_assistants_per_match(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
-        .filter(assists__match__league=league)
+        .filter(
+            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+            assists__match__league=league
+        )
         .annotate(
             assists_count=Count('assists'),
             matches_count=Coalesce(get_player_matches_subquery(league), 0),
             count=Cast(F('assists_count'), FloatField()) / F('matches_count'),
             last_team_logo=get_player_last_team_logo_subquery(league)
         )
-        .filter(matches_count__gte=3)
+        .filter(count__gt=0, matches_count__gte=3)
         .order_by('-count')
     )
     
@@ -550,10 +556,10 @@ def top_assistants_per_match(league: League):
 def top_goals_assists(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
-        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), match__league=league)))
+        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)))
         .annotate(
-            goals_count=Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')),
-            assists_count=Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')),
+            goals_count=Coalesce(Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')), 0),
+            assists_count=Coalesce(Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')), 0),
             count=F('goals_count') + F('assists_count'),
             last_team_logo=get_player_last_team_logo_subquery(league)
         )
@@ -565,14 +571,13 @@ def top_goals_assists(league: League):
 @register.filter
 def top_goals_assists_per_match(league: League):  
     return (
-        Player.objects.select_related('name__user_profile')
-        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), match__league=league)))
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)))
         .annotate(
-            goals_count=Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')),
-            assists_count=Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')),
+            goals_count=Coalesce(Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')), 0),
+            assists_count=Coalesce(Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')), 0),
             matches_count=Coalesce(get_player_matches_subquery(league), 0),
             count=Cast(F('goals_count') + F('assists_count'), FloatField()) / F('matches_count'),
-            
             last_team_logo=get_player_last_team_logo_subquery(league)
         )
         .filter(count__gt=0, matches_count__gte=3)
@@ -626,7 +631,10 @@ def top_yellow_cards(league: League):
 def top_yellow_cards_per_match(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
-        .filter(event__match__league=league, event__event='YEL')
+        .filter(
+            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+            event__match__league=league, event__event='YEL'
+        )
         .annotate(
             yellow_cards_count=Count('event__match__league'),
             matches_count=Coalesce(get_player_matches_subquery(league), 0),
@@ -654,7 +662,10 @@ def top_red_cards(league: League):
 def top_red_cards_per_match(league: League):
     return (
         Player.objects.select_related('team', 'name__user_profile')
-        .filter(event__match__league=league, event__event='RED')
+        .filter(
+            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+            event__match__league=league, event__event='RED'
+        )
         .annotate(
             red_cards_count=Count('event__match__league'),
             matches_count=Coalesce(get_player_matches_subquery(league), 0),
@@ -681,7 +692,7 @@ def get_player_last_team_logo_subquery(league: League):
 def get_player_matches_subquery(league: League):
     return Subquery(
         PlayerMatchStatistics.objects
-        .filter(player=OuterRef('id'), match__league=league)
+        .filter(player=OuterRef('id'), league=league)
         .order_by()
         .values('player')
         .annotate(c=Count('id', distinct=True))
