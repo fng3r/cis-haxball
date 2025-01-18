@@ -560,10 +560,11 @@ def top_goals_assists(league: League):
         .annotate(
             goals_count=Coalesce(Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')), 0),
             assists_count=Coalesce(Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')), 0),
+            matches_count=Coalesce(get_player_matches_subquery(league), 0),
             count=F('goals_count') + F('assists_count'),
             last_team_logo=get_player_last_team_logo_subquery(league)
         )
-        .filter(count__gt=0)
+        .filter(count__gt=0, matches_count__gt=0)
         .order_by('-count')
     )
     

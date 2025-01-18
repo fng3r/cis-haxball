@@ -1,5 +1,6 @@
 {% load static %}
 {% load tournament_extras %}
+{% load utils %}
 
 
 {% partialdef statistics-card %}
@@ -34,7 +35,7 @@
                                         <img src="{% static "img/ico/free_player.png" %}"  width="25px" height="25px">
                                     {% endif %}
                                 {% else %}
-                                    <img src="/media/{{ player.last_team_logo }}" width="25px" height="25px">
+                                    <img src="{% media player.last_team_logo %}" width="25px" height="25px">
                                 {% endif %}
                             </td>
 
@@ -51,7 +52,7 @@
                             <td width="16%">
 
                                 <span class="font-weight-bold h6">
-                                    {% if stat_type == 'mean' %}
+                                    {% if stat_type == 'avg' %}
                                         {{ player.count|floatformat:2 }}
                                     {% else %}
                                         {{ player.count }}
@@ -77,8 +78,8 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" id="mean-stats-tab" href="#mean-stats-panel" data-toggle="tab"
-                   role="tab" aria-controls="mean-stats-panel" aria-selected="false">
+                <a class="nav-link" id="avg-stats-tab" href="#avg-stats-panel" data-toggle="tab"
+                   role="tab" aria-controls="avg-stats-panel" aria-selected="false">
                     В среднем за матч
                 </a>
             </li>
@@ -129,22 +130,22 @@
             </div>
         </div>
 
-        <div class="tab-pane fade" id="mean-stats-panel" role="tabpanel" aria-labelledby="mean-stats-tab">
+        <div class="tab-pane fade" id="avg-stats-panel" role="tabpanel" aria-labelledby="avg-stats-tab">
             <div class="row mx-0 mt-2 mb-2">
                 <div class="col-4 px-1">
-                    {% with players=league|top_goalscorers_per_match stat_type='mean' title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
+                    {% with players=league|top_goalscorers_per_match stat_type='avg' title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
                         {% partial statistics-card %}
                     {% endwith %}
                 </div>
 
                 <div class="col-4 px-1">
-                    {% with players=league|top_assistants_per_match stat_type='mean' title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
+                    {% with players=league|top_assistants_per_match stat_type='avg' title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
                         {% partial statistics-card %}
                     {% endwith %}
                 </div>
 
                 <div class="col-4 px-1">
-                    {% with players=league|top_clean_sheets_per_match stat_type='mean' title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
+                    {% with players=league|top_clean_sheets_per_match stat_type='avg' title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
                         {% partial statistics-card %}
                     {% endwith %}
                 </div>
@@ -152,19 +153,19 @@
 
             <div class="row mx-0 mb-1">
                 <div class="col-4 px-1">
-                    {% with players=league|top_goals_assists_per_match stat_type='mean' title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
+                    {% with players=league|top_goals_assists_per_match stat_type='avg' title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
                         {% partial statistics-card %}
                     {% endwith %}
                 </div>
 
                 <div class="col-4 px-1">
-                    {% with players=league|top_yellow_cards_per_match stat_type='mean' title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
+                    {% with players=league|top_yellow_cards_per_match stat_type='avg' title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
                         {% partial statistics-card %}
                     {% endwith %}
                 </div>
 
                 <div class="col-4 px-1">
-                    {% with players=league|top_red_cards_per_match stat_type='mean' title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
+                    {% with players=league|top_red_cards_per_match stat_type='avg' title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
                         {% partial statistics-card %}
                     {% endwith %}
                 </div>
