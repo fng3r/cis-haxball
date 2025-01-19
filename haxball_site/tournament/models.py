@@ -489,7 +489,7 @@ class TourNumber(models.Model):
 
     @property
     def is_actual(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
         return today >= self.date_from and any(not match.is_played for match in self.tour_matches.all())
 
     def __str__(self):
@@ -1136,7 +1136,7 @@ class Postponement(models.Model):
 
     @property
     def can_be_cancelled(self):
-        return not self.is_cancelled and timezone.now().date() < self.starts_at
+        return not self.is_cancelled and timezone.localdate() < self.starts_at
 
     @property
     def is_cancelled(self):

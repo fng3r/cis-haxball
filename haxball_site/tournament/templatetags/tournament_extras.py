@@ -1066,7 +1066,7 @@ def postponements_form(user: User, league: League):
         Q(team_home__in=teams) | Q(team_guest__in=teams),
         league=league,
         is_played=False,
-        numb_tour__date_from__lte=timezone.now().date(),
+        numb_tour__date_from__lte=timezone.localdate(),
     )
     available_matches = [match for match in matches if match.can_be_postponed]
 
