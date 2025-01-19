@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Case, Q, Value, When
-from django.db.models.signals import post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
@@ -588,6 +588,7 @@ class Match(models.Model):
     team_guest_start = models.ManyToManyField(
         Player, related_name='guest_matches', verbose_name='Состав гостей', blank=True
     )
+    match_participants = models.ManyToManyField(Player, verbose_name='Участники матча', through="PlayerMatchStatistics")
 
     is_played = models.BooleanField('Сыгран', default=False)
 
@@ -597,8 +598,10 @@ class Match(models.Model):
     commentable = models.BooleanField('Комментируемый матч', default=True)
 
     def cards(self):
-        return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by(
-            'team'
+        return (
+            self.match_event
+            .filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD))
+            .order_by('team')
         )
 
     @property
@@ -749,20 +752,6 @@ class MatchResult(models.Model):
         ordering = ['value']
         verbose_name = 'Результат матча'
         verbose_name_plural = 'Результат матча'
-        
-        
-
-class PlayerMatchStatistics(models.Model):
-    match = models.ForeignKey(Match, verbose_name='Матч', null=False, blank=False, on_delete=models.CASCADE)
-    player = models.ForeignKey(Player, verbose_name='Игрок', null=False, related_name='match_stats', blank=False, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, verbose_name='Команда', null=False, blank=False, on_delete=models.CASCADE)
-    league = models.ForeignKey(League, verbose_name='Лига', null=True, blank=False, on_delete=models.CASCADE)
-    
-    class Meta:
-        verbose_name = 'Статистика игрока в матче'
-        verbose_name_plural = 'Статистика игроков в матчах'
-        unique_together = ('match', 'player')
-        indexes = [models.Index(fields=['player', 'league'])]
 
 
 class Goal(models.Model):
@@ -860,6 +849,59 @@ class Substitution(models.Model):
     class Meta:
         verbose_name = 'Замена'
         verbose_name_plural = 'Замены'
+        
+        
+class PlayerMatchStatistics(models.Model):
+    match = models.ForeignKey(Match, verbose_name='Матч', null=False, blank=False, on_delete=models.CASCADE)
+    player = models.ForeignKey(
+        Player,
+        verbose_name='Игрок',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE
+    )
+    team = models.ForeignKey(Team, verbose_name='Команда', null=False, blank=False, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, verbose_name='Лига', null=False, blank=False, on_delete=models.CASCADE)
+    
+    
+    @receiver(m2m_changed, sender=Match.team_home_start.through)
+    def match_team_home_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+        if action in ('post_add', 'post_remove'):
+            PlayerMatchStatistics.update_match_participants(instance)
+        
+    @receiver(m2m_changed, sender=Match.team_guest_start.through)
+    def match_team_guest_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+        if action in ('post_add', 'post_remove'):
+            PlayerMatchStatistics.update_match_participants(instance)
+        
+    @receiver([post_save, post_delete], sender=Substitution)
+    def match_substitutions_changed(sender, instance, **kwargs):
+        PlayerMatchStatistics.update_match_participants(instance.match)
+
+    @staticmethod
+    def update_match_participants(match):
+        match.match_participants.clear()
+        for player in match.team_home_start.all():
+            match.match_participants.add(
+                player,
+                through_defaults={'match': match, 'team': match.team_home, 'league': match.league}
+            )
+        for player in match.team_guest_start.all():
+            match.match_participants.add(
+                player,
+                through_defaults={'match': match, 'team': match.team_guest, 'league': match.league}
+            )
+        for substitution in match.match_substitutions.all():
+            match.match_participants.add(
+                substitution.player_in,
+                through_defaults={'match': match, 'team': substitution.team, 'league': match.league}
+            )
+    
+    class Meta:
+        verbose_name = 'Статистика игрока в матче'
+        verbose_name_plural = 'Статистика игроков в матчах'
+        unique_together = ('match', 'player')
+        indexes = [models.Index(fields=['player', 'league'])]
 
 
 class Disqualification(models.Model):

@@ -558,8 +558,8 @@ def top_goals_assists(league: League):
         Player.objects.select_related('team', 'name__user_profile')
         .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)))
         .annotate(
-            goals_count=Coalesce(Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')), 0),
-            assists_count=Coalesce(Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')), 0),
+            goals_count=Coalesce(get_player_goals_subquery(league), 0),
+            assists_count=Coalesce(get_player_assists_subquery(league), 0),
             matches_count=Coalesce(get_player_matches_subquery(league), 0),
             count=F('goals_count') + F('assists_count'),
             last_team_logo=get_player_last_team_logo_subquery(league)
@@ -575,8 +575,8 @@ def top_goals_assists_per_match(league: League):
         Player.objects.select_related('team', 'name__user_profile')
         .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)))
         .annotate(
-            goals_count=Coalesce(Subquery(Goal.objects.filter(author=OuterRef('id'), match__league=league).order_by().values('author').annotate(c=Count('id', distinct=True)).values('c')), 0),
-            assists_count=Coalesce(Subquery(Goal.objects.filter(assistent=OuterRef('id'), match__league=league).order_by().values('assistent').annotate(c=Count('id', distinct=True)).values('c')), 0),
+            goals_count=Coalesce(get_player_goals_subquery(league), 0),
+            assists_count=Coalesce(get_player_assists_subquery(league), 0),
             matches_count=Coalesce(get_player_matches_subquery(league), 0),
             count=Cast(F('goals_count') + F('assists_count'), FloatField()) / F('matches_count'),
             last_team_logo=get_player_last_team_logo_subquery(league)
@@ -696,6 +696,28 @@ def get_player_matches_subquery(league: League):
         .filter(player=OuterRef('id'), league=league)
         .order_by()
         .values('player')
+        .annotate(c=Count('id', distinct=True))
+        .values('c')
+    )
+    
+    
+def get_player_goals_subquery(league: League):
+    return Subquery(
+        Goal.objects
+        .filter(author=OuterRef('id'), match__league=league)
+        .order_by()
+        .values('author')
+        .annotate(c=Count('id', distinct=True))
+        .values('c')
+    )
+    
+    
+def get_player_assists_subquery(league: League):
+    return Subquery(
+        Goal.objects
+        .filter(assistent=OuterRef('id'), match__league=league)
+        .order_by()
+        .values('assistent')
         .annotate(c=Count('id', distinct=True))
         .values('c')
     )
