@@ -856,6 +856,7 @@ class PlayerMatchStatistics(models.Model):
     player = models.ForeignKey(
         Player,
         verbose_name='Игрок',
+        related_name='played_matches',
         null=False,
         blank=False,
         on_delete=models.CASCADE

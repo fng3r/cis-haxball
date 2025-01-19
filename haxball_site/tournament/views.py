@@ -883,39 +883,62 @@ def get_players_tops(seasons=None, tournaments=None, nation=None):
         .order_by('-count')
     )
 
-    home_matches_subquery = (
-        Match.objects
-        .filter(team_home_start=OuterRef('id'), is_played=True,
-                league__in=tournaments, league__championship__in=seasons)
-        .order_by().values('team_home_start')
-        .annotate(c=Count('*')).values('c')
-    )
-    guest_matches_subquery = (
-        Match.objects
-        .filter(team_guest_start=OuterRef('id'), is_played=True,
-                league__in=tournaments, league__championship__in=seasons)
-        .order_by().values('team_guest_start')
-        .annotate(c=Count('*')).values('c')
-    )
-
-    sub_matches_subquery = (
-        Match.objects
-        .filter(
-            ~(Q(team_guest_start=OuterRef('id')) | Q(team_home_start=OuterRef('id'))),
-            match_substitutions__player_in=OuterRef('id'), is_played=True,
-            league__in=tournaments, league__championship__in=seasons)
-        .order_by().values('match_substitutions__player_in')
-        .annotate(c=Count('*')).values('c')
-    )
-
     top_matches = (
         players
-        .annotate(home_matches_count=Coalesce(Subquery(home_matches_subquery), 0),
-                  guest_matches_count=Coalesce(Subquery(guest_matches_subquery), 0),
-                  sub_matches_count=Coalesce(Subquery(sub_matches_subquery), 0),
-                  count=F('home_matches_count') + F('guest_matches_count') + F('sub_matches_count'))
+        .annotate(
+            count=Count(
+                'played_matches',
+                filter=Q(
+                    played_matches__league__in=tournaments,
+                    played_matches__league__championship__in=seasons
+                )
+            )
+        )
         .filter(count__gt=0)
         .order_by('-count')
+    )
+    
+    top_wins = (
+        players
+        .annotate(
+            count=Count(
+                'played_matches',
+                filter=Q(
+                    played_matches__match__result__winner=F('played_matches__team'),
+                    played_matches__league__in=tournaments,
+                    played_matches__league__championship__in=seasons
+                )
+            )
+        )
+        .filter(count__gt=0)
+        .order_by('-count')
+    )
+    
+    top_winrates = (
+        players
+        .annotate(
+            matches_count=Count(
+                'played_matches',
+                filter=Q(
+                    played_matches__league__in=tournaments,
+                    played_matches__league__championship__in=seasons
+                )
+            ),
+            wins_count=Count(
+                'played_matches',
+                filter=Q(
+                    played_matches__match__result__winner=F('played_matches__team'),
+                    played_matches__league__in=tournaments,
+                    played_matches__league__championship__in=seasons
+                )
+            )
+        )
+        .filter(matches_count__gt=10)
+        .annotate(
+            winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100
+        )
+        .filter(winrate__gt=0)
+        .order_by('-winrate')
     )
 
     return {
@@ -926,6 +949,8 @@ def get_players_tops(seasons=None, tournaments=None, nation=None):
         'red_cards': top_red_cards,
         'ogs': top_ogs,
         'matches': top_matches,
+        'wins': top_wins,
+        'winrates': top_winrates,
         'subs_in': top_subs_in,
         'subs_out': top_subs_out,
     }
@@ -1229,6 +1254,7 @@ def player_detailed_statistics(request, pk):
             ),
             *prefetches,
         )
+        .distinct()
     )
 
     all_matches = list(sub_matches) + list(home_matches) + list(guest_matches)

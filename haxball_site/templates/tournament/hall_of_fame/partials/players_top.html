@@ -7,7 +7,11 @@
             <h5 class="mb-0 font-weight-bold">
                 {{ title }}
                 {% if icon_url %}
-                    <img src="{% static icon_url %}" width="24" height="24" title="{{ title }}">
+                    <img
+                        src="{% static icon_url %}"
+                        width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
+                        height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
+                        title="{{ title }}">
                 {% elif icon_cls %}
                     <i class="{{ icon_cls }}" title="Выходов на замену" aria-hidden="true" style="font-size: 21px"></i>
                 {% endif %}
@@ -45,7 +49,13 @@
                                     </div>
 
                                     <div class="ml-auto">
-                                        <span class="font-weight-bold h6">{{ player.count }}</span>
+                                        <span class="font-weight-bold h6">
+                                            {% if player.count %}
+                                                {{ player.count }}
+                                            {% else %}
+                                                {{ player.winrate|floatformat:1 }}
+                                            {% endif %}
+                                        </span>
                                     </div>
 
                                 </div>
