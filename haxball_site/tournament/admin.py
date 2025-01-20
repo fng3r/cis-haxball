@@ -25,6 +25,7 @@ from .models import (
     Nation,
     OtherEvents,
     Player,
+    PlayerMatchStatistics,
     PlayerTransfer,
     PlayoffBracketSlotStub,
     PlayOffStage,
@@ -563,3 +564,8 @@ class RatingVersionAdmin(admin.ModelAdmin):
 class TeamRatingAdmin(admin.ModelAdmin):
     list_display = ('version', 'rank', 'team', 'total_points')
     list_filter = ('version', 'team')
+
+
+@admin.register(PlayerMatchStatistics)
+class PlayerMatchStatisticsAdmin(admin.ModelAdmin):
+    list_display = ('player', 'match', 'team', 'league')

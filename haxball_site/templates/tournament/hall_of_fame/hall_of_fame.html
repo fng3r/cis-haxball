@@ -84,11 +84,25 @@
                                         {% include 'tournament/hall_of_fame/partials/players_top.html' %}
                                     {% endwith %}
 
+                                    {% with title='Победы' icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 players=players_tops.wins %}
+                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                    {% endwith %}
+
+                                    {% with title='Процент побед' icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 players=players_tops.winrates %}
+                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                    {% endwith %}
+                                </div>
+
+                                <div class="row row-cols-3 mx-0 mt-3">
                                     {% with title='Вышел на поле' icon_cls='fa fa-arrow-up text-success' players=players_tops.subs_in %}
                                         {% include 'tournament/hall_of_fame/partials/players_top.html' %}
                                     {% endwith %}
 
                                     {% with title='Ушел с поля' icon_cls='fa fa-arrow-down text-danger' players=players_tops.subs_out %}
+                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
+                                    {% endwith %}
+
+                                    {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' players=players_tops.ogs %}
                                         {% include 'tournament/hall_of_fame/partials/players_top.html' %}
                                     {% endwith %}
                                 </div>
@@ -99,10 +113,6 @@
                                     {% endwith %}
 
                                     {% with title='Красные карточки' icon_url='img/ico/red_card.png' players=players_tops.red_cards %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' players=players_tops.ogs %}
                                         {% include 'tournament/hall_of_fame/partials/players_top.html' %}
                                     {% endwith %}
                                 </div>
