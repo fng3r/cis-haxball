@@ -45,7 +45,7 @@
 
             <div class="card-body px-2 pb-0">
                 <form id="teams-comparison-form" class="form-inline mt-1 mb-3 ml-2 px-3"
-                      hx-post="{% url 'tournament:compare_teams' %}"
+                      hx-get="{% url 'tournament:compare_teams' %}"
                       hx-trigger="submit"
                       hx-target="#teams-comparison-container"
                       hx-swap="innerHtml"
@@ -97,134 +97,116 @@
                 </form>
 
                 <div id="teams-comparison-container">
-                    <div class="row mb-3">
-                        <div class="col-5 d-flex flex-column justify-content-center">
-                            {% with team=team1.team %}
-                                <div class="d-flex justify-content-center">
-                                    <div class="mb-2">
-                                        <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
-                                    </div>
-                                </div>
-
-                                <div class="text-center">
-                                    <span class="text-dark h3">
-                                        Выберите команду
-                                    </span>
-                                </div>
-                            {% endwith %}
-                        </div>
-
-                        <div class="col-2 justify-content-center align-content-center">
-                            <div class="h1 w-100 text-center" style="font-size: 4rem">VS</div>
-                        </div>
-
-                        <div class="col-5 d-flex flex-column justify-content-center">
-                            {% with team=team2.team %}
-                                <div class="d-flex justify-content-center">
-                                    <div class="mb-2">
-                                        <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
-                                    </div>
-                                </div>
-
-                                <div class="text-center">
-                                    <span class="text-dark h3">
-                                        Выберите команду
-                                    </span>
-                                </div>
-                            {% endwith %}
-                        </div>
-                    </div>
-
                     {% partialdef teams-comparison inline=True %}
-                        {% if team1 and team2 %}
-                            <div class="row mb-3">
-                                <div class="col-5 d-flex flex-column justify-content-center">
-                                    {% with team=team1.team %}
-                                        <div class="d-flex justify-content-center">
+                        <div class="row mb-3">
+                            <div class="col-5 d-flex flex-column justify-content-center">
+                                {% with team=team1.team %}
+                                    <div class="d-flex justify-content-center">
+                                        {% if team %}
                                             <div class="mb-2">
                                                 <img src="{{ team.logo.url }}" width="150" height="150">
                                             </div>
-                                        </div>
-
-                                        <div class="text-center">
-                                            <a class="text-dark h3" href="{{ team.get_absolute_url }}">
-                                                {{ team.title }}
-                                            </a>
-                                        </div>
-                                    {% endwith %}
-                                </div>
-
-                                <div class="col-2 justify-content-center align-content-center">
-                                    <div class="h1 w-100 text-center" style="font-size: 4rem">VS</div>
-                                </div>
-
-                                <div class="col-5 d-flex flex-column justify-content-center">
-                                    {% with team=team2.team %}
-                                        <div class="d-flex justify-content-center">
+                                        {% else %}
                                             <div class="mb-2">
-                                                <img src="{{ team.logo.url }}" width="150" height="150">
+                                                <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
                                             </div>
-                                        </div>
+                                        {% endif %}
+                                    </div>
 
-                                        <div class="text-center">
+                                    <div class="text-center">
+                                        {% if team %}
                                             <a class="text-dark h3" href="{{ team.get_absolute_url }}">
                                                 {{ team.title }}
                                             </a>
-                                        </div>
-                                    {% endwith %}
-                                </div>
+                                        {% else %}
+                                            <span class="text-dark h3">Выберите команду</span>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
                             </div>
 
+                            <div class="col-2 justify-content-center align-content-center">
+                                <div class="h1 w-100 text-center" style="font-size: 4rem">VS</div>
+                            </div>
+
+                            <div class="col-5 d-flex flex-column justify-content-center">
+                                {% with team=team2.team %}
+                                    <div class="d-flex justify-content-center">
+                                        {% if team %}
+                                            <div class="mb-2">
+                                                <img src="{{ team.logo.url }}" width="150" height="150">
+                                            </div>
+                                        {% else %}
+                                            <div class="mb-2">
+                                                <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="text-center">
+                                        {% if team %}
+                                            <a class="text-dark h3" href="{{ team.get_absolute_url }}">
+                                                {{ team.title }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-dark h3">Выберите команду</span>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
+                            </div>
+                        </div>
+
+                        {% if team1.stats and team2.stats %}
                             <div class="row mb-3">
-                                {% with stat_name='Матчи' team1_stat=team1.matches team2_stat=team2.matches %}
+                                {% with stat_name='Матчи' team1_stat=team1.stats.matches team2_stat=team2.stats.matches %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Победы' team1_stat=team1.wins team2_stat=team2.wins %}
+                                {% with stat_name='Победы' team1_stat=team1.stats.wins team2_stat=team2.stats.wins %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Процент побед' team1_stat=team1.winrate team2_stat=team2.winrate %}
+                                {% with stat_name='Процент побед' team1_stat=team1.stats.winrate team2_stat=team2.stats.winrate %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голы' team1_stat=team1.goals team2_stat=team2.goals %}
+                                {% with stat_name='Голы' team1_stat=team1.stats.goals team2_stat=team2.stats.goals %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голы (ср. за матч)' team1_stat=team1.goals_per_match team2_stat=team2.goals_per_match %}
+                                {% with stat_name='Голы (ср. за матч)' team1_stat=team1.stats.goals_per_match team2_stat=team2.stats.goals_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Пропущенные голы' team1_stat=team1.conceded_goals team2_stat=team2.conceded_goals %}
+                                {% with stat_name='Пропущенные голы' team1_stat=team1.stats.conceded_goals team2_stat=team2.stats.conceded_goals %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Пропущенные голы (ср. за матч)' team1_stat=team1.conceded_goals_per_match team2_stat=team2.conceded_goals_per_match %}
+                                {% with stat_name='Пропущенные голы (ср. за матч)' team1_stat=team1.stats.conceded_goals_per_match team2_stat=team2.stats.conceded_goals_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голевые передачи' team1_stat=team1.assists team2_stat=team2.assists %}
+                                {% with stat_name='Голевые передачи' team1_stat=team1.stats.assists team2_stat=team2.stats.assists %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голевые передачи (ср. за матч)' team1_stat=team1.assists_per_match team2_stat=team2.assists_per_match %}
+                                {% with stat_name='Голевые передачи (ср. за матч)' team1_stat=team1.stats.assists_per_match team2_stat=team2.stats.assists_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Сухие таймы' team1_stat=team1.cs team2_stat=team2.cs %}
+                                {% with stat_name='Сухие таймы' team1_stat=team1.stats.cs team2_stat=team2.stats.cs %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Сухие таймы (ср. за матч)' team1_stat=team1.cs_per_match team2_stat=team2.cs_per_match %}
+                                {% with stat_name='Сухие таймы (ср. за матч)' team1_stat=team1.stats.cs_per_match team2_stat=team2.stats.cs_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Желтые карточки' team1_stat=team1.yellow_cards team2_stat=team2.yellow_cards %}
+                                {% with stat_name='Желтые карточки' team1_stat=team1.stats.yellow_cards team2_stat=team2.stats.yellow_cards %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Красные карточки' team1_stat=team1.red_cards team2_stat=team2.red_cards %}
+                                {% with stat_name='Красные карточки' team1_stat=team1.stats.red_cards team2_stat=team2.stats.red_cards %}
                                     {% partial stat-row %}
                                 {% endwith %}
                             </div>

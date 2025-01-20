@@ -1,8 +1,7 @@
 from colorfield.widgets import ColorWidget
-from django.db import models
 from django import forms
 
-from .models import FreeAgent, Season, Team, Player
+from .models import FreeAgent, Player, Season, Team
 
 
 class FreeAgentForm(forms.ModelForm):
@@ -26,7 +25,6 @@ class ComparePlayersForm(forms.Form):
         ALL = 'all'
         SAME_TEAM = 'same_team'
         HEAD_TO_HEAD = 'head_to_head'
-        
     
     player1 = forms.ModelChoiceField(label='Игрок 1', queryset=Player.objects.all(), required=True)
     player2 = forms.ModelChoiceField(label='Игрок 2', queryset=Player.objects.all(), required=True)
@@ -55,7 +53,8 @@ class ComparePlayersForm(forms.Form):
             (MatchesSelection.ALL, 'Все'),
             (MatchesSelection.SAME_TEAM, 'Только в одной команде'),
             (MatchesSelection.HEAD_TO_HEAD, 'Только очные матчи')
-        )
+        ),
+        required=False
     )
 
 
@@ -90,6 +89,7 @@ class CompareTeamsForm(forms.Form):
         label='Выборка матчей',
         choices=(
             (MatchesSelection.ALL, 'Все'),
-            (MatchesSelection.HEAD_TO_HEAD, 'Только очные матчи')
-        )
+            (MatchesSelection.HEAD_TO_HEAD, 'Только очные матчи'),
+        ),
+        required=False
     )

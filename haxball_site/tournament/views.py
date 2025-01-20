@@ -1879,14 +1879,26 @@ def team_statistics_charts(request, pk):
 
     
 class ComparePlayersView(View):
-    def get(self, request):
-        form = ComparePlayersForm(request.GET or {'player1': 57, 'player2': 122})
-        return render(request, 'tournament/compare_players.html', {'compare_form': form})
+    def get_template_names(self) -> list[str]:
+        if self.request.htmx:
+            return ['tournament/compare_players.html#players-comparison']
+        
+        return ['tournament/compare_players.html']
     
-    def post(self, request):
-        form = ComparePlayersForm(request.POST)
+    def get(self, request):
+        form = ComparePlayersForm(request.GET)
         if not form.is_valid():
-            return render(request, 'tournament/compare_players.html#players-comparison')
+            player1 = form.cleaned_data.get('player1', None)
+            player2 = form.cleaned_data.get('player2', None)
+            return render(
+                request,
+                self.get_template_names(),
+                {
+                    'compare_form': form,
+                    'player1': {'player': player1},
+                    'player2': {'player': player2},
+                },
+            )
         
         player1 = form.cleaned_data['player1']
         player2 = form.cleaned_data['player2']
@@ -1902,8 +1914,12 @@ class ComparePlayersView(View):
     
         return render(
             request,
-            'tournament/compare_players.html#players-comparison', 
-            {'player1': player1_stats, 'player2': player2_stats}
+            self.get_template_names(), 
+            {
+                'compare_form': form,
+                'player1': {'player': player1, 'stats': player1_stats},
+                'player2': {'player': player2, 'stats': player2_stats},
+            }
         )
         
     def get_selected_matches(self, player1, player2, season, tournament, matches_selection):
@@ -1954,7 +1970,6 @@ class ComparePlayersView(View):
         cs_per_match = round(float(cs) / matches, 2) if matches else 0
         
         return {
-            'player': player,
             'matches': matches,
             'wins': wins,
             'winrate': winrate,
@@ -1972,14 +1987,26 @@ class ComparePlayersView(View):
 
 
 class CompareTeamsView(View):
-    def get(self, request):
-        form = CompareTeamsForm(request.GET or {'team1': 10, 'team2': 7})
-        return render(request, 'tournament/compare_teams.html', {'compare_form': form})
+    def get_template_names(self) -> list[str]:
+        if self.request.htmx:
+            return ['tournament/compare_teams.html#teams-comparison']
+        
+        return ['tournament/compare_teams.html']
     
-    def post(self, request):
-        form = CompareTeamsForm(request.POST)
+    def get(self, request):
+        form = CompareTeamsForm(request.GET)
         if not form.is_valid():
-            return render(request, 'tournament/compare_teams.html#teams-comparison')
+            team1 = form.cleaned_data.get('team1', None)
+            team2 = form.cleaned_data.get('team2', None)
+            return render(
+                request,
+                self.get_template_names(),
+                {
+                    'compare_form': form,
+                    'team1': {'team': team1},
+                    'team2': {'team': team2},
+                },
+            )
         
         team1 = form.cleaned_data['team1']
         team2 = form.cleaned_data['team2']
@@ -1995,8 +2022,12 @@ class CompareTeamsView(View):
     
         return render(
             request,
-            'tournament/compare_teams.html#teams-comparison', 
-            {'team1': team1_stats, 'team2': team2_stats}
+            self.get_template_names(), 
+            {
+                'compare_form': form,
+                'team1': {'team': team1, 'stats': team1_stats},
+                'team2': {'team': team2, 'stats': team2_stats},
+            }
         )
         
     def get_selected_matches(self, team1, team2, season, tournament, matches_selection):
