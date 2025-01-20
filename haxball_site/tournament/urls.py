@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     CardsList,
     ComparePlayersView,
+    CompareTeamsView,
     DisqualificationsList,
     EditTeamView,
     FreeAgentList,
@@ -32,6 +33,7 @@ app_name = 'tournament'
 urlpatterns = [
     # Зал славы
     path('compare_players', ComparePlayersView.as_view(), name='compare_players'),
+    path('compare_teams', CompareTeamsView.as_view(), name='compare_teams'),
     path('hall_of_fame', hall_of_fame, name='hall_of_fame'),
     path('hall_of_fame/players', players_hall_of_fame, name='players_hall_of_fame'),
     path('hall_of_fame/teams', teams_hall_of_fame, name='teams_hall_of_fame'),

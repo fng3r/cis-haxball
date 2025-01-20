@@ -57,3 +57,39 @@ class ComparePlayersForm(forms.Form):
             (MatchesSelection.HEAD_TO_HEAD, 'Только очные матчи')
         )
     )
+
+
+class CompareTeamsForm(forms.Form):
+    class MatchesSelection:
+        ALL = 'all'
+        HEAD_TO_HEAD = 'head_to_head'
+        
+    
+    team1 = forms.ModelChoiceField(label='Команда 1', queryset=Team.objects.all(), required=True)
+    team2 = forms.ModelChoiceField(label='Команда 2', queryset=Team.objects.all(), required=True)
+    season = forms.ModelChoiceField(label='Сезон', queryset=Season.objects.filter(number__gt=5), empty_label='Все', required=False)
+    tournament = forms.ChoiceField(
+        label='Турнир',
+        choices=(
+            ('','Все'),
+            ('Высшая лига','Высшая лига'),
+            ('Единая лига','Единая лига'),
+            ('Первая лига','Первая лига'),
+            ('Вторая лига','Вторая лига'),
+            ('Кубок России','Кубок России'),
+            ('Лига Чемпионов','Лига Чемпионов'),
+            ('Кубок Высшей лиги','Кубок Высшей лиги'),
+            ('Кубок Первой лиги','Кубок Первой лиги'),
+            ('Кубок Второй лиги','Кубок Второй лиги'),
+            ('Кубок лиги','Кубок лиги'),
+            ('Итоговый турнир','Итоговый турнир'),
+        ),
+        required=False
+    )
+    matches_selection = forms.ChoiceField(
+        label='Выборка матчей',
+        choices=(
+            (MatchesSelection.ALL, 'Все'),
+            (MatchesSelection.HEAD_TO_HEAD, 'Только очные матчи')
+        )
+    )

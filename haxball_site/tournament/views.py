@@ -18,7 +18,7 @@ from django.views.generic import DetailView, ListView
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
 
 from .charts import StatCharts
-from .forms import ComparePlayersForm, EditTeamProfileForm, FreeAgentForm
+from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm
 from .models import (
     Disqualification,
     FreeAgent,
@@ -1939,8 +1939,7 @@ class ComparePlayersView(View):
             player1_matches.values_list('match__id', flat=True),
             player2_matches.values_list('match__id', flat=True)
         )
-        
-        
+
     def get_player_stats(self, player: Player, selected_matches) -> dict:
         matches = player.played_matches.filter(match__in=selected_matches).count()
         wins = player.played_matches.filter(match__in=selected_matches, match__result__winner=F('team')).count()
@@ -1969,4 +1968,98 @@ class ComparePlayersView(View):
             'cs_per_match': cs_per_match,
             'yellow_cards': player.event.yellow_cards().filter(match__in=selected_matches).count(),
             'red_cards': player.event.red_cards().filter(match__in=selected_matches).count(),
+    }
+
+
+class CompareTeamsView(View):
+    def get(self, request):
+        form = CompareTeamsForm(request.GET or {'team1': 10, 'team2': 7})
+        return render(request, 'tournament/compare_teams.html', {'compare_form': form})
+    
+    def post(self, request):
+        form = CompareTeamsForm(request.POST)
+        if not form.is_valid():
+            return render(request, 'tournament/compare_teams.html#teams-comparison')
+        
+        team1 = form.cleaned_data['team1']
+        team2 = form.cleaned_data['team2']
+        season = form.cleaned_data['season']
+        tournament = form.cleaned_data['tournament']
+        matches_selection = form.cleaned_data['matches_selection']
+        
+        team1_matches, team2_matches = self.get_selected_matches(
+            team1, team2, season, tournament, matches_selection
+        )
+        team1_stats = self.get_team_stats(team1, team1_matches)
+        team2_stats = self.get_team_stats(team2, team2_matches)
+    
+        return render(
+            request,
+            'tournament/compare_teams.html#teams-comparison', 
+            {'team1': team1_stats, 'team2': team2_stats}
+        )
+        
+    def get_selected_matches(self, team1, team2, season, tournament, matches_selection):
+        season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
+        tournament_condition = Q(league__title__icontains=tournament)
+        
+        team1_matches = (
+            team1.played_matches
+            .filter(season_condition, tournament_condition)
+            .select_related('match')
+            .distinct('match')
+        )
+        team2_matches = (
+            team2.played_matches
+            .filter(season_condition, tournament_condition)
+            .select_related('match')
+            .distinct('match')
+        )
+        
+        selected_matches = None
+        if matches_selection == ComparePlayersForm.MatchesSelection.HEAD_TO_HEAD:
+            team1_matches_set = set(x.match.id for x in team1_matches)
+            team2_matches_set = set(x.match.id for x in team2_matches)
+            selected_matches = team1_matches_set.intersection(team2_matches_set)
+            
+        if selected_matches is not None:
+            return selected_matches, selected_matches
+        
+        return (
+            team1_matches.values_list('match__id', flat=True),
+            team2_matches.values_list('match__id', flat=True)
+        )
+
+    def get_team_stats(self, team: Team, selected_matches) -> dict:
+        matches = team.played_matches.filter(match__in=selected_matches).distinct('match').count()
+        wins = team.won_matches.filter(match__in=selected_matches).count()
+        winrate = round(float(wins) / matches * 100, 1) if matches else 0
+        goals = team.goals.filter(match__in=selected_matches).count()
+        goals_per_match = round(float(goals) / matches, 2) if matches else 0
+        conceded_goals = Goal.objects.filter(
+            Q(match__team_home=team) | Q(match__team_guest=team),
+            ~Q(team=team),
+            match__in=selected_matches
+        ).count()
+        conceded_goals_per_match = round(float(conceded_goals) / matches, 2) if matches else 0
+        assists = team.goals.filter(assistent__isnull=True, match__in=selected_matches).count()
+        assists_per_match = round(float(assists) / matches, 2) if matches else 0
+        cs = team.team_events.cs().filter(match__in=selected_matches).count()
+        cs_per_match = round(float(cs) / matches, 2) if matches else 0
+        
+        return {
+            'team': team,
+            'matches': matches,
+            'wins': wins,
+            'winrate': winrate,
+            'goals': goals,
+            'goals_per_match': goals_per_match,
+            'assists': assists,
+            'assists_per_match': assists_per_match,
+            'conceded_goals': conceded_goals,
+            'conceded_goals_per_match': conceded_goals_per_match,
+            'cs': cs,
+            'cs_per_match': cs_per_match,
+            'yellow_cards': team.team_events.yellow_cards().filter(match__in=selected_matches).count(),
+            'red_cards': team.team_events.red_cards().filter(match__in=selected_matches).count(),
     }

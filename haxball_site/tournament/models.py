@@ -861,7 +861,13 @@ class PlayerMatchStatistics(models.Model):
         blank=False,
         on_delete=models.CASCADE
     )
-    team = models.ForeignKey(Team, verbose_name='Команда', null=False, blank=False, on_delete=models.CASCADE)
+    team = models.ForeignKey(
+        Team,
+        verbose_name='Команда',
+        related_name='played_matches',
+        null=False, blank=False,
+        on_delete=models.CASCADE
+    )
     league = models.ForeignKey(League, verbose_name='Лига', null=False, blank=False, on_delete=models.CASCADE)
     
     

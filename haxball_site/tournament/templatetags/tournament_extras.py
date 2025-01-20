@@ -1145,13 +1145,13 @@ def sorted_by_league(dictionary: defaultdict):
 
 
 @register.simple_tag
-def stats_percentage(player1_stat, player2_stat):
-    sum = player1_stat + player2_stat
+def stats_percentage(stat1, stat2):
+    sum = stat1 + stat2
     if sum == 0:
-        player1_percentage = 0
-        player2_percentage = 0
+        percentage1 = 0
+        percentage2 = 0
     else:
-        player1_percentage = round(float(player1_stat) / sum * 100)
-        player2_percentage = round(float(player2_stat) / sum * 100)
+        percentage1 = round(float(stat1) / sum * 100)
+        percentage2 = round(float(stat2) / sum * 100)
     
-    return {'player1': player1_percentage, 'player2': player2_percentage}
+    return percentage1, percentage2

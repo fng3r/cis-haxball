@@ -6,11 +6,11 @@
 
 {% partialdef stat-row %}
     <div class="d-flex w-100 flex-column justify-content-center mb-1">
-        {% stats_percentage player1_stat player2_stat as percentages %}
+        {% stats_percentage team1_stat team2_stat as percentages %}
         <div class="row mx-5">
             <div class="col-3 px-1">
                 <div class="h5 text-left">
-                    {% if player1_stat == 0 %}0{% else %}{{ player1_stat }}{% endif %}
+                    {% if team1_stat == 0 %}0{% else %}{{ team1_stat }}{% endif %}
                 </div>
             </div>
             <div class="col-6 d-flex justify-content-center">
@@ -18,7 +18,7 @@
             </div>
             <div class="col-3 px-0">
                 <div class="h5 text-right">
-                    {% if player2_stat == 0 %}0{% else %}{{ player2_stat }}{% endif %}
+                    {% if team2_stat == 0 %}0{% else %}{{ team2_stat }}{% endif %}
                 </div>
             </div>
         </div>
@@ -32,30 +32,30 @@
     </div>
 {% endpartialdef %}
 
-{% block title %}Чемпионат | Сравнить игроков — CIS-HAXBALL {%endblock%}
+{% block title %}Чемпионат | Сравнить команды — CIS-HAXBALL {%endblock%}
 
 {% block post %}
     <div class="container-fluid mt-2 px-0">
         <div class="card pb-2">
             <div class="card-header py-1">
                 <h3 class="text-center">
-                    Сравнить игроков
+                    Сравнить команды
                 </h3>
             </div>
 
             <div class="card-body px-2 pb-0">
-                <form id="players-comparison-form" class="form-inline mt-1 mb-3 ml-2 px-3"
-                      hx-post="{% url 'tournament:compare_players' %}"
+                <form id="teams-comparison-form" class="form-inline mt-1 mb-3 ml-2 px-3"
+                      hx-post="{% url 'tournament:compare_teams' %}"
                       hx-trigger="submit"
-                      hx-target="#players-comparison-container"
+                      hx-target="#teams-comparison-container"
                       hx-swap="innerHtml"
                       hx-disabled-elt="find button">
 
                     <div class="form-row w-100 mb-1">
                         <div class="col-5">
                             <div class="form-group mr-2 mb-2">
-                                <label>{{ compare_form.player1.label }}:</label>
-                                {% render_field compare_form.player1|add_class:'form-control-sm ml-1' %}
+                                <label>{{ compare_form.team1.label }}:</label>
+                                {% render_field compare_form.team1|add_class:'form-control-sm ml-1' %}
                             </div>
                         </div>
 
@@ -68,8 +68,8 @@
 
                         <div class="col-5">
                             <div class="form-group mr-2 mb-2 justify-content-end">
-                                <label>{{ compare_form.player2.label }}:</label>
-                                {% render_field compare_form.player2|add_class:'form-control-sm ml-1' %}
+                                <label>{{ compare_form.team2.label }}:</label>
+                                {% render_field compare_form.team2|add_class:'form-control-sm ml-1' %}
                             </div>
                         </div>
                     </div>
@@ -96,19 +96,19 @@
 
                 </form>
 
-                <div id="players-comparison-container">
+                <div id="teams-comparison-container">
                     <div class="row mb-3">
                         <div class="col-5 d-flex flex-column justify-content-center">
-                            {% with player=player1.player %}
+                            {% with team=team1.team %}
                                 <div class="d-flex justify-content-center">
-                                    <div class="mb-2" style="background-image: url({% media 'users_avatars/default/default.png' %}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
+                                    <div class="mb-2">
+                                        <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
                                     </div>
-
                                 </div>
 
                                 <div class="text-center">
                                     <span class="text-dark h3">
-                                        Выберите игрока
+                                        Выберите команду
                                     </span>
                                 </div>
                             {% endwith %}
@@ -119,40 +119,36 @@
                         </div>
 
                         <div class="col-5 d-flex flex-column justify-content-center">
-                            {% with player=player2.player %}
+                            {% with team=team2.team %}
                                 <div class="d-flex justify-content-center">
-                                    <div class="mb-2" style="background-image: url({% media 'users_avatars/default/default.png' %}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
+                                    <div class="mb-2">
+                                        <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
                                     </div>
                                 </div>
 
                                 <div class="text-center">
                                     <span class="text-dark h3">
-                                        Выберите игрока
+                                        Выберите команду
                                     </span>
                                 </div>
                             {% endwith %}
                         </div>
                     </div>
 
-                    {% partialdef players-comparison inline=True %}
-                        {% if player1 and player2 %}
+                    {% partialdef teams-comparison inline=True %}
+                        {% if team1 and team2 %}
                             <div class="row mb-3">
                                 <div class="col-5 d-flex flex-column justify-content-center">
-                                    {% with player=player1.player %}
+                                    {% with team=team1.team %}
                                         <div class="d-flex justify-content-center">
-                                            <div class="mb-2" style="background-image: url({{ player.name.user_profile.avatar.url }}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
-                                                {% if player.team %}
-                                                    <img src="{{ player.team.logo.url }}" width="80" height="80" style="position: relative; top: 80px; left: 90px;">
-                                                {% else %}
-                                                    <img src="{% static 'img/ico/free_player.png' %}" width="80" height="80" style="position: relative; top: 80px; left: 90px;">
-                                                {% endif %}
+                                            <div class="mb-2">
+                                                <img src="{{ team.logo.url }}" width="150" height="150">
                                             </div>
-
                                         </div>
 
                                         <div class="text-center">
-                                            <a class="text-dark h3" href="{{ player.name.user_profile.get_absolute_url }}">
-                                                {{ player.nickname }}
+                                            <a class="text-dark h3" href="{{ team.get_absolute_url }}">
+                                                {{ team.title }}
                                             </a>
                                         </div>
                                     {% endwith %}
@@ -163,19 +159,16 @@
                                 </div>
 
                                 <div class="col-5 d-flex flex-column justify-content-center">
-                                    {% with player=player2.player %}
+                                    {% with team=team2.team %}
                                         <div class="d-flex justify-content-center">
-                                            <div class="mb-2" style="background-image: url({{ player.name.user_profile.avatar.url }}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
-                                                {% if player.team %}
-                                                    <img src="{{ player.team.logo.url }}" width="80" height="80" style="position: relative; top: 80px; left: 90px;">
-                                                {% else %}
-                                                    <img src="{% static 'img/ico/free_player.png' %}" width="80" height="80" style="position: relative; top: 80px; left: 90px;">
-                                                {% endif %}
+                                            <div class="mb-2">
+                                                <img src="{{ team.logo.url }}" width="150" height="150">
                                             </div>
                                         </div>
+
                                         <div class="text-center">
-                                            <a class="text-dark h3" href="{{ player.name.user_profile.get_absolute_url }}">
-                                                {{ player.nickname }}
+                                            <a class="text-dark h3" href="{{ team.get_absolute_url }}">
+                                                {{ team.title }}
                                             </a>
                                         </div>
                                     {% endwith %}
@@ -183,55 +176,55 @@
                             </div>
 
                             <div class="row mb-3">
-                                {% with stat_name='Матчи' player1_stat=player1.matches player2_stat=player2.matches %}
+                                {% with stat_name='Матчи' team1_stat=team1.matches team2_stat=team2.matches %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Победы' player1_stat=player1.wins player2_stat=player2.wins %}
+                                {% with stat_name='Победы' team1_stat=team1.wins team2_stat=team2.wins %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Процент побед' player1_stat=player1.winrate player2_stat=player2.winrate %}
+                                {% with stat_name='Процент побед' team1_stat=team1.winrate team2_stat=team2.winrate %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голы' player1_stat=player1.goals player2_stat=player2.goals %}
+                                {% with stat_name='Голы' team1_stat=team1.goals team2_stat=team2.goals %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голы (ср. за матч)' player1_stat=player1.goals_per_match player2_stat=player2.goals_per_match %}
+                                {% with stat_name='Голы (ср. за матч)' team1_stat=team1.goals_per_match team2_stat=team2.goals_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голевые передачи' player1_stat=player1.assists player2_stat=player2.assists %}
+                                {% with stat_name='Пропущенные голы' team1_stat=team1.conceded_goals team2_stat=team2.conceded_goals %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голевые передачи (ср. за матч)' player1_stat=player1.assists_per_match player2_stat=player2.assists_per_match %}
+                                {% with stat_name='Пропущенные голы (ср. за матч)' team1_stat=team1.conceded_goals_per_match team2_stat=team2.conceded_goals_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Результативные действия' player1_stat=player1.goals_assists player2_stat=player2.goals_assists %}
+                                {% with stat_name='Голевые передачи' team1_stat=team1.assists team2_stat=team2.assists %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Результативные действия (ср. за матч)' player1_stat=player1.goals_assists_per_match player2_stat=player2.goals_assists_per_match %}
+                                {% with stat_name='Голевые передачи (ср. за матч)' team1_stat=team1.assists_per_match team2_stat=team2.assists_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Сухие таймы' player1_stat=player1.cs player2_stat=player2.cs %}
+                                {% with stat_name='Сухие таймы' team1_stat=team1.cs team2_stat=team2.cs %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Сухие таймы (ср. за матч)' player1_stat=player1.cs_per_match player2_stat=player2.cs_per_match %}
+                                {% with stat_name='Сухие таймы (ср. за матч)' team1_stat=team1.cs_per_match team2_stat=team2.cs_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Желтые карточки' player1_stat=player1.yellow_cards player2_stat=player2.yellow_cards %}
+                                {% with stat_name='Желтые карточки' team1_stat=team1.yellow_cards team2_stat=team2.yellow_cards %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Красные карточки' player1_stat=player1.red_cards player2_stat=player2.red_cards %}
+                                {% with stat_name='Красные карточки' team1_stat=team1.red_cards team2_stat=team2.red_cards %}
                                     {% partial stat-row %}
                                 {% endwith %}
                             </div>
