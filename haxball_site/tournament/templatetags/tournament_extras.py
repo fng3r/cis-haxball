@@ -1142,3 +1142,16 @@ def sorted_by_season(dictionary: defaultdict):
 @register.filter
 def sorted_by_league(dictionary: defaultdict):
     return sorted(dictionary.items(), key=lambda item: item[0].id)
+
+
+@register.simple_tag
+def stats_percentage(player1_stat, player2_stat):
+    sum = player1_stat + player2_stat
+    if sum == 0:
+        player1_percentage = 0
+        player2_percentage = 0
+    else:
+        player1_percentage = round(float(player1_stat) / sum * 100)
+        player2_percentage = round(float(player2_stat) / sum * 100)
+    
+    return {'player1': player1_percentage, 'player2': player2_percentage}
