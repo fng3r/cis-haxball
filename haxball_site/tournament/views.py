@@ -1930,12 +1930,12 @@ class ComparePlayersView(View):
         
         player1_matches = (
             player1.played_matches
-            .filter(season_condition, tournament_condition)
+            .filter(season_condition, tournament_condition, match__is_played=True)
             .select_related('team', 'match')
         )
         player2_matches = (
             player2.played_matches
-            .filter(season_condition, tournament_condition)
+            .filter(season_condition, tournament_condition, match__is_played=True)
             .select_related('team', 'match')
         )
         
@@ -2041,12 +2041,12 @@ class CompareTeamsView(View):
         
         team1_matches = (
             Match.objects
-            .filter(season_condition, tournament_condition, Q(team_home=team1) | Q(team_guest=team1))
+            .filter(season_condition, tournament_condition, Q(team_home=team1) | Q(team_guest=team1), is_played=True)
             .distinct()
         )
         team2_matches = (
             Match.objects
-            .filter(season_condition, tournament_condition, Q(team_home=team2) | Q(team_guest=team2))
+            .filter(season_condition, tournament_condition, Q(team_home=team2) | Q(team_guest=team2), is_played=True)
             .distinct()
         )
         
