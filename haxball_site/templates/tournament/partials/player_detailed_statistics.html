@@ -23,7 +23,13 @@
     }
 </style>
 
-<div class="card">
+<div class="card px-2">
+    <div class="d-flex">
+        <a class="btn btn-dark mt-2 mb-1" href="{% url 'tournament:compare_players' %}?player1={{ user.user_player.id }}" target="_blank">
+            Сравнить c ...
+        </a>
+    </div>
+
     <div class="card-header p-0">
         <ul class="nav nav-pills nav-fill" id="myTab" role="tablist">
             <li class="nav-item">
