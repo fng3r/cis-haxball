@@ -2038,34 +2038,32 @@ class CompareTeamsView(View):
         tournament_condition = Q(league__title__iregex=tournament)
         
         team1_matches = (
-            team1.played_matches
-            .filter(season_condition, tournament_condition)
-            .select_related('match')
-            .distinct('match')
+            Match.objects
+            .filter(season_condition, tournament_condition, Q(team_home=team1) | Q(team_guest=team1))
+            .distinct()
         )
         team2_matches = (
-            team2.played_matches
-            .filter(season_condition, tournament_condition)
-            .select_related('match')
-            .distinct('match')
+            Match.objects
+            .filter(season_condition, tournament_condition, Q(team_home=team2) | Q(team_guest=team2))
+            .distinct()
         )
         
         selected_matches = None
         if matches_selection == ComparePlayersForm.MatchesSelection.HEAD_TO_HEAD:
-            team1_matches_set = set(x.match.id for x in team1_matches)
-            team2_matches_set = set(x.match.id for x in team2_matches)
+            team1_matches_set = set(x.id for x in team1_matches)
+            team2_matches_set = set(x.id for x in team2_matches)
             selected_matches = team1_matches_set.intersection(team2_matches_set)
             
         if selected_matches is not None:
             return selected_matches, selected_matches
         
         return (
-            team1_matches.values_list('match__id', flat=True),
-            team2_matches.values_list('match__id', flat=True)
+            team1_matches.values_list('id', flat=True),
+            team2_matches.values_list('id', flat=True)
         )
 
     def get_team_stats(self, team: Team, selected_matches) -> dict:
-        matches = team.played_matches.filter(match__in=selected_matches).distinct('match').count()
+        matches = len(selected_matches)
         wins = team.won_matches.filter(match__in=selected_matches).count()
         winrate = round(float(wins) / matches * 100, 1) if matches else 0
         goals = team.goals.filter(match__in=selected_matches).count()
