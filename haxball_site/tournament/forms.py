@@ -64,9 +64,8 @@ class CompareTeamsForm(forms.Form):
         ALL = 'all'
         HEAD_TO_HEAD = 'head_to_head'
         
-    
-    team1 = forms.ModelChoiceField(label='Команда 1', queryset=Team.objects.all(), required=True)
-    team2 = forms.ModelChoiceField(label='Команда 2', queryset=Team.objects.all(), required=True)
+    team1 = forms.ModelChoiceField(label='Команда 1', queryset=Team.objects.all().order_by('title'), required=True)
+    team2 = forms.ModelChoiceField(label='Команда 2', queryset=Team.objects.all().order_by('title'), required=True)
     season = forms.ModelChoiceField(label='Сезон', queryset=Season.objects.filter(number__gt=5), empty_label='Все', required=False)
     tournament = forms.ChoiceField(
         label='Турнир',
