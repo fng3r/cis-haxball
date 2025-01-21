@@ -677,6 +677,7 @@ class HallOfFamePlayerFilter(FilterSet):
         choices=(
             ('Высшая лига','Высшая лига'),
             ('Единая лига','Единая лига'),
+            ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
             ('Первая лига','Первая лига'),
             ('Вторая лига','Вторая лига'),
             ('Кубок России','Кубок России'),
@@ -698,6 +699,7 @@ class HallOfFameTeamFilter(FilterSet):
         choices=(
             ('Высшая лига','Высшая лига'),
             ('Единая лига','Единая лига'),
+            ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
             ('Первая лига','Первая лига'),
             ('Вторая лига','Вторая лига'),
             ('Кубок России','Кубок России'),
@@ -720,8 +722,8 @@ def hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
     
-    tournament_name = request.GET.get('tournament', None)
-    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    tournament_name = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(title__iregex=tournament_name)
     
     players = get_players_tops(seasons, tournaments, nation)
     teams = get_teams_tops(seasons, tournaments)
@@ -745,8 +747,8 @@ def players_hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
     
-    tournament_name = request.GET.get('tournament', None)
-    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    tournament_name = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(title__iregex=tournament_name)
     
     players = get_players_tops(seasons, tournaments, nation)
     
@@ -764,8 +766,8 @@ def teams_hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
     
-    tournament_name = request.GET.get('tournament', None)
-    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    tournament_name = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(title__iregex=tournament_name)
     
     teams = get_teams_tops(seasons, tournaments)
     
