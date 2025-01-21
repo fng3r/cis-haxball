@@ -236,6 +236,10 @@
                                     {% partial stat-row %}
                                 {% endwith %}
 
+                                {% with stat_name='Лучший по результативным действиям' team1_player=team1.player_stats.goals_assists.pl team2_player=team2.player_stats.goals_assists.pl team1_stat=team1.player_stats.goals_assists.count team2_stat=team2.player_stats.goals_assists.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
                                 {% with stat_name='Лучший по сухим таймам' team1_player=team1.player_stats.cs.pl team2_player=team2.player_stats.cs.pl team1_stat=team1.player_stats.cs.count team2_stat=team2.player_stats.cs.count %}
                                     {% partial stat-row %}
                                 {% endwith %}

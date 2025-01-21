@@ -2104,6 +2104,18 @@ class CompareTeamsView(View):
         top_assists = (
             team.goals.filter(match__in=selected_matches).values(pl=F('assistent__nickname')).annotate(count=Count('assistent')).order_by('-count').first()
         )
+        top_goals_assists = (
+            Player.objects
+            .annotate(
+                goals_count=Coalesce(self.get_player_goals_subquery(selected_matches, team), 0),
+                assists_count=Coalesce(self.get_player_assists_subquery(selected_matches, team), 0),
+                count=F('goals_count') + F('assists_count'),
+                pl=F('nickname'),
+            )
+            .filter(count__gt=0)
+            .order_by('-count')
+            .first()
+        )
         top_cs = (
             team.team_events.filter(event=OtherEvents.CLEAN_SHEET)
             .filter(match__in=selected_matches)
@@ -2118,5 +2130,28 @@ class CompareTeamsView(View):
             'wins': top_wins or {'pl': '–', 'count': 0},
             'goals': top_goals or {'pl': '–', 'count': 0},
             'assists': top_assists or {'pl': '–', 'count': 0},
+            'goals_assists': top_goals_assists or {'pl': '–', 'count': 0},
             'cs': top_cs or {'pl': '–', 'count': 0},
         }
+        
+    @staticmethod
+    def get_player_goals_subquery(selected_matches, team):
+        return Subquery(
+            Goal.objects
+            .filter(author=OuterRef('id'), match__in=selected_matches, team=team)
+            .order_by()
+            .values('author')
+            .annotate(c=Count('id', distinct=True))
+            .values('c')
+        )
+    
+    @staticmethod
+    def get_player_assists_subquery(selected_matches, team):
+        return Subquery(
+            Goal.objects
+            .filter(assistent=OuterRef('id'), match__in=selected_matches, team=team)
+            .order_by()
+            .values('assistent')
+            .annotate(c=Count('id', distinct=True))
+            .values('c')
+        )
