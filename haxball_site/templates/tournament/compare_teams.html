@@ -9,16 +9,18 @@
         {% stats_percentage team1_stat team2_stat as percentages %}
         <div class="row mx-5">
             <div class="col-3 px-1">
-                <div class="h5 text-left">
-                    {% if team1_stat == 0 %}0{% else %}{{ team1_stat }}{% endif %}
+                <div class="d-flex flex-column h5 justify-content-start">
+                    <div class="text-left">{% if team1_player %}{{ team1_player }}{% endif %}</div>
+                    <div class="text-left">{% if team1_stat == 0 %}0{% else %}{{ team1_stat }}{% endif %}</div>
                 </div>
             </div>
-            <div class="col-6 d-flex justify-content-center">
-                <span class="h5 text-center">{{ stat_name }}</span>
+            <div class="col-6 d-flex flex-column justify-content-center">
+                <div class="h5 text-center">{{ stat_name }}</div>
             </div>
-            <div class="col-3 px-0">
-                <div class="h5 text-right">
-                    {% if team2_stat == 0 %}0{% else %}{{ team2_stat }}{% endif %}
+            <div class="col-3 px-1">
+                <div class="d-flex h5 flex-column justify-content-end">
+                    <div class="text-right">{% if team2_player %}{{ team2_player }}{% endif %}</div>
+                    <div class="text-right">{% if team2_stat == 0 %}0{% else %}{{ team2_stat }}{% endif %}</div>
                 </div>
             </div>
         </div>
@@ -208,6 +210,33 @@
                                 {% endwith %}
 
                                 {% with stat_name='Красные карточки' team1_stat=team1.stats.red_cards team2_stat=team2.stats.red_cards %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+
+                        {% if team1.player_stats and team2.player_stats %}
+                            <div class="row mb-3">
+                                <div class="w-100">
+                                    <div class="h4 text-center">Игроки</div>
+                                </div>
+                                {% with stat_name='Наибольшее кол-во матчей' team1_player=team1.player_stats.matches.pl team2_player=team2.player_stats.matches.pl team1_stat=team1.player_stats.matches.count team2_stat=team2.player_stats.matches.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Наибольшее кол-во побед' team1_player=team1.player_stats.wins.pl team2_player=team2.player_stats.wins.pl team1_stat=team1.player_stats.wins.count team2_stat=team2.player_stats.wins.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Лучший бомбардир' team1_player=team1.player_stats.goals.pl team2_player=team2.player_stats.goals.pl team1_stat=team1.player_stats.goals.count team2_stat=team2.player_stats.goals.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Лучший ассистент' team1_player=team1.player_stats.assists.pl team2_player=team2.player_stats.assists.pl team1_stat=team1.player_stats.assists.count team2_stat=team2.player_stats.assists.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Лучший по сухим таймам' team1_player=team1.player_stats.cs.pl team2_player=team2.player_stats.cs.pl team1_stat=team1.player_stats.cs.count team2_stat=team2.player_stats.cs.count %}
                                     {% partial stat-row %}
                                 {% endwith %}
                             </div>

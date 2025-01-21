@@ -1924,7 +1924,7 @@ class ComparePlayersView(View):
         
     def get_selected_matches(self, player1, player2, season, tournament, matches_selection):
         season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
-        tournament_condition = Q(league__title__icontains=tournament)
+        tournament_condition = Q(league__title__iregex=tournament)
         
         player1_matches = (
             player1.played_matches
@@ -2019,20 +2019,23 @@ class CompareTeamsView(View):
         )
         team1_stats = self.get_team_stats(team1, team1_matches)
         team2_stats = self.get_team_stats(team2, team2_matches)
+        
+        team1_player_stats = self.get_player_stats(team1, team1_matches)
+        team2_player_stats = self.get_player_stats(team2, team2_matches)
     
         return render(
             request,
             self.get_template_names(), 
             {
                 'compare_form': form,
-                'team1': {'team': team1, 'stats': team1_stats},
-                'team2': {'team': team2, 'stats': team2_stats},
+                'team1': {'team': team1, 'stats': team1_stats, 'player_stats': team1_player_stats},
+                'team2': {'team': team2, 'stats': team2_stats, 'player_stats': team2_player_stats},
             }
         )
         
     def get_selected_matches(self, team1, team2, season, tournament, matches_selection):
         season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
-        tournament_condition = Q(league__title__icontains=tournament)
+        tournament_condition = Q(league__title__iregex=tournament)
         
         team1_matches = (
             team1.played_matches
@@ -2073,13 +2076,12 @@ class CompareTeamsView(View):
             match__in=selected_matches
         ).count()
         conceded_goals_per_match = round(float(conceded_goals) / matches, 2) if matches else 0
-        assists = team.goals.filter(assistent__isnull=True, match__in=selected_matches).count()
+        assists = team.goals.filter(assistent__isnull=False, match__in=selected_matches).count()
         assists_per_match = round(float(assists) / matches, 2) if matches else 0
         cs = team.team_events.cs().filter(match__in=selected_matches).count()
         cs_per_match = round(float(cs) / matches, 2) if matches else 0
         
         return {
-            'team': team,
             'matches': matches,
             'wins': wins,
             'winrate': winrate,
@@ -2093,4 +2095,28 @@ class CompareTeamsView(View):
             'cs_per_match': cs_per_match,
             'yellow_cards': team.team_events.yellow_cards().filter(match__in=selected_matches).count(),
             'red_cards': team.team_events.red_cards().filter(match__in=selected_matches).count(),
-    }
+        }
+        
+    def get_player_stats(self, team: Team, selected_matches) -> dict:
+        top_matches = team.played_matches.filter(match__in=selected_matches).values(pl=F('player__nickname')).annotate(count=Count('player')).order_by('-count').first()
+        top_wins = team.played_matches.filter(match__in=selected_matches, match__result__winner=team).values(pl=F('player__nickname')).annotate(count=Count('player')).order_by('-count').first()
+        top_goals = team.goals.filter(match__in=selected_matches).values(pl=F('author__nickname')).annotate(count=Count('author')).order_by('-count').first()
+        top_assists = (
+            team.goals.filter(match__in=selected_matches).values(pl=F('assistent__nickname')).annotate(count=Count('assistent')).order_by('-count').first()
+        )
+        top_cs = (
+            team.team_events.filter(event=OtherEvents.CLEAN_SHEET)
+            .filter(match__in=selected_matches)
+            .values(pl=F('author__nickname'))
+            .annotate(count=Count('author'))
+            .order_by('-count')
+            .first()
+        )
+        
+        return {
+            'matches': top_matches or {'pl': '–', 'count': 0},
+            'wins': top_wins or {'pl': '–', 'count': 0},
+            'goals': top_goals or {'pl': '–', 'count': 0},
+            'assists': top_assists or {'pl': '–', 'count': 0},
+            'cs': top_cs or {'pl': '–', 'count': 0},
+        }
