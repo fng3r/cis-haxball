@@ -564,16 +564,16 @@ class Match(models.Model):
     updated = models.DateTimeField('Обновлено', auto_now=True)
     team_home = ChainedForeignKey(
         Team,
-        chained_field='league',
-        chained_model_field='leagues',
+        chained_field='stage',
+        chained_model_field='stages',
         on_delete=models.CASCADE,
         related_name='home_matches',
         verbose_name='Хозяева',
     )
     team_guest = ChainedForeignKey(
         Team,
-        chained_field='league',
-        chained_model_field='leagues',
+        chained_field='stage',
+        chained_model_field='stages',
         on_delete=models.CASCADE,
         related_name='guest_matches',
         verbose_name='Гости',
