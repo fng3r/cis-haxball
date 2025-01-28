@@ -28,7 +28,12 @@ class ComparePlayersForm(forms.Form):
     
     player1 = forms.ModelChoiceField(label='Игрок 1', queryset=Player.objects.all(), required=True)
     player2 = forms.ModelChoiceField(label='Игрок 2', queryset=Player.objects.all(), required=True)
-    season = forms.ModelChoiceField(label='Сезон', queryset=Season.objects.filter(number__gt=5), empty_label='Все', required=False)
+    season = forms.ModelChoiceField(
+        label='Сезон',
+        queryset=Season.objects.filter(number__gt=5),
+        empty_label='Все',
+        required=False
+    )
     tournament = forms.ChoiceField(
         label='Турнир',
         choices=(
@@ -66,7 +71,12 @@ class CompareTeamsForm(forms.Form):
         
     team1 = forms.ModelChoiceField(label='Команда 1', queryset=Team.objects.all().order_by('title'), required=True)
     team2 = forms.ModelChoiceField(label='Команда 2', queryset=Team.objects.all().order_by('title'), required=True)
-    season = forms.ModelChoiceField(label='Сезон', queryset=Season.objects.filter(number__gt=5), empty_label='Все', required=False)
+    season = forms.ModelChoiceField(
+        label='Сезон',
+        queryset=Season.objects.filter(number__gt=5),
+        empty_label='Все',
+        required=False
+    )
     tournament = forms.ChoiceField(
         label='Турнир',
         choices=(

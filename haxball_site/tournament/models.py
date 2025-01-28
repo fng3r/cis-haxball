@@ -445,7 +445,7 @@ class Player(models.Model):
     role = models.CharField('Должность', max_length=2, choices=ROLES, default=JUST_PLAYER)
 
     @receiver(post_save, sender=User)
-    def create_comment_history_item(sender, instance, created, **kwargs):
+    def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
         if not created:
             player = Player.objects.filter(name=instance).first()
             if not player:
@@ -729,7 +729,7 @@ class MatchResult(models.Model):
         super(MatchResult, self).save(*args, **kwargs)
 
     @receiver(post_save, sender=Match)
-    def create_or_update_result(sender, instance, created, **kwargs):
+    def create_or_update_result(sender, instance, created, **kwargs):  # noqa: N805
         if not instance.is_played:
             return
 
@@ -882,7 +882,7 @@ class PlayerMatchStatistics(models.Model):
             PlayerMatchStatistics.update_match_participants(instance)
         
     @receiver([post_save, post_delete], sender=Substitution)
-    def match_substitutions_changed(sender, instance, **kwargs):
+    def match_substitutions_changed(sender, instance, **kwargs):  # noqa: N805
         PlayerMatchStatistics.update_match_participants(instance.match)
 
     @staticmethod

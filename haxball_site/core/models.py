@@ -187,7 +187,7 @@ class CommentHistoryItem(models.Model):
         )
 
     @receiver(post_save, sender=NewComment)
-    def create_comment_history_item(sender, instance, created, **kwargs):
+    def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
         if not created and instance.tracker.has_changed('body'):
             previous_created = instance.tracker.previous('edited') or instance.created
             previous_comment = instance.tracker.previous('body')
@@ -304,12 +304,12 @@ class Profile(models.Model):
     can_comment = models.BooleanField('Может комментировать', default=True)
 
     @receiver(post_save, sender=User)
-    def create_user_profile(sender, instance, created, **kwargs):
+    def create_user_profile(sender, instance, created, **kwargs):  # noqa: N805
         if created:
             Profile.objects.create(name=instance)
 
     @receiver(post_save, sender=User)
-    def save_user_profile(sender, instance, **kwargs):
+    def save_user_profile(sender, instance, **kwargs):  # noqa: N805
         instance.user_profile.save()
 
     def get_absolute_url(self):
@@ -347,7 +347,7 @@ class UserNicknameHistoryItem(models.Model):
         verbose_name_plural = 'История никнеймов'
 
     @receiver(pre_save, sender=User)
-    def create_history_item(sender, instance, **kwargs):
+    def create_history_item(sender, instance, **kwargs):  # noqa: N805
         previous_instance = User.objects.filter(pk=instance.pk).first()
         if previous_instance is None:
             return

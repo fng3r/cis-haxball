@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
-from django.http import HttpRequest
 from django.urls import resolve
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,

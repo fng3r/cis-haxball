@@ -866,7 +866,8 @@ def get_players_tops(seasons=None, tournaments=None, nation=None):
         .annotate(
             count=Count(
                 'join_game__player_in',
-                filter=Q(join_game__match__league__in=tournaments) & Q(join_game__match__league__championship__in=seasons)
+                filter=Q(join_game__match__league__in=tournaments) &
+                       Q(join_game__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -935,7 +936,7 @@ def get_players_tops(seasons=None, tournaments=None, nation=None):
                 )
             )
         )
-        .filter(matches_count__gt=10)
+        .filter(matches_count__gt=25)
         .annotate(
             winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100
         )
@@ -976,7 +977,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'goals__match__league',
-                filter=Q(goals__assistent__isnull=False) & Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons)
+                filter=Q(goals__assistent__isnull=False) & Q(goals__match__league__in=tournaments) &
+                       Q(goals__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -989,7 +991,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1002,7 +1005,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1015,7 +1019,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1028,7 +1033,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1040,7 +1046,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'substitutions',
-                filter=Q(substitutions__match__league__in=tournaments) & Q(substitutions__match__league__championship__in=seasons)
+                filter=Q(substitutions__match__league__in=tournaments) &
+                       Q(substitutions__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1075,7 +1082,11 @@ def get_teams_tops(seasons=None, tournaments=None):
         )
         .filter(matches_count__gt=0)
         .annotate(
-            wins_count=Count('won_matches', filter=Q(won_matches__match__league__in=tournaments) & Q(won_matches__match__league__championship__in=seasons)),
+            wins_count=Count(
+                'won_matches',
+                filter=Q(won_matches__match__league__in=tournaments) &
+                       Q(won_matches__match__league__championship__in=seasons)
+            ),
             winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100)
         .order_by()
     )
@@ -2098,9 +2109,20 @@ class CompareTeamsView(View):
         }
         
     def get_player_stats(self, team: Team, selected_matches) -> dict:
-        top_matches = team.played_matches.filter(match__in=selected_matches).values(pl=F('player__nickname')).annotate(count=Count('player')).order_by('-count').first()
-        top_wins = team.played_matches.filter(match__in=selected_matches, match__result__winner=team).values(pl=F('player__nickname')).annotate(count=Count('player')).order_by('-count').first()
-        top_goals = team.goals.filter(match__in=selected_matches).values(pl=F('author__nickname')).annotate(count=Count('author')).order_by('-count').first()
+        top_matches = (
+            team.played_matches.filter(match__in=selected_matches).values(pl=F('player__nickname')).annotate(count=Count('player')).order_by('-count').first()
+        )
+        top_wins = (
+            team.played_matches
+            .filter(match__in=selected_matches, match__result__winner=team)
+            .values(pl=F('player__nickname'))
+            .annotate(count=Count('player'))
+            .order_by('-count')
+            .first()
+        )
+        top_goals = (
+            team.goals.filter(match__in=selected_matches).values(pl=F('author__nickname')).annotate(count=Count('author')).order_by('-count').first()
+        )
         top_assists = (
             team.goals.filter(match__in=selected_matches).values(pl=F('assistent__nickname')).annotate(count=Count('assistent')).order_by('-count').first()
         )
@@ -2117,7 +2139,7 @@ class CompareTeamsView(View):
             .first()
         )
         top_cs = (
-            team.team_events.filter(event=OtherEvents.CLEAN_SHEET)
+            team.team_events.cs()
             .filter(match__in=selected_matches)
             .values(pl=F('author__nickname'))
             .annotate(count=Count('author'))

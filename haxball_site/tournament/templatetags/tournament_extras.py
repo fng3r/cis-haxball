@@ -845,7 +845,9 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
         losses[i] = losses_count
         draws[i] = draws_count
 
-    table = zip(teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties)
+    table = zip(
+        teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties
+    )
     sorted_table = sorted(table, key=lambda x: (x[8], x[7], x[5]), reverse=True)
 
     result = []

@@ -4,7 +4,7 @@ from django import template
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Page
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from online_users.models import OnlineUserActivity
 from tournament.models import League, Player, PlayerTransfer, Team
@@ -235,7 +235,7 @@ def is_executive(user: User, league: League):
 
     is_owner = Team.objects.filter(owner=user, leagues=league).exists()
 
-    return is_owner
+    return is_owner  # noqa: RET504
 
 
 @register.filter
