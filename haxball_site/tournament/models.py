@@ -301,6 +301,7 @@ class PlayOffStage(TournamentStage):
         default=PlayOffType.SE,
         max_length=10
     )
+    has_match_for_third_place = models.BooleanField('Есть матч за 3-е место', default=False)
     show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
     winner_determinator = models.CharField(
         'Как определяется победитель',
@@ -548,7 +549,7 @@ class Match(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
-    bracket_slot = models.PositiveSmallIntegerField('Номер слота в сетке', default=0, null=False)
+    bracket_slot = models.PositiveSmallIntegerField('Номер слота в раунде ПО', default=0, null=False)
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
