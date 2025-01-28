@@ -264,8 +264,9 @@ def get_bracket_slots(tours):
         return []
 
     bracket = tours[0].bracket
+    stage = tours[0].stage
     slots = []
-    if bracket == PlayOffStage.Bracket.UPPER or is_old_champions_league_season(tours[0].league):
+    if bracket == PlayOffStage.Bracket.UPPER or stage.has_match_for_third_place:
         slots = [1] + [2**(tour.number-1) for tour in tours][:-1]
     elif bracket == PlayOffStage.Bracket.LOWER:
         slots = [2**(tour.number - tour.number // 2 - 1) for tour in tours]
@@ -368,7 +369,8 @@ def has_more_slots_than_next_round(tour, tours):
 @register.filter
 def show_connector(tour: TourNumber, tours: Iterable[TourNumber]):
     tours_total = len(tours)
-    if is_old_champions_league_season(tour.league):
+    # since match for third place played in extra tour, ignore that tour
+    if tour.stage.has_match_for_third_place:
         tours_total -= 1
 
     return tour.number < tours_total
@@ -395,8 +397,11 @@ def connector_line_height(tour: TourNumber, tours: Iterable[TourNumber]):
     return (pair_height + gap) // 2
 
 
-def is_old_champions_league_season(league):
-    return league.title.startswith('Лига Чемпионов') and league.championship.number < 12
+def has_match_for_third_place(league):
+    return (
+        league.title.startswith('Лига Чемпионов') and league.championship.number < 12 or
+        league.title.startswith('Итоговый турнир')
+    )
 
 
 @register.filter
@@ -424,7 +429,7 @@ def get_series_result(teams, matches):
     for match in matches:
         team1_score = team_score_in_match(team1, match)
         team2_score = team_score_in_match(team2, match)
-        winner_determinator = match.stage.winner_determinator if match.stage else PlayOffStage.WinnerDeterminator.GOALS
+        winner_determinator = match.stage.winner_determinator
         if winner_determinator == PlayOffStage.WinnerDeterminator.GOALS:
             team1_series_score += team1_score
             team2_series_score += team2_score
@@ -458,7 +463,8 @@ def round_name(tour, all_tours):
     if tour.name:
         return tour.name
 
-    if is_old_champions_league_season(tour.league):
+    # since match for third place played in extra tour, ignore that tour
+    if tour.stage.has_match_for_third_place:
         all_tours -= 1
 
     if tour.number == all_tours:
@@ -845,7 +851,9 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
         losses[i] = losses_count
         draws[i] = draws_count
 
-    table = zip(teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties)
+    table = zip(
+        teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties
+    )
     sorted_table = sorted(table, key=lambda x: (x[8], x[7], x[5]), reverse=True)
 
     result = []
@@ -1142,3 +1150,16 @@ def sorted_by_season(dictionary: defaultdict):
 @register.filter
 def sorted_by_league(dictionary: defaultdict):
     return sorted(dictionary.items(), key=lambda item: item[0].id)
+
+
+@register.simple_tag
+def stats_percentage(stat1, stat2):
+    sum = stat1 + stat2
+    if sum == 0:
+        percentage1 = 0
+        percentage2 = 0
+    else:
+        percentage1 = round(float(stat1) / sum * 100)
+        percentage2 = round(float(stat2) / sum * 100)
+    
+    return percentage1, percentage2

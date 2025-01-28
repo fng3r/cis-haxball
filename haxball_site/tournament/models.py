@@ -301,6 +301,7 @@ class PlayOffStage(TournamentStage):
         default=PlayOffType.SE,
         max_length=10
     )
+    has_match_for_third_place = models.BooleanField('Есть матч за 3-е место', default=False)
     show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
     winner_determinator = models.CharField(
         'Как определяется победитель',
@@ -445,7 +446,7 @@ class Player(models.Model):
     role = models.CharField('Должность', max_length=2, choices=ROLES, default=JUST_PLAYER)
 
     @receiver(post_save, sender=User)
-    def create_comment_history_item(sender, instance, created, **kwargs):
+    def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
         if not created:
             player = Player.objects.filter(name=instance).first()
             if not player:
@@ -548,7 +549,7 @@ class Match(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
-    bracket_slot = models.PositiveSmallIntegerField('Номер слота в сетке', default=0, null=False)
+    bracket_slot = models.PositiveSmallIntegerField('Номер слота в раунде ПО', default=0, null=False)
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
@@ -564,16 +565,16 @@ class Match(models.Model):
     updated = models.DateTimeField('Обновлено', auto_now=True)
     team_home = ChainedForeignKey(
         Team,
-        chained_field='league',
-        chained_model_field='leagues',
+        chained_field='stage',
+        chained_model_field='stages',
         on_delete=models.CASCADE,
         related_name='home_matches',
         verbose_name='Хозяева',
     )
     team_guest = ChainedForeignKey(
         Team,
-        chained_field='league',
-        chained_model_field='leagues',
+        chained_field='stage',
+        chained_model_field='stages',
         on_delete=models.CASCADE,
         related_name='guest_matches',
         verbose_name='Гости',
@@ -729,7 +730,7 @@ class MatchResult(models.Model):
         super(MatchResult, self).save(*args, **kwargs)
 
     @receiver(post_save, sender=Match)
-    def create_or_update_result(sender, instance, created, **kwargs):
+    def create_or_update_result(sender, instance, created, **kwargs):  # noqa: N805
         if not instance.is_played:
             return
 
@@ -861,7 +862,13 @@ class PlayerMatchStatistics(models.Model):
         blank=False,
         on_delete=models.CASCADE
     )
-    team = models.ForeignKey(Team, verbose_name='Команда', null=False, blank=False, on_delete=models.CASCADE)
+    team = models.ForeignKey(
+        Team,
+        verbose_name='Команда',
+        related_name='played_matches',
+        null=False, blank=False,
+        on_delete=models.CASCADE
+    )
     league = models.ForeignKey(League, verbose_name='Лига', null=False, blank=False, on_delete=models.CASCADE)
     
     
@@ -876,7 +883,7 @@ class PlayerMatchStatistics(models.Model):
             PlayerMatchStatistics.update_match_participants(instance)
         
     @receiver([post_save, post_delete], sender=Substitution)
-    def match_substitutions_changed(sender, instance, **kwargs):
+    def match_substitutions_changed(sender, instance, **kwargs):  # noqa: N805
         PlayerMatchStatistics.update_match_participants(instance.match)
 
     @staticmethod

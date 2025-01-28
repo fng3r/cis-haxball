@@ -1,0 +1,227 @@
+{% extends "core/home.html" %}
+{% load static %}
+{% load tournament_extras %}
+{% load widget_tweaks %}
+{% load utils %}
+
+{% partialdef stat-row %}
+    <div class="d-flex w-100 flex-column justify-content-center mb-1">
+        {% stats_percentage player1_stat player2_stat as percentages %}
+        <div class="row mx-5">
+            <div class="col-3 px-1">
+                <div class="h5 text-left">
+                    {% if player1_stat == 0 %}0{% else %}{{ player1_stat }}{% endif %}
+                </div>
+            </div>
+            <div class="col-6 d-flex justify-content-center">
+                <span class="h5 text-center">{{ stat_name }}</span>
+            </div>
+            <div class="col-3 px-0">
+                <div class="h5 text-right">
+                    {% if player2_stat == 0 %}0{% else %}{{ player2_stat }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mx-5 {% if percentages.0 == 0 and percentages.1 == 0 %}bg-secondary{% endif %}" style="height: 10px;">
+            <div class="bg-danger"
+                 style="width: {{ percentages.0 }}%; height: 10px; {% if percentages.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);{% endif %}"></div>
+            <div class="bg-primary"
+                 style="width: {{ percentages.1 }}%; height: 10px; {% if percentages.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);{% endif %}"></div>
+        </div>
+    </div>
+{% endpartialdef %}
+
+{% block title %}Чемпионат | Сравнить игроков — CIS-HAXBALL {%endblock%}
+
+{% block post %}
+    <div class="container-fluid mt-2 px-0">
+        <div class="card pb-2">
+            <div class="card-header py-1">
+                <h3 class="text-center">
+                    Сравнить игроков
+                </h3>
+            </div>
+
+            <div class="card-body px-2 pb-0">
+                <form id="players-comparison-form" class="form-inline mt-1 mb-2 ml-2 px-3"
+                      hx-get="{% url 'tournament:compare_players' %}"
+                      hx-trigger="submit"
+                      hx-target="#players-comparison-container"
+                      hx-swap="innerHtml"
+                      hx-disabled-elt="find button">
+
+                    <div class="form-row w-100 mb-2">
+                        <div class="col-5">
+                            <div class="form-group mr-2">
+                                <label>{{ compare_form.player1.label }}:</label>
+                                {% render_field compare_form.player1|add_class:'form-control-sm ml-1' %}
+                            </div>
+                        </div>
+
+                        <div class="col-2">
+                            <div class="form-group justify-content-center ml-4">
+                                <button class="btn btn-primary">Сравнить</button>
+                                <img class="htmx-indicator ml-2" src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
+                            </div>
+                        </div>
+
+                        <div class="col-5">
+                            <div class="form-group mr-2 justify-content-end">
+                                <label>{{ compare_form.player2.label }}:</label>
+                                {% render_field compare_form.player2|add_class:'form-control-sm ml-1' %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-100"></div>
+
+                    <div class="h6 w-100">
+                        Фильтры <i class="fa fa-filter"></i>
+                    </div>
+                    <div class="form-group mr-3 mb-2">
+                        <label>{{ compare_form.season.label }}:</label>
+                        {% render_field compare_form.season|add_class:'form-control-sm ml-1' %}
+                    </div>
+
+                    <div class="form-group mr-3 mb-2">
+                        <label>{{ compare_form.tournament.label }}:</label>
+                        {% render_field compare_form.tournament|add_class:'form-control-sm ml-1' %}
+                    </div>
+
+                    <div class="form-group mr-3 mb-2">
+                        <label>{{ compare_form.matches_selection.label }}:</label>
+                        {% render_field compare_form.matches_selection|add_class:'form-control-sm ml-1' %}
+                    </div>
+                </form>
+
+                <div id="players-comparison-container">
+                    {% partialdef players-comparison inline=True %}
+                        <div class="dropdown-divider mx-3 mb-3"></div>
+                        <div class="row mb-3">
+                            <div class="col-5 d-flex flex-column justify-content-center">
+                                {% with player=player1.player %}
+                                    <div class="d-flex justify-content-center">
+                                        {% if player %}
+                                            <div class="mb-2" style="background-image: url({{ player.name.user_profile.avatar.url }}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
+                                                {% if player.team %}
+                                                    <img src="{{ player.team.logo.url }}" width="80" height="80" style="position: relative; top: 80px; left: 90px;">
+                                                {% else %}
+                                                    <img src="{% static 'img/ico/free_player.png' %}" width="70" height="70" style="position: relative; top: 95px; left: 105px;">
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <div class="mb-2" style="background-image: url({% media 'users_avatars/default/default.png' %}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="text-center">
+                                        {% if player %}
+                                            <a class="text-dark h3" href="{{ player.name.user_profile.get_absolute_url }}">
+                                                {{ player.nickname }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-dark h3">Выберите игрока</span>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
+                            </div>
+
+                            <div class="col-2 justify-content-center align-content-center">
+                                <div class="h1 w-100 text-center" style="font-size: 4rem">VS</div>
+                            </div>
+
+                            <div class="col-5 d-flex flex-column justify-content-center">
+                                {% with player=player2.player %}
+                                    <div class="d-flex justify-content-center">
+                                        {% if player %}
+                                            <div class="mb-2" style="background-image: url({{ player.name.user_profile.avatar.url }}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
+                                                {% if player.team %}
+                                                    <img src="{{ player.team.logo.url }}" width="80" height="80" style="position: relative; top: 80px; left: 90px;">
+                                                {% else %}
+                                                    <img src="{% static 'img/ico/free_player.png' %}" width="70" height="70" style="position: relative; top: 95px; left: 105px;">
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <div class="mb-2" style="background-image: url({% media 'users_avatars/default/default.png' %}); width: 150px; height: 150px; border-radius: 10px; margin: 0 auto; background-position: 50%; background-size: cover; border-radius: 100%;">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="text-center">
+                                        {% if player %}
+                                            <a class="text-dark h3" href="{{ player.name.user_profile.get_absolute_url }}">
+                                                {{ player.nickname }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-dark h3">Выберите игрока</span>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
+                            </div>
+                        </div>
+
+                        {% if player1.stats and player2.stats %}
+                            <div class="row mb-3">
+                                {% with stat_name='Матчи' player1_stat=player1.stats.matches player2_stat=player2.stats.matches %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Победы' player1_stat=player1.stats.wins player2_stat=player2.stats.wins %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Процент побед' player1_stat=player1.stats.winrate player2_stat=player2.stats.winrate %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голы' player1_stat=player1.stats.goals player2_stat=player2.stats.goals %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голы (ср. за матч)' player1_stat=player1.stats.goals_per_match player2_stat=player2.stats.goals_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голевые передачи' player1_stat=player1.stats.assists player2_stat=player2.stats.assists %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голевые передачи (ср. за матч)' player1_stat=player1.stats.assists_per_match player2_stat=player2.stats.assists_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Результативные действия' player1_stat=player1.stats.goals_assists player2_stat=player2.stats.goals_assists %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Результативные действия (ср. за матч)' player1_stat=player1.stats.goals_assists_per_match player2_stat=player2.stats.goals_assists_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Сухие таймы' player1_stat=player1.stats.cs player2_stat=player2.stats.cs %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Сухие таймы (ср. за матч)' player1_stat=player1.stats.cs_per_match player2_stat=player2.stats.cs_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Желтые карточки' player1_stat=player1.stats.yellow_cards player2_stat=player2.stats.yellow_cards %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Красные карточки' player1_stat=player1.stats.red_cards player2_stat=player2.stats.red_cards %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+                    {% endpartialdef %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock post %}

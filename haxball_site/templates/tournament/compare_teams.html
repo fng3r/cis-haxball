@@ -1,0 +1,255 @@
+{% extends "core/home.html" %}
+{% load static %}
+{% load tournament_extras %}
+{% load widget_tweaks %}
+{% load utils %}
+
+{% partialdef stat-row %}
+    <div class="d-flex w-100 flex-column justify-content-center mb-1">
+        {% stats_percentage team1_stat team2_stat as percentages %}
+        <div class="row mx-5">
+            <div class="col-3 px-1">
+                <div class="d-flex flex-column h5 justify-content-start">
+                    <div class="text-left">{% if team1_player %}{{ team1_player }}{% endif %}</div>
+                    <div class="text-left">{% if team1_stat == 0 %}0{% else %}{{ team1_stat }}{% endif %}</div>
+                </div>
+            </div>
+            <div class="col-6 d-flex flex-column justify-content-center">
+                <div class="h5 text-center">{{ stat_name }}</div>
+            </div>
+            <div class="col-3 px-1">
+                <div class="d-flex h5 flex-column justify-content-end">
+                    <div class="text-right">{% if team2_player %}{{ team2_player }}{% endif %}</div>
+                    <div class="text-right">{% if team2_stat == 0 %}0{% else %}{{ team2_stat }}{% endif %}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mx-5 {% if percentages.0 == 0 and percentages.1 == 0 %}bg-secondary{% endif %}" style="height: 10px;">
+            <div class="bg-danger"
+                 style="width: {{ percentages.0 }}%; height: 10px; {% if percentages.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);{% endif %}"></div>
+            <div class="bg-primary"
+                 style="width: {{ percentages.1 }}%; height: 10px; {% if percentages.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);{% endif %}"></div>
+        </div>
+    </div>
+{% endpartialdef %}
+
+{% block title %}Чемпионат | Сравнить команды — CIS-HAXBALL {%endblock%}
+
+{% block post %}
+    <div class="container-fluid mt-2 px-0">
+        <div class="card pb-2">
+            <div class="card-header py-1">
+                <h3 class="text-center">
+                    Сравнить команды
+                </h3>
+            </div>
+
+            <div class="card-body px-2 pb-0">
+                <form id="teams-comparison-form" class="form-inline mt-1 mb-2 ml-2 px-3"
+                      hx-get="{% url 'tournament:compare_teams' %}"
+                      hx-trigger="submit"
+                      hx-target="#teams-comparison-container"
+                      hx-swap="innerHtml"
+                      hx-disabled-elt="find button">
+
+                    <div class="form-row w-100 mb-2">
+                        <div class="col-5">
+                            <div class="form-group mr-2">
+                                <label>{{ compare_form.team1.label }}:</label>
+                                {% render_field compare_form.team1|add_class:'form-control-sm ml-1' %}
+                            </div>
+                        </div>
+
+                        <div class="col-2">
+                            <div class="form-group justify-content-center ml-4">
+                                <button class="btn btn-primary">Сравнить</button>
+                                <img class="htmx-indicator ml-2" src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
+                            </div>
+                        </div>
+
+                        <div class="col-5">
+                            <div class="form-group mr-2 justify-content-end">
+                                <label>{{ compare_form.team2.label }}:</label>
+                                {% render_field compare_form.team2|add_class:'form-control-sm ml-1' %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-100"></div>
+
+                    <div class="h6 w-100">
+                        Фильтры <i class="fa fa-filter"></i>
+                    </div>
+                    <div class="form-group mr-3 mb-2">
+                        <label>{{ compare_form.season.label }}:</label>
+                        {% render_field compare_form.season|add_class:'form-control-sm ml-1' %}
+                    </div>
+
+                    <div class="form-group mr-3 mb-2">
+                        <label>{{ compare_form.tournament.label }}:</label>
+                        {% render_field compare_form.tournament|add_class:'form-control-sm ml-1' %}
+                    </div>
+
+                    <div class="form-group mr-3 mb-2">
+                        <label>{{ compare_form.matches_selection.label }}:</label>
+                        {% render_field compare_form.matches_selection|add_class:'form-control-sm ml-1' %}
+                    </div>
+
+                </form>
+
+                <div id="teams-comparison-container">
+                    {% partialdef teams-comparison inline=True %}
+                        <div class="dropdown-divider mx-3 mb-3"></div>
+                        <div class="row mb-3">
+                            <div class="col-5 d-flex flex-column justify-content-center">
+                                {% with team=team1.team %}
+                                    <div class="d-flex justify-content-center">
+                                        {% if team %}
+                                            <div class="mb-2">
+                                                <img src="{{ team.logo.url }}" width="150" height="150">
+                                            </div>
+                                        {% else %}
+                                            <div class="mb-2">
+                                                <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="text-center">
+                                        {% if team %}
+                                            <a class="text-dark h3" href="{{ team.get_absolute_url }}">
+                                                {{ team.title }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-dark h3">Выберите команду</span>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
+                            </div>
+
+                            <div class="col-2 justify-content-center align-content-center">
+                                <div class="h1 w-100 text-center" style="font-size: 4rem">VS</div>
+                            </div>
+
+                            <div class="col-5 d-flex flex-column justify-content-center">
+                                {% with team=team2.team %}
+                                    <div class="d-flex justify-content-center">
+                                        {% if team %}
+                                            <div class="mb-2">
+                                                <img src="{{ team.logo.url }}" width="150" height="150">
+                                            </div>
+                                        {% else %}
+                                            <div class="mb-2">
+                                                <img src="{% static 'img/default_team_logo.png' %}" width="150" height="150">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="text-center">
+                                        {% if team %}
+                                            <a class="text-dark h3" href="{{ team.get_absolute_url }}">
+                                                {{ team.title }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-dark h3">Выберите команду</span>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
+                            </div>
+                        </div>
+
+                        {% if team1.stats and team2.stats %}
+                            <div class="row mb-3">
+                                {% with stat_name='Матчи' team1_stat=team1.stats.matches team2_stat=team2.stats.matches %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Победы' team1_stat=team1.stats.wins team2_stat=team2.stats.wins %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Процент побед' team1_stat=team1.stats.winrate team2_stat=team2.stats.winrate %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голы' team1_stat=team1.stats.goals team2_stat=team2.stats.goals %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голы (ср. за матч)' team1_stat=team1.stats.goals_per_match team2_stat=team2.stats.goals_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Пропущенные голы' team1_stat=team1.stats.conceded_goals team2_stat=team2.stats.conceded_goals %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Пропущенные голы (ср. за матч)' team1_stat=team1.stats.conceded_goals_per_match team2_stat=team2.stats.conceded_goals_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голевые передачи' team1_stat=team1.stats.assists team2_stat=team2.stats.assists %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Голевые передачи (ср. за матч)' team1_stat=team1.stats.assists_per_match team2_stat=team2.stats.assists_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Сухие таймы' team1_stat=team1.stats.cs team2_stat=team2.stats.cs %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Сухие таймы (ср. за матч)' team1_stat=team1.stats.cs_per_match team2_stat=team2.stats.cs_per_match %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Желтые карточки' team1_stat=team1.stats.yellow_cards team2_stat=team2.stats.yellow_cards %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Красные карточки' team1_stat=team1.stats.red_cards team2_stat=team2.stats.red_cards %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+
+                        {% if team1.player_stats and team2.player_stats %}
+                            <div class="row mb-3">
+                                <div class="w-100">
+                                    <div class="h4 text-center">Игроки</div>
+                                </div>
+                                {% with stat_name='Наибольшее кол-во матчей' team1_player=team1.player_stats.matches.pl team2_player=team2.player_stats.matches.pl team1_stat=team1.player_stats.matches.count team2_stat=team2.player_stats.matches.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Наибольшее кол-во побед' team1_player=team1.player_stats.wins.pl team2_player=team2.player_stats.wins.pl team1_stat=team1.player_stats.wins.count team2_stat=team2.player_stats.wins.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Лучший бомбардир' team1_player=team1.player_stats.goals.pl team2_player=team2.player_stats.goals.pl team1_stat=team1.player_stats.goals.count team2_stat=team2.player_stats.goals.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Лучший ассистент' team1_player=team1.player_stats.assists.pl team2_player=team2.player_stats.assists.pl team1_stat=team1.player_stats.assists.count team2_stat=team2.player_stats.assists.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Лучший по результативным действиям' team1_player=team1.player_stats.goals_assists.pl team2_player=team2.player_stats.goals_assists.pl team1_stat=team1.player_stats.goals_assists.count team2_stat=team2.player_stats.goals_assists.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+
+                                {% with stat_name='Лучший по сухим таймам' team1_player=team1.player_stats.cs.pl team2_player=team2.player_stats.cs.pl team1_stat=team1.player_stats.cs.count team2_stat=team2.player_stats.cs.count %}
+                                    {% partial stat-row %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+                    {% endpartialdef %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock post %}

@@ -18,7 +18,7 @@ from django.views.generic import DetailView, ListView
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
 
 from .charts import StatCharts
-from .forms import EditTeamProfileForm, FreeAgentForm
+from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm
 from .models import (
     Disqualification,
     FreeAgent,
@@ -677,6 +677,7 @@ class HallOfFamePlayerFilter(FilterSet):
         choices=(
             ('Высшая лига','Высшая лига'),
             ('Единая лига','Единая лига'),
+            ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
             ('Первая лига','Первая лига'),
             ('Вторая лига','Вторая лига'),
             ('Кубок России','Кубок России'),
@@ -698,6 +699,7 @@ class HallOfFameTeamFilter(FilterSet):
         choices=(
             ('Высшая лига','Высшая лига'),
             ('Единая лига','Единая лига'),
+            ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
             ('Первая лига','Первая лига'),
             ('Вторая лига','Вторая лига'),
             ('Кубок России','Кубок России'),
@@ -720,8 +722,8 @@ def hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
     
-    tournament_name = request.GET.get('tournament', None)
-    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    tournament_name = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(title__iregex=tournament_name)
     
     players = get_players_tops(seasons, tournaments, nation)
     teams = get_teams_tops(seasons, tournaments)
@@ -745,8 +747,8 @@ def players_hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
     
-    tournament_name = request.GET.get('tournament', None)
-    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    tournament_name = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(title__iregex=tournament_name)
     
     players = get_players_tops(seasons, tournaments, nation)
     
@@ -764,8 +766,8 @@ def teams_hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
     
-    tournament_name = request.GET.get('tournament', None)
-    tournaments = League.objects.filter(title__icontains=tournament_name) if tournament_name else League.objects.all()
+    tournament_name = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(title__iregex=tournament_name)
     
     teams = get_teams_tops(seasons, tournaments)
     
@@ -864,7 +866,8 @@ def get_players_tops(seasons=None, tournaments=None, nation=None):
         .annotate(
             count=Count(
                 'join_game__player_in',
-                filter=Q(join_game__match__league__in=tournaments) & Q(join_game__match__league__championship__in=seasons)
+                filter=Q(join_game__match__league__in=tournaments) &
+                       Q(join_game__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -933,7 +936,7 @@ def get_players_tops(seasons=None, tournaments=None, nation=None):
                 )
             )
         )
-        .filter(matches_count__gt=10)
+        .filter(matches_count__gt=25)
         .annotate(
             winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100
         )
@@ -974,7 +977,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'goals__match__league',
-                filter=Q(goals__assistent__isnull=False) & Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons)
+                filter=Q(goals__assistent__isnull=False) & Q(goals__match__league__in=tournaments) &
+                       Q(goals__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -987,7 +991,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1000,7 +1005,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1013,7 +1019,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1026,7 +1033,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'team_events__match__league',
-                filter=Q(team_events__match__league__in=tournaments) & Q(team_events__match__league__championship__in=seasons)
+                filter=Q(team_events__match__league__in=tournaments) &
+                       Q(team_events__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1038,7 +1046,8 @@ def get_teams_tops(seasons=None, tournaments=None):
         .annotate(
             count=Count(
                 'substitutions',
-                filter=Q(substitutions__match__league__in=tournaments) & Q(substitutions__match__league__championship__in=seasons)
+                filter=Q(substitutions__match__league__in=tournaments) &
+                       Q(substitutions__match__league__championship__in=seasons)
             )
         )
         .filter(count__gt=0)
@@ -1073,7 +1082,11 @@ def get_teams_tops(seasons=None, tournaments=None):
         )
         .filter(matches_count__gt=0)
         .annotate(
-            wins_count=Count('won_matches', filter=Q(won_matches__match__league__in=tournaments) & Q(won_matches__match__league__championship__in=seasons)),
+            wins_count=Count(
+                'won_matches',
+                filter=Q(won_matches__match__league__in=tournaments) &
+                       Q(won_matches__match__league__championship__in=seasons)
+            ),
             winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100)
         .order_by()
     )
@@ -1876,3 +1889,291 @@ def team_statistics_charts(request, pk):
     }
 
     return render(request, 'tournament/partials/team_stats_charts.html', context)
+
+    
+class ComparePlayersView(View):
+    def get_template_names(self) -> list[str]:
+        if self.request.htmx:
+            return ['tournament/compare_players.html#players-comparison']
+        
+        return ['tournament/compare_players.html']
+    
+    def get(self, request):
+        form = ComparePlayersForm(request.GET)
+        if not form.is_valid():
+            player1 = form.cleaned_data.get('player1', None)
+            player2 = form.cleaned_data.get('player2', None)
+            return render(
+                request,
+                self.get_template_names(),
+                {
+                    'compare_form': form,
+                    'player1': {'player': player1},
+                    'player2': {'player': player2},
+                },
+            )
+        
+        player1 = form.cleaned_data['player1']
+        player2 = form.cleaned_data['player2']
+        season = form.cleaned_data['season']
+        tournament = form.cleaned_data['tournament']
+        matches_selection = form.cleaned_data['matches_selection']
+        
+        player1_matches, player2_matches = self.get_selected_matches(
+            player1, player2, season, tournament, matches_selection
+        )
+        player1_stats = self.get_player_stats(player1, player1_matches)
+        player2_stats = self.get_player_stats(player2, player2_matches)
+    
+        return render(
+            request,
+            self.get_template_names(), 
+            {
+                'compare_form': form,
+                'player1': {'player': player1, 'stats': player1_stats},
+                'player2': {'player': player2, 'stats': player2_stats},
+            }
+        )
+        
+    def get_selected_matches(self, player1, player2, season, tournament, matches_selection):
+        season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
+        tournament_condition = Q(league__title__iregex=tournament)
+        
+        player1_matches = (
+            player1.played_matches
+            .filter(season_condition, tournament_condition, match__is_played=True)
+            .select_related('team', 'match')
+        )
+        player2_matches = (
+            player2.played_matches
+            .filter(season_condition, tournament_condition, match__is_played=True)
+            .select_related('team', 'match')
+        )
+        
+        selected_matches = None
+        if matches_selection == ComparePlayersForm.MatchesSelection.SAME_TEAM:
+            player1_matches_in_team = set((x.match.id, x.team.id) for x in player1_matches)
+            player2_matches_in_team = set((x.match.id, x.team.id) for x in player2_matches)
+            selected_matches = [x[0] for x in player1_matches_in_team.intersection(player2_matches_in_team)]
+        elif matches_selection == ComparePlayersForm.MatchesSelection.HEAD_TO_HEAD:
+            selected_matches = [
+                pm1.match.id for pm1 in player1_matches for pm2 in player2_matches
+                if pm1.match == pm2.match and pm1.team != pm2.team
+            ]
+            
+        if selected_matches is not None:
+            return selected_matches, selected_matches
+        
+        return (
+            player1_matches.values_list('match__id', flat=True),
+            player2_matches.values_list('match__id', flat=True)
+        )
+
+    def get_player_stats(self, player: Player, selected_matches) -> dict:
+        matches = player.played_matches.filter(match__in=selected_matches).count()
+        wins = player.played_matches.filter(match__in=selected_matches, match__result__winner=F('team')).count()
+        winrate = round(float(wins) / matches * 100, 1) if matches else 0
+        goals = player.goals.filter(match__in=selected_matches).count()
+        goals_per_match = round(float(goals) / matches, 2) if matches else 0
+        assists = player.assists.filter(match__in=selected_matches).count()
+        assists_per_match = round(float(assists) / matches, 2) if matches else 0
+        goals_assists = goals + assists
+        goals_assists_per_match = round(float(goals_assists) / matches, 2) if matches else 0
+        cs = player.event.cs().filter(match__in=selected_matches).count()
+        cs_per_match = round(float(cs) / matches, 2) if matches else 0
+        
+        return {
+            'matches': matches,
+            'wins': wins,
+            'winrate': winrate,
+            'goals': goals,
+            'goals_per_match': goals_per_match,
+            'assists': assists,
+            'assists_per_match': assists_per_match,
+            'goals_assists': goals_assists,
+            'goals_assists_per_match': goals_assists_per_match,
+            'cs': cs,
+            'cs_per_match': cs_per_match,
+            'yellow_cards': player.event.yellow_cards().filter(match__in=selected_matches).count(),
+            'red_cards': player.event.red_cards().filter(match__in=selected_matches).count(),
+    }
+
+
+class CompareTeamsView(View):
+    def get_template_names(self) -> list[str]:
+        if self.request.htmx:
+            return ['tournament/compare_teams.html#teams-comparison']
+        
+        return ['tournament/compare_teams.html']
+    
+    def get(self, request):
+        form = CompareTeamsForm(request.GET)
+        if not form.is_valid():
+            team1 = form.cleaned_data.get('team1', None)
+            team2 = form.cleaned_data.get('team2', None)
+            return render(
+                request,
+                self.get_template_names(),
+                {
+                    'compare_form': form,
+                    'team1': {'team': team1},
+                    'team2': {'team': team2},
+                },
+            )
+        
+        team1 = form.cleaned_data['team1']
+        team2 = form.cleaned_data['team2']
+        season = form.cleaned_data['season']
+        tournament = form.cleaned_data['tournament']
+        matches_selection = form.cleaned_data['matches_selection']
+        
+        team1_matches, team2_matches = self.get_selected_matches(
+            team1, team2, season, tournament, matches_selection
+        )
+        team1_stats = self.get_team_stats(team1, team1_matches)
+        team2_stats = self.get_team_stats(team2, team2_matches)
+        
+        team1_player_stats = self.get_player_stats(team1, team1_matches)
+        team2_player_stats = self.get_player_stats(team2, team2_matches)
+    
+        return render(
+            request,
+            self.get_template_names(), 
+            {
+                'compare_form': form,
+                'team1': {'team': team1, 'stats': team1_stats, 'player_stats': team1_player_stats},
+                'team2': {'team': team2, 'stats': team2_stats, 'player_stats': team2_player_stats},
+            }
+        )
+        
+    def get_selected_matches(self, team1, team2, season, tournament, matches_selection):
+        season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
+        tournament_condition = Q(league__title__iregex=tournament)
+        
+        team1_matches = (
+            Match.objects
+            .filter(season_condition, tournament_condition, Q(team_home=team1) | Q(team_guest=team1), is_played=True)
+            .distinct()
+        )
+        team2_matches = (
+            Match.objects
+            .filter(season_condition, tournament_condition, Q(team_home=team2) | Q(team_guest=team2), is_played=True)
+            .distinct()
+        )
+        
+        selected_matches = None
+        if matches_selection == ComparePlayersForm.MatchesSelection.HEAD_TO_HEAD:
+            team1_matches_set = set(x.id for x in team1_matches)
+            team2_matches_set = set(x.id for x in team2_matches)
+            selected_matches = team1_matches_set.intersection(team2_matches_set)
+            
+        if selected_matches is not None:
+            return selected_matches, selected_matches
+        
+        return (
+            team1_matches.values_list('id', flat=True),
+            team2_matches.values_list('id', flat=True)
+        )
+
+    def get_team_stats(self, team: Team, selected_matches) -> dict:
+        matches = len(selected_matches)
+        wins = team.won_matches.filter(match__in=selected_matches).count()
+        winrate = round(float(wins) / matches * 100, 1) if matches else 0
+        goals = team.goals.filter(match__in=selected_matches).count()
+        goals_per_match = round(float(goals) / matches, 2) if matches else 0
+        conceded_goals = Goal.objects.filter(
+            Q(match__team_home=team) | Q(match__team_guest=team),
+            ~Q(team=team),
+            match__in=selected_matches
+        ).count()
+        conceded_goals_per_match = round(float(conceded_goals) / matches, 2) if matches else 0
+        assists = team.goals.filter(assistent__isnull=False, match__in=selected_matches).count()
+        assists_per_match = round(float(assists) / matches, 2) if matches else 0
+        cs = team.team_events.cs().filter(match__in=selected_matches).count()
+        cs_per_match = round(float(cs) / matches, 2) if matches else 0
+        
+        return {
+            'matches': matches,
+            'wins': wins,
+            'winrate': winrate,
+            'goals': goals,
+            'goals_per_match': goals_per_match,
+            'assists': assists,
+            'assists_per_match': assists_per_match,
+            'conceded_goals': conceded_goals,
+            'conceded_goals_per_match': conceded_goals_per_match,
+            'cs': cs,
+            'cs_per_match': cs_per_match,
+            'yellow_cards': team.team_events.yellow_cards().filter(match__in=selected_matches).count(),
+            'red_cards': team.team_events.red_cards().filter(match__in=selected_matches).count(),
+        }
+        
+    def get_player_stats(self, team: Team, selected_matches) -> dict:
+        top_matches = (
+            team.played_matches.filter(match__in=selected_matches).values(pl=F('player__nickname')).annotate(count=Count('player')).order_by('-count').first()
+        )
+        top_wins = (
+            team.played_matches
+            .filter(match__in=selected_matches, match__result__winner=team)
+            .values(pl=F('player__nickname'))
+            .annotate(count=Count('player'))
+            .order_by('-count')
+            .first()
+        )
+        top_goals = (
+            team.goals.filter(match__in=selected_matches).values(pl=F('author__nickname')).annotate(count=Count('author')).order_by('-count').first()
+        )
+        top_assists = (
+            team.goals.filter(match__in=selected_matches).values(pl=F('assistent__nickname')).annotate(count=Count('assistent')).order_by('-count').first()
+        )
+        top_goals_assists = (
+            Player.objects
+            .annotate(
+                goals_count=Coalesce(self.get_player_goals_subquery(selected_matches, team), 0),
+                assists_count=Coalesce(self.get_player_assists_subquery(selected_matches, team), 0),
+                count=F('goals_count') + F('assists_count'),
+                pl=F('nickname'),
+            )
+            .filter(count__gt=0)
+            .order_by('-count')
+            .first()
+        )
+        top_cs = (
+            team.team_events.cs()
+            .filter(match__in=selected_matches)
+            .values(pl=F('author__nickname'))
+            .annotate(count=Count('author'))
+            .order_by('-count')
+            .first()
+        )
+        
+        return {
+            'matches': top_matches or {'pl': '–', 'count': 0},
+            'wins': top_wins or {'pl': '–', 'count': 0},
+            'goals': top_goals or {'pl': '–', 'count': 0},
+            'assists': top_assists or {'pl': '–', 'count': 0},
+            'goals_assists': top_goals_assists or {'pl': '–', 'count': 0},
+            'cs': top_cs or {'pl': '–', 'count': 0},
+        }
+        
+    @staticmethod
+    def get_player_goals_subquery(selected_matches, team):
+        return Subquery(
+            Goal.objects
+            .filter(author=OuterRef('id'), match__in=selected_matches, team=team)
+            .order_by()
+            .values('author')
+            .annotate(c=Count('id', distinct=True))
+            .values('c')
+        )
+    
+    @staticmethod
+    def get_player_assists_subquery(selected_matches, team):
+        return Subquery(
+            Goal.objects
+            .filter(assistent=OuterRef('id'), match__in=selected_matches, team=team)
+            .order_by()
+            .values('assistent')
+            .annotate(c=Count('id', distinct=True))
+            .values('c')
+        )
