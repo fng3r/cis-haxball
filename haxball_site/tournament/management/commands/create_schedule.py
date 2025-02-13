@@ -10,28 +10,28 @@ class Command(BaseCommand):
     help = 'Generate schedule using round-robin algorythm'
 
     tour_dates = {
-        1: (datetime.date(2024, 9, 1), datetime.date(2024, 9, 3)),
-        2: (datetime.date(2024, 9, 1), datetime.date(2024, 9, 6)),
-        3: (datetime.date(2024, 9, 4), datetime.date(2024, 9, 6)),
-        4: (datetime.date(2024, 9, 8), datetime.date(2024, 9, 10)),
-        5: (datetime.date(2024, 9, 11), datetime.date(2024, 9, 13)),
-        6: (datetime.date(2024, 9, 15), datetime.date(2024, 9, 17)),
-        7: (datetime.date(2024, 9, 15), datetime.date(2024, 9, 20)),
-        8: (datetime.date(2024, 9, 18), datetime.date(2024, 9, 20)),
-        9: (datetime.date(2024, 9, 22), datetime.date(2024, 9, 24)),
-        10: (datetime.date(2024, 9, 25), datetime.date(2024, 9, 27)),
-        11: (datetime.date(2024, 9, 29), datetime.date(2024, 10, 1)),
-        12: (datetime.date(2024, 10, 6), datetime.date(2024, 10, 8)),
-        13: (datetime.date(2024, 10, 9), datetime.date(2024, 10, 3)),
-        14: (datetime.date(2024, 10, 13), datetime.date(2024, 10, 15)),
-        15: (datetime.date(2024, 10, 13), datetime.date(2024, 10, 18)),
-        16: (datetime.date(2024, 10, 16), datetime.date(2024, 10, 18)),
-        17: (datetime.date(2024, 10, 20), datetime.date(2024, 10, 22)),
-        18: (datetime.date(2024, 10, 23), datetime.date(2024, 10, 25)),
-        19: (datetime.date(2024, 10, 27), datetime.date(2024, 10, 29)),
-        20: (datetime.date(2024, 9, 30), datetime.date(2024, 11, 1)),
-        21: (datetime.date(2024, 11, 3), datetime.date(2024, 11, 5)),
-        22: (datetime.date(2024, 11, 6), datetime.date(2024, 11, 8)),
+        1: (datetime.date(2025, 2, 12), datetime.date(2025, 2, 14)),
+        2: (datetime.date(2025, 2, 16), datetime.date(2025, 2, 18)),
+        3: (datetime.date(2025, 2, 19), datetime.date(2025, 2, 21)),
+        4: (datetime.date(2025, 2, 23), datetime.date(2025, 2, 25)),
+        5: (datetime.date(2025, 2, 26), datetime.date(2025, 2, 28)),
+        6: (datetime.date(2025, 3, 2), datetime.date(2025, 3, 4)),
+        7: (datetime.date(2025, 3, 5), datetime.date(2025, 3, 7)),
+        8: (datetime.date(2025, 3, 9), datetime.date(2025, 3, 11)),
+        9: (datetime.date(2025, 3, 12), datetime.date(2025, 3, 14)),
+        10: (datetime.date(2025, 3, 19), datetime.date(2025, 3, 21)),
+        11: (datetime.date(2025, 3, 23), datetime.date(2025, 3, 25)),
+        12: (datetime.date(2025, 3, 26), datetime.date(2025, 3, 28)),
+        13: (datetime.date(2025, 3, 30), datetime.date(2025, 4, 1)),
+        14: (datetime.date(2025, 4, 2), datetime.date(2025, 4, 4)),
+        15: (datetime.date(2025, 4, 6), datetime.date(2025, 4, 8)),
+        16: (datetime.date(2025, 4, 8), datetime.date(2025, 4, 10)),
+        17: (datetime.date(2025, 4, 12), datetime.date(2025, 4, 14)),
+        18: (datetime.date(2025, 4, 15), datetime.date(2025, 4, 17)),
+        # 19: (datetime.date(2025, 4, 27), datetime.date(2025, 4, 29)),
+        # 20: (datetime.date(2025, 4, 30), datetime.date(2025, 4, 1)),
+        # 21: (datetime.date(2025, 4, 3), datetime.date(2025, 4, 5)),
+        # 22: (datetime.date(2025, 4, 6), datetime.date(2025, 4, 8)),
     }
 
     def add_arguments(self, parser):
@@ -125,7 +125,7 @@ class Command(BaseCommand):
             for j in range(half):
                 teams.insert(1, teams.pop())
 
-        tours = TourNumber.objects.filter(league=league, stage=stage, group=group).order_by('number')
+        tours = TourNumber.objects.filter(league=league, stage=stage).order_by('number')
         for tour in tours:
             print(f'             {tour.number} тур')
             for match in tour.tour_matches.all():
