@@ -187,7 +187,7 @@ class CommentHistoryItem(models.Model):
         )
 
     @receiver(post_save, sender=NewComment)
-    def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
+    def create_comment_history_item(sender, instance, created, **kwargs):
         if not created and instance.tracker.has_changed('body'):
             previous_created = instance.tracker.previous('edited') or instance.created
             previous_comment = instance.tracker.previous('body')
@@ -291,25 +291,27 @@ class Profile(models.Model):
     avatar = models.ImageField('Аватар', upload_to='users_avatars/', default='users_avatars/default/default.png')
     background = models.ImageField('Фон профиля', upload_to='users_background/', blank=True, null=True)
     born_date = models.DateField('Дата рождения', blank=True, null=True)
-    about = models.TextField(max_length=1000, blank=True)
-    city = models.CharField(max_length=100, blank=True)
+    about = models.TextField('О себе', max_length=1000, blank=True)
+    favourite_teams = models.TextField('Любимые команды', max_length=1000, blank=True)
+    favourite_players = models.TextField('Любимые игроки', max_length=1000, blank=True)
+    city = models.CharField('Город', max_length=100, blank=True)
     vk = models.CharField(max_length=100, blank=True)
     telegram = models.CharField(max_length=100, blank=True)
     discord = models.CharField(max_length=100, blank=True)
-    views = models.PositiveIntegerField(default=0)
-    karma = models.SmallIntegerField(default=0)
+    views = models.PositiveIntegerField('Просмотры', default=0)
+    karma = models.SmallIntegerField('Карма', default=0)
     comments = GenericRelation(NewComment, related_query_name='profile_comments')
     commentable = models.BooleanField('Комментируемый профиль', default=True)
     can_vote = models.BooleanField('Может голосовать', default=True)
     can_comment = models.BooleanField('Может комментировать', default=True)
 
     @receiver(post_save, sender=User)
-    def create_user_profile(sender, instance, created, **kwargs):  # noqa: N805
+    def create_user_profile(sender, instance, created, **kwargs):
         if created:
             Profile.objects.create(name=instance)
 
     @receiver(post_save, sender=User)
-    def save_user_profile(sender, instance, **kwargs):  # noqa: N805
+    def save_user_profile(sender, instance, **kwargs):
         instance.user_profile.save()
 
     def get_absolute_url(self):
@@ -347,7 +349,7 @@ class UserNicknameHistoryItem(models.Model):
         verbose_name_plural = 'История никнеймов'
 
     @receiver(pre_save, sender=User)
-    def create_history_item(sender, instance, **kwargs):  # noqa: N805
+    def create_history_item(sender, instance, **kwargs):
         previous_instance = User.objects.filter(pk=instance.pk).first()
         if previous_instance is None:
             return
