@@ -89,7 +89,7 @@
                                     </div>
                                 </div>
 
-                                <h5 class="m-b-20 m-t-40 p-b-5 b-b-default f-w-600">Способы связи</h5>
+                                <h5 class="m-b-20 m-t-20 p-b-5 b-b-default f-w-600">Способы связи</h5>
                                 <div class="row">
                                     <div class="col-4">
                                         <p class="f-w-600" style="margin-bottom: 0">Вк</p>
@@ -113,7 +113,7 @@
                                     </div>
                                 </div>
 
-                                <h5 class="m-b-20 m-t-40 p-b-5 b-b-default f-w-600">Активность</h5>
+                                <h5 class="m-b-20 m-t-20 p-b-5 b-b-default f-w-600">Активность</h5>
                                 <div class="row">
                                     <div class="col-sm-4 text-center">
                                         <p class="m-b-10 f-w-600"><img src="{% static "img/ico/comment_1.png" %}"></p>
@@ -129,13 +129,29 @@
                                     </div>
                                 </div>
 
-                                <h5 class="m-b-20 m-t-30 p-b-5 b-b-default f-w-600">О себе</h5>
+                                <h5 class="m-b-5 m-t-30 p-b-5 b-b-default f-w-600">О себе</h5>
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <h6 class="text-muted f-w-400">
-                                            <textarea class="form-control border" rows="3" name="about"
-                                                      id="contactcomment"
-                                                      rows="2">{{ profile.about }}</textarea>
+                                            <textarea class="form-control border" rows="3" name="about">{{ profile.about }}</textarea>
+                                        </h6>
+                                    </div>
+                                </div>
+
+                                <h5 class="m-b-5 m-t-30 p-b-5 b-b-default f-w-600">Любимые команды</h5>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <h6 class="text-muted f-w-400">
+                                            <textarea class="form-control border" rows="2" name="favourite_teams">{{ profile.favourite_teams }}</textarea>
+                                        </h6>
+                                    </div>
+                                </div>
+
+                                <h5 class="m-b-5 m-t-30 p-b-5 b-b-default f-w-600">Любимые игроки</h5>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <h6 class="text-muted f-w-400">
+                                            <textarea class="form-control border" rows="2" name="favourite_players">{{ profile.favourite_players }}</textarea>
                                         </h6>
                                     </div>
                                 </div>
