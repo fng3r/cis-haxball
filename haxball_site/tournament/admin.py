@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
-from django.http import HttpRequest
 from django.urls import resolve
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
@@ -25,6 +24,7 @@ from .models import (
     Nation,
     OtherEvents,
     Player,
+    PlayerMatchStatistics,
     PlayerTransfer,
     PlayoffBracketSlotStub,
     PlayOffStage,
@@ -563,3 +563,8 @@ class RatingVersionAdmin(admin.ModelAdmin):
 class TeamRatingAdmin(admin.ModelAdmin):
     list_display = ('version', 'rank', 'team', 'total_points')
     list_filter = ('version', 'team')
+
+
+@admin.register(PlayerMatchStatistics)
+class PlayerMatchStatisticsAdmin(admin.ModelAdmin):
+    list_display = ('player', 'match', 'team', 'league')

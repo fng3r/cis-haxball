@@ -1,7 +1,6 @@
-import datetime
-
 from django.core.management.base import BaseCommand
 from django.db.models import F, Q
+from django.utils import timezone
 
 from ...models import RatingVersion, Season, SeasonTeamRating, TeamRating
 
@@ -28,7 +27,7 @@ class Command(BaseCommand):
         #     season = next_season
 
         last_version = RatingVersion.objects.order_by('-number').first()
-        version = 0
+        version = last_version + 1 if last_version else 1
         while source_season_number < 17:
             season_count = 0
             source_season = Season.objects.get(number=source_season_number)
@@ -52,7 +51,11 @@ class Command(BaseCommand):
 
             ordered_rating = [(k, v) for k, v in sorted(overall_rating.items(), key=lambda item: item[1], reverse=True)]
 
-            rating_version = RatingVersion(number=version, date=datetime.date.today(), related_season=Season.objects.get(number=1))
+            rating_version = RatingVersion(
+                number=version,
+                date=timezone.localdate(),
+                related_season=Season.objects.get(number=1)
+            )
             rating_version.save()
             for rank, entry in enumerate(ordered_rating, 1):
                 TeamRating(version=rating_version, rank=rank, team=entry[0], total_points=entry[1]).save()

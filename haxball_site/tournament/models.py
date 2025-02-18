@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import Case, Q, Value, When
-from django.db.models.signals import post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
@@ -301,6 +301,7 @@ class PlayOffStage(TournamentStage):
         default=PlayOffType.SE,
         max_length=10
     )
+    has_match_for_third_place = models.BooleanField('Есть матч за 3-е место', default=False)
     show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
     winner_determinator = models.CharField(
         'Как определяется победитель',
@@ -445,7 +446,7 @@ class Player(models.Model):
     role = models.CharField('Должность', max_length=2, choices=ROLES, default=JUST_PLAYER)
 
     @receiver(post_save, sender=User)
-    def create_comment_history_item(sender, instance, created, **kwargs):
+    def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
         if not created:
             player = Player.objects.filter(name=instance).first()
             if not player:
@@ -489,7 +490,7 @@ class TourNumber(models.Model):
 
     @property
     def is_actual(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
         return today >= self.date_from and any(not match.is_played for match in self.tour_matches.all())
 
     def __str__(self):
@@ -548,7 +549,7 @@ class Match(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
-    bracket_slot = models.PositiveSmallIntegerField('Номер слота в сетке', default=0, null=False)
+    bracket_slot = models.PositiveSmallIntegerField('Номер слота в раунде ПО', default=0, null=False)
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
@@ -564,16 +565,16 @@ class Match(models.Model):
     updated = models.DateTimeField('Обновлено', auto_now=True)
     team_home = ChainedForeignKey(
         Team,
-        chained_field='league',
-        chained_model_field='leagues',
+        chained_field='stage',
+        chained_model_field='stages',
         on_delete=models.CASCADE,
         related_name='home_matches',
         verbose_name='Хозяева',
     )
     team_guest = ChainedForeignKey(
         Team,
-        chained_field='league',
-        chained_model_field='leagues',
+        chained_field='stage',
+        chained_model_field='stages',
         on_delete=models.CASCADE,
         related_name='guest_matches',
         verbose_name='Гости',
@@ -588,6 +589,7 @@ class Match(models.Model):
     team_guest_start = models.ManyToManyField(
         Player, related_name='guest_matches', verbose_name='Состав гостей', blank=True
     )
+    match_participants = models.ManyToManyField(Player, verbose_name='Участники матча', through="PlayerMatchStatistics")
 
     is_played = models.BooleanField('Сыгран', default=False)
 
@@ -597,8 +599,10 @@ class Match(models.Model):
     commentable = models.BooleanField('Комментируемый матч', default=True)
 
     def cards(self):
-        return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by(
-            'team'
+        return (
+            self.match_event
+            .filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD))
+            .order_by('team')
         )
 
     @property
@@ -726,7 +730,7 @@ class MatchResult(models.Model):
         super(MatchResult, self).save(*args, **kwargs)
 
     @receiver(post_save, sender=Match)
-    def create_or_update_result(sender, instance, created, **kwargs):
+    def create_or_update_result(sender, instance, created, **kwargs):  # noqa: N805
         if not instance.is_played:
             return
 
@@ -846,6 +850,66 @@ class Substitution(models.Model):
     class Meta:
         verbose_name = 'Замена'
         verbose_name_plural = 'Замены'
+        
+        
+class PlayerMatchStatistics(models.Model):
+    match = models.ForeignKey(Match, verbose_name='Матч', null=False, blank=False, on_delete=models.CASCADE)
+    player = models.ForeignKey(
+        Player,
+        verbose_name='Игрок',
+        related_name='played_matches',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE
+    )
+    team = models.ForeignKey(
+        Team,
+        verbose_name='Команда',
+        related_name='played_matches',
+        null=False, blank=False,
+        on_delete=models.CASCADE
+    )
+    league = models.ForeignKey(League, verbose_name='Лига', null=False, blank=False, on_delete=models.CASCADE)
+    
+    
+    @receiver(m2m_changed, sender=Match.team_home_start.through)
+    def match_team_home_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+        if action in ('post_add', 'post_remove'):
+            PlayerMatchStatistics.update_match_participants(instance)
+        
+    @receiver(m2m_changed, sender=Match.team_guest_start.through)
+    def match_team_guest_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+        if action in ('post_add', 'post_remove'):
+            PlayerMatchStatistics.update_match_participants(instance)
+        
+    @receiver([post_save, post_delete], sender=Substitution)
+    def match_substitutions_changed(sender, instance, **kwargs):  # noqa: N805
+        PlayerMatchStatistics.update_match_participants(instance.match)
+
+    @staticmethod
+    def update_match_participants(match):
+        match.match_participants.clear()
+        for player in match.team_home_start.all():
+            match.match_participants.add(
+                player,
+                through_defaults={'match': match, 'team': match.team_home, 'league': match.league}
+            )
+        for player in match.team_guest_start.all():
+            match.match_participants.add(
+                player,
+                through_defaults={'match': match, 'team': match.team_guest, 'league': match.league}
+            )
+        for substitution in match.match_substitutions.all():
+            match.match_participants.add(
+                substitution.player_in,
+                through_defaults={'match': match, 'team': substitution.team, 'league': match.league}
+            )
+    
+    class Meta:
+        verbose_name = 'Статистика игрока в матче'
+        verbose_name_plural = 'Статистика игроков в матчах'
+        unique_together = ('match', 'player')
+        indexes = [models.Index(fields=['player', 'league'])]
 
 
 class Disqualification(models.Model):
@@ -1080,7 +1144,7 @@ class Postponement(models.Model):
 
     @property
     def can_be_cancelled(self):
-        return not self.is_cancelled and timezone.now().date() < self.starts_at
+        return not self.is_cancelled and timezone.localdate() < self.starts_at
 
     @property
     def is_cancelled(self):

@@ -36,7 +36,7 @@ def can_reserve_host(user):
 @register.inclusion_tag('reservation/reservation_form.html')
 def reservation_form(user):
     teams = teams_can_reserve(user)
-    today = timezone.now().date()
+    today = timezone.localdate()
     tomorrow = today + timedelta(days=1)
     matches_to_choose = (
         Match.objects.filter(

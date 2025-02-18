@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import (
     CardsList,
+    ComparePlayersView,
+    CompareTeamsView,
     DisqualificationsList,
     EditTeamView,
     FreeAgentList,
@@ -14,12 +16,15 @@ from .views import (
     TeamRatingView,
     TransfersList,
     cancel_postponement,
-    halloffame,
+    hall_of_fame,
     player_detailed_statistics,
     player_statistics_charts,
+    players_hall_of_fame,
     remove_free_agent_entry,
+    team_squad_statistics,
     team_statistics,
     team_statistics_charts,
+    teams_hall_of_fame,
     update_free_agent_entry,
 )
 
@@ -27,7 +32,11 @@ app_name = 'tournament'
 
 urlpatterns = [
     # Зал славы
-    path('hall_of_fame', halloffame, name='hall_of_fame'),
+    path('compare_players', ComparePlayersView.as_view(), name='compare_players'),
+    path('compare_teams', CompareTeamsView.as_view(), name='compare_teams'),
+    path('hall_of_fame', hall_of_fame, name='hall_of_fame'),
+    path('hall_of_fame/players', players_hall_of_fame, name='players_hall_of_fame'),
+    path('hall_of_fame/teams', teams_hall_of_fame, name='teams_hall_of_fame'),
     path('postponements', PostponementsList.as_view(), name='postponements'),
     path('postponements/events', PostponementsEvents.as_view(), name='postponements_events'),
     path('postponements/<int:pk>/cancel', cancel_postponement, name='cancel_postponement'),
@@ -46,5 +55,6 @@ urlpatterns = [
     path('player_stats/<int:pk>', player_detailed_statistics, name='player_stats'),
     path('player_stats/<int:pk>/charts', player_statistics_charts, name='player_stats_charts'),
     path('team_stats/<int:pk>', team_statistics, name='team_stats'),
+    path('team_stats/<int:pk>/players', team_squad_statistics, name='team_squad_stats'),
     path('team_stats/<int:pk>/charts', team_statistics_charts, name='team_stats_charts'),
 ]
