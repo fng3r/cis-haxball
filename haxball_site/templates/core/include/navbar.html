@@ -47,6 +47,13 @@
                     <a class="dropdown-item" href="{% url 'tournament:league' 's14-second-league' %}">Вторая лига</a>
                     <a class="dropdown-item" href="{% url 'tournament:league' 's14-russian-cup' %}">Кубок России</a>
 
+                    <a class="dropdown-item submenu" href="#">Кубок лиги</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's14-league-cup-pl' %}">Высшая лига</a>
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's14-league-cup-fl' %}">Первая лига</a>
+                        <a class="dropdown-item" href="{% url 'tournament:league' 's14-league-cup-sl' %}">Вторая лига</a>
+                    </div>
+
                     <div class="dropdown-divider"></div>
 
                     <a class="dropdown-item" target="_blank"
@@ -180,7 +187,6 @@
                         <a class="dropdown-item" href="{% url 'tournament:league' 's12-russian-cup' %}">Кубок России</a>
 
                         <a class="dropdown-item submenu" href="#">Кубок лиги</a>
-
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-pl' %}">Высшая лига</a>
                             <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-fl' %}">Первая лига</a>
