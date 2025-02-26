@@ -169,20 +169,6 @@ def show_top_comments(count=5):
     }
 
 
-# Сайд-бар для отображеня топа лайков постов за всё время
-# (Потом надо будет переделать, чтобы в параметр передавать за какое время, для переключения)
-@register.inclusion_tag('core/include/sidebar_for_likes.html')
-def show_post_with_top_likes(count=5):
-    posts = (
-        Post.objects.annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0)))
-        .annotate(dislike_count=Count('votes', filter=Q(votes__vote__lt=0)))
-        .filter(created__year=2020)
-        .order_by('-like_count')[:count]
-    )
-
-    return {'liked_posts': posts}
-
-
 # Фильтр, возращающий свежий ли пост или нет в зависимости от оффсета
 @register.filter
 def is_fresh(value, hours):

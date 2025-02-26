@@ -3,17 +3,16 @@
     <link rel="stylesheet" type="text/css" href="{% static "core/include/sidebar_for_users.css" %}">
 {% endblock %}
 
-<div class="card mb-2" style="border-radius: 20px 20px 20px 20px;">
-    <div class="card-header d-inline-flex mb-0 justify-content-center bg-for-online-head" style="border-radius: 20px 20px 0px 0;">
-        <h6 class="mb-0" style="font-size: 1rem">Сейчас онлайн: {{ users_online_count }}</h6>
+<div class="tw:card tw:border tw:border-white tw:rounded-2xl tw:mb-2">
+    <div class="tw:card-title tw:rounded-t-2xl tw:justify-center tw:p-2 tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
+        <span class="tw:mb-0">Сейчас онлайн: {{ users_online_count }}</span>
     </div>
-    <div class="card-body p-0 bg-for-online-body" style="position: relative; height: 250px; overflow: auto; border-radius: 0px 0px 20px 20px;">
-        <div class="btn-group-vertical w-100">
+    <div class="tw:card-body tw:h-[250px] tw:overflow-auto tw:rounded-b-2xl tw:p-0 tw:bg-gradient-to-r tw:from-[#3e2238] tw:to-[#20183ed1]">
+        <div class="tw:flex tw:flex-col">
             {% for user in users_online %}
-                <a type="button" class="btn btn-secondary btn-block text-left justify-content-between"
+                <a role="button" class="tw:btn-link-block tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
                    href="{{ user.user_profile.get_absolute_url }}">
-
-                    <i class="mr-1 fa fa-circle text-success" aria-hidden="true"></i>{{ user }}
+                    <i class="fa fa-circle tw:text-success" aria-hidden="true"></i>{{ user }}
                     <span>
                         {% for icon in user.user_profile.user_icon.all %}
                             <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">

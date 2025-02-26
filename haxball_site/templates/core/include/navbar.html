@@ -286,9 +286,12 @@
         {% endif %}
 
         {% if user.is_authenticated %}
-            <button type="button" class="btn btn-danger mr-2" data-toggle="modal" data-target="#logoutModal">
+            <label for="logoutModal"
+                   class="tw:btn tw:btn-sm tw:bg-red-700 tw:border-red-700 tw:hover:bg-red-800 tw:hover:border-red-800
+                          tw:text-white tw:shadow-none tw:mr-2 tw:mb-0! tw:inline-flex!"
+            >
                 Выход
-            </button>
+            </label>
         {% else %}
             <button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#loginModal">
                 Вход

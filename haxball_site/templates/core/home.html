@@ -16,48 +16,12 @@
 
 {% block content %}
 
+    <div class="tw:w-full tw:mx-auto tw:justify-center">
+        <div class="tw:max-w-[1600px] tw:flex tw:flex-wrap tw:relative tw:mx-auto">
+            <div class="tw:w-1/2 tw:order-2 tw:xl:w-1/6 tw:xl:order-1 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
+                {% show_users_online %}
 
-    <div class="container-fluid justify-content-center">
-        <div class="row" style="max-width: 1600px; position: relative; margin: 0 auto;">
-            <div class="col-2 col-xl-2 col-lg-3 col-sm-6 order-xl-1 order-lg-2 order-md-2 order-sm-2 my-2 px-1">
-                {% block sidebar_users %}
-                    {% show_users_online %}
-                {% endblock %}
-                <div class="card mb-2" style="border-radius: 20px 20px 20px 20px;">
-                    <div class="card-header mb-0 py-1 justify-content-center bg-for-online-head text-center"
-                         style="border-radius: 20px 20px 0px 0">
-                        <h5 style="text-decoration: underline">Медиа</h5>
-                    </div>
-                    <div class="card-body p-0 bg-for-online-body"
-                         style="position: relative; border-radius: 0px 0px 20px 20px; width: inherit; padding: 5%">
-                        <div class="d-flex justify-content-center">
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://discord.gg/h6mgc4bTJh" target="_blank" class="m-0 p-0" >
-                                    <img src="{% static 'img/ico/discord.PNG' %}" title="discord"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://t.me/+GRxpyqeJKosxODQy" target="_blank" class="m-0 p-0">
-                                    <img src="{% static 'img/ico/tg.png' %}" title="tg"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://www.youtube.com/@cis-haxball" target="_blank" class="m-0 p-0">
-                                    <img src="{% static 'img/ico/youtube.PNG' %}" title="youtube"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://www.tiktok.com/@cishaxball3" target="_blank" class="m-0 p-0">
-                                    <img src="{% static 'img/ico/tiktok.png' %}" title="tiktok"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% include 'core/include/sidebar_for_media.html' %}
 
                 {% polls_list 2 user %}
 
@@ -65,26 +29,20 @@
                     {% show_last_transfers %}
                 {% endcache %}
             </div>
-            <div class="col-8 main-col col-xl-8 col-lg-12 col-md-12 col-sm-12 mx-0 order-xl-2 order-md-1 order-sm-1 order-lg-1 px-1">
+            <div class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:lg:w-full tw:md:w-full tw:sm:w-full tw:mx-0 tw:px-1">
 
-                <!-- Всплывающее окно входа на сайт -->
                 {% include 'core/include/login_logout_modal/log_out_modal.html' %}
 
-                <!-- Всплывающее окно выхода с сайта -->
-                <div class="modal" id="logoutModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 class="modal-title">Хотите выйти?</h4>
-                                <button type="button" class="close" data-dismiss="modal">×</button>
-                            </div>
-                            <div class="modal-footer">
-                                <form method="post" action="{% url 'account_logout' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary">Да</button>
-                                </form>
-                                <button type="button" class="btn btn-danger" data-dismiss="modal">Нет</button>
-                            </div>
+                <input type="checkbox" id="logoutModal" class="tw:modal-toggle" />
+                <div class="tw:modal" role="dialog">
+                    <div class="tw:modal-box">
+                        <h4 class="tw:font-bold">Хотите выйти?</h4>
+                        <div class="tw:modal-action">
+                            <form method="post" action="{% url 'account_logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="tw:btn tw:btn-primary tw:rounded-sm!">Да</button>
+                                <label for="logoutModal" class="tw:btn tw:rounded-sm tw:mb-0! tw:inline-flex!">Нет</label>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -107,7 +65,7 @@
                 {% endblock %}
 
             </div>
-            <div class="col-2 col-xl-2 col-lg-3 col-sm-6 order-3 order-xl-3 order-sm-3 px-1">
+            <div class="tw:w-1/2 tw:order-3 tw:xl:w-1/6 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
 
                 {% block sidebar_last_activity %}
                     {% show_last_activity 12 %}

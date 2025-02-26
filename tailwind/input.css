@@ -7,10 +7,38 @@
     max-width: none;
     height: none;
   }
+
+  :root {
+    scrollbar-color: unset !important;
+  }
+
+  /* custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 20px;
+  }
+
+  ::-webkit-scrollbar-track {
+      background-color: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+      background-color: #d6dee1;
+      border-radius: 20px;
+      border: 6px solid transparent;
+      background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+      background-color: #a8bbbf;
+  }
 }
 
 @layer components {
   img {
     display: inline;
+  }
+
+  .tw\:btn-link-block {
+    @apply tw:btn tw:btn-link tw:btn-block tw:justify-start tw:border-0 tw:no-underline! tw:rounded-none;
   }
 }
