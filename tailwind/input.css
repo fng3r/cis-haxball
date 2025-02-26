@@ -1,0 +1,16 @@
+@import "tailwindcss" prefix(tw) source("../haxball_site/templates");
+
+@plugin "daisyui";
+
+@layer base {
+  img, video {
+    max-width: none;
+    height: none;
+  }
+}
+
+@layer components {
+  img {
+    display: inline;
+  }
+}

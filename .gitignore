@@ -118,3 +118,6 @@ media/
 
 # site_cache
 /haxball_site/mycache/
+
+# tailwind
+tailwind/node_modules

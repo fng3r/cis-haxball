@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "dev": "npx @tailwindcss/cli -i ./input.css -o ../haxball_site/static/tailwind/css/output.css --watch",
+    "build": "npx @tailwindcss/cli -i ./input.css -o ../haxball_site/static/tailwind/css/output.css --optimize"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.0.9",
+    "daisyui": "^5.0.0-beta.8",
+    "tailwindcss": "^4.0.9"
+  }
+}

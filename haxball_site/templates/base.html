@@ -24,6 +24,7 @@
         <meta charset="UTF-8">
         <title>{% block title %}{% endblock %}</title>
         <link rel="stylesheet" type="text/css" href="{% static "bootstrap/css/bootstrap.min.css" %}">
+        <link rel="stylesheet" type="text/css" href="{% static "tailwind/css/output.css" %}">
         <link rel="stylesheet" href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
         <link rel="shortcut icon" href="{% static "img/logo_try.png" %}" type="image/x-icon">
         <!-- Google Fonts-->
@@ -33,15 +34,6 @@
               rel="stylesheet">
 
         <style>
-
-            body {
-                background: linear-gradient(120deg, #000000, #10205a, #00a080, #40ffbf);
-                background-size: 160% 160%;
-                background-repeat: no-repeat;
-                background-attachment: fixed;
-                animation: gradient 22s ease-in-out infinite;
-                height: 100vh;
-            }
 
             [x-cloak] {
                 display: none !important;
@@ -83,7 +75,7 @@
         {% block scripts %} {% endblock %}
     </head>
 
-    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:bg-gradient-to-r tw:from-black tw:via-blue-950 tw:to-teal-700 tw:min-h-screen tw:bg-fixed">
 
         {% include "core/include/navbar.html" %}
         {% include "core/include/running_line.html" %}
