@@ -30,6 +30,7 @@
     --tw-radius-sm: 0.25rem;
     --tw-radius-xl: 0.75rem;
     --tw-radius-2xl: 1rem;
+    --tw-animate-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
 }
 @layer base {
@@ -517,6 +518,20 @@
   .tw\:ml-2 {
     margin-left: calc(var(--tw-spacing) * 2);
   }
+  .tw\:status {
+    display: inline-block;
+    aspect-ratio: 1 / 1;
+    width: calc(0.25rem * 2);
+    height: calc(0.25rem * 2);
+    border-radius: var(--radius-selector);
+    background-color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+    background-position: center;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+    color: color-mix(in oklab, var(--color-black) 30%, transparent);
+    background-image: radial-gradient( circle at 35% 30%, oklch(1 0 0 / calc(var(--depth) * 0.5)), #0000 );
+    box-shadow: 0 2px 3px -1px color-mix(in oklab, currentColor calc(var(--depth) * 100%), #0000);
+  }
   .tw\:badge {
     display: inline-flex;
     align-items: center;
@@ -586,6 +601,10 @@
   .tw\:inline-flex\! {
     display: inline-flex !important;
   }
+  .tw\:status-lg {
+    width: calc(0.25rem * 3);
+    height: calc(0.25rem * 3);
+  }
   .tw\:h-\[50px\] {
     height: 50px;
   }
@@ -612,6 +631,9 @@
   }
   .tw\:max-w-\[1600px\] {
     max-width: 1600px;
+  }
+  .tw\:animate-ping {
+    animation: var(--tw-animate-ping);
   }
   .tw\:cursor-pointer {
     cursor: pointer;
@@ -689,6 +711,10 @@
   }
   .tw\:border-white {
     border-color: var(--tw-color-white);
+  }
+  .tw\:status-success {
+    background-color: var(--color-success);
+    color: var(--color-success);
   }
   .tw\:bg-blue-400\! {
     background-color: var(--tw-color-blue-400) !important;
@@ -797,9 +823,6 @@
   }
   .tw\:text-gray-800\! {
     color: var(--tw-color-gray-800) !important;
-  }
-  .tw\:text-success {
-    color: var(--color-success);
   }
   .tw\:text-white {
     color: var(--tw-color-white);
@@ -913,9 +936,6 @@
   img, video {
     max-width: none;
     height: none;
-  }
-  :root {
-    scrollbar-color: unset !important;
   }
   ::-webkit-scrollbar {
     width: 20px;
@@ -1350,11 +1370,6 @@ video {
 @layer base {
   :root:has( .modal-open, .modal[open], .modal:target, .modal-toggle:checked, .drawer:not([class*="drawer-open"]) > .drawer-toggle:checked ) {
     overflow: hidden;
-  }
-}
-@layer base {
-  :root {
-    scrollbar-color: color-mix(in oklch, currentColor 35%, #0000) #0000;
   }
 }
 @keyframes dropdown {

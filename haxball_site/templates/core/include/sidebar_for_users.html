@@ -1,7 +1,4 @@
 {% load static %}
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/include/sidebar_for_users.css" %}">
-{% endblock %}
 
 <div class="tw:card tw:border tw:border-white tw:rounded-2xl tw:mb-2">
     <div class="tw:card-title tw:rounded-t-2xl tw:justify-center tw:p-2 tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
@@ -12,7 +9,8 @@
             {% for user in users_online %}
                 <a role="button" class="tw:btn-link-block tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
                    href="{{ user.user_profile.get_absolute_url }}">
-                    <i class="fa fa-circle tw:text-success" aria-hidden="true"></i>{{ user }}
+                    <span class="tw:status tw:status-success tw:status-lg tw:animate-ping" aria-label="status"></span>
+                    {{ user }}
                     <span>
                         {% for icon in user.user_profile.user_icon.all %}
                             <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">

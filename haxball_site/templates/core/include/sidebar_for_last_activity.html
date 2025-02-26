@@ -1,8 +1,5 @@
 {% load static %}
 {% load cache %}
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/include/sidebar_for_last_activity.css" %}">
-{% endblock %}
 
 {% cache 60 last_activity_cache %}
 

@@ -1,15 +1,13 @@
 @import "tailwindcss" prefix(tw) source("../haxball_site/templates");
 
-@plugin "daisyui";
+@plugin "daisyui" {
+  exclude: scrollbar;
+}
 
 @layer base {
   img, video {
     max-width: none;
     height: none;
-  }
-
-  :root {
-    scrollbar-color: unset !important;
   }
 
   /* custom scrollbar */
