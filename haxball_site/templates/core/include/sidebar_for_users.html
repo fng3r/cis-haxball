@@ -9,7 +9,7 @@
             {% for user in users_online %}
                 <a role="button" class="tw:btn-link-block tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
                    href="{{ user.user_profile.get_absolute_url }}">
-                    <span class="tw:status tw:status-success tw:status-lg tw:animate-ping" aria-label="status"></span>
+                    <span class="tw:status tw:status-success tw:status-lg" aria-label="status"></span>
                     {{ user }}
                     <span>
                         {% for icon in user.user_profile.user_icon.all %}

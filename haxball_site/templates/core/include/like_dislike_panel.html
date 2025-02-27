@@ -1,37 +1,31 @@
 {% load user_tags %}
 
-{% if user.is_authenticated and user.user_profile.can_vote %}
-    <ul class="list-group list-group-horizontal-md d-inline-flex">
-        <li class="action-like fa fa-thumbs-up {% if post.votes.likes.all|user_in:user %}text-success{% endif %}"
-            data-id="{{ post.id }}" data-type="post" data-action="like" id="lpost{{ post.id }}" title="Нравится" style="cursor: pointer">
-            <span data-count="like">{{ post.votes.likes.count }}</span>
-        </li>
+<ul class="tw:inline-flex tw:items-center tw:mb-0!">
+    <li class="action-like fa fa-thumbs-up tw:pl-2 tw:cursor-pointer tw:text-base-content/40 tw:hover:text-success {% if post.votes.likes.all|user_in:user %}tw:text-success{% endif %}"
+        {% if user.is_authenticated %}
+            {% if user.user_profile.can_vote %}
+                data-id="{{ post.id }}" data-type="post" data-action="like" id="lpost{{ post.id }}" title="Нравится"
+            {% else %}
+                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
+            {% endif %}
+        {% else %}
+            data-toggle="modal" data-target="#loginModal"
+        {% endif %}
+    >
+        <span data-count="like">{{ post.votes.likes.count }}</span>
+    </li>
 
-        <li class="action-dislike fa fa-thumbs-down {% if post.votes.dislikes.all|user_in:user %}text-danger{% endif %}"
-            data-id="{{ post.id }}" data-type="post" data-action="dislike" id="dpost{{ post.id }}" title="Не нравится" style="cursor: pointer">
-
-            <span data-count="dislike">{{ post.votes.dislikes.count }}</span>
-        </li>
-    </ul>
-{% elif user.is_authenticated and not user.user_profile.can_vote %}
-    <ul class="list-group list-group-horizontal-md d-inline-flex">
-        <li class="action-like fa fa-thumbs-up" onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')">
-            <span data-count="like">{{ post.votes.likes.count }}</span>
-        </li>
-
-        <li class="action-dislike fa fa-thumbs-down" onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')">
-            <span data-count="dislike">{{ post.votes.dislikes.count }}</span>
-        </li>
-    </ul>
-{% else %}
-    <ul class="list-group list-group-horizontal-md d-inline-flex">
-        <li class="action-like fa fa-thumbs-up" data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
-            <span data-count="like">{{ post.votes.likes.count }}</span>
-        </li>
-
-        <li class="action-dislike fa fa-thumbs-down" data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
-
-            <span data-count="dislike">{{ post.votes.dislikes.count }}</span>
-        </li>
-    </ul>
-{% endif %}
+    <li class="action-dislike fa fa-thumbs-down tw:pl-2 tw:cursor-pointer tw:text-base-content/40 tw:hover:text-error {% if post.votes.dislikes.all|user_in:user %}tw:text-error{% endif %}"
+        {% if user.is_authenticated %}
+            {% if user.user_profile.can_vote %}
+                data-id="{{ post.id }}" data-type="post" data-action="dislike" id="dpost{{ post.id }}" title="Не нравится"
+            {% else %}
+                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
+            {% endif %}
+        {% else %}
+            data-toggle="modal" data-target="#loginModal"
+        {% endif %}
+    >
+        <span data-count="dislike">{{ post.votes.dislikes.count }}</span>
+    </li>
+</ul>

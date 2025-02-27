@@ -10,17 +10,14 @@
 
 {% block postlist %}
 
-    <div class="card my-2"
-         style="border-radius: 25px; background-image: url({% static "img/backgrounds/bg-light-4866.png" %})">
-
-        <div class="card-body">
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-4xl">
+        <div class="tw:card-body tw:rounded-t-4xl tw:gap-0 tw:py-4">
             {% if count_imp > 0 %}
-                <h3 class="text-center mt-1 mb-0">
-                    <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
+                <h3 class="tw:text-center tw:my-0">
+                    <i class="fa fa-exclamation tw:text-error!" aria-hidden="true"></i>
                     Актуальные новости
-                    <i class="fa fa-exclamation text-danger" aria-hidden="true"></i>
                 </h3>
-                <hr>
+                <div class="tw:divider tw:my-0!"></div>
 
                 {% for post in posts %}
                     {% if post.important %}
@@ -29,10 +26,10 @@
                 {% endfor %}
             {% endif %}
 
-            <h3 class="text-center mb-0">
-                <i class="fa fa-newspaper-o text-success" aria-hidden="true"></i> Последние новости
+            <h3 class="tw:text-center tw:mb-0">
+                <i class="fa fa-newspaper-o tw:text-success" aria-hidden="true"></i> Последние новости
             </h3>
-            <hr>
+            <div class="tw:divider tw:my-0!"></div>
 
             {% for post in posts %}
                 {% if not post.important %}
@@ -41,10 +38,8 @@
             {% endfor %}
         </div>
 
-
-        <div class="card-footer text-muted">
+        <div class="tw:card-body tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300 tw:py-2!">
             <a href="{% url 'core:all_posts' %}">Смотреть все новости</a>
         </div>
-
     </div>
 {% endblock %}
