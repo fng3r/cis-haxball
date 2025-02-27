@@ -5,7 +5,7 @@
 
 {% block title %}Чемпионат | Трансферы — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
-    <div class="tw:card tw:bg-white tw:mb-2 tw:mt-2 tw:rounded-2xl">
+    <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-2xl">
         <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-2xl tw:py-2 tw:border-b tw:border-gray-300">
             <h2 class="tw:card-title">
                 <i class="fa fa-arrow-circle-right tw:text-info tw:self-end" aria-hidden="true"></i>Трансферы
@@ -13,28 +13,29 @@
         </div>
 
         <div class="tw:w-full tw:p-0 tw:mx-0">
-            <form id="filter-form" class="form-inline my-2 ml-2"
+            <form id="filter-form" class="form-inline tw:mt-2 tw:mb-1 tw:mx-2"
                   hx-get="{% url 'tournament:transfers' %}"
                   hx-trigger="submit"
                   hx-target="#transfers-list-container"
                   hx-swap="innerHTML show:top"
                   hx-disabled-elt="find button">
-                <div class="form-group mr-2 mb-2">
+
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
                     <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.season.label }}</label>
                     {% render_field filter.form.season|add_class:'tw:select' %}
                 </div>
 
-                <div class="form-group mr-2 mb-2">
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
                     <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.team_from.label }}</label>
                     {% render_field filter.form.team_from|add_class:'tw:select' %}
                 </div>
 
-                <div class="form-group mr-2 mb-2">
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
                     <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.team_to.label }}</label>
                     {% render_field filter.form.team_to|add_class:'tw:select' %}
                 </div>
 
-                <div class="form-group mr-2 mb-2">
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
                     <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.player.label }}</label>
                     {% render_field filter.form.player|add_class:'tw:select' %}
                 </div>

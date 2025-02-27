@@ -13,7 +13,7 @@
         <tr class="tw:text-[16px]">
     {% endif %}
     <td class="tw:pl-2 tw:pr-1">
-        <div class="d-flex align-items-center">
+        <div class="tw:flex tw:items-center">
             <div class="tw:avatar tw:mr-2">
                 <div class="tw:w-[30px] tw:h-[30px] tw:rounded-full">
                     <img src="{{ transfer.trans_player.name.user_profile.avatar.url }}" class="tw:rounded-full"
@@ -25,7 +25,7 @@
     </td>
 
     <td class="tw:pl-2 tw:pr-1">
-        <div class="d-flex align-items-center">
+        <div class="tw:flex tw:items-center">
             {% if transfer.from_team %}
                 <img src="{{ transfer.from_team.logo.url }}" class="tw:mr-2"
                      alt="{{ transfer.from_team.title }}" width="30">
@@ -39,7 +39,7 @@
     </td>
 
     <td class="tw:pl-2 tw:pr-1">
-        <div class="d-flex align-items-center">
+        <div class="tw:flex tw:items-center">
             {% if transfer.to_team %}
                 <img src="{{ transfer.to_team.logo.url }}" class="tw:mr-2"
                      alt="{{ transfer.to_team.title }}" width="30">

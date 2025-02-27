@@ -25,9 +25,9 @@
                         {% for comment in top_comments_day %}
                             <a type="button" href="{{ comment.get_absolute_url }}" title="от {{ comment.author }} в {{ comment.content_object }}"
                                class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!">
-                                <div class="tw:flex">
+                                <div class="tw:flex tw:overflow-hidden">
                                     <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    {{ comment.body|striptags|truncatechars:18 }}
+                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
                                 </div>
                                 <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
                             </a>
@@ -58,9 +58,9 @@
                             <a type="button" href="{{ comment.get_absolute_url }}"
                                class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
                                title="от {{ comment.author }} в {{ comment.content_object }}">
-                                <div class="tw:flex">
+                                <div class="tw:flex tw:overflow-hidden">
                                     <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    {{ comment.body|striptags|truncatechars:18 }}
+                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
                                 </div>
                                 <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
                             </a>
@@ -88,9 +88,9 @@
                                class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
                                data-toggle="tooltip" data-placement="right"
                                title="от {{ comment.author }} в {{ comment.content_object }}">
-                                <div class="tw:flex">
+                                <div class="tw:flex tw:overflow-hidden">
                                     <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    {{ comment.body|striptags|truncatechars:18 }}
+                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
                                 </div>
                                 <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
                             </a>
@@ -117,9 +117,9 @@
                             <a type="button" href="{{ comment.get_absolute_url }}"
                                class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
                                title="от {{ comment.author }} в {{ comment.content_object }}">
-                                <div class="tw:flex">
+                                <div class="tw:flex tw:overflow-hidden">
                                     <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    <span>{{ comment.body|striptags|truncatechars:18 }}</span>
+                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
                                 </div>
                                 <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
                             </a>
