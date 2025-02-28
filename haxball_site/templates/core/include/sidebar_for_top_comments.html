@@ -2,133 +2,38 @@
 {% load cache %}
 
 {% cache 60 top_comments_cache %}
-
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
-            <div class="carousel-item active">
-                <div class="tw:card tw:mt-2 tw:rounded-t-2xl tw:rounded-b-none tw:border tw:border-white">
-                    <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-2xl tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
-                        <a class="d-inline" href="#carouselExampleControls" role="button" data-slide="prev"
-                           style="height: 100%">
-                            <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-                        <span class="tw:mb-0 tw:d-inline tw:text-2xl!">
-                            <i class="fa fa-thumbs-o-up text-success mr-1" aria-hidden="true"></i>Сегодня
-                        </span>
-                        <a class="tw:inline" href="#carouselExampleControls" role="button" data-slide="next">
-                            <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-
-                    </div>
-
-                    <div class="tw:w-full">
-                        {% for comment in top_comments_day %}
-                            <a type="button" href="{{ comment.get_absolute_url }}" title="от {{ comment.author }} в {{ comment.content_object }}"
-                               class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!">
-                                <div class="tw:flex tw:overflow-hidden">
-                                    <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
-                                </div>
-                                <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
+            {% for period in comments_by_period %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <div class="tw:card tw:mt-2 tw:rounded-t-2xl tw:rounded-b-none tw:border tw:border-white">
+                        <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-2xl tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
+                            <a class="d-inline" href="#carouselExampleControls" role="button" data-slide="prev" style="height: 100%">
+                                <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl!" aria-hidden="true"></i>
                             </a>
-                        {% endfor %}
+                            <span class="tw:mb-0 tw:d-inline tw:text-2xl!">
+                                <i class="fa fa-thumbs-o-up tw:text-success tw:mr-1" aria-hidden="true"></i>{{ period.title }}
+                            </span>
+                            <a class="tw:inline" href="#carouselExampleControls" role="button" data-slide="next">
+                                <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl!" aria-hidden="true"></i>
+                            </a>
+                        </div>
+
+                        <div class="tw:w-full">
+                            {% for comment in period.comments %}
+                                <a type="button" href="{{ comment.get_absolute_url }}" title="от {{ comment.author }} в {{ comment.content_object }}"
+                                   class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!">
+                                    <div class="tw:flex tw:overflow-hidden">
+                                        <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
+                                        <span class="tw:truncate">{{ comment.body|striptags|default:"*Медиа-контент" }}</span>
+                                    </div>
+                                    <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
+                                </a>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="carousel-item">
-                <div class="tw:card tw:mt-2 tw:rounded-t-2xl tw:rounded-b-none tw:border tw:border-white">
-
-                    <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-2xl tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
-                        <a class="d-inline" href="#carouselExampleControls" role="button" data-slide="prev"
-                           style="height: 100%">
-                            <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-                        <span class="tw:mb-0 tw:d-inline tw:text-2xl!">
-                            <i class="fa fa-thumbs-o-up text-success mr-1" aria-hidden="true"></i>Неделя
-                        </span>
-                        <a class="tw:inline" href="#carouselExampleControls" role="button" data-slide="next">
-                            <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-
-                    </div>
-
-                    <div class="tw:w-full">
-                        {% for comment in top_comments_week %}
-                            <a type="button" href="{{ comment.get_absolute_url }}"
-                               class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
-                               title="от {{ comment.author }} в {{ comment.content_object }}">
-                                <div class="tw:flex tw:overflow-hidden">
-                                    <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
-                                </div>
-                                <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
-                            </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="carousel-item">
-                <div class="tw:card tw:mt-2 tw:rounded-t-2xl tw:rounded-b-none tw:border tw:border-white">
-                    <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-2xl tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
-                        <a class="tw:inline" href="#carouselExampleControls" role="button" data-slide="prev">
-                            <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-                        <span class="tw:mb-0 tw:d-inline tw:text-2xl!">
-                            <i class="fa fa-thumbs-o-up text-success mr-1" aria-hidden="true"></i>Месяц
-                        </span>
-                        <a class="tw:inline" href="#carouselExampleControls" role="button" data-slide="next">
-                            <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                    <div class="tw:w-full">
-                        {% for comment in top_comments_month %}
-                            <a type="button" href="{{ comment.get_absolute_url }}"
-                               class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
-                               data-toggle="tooltip" data-placement="right"
-                               title="от {{ comment.author }} в {{ comment.content_object }}">
-                                <div class="tw:flex tw:overflow-hidden">
-                                    <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
-                                </div>
-                                <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
-                            </a>
-
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <div class="tw:card tw:mt-2 tw:rounded-t-2xl tw:rounded-b-none tw:border tw:border-white">
-                    <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-2xl tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
-                        <a class="tw:inline" href="#carouselExampleControls" role="button" data-slide="prev">
-                            <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-                        <span class="tw:mb-0 tw:d-inline tw:text-2xl!">
-                            <i class="fa fa-thumbs-o-up text-success mr-1" aria-hidden="true"></i>Год
-                        </span>
-                        <a class="tw:inline" href="#carouselExampleControls" role="button" data-slide="next">
-                            <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl!" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                    <div class="tw:w-full">
-                        {% for comment in top_comments_year %}
-                            <a type="button" href="{{ comment.get_absolute_url }}"
-                               class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"
-                               title="от {{ comment.author }} в {{ comment.content_object }}">
-                                <div class="tw:flex tw:overflow-hidden">
-                                    <span class="tw:badge tw:badge-pill tw:badge-success tw:mr-2">{{ comment.likes_count }}</span>
-                                    <span class="tw:truncate">{{ comment.body|striptags }}</span>
-                                </div>
-                                <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
-                            </a>
-
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+            {% endfor %}
         </div>
-
     </div>
 {% endcache %}

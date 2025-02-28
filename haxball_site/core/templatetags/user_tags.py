@@ -139,7 +139,7 @@ def show_last_activity(count=10):
 @register.inclusion_tag('core/include/sidebar_for_top_comments.html')
 def show_top_comments(count=5):
     my_date = datetime.now()
-    year, week, day_of_week = my_date.isocalendar()
+    year, _, day_of_week = my_date.isocalendar()
     day = my_date.day
     month = my_date.month
 
@@ -150,22 +150,23 @@ def show_top_comments(count=5):
         .annotate(dislikes_count=Count('votes', filter=Q(votes__vote__lt=0)))
     )
 
-    top_com_today = comments.filter(created__year=year, created__month=month, created__day=day).order_by(
+    top_comments_today = comments.filter(created__year=year, created__month=month, created__day=day).order_by(
         '-likes_count'
     )[:count]
-    top_com_month = comments.filter(created__year=year, created__month=month).order_by('-likes_count')[:count]
-    top_com_year = comments.filter(created__year=year).order_by('-likes_count')[:count]
-
+    
     week_start = my_date - timezone.timedelta(days=day_of_week - 1, hours=my_date.hour, minutes=my_date.minute)
-
     week_end = my_date + timezone.timedelta(days=7 - day_of_week, hours=23 - my_date.hour, minutes=60 - my_date.minute)
-    top_com_week = comments.filter(created__gt=week_start, created__lt=week_end).order_by('-likes_count')[:count]
+    top_comments_by_week = comments.filter(created__gt=week_start, created__lt=week_end).order_by('-likes_count')[:count]
+    top_comments_by_month = comments.filter(created__year=year, created__month=month).order_by('-likes_count')[:count]
+    top_comments_by_year = comments.filter(created__year=year).order_by('-likes_count')[:count]
 
     return {
-        'top_comments_day': top_com_today,
-        'top_comments_month': top_com_month,
-        'top_comments_year': top_com_year,
-        'top_comments_week': top_com_week,
+        'comments_by_period': [
+            {'title': 'Сегодня', 'comments': top_comments_today},
+            {'title': 'Неделя', 'comments': top_comments_by_week},
+            {'title': 'Месяц', 'comments': top_comments_by_month},
+            {'title': 'Год', 'comments': top_comments_by_year},
+        ],
     }
 
 
