@@ -184,14 +184,14 @@ if DEBUG:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-            'LOCATION': os.path.join(BASE_DIR, 'mycache'),
+            'LOCATION': config('CACHE_LOCATION', default=os.path.join(BASE_DIR, '.site_cache')),
         }
     }
 else:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-            'LOCATION': '/var/tmp/django_cache',
+            'LOCATION': config('CACHE_LOCATION', default='/var/tmp/django_cache'),
         }
     }
 
