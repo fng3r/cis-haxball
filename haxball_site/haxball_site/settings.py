@@ -106,20 +106,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 WSGI_APPLICATION = 'haxball_site.wsgi.application'
 
 USE_DJANGO_JQUERY = True
-# Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-# if DEBUG:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#             'OPTIONS': {'timeout': 30},
-#         }
-#     }
-# else:
+# Database
+# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -171,9 +162,6 @@ USE_L10N = True
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    # ACCOUNT_EMAIL_REQUIRED = True
-    # ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
-    # ACCOUNT_EMAIL_VERIFICATION = True
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     ACCOUNT_EMAIL_REQUIRED = True
