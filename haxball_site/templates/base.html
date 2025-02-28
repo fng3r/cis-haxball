@@ -55,10 +55,10 @@
         {% block scripts %} {% endblock %}
     </head>
 
-    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:bg-gradient-to-r tw:from-black tw:via-blue-950 tw:to-teal-700 tw:min-h-screen tw:bg-fixed">
+    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:bg-gradient-to-r tw:from-black tw:via-blue-950 tw:to-teal-700 tw:min-h-screen tw:bg-fixed tw:pb-1!">
 
         {% include "core/include/navbar.html" %}
-        {% include "core/include/running_line.html" %}
+        {% comment %} {% include "core/include/running_line.html" %} {% endcomment %}
 
         {% block content %} {% endblock %}
 
