@@ -20,7 +20,7 @@ urlpatterns = [
     #  Путь к админам
     path('admin_list/', views.AdminListView.as_view(), name='admins'),
     #  Все посты
-    path('news_all/', views.AllPostView.as_view(), name='all_posts'),
+    path('posts/', views.AllPostView.as_view(), name='all_posts'),
     #  Путь к трансляциям
     path('lives/', views.LivesView.as_view(), name='lives'),
     #  Путь на форум

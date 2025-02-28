@@ -35,17 +35,10 @@ class PostListView(ListView):
     paginate_by = 7
     template_name = 'core/post/list.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        count_imp = Post.objects.filter(category__is_official=True, important=True).count()
-        context['count_imp'] = count_imp
-
-        return context
-
 
 # Смотреть все новости
 class AllPostView(ListView):
-    queryset = Post.objects.filter(category__is_official=True).order_by('-created')
+    queryset = Post.objects.filter(category__is_official=True).order_by('-publish')
     context_object_name = 'posts'
     paginate_by = 7
     template_name = 'core/post/all_posts_list.html'
