@@ -276,23 +276,30 @@
 
         </ul>
 
-
-
-
         {% if user.is_authenticated %}
-            <a class="p-2" href="{{ user.user_profile.get_absolute_url }}">{{ user.username }}</a>
+            <div class="tw:dropdown tw:dropdown-start tw:xl:dropdown-end">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar">
+                    <div class="tw:w-[45px] tw:rounded-full">
+                        <img src="{{ user.user_profile.avatar.url }}" />
+                    </div>
+                </div>
+
+                <ul tabindex="0"
+                    class="tw:menu tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:w-45 tw:p-2 tw:shadow"
+                >
+                    <span class="tw:inline-block tw:w-full tw:truncate tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">{{ user.username }}</span>
+                    <li>
+                        <a class="tw:block tw:text-base-content! tw:no-underline!" href="{{ user.user_profile.get_absolute_url }}">
+                            Профиль
+                        </a>
+                    </li>
+                    <li>
+                        <label for="logoutModal" class="tw:text-sm tw:mb-0!">Выход</label>
+                    </li>
+                </ul>
+            </div>
         {% else %}
             <a role="button" class="btn btn-success mr-2" href="{% url 'account_signup' %}">Регистрация</a>
-        {% endif %}
-
-        {% if user.is_authenticated %}
-            <label for="logoutModal"
-                   class="tw:btn tw:btn-sm tw:bg-red-700 tw:border-red-700 tw:hover:bg-red-800 tw:hover:border-red-800
-                          tw:text-white tw:shadow-none tw:mr-2 tw:mb-0! tw:inline-flex!"
-            >
-                Выход
-            </label>
-        {% else %}
             <button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#loginModal">
                 Вход
             </button>
