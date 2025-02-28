@@ -11,53 +11,54 @@
     {% else %}
         <tr>
     {% endif %}
-    <td>
-        <div style="font-size: 13px;">
+    <td class="tw:pr-1">
+        <div class="tw:text-sm">
             {{ disqualification.match.league.championship.short_title }}
         </div>
     </td>
 
-    <td class="disqualification-row pl-2 pr-1">
-        <div class="media">
-            <img src="{{ disqualification.team.logo.url }}" class="align-self-start mr-1"
+    <td class="disqualification-row tw:pl-2 tw:pr-1">
+        <div class="tw:flex tw:items-center tw:text-[12px]">
+            <img src="{{ disqualification.team.logo.url }}" class="tw:mr-1"
                  alt="{{ disqualification.team.title }}" width="20" height="20">
-            <div class="media-body">
-                <h6 class="mt-0" style="font-size: 13px">
-                    <a href="{{ disqualification.team.get_absolute_url }}">{{ disqualification.team.title }}</a>
-                </h6>
-            </div>
+            <a href="{{ disqualification.team.get_absolute_url }}" class="tw:my-0 tw:font-semibold">{{ disqualification.team.title }}</a>
         </div>
     </td>
 
-    <td class="disqualification-row pl-2 pr-1">
-        <div class="media">
-            <img src="{{ disqualification.player.name.user_profile.avatar.url }}" class="align-self-start mr-1"
-                 alt="{{ disqualification.player.nickname }}" width="20" height="20" style="border-radius: 100%; background-position: center center; background-repeat: no-repeat;">
-            <div class="media-body">
-                <h6 class="mt-0" style="font-size: 13px">
-                    <a href="{{ disqualification.player.name.user_profile.get_absolute_url }}">{{ disqualification.player }}</a>
-                </h6>
+    <td class="disqualification-row tw:pl-2 tw:pr-1">
+        <div class="tw:flex tw:items-center tw:text-[12px]">
+            <div class="tw:avatar tw:mr-1">
+                <div class="tw:w-[20px] tw:rounded-full">
+                    <img src="{{ disqualification.player.name.user_profile.avatar.url }}" class="tw:rounded-full"
+                         alt="{{ disqualification.player.nickname }}">
+                </div>
             </div>
+            <a href="{{ disqualification.player.name.user_profile.get_absolute_url }}" class="tw:my-0 tw:font-semibold">{{ disqualification.player }}</a>
         </div>
     </td>
 
-    <td class="disqualification-row pl-2 pr-1">
-        <div class="media">
-            <img src="{{ disqualification.match.team_home.logo.url }}" class="align-self-start mr-1"
-                 alt="{{ disqualification.match.team_home }}" width="20" height="20">
-            <h6 class="mt-0" style="font-size: 13px">
-                <a href="{{disqualification.match.get_absolute_url}}">{{disqualification.match.team_home.short_title}}-{{disqualification.match.team_guest.short_title}}</a>
-            </h6>
-            <img src="{{ disqualification.match.team_guest.logo.url }}" class="ml-1"
-                 alt="{{ disqualification.match.team_guest }}" width="20" height="20">
-        </div>
+    <td class="disqualification-row tw:pl-2 tw:pr-1">
+        <a href="{{disqualification.match.get_absolute_url}}" class="tw:font-semibold">
+            <div class="tw:flex tw:flex-col tw:items-left">
+                <div class="tw:flex tw:items-center">
+                    <img src="{{ disqualification.match.team_home.logo.url }}" class="tw:mr-1"
+                         alt="{{ disqualification.match.team_home }}" width="20" height="20">{{disqualification.match.team_home.short_title}}
+                </div>
+                <div class="tw:text-base-content/70! tw:text-center tw:text-xs">vs</div>
+                <div class="tw:flex tw:items-center">
+                    <img src="{{ disqualification.match.team_guest.logo.url }}" class="tw:mr-1"
+                         alt="{{ disqualification.match.team_guest }}" width="20" height="20">{{disqualification.match.team_guest.short_title}}
+                </div>
+            </div>
+        </a>
+    </td>
+
+    <td class="disqualification-row" width="15%">
+        <div class="tw:text-[12px] tw:text-left">{{ disqualification.reason }}</div>
     </td>
 
     <td class="disqualification-row">
-        <div style="width: 100%; font-size: 13px; text-align: left;">{{ disqualification.reason }}</div>
-    </td>
-    <td class="disqualification-row">
-        <div style="font-size: 13px">
+        <div class="tw:text-[12px]">
             {% for tour in disqualification.tours.all %}
                 {{ tour }}<br>
             {% endfor %}
@@ -65,7 +66,7 @@
     </td>
 
     <td class="disqualification-row">
-        <div style="font-size: 13px">
+        <div class="ttw:text-[12px]">
             {% if disqualification.lifted_tours.count == 0 %}
                 Нет
             {% elif disqualification.tours.count == disqualification.lifted_tours.count %}
@@ -79,20 +80,22 @@
         </div>
     </td>
 
-    <td class="pl-2 pr-1">
-        {% if disqualification.match.inspector %}
-            <div class="media">
-                <img src="{{ disqualification.match.inspector.user_profile.avatar.url }}" class="align-self-start mr-1"
-                     alt="{{ disqualification.match.inspector.username }}" width="20" height="20" style="border-radius: 100%; background-position: center center; background-repeat: no-repeat;">
-                <div class="media-body">
-                    <h6 class="mt-0" style="font-size: 13px">
-                        <a href="{{ disqualification.inspector.name.user_profile.get_absolute_url }}">{{ disqualification.match.inspector.username }}</a>
-                    </h6>
+    <td class="tw:pl-2 tw:pr-1">
+        <div class="tw:flex tw:items-center tw:text-[12px]">
+            {% if disqualification.match.inspector %}
+                <div class="tw:avatar tw:mr-1">
+                    <div class="tw:w-[20px] tw:rounded-full">
+                        <img src="{{ disqualification.match.inspector.user_profile.avatar.url }}" class="tw:mr-1 tw:rounded-full"
+                             alt="{{ disqualification.match.inspector.username }}">
+                    </div>
                 </div>
-            </div>
-        {% else %}
-            —
-        {% endif %}
+                <div class="tw:text-sm">
+                    <a href="{{ disqualification.match.inspector.user_profile.get_absolute_url }}" class="tw:my-0 tw:font-semibold">{{ disqualification.match.inspector.username }}</a>
+                </div>
+            {% else %}
+                —
+            {% endif %}
+        </div>
     </td>
     </tr>
 {% endfor %}
