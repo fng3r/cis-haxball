@@ -31,6 +31,14 @@
   }
 }
 
+@layer utilities {
+  .tw\:tab {
+    &:not(:checked, :hover, .tw\:tab-active, [aria-selected="true"]) {
+      color: color-mix(in oklab, var(--color-base-content) 75%, transparent);
+    }
+  }
+}
+
 @layer components {
   img {
     display: inline;
