@@ -1,208 +1,37 @@
 {% extends "core/home.html" %}
-{% load static %}
 {% load cache %}
-{% load widget_tweaks %}
 {% load tournament_extras %}
 
 {% block title %}Чемпионат | Зал славы — CIS-HAXBALL {% endblock %}
 {% block profile_of_user %}
     {% cache 3600 hall_of_fame_cache %}
-        <div class="card mb-4 mt-2" style="border-radius: 25px">
-            <div class="card-header pb-0" style="border-radius: 25px 25px 0 0">
-                <h1 class="text-center">Зал славы</h1>
+        <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-2xl">
+            <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-2xl tw:py-2 tw:border-b tw:border-gray-300">
+                <div class="tw:card-title tw:py-1">
+                    <h3 class="tw:text-center tw:flex tw:items-center tw:justify-center">Зал славы</h3>
+                </div>
             </div>
 
-            <div class="card-body text-center p-0">
-                <div class="p-0" style="bottom: 0;">
-                    <ul class="nav nav-tabs" id="tabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="players-tab" href="#players" data-toggle="tab"
-                               role="tab" aria-controls="players-tab" aria-selected="true">
-                                Игроки
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" id="teams-tab" href="#teams" data-toggle="tab"
-                               role="tab" aria-controls="teams-tab" aria-selected="false">
-                                Команды
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="tab-content" id="content">
-                    <div class="tab-pane fade active show" id="players" role="tabpanel" aria-labelledby="players-tab">
-                        {% partialdef players-hall-of-fame inline=True %}
-                            <div class="container-fluid px-0">
-
-                                <form id="filter-form" class="form-inline mt-2 ml-2"
-                                      hx-get="{% url 'tournament:players_hall_of_fame' %}"
-                                      hx-trigger="submit"
-                                      hx-target="#players"
-                                      hx-swap="innerHTML"
-                                      hx-disabled-elt="find button">
-
-                                    <div class="form-group mr-2 mb-2">
-                                        <label>{{ players_filter.form.season.label }}:</label>
-                                        {% render_field players_filter.form.season|add_class:'form-control-sm ml-1' %}
-                                    </div>
-
-                                    <div class="form-group mr-2 mb-2">
-                                        <label>{{ players_filter.form.tournament.label }}:</label>
-                                        {% render_field players_filter.form.tournament|add_class:'form-control-sm ml-1' %}
-                                    </div>
-
-                                    <div class="form-group mr-2 mb-2">
-                                        <label>{{ players_filter.form.nation.label }}:</label>
-                                        {% render_field players_filter.form.nation|add_class:'form-control-sm ml-1' %}
-                                    </div>
-
-                                    <div class="form-group mb-2">
-                                        <button class="btn-sm btn-primary">Применить фильтр</button>
-                                        <img class="htmx-indicator ml-2" src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
-                                    </div>
-
-                                </form>
-
-                                <div class="row row-cols-3 mx-0 mt-2">
-                                    {% with title='Бомбардиры' icon_url='img/ico/ball_2.png' players=players_tops.goals %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Ассистенты' icon_url='img/ico/boot_ass_2.png' players=players_tops.assists %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' players=players_tops.clean_sheets %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-                                </div>
-
-                                <div class="row row-cols-3 mx-0 mt-3">
-                                    {% with title='Матчи' icon_url='img/ico/matches_icon.png' players=players_tops.matches %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Победы' icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 players=players_tops.wins %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Процент побед' icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 players=players_tops.winrates %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-                                </div>
-
-                                <div class="row row-cols-3 mx-0 mt-3">
-                                    {% with title='Вышел на поле' icon_cls='fa fa-arrow-up text-success' players=players_tops.subs_in %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Ушел с поля' icon_cls='fa fa-arrow-down text-danger' players=players_tops.subs_out %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' players=players_tops.ogs %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-                                </div>
-
-                                <div class="row row-cols-3 mx-0 mt-3 mb-3">
-                                    {% with title='Желтые карточки' icon_url='img/ico/yellow_card.png' players=players_tops.yellow_cards %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Красные карточки' icon_url='img/ico/red_card.png' players=players_tops.red_cards %}
-                                        {% include 'tournament/hall_of_fame/partials/players_top.html' %}
-                                    {% endwith %}
-                                </div>
-                            </div>
-
-                        {% endpartialdef %}
+            <div class="tw:card-body tw:px-0 tw:pt-0! tw:pb-1">
+                <div class="tw:tabs tw:tabs-border tw:px-0! tw:bg-base-200 tw:rounded-b-2xl tw:mb-3" role="tablist">
+                    <input type="radio" name="hall-of-fame-tabs"
+                           class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
+                           aria-label="Игроки"
+                           checked
+                    />
+                    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300" role="tabpanel">
+                        {% include 'tournament/hall_of_fame/partials/players_hall_of_fame.html' %}
                     </div>
 
-                    <div class="tab-pane fade" id="teams" role="tabpanel" aria-labelledby="teams-tab">
-                        {% partialdef teams-hall-of-fame inline=True %}
-                            <div class="container-fluid px-0">
-
-                                <form id="filter-form" class="form-inline mt-2 ml-2"
-                                      hx-get="{% url 'tournament:teams_hall_of_fame' %}"
-                                      hx-trigger="submit"
-                                      hx-target="#teams"
-                                      hx-swap="innerHTML"
-                                      hx-disabled-elt="find button">
-
-                                    <div class="form-group mr-2 mb-2">
-                                        <label>{{ teams_filter.form.season.label }}:</label>
-                                        {% render_field teams_filter.form.season|add_class:'form-control-sm ml-1' %}
-                                    </div>
-
-                                    <div class="form-group mr-2 mb-2">
-                                        <label>{{ teams_filter.form.tournament.label }}:</label>
-                                        {% render_field teams_filter.form.tournament|add_class:'form-control-sm ml-1' %}
-                                    </div>
-
-                                    <div class="form-group mb-2">
-                                        <button class="btn-sm btn-primary">Применить фильтр</button>
-                                        <img class="htmx-indicator ml-2" src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
-                                    </div>
-
-                                </form>
-
-                                <div class="row row-cols-3 mx-0 mt-2">
-                                    {% with title='Голы' icon_url='img/ico/ball_2.png' teams=teams_tops.goals %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Передачи' icon_url='img/ico/boot_ass_2.png' teams=teams_tops.assists %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' teams=teams_tops.clean_sheets %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-                                </div>
-
-                                <div class="row row-cols-3 mx-0 mt-3">
-                                    {% with title='Матчи' icon_url='img/ico/matches_icon.png' teams=teams_tops.matches %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Победы' icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 teams=teams_tops.wins %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Процент побед' icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 teams=teams_tops.winrates %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-                                </div>
-
-                                <div class="row row-cols-3 mx-0 mt-3">
-                                    {% with title='Замены' icon_url='img/ico/statistic/sub.png' teams=teams_tops.subs %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Желтые карточки' icon_url='img/ico/yellow_card.png' teams=teams_tops.yellow_cards %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-
-                                    {% with title='Красные карточки' icon_url='img/ico/red_card.png' teams=teams_tops.red_cards %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-                                </div>
-
-                                <div class="row row-cols-3 mx-0 mt-3 mb-3">
-                                    {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' teams=teams_tops.ogs %}
-                                        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-                                    {% endwith %}
-                                </div>
-                            </div>
-
-                        {% endpartialdef %}
+                    <input type="radio" name="hall-of-fame-tabs"
+                           class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
+                           aria-label="Команды"
+                    />
+                    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300" role="tabpanel">
+                        {% include 'tournament/hall_of_fame/partials/teams_hall_of_fame.html' %}
                     </div>
                 </div>
             </div>
         </div>
     {% endcache %}
-
 {% endblock %}

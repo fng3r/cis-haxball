@@ -389,6 +389,8 @@ CKEDITOR_CONFIGS = {
     },
 }
 
+THUMBNAIL_PRESERVE_FORMAT = True
+
 INTERNAL_IPS = config('INTERNAL_IPS', cast=str.split)
 
 # This sets the mapping of message level to message tag, which is typically rendered as a CSS class in HTML.
