@@ -20,8 +20,6 @@
             {% endfor %}
         </div>
 
-        <div class="tw:flex tw:justify-center tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300">
-            {% include "core/include/pagination.html" with page=page_obj %}
-        </div>
+        {% include "core/include/pagination.html" with page=page_obj %}
     </div>
 {% endblock %}

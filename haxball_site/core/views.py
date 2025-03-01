@@ -256,7 +256,7 @@ class CommentsListView(ListView):
             'comments': comments,
         }
 
-        return render(request, 'core/include/new_comments.html#comments-container', context)
+        return render(request, 'core/comment/comments.html#comments-container', context)
 
 
 class AddCommentView(View):
@@ -271,7 +271,7 @@ class AddCommentView(View):
             'comment_form': comment_form,
         }
 
-        return render(request, 'core/include/new_comments.html#comment-form-container', context)
+        return render(request, 'core/comment/comments.html#comment-form-container', context)
 
     def post(self, request, ct, pk):
         content_type = ContentType.objects.get(pk=ct)
@@ -296,7 +296,7 @@ class AddCommentView(View):
             'comment_form': comment_form,
         }
 
-        return render(request, 'core/include/new_comments.html#comments-container', context)
+        return render(request, 'core/comment/comments.html#comments-container', context)
 
 
 class EditCommentView(View):
@@ -332,7 +332,7 @@ class EditCommentView(View):
 
         return render(
             request,
-            'core/include/comment/comment-item.html',
+            'core/comment/comment-item.html',
             {
                 'comment': comment,
                 'object': comment.content_object
@@ -360,7 +360,7 @@ def get_comment(request, pk):
 
     return render(
         request,
-        'core/include/comment/comment-item.html',
+        'core/comment/comment-item.html',
         {
             'comment': comment,
             'object': comment.content_object
@@ -389,7 +389,7 @@ def delete_comment(request, pk):
             'comment_form': NewCommentForm(),
         }
 
-        return render(request, 'core/include/new_comments.html#comments-container', context)
+        return render(request, 'core/comment/comments.html#comments-container', context)
 
     return HttpResponse('Ошибка доступа или время истекло')
 

@@ -51,21 +51,19 @@
                 {{ post.body|safe }}
             </p>
         </div>
-        <div class="card-footer d-inline-flex justify-content-between" style="cursor: pointer">
-            <span class="text-muted"> Комментариев: {{ post.comments.count }} </span>
+        <div class="tw:inline-flex tw:justify-between tw:rounded-b-3xl tw:bg-base-300 tw:px-4 tw:py-2">
+            <span class="tw:text-base-content/70"> Комментариев: {{ post.comments.count }} </span>
 
             <div>
-
                 {% include 'core/include/like_dislike_panel.html' %}
 
-
-                <span class="action-icons">
+                <span class="action-icons tw:ml-1 tw:hover:text-[#1976d2]">
                     {% if user.is_authenticated %}
                         <a href="#addcomment" onclick="addComment('','')">
                             <i class="fa fa-reply"></i>
                         </a>
                     {% else %}
-                        <a data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
+                        <a class="tw:cursor-pointer" data-toggle="modal" data-target="#loginModal">
                             <i class="fa fa-reply"></i>
                         </a>
                     {% endif %}
@@ -78,7 +76,7 @@
 {% endblock %}
 
 {% block comments %}
-    {% include 'core/include/new_comments.html' with object=post comments=comments %}
+    {% include 'core/comment/comments.html' with object=post comments=comments %}
 {% endblock %}
 
 

@@ -66,11 +66,16 @@ def exceeds_edit_limit(comment: NewComment):
 def user_last_activity(user):
     try:
         user_activity = OnlineUserActivity.objects.get(user=user)
-        is_online = timezone.now() - user_activity.last_activity < timezone.timedelta(minutes=15)
+        is_online = timezone.now() - user_activity.last_activity < timezone.timedelta(minutes=5)
     except:
         return None
 
     return {'last_seen': user_activity.last_activity, 'is_online': is_online}
+
+
+@register.filter
+def is_online(user, users_online):
+    return user in users_online
 
 
 # Тег для отображения последней активности на форуме
@@ -96,18 +101,6 @@ def forum_last_activity(category):
         return {'last_act': last_comment.created}
 
     return {'last_act': last_post.created}
-
-
-# Сайдбар для пользователей онлайн(по дефолту 15 минут)
-@register.inclusion_tag('core/include/sidebar_for_users.html')
-def show_users_online():
-    user_activity_objects = OnlineUserActivity.get_user_activities(
-        time_delta=timezone.timedelta(minutes=5)
-    ).select_related('user__user_profile')
-    users_online_count = user_activity_objects.count()
-    users_online = (user.user for user in user_activity_objects)
-
-    return {'users_online': users_online, 'users_online_count': users_online_count}
 
 
 # Сайд-бар для last activity (выводит последние оставленные комментарии

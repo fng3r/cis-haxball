@@ -26,9 +26,7 @@
         </div>
 
         {% if category.posts_in_category.all.count > 6 %}
-            <div class="tw:flex tw:justify-center tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300">
-                {% include "core/include/pagination.html" with page=posts %}
-            </div>
+            {% include "core/include/pagination.html" with page=posts %}
         {% endif %}
     </div>
 {% endblock %}

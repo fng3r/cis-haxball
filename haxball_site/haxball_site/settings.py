@@ -95,6 +95,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'haxball_site.context_processors.running_line_context',
+                'haxball_site.context_processors.online_users_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },

@@ -1,37 +1,37 @@
 {% load static %}
 {% load user_tags %}
 
-<div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
-    {% if page.paginator.num_pages > 1 %}
-
-        {% for page_number in page|pages_to_show %}
-            {% if not page_number %}
-                <button class="tw:join-item tw:btn tw:btn-disabled">...</button>
-            {% elif page_number == page.number %}
-                <button class="tw:join-item tw:btn tw:btn-active">{{ page_number }}</button>
-            {% else %}
-                {% with content_type=object|content_type %}
-                    {% if paginated_type == 'comments' %}
-                        <button class="tw:join-item tw:btn"
-                                hx-get="{% url 'core:comments' content_type.pk object.id %}?page={{ page_number }}"
-                                hx-push-url="?page={{ page_number }}"
-                                hx-target="#comments-container"
-                                hx-swap="outerHTML show:top"
-                                hx-indicator="#page-indicator">
-                            {{ page_number }}
-                        </button>
-                    {% else %}
-                        <a href="{{ object.get_absolute_url }}?page={{ page_number }}">
-                            <button class="tw:join-item tw:btn">
+{% if page.paginator.num_pages > 1 %}
+    <div class="tw:flex tw:justify-center tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300">
+        <div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
+            {% for page_number in page|pages_to_show %}
+                {% if not page_number %}
+                    <button class="tw:join-item tw:btn tw:btn-disabled">...</button>
+                {% elif page_number == page.number %}
+                    <button class="tw:join-item tw:btn tw:btn-active">{{ page_number }}</button>
+                {% else %}
+                    {% with content_type=object|content_type %}
+                        {% if paginated_type == 'comments' %}
+                            <button class="tw:join-item tw:btn"
+                                    hx-get="{% url 'core:comments' content_type.pk object.id %}?page={{ page_number }}"
+                                    hx-push-url="?page={{ page_number }}"
+                                    hx-target="#comments-container"
+                                    hx-swap="outerHTML show:top"
+                                    hx-indicator="#page-indicator">
                                 {{ page_number }}
                             </button>
-                        </a>
-                    {% endif %}
-                {% endwith %}
-            {% endif %}
-        {% endfor %}
+                        {% else %}
+                            <a href="{{ object.get_absolute_url }}?page={{ page_number }}">
+                                <button class="tw:join-item tw:btn">
+                                    {{ page_number }}
+                                </button>
+                            </a>
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+            {% endfor %}
 
-        <img id="page-indicator" class="htmx-indicator tw:ml-2 tw:my-auto tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
-
-    {% endif %}
-</div>
+            <img id="page-indicator" class="htmx-indicator tw:ml-2 tw:my-auto tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+        </div>
+    </div>
+{% endif %}

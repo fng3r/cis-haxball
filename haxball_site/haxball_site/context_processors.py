@@ -1,4 +1,5 @@
 from django.utils import timezone
+from online_users.models import OnlineUserActivity
 from tournament.models import Match
 
 
@@ -13,3 +14,12 @@ def running_line_context(request):
     animation_duration = base_duration + added_duration
 
     return {'latest_matches': latest_matches, 'animation_duration': animation_duration}
+
+
+def online_users_context(request):
+    user_activity_objects = OnlineUserActivity.get_user_activities(
+        time_delta=timezone.timedelta(minutes=5)
+    ).select_related('user__user_profile')
+    users_online = [user_activity.user for user_activity in user_activity_objects]
+
+    return {'users_online': users_online, 'users_online_count': len(users_online)}
