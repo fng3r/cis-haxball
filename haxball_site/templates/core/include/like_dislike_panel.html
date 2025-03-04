@@ -9,7 +9,7 @@
                 onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
             {% endif %}
         {% else %}
-            data-toggle="modal" data-target="#loginModal"
+            onclick="login_modal.showModal()"
         {% endif %}
     >
         <span data-count="like">{{ post.votes.likes.count }}</span>
@@ -23,7 +23,7 @@
                 onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
             {% endif %}
         {% else %}
-            data-toggle="modal" data-target="#loginModal"
+            onclick="login_modal.showModal()"
         {% endif %}
     >
         <span data-count="dislike">{{ post.votes.dislikes.count }}</span>

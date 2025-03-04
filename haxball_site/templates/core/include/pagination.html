@@ -13,7 +13,7 @@
                     {% with content_type=object|content_type %}
                         {% if paginated_type == 'comments' %}
                             <button class="tw:join-item tw:btn"
-                                    hx-get="{% url 'core:comments' content_type.pk object.id %}?page={{ page_number }}"
+                                    hx-get="{% url 'core:comments' content_type.pk object.id %}{% querystring page=page_number %}"
                                     hx-push-url="?page={{ page_number }}"
                                     hx-target="#comments-container"
                                     hx-swap="outerHTML show:top"
@@ -21,7 +21,7 @@
                                 {{ page_number }}
                             </button>
                         {% else %}
-                            <a href="{{ object.get_absolute_url }}?page={{ page_number }}">
+                            <a href="{{ object.get_absolute_url }}{% querystring page=page_number %}">
                                 <button class="tw:join-item tw:btn">
                                     {{ page_number }}
                                 </button>
