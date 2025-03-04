@@ -1,21 +1,21 @@
 {% load static %}
 {% load tournament_extras %}
+{% load widget_tweaks %}
 
 
-<div class="card bg-c-lite-unknown mb-2" style="border-radius: 1rem">
+<div class="tw:p-1">
     {% if matches %}
-        <form id="reservation-form" class="row px-3 py-2"
+        <form id="reservation-form" class="tw:flex tw:flex-wrap tw:items-center tw:px-1 tw:pb-2 tw:gap-2"
               hx-trigger="submit"
               hx-post="{% url 'reservation:host_reservation' %}"
               hx-target="#content-container"
               hx-swap="outerHTML"
               hx-disabled-elt="find button">
-
             <input type="hidden" name="author" value="{{ user.id }}">
 
-            <div class="form-group text-center col-5">
-                <label for="match" class="h6 mb-1">Матч</label>
-                <select id="match" class="form-control" name="match">
+            <div class="tw:flex tw:flex-wrap tw:items-center">
+                <label for="match" class="tw:label tw:text-base-content tw:font-bold">Матч</label>
+                <select id="match" name="match" class="tw:select" >
                     {% for m in matches %}
                         <option {% if forloop.first %}selected{% endif %} value="{{ m.id }}">
                             {{ m.numb_tour|tour_name }}, {{ m.team_home.title }}-{{ m.team_guest.title }}
@@ -24,65 +24,57 @@
                 </select>
             </div>
 
-            <div class="form-group col-2 mb-1 px-2 text-center">
-                <label for="match_date" class="mb-1 h6">Дата матча</label>
-                <select class="match_date custom-select" name="match_date">
+            <div class="tw:flex tw:flex-wrap tw:items-center">
+                <label for="match_date" class="tw:label tw:text-base-content tw:font-bold">Дата матча</label>
+                <select class="tw:select" id="match_date" name="match_date">
                     <option value="{{ date_today|date:"Y-m-d" }}" selected>Сегодня</option>
                     <option value="{{ date_tomorrow|date:"Y-m-d" }}">Завтра</option>
                 </select>
             </div>
 
-            <div class="form-group col-2 mb-1 text-center">
-
-                <label for="match_time" class="mb-1 h6">Время матча</label>
-                <div class="row">
-
-                    <div class="col-6 px-2">
-                        <select class="match_time form-control text-center" name="match_hour">
-                            {% for hour in hours_list %}
-                                <option {% if forloop.first %}selected{% endif %} value="{{ hour }}">
-                                    {{ hour }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-6 px-2">
-                        <select class="match_time form-control text-center" name="match_minute">
-                            {% for minute in minutes_list %}
-                                <option {% if forloop.first %}selected{% endif %} value="{{ minute }}">
-                                    {{ minute }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
+            <div class="tw:flex tw:flex-col tw:justify-center">
+                <label for="match_time" class="tw:label tw:text-base-content tw:font-bold">Время матча</label>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                    <select class="tw:select" id="match_hour" name="match_hour">
+                        {% for hour in hours_list %}
+                            <option {% if forloop.first %}selected{% endif %} value="{{ hour }}">
+                                {{ hour }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <select class="tw:select" id="match_minute" name="match_minute">
+                        {% for minute in minutes_list %}
+                            <option {% if forloop.first %}selected{% endif %} value="{{ minute }}">
+                                {{ minute }}
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
-
             </div>
 
-            <div class="form-group col-3 mb-1 px-2 text-center">
-
-                <label for="match_host" class="mb-1 h6">Хост</label>
-                <select class="match_host custom-select" name="match_host">
+            <div class="tw:flex tw:flex-wrap tw:items-center">
+                <label for="match_host" class="tw:label tw:text-base-content tw:font-bold">Хост</label>
+                <select class="tw:select" id="match_host" name="match_host">
                     {% for host in hosts %}
                         <option {% if forloop.first %}selected{% endif %} value="{{ host.id }}">
                             {{host.name}}
                         </option>
                     {% endfor %}
                 </select>
-
             </div>
 
-            <div class="d-flex justify-content-end w-100 mb-1 mt-n1">
-                <img class="htmx-indicator mr-2 mt-2"
-                     src="{% static 'img/svg-loaders/bars-white.svg' %}" height="24">
-                <button type="submit" class="btn btn-primary mr-2 col-2">Забронировать хост</button>
+            <div class="tw:flex tw:mt-auto">
+                <button type="submit" class="tw:btn tw:btn-primary tw:rounded! tw:items-center">
+                    <i class="fa fa-clock-o" aria-hidden="true"></i>Забронировать хост
+                </button>
+                <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6"
+                     src="{% static 'img/svg-loaders/bars.svg' %}">
             </div>
-
         </form>
     {% else %}
-        <div class="d-inline-flex justify-content-center bg-c-lite-unknown p-3" style="border-radius: 1rem">
-            <h6 class="mb-0">У Вас сыграны/забронированны все матчи</h6>
+        <div role="alert" class="tw:alert tw:alert-info tw:gap-2">
+            <i class="fa fa-info-circle" aria-hidden="true"></i>
+            <span>У Вас сыграны/забронированны все матчи</span>
         </div>
     {% endif %}
 </div>
