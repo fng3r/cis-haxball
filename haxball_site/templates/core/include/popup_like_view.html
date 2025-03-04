@@ -5,8 +5,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'core/include/popup_likes_styles.css' %}">
 {% endblock %}
 
-<input type="checkbox" id="popupLikeDislike-{{comment.id}}" class="tw:modal-toggle" />
-<div class="tw:modal" role="dialog">
+<dialog id="popupLikeDislike_{{comment.id}}" class="tw:modal" role="dialog">
     <div class="tw:modal-box tw:p-0!">
         <div class="popup-content">
             <div class="popup-tab">
@@ -16,7 +15,7 @@
                         {{ comment|likes_count }}</div>
                 </div>
                 <div class="popup-tab-dislike" id="dislike{{comment.id}}">
-                    <div class="fa fa-thumbs-down"  style="padding-top: 2px: "></div>
+                    <div class="fa fa-thumbs-down"  style="padding-top: 2px"></div>
                     <div class=popup-tab-count>
                         {{ comment|dislikes_count }}</div>
                 </div>
@@ -46,7 +45,10 @@
             </div>
         </div>
     </div>
-    <label class="tw:modal-backdrop" for="popupLikeDislike-{{comment.id}}"></label>
-</div>
+
+    <form method="dialog" class="tw:modal-backdrop">
+        <button />
+    </form>
+</dialog>
 
 <script type="text/javascript" src="{% static 'scripts/LikeViewPopup.js' %}"></script>

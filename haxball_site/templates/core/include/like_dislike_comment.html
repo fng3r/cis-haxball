@@ -36,9 +36,9 @@
 
     {% if comment|likes_count > 0 or comment|dislikes_count > 0 %}
         {% if user|can_view_likes_details %}
-            <label for="popupLikeDislike-{{comment.id}}" class="tw:cursor-pointer tw:ml-2 tw:mb-0! tw:mt-[1px] tw:text-base-content/40 tw:hover:text-purple-500 fa fa-list"  >
+            <div onclick="popupLikeDislike_{{comment.id}}.showModal()" class="tw:cursor-pointer tw:ml-2 tw:mb-0! tw:mt-[1px] tw:text-base-content/40 tw:hover:text-purple-500 fa fa-list">
                 <span data-count="like"></span>
-            </label>
+            </div>
 
             {% include 'core/include/popup_like_view.html' with comment=comment %}
         {% endif %}
