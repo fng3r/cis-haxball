@@ -31,24 +31,6 @@
             </div>
             <div class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:lg:w-full tw:md:w-full tw:sm:w-full tw:mx-0 tw:px-1">
 
-                {% include 'core/include/login_modal.html' %}
-
-                <dialog id="logout_modal" class="tw:modal">
-                    <div class="tw:modal-box">
-                        <h4 class="tw:font-bold">Хотите выйти?</h4>
-                        <div class="tw:modal-action">
-                            <form method="post" action="{% url 'account_logout' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="tw:btn tw:btn-primary tw:rounded-sm!">Да</button>
-                            </form>
-                            <form method="dialog">
-                                <button class="tw:btn tw:rounded-sm tw:mb-0! tw:inline-flex!">Нет</button>
-                            </form>
-                        </div>
-                    </div>
-                </dialog>
-
-
                 {# Блок для отображение профиля пользователя #}
                 {% block profile_of_user %}
                 {% endblock %}
@@ -80,6 +62,8 @@
         </div>
     </div>
 
+    {% include 'core/include/login_modal.html' %}
+    {% include 'core/include/logout_modal.html' %}
 
 {% endblock %}
 

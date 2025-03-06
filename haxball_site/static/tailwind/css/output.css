@@ -1344,6 +1344,9 @@
   .tw\:mr-1 {
     margin-right: calc(var(--tw-spacing) * 1);
   }
+  .tw\:mr-1\! {
+    margin-right: calc(var(--tw-spacing) * 1) !important;
+  }
   .tw\:mr-2 {
     margin-right: calc(var(--tw-spacing) * 2);
   }
@@ -1355,6 +1358,9 @@
   }
   .tw\:mr-4 {
     margin-right: calc(var(--tw-spacing) * 4);
+  }
+  .tw\:mr-4\! {
+    margin-right: calc(var(--tw-spacing) * 4) !important;
   }
   .tw\:fieldset-legend {
     margin-bottom: calc(0.25rem * -1);
