@@ -1,19 +1,34 @@
 from django.utils import timezone
 from online_users.models import OnlineUserActivity
+from reservation.models import ReservationEntry
 from tournament.models import Match
 
 
-def running_line_context(request):
+def latest_matches_context(request):
     today = timezone.now().today()
     three_days_ago = today - timezone.timedelta(days=3)
-    latest_matches = Match.objects.filter(is_played=True, match_date__range=[three_days_ago, today]).order_by(
-        'league__priority', 'league__created', '-match_date'
+    latest_matches = (
+        Match.objects
+        .filter(is_played=True, match_date__range=[three_days_ago, today])
+        .order_by('league__priority', 'league__created', '-match_date')
+        .select_related('league', 'stage', 'numb_tour', 'team_home', 'team_guest')
     )
-    base_duration = 15
-    added_duration = 3 * latest_matches.count()
-    animation_duration = base_duration + added_duration
+    
+    return {'latest_matches': latest_matches}
 
-    return {'latest_matches': latest_matches, 'animation_duration': animation_duration}
+
+def upcoming_matches_context(request):
+    today = timezone.localdate()
+    upcoming_matches = (
+        ReservationEntry.objects
+        .filter(time_date__range=[today, today + timezone.timedelta(days=2)])
+        .order_by('time_date', 'match__league__priority',)
+        .select_related(
+            'match', 'match__league', 'match__stage', 'match__numb_tour', 'match__team_home', 'match__team_guest'
+        )
+    )
+    
+    return {'upcoming_matches': upcoming_matches}
 
 
 def online_users_context(request):

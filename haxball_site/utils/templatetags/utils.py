@@ -11,6 +11,4 @@ def media(path):
 @register.filter
 def batch(iterable, batch_size):
     lst = list(iterable)
-    res = [lst[i:i + batch_size] for i in range(0, len(lst), batch_size)]
-    print(res)
-    return res
+    return [lst[i:i + batch_size] for i in range(0, len(lst), batch_size)]
