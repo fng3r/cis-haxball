@@ -22,16 +22,16 @@
 
     {% partialdef team-page-container inline=True %}
         <div id="team-page-container">
-            <div class="container-fluid emp-profile"
+            <div class="tw:flex tw:flex-col tw:rounded-lg emp-profile"
                  style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="profile-img mb-3">
+                <div class="tw:flex">
+                    <div class="tw:w-1/4 tw:px-4">
+                        <div class="profile-img tw:mb-3">
                             <img src="{{ team.logo.url }}" alt="{{ team.title }}">
                         </div>
                     </div>
 
-                    <div class="col-md-7">
+                    <div class="tw:grow tw:relative tw:px-4">
                         <div class="profile-head">
                             <h3>
                                 {{ team.title }}
@@ -52,85 +52,31 @@
                                          title="Офис команды">
                                 </a>
                             </p>
-
-                            <div class="p-0" style="position: absolute; bottom: 0;">
-                                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home-panel" role="tab"
-                                           aria-controls="home-panel" aria-selected="true">Состав</a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="matches-tab" data-toggle="tab" href="#matches-panel" role="tab"
-                                           aria-controls="matches-panel" aria-selected="false">Матчи</a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="stats-tab" data-toggle="tab" href="#stats-panel" role="tab"
-                                           aria-controls="stats-panel" aria-selected="false"
-                                           hx-get="{% url 'tournament:team_stats' team.id %}"
-                                           hx-trigger="click once"
-                                           hx-target="#stats-panel"
-                                           hx-swap="innerHTML">
-                                            Статистика
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="achievements-tab" data-toggle="tab" href="#achievements-panel" role="tab"
-                                           aria-controls="achievements-panel" aria-selected="false">Достижения</a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="other-tab" data-toggle="tab" href="#other-panel" role="tab"
-                                           aria-controls="other-panel" aria-selected="false">Контакты</a>
-                                    </li>
-                                </ul>
-                            </div>
                         </div>
                     </div>
 
-                    <div class="col-md-1">
-                        <img src="{% static "img/ico/best_logo.png" %}" width="100%">
+                    <div class="tw:ml-auto tw:px-4">
+                        <img src="{% static "img/ico/best_logo.png" %}" class="tw:w-12">
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-12 py-2">
-                        <div class="tab-content profile-tab" id="myTabContent">
-                            <div class="tab-pane fade show active pr-2" id="home-panel" role="tabpanel" aria-labelledby="home-tab">
-
-                                <ul class="nav nav-pills nav-fill" id="myTab" style="width: 100%;">
-                                    <li class="nav-item" style="width: 33%;">
-                                        <a class="nav-link h5 active" id="current-players-tab" data-toggle="tab" href="#current-players-panel"
-                                           role="tab"
-                                           aria-controls="current-players-panel"
-                                           aria-selected="true">
-                                            Текущий
-                                        </a>
-                                    </li>
-                                    <li class="nav-item" style="width: 33%;">
-                                        <a class="nav-link h5" id="alltime-players-tab" data-toggle="tab" href="#alltime-players-panel"
-                                           role="tab"
-                                           aria-controls="alltime-players-panel"
-                                           aria-selected="false">
-                                            За всё время
-                                        </a>
-                                    </li>
-                                </ul>
-                                <div class="tab-content" id="players-switch">
-                                    <div class="tab-pane fade show active" id="current-players-panel"
-                                         role="tabpanel"
-                                         aria-labelledby="current-players-tab">
-
+                <div class="tw:flex tw:px-2">
+                    <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
+                        <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Состав" checked />
+                        <div class="tw:tab-content tw:pt-3">
+                            <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-transparent tw:p-0! tw:tabs-lg">
+                                <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="Текущий" checked />
+                                <div class="tw:tab-content tw:pt-2">
+                                    <div id="current-players-panel" role="tabpanel" aria-labelledby="current-players-tab">
                                         {% with team_squad=team|current_squad_stats %}
                                             {% include 'tournament/teams/partials/team_squad_stats.html' %}
                                         {% endwith %}
-
                                     </div>
-                                    <div class="tab-pane fade" id="alltime-players-panel"
-                                         role="tabpanel"
-                                         aria-labelledby="alltime-players-tab">
+                                </div>
+
+                                <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="За всё время" />
+                                <div class="tw:tab-content tw:pt-3">
+                                    <div id="alltime-players-panel" role="tabpanel" aria-labelledby="alltime-players-tab">
 
                                         <div class="form-group mr-2 mb-2">
                                             <label class="h6">Сезон:</label>
@@ -154,76 +100,72 @@
                                         {% endwith %}
                                     </div>
                                 </div>
-
                             </div>
+                        </div>
 
-                            <div class="tab-pane fade" id="matches-panel" role="tabpanel" aria-labelledby="matches-tab">
+                        <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Матчи" />
+                        <div class="tw:tab-content tw:pt-2">
+                            <div id="matches-panel" role="tabpanel" aria-labelledby="matches-tab">
                                 {% team_seasons team as all_team_seasons %}
 
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="pr-2 mb-2">
-                                            <ul class="nav nav-pills nav-fill" id="seasons-list" style="width: 100%;">
-                                                {% for season in all_team_seasons %}
-                                                    <li class="nav-item" style="width: 33%;">
-                                                        <a class="nav-link h5 {% if forloop.first %}active{% endif %}"
-                                                           id="season-{{ season.id }}-tab" data-toggle="tab"
-                                                           href="#season-{{ season.id }}-panel"
-                                                           role="tab"
-                                                           aria-controls="schedule-s{{ season.id }}-tab"
-                                                           aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
-                                                            {{ season }}
-                                                        </a>
-                                                    </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
+                                <div class="tw:flex">
+                                    <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
+                                        {% team_seasons team as all_team_seasons %}
+
+                                        {% for season in all_team_seasons %}
+                                            <input type="radio" name="matches-tabs" class="tw:w-1/3 tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{{ season }}"
+                                                   {% if forloop.first %}checked{% endif %}
+                                            />
+                                            <div class="tw:tab-content tw:pt-1" role="tabpanel">
+                                                <div id="season-{{ season.id }}-panel" role="tabpanel" aria-labelledby="schedule-s{{ season.id }}-tab">
+                                                    {% for league in season.team_leagues %}
+                                                        <p class="text-center mb-2">
+                                                            <a href="{{ league.get_absolute_url }}"
+                                                               class="h5 text-center">{{ league.title }}</a>
+                                                        </p>
+
+                                                        {% for stage in league.stages.all %}
+                                                            {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
+                                                                {% include 'tournament/teams/partials/team_matches.html' %}
+                                                            {% endwith %}
+                                                        {% endfor %}
+
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
                                     </div>
                                 </div>
-
-                                <div class="tab-content" id="seasons-switch">
-
-                                    {% for season in all_team_seasons %}
-
-                                        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
-                                             id="season-{{ season.id }}-panel" role="tabpanel"
-                                             aria-labelledby="schedule-s{{ season.id }}-tab">
-
-                                            {% for league in season.team_leagues %}
-                                                <p class="text-center mb-2">
-                                                    <a href="{{ league.get_absolute_url }}"
-                                                       class="h5 text-center">{{ league.title }}</a>
-                                                </p>
-
-                                                {% for stage in league.stages.all %}
-                                                    {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
-                                                        {% include 'tournament/teams/partials/team_matches.html' %}
-                                                    {% endwith %}
-                                                {% endfor %}
-
-                                            {% endfor %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-
                             </div>
+                        </div>
 
-                            <div class="tab-pane fade" id="stats-panel" role="tabpanel" aria-labelledby="stats-tab">
-                                <div class="card d-flex justify-content-center border-0" style="min-height: 450px; background: transparent">
-                                    <img src="{% static 'img/svg-loaders/audio.svg' %}" height="96" class="mb-3">
+                        <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Статистика"
+                               hx-get="{% url 'tournament:team_stats' team.id %}"
+                               hx-trigger="click once"
+                               hx-target="#stats-panel"
+                               hx-swap="innerHTML"
+                        />
+                        <div class="tw:tab-content tw:pt-2">
+                            <div id="stats-panel" role="tabpanel" aria-labelledby="stats-tab">
+                                <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
+                                    <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
                                     <h3 class="text-center">Загружаем статистику...</h3>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="tab-pane fade" id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
+                        <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Достижения" />
+                        <div class="tw:tab-content tw:pt-2 tw:mb-2">
+                            <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
                                 {% if team.achievements.count %}
                                     {% for season, achievements in team|team_achievements_by_season %}
                                         <div class="team_achievements">
                                             <div class="team_achievements-season">{{season.title}}</div>
                                             <div class="team_achievements-medals">
                                                 {% for achievement in achievements %}
-                                                    <div class="team_achievements-medal" ><img src="{{ achievement.image.url }}" title="{{ achievement.description }}"
-                                                                                               width="80px" height="80px" alt="{{ achievement.title }}">
+                                                    <div class="team_achievements-medal" >
+                                                        <img src="{{ achievement.image.url }}" title="{{ achievement.description }}"
+                                                             width="80px" height="80px" alt="{{ achievement.title }}">
                                                     </div>
                                                 {% endfor %}
                                             </div>
@@ -232,24 +174,22 @@
                                     {% endfor %}
                                 {% endif %}
                             </div>
+                        </div>
 
-                            <div class="tab-pane fade" id="other-panel" role="tabpanel" aria-labelledby="other-tab">
-                                <div class="row">
-                                    <div class="col-2">
-
-                                    </div>
-
-                                    <div class="col-8 justify-content-center">
-
-                                        <table class="table">
+                        <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Контакты" />
+                        <div class="tw:tab-content tw:pt-2">
+                            <div id="other-panel" role="tabpanel" aria-labelledby="other-tab">
+                                <div class="tw:flex tw:justify-center">
+                                    <div class="tw:w-2/3 tw:flex tw:justify-center">
+                                        <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
                                             <tbody>
                                                 <tr>
-                                                    <td><span class="h5 text-secondary">Владелец</span></td>
+                                                    <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Владелец</span></td>
                                                     <td>
-                                                        <a class="h5"
+                                                        <a class="tw:text-lg tw:font-semibold"
                                                            href="{{ team.owner.user_profile.get_absolute_url }}">{{ team.owner.user_player }}</a>
                                                     </td>
-                                                    <td class="text-center">
+                                                    <td class="tw:text-center">
                                                         {% if team.owner.user_profile.vk %}
                                                             <a href="https://vk.com/{{ team.owner.user_profile.vk }}"
                                                                target="_blank"><img
@@ -278,17 +218,17 @@
                                                 </tr>
                                                 {% for cap in team|get_captain %}
                                                     <tr>
-                                                        <td><span class="h5 text-secondary">Капитан</span></td>
+                                                        <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span></td>
                                                         <td>
                                                             {% if cap.name %}
-                                                                <a class="h5"
+                                                                <a class="tw:text-lg tw:font-semibold"
                                                                    href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
                                                             {% else %}
-                                                                <span class="text-secondary h5">{{ cap }}</span>
+                                                                <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
 
                                                             {% endif %}
                                                         </td>
-                                                        <td class="text-center">
+                                                        <td class="tw:text-center">
                                                             {% if cap.name.user_profile.vk %}
                                                                 <a href="https://vk.com/{{ cap.name.user_profile.vk }}"
                                                                    target="_blank"><img
@@ -321,17 +261,17 @@
 
                                                 {% for cap in team|get_team_assistent %}
                                                     <tr>
-                                                        <td><span class="h5 text-secondary">Ассистент</span></td>
+                                                        <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Ассистент</span></td>
                                                         <td>
                                                             {% if cap.name %}
-                                                                <a class="h5"
+                                                                <a class="tw:text-lg tw:font-semibold"
                                                                    href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
                                                             {% else %}
-                                                                <span class="text-secondary h5">{{ cap }}</span>
+                                                                <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
 
                                                             {% endif %}
                                                         </td>
-                                                        <td class="text-center">
+                                                        <td class="tw:text-center">
                                                             {% if cap.name.user_profile.vk %}
                                                                 <a href="https://vk.com/{{ team.owner.user_profile.vk }}"
                                                                    target="_blank"><img
@@ -364,15 +304,12 @@
                                             </tbody>
                                         </table>
                                     </div>
-
-                                    <div class="col-2"></div>
                                 </div>
 
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     {% endpartialdef team-page-container %}
