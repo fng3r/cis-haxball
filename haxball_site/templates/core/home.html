@@ -30,6 +30,11 @@
                 {% endcache %}
             </div>
             <div class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:lg:w-full tw:md:w-full tw:sm:w-full tw:mx-0 tw:px-1">
+                {% block match_results %}
+                {% endblock %}
+
+                {% block upcoming_matches %}
+                {% endblock %}
 
                 {# Блок для отображение профиля пользователя #}
                 {% block profile_of_user %}
@@ -46,8 +51,8 @@
                 {# Блок для отображение списка комментариев #}
                 {% block comments %}
                 {% endblock %}
-
             </div>
+
             <div class="tw:w-1/2 tw:order-3 tw:xl:w-1/6 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
 
                 {% block sidebar_last_activity %}
