@@ -16,99 +16,103 @@
 {% block profile_of_user %}
     {% partialdef content-container inline=True %}
         <div id="content-container">
-            <div class="card mb-2 mt-2" style="border-radius: 10px;">
-                <h2 class="text-center my-2">
-                    <i class="fa fa-calendar text-success" aria-hidden="true"></i> Переносы
-                </h2>
+            <div class="tw:card tw:mt-2 tw:mb-2 tw:bg-base-100 tw:rounded-2xl">
+                <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-2xl tw:py-2 tw:border-b tw:border-b-neutral-300">
+                    <h2 class="tw:card-title">
+                        <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
+                        Переносы
+                    </h2>
+                </div>
 
                 {% include 'alerts.html' %}
 
-                <div class="container-fluid p-0 mx-0">
-                    <form class="form-inline mb-2 ml-2"
+                <div class="tw:flex tw:flex-col tw:w-full tw:p-0 tw:mx-0">
+                    <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:mt-1 tw:mb-3 tw:ml-2"
                           hx-get="{% url 'tournament:postponements' %}"
                           hx-trigger="submit"
                           hx-target="#content-container"
                           hx-swap="outerHTML"
                           hx-disabled-elt="find button">
 
-                        <div class="form-group mr-2">
-                            <label>{{ filter.form.tournament.label }}:</label>
-                            {% render_field filter.form.tournament|add_class:'form-control-sm ml-1' %}
+                        <div class="tw:flex tw:flex-col tw:justify-center">
+                            <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.tournament.label }}</label>
+                            {% render_field filter.form.tournament|add_class:'tw:select' %}
                         </div>
 
-                        <button class="btn-sm btn-primary">Применить фильтр</button>
-                        <img class="htmx-indicator ml-2" src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
+                        <div class="tw:flex tw:mt-auto">
+                            <button class="tw:btn tw:btn-primary tw:rounded!">Применить фильтр</button>
+                            <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+                        </div>
                     </form>
 
-                    <div id="postponements-table" class="table-fix table-responsive">
-                        <table id="postponements-table" class="table table-hover" style="max-width: 100%">
-                            <thead class="thead-dark py-2 text-center">
-                                <tr>
-                                    <th scope="col" class="col-sm-2 col-lg-3 border-right">Команда</th>
+                    <div id="postponements-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:rounded-b-2xl">
+                        <table id="postponements-table" class="tw:table tw:table-pin-rows tw:border-t tw:border-neutral-200">
+                            <thead class="tw:text-center">
+                                <tr class="tw:bg-base-300!">
+                                    <th scope="col" class="tw:border-r tw:border-neutral-200">Команда</th>
                                     {% for i in ''|rjust:league.get_postponement_slots.common_count %}
-                                        <th scope="col" class="border-right">Обычн. {{ forloop.counter }}</th>
+                                        <th scope="col" class="tw:border-r tw:border-neutral-200">Обычн. {{ forloop.counter }}</th>
                                     {% endfor %}
                                     {% for i in ''|rjust:league.get_postponement_slots.emergency_count %}
-                                        <th scope="col" class="border-right">Экстр. {{ forloop.counter }}</th>
+                                        <th scope="col" class="tw:border-r tw:border-neutral-200">Экстр. {{ forloop.counter }}</th>
                                     {% endfor %}
                                     {% for i in ''|rjust:league.get_postponement_slots.extra_count %}
-                                        <th scope="col" class="border-right">Платн. {{ forloop.counter }}</th>
+                                        <th scope="col" class="tw:border-r tw:border-neutral-200">Платн. {{ forloop.counter }}</th>
                                     {% endfor %}
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {% for team in teams %}
-                                    <tr style="font-weight: 700">
-                                        <td class="p-2 border-right" style="text-align: center; font-size: 17px; vertical-align: center;">
-                                            <img src="{{team.logo.url}}" alt="..." style="margin-right: 5px;" width="25" height="25">{{team.title}}
+                                    <tr class="tw:font-bold tw:text-center">
+                                        <td class="tw:p-2 tw:border-r tw:border-neutral-200 tw:text-lg">
+                                            <img src="{{team.logo.url}}" alt="{{team.title}}" style="margin-right: 5px;" width="25" height="25">{{team.title}}
                                         </td>
                                         {% for postponement in team|postponements_in_league:league %}
-                                            <td class="p-1 border-right" style="font-size: 14px; text-align: center;" height="80px">
+                                            <td class="tw:h-20 tw:p-1 tw:border-r tw:border-neutral-200 tw:text-sm">
                                                 {% if postponement is not None %}
                                                     {% with match=postponement.match %}
                                                         <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">
                                                             {{match.numb_tour.number}} тур<br>
+                                                            <img src="{{match.team_home.logo.url}}" alt="{{match.team_home.short_title}}" width="16" height="16">
                                                             <a href="{{match.get_absolute_url}}">
-                                                                <img src="{{match.team_home.logo.url}}" alt="..." width="16" height="16">
                                                                 {{match.team_home.short_title}} - {{match.team_guest.short_title}}
-                                                                <img src="{{match.team_guest.logo.url}}" alt="..." width="16" height="16">
-                                                            </a><br>
+                                                            </a>
+                                                            <img src="{{match.team_guest.logo.url}}" alt="{{match.team_guest.short_title}}" width="16" height="16">
+                                                            <br />
                                                             {{postponement.starts_at|date:'d.m'}}-{{postponement.ends_at|date:'d.m'}}
                                                             {% if postponement|can_be_cancelled_by_user:user %}
-                                                                <a class="text-danger" data-toggle="modal"
-                                                                   data-target="#cancel_postponement{{ postponement.id }}">
-                                                                    <i class="fa fa-times" aria-hidden="true"
-                                                                       style="font-size: 14px; cursor: pointer"></i>
-                                                                </a>
-                                                                <div class="modal fade" id="cancel_postponement{{ postponement.id }}"
-                                                                     tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-                                                                     aria-hidden="true">
-                                                                    <div class="modal-dialog">
-                                                                        <div class="modal-content">
-                                                                            <div class="modal-header justify-content-center">
-                                                                                <h4 class="modal-title">Отменить перенос?</h4>
-                                                                            </div>
-                                                                            <div class="modal-footer justify-content-center">
-                                                                                <button type="button" class="btn btn-danger"
-                                                                                        data-dismiss="modal">Нет, подождите
+                                                                <span class="tw:text-error"
+                                                                      onclick="document.getElementById('cancel_postponement{{ postponement.id }}').showModal()">
+                                                                    <i class="fa fa-times tw:text-xs tw:cursor-pointer" aria-hidden="true"></i>
+                                                                </span>
+                                                                <dialog class="tw:modal" id="cancel_postponement{{ postponement.id }}">
+
+                                                                    <div class="tw:modal-box">
+                                                                        <h4 class="tw:text-left">Отменить перенос?</h4>
+                                                                        <div class="tw:modal-action">
+                                                                            <form method="POST"
+                                                                                  hx-post="{% url 'tournament:cancel_postponement' postponement.id %}"
+                                                                                  hx-trigger="submit"
+                                                                                  hx-target="#content-container"
+                                                                                  hx-swap="outerHTML"
+                                                                                  hx-vals='{"tournament": "{{ league.id }}"}'
+                                                                            >
+                                                                                <img class="htmx-indicator tw:mr-2 tw:w-6"
+                                                                                     src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
+                                                                                <button type="submit" class="tw:btn tw:btn-primary tw:rounded!">
+                                                                                    Да, я уверен
                                                                                 </button>
-                                                                                <form method="POST"
-                                                                                      hx-post="{% url 'tournament:cancel_postponement' postponement.id %}"
-                                                                                      hx-trigger="submit"
-                                                                                      hx-target="#content-container"
-                                                                                      hx-swap="outerHTML"
-                                                                                      hx-vals='{"tournament": "{{ league.id }}"}'>
-                                                                                    <button type="submit" class="btn btn-primary">
-                                                                                        Да, я уверен
-                                                                                    </button>
-                                                                                    <img class="htmx-indicator ml-2"
-                                                                                         src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
-                                                                                </form>
-                                                                            </div>
+                                                                            </form>
+
+                                                                            <form method="dialog">
+                                                                                <button class="tw:btn tw:rounded!">
+                                                                                    Нет, подождите
+                                                                                </button>
+                                                                            </form>
                                                                         </div>
                                                                     </div>
-                                                                </div>
+                                                                </dialog>
                                                             {% endif %}
                                                         </div>
                                                     {% endwith %}
@@ -129,47 +133,48 @@
             {% endif %}
 
             {% partialdef postponements-events inline=True %}
-                <div id="postponements-events" class="card mb-5" style="border-radius: 20px">
-                    <div class="card-body card-body-comment">
-                        <h4 class="card-title">Журнал событий ({{ postponements.paginator.count }})</h4>
+                <div id="postponements-events" class="tw:card tw:bg-base-100 tw:rounded-2xl">
+                    <div class="tw:card-title tw:rounded-t-2xl tw:p-4">
+                        <h4 class="tw:card-title">Журнал событий ({{ postponements.paginator.count }})</h4>
                     </div>
 
                     <div class="comment-widgets">
                         {% for postponement in postponements %}
 
-                            <div class="d-flex flex-row comment-row" id="postponement{{ postponement.id }}">
-                                <div class="p-2">
-                                    <span class="round">
-                                        <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
-                                            {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                                                <img src="{{ avatar.url }}" alt="{{ postponement.taken_by.username }}" width="50">
-                                            {% endthumbnail %}
-                                        </a>
-                                    </span>
+                            <div class="tw:flex tw:p-3 comment-row" id="postponement{{ postponement.id }}">
+                                <div class="tw:pl-2">
+                                    <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
+                                        <div class="tw:mr-2 tw:avatar">
+                                            <div class="tw:w-[50px] tw:rounded-full">
+                                                {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                                                    <img src="{{ avatar.url }}" alt="{{ postponement.taken_by.username }}" width="50" class="tw:rounded-full">
+                                                {% endthumbnail %}
+                                            </div>
+                                        </div>
+                                    </a>
                                 </div>
-                                <div class="comment-text w-100">
-                                    <div class="d-flex justify-content-between">
-                                        <div class="m-0 d-flex" style="font-size: 13pt; font-weight: 600;">
+                                <div class="comment-text tw:w-full">
+                                    <div class="tw:flex tw:justify-between">
+                                        <div class="tw:m-0 tw:flex">
 
                                             {% for icon in postponement.taken_by.user_profile.user_icon.all %}
-                                                <div class="mr-1" style="vertical-align: middle">
+                                                <div class="tw:mr-1 tw:align-middle">
                                                     <img src="{{ icon.image.url }}" width="16px" height="16px"
                                                          title="{{ icon.description }}">
                                                 </div>
                                             {% endfor %}
-                                            <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
+                                            <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}" class="tw:font-semibold">
                                                 {{ postponement.taken_by.username }}
                                             </a>
 
                                         </div>
-
                                     </div>
 
-                                    <div class="comment-footer">
-                                        <span class="date text-muted small">
-                                            <i class="fa fa-calendar text-primary" aria-hidden="true"></i>
+                                    <div class="tw:inline-flex tw:items-center">
+                                        <span class="tw:text-base-content/70 tw:text-xs">
+                                            <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
                                             {{ postponement.taken_at|date:"d.m.y" }}
-                                            <i class="fa fa-clock-o text-primary" aria-hidden="true"></i>
+                                            <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
                                             {{ postponement.taken_at|time:"H:i" }}
                                         </span>
                                     </div>
@@ -193,44 +198,42 @@
                                 </div>
                             </div>
                             {% if postponement.is_cancelled %}
-                                <div class="d-flex flex-row comment-row" style="padding-left: 100px"
+                                <div class="tw:flex tw:p-3 tw:pl-[7%] comment-row"
                                      id="postponement_c{{ postponement.id }}">
-                                    <div class="p-2">
-                                        <span class="round">
-                                            <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
-                                                {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                                                    <img src="{{ avatar.url }}"
-                                                         alt="{{ postponement.cancelled_by.username }}" width="50">
-                                                {% endthumbnail %}
-                                            </a>
-                                        </span>
+                                    <div class="tw:pl-2">
+                                        <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
+                                            <div class="tw:mr-2 tw:avatar">
+                                                <div class="tw:w-[50px] tw:rounded-full">
+                                                    {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                                                        <img src="{{ avatar.url }}" alt="{{ postponement.cancelled_by.username }}" width="50" class="tw:rounded-full">
+                                                    {% endthumbnail %}
+                                                </div>
+                                            </div>
+                                        </a>
                                     </div>
 
-                                    <div class="comment-text w-100">
-                                        <div class="d-flex justify-content-between">
-                                            <div class="d-inline-flex">
+                                    <div class="comment-text tw:w-full">
+                                        <div class="tw:flex tw:justify-between">
+                                            <div class="tw:m-0 tw:flex">
 
-                                                <div class="m-0 d-flex mr-2" style="font-size: 13pt; font-weight: 600;">
-                                                    {% for icon in postponement.cancelled_by.user_profile.user_icon.all %}
-                                                        <div class="mr-1" style="vertical-align: middle">
-
-                                                            <img src="{{ icon.image.url }}" width="16px" height="16px"
-                                                                 title="{{ icon.description }}">
-                                                        </div>
-                                                    {% endfor %}
-                                                    <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
-                                                        {{ postponement.cancelled_by.username }}
-                                                    </a>
-                                                </div>
+                                                {% for icon in postponement.cancelled_by.user_profile.user_icon.all %}
+                                                    <div class="tw:mr-1 tw:align-middle">
+                                                        <img src="{{ icon.image.url }}" width="16px" height="16px"
+                                                             title="{{ icon.description }}">
+                                                    </div>
+                                                {% endfor %}
+                                                <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}" class="tw:font-semibold">
+                                                    {{ postponement.cancelled_by.username }}
+                                                </a>
 
                                             </div>
                                         </div>
-                                        <div class="comment-footer">
-                                            <span class="date text-muted small">
-                                                <i class="fa fa-calendar text-primary"
-                                                   aria-hidden="true"></i> {{ postponement.cancelled_at|date:"d.m.y" }}
-                                                <i class="fa fa-clock-o text-primary"
-                                                   aria-hidden="true"></i> {{ postponement.cancelled_at|time:"H:i" }}
+                                        <div class="tw:inline-flex tw:items-center">
+                                            <span class="tw:text-base-content/70 tw:text-xs">
+                                                <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
+                                                {{ postponement.cancelled_at|date:"d.m.y" }}
+                                                <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
+                                                {{ postponement.cancelled_at|time:"H:i" }}
                                             </span>
                                         </div>
                                         <div class="comment-body">
@@ -247,68 +250,46 @@
                         {% endfor %}
                     </div>
 
-                    <div class="card-footer text-muted pb-0 pt-3">
-                        {% if postponements.paginator.count > 2 %}
-                            <nav aria-label="Page navigation" class="bot_nav_page m-0">
-                                <ul class="pagination justify-content-center">
-                                    {% with page=postponements %}
-                                        {% if page.paginator.num_pages > 1 %}
-
-                                            {% for page_number in page|pages_to_show %}
-                                                {% if not page_number %}
-                                                    <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">...</a></li>
-                                                {% elif page_number == page.number %}
-                                                    <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">{{ page_number }}</a></li>
+                    {% if postponements.paginator.num_pages > 1 %}
+                        <div class="tw:flex tw:justify-center tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300">
+                            <div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
+                                {% with page=postponements %}
+                                    {% for page_number in page|pages_to_show %}
+                                        {% if not page_number %}
+                                            <button class="tw:join-item tw:btn tw:btn-disabled">...</button>
+                                        {% elif page_number == page.number %}
+                                            <button class="tw:join-item tw:btn tw:btn-active">{{ page_number }}</button>
+                                        {% else %}
+                                            {% with content_type=object|content_type %}
+                                                {% if paginated_type == 'comments' %}
+                                                    <button class="tw:join-item tw:btn"
+                                                            hx-get="{% url 'tournament:postponements_events' %}?tournament={{ league.id }}&page={{ page_number }}"
+                                                            hx-push-url="?page={{ page_number }}"
+                                                            hx-target="#postponements-events"
+                                                            hx-swap="outerHTML show:top"
+                                                            hx-indicator="#page-indicator">
+                                                        {{ page_number }}
+                                                    </button>
                                                 {% else %}
-                                                    <li class="page-item">
-                                                        <a class="page-link" href="#"
-                                                           hx-get="{% url 'tournament:postponements_events' %}?tournament={{ league.id }}&page={{ page_number }}"
-                                                           hx-target="#postponements-events"
-                                                           hx-swap="outerHTML show:top"
-                                                           hx-indicator="#paging-indicator">
+                                                    <a href="{{ object.get_absolute_url }}{% querystring page=page_number %}">
+                                                        <button class="tw:join-item tw:btn">
                                                             {{ page_number }}
-                                                        </a>
-                                                    </li>
+                                                        </button>
+                                                    </a>
                                                 {% endif %}
-                                            {% endfor %}
-
-                                            <img id="paging-indicator" class="htmx-indicator ml-2 mt-2" src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
-
+                                            {% endwith %}
                                         {% endif %}
-                                    {% endwith %}
-                                </ul>
-                            </nav>
-                        {% endif %}
-                    </div>
-            {% endpartialdef postponements-events %}
+                                    {% endfor %}
+                                {% endwith %}
 
-            {% if show_exceeded_limit_modal %}
-                <div class="modal fade" id="exceeded_limit_modal" tabindex="-1" role="dialog"
-                     aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header justify-content-center">
-                                <h4 class="modal-title">{{ exceeded_limit_message }}</h4>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" style="width: 25%;"
-                                        data-dismiss="modal">ОК
-                                </button>
+                                <img id="page-indicator" class="htmx-indicator tw:ml-2 tw:my-auto tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
                             </div>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
-            {% endif %}
-
-        </div>
-        </div>
+            {% endpartialdef postponements-events %}
     {% endpartialdef %}
 
     <script type="text/javascript" src="{% static 'scripts/PostponementScripts.js' %}"></script>
-    <script>
-        function func(filter) {
-            return filter.data.tournament
-        }
-    </script>
 {% endblock %}
 
