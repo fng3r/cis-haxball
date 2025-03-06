@@ -1,10 +1,10 @@
 {% load static %}
 
-<div class="tw:card tw:border tw:border-white tw:rounded-2xl tw:mb-2">
-    <div class="tw:card-title tw:rounded-t-2xl tw:justify-center tw:p-2 tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
+<div class="tw:card tw:border tw:border-white tw:rounded-lg tw:mb-2">
+    <div class="tw:card-title tw:rounded-t-lg tw:justify-center tw:p-2 tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
         <span class="tw:mb-0">Сейчас онлайн: {{ users_online_count }}</span>
     </div>
-    <div class="tw:card-body tw:h-[250px] tw:overflow-auto tw:rounded-b-2xl tw:p-0 tw:bg-gradient-to-r tw:from-[#3e2238] tw:to-[#20183ed1]">
+    <div class="tw:card-body tw:h-[250px] tw:overflow-auto tw:rounded-b-lg tw:p-0 tw:bg-gradient-to-r tw:from-[#3e2238] tw:to-[#20183ed1]">
         <div class="tw:flex tw:flex-col">
             {% for user in users_online %}
                 <a role="button" class="tw:btn-link-block tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!"

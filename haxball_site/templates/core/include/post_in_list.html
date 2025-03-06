@@ -5,7 +5,7 @@
     <div class="tw:card-body tw:gap-0 tw:p-0">
         <a href="{{ post.get_absolute_url }}">
             <span type="button"
-                  class="tw:btn tw:btn-block tw:btn-lg tw:btn-outline tw:rounded-xl tw:rounded-b-none {% if post.important and is_on_homepage %}tw:btn-error{%else%}tw:btn-info{%endif%}">
+                  class="tw:btn tw:btn-block tw:btn-lg tw:btn-outline tw:rounded-lg tw:rounded-b-none {% if post.important and is_on_homepage %}tw:btn-error{%else%}tw:btn-info{%endif%}">
                 {{ post.title }}
                 {% if post.publish|is_fresh:5 %}
                     <span class="tw:badge tw:badge-pill tw:badge-success">Новая!</span>
@@ -17,7 +17,7 @@
         </a>
     </div>
 
-    <div class="tw:flex tw:rounded-b-xl tw:bg-base-300 tw:px-4 tw:py-2 tw:justify-between">
+    <div class="tw:flex tw:rounded-b-lg tw:bg-base-300 tw:px-4 tw:py-2 tw:justify-between">
         <span class="tw:text-base-content/70 tw:inline-flex tw:items-center tw:gap-2">
             <div>
                 <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>

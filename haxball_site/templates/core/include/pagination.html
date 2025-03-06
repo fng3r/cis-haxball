@@ -2,7 +2,7 @@
 {% load user_tags %}
 
 {% if page.paginator.num_pages > 1 %}
-    <div class="tw:flex tw:justify-center tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300">
+    <div class="tw:flex tw:justify-center tw:rounded-b-lg tw:bg-base-200 tw:border-t tw:border-gray-300">
         <div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
             {% for page_number in page|pages_to_show %}
                 {% if not page_number %}

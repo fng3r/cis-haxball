@@ -1,7 +1,7 @@
 {% load static %}
 
-<div class="tw:card tw:border-t-1 tw:border-white tw:rounded-2xl tw:mb-2">
-    <div class="tw:card-title tw:justify-center tw:rounded-t-2xl tw:border-b tw:border-gray-300 tw:p-2 tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
+<div class="tw:card tw:border-t-1 tw:border-white tw:rounded-lg tw:mb-2">
+    <div class="tw:card-title tw:justify-center tw:rounded-t-lg tw:border-b tw:border-gray-300 tw:p-2 tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
         <span class="tw:mb-0 tw:text-lg tw:text-center">Последние трансферы</span>
     </div>
 
@@ -22,7 +22,7 @@
                         <div class="tw:w-[55px]">
                             {% if transfer.from_team %}
                                 <a href="{{ transfer.from_team.get_absolute_url }}">
-                                    <img src="{{ transfer.from_team.logo.url }}" class="tw:rounded-xl"
+                                    <img src="{{ transfer.from_team.logo.url }}" class="tw:rounded-lg"
                                          alt="{{ transfer.from_team.title }}" title="{{ transfer.from_team.title }}">
                                 </a>
                             {% else %}
@@ -38,7 +38,7 @@
                         <div class="tw:w-[55px]">
                             {% if transfer.to_team %}
                                 <a href="{{ transfer.to_team.get_absolute_url }}">
-                                    <img src="{{ transfer.to_team.logo.url }}" class="tw:rounded-xl"
+                                    <img src="{{ transfer.to_team.logo.url }}" class="tw:rounded-lg"
                                          alt="{{ transfer.to_team.title }}" title="{{ transfer.to_team.title }}">
                                 </a>
                             {% else %}

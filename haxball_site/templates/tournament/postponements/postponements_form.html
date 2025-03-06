@@ -1,11 +1,11 @@
 {% load static %}
 
 
-<div class="tw:card tw:bg-base-100 tw:mb-2 tw:rounded-xl">
-    <div class="tw:p-0 tw:mx-0 tw:rounded-xl">
+<div class="tw:card tw:bg-base-100 tw:mb-2 tw:rounded-lg">
+    <div class="tw:p-0 tw:mx-0 tw:rounded-lg">
         {% if matches %}
 
-            <div class="tw:flex tw:px-3 tw:py-2 tw:bg-neutral-700 tw:text-base-100 tw:font-bold tw:text-center tw:rounded-t-xl">
+            <div class="tw:flex tw:px-3 tw:py-2 tw:bg-neutral-700 tw:text-base-100 tw:font-bold tw:text-center tw:rounded-t-lg">
                 <div class="tw:text-center tw:ml-2" style="width: 4%">
                     <label>Тур</label>
                 </div>
@@ -27,7 +27,7 @@
             </div>
 
             {% for match in matches %}
-                <form class="tw:flex tw:flex-wrap tw:items-center tw:p-3 tw:border-b tw:text-base tw:font-bold tw:rounded-b-xl"
+                <form class="tw:flex tw:flex-wrap tw:items-center tw:p-3 tw:text-base tw:font-bold tw:rounded-b-lg"
                       hx-post="{% url 'tournament:postponements' %}"
                       hx-trigger="submit"
                       hx-target="#content-container"
@@ -66,7 +66,7 @@
                 </form>
             {% endfor %}
         {% else %}
-            <div class="tw:flex tw:justify-center bg-c-lite-unknown tw:p-3 tw:w-full tw:rounded-xl">
+            <div class="tw:flex tw:justify-center bg-c-lite-unknown tw:p-3 tw:w-full tw:rounded-lg">
                 <h6 class="tw:mb-0">На текущий момент у Вас нет несыгранных матчей в данном турнире</h6>
             </div>
         {% endif %}

@@ -17,7 +17,7 @@
 <div class="tw:flex tw:flex-col tw:gap-2 tw:mt-2">
     {% partialdef comment-form-container inline=True %}
         {% with content_type=object|content_type %}
-            <div id="comment-form-container" class="tw:card tw:bg-base-100 tw:rounded-2xl tw:py-2 tw:px-1"
+            <div id="comment-form-container" class="tw:card tw:bg-base-100 tw:rounded-lg tw:py-2 tw:px-1"
                  x-data="{commentable: '{{object.commentable}}' === 'True' }"
                  @commentable-changed.window="commentable = $event.detail.commentable">
 
@@ -51,7 +51,7 @@
 
     {% partialdef comments-container inline=True %}
         {% if comments|length > 0 or object.commentable %}
-            <div class="tw:card tw:bg-base-100 tw:rounded-2xl" id="comments-container">
+            <div class="tw:card tw:bg-base-100 tw:rounded-lg" id="comments-container">
                 <div class="tw:card-title tw:flex-col tw:items-start tw:px-4 tw:py-4 tw:gap-1 card-body-comment">
                     {% if comments|length > 0 %}
                         <div class=" tw:text-2xl">Комментарии ({{ object.comments.count }})</div>

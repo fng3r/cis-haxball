@@ -12,10 +12,10 @@
 {% endblock %}
 
 {% block match_results %}
-    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-xl">
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
         <div class="tw:card-body tw:p-0">
             <div id="latestMatchesControls" class="carousel slide" data-ride="carousel">
-                <div class="carousel-inner tw:rounded-xl">
+                <div class="carousel-inner tw:rounded-lg">
                     {% for matches_batch in latest_matches|batch:4 %}
                         <div class="carousel-item {% if forloop.first %}active{% endif %}">
                             <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-4 tw:gap-2 tw:text-sm">
@@ -71,8 +71,8 @@
 {% endblock %}
 
 {% block postlist %}
-    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-4xl">
-        <div class="tw:card-body tw:rounded-t-4xl tw:gap-0 tw:py-4">
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
             <h3 class="tw:text-center tw:mb-0">
                 <i class="fa fa-list-alt tw:text-primary" aria-hidden="true"></i> Последние посты
             </h3>
@@ -83,7 +83,7 @@
             {% endfor %}
         </div>
 
-        <div class="tw:card-body tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300 tw:py-2!">
+        <div class="tw:card-body tw:rounded-b-lg tw:bg-base-200 tw:border-t tw:border-gray-300 tw:py-2!">
             <a href="{% url 'core:all_posts' %}">Смотреть все посты</a>
         </div>
     </div>

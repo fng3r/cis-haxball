@@ -16,8 +16,8 @@
 {% block profile_of_user %}
     {% partialdef content-container inline=True %}
         <div id="content-container">
-            <div class="tw:card tw:mt-2 tw:mb-2 tw:bg-base-100 tw:rounded-2xl">
-                <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-2xl tw:py-2 tw:border-b tw:border-b-neutral-300">
+            <div class="tw:card tw:mt-2 tw:mb-2 tw:bg-base-100 tw:rounded-lg">
+                <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
                     <h2 class="tw:card-title">
                         <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
                         Переносы
@@ -45,7 +45,7 @@
                         </div>
                     </form>
 
-                    <div id="postponements-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:rounded-b-2xl">
+                    <div id="postponements-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:rounded-b-lg">
                         <table id="postponements-table" class="tw:table tw:table-pin-rows tw:border-t tw:border-neutral-200">
                             <thead class="tw:text-center">
                                 <tr class="tw:bg-base-300!">
@@ -133,8 +133,8 @@
             {% endif %}
 
             {% partialdef postponements-events inline=True %}
-                <div id="postponements-events" class="tw:card tw:bg-base-100 tw:rounded-2xl">
-                    <div class="tw:card-title tw:rounded-t-2xl tw:p-4">
+                <div id="postponements-events" class="tw:card tw:bg-base-100 tw:rounded-lg">
+                    <div class="tw:card-title tw:rounded-t-lg tw:p-4">
                         <h4 class="tw:card-title">Журнал событий ({{ postponements.paginator.count }})</h4>
                     </div>
 
@@ -251,7 +251,7 @@
                     </div>
 
                     {% if postponements.paginator.num_pages > 1 %}
-                        <div class="tw:flex tw:justify-center tw:rounded-b-4xl tw:bg-base-200 tw:border-t tw:border-gray-300">
+                        <div class="tw:flex tw:justify-center tw:rounded-b-lg tw:bg-base-200 tw:border-t tw:border-gray-300">
                             <div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
                                 {% with page=postponements %}
                                     {% for page_number in page|pages_to_show %}
@@ -288,6 +288,7 @@
                     {% endif %}
                 </div>
             {% endpartialdef postponements-events %}
+        </div>
     {% endpartialdef %}
 
     <script type="text/javascript" src="{% static 'scripts/PostponementScripts.js' %}"></script>

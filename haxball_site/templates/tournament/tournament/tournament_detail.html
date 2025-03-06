@@ -12,8 +12,8 @@
 {% block profile_of_user %}
     {% cache 1 champ_table league.id %}
 
-        <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-2xl">
-            <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-2xl tw:py-2 tw:border-b tw:border-gray-300">
+        <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-lg">
+            <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
                 <div class="tw:card-title tw:py-1">
                     <h3 class="tw:text-center tw:flex tw:items-center tw:justify-center">
                         {% if league.logo %}
@@ -24,7 +24,7 @@
                 </div>
             </div>
 
-            <div class="tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:bg-base-200! tw:rounded-b-2xl tw:mb-3" role="tablist">
+            <div class="tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:bg-base-200! tw:rounded-b-lg tw:mb-3" role="tablist">
                 {% for stage in league.stages.all %}
                     <input type="radio" name="tournament-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
                            aria-label="{% if league.is_multistage_league %}{{ stage.stage_name }}{% else %}{% if stage.is_playoff %}Сетка{% else %}Таблица{% endif %}{% endif %}"
@@ -78,8 +78,8 @@
             </div>
         </div>
 
-        {% comment %} <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-2xl">
-            <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-2xl tw:pt-2 tw:border-b tw:border-gray-300">
+        {% comment %} <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-lg">
+            <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:pt-2 tw:border-b tw:border-gray-300">
                 <div class="tw:card-title tw:py-1 tw:items-center tw:justify-center">
                     <h3 class="tw:text-center tw:flex ">
                         {% if league.logo %}
