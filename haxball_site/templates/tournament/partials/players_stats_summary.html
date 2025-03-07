@@ -5,57 +5,67 @@
     <link rel="stylesheet" type="text/css" href="{% static "tournament/include/player_stats_summary.css" %}">
 {% endblock %}
 
-<table class="table table-borderless">
-    <tbody>
-        {% for player in players %}
-            <tr>
-                <td class="text-left px-0" width="65px">
-                    <span style="width: 45px">
-                        {% if player.id in time_played_by_player %}
-                            <span class="player-stats mt-3">({{time_played_by_player|get:player.id}})</span>
-                        {% endif %}
-                    </span>
-                </td>
-                <td class="text-left px-1" width="24px">
-                    <img class="my-1 mx-1" src="{{ player.player_nation.flag.url }}" width="24" height="24"
-                         title="{{ player.player_nation.country }}">
-                </td>
-                <td class="text-left pl-0 font-weight-bold">
-                    {% if player.name %}
-                        <a class="text-dark mr-1"
-                           href="{{ player.name.user_profile.get_absolute_url }}">{{ player }}</a>
-                    {% else %}
-                        <span class="text-secondary mr-1">{{ player }}</span>
-                    {% endif %}
 
-                    <span class="player-stats ml-1">
-                        {% if player.id in clean_sheets_by_player %}
-                            <div class="player-stats-container">
-                                <img class="player-stats-icon" src="{% static 'img/ico/clean_sheet1.png' %}" title="Сухой тайм">
-                                {% if clean_sheets_by_player|get:player.id > 1 %}
-                                    <span class="player-stats-count">x{{clean_sheets_by_player|get:player.id}}</span>
-                                {% endif %}
-                            </div>
+{% partialdef player-stats %}
+    <div class="tw:flex tw:items-center">
+        {% if player.id in time_played_by_player %}
+            <div class="player-stats">({{time_played_by_player|get:player.id}})</div>
+        {% endif %}
+        <div class="tw:flex tw:items-center tw:gap-1 tw:pl-1 tw:text-base">
+            <img class="tw:m-1" src="{{ player.player_nation.flag.url }}" width="24" height="24" title="{{ player.player_nation.country }}">
+            {% if player.name %}
+                <a class="tw:text-neutral-800! tw:font-semibold tw:mr-1"
+                   href="{{ player.name.user_profile.get_absolute_url }}">{{ player }}</a>
+            {% else %}
+                <span class="tw:text-neutral-600 tw:mr-1">{{ player }}</span>
+            {% endif %}
+        </div>
+        <div class="tw:text-left tw:pl-0 tw:font-weight-bold">
+            <span class="player-stats tw:ml-1">
+                {% if player.id in clean_sheets_by_player %}
+                    <div class="tw:inline-flex tw:h-[20px]">
+                        <img class="player-stats-icon" src="{% static 'img/ico/clean_sheet1.png' %}" title="Сухой тайм">
+                        {% if clean_sheets_by_player|get:player.id > 1 %}
+                            <span class="player-stats-count">x{{clean_sheets_by_player|get:player.id}}</span>
                         {% endif %}
-                        {% if player.id in goals_by_player %}
-                            <div class="player-stats-container">
-                                <img class="player-stats-icon" src="{% static 'img/ico/ball_2.png' %}" title="Гол">
-                                {% if goals_by_player|get:player.id > 1 %}
-                                    <span class="player-stats-count">x{{goals_by_player|get:player.id}}</span>
-                                {% endif %}
-                            </div>
+                    </div>
+                {% endif %}
+                {% if player.id in goals_by_player %}
+                    <div class="tw:inline-flex tw:h-[20px]">
+                        <img class="player-stats-icon" src="{% static 'img/ico/ball_2.png' %}" title="Гол">
+                        {% if goals_by_player|get:player.id > 1 %}
+                            <span class="player-stats-count">x{{goals_by_player|get:player.id}}</span>
                         {% endif %}
-                        {% if player.id in assists_by_player %}
-                            <div class="player-stats-container">
-                                <img class="player-stats-icon" src="{% static 'img/ico/boot_ass_2.png' %}" title="Голевая передача">
-                                {% if assists_by_player|get:player.id > 1 %}
-                                    <span class="player-stats-count">x{{assists_by_player|get:player.id}}</span>
-                                {% endif %}
-                            </div>
+                    </div>
+                {% endif %}
+                {% if player.id in assists_by_player %}
+                    <div class="tw:inline-flex tw:h-[20px]">
+                        <img class="player-stats-icon" src="{% static 'img/ico/boot_ass_2.png' %}" title="Голевая передача">
+                        {% if assists_by_player|get:player.id > 1 %}
+                            <span class="player-stats-count">x{{assists_by_player|get:player.id}}</span>
                         {% endif %}
-                    </span>
-                </td>
-            </tr>
+                    </div>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+{% endpartialdef %}
+
+<div class="tw:flex tw:justify-center">
+    <div class="tw:flex tw:flex-col tw:gap-4">
+        {% for player in players %}
+            {% with player=player %}
+                {% partial player-stats %}
+            {% endwith %}
         {% endfor %}
-    </tbody>
-</table>
+
+        {% if subs|length > 0 %}
+            <div class="tw:divider tw:my-1">Замены</div>
+            {% for sub in subs %}
+                {% with player=sub %}
+                    {% partial player-stats %}
+                {% endwith %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>

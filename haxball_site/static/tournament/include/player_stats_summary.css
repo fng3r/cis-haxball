@@ -5,11 +5,6 @@
     font-size: 15px;
 }
 
-.player-stats-container {
-    display: inline-flex;
-    height: 20px;
-}
-
 .player-stats-count {
     position: relative;
     bottom: -10px;
