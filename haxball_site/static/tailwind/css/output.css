@@ -2660,6 +2660,9 @@
   .tw\:px-\[15px\] {
     padding-inline: 15px;
   }
+  .tw\:py-0\! {
+    padding-block: calc(var(--tw-spacing) * 0) !important;
+  }
   .tw\:py-1 {
     padding-block: calc(var(--tw-spacing) * 1);
   }

@@ -24,13 +24,13 @@
                 </div>
             </div>
 
-            <div class="tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:bg-base-200! tw:rounded-b-lg tw:mb-1" role="tablist">
+            <div class="tw:tabs tw:tabs-box tw:px-0! tw:py-0! tw:bg-base-200! tw:rounded-b-lg" role="tablist">
                 {% for stage in league.stages.all %}
                     <input type="radio" name="tournament-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
                            aria-label="{% if league.is_multistage_league %}{{ stage.stage_name }}{% else %}{% if stage.is_playoff %}Сетка{% else %}Таблица{% endif %}{% endif %}"
                            {% if forloop.first %}checked{% endif %}
                     />
-                    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300">
+                    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
                         <div id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
                             {% if stage.is_playoff %}
                                 {% if stage.is_double_elimination %}
@@ -67,12 +67,12 @@
                 {% endfor %}
 
                 <input type="radio" name="tournament-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" aria-label="Статистика" />
-                <div class="tw:tab-content tw:bg-base-100 tw:border-base-300">
+                <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
                     {% include 'tournament/tournament/partials/tournament_stats.html' %}
                 </div>
 
                 <input type="radio" name="tournament-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" aria-label="Матчи" />
-                <div class="tw:tab-content tw:bg-base-100 tw:border-base-300">
+                <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
                     {% include 'tournament/tournament/partials/tournament_schedule.html' %}
                 </div>
             </div>
