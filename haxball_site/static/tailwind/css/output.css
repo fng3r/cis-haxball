@@ -27,6 +27,7 @@
     --tw-color-neutral-500: oklch(0.556 0 0);
     --tw-color-neutral-600: oklch(0.439 0 0);
     --tw-color-neutral-700: oklch(0.371 0 0);
+    --tw-color-neutral-800: oklch(0.269 0 0);
     --tw-color-black: #000;
     --tw-color-white: #fff;
     --tw-spacing: 0.25rem;
@@ -1851,6 +1852,12 @@
   .tw\:h-24 {
     height: calc(var(--tw-spacing) * 24);
   }
+  .tw\:h-\[25px\] {
+    height: 25px;
+  }
+  .tw\:h-\[26px\] {
+    height: 26px;
+  }
   .tw\:h-\[28px\] {
     height: 28px;
   }
@@ -1859,6 +1866,9 @@
   }
   .tw\:h-\[50px\] {
     height: 50px;
+  }
+  .tw\:h-\[75\%\] {
+    height: 75%;
   }
   .tw\:h-\[250px\] {
     height: 250px;
@@ -1965,6 +1975,15 @@
   .tw\:w-\[20px\] {
     width: 20px;
   }
+  .tw\:w-\[25px\] {
+    width: 25px;
+  }
+  .tw\:w-\[26px\] {
+    width: 26px;
+  }
+  .tw\:w-\[28px\] {
+    width: 28px;
+  }
   .tw\:w-\[30px\] {
     width: 30px;
   }
@@ -2060,6 +2079,9 @@
   }
   .tw\:gap-1 {
     gap: calc(var(--tw-spacing) * 1);
+  }
+  .tw\:gap-1\.5 {
+    gap: calc(var(--tw-spacing) * 1.5);
   }
   .tw\:gap-2 {
     gap: calc(var(--tw-spacing) * 2);
@@ -2765,11 +2787,23 @@
   .tw\:text-neutral {
     color: var(--color-neutral);
   }
+  .tw\:text-neutral\! {
+    color: var(--color-neutral) !important;
+  }
   .tw\:text-neutral-500 {
     color: var(--tw-color-neutral-500);
   }
   .tw\:text-neutral-600 {
     color: var(--tw-color-neutral-600);
+  }
+  .tw\:text-neutral-700 {
+    color: var(--tw-color-neutral-700);
+  }
+  .tw\:text-neutral-700\! {
+    color: var(--tw-color-neutral-700) !important;
+  }
+  .tw\:text-neutral-800\! {
+    color: var(--tw-color-neutral-800) !important;
   }
   .tw\:text-primary {
     color: var(--color-primary);
@@ -2904,6 +2938,24 @@
   .tw\:checked\:bg-transparent\! {
     &:checked {
       background-color: transparent !important;
+    }
+  }
+  .tw\:checked\:shadow\! {
+    &:checked {
+      --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
+    }
+  }
+  .tw\:checked\:shadow-xl {
+    &:checked {
+      --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 8px 10px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  .tw\:checked\:shadow-xl\! {
+    &:checked {
+      --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 8px 10px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
     }
   }
   .tw\:hover\:bg-base-300\! {

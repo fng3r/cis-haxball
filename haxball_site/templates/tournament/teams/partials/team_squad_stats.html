@@ -1,36 +1,36 @@
 {% load static %}
 
-<table class="table table-bordered table-hover text-center font-weight-bold"
+<table class="tw:table tw:**:[tr]:border-[#dee2e6]! tw:font-bold tw:text-center"
        bgcolor="{{ team.color_table }}"
        style="color: black;">
     <thead>
         <tr>
-            <th scope="col">
-                <span class="h5">Игрок</span>
+            <th scope="col" class="tw:text-left! tw:text-base-content">
+                <span class="tw:text-base">Игрок</span>
             </th>
-            <th scope="col" class="text-center">
+            <th scope="col">
                 <img src="{% static "img/ico/matches_icon.png" %}" height="20" width="20" title="Вышел на поле">
             </th>
-            <th scope="col" class="text-center">
+            <th scope="col">
                 <img src="{% static "img/ico/ball_2.png" %}" height="20" width="20" title="Забито">
             </th>
-            <th scope="col" class="text-center">
+            <th scope="col">
                 <img src="{% static "img/ico/assists_icon.png" %}" height="20" width="20" title="Голевые передачи">
             </th>
-            <th scope="col" class="text-center">
+            <th scope="col">
                 <img src="{% static "img/ico/clean_sheet1.png" %}" height="20" width="20" title="Сухие таймы">
             </th>
             <th scope="col">
-                <div class="h-75 text-center">
-                    <i class="fa fa-arrow-down text-danger" title="Заменён"
+                <div class="tw:h-[75%]">
+                    <i class="fa fa-arrow-down tw:text-error" title="Заменён"
                        aria-hidden="true"
                        style="font-size: 21px">
                     </i>
                 </div>
             </th>
             <th scope="col">
-                <div class="h-75 text-center">
-                    <i class="fa fa-arrow-up text-success" title="Вышел на замену"
+                <div class="tw:h-[75%]">
+                    <i class="fa fa-arrow-up tw:text-success" title="Вышел на замену"
                        aria-hidden="true"
                        style="font-size: 21px">
                     </i>
@@ -39,10 +39,10 @@
             <th scope="col">
                 <img src="{% static "img/ico/ball_2_og.png" %}" height="20" width="20" title="Автоголы">
             </th>
-            <th scope="col" class="text-center">
+            <th scope="col">
                 <img src="{% static "img/ico/yellow_card.png" %}" height="20" width="20" title="Жёлтые карточки">
             </th>
-            <th scope="col" class="text-center">
+            <th scope="col">
                 <img src="{% static "img/ico/red_card.png" %}" height="20" width="20" title="Красные карточки">
             </th>
         </tr>
@@ -50,23 +50,23 @@
     <tbody>
         {% for player in team_squad %}
             <tr>
-                <td class="text-left">
-                    {% if player.name %}
-                        <img src="{{ player.player_nation.flag.url }}" width="24"
-                             height="24"
-                             title="{{ player.player_nation.country }}">
-                        <a class="text-dark"
-                           href="{{ player.name.user_profile.get_absolute_url }}"
-                           style="vertical-align: middle;">{{ player }}</a>
-                    {% else %}
-                        <img src="{{ player.player_nation.flag.url }}" width="24"
-                             height="24"
-                             title="{{ player.player_nation.country }}">
-                        <span class="text-secondary" style="vertical-align: middle;">
-                            {{ player }}
-                        </span>
-                    {% endif %}
-
+                <td class="tw:text-left">
+                    <div class="tw:flex tw:items-center tw:gap-1.5">
+                        {% if player.name %}
+                            <img src="{{ player.player_nation.flag.url }}" width="24"
+                                 height="24"
+                                 title="{{ player.player_nation.country }}">
+                            <a class="tw:text-neutral-700! tw:align-middle"
+                               href="{{ player.name.user_profile.get_absolute_url }}">{{ player }}</a>
+                        {% else %}
+                            <img src="{{ player.player_nation.flag.url }}" width="24"
+                                 height="24"
+                                 title="{{ player.player_nation.country }}">
+                            <span class="tw:text-neutral-700 tw:align-middle">
+                                {{ player }}
+                            </span>
+                        {% endif %}
+                    </div>
                 </td>
 
                 <td>{{ player.matches_c }}</td>

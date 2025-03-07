@@ -213,22 +213,20 @@
 
         <input type="radio" name="team-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="Топ" />
         <div class="tw:tab-content tw:pt-2">
-            <div id="avg-stats" role="tabpanel" aria-labelledby="avg-stats-tab">
-                <h5 class="mt-3 ml-1">Матчи</h5>
-                <table class="table table-striped">
-                    <tbody style="font-size: 18px">
-                        <tr class="border-bottom">
+            <div id="top-stats" role="tabpanel" aria-labelledby="top-stats-tab">
+                <h5 class="tw:mt-3 tw:ml-1">Матчи</h5>
+                <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
+                    <tbody class="tw:text-base">
+                        <tr>
                             {% with match=other_stats.first_match %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Первый матч
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league.championship }})
@@ -239,18 +237,16 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with match=other_stats.biggest_home_win %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самая крупная "домашняя" победа
                                 </th>
                                 <td class="text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -261,18 +257,16 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with match=other_stats.biggest_guest_win %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самая крупная "гостевая" победа
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -283,18 +277,16 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with match=other_stats.biggest_home_loss %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самое крупное "домашнее" поражение
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -305,18 +297,16 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with match=other_stats.biggest_guest_loss %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самое крупное "гостевое" поражение
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -327,18 +317,16 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with match=other_stats.most_effective_draw %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самая результативная ничья
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -349,19 +337,17 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with goal=other_stats.fastest_goal match=other_stats.fastest_goal.match %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самый быстрый гол
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if goal %}
                                         {{ goal|goal_time }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -372,19 +358,17 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with goal=other_stats.latest_goal match=other_stats.latest_goal.match %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самый поздний гол
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if goal %}
                                         {{ goal|goal_time }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -395,18 +379,16 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with match=other_stats.most_biggest_cards_given %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Самый "жаркий" матч
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
-                                            {{ match.score_home }}:{{ match.score_guest }}
-                                        </a>
+                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }}) - {{ match.cards_count }} {{ match.cards_count|ru_pluralize:'карточка,карточки,карточек' }}
@@ -419,23 +401,24 @@
                     </tbody>
                 </table>
 
-                <h5 class="ml-1">Игроки</h5>
-                <table class="table table-striped">
-                    <tbody style="font-size: 18px">
-                        <tr class="border-bottom">
+                <h5 class="tw:ml-1">Игроки</h5>
+                <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
+                    <tbody class="tw:text-base">
+                        <tr>
                             {% with player=other_stats.greatest_player.player %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Наибольшее количество матчей
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if player %}
-                                        <span class="round">
-                                            <a href="{{ player.user_profile.get_absolute_url }}">
-                                                <img src="{{ player.user_profile.avatar.url }}"
-                                                     alt="{{ player.username }}">
-                                                {{ player.username }}
-                                            </a>
-                                        </span>
+                                        <div class="tw:avatar">
+                                            <div class="tw:w-[26px] tw:h-[26px] tw:rounded-full">
+                                                {% thumbnail player.user_profile.avatar "100x100" crop="center" as avatar %}
+                                                    <img src="{{ avatar.url }}" alt="{{ player.username }}" class="tw:rounded-full">
+                                                {% endthumbnail %}
+                                            </div>
+                                        </div>
+                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
                                         <span>
                                             ({{ other_stats.greatest_player.count }})
                                         </span>
@@ -446,20 +429,21 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with player=other_stats.greatest_sub_in.player %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Наибольшее количество выходов на замену
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if player %}
-                                        <span class="round">
-                                            <a href="{{ player.user_profile.get_absolute_url }}">
-                                                <img src="{{ player.user_profile.avatar.url }}"
-                                                     alt="{{ player.username }}">
-                                                {{ player.username }}
-                                            </a>
-                                        </span>
+                                        <div class="tw:avatar">
+                                            <div class="tw:w-[26px] tw:h-[26px] tw:rounded-full">
+                                                {% thumbnail player.user_profile.avatar "100x100" crop="center" as avatar %}
+                                                    <img src="{{ avatar.url }}" alt="{{ player.username }}" class="tw:rounded-full">
+                                                {% endthumbnail %}
+                                            </div>
+                                        </div>
+                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
                                         <span>
                                             ({{ other_stats.greatest_sub_in.count }})
                                         </span>
@@ -470,20 +454,21 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with player=other_stats.greatest_goalscorer.player %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Лучший бомбардир
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if player %}
-                                        <span class="round">
-                                            <a href="{{ player.user_profile.get_absolute_url }}">
-                                                <img src="{{ player.user_profile.avatar.url }}"
-                                                     alt="{{ player.username }}">
-                                                {{ player.username }}
-                                            </a>
-                                        </span>
+                                        <div class="tw:avatar">
+                                            <div class="tw:w-[26px] tw:h-[26px] tw:rounded-full">
+                                                {% thumbnail player.user_profile.avatar "100x100" crop="center" as avatar %}
+                                                    <img src="{{ avatar.url }}" alt="{{ player.username }}" class="tw:rounded-full">
+                                                {% endthumbnail %}
+                                            </div>
+                                        </div>
+                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
                                         -
                                         <span>
                                             {{ other_stats.greatest_goalscorer.count }} {{ other_stats.greatest_goalscorer.count|ru_pluralize:'гол,гола,голов' }}
@@ -495,20 +480,21 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with player=other_stats.greatest_assistant.player %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Лучший ассистент
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if player %}
-                                        <span class="round">
-                                            <a href="{{ player.user_profile.get_absolute_url }}">
-                                                <img src="{{ player.user_profile.avatar.url }}"
-                                                     alt="{{ player.username }}">
-                                                {{ player.username }}
-                                            </a>
-                                        </span>
+                                        <div class="tw:avatar">
+                                            <div class="tw:w-[26px] tw:h-[26px] tw:rounded-full">
+                                                {% thumbnail player.user_profile.avatar "100x100" crop="center" as avatar %}
+                                                    <img src="{{ avatar.url }}" alt="{{ player.username }}" class="tw:rounded-full">
+                                                {% endthumbnail %}
+                                            </div>
+                                        </div>
+                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
                                         -
                                         <span>
                                             {{ other_stats.greatest_assistant.count }} {{ other_stats.greatest_assistant.count|ru_pluralize:'передача,передачи,передач' }}
@@ -520,20 +506,21 @@
                             {% endwith %}
                         </tr>
 
-                        <tr class="border-bottom">
+                        <tr>
                             {% with player=other_stats.greatest_goalkeeper.player %}
-                                <th scope="row" class="col-sm-4">
+                                <th scope="row" class="tw:w-1/3">
                                     Лучший голкипер
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if player %}
-                                        <span class="round">
-                                            <a href="{{ player.user_profile.get_absolute_url }}">
-                                                <img src="{{ player.user_profile.avatar.url }}"
-                                                     alt="{{ player.username }}">
-                                                {{ player.username }}
-                                            </a>
-                                        </span>
+                                        <div class="tw:avatar">
+                                            <div class="tw:w-[26px] tw:h-[26px] tw:rounded-full">
+                                                {% thumbnail player.user_profile.avatar "100x100" crop="center" as avatar %}
+                                                    <img src="{{ avatar.url }}" alt="{{ player.username }}" class="tw:rounded-full">
+                                                {% endthumbnail %}
+                                            </div>
+                                        </div>
+                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
                                         -
                                         <span>
                                             {{ other_stats.greatest_goalkeeper.count }} "{{ other_stats.greatest_goalkeeper.count|ru_pluralize:'сухарь,сухаря,сухарей' }}"
