@@ -2069,6 +2069,18 @@
   .tw\:gap-x-4 {
     column-gap: calc(var(--tw-spacing) * 4);
   }
+  .tw\:gap-y-0\! {
+    row-gap: calc(var(--tw-spacing) * 0) !important;
+  }
+  .tw\:gap-y-1 {
+    row-gap: calc(var(--tw-spacing) * 1);
+  }
+  .tw\:gap-y-1\! {
+    row-gap: calc(var(--tw-spacing) * 1) !important;
+  }
+  .tw\:gap-y-2 {
+    row-gap: calc(var(--tw-spacing) * 2);
+  }
   .tw\:gap-y-2\! {
     row-gap: calc(var(--tw-spacing) * 2) !important;
   }
@@ -2215,6 +2227,9 @@
   }
   .tw\:border-white {
     border-color: var(--tw-color-white);
+  }
+  .tw\:border-t-neutral-300 {
+    border-top-color: var(--tw-color-neutral-300);
   }
   .tw\:border-b-neutral-300 {
     border-bottom-color: var(--tw-color-neutral-300);
@@ -2632,11 +2647,17 @@
   .tw\:text-warning {
     color: var(--color-warning);
   }
+  .tw\:text-warning\! {
+    color: var(--color-warning) !important;
+  }
   .tw\:text-white\! {
     color: var(--tw-color-white) !important;
   }
   .tw\:text-yellow-400 {
     color: var(--tw-color-yellow-400);
+  }
+  .tw\:italic {
+    font-style: italic;
   }
   .tw\:no-underline\! {
     text-decoration-line: none !important;
