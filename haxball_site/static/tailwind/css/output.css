@@ -2197,8 +2197,17 @@
   .tw\:max-w-\[1600px\] {
     max-width: 1600px;
   }
+  .tw\:min-w-30 {
+    min-width: calc(var(--tw-spacing) * 30);
+  }
   .tw\:min-w-40 {
     min-width: calc(var(--tw-spacing) * 40);
+  }
+  .tw\:min-w-45 {
+    min-width: calc(var(--tw-spacing) * 45);
+  }
+  .tw\:min-w-50 {
+    min-width: calc(var(--tw-spacing) * 50);
   }
   .tw\:flex-1 {
     flex: 1;
@@ -3043,6 +3052,9 @@
   }
   .tw\:text-base-content\/40 {
     color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+  }
+  .tw\:text-base-content\/50 {
+    color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
   }
   .tw\:text-base-content\/70 {
     color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
