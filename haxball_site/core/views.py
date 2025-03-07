@@ -21,7 +21,7 @@ from .utils import get_comments_for_object, get_paginated_comments
 
 
 # Вьюха для списка постов
-class PostListView(ListView):
+class HomeView(ListView):
     queryset = (
         Post.objects.select_related('category', 'author__user_profile')
         .prefetch_related('comments', 'votes')
@@ -33,7 +33,7 @@ class PostListView(ListView):
     )
     context_object_name = 'posts'
     paginate_by = 7
-    template_name = 'core/post/list.html'
+    template_name = 'core/home.html'
 
 
 # Смотреть все новости

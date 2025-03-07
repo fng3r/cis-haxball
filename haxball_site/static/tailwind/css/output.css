@@ -1945,8 +1945,17 @@
   .tw\:w-4\/9 {
     width: calc(4/9 * 100%);
   }
+  .tw\:w-5 {
+    width: calc(var(--tw-spacing) * 5);
+  }
+  .tw\:w-5\! {
+    width: calc(var(--tw-spacing) * 5) !important;
+  }
   .tw\:w-6 {
     width: calc(var(--tw-spacing) * 6);
+  }
+  .tw\:w-6\! {
+    width: calc(var(--tw-spacing) * 6) !important;
   }
   .tw\:w-7 {
     width: calc(var(--tw-spacing) * 7);
