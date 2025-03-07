@@ -2347,6 +2347,9 @@
   .tw\:border-neutral-200 {
     border-color: var(--tw-color-neutral-200);
   }
+  .tw\:border-neutral-300 {
+    border-color: var(--tw-color-neutral-300);
+  }
   .tw\:border-white {
     border-color: var(--tw-color-white);
   }
