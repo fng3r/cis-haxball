@@ -17,7 +17,7 @@
             </h2>
         </div>
 
-        <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:bg-base-100 tw:gap-x-4 tw:mt-1 tw:rounded-b-lg" role="tablist">
+        <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:bg-base-100 tw:gap-x-4 tw:rounded-b-lg" role="tablist">
             <input type="radio" name="rating-tabs" class="tw:tab tw:pl-2! tw:font-semibold" role="tab" aria-label="Рейтинг" checked />
             <div class="tw:tab-content tw:pt-2">
                 <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
@@ -47,7 +47,7 @@
                             </label>
                         </fieldset>
 
-                        <div id="team-rating-table" class="tw:max-h-[700px] tw:overflow-y-auto">
+                        <div id="team-rating-table" class="tw:max-h-[700px] tw:overflow-y-auto tw:mb-1">
                             {% include 'tournament/partials/team_rating_table.html' %}
                         </div>
                     </div>
@@ -57,7 +57,7 @@
             <input type="radio" name="rating-tabs" class="tw:tab tw:font-semibold" role="tab" aria-label="Справка" />
             <div class="tw:tab-content tw:pt-2">
                 <div id="ref-info-tab-content" role="tabpanel" aria-labelledby="ref-info-tab">
-                    <div class="tw:mx-3 tw:mt-1 tw:max-h-[820px] tw:overflow-y-auto">
+                    <div class="tw:mx-3 tw:mt-1">
                         <p>
                             Рейтинг рассчитывается следующим образом:
                         </p>
