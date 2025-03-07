@@ -2642,6 +2642,9 @@
   .tw\:text-right {
     text-align: right;
   }
+  .tw\:align-bottom {
+    vertical-align: bottom;
+  }
   .tw\:align-middle {
     vertical-align: middle;
   }
