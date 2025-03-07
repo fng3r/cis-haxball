@@ -289,9 +289,11 @@
                 >
                     <span class="tw:inline-block tw:w-full tw:truncate tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">{{ user.username }}</span>
                     <li>
-                        <a class="tw:block tw:text-base-content! tw:no-underline!" href="{{ user.user_profile.get_absolute_url }}">
-                            Профиль
-                        </a>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000;" href="{{ user.user_profile.get_absolute_url }}">
+                                Профиль
+                            </a>
+                        </span>
                     </li>
                     <li>
                         <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">Выход</span>

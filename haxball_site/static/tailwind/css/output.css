@@ -3055,6 +3055,16 @@
       }
     }
   }
+  .tw\:active\:text-base-100 {
+    &:active {
+      color: var(--color-base-100);
+    }
+  }
+  .tw\:active\:text-base-100\! {
+    &:active {
+      color: var(--color-base-100) !important;
+    }
+  }
   .tw\:sm\:w-1\/2 {
     @media (width >= 40rem) {
       width: calc(1/2 * 100%);
