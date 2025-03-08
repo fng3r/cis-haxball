@@ -135,8 +135,8 @@
                 <table class="tw:table tw:**:[tr]:border-[#dee2e6]! team-stats-table team-avg-stats-table">
                     <thead>
                         <tr>
-                            <th scope="col" class="tw:text-base tw:text-base-content number tw:font-bold">Сезон</th>
-                            <th scope="col" class="tw:text-base tw:text-base-content number tw:font-bold">Турнир</th>
+                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Сезон</th>
+                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Турнир</th>
                             <th scope="col" class="tw:text-center!">
                                 <img src="{% static "img/ico/statistic/jersey.PNG" %}" title="Матчей сыграно">
                             </th>
@@ -193,8 +193,7 @@
                         {% endfor %}
 
                         <tr>
-                            <th colspan="2" class="tw:text-center!">
-                            </th>
+                            <th colspan="2"></th>
                             {% for single_stat in overall_avg_stats %}
                                 <td class="tw:text-center tw:font-bold number">
                                     {% if forloop.counter == 1 or single_stat == 0 %}
