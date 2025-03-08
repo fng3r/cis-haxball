@@ -8,7 +8,7 @@
     <div class="tw:pl-2">
         <a href="{{ comment.author.user_profile.get_absolute_url }}">
             <div class="tw:mr-2 tw:avatar {% if comment.author|is_online:users_online %}tw:avatar-online{% else %}tw:avatar-offline{% endif %}">
-                <div class="tw:w-[50px] tw:rounded-full">
+                <div class="tw:w-[50px] tw:rounded-full {% if comment.author.is_superuser %}tw:ring tw:ring-warning tw:ring-offset-base-100 tw:ring-offset-1{% endif %}">
                     {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as avatar %}
                         <img src="{{ avatar.url }}" alt="{{ comment.author.username }}" width="50" class="tw:rounded-full">
                     {% endthumbnail %}

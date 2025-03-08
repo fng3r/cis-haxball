@@ -2,12 +2,6 @@ body {
     background-color: #f9f9fa
 }
 
-
-
-.user-card-full {
-    overflow: hidden
-}
-
 .card {
     border-radius: 5px;
     -webkit-box-shadow: 0 1px 20px 0 rgba(69, 90, 100, 0.08);
@@ -23,17 +17,9 @@ body {
     margin-left: 0px
 }
 
-.user-card-full .user-profile {
-    border-radius: 5px 0 0 5px;
-}
-
 .bg-c-lite-green {
     background: -webkit-gradient(linear, left top, right top, from(#f29263), to(#ee5a6f));
     background: linear-gradient(to right, #ee5a6f, #f29263)
-}
-
-.user-profile {
-    padding: 20px 0
 }
 
 .card-block {
@@ -95,10 +81,6 @@ h6 {
     padding-bottom: 5px !important
 }
 
-.f-w-600 {
-    font-weight: 600
-}
-
 .user-card-full .social-link li {
     display: inline-block
 }
@@ -132,11 +114,6 @@ h6 {
     margin-right: 6px;
 }
 
-.profile-achievements-image {
-    width: 96px;
-    height: 96px;
-}
-
 .tabs-decoration{
     width: 100%;
     border-radius: 10px;
@@ -166,12 +143,6 @@ h6 {
     overflow-y: auto;
 }
 
-#profile-achievements-panel {
-    overflow-y: auto;
-    max-height: 580px;
-    margin-top: 0;
-}
-
 .nicknames-history{
     position: absolute;
     top: 0;
@@ -183,34 +154,6 @@ h6 {
     box-shadow: 0px 0px 10px #000000;
     transition: 0.6s;
     z-index: 999;
-}
-
-.nicknames-history-item:not(:last-of-type){
-    border-bottom: 1px solid #7b7b7b;
-    padding-bottom: 3px;
-}
-
-.link-decoration-none:focus, .link-decoration-none:active{
-    outline: none;
-}
-
-
-.link-decoration-none,.link-decoration-none:hover{
-    text-decoration: none;
-    color: #ffffff;
-}
-
-.link-decoration-none:visited{
-    text-decoration: none;
-}
-
-.nickname-inline:hover{
-    transition: 0.3s;
-    color: #f5f5f5;
-}
-
-.nickname-inline{
-    transition: 0.3s;
 }
 
 .profile-triangle{
