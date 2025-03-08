@@ -1,5 +1,5 @@
 {% load static %}
-
+{% load thumbnail %}
 <div class="tw:card tw:border-t-1 tw:border-white tw:rounded-lg tw:mb-2">
     <div class="tw:card-title tw:justify-center tw:rounded-t-lg tw:border-b tw:border-gray-300 tw:p-2 tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
         <span class="tw:mb-0 tw:text-lg tw:text-center">Последние трансферы</span>
@@ -11,8 +11,9 @@
                 <div class="tw:avatar tw:mr-4">
                     <div class="tw:w-[50px] tw:h-[50px] tw:rounded-full">
                         <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
-                            <img src="{{ transfer.trans_player.name.user_profile.avatar.url }}" class="tw:rounded-full"
-                                 alt="{{ transfer.trans_player.nickname }}" title="{{ transfer.trans_player }}">
+                            {% thumbnail transfer.trans_player.name.user_profile.avatar "100x100" crop="center" as avatar %}
+                                <img src="{{ avatar.url }}" alt="{{ transfer.trans_player.nickname }}" title="{{ transfer.trans_player }}">
+                            {% endthumbnail %}
                         </a>
                     </div>
                 </div>

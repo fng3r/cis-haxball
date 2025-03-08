@@ -27,9 +27,10 @@
                         <div class="tw:flex tw:mr-3">
                             <div class="tw:avatar tw:mr-2">
                                 <div class="tw:mask tw:mask-squircle tw:w-[40px]">
-                                    {% thumbnail player.name.user_profile.avatar "100x100" crop="center" as avatar %}
+                                    {% comment %} {% thumbnail player.name.user_profile.avatar "100x100" crop="center" as avatar %}
                                         <img src="{{ avatar.url }}">
-                                    {% endthumbnail %}
+                                    {% endthumbnail %} {% endcomment %}
+                                    <img src="{{ player.name.user_profile.avatar.url }}">
                                 </div>
                             </div>
 
