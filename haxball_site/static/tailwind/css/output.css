@@ -3075,6 +3075,10 @@
     font-size: var(--tw-text-xl);
     line-height: var(--tw-leading, var(--tw-text-xl--line-height));
   }
+  .tw\:text-xl\! {
+    font-size: var(--tw-text-xl) !important;
+    line-height: var(--tw-leading, var(--tw-text-xl--line-height)) !important;
+  }
   .tw\:text-xs {
     font-size: var(--tw-text-xs);
     line-height: var(--tw-leading, var(--tw-text-xs--line-height));
@@ -3087,6 +3091,18 @@
   .tw\:select-sm {
     --size: calc(var(--size-field, 0.25rem) * 8);
     font-size: 0.75rem;
+  }
+  .tw\:text-\[2rem\] {
+    font-size: 2rem;
+  }
+  .tw\:text-\[2rem\]\! {
+    font-size: 2rem !important;
+  }
+  .tw\:text-\[3rem\] {
+    font-size: 3rem;
+  }
+  .tw\:text-\[3rem\]\! {
+    font-size: 3rem !important;
   }
   .tw\:text-\[12px\] {
     font-size: 12px;
@@ -3101,6 +3117,10 @@
     --tw-font-weight: var(--tw-font-weight-bold);
     font-weight: var(--tw-font-weight-bold);
   }
+  .tw\:font-bold\! {
+    --tw-font-weight: var(--tw-font-weight-bold);
+    font-weight: var(--tw-font-weight-bold) !important;
+  }
   .tw\:font-medium {
     --tw-font-weight: var(--tw-font-weight-medium);
     font-weight: var(--tw-font-weight-medium);
@@ -3112,6 +3132,10 @@
   .tw\:font-semibold {
     --tw-font-weight: var(--tw-font-weight-semibold);
     font-weight: var(--tw-font-weight-semibold);
+  }
+  .tw\:font-semibold\! {
+    --tw-font-weight: var(--tw-font-weight-semibold);
+    font-weight: var(--tw-font-weight-semibold) !important;
   }
   .tw\:text-nowrap {
     text-wrap: nowrap;
