@@ -1,25 +1,5 @@
-{% load static %}
+{% extends 'core.html' %}
 
-{% if user.is_authenticated %}
-    <div id="team-form-container" class="card mt-2">
-        <div class="card-header">
-            <h5>Изменить команду {{ team.title }}</h5>
-        </div>
-        <div class="card-body">
-            {{ form.media }}
-            <form method="POST"
-                  hx-post="{% url 'tournament:edit_team' team.slug %}"
-                  hx-trigger="submit"
-                  hx-target="#team-form-container"
-                  hx-swap="outerHTML"
-                  hx-disabled-elt="find button">
-                {{ form.as_p }}
-                <div class="d-flex justify-content-end">
-                    <img class="htmx-indicator mr-2 mt-2" height="24" src="{% static 'img/svg-loaders/bars.svg' %}">
-                    <button class="btn btn-primary" type="submit">Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-{% endif %}
+{% block main_content %}
+    {% include 'tournament/teams/partials/edit_team_form.html' %}
+{% endblock %}

@@ -287,7 +287,12 @@ def update_free_agent_entry(request, pk):
 class EditTeamView(DetailView, View):
     model = Team
     context_object_name = 'team'
-    template_name = 'tournament/teams/edit_team.html'
+    
+    def get_template_names(self):
+        if self.request.htmx:
+            return 'tournament/teams/partials/edit_team_form.html'
+
+        return 'tournament/teams/edit_team.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1869,7 +1874,7 @@ def team_squad_statistics(request, pk):
     season = Season.objects.get(number=season_number) if season_number else None
     stats = get_team_squad_stats(team, season=season)
     
-    return render(request, 'tournament/teams/partials/team_squad_stats.html', {'team_squad': stats})
+    return render(request, 'tournament/teams/partials/team_squad_stats.html', {'team': team, 'team_squad': stats})
 
 
 def team_statistics_charts(request, pk):

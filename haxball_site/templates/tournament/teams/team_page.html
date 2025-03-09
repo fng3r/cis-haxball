@@ -22,7 +22,7 @@
 
     {% partialdef team-page-container inline=True %}
         <div id="team-page-container">
-            <div class="tw:flex tw:flex-col tw:rounded-lg emp-profile"
+            <div class="tw:flex tw:flex-col tw:rounded-lg tw:mt-2 tw:gap-2 tw:bg-base-100 tw:pt-4 tw:pb-2 tw:px-4"
                  style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})">
                 <div class="tw:flex">
                     <div class="tw:w-1/4 tw:px-4">
@@ -36,9 +36,10 @@
                             <h3>
                                 {{ team.title }}
                                 {% if team.owner == user or user.is_superuser %}
-                                    <a href="#" class="text-warning small text-right"
+                                    <a href="#" class="tw:text-warning! tw:text-xl"
                                        hx-get="{% url 'tournament:edit_team' team.slug %}"
                                        hx-target="#team-page-container"
+                                       hx-push-url="true"
                                        hx-swap="outerHTML">
                                         <i class="fa fa-pencil" aria-hidden="true"></i>
                                     </a>
@@ -60,7 +61,7 @@
                     </div>
                 </div>
 
-                <div class="tw:flex tw:px-2">
+                <div class="tw:flex">
                     <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
                         <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Состав" checked />
                         <div class="tw:tab-content tw:pt-3">
@@ -78,10 +79,10 @@
                                 <div class="tw:tab-content tw:pt-3">
                                     <div id="alltime-players-panel" role="tabpanel" aria-labelledby="alltime-players-tab">
 
-                                        <div class="form-group mr-2 mb-2">
-                                            <label class="h6">Сезон:</label>
+                                        <div class="tw:flex tw:items-center tw:mb-2 tw:gap-1">
+                                            <label class="tw:label tw:text-base-content tw:font-normal tw:mb-0!">Сезон:</label>
                                             <select name="season"
-                                                    class="form-control-sm ml-1"
+                                                    class="tw:select tw:select-sm tw:max-w-38!"
                                                     hx-get="{% url 'tournament:team_squad_stats' team.id %}"
                                                     hx-target="#team-squad-stats"
                                                     hx-swap="innerHTML">
@@ -90,7 +91,6 @@
                                                     <option value="{{ season.number }}">{{ season.title }}</option>
                                                 {% endfor %}
                                             </select>
-
                                         </div>
 
                                         {% with team_squad=team|all_time_squad_stats %}
@@ -159,7 +159,7 @@
                             <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
                                 {% if team.achievements.count %}
                                     {% for season, achievements in team|team_achievements_by_season %}
-                                        <div class="team_achievements">
+                                        <div class="team_achievements tw:py-1">
                                             <div class="team_achievements-season">{{season.title}}</div>
                                             <div class="team_achievements-medals">
                                                 {% for achievement in achievements %}
