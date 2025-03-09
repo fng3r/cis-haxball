@@ -397,7 +397,13 @@ def delete_comment(request, pk):
 class EditProfile(DetailView, View):
     model = Profile
     context_object_name = 'profile'
-    template_name = 'core/profile/edit_profile_form.html'
+    template_name = 'core/profile/partials/edit_profile_form.html'
+    
+    def get_template_names(self):
+        if self.request.htmx:
+            return 'core/profile/partials/edit_profile_form.html'
+        
+        return 'core/profile/edit_profile.html'
 
     def post(self, request, pk, slug):
         profile = Profile.objects.get(slug=slug, id=pk)
