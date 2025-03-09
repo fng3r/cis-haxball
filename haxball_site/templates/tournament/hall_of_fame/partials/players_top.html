@@ -7,11 +7,15 @@
             <div class="tw:card-title tw:px-2 tw:py-3">
                 <h5 class="tw:h-[28px] tw:mb-0! tw:flex tw:items-center tw:gap-1">
                     <span class="tw:font-semibold">{{ title }}</span>
-                    <img
-                        src="{% static icon_url %}"
-                        width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
-                        height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
-                        title="{{ icon_title }}">
+                    {% if icon_url %}
+                        <img
+                            src="{% static icon_url %}"
+                            width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
+                            height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
+                            title="{{ icon_title }}">
+                    {% elif icon_cls %}
+                        <i class="{{ icon_cls }}" title="{{ title }}"></i>
+                    {% endif %}
                 </h5>
             </div>
         </div>
@@ -30,7 +34,7 @@
                                     {% comment %} {% thumbnail player.name.user_profile.avatar "100x100" crop="center" as avatar %}
                                         <img src="{{ avatar.url }}">
                                     {% endthumbnail %} {% endcomment %}
-                                    <img src="{{ player.name.user_profile.avatar.url }}">
+                                    <img src="{{ player.name.user_profile.avatar.url }}" title="{{ player.nickname }}">
                                 </div>
                             </div>
 
