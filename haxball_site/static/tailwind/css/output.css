@@ -3024,6 +3024,9 @@
   .tw\:align-top {
     vertical-align: top;
   }
+  .tw\:align-top\! {
+    vertical-align: top !important;
+  }
   .tw\:text-2xl {
     font-size: var(--tw-text-2xl);
     line-height: var(--tw-leading, var(--tw-text-2xl--line-height));
