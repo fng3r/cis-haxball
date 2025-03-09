@@ -2366,8 +2366,14 @@
   .tw\:w-3\/7 {
     width: calc(3/7 * 100%);
   }
+  .tw\:w-3\/10 {
+    width: calc(3/10 * 100%);
+  }
   .tw\:w-4\/9 {
     width: calc(4/9 * 100%);
+  }
+  .tw\:w-4\/10 {
+    width: calc(4/10 * 100%);
   }
   .tw\:w-5\! {
     width: calc(var(--tw-spacing) * 5) !important;
