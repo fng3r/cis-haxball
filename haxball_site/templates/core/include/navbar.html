@@ -574,9 +574,9 @@
             <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:forum' %}">Форум</a>
         </div>
 
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+        {% comment %} <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
             <a class="tw:text-success! tw:no-underline!" href="{% url 'core:forum_category' 'guides' %}">Гайды</a>
-        </div>
+        </div> {% endcomment %}
 
         <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
             <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:admins' %}">Администрация</a>
