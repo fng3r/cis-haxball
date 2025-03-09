@@ -2675,6 +2675,9 @@
   .tw\:justify-self-center {
     justify-self: center;
   }
+  .tw\:justify-self-end {
+    justify-self: flex-end;
+  }
   .tw\:truncate {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -3084,6 +3087,9 @@
   }
   .tw\:pr-4 {
     padding-right: calc(var(--tw-spacing) * 4);
+  }
+  .tw\:pb-0 {
+    padding-bottom: calc(var(--tw-spacing) * 0);
   }
   .tw\:pb-1 {
     padding-bottom: calc(var(--tw-spacing) * 1);
