@@ -1997,6 +1997,9 @@
   .tw\:mb-0\! {
     margin-bottom: calc(var(--tw-spacing) * 0) !important;
   }
+  .tw\:mb-0\.5\! {
+    margin-bottom: calc(var(--tw-spacing) * 0.5) !important;
+  }
   .tw\:mb-1 {
     margin-bottom: calc(var(--tw-spacing) * 1);
   }
@@ -3196,6 +3199,10 @@
   .tw\:text-xs {
     font-size: var(--tw-text-xs);
     line-height: var(--tw-leading, var(--tw-text-xs--line-height));
+  }
+  .tw\:text-xs\! {
+    font-size: var(--tw-text-xs) !important;
+    line-height: var(--tw-leading, var(--tw-text-xs--line-height)) !important;
   }
   .tw\:file-input-md {
     --size: calc(var(--size-field, 0.25rem) * 10);

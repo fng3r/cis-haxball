@@ -79,18 +79,20 @@
                                 <div class="tw:tab-content tw:pt-3">
                                     <div id="alltime-players-panel" role="tabpanel" aria-labelledby="alltime-players-tab">
 
-                                        <div class="tw:flex tw:items-center tw:mb-2 tw:gap-1">
-                                            <label class="tw:label tw:text-base-content tw:font-normal tw:mb-0!">Сезон:</label>
-                                            <select name="season"
-                                                    class="tw:select tw:select-sm tw:max-w-38!"
-                                                    hx-get="{% url 'tournament:team_squad_stats' team.id %}"
-                                                    hx-target="#team-squad-stats"
-                                                    hx-swap="innerHTML">
-                                                <option selected value>Все</option>
-                                                {% for season in seasons %}
-                                                    <option value="{{ season.number }}">{{ season.title }}</option>
-                                                {% endfor %}
-                                            </select>
+                                        <div class="tw:flex tw:items-center tw:mb-2">
+                                            <fieldset class="tw:fieldset">
+                                                <legend class="tw:fieldset-legend tw:text-sm! tw:mb-0.5!">Сезон</legend>
+                                                <select name="season"
+                                                        class="tw:select tw:select-sm"
+                                                        hx-get="{% url 'tournament:team_squad_stats' team.id %}"
+                                                        hx-target="#team-squad-stats"
+                                                        hx-swap="innerHTML">
+                                                    <option selected value>Все</option>
+                                                    {% for season in seasons %}
+                                                        <option value="{{ season.number }}">{{ season.title }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </fieldset>
                                         </div>
 
                                         {% with team_squad=team|all_time_squad_stats %}
