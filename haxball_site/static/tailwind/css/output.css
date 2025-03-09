@@ -2546,6 +2546,12 @@
   .tw\:flex-1 {
     flex: 1;
   }
+  .tw\:flex-\[1_1\] {
+    flex: 1 1;
+  }
+  .tw\:flex-\[1_1_50\%\] {
+    flex: 1 1 50%;
+  }
   .tw\:grow {
     flex-grow: 1;
   }

@@ -7,583 +7,585 @@
 {% endblock %}
 
 <div class="tw:navbar tw:bg-base-200 tw:shadow-sm tw:justify-between">
-    <div class="tw:text-lg">
+    <div class="tw:flex tw:items-center tw:text-lg">
         <a class="tw:btn tw:btn-ghost tw:text-xl tw:no-underline! tw:text-blue-600!" href="{% url 'core:home' %}">CIS-HAXBALL</a>
 
-        <div class="tw:dropdown">
-            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Чемпионат</div>
-            <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                <span class="tw:ml-1 tw:mt-1 tw:text-sm tw:text-base-content/70 tw:font-semibold">Турниры</span>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-premier-league' %}">Высшая лига</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-first-league' %}">Первая лига</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-second-league' %}">Вторая лига</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-russian-cup' %}">Кубок России</a>
-                    </span>
-                </li>
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Кубок лиги<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+        <div class="tw:flex tw:flex-wrap tw:mr-3">
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Чемпионат</div>
+                <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    <span class="tw:ml-1 tw:mt-1 tw:text-sm tw:text-base-content/70 tw:font-semibold">Турниры</span>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-premier-league' %}">Высшая лига</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-first-league' %}">Первая лига</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-second-league' %}">Вторая лига</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-russian-cup' %}">Кубок России</a>
+                        </span>
+                    </li>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                Кубок лиги<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-league-cup-pl' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-league-cup-fl' %}">Первая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-league-cup-sl' %}">Вторая лига</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-league-cup-pl' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-league-cup-fl' %}">Первая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's14-league-cup-sl' %}">Вторая лига</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    </li>
 
-                <div class="tw:divider tw:my-0"></div>
+                    <div class="tw:divider tw:my-0"></div>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" target="_blank"
-                           href="https://docs.google.com/spreadsheets/d/1uO4L_LzPAJz28WDNICFxBep76OTWvaZ3tQlw5HIAaw4/edit?usp=sharing">
-                            Календарь
-                        </a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:postponements' %}">Переносы</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:cards' %}">Карточки</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '918' 'transfers-13' %}">Трансферы</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
-                    </span>
-                </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" target="_blank"
+                               href="https://docs.google.com/spreadsheets/d/1uO4L_LzPAJz28WDNICFxBep76OTWvaZ3tQlw5HIAaw4/edit?usp=sharing">
+                                Календарь
+                            </a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:postponements' %}">Переносы</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:cards' %}">Карточки</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '918' 'transfers-13' %}">Трансферы</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
+                        </span>
+                    </li>
 
-                <div class="tw:divider tw:my-0"></div>
+                    <div class="tw:divider tw:my-0"></div>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '111' 'org_razdel' %}">Орг. раздел</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '817' 'regulations' %}">Регламент</a>
-                    </span>
-                </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '111' 'org_razdel' %}">Орг. раздел</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '817' 'regulations' %}">Регламент</a>
+                        </span>
+                    </li>
 
-            </ul>
-        </div>
+                </ul>
+            </div>
 
-        <div class="tw:dropdown">
-            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Команды</div>
-            <ul tabindex="0" class="tw:w-[700px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                <li>
-                    {% teams_in_navbar %}
-                </li>
-            </ul>
-        </div>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Команды</div>
+                <ul tabindex="0" class="tw:w-[700px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    <li>
+                        {% teams_in_navbar %}
+                    </li>
+                </ul>
+            </div>
 
-        <div class="tw:dropdown">
-            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Турниры</div>
-            <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:fastcups' %}">Фасткапы</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:tournaments' %}">Прочие турниры</a>
-                    </span>
-                </li>
-            </ul>
-        </div>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Турниры</div>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:fastcups' %}">Фасткапы</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:tournaments' %}">Прочие турниры</a>
+                        </span>
+                    </li>
+                </ul>
+            </div>
 
-        <div class="tw:dropdown">
-            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Архив</div>
-            <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '46' 'season_1' %}">ЧР #1</a>
-                    </span>
-                </li>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Архив</div>
+                <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '46' 'season_1' %}">ЧР #1</a>
+                        </span>
+                    </li>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '47' 'season_2' %}">ЧР #2</a>
-                    </span>
-                </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '47' 'season_2' %}">ЧР #2</a>
+                        </span>
+                    </li>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">ЛЧ #1</a>
-                    </span>
-                </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">ЛЧ #1</a>
+                        </span>
+                    </li>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '49' 'season_4' %}">ЧР #4</a>
-                    </span>
-                </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '49' 'season_4' %}">ЧР #4</a>
+                        </span>
+                    </li>
 
-                <div class="tw:divider tw:my-0"></div>
+                    <div class="tw:divider tw:my-0"></div>
 
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #5<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #5<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's5-premier-league' %}">Единая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's5-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's5-premier-league' %}">Единая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's5-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    </li>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'champions-league-s2' %}">ЛЧ #2</a>
-                    </span>
-                </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'champions-league-s2' %}">ЛЧ #2</a>
+                        </span>
+                    </li>
 
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #6<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #6<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's6-premier-league' %}">Единая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's6-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's6-premier-league' %}">Единая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's6-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    </li>
 
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #7<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #7<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's7-premier-league' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's7-first-league' %}">Первая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's7-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's7-premier-league' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's7-first-league' %}">Первая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's7-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    </li>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'champions-league-s3' %}">ЛЧ #3</a>
-                    </span>
-                </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'champions-league-s3' %}">ЛЧ #3</a>
+                        </span>
+                    </li>
 
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #8<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
-                        </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-premier-league' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <div class="tw:dropdown tw:dropdown-right">
-                                    <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                                        Первая лига<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #8<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-premier-league' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <div class="tw:dropdown tw:dropdown-right">
+                                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                            Первая лига<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                                        </div>
+                                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-first-league-sharks' %}">Дивизион Акул</a>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-first-league-berkuts' %}">Дивизион Беркутов</a>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-league-cup' %}">Кубок лиги</a>
+                                                </span>
+                                            </li>
+                                        </ul>
                                     </div>
-                                    <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-first-league-sharks' %}">Дивизион Акул</a>
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-first-league-berkuts' %}">Дивизион Беркутов</a>
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-league-cup' %}">Кубок лиги</a>
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #9<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's8-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-premier-league' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <div class="tw:dropdown tw:dropdown-right">
-                                    <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                                        Первая лига<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    </li>
+
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #9<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-premier-league' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <div class="tw:dropdown tw:dropdown-right">
+                                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                            Первая лига<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                                        </div>
+                                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-first-league-volga' %}">Дивизион Волги</a>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-first-league-kama' %}">Дивизион Камы</a>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-league-cup' %}">Кубок лиги</a>
+                                                </span>
+                                            </li>
+                                        </ul>
                                     </div>
-                                    <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-first-league-volga' %}">Дивизион Волги</a>
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-first-league-kama' %}">Дивизион Камы</a>
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-league-cup' %}">Кубок лиги</a>
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #10<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's9-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's10-premier-league' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's10-first-league' %}">Первая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's10-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    </li>
 
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #11<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #10<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's10-premier-league' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's10-first-league' %}">Первая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's10-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-premier-league' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <div class="tw:dropdown tw:dropdown-right">
-                                    <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                                        Первая лига<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    </li>
+
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #11<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-premier-league' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <div class="tw:dropdown tw:dropdown-right">
+                                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                            Первая лига<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                                        </div>
+                                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-nadezhda' %}">Дивизион Надежды</a>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-vera' %}">Дивизион Веры</a>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-playoff' %}">Плей-офф</a>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span class="tw:inline-block">
+                                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-superfinal' %}">Суперфинал</a>
+                                                </span>
+                                            </li>
+                                        </ul>
                                     </div>
-                                    <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-nadezhda' %}">Дивизион Надежды</a>
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-vera' %}">Дивизион Веры</a>
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-playoff' %}">Плей-офф</a>
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span class="tw:inline-block">
-                                                <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-first-league-superfinal' %}">Суперфинал</a>
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #12<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's11-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-premier-league' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-first-league' %}">Первая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-second-league' %}">Вторая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    </li>
 
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            ЧР #13<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #12<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-premier-league' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-first-league' %}">Первая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-second-league' %}">Вторая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's12-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-second-league' %}">Вторая лига</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-russian-cup' %}">Кубок России</a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-league-cup' %}">Кубок лиги</a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                    </li>
 
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'champions-league-s4' %}">ЛЧ #4</a>
-                    </span>
-                </li>
-
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'finals-24' %}">ИТ'24</a>
-                    </span>
-                </li>
-            </ul>
-        </div>
-
-        <div class="tw:dropdown">
-            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Рейтинг</div>
-            <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:team_rating' %}">Рейтинг команд</a>
-                    </span>
-                </li>
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '958' 'player-rating-2025-1' %}">Рейтинг игроков</a>
-                    </span>
-                </li>
-            </ul>
-        </div>
-
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-            <a class="tw:text-warning! tw:no-underline!" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
-        </div>
-
-        <div class="tw:dropdown">
-            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Медиа</div>
-            <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                <li>
-                    <span class="tw:inline-block">
-                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:lives' %}">Трансляции</a>
-                    </span>
-                </li>
-                <li>
-                    <div class="tw:dropdown tw:dropdown-right">
-                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Соцсети<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                ЧР #13<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-second-league' %}">Вторая лига</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-russian-cup' %}">Кубок России</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 's13-league-cup' %}">Кубок лиги</a>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
-                        <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
-                                       href="https://discord.gg/h6mgc4bTJh"><img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
-                                    </a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
-                                       href="https://www.youtube.com/@cis-haxball"><img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> YouTube
-                                    </a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
-                                       href="https://www.twitch.tv/cis_haxball"><img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> Twitch
-                                    </a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
-                                       href="https://t.me/+GRxpyqeJKosxODQy"><img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> Telegram
-                                    </a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
-                                       href="https://www.tiktok.com/@cishaxball3"><img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> TikTok
-                                    </a>
-                                </span>
-                            </li>
-                            <li>
-                                <span class="tw:inline-block">
-                                    <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
-                                       href="https://vk.com/haxball_ru"><img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK
-                                    </a>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-        </div>
+                    </li>
 
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-            <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:forum' %}">Форум</a>
-        </div>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'champions-league-s4' %}">ЛЧ #4</a>
+                        </span>
+                    </li>
 
-        {% comment %} <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-            <a class="tw:text-success! tw:no-underline!" href="{% url 'core:forum_category' 'guides' %}">Гайды</a>
-        </div> {% endcomment %}
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:league' 'finals-24' %}">ИТ'24</a>
+                        </span>
+                    </li>
+                </ul>
+            </div>
 
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-            <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:admins' %}">Администрация</a>
-        </div>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Рейтинг</div>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'tournament:team_rating' %}">Рейтинг команд</a>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:post_detail' '958' 'player-rating-2025-1' %}">Рейтинг игроков</a>
+                        </span>
+                    </li>
+                </ul>
+            </div>
 
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-            <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                <a class="tw:text-warning! tw:no-underline!" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+            </div>
+
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">Медиа</div>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    <li>
+                        <span class="tw:inline-block">
+                            <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000" href="{% url 'core:lives' %}">Трансляции</a>
+                        </span>
+                    </li>
+                    <li>
+                        <div class="tw:dropdown tw:dropdown-right">
+                            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                                Соцсети<i class="fa fa-chevron-right" style="font-size: 10px;"></i>
+                            </div>
+                            <ul tabindex="0" class="tw:dropdown-content tw:ml-2 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
+                                           href="https://discord.gg/h6mgc4bTJh"><img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
+                                        </a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
+                                           href="https://www.youtube.com/@cis-haxball"><img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> YouTube
+                                        </a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
+                                           href="https://www.twitch.tv/cis_haxball"><img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> Twitch
+                                        </a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
+                                           href="https://t.me/+GRxpyqeJKosxODQy"><img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> Telegram
+                                        </a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
+                                           href="https://www.tiktok.com/@cishaxball3"><img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> TikTok
+                                        </a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="tw:inline-block">
+                                        <a class="tw:block tw:active:text-base-100! tw:no-underline!" style="color: #000"
+                                           href="https://vk.com/haxball_ru"><img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK
+                                        </a>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:forum' %}">Форум</a>
+            </div>
+
+            {% comment %} <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                <a class="tw:text-success! tw:no-underline!" href="{% url 'core:forum_category' 'guides' %}">Гайды</a>
+            </div> {% endcomment %}
+
+            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:admins' %}">Администрация</a>
+            </div>
+
+            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                <a class="tw:text-base-content! tw:no-underline!" href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+            </div>
         </div>
     </div>
 
