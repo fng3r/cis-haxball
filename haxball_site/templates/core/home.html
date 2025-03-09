@@ -15,7 +15,7 @@
     {% if latest_matches %}
         <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
             <div class="tw:card-body tw:p-0">
-                <div id="latestMatchesControls" class="carousel slide" data-ride="carousel">
+                <div id="latestMatchesControls" class="carousel slide" data-interval="7500" data-ride="carousel">
                     <div class="carousel-inner tw:rounded-lg">
                         {% for matches_batch in latest_matches|batch:4 %}
                             <div class="carousel-item {% if forloop.first %}active{% endif %}">
@@ -77,7 +77,7 @@
     {% if upcoming_matches %}
         <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
             <div class="tw:card-body tw:p-0">
-                <div id="upcomingMatchesControls" class="carousel slide" data-ride="carousel">
+                <div id="upcomingMatchesControls" class="carousel slide" data-interval="7500" data-ride="carousel">
                     <div class="carousel-inner tw:rounded-lg">
                         {% for upcoming_matches_batch in upcoming_matches|batch:4 %}
                             <div class="carousel-item {% if forloop.first %}active{% endif %}">
