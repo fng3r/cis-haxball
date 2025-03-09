@@ -40,12 +40,15 @@
                             </div>
                         </form>
 
-                        <fieldset class="tw:fieldset tw:my-2! tw:ml-2!">
-                            <label class="tw:fieldset-label tw:text-sm">
-                                <input id="show-selected-season-teams-only" type="checkbox" class="tw:checkbox tw:checkbox-sm" />
-                                <span class="tw:align-middle tw:text-base-content">Только команды, принимавшие участие в сезоне</span>
+                        <div class="tw:inline-flex tw:my-2! tw:ml-2! tw:gap-2">
+                            <label class="tw:toggle tw:text-base-content tw:inline-grid!">
+                                <input id="show-selected-season-teams-only" type="checkbox"
+                                />
+                                <svg aria-label="disabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"></path></g></svg>
                             </label>
-                        </fieldset>
+                            <span class="tw:text-base-content/80">Только команды, принимавшие участие в сезоне</span>
+                        </div>
 
                         <div id="team-rating-table" class="tw:max-h-[700px] tw:overflow-y-auto tw:mb-1">
                             {% include 'tournament/partials/team_rating_table.html' %}

@@ -3309,6 +3309,9 @@
   .tw\:text-base-content\/70\! {
     color: color-mix(in oklab, var(--color-base-content) 70%, transparent) !important;
   }
+  .tw\:text-base-content\/80 {
+    color: color-mix(in oklab, var(--color-base-content) 80%, transparent);
+  }
   .tw\:text-base-content\/85 {
     color: color-mix(in oklab, var(--color-base-content) 85%, transparent);
   }
