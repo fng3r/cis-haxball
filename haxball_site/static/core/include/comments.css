@@ -39,6 +39,13 @@
     max-width: 100%;
 }
 
+:where(.comment-body) {
+    ol, ul {
+        padding-left: 2rem;
+        list-style-type: revert;
+    }
+}
+
 .label {
     padding: 3px 10px;
     line-height: 13px;

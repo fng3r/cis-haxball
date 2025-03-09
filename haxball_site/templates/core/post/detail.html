@@ -16,6 +16,16 @@
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
 {% block post %}
+
+    <style>
+        :where(.post-body) {
+            ol, ul {
+                padding-left: 2rem;
+                list-style-type: revert;
+            }
+        }
+    </style>
+
     <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:mt-2">
         <div class="tw:w-full tw:bg-base-300 tw:rounded-t-lg tw:px-4 tw:py-3 tw:border-b tw:border-b-neutral-300">
             <div class="tw:flex tw:flex-col">
@@ -55,7 +65,9 @@
         </div>
 
         <div class="tw:flex tw:flex-col tw:p-4">
-            {{ post.body|safe }}
+            <div class="post-body">
+                {{ post.body|safe }}
+            </div>
         </div>
         <div class="tw:inline-flex tw:justify-between tw:rounded-b-lg tw:bg-base-300 tw:px-4 tw:py-2 tw:border-t tw:border-t-neutral-300">
             <span class="tw:text-base-content/70"> Комментариев: {{ post.comments.count }} </span>
