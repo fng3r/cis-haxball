@@ -22,13 +22,18 @@
                                 <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-4 tw:gap-2 tw:text-sm">
                                     {% for match in matches_batch %}
                                         <div class="tw:flex tw:flex-col tw:relative tw:px-2 tw:py-4 tw:hover:bg-neutral-200/70!">
-                                            <h6 class="tw:text-center tw:mb-3! tw:text-neutral-600">
-                                                {{ match.league.title }},
-                                                {% if match.stage.is_playoff %}
-                                                    {{ match.numb_tour|round_name:match.stage.tours.count }}
-                                                {% else %}
-                                                    {{ match.numb_tour|tour_name }}
-                                                {% endif %}
+                                            <h6 class="tw:flex tw:flex-col tw:items-center tw:mb-3! tw:text-neutral-600">
+                                                <span>
+                                                    {{ match.league.title }},
+                                                    {% if match.stage.is_playoff %}
+                                                        {{ match.numb_tour|round_name:match.stage.tours.count }}
+                                                    {% else %}
+                                                        {{ match.numb_tour|tour_name }}
+                                                    {% endif %}
+                                                </span>
+                                                <span>
+                                                    {{ match.match_date|date:"d.m" }}
+                                                </span>
                                             </h6>
 
                                             <div class="tw:flex">
@@ -79,15 +84,18 @@
                                 <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-4 tw:gap-2 tw:text-sm">
                                     {% for upcoming_match in upcoming_matches_batch %}
                                         <div class="tw:flex tw:flex-col tw:relative tw:px-2 tw:py-4 tw:hover:bg-neutral-200/70!">
-                                            <h6 class="tw:text-center tw:mb-3! tw:text-neutral-600">
-                                                {{ upcoming_match.match.league.title }},
-                                                {% if upcoming_match.match.stage.is_playoff %}
-                                                    {{ upcoming_match.match.numb_tour|round_name:upcoming_match.match.stage.tours.count }}
-                                                {% else %}
-                                                    {{ upcoming_match.match.numb_tour|tour_name }}
-                                                {% endif %}
-                                                <br />
-                                                {{ upcoming_match.time_date|date:"d.m / H:i" }}
+                                            <h6 class="tw:flex tw:flex-col tw:items-center tw:mb-3! tw:text-neutral-600">
+                                                <span>
+                                                    {{ upcoming_match.match.league.title }},
+                                                    {% if upcoming_match.match.stage.is_playoff %}
+                                                        {{ upcoming_match.match.numb_tour|round_name:upcoming_match.match.stage.tours.count }}
+                                                    {% else %}
+                                                        {{ upcoming_match.match.numb_tour|tour_name }}
+                                                    {% endif %}
+                                                </span>
+                                                <span>
+                                                    {{ upcoming_match.time_date|date:"d.m / H:i" }}
+                                                </span>
                                             </h6>
 
                                             <div class="tw:flex">

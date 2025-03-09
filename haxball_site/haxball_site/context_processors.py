@@ -10,7 +10,7 @@ def latest_matches_context(request):
     latest_matches = (
         Match.objects
         .filter(is_played=True, match_date__range=[three_days_ago, today])
-        .order_by('league__priority', 'league__created', '-match_date')
+        .order_by('-match_date', 'league__priority')
         .select_related('league', 'stage', 'numb_tour', 'team_home', 'team_guest')
     )
     
