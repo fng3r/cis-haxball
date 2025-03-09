@@ -18,14 +18,15 @@
             <div class="tw:card user-card-full">
                 <div class="tw:flex">
                     <div class="tw:w-1/3 tw:rounded-bl-md bg-c-lite-green user-profile">
-                        <div class="tw:flex tw:flex-col tw:p-4 tw:text-center tw:text-white">
+                        <div class="tw:flex tw:flex-col tw:p-4 tw:text-white">
                             <div class="tw:mb-2.5 tw:flex tw:flex-col tw:gap-2">
                                 <img src="{{ profile.avatar.url }}" width="100%" height="100%"
                                      class="tw:rounded" alt="User-Profile-Image">
 
+                                <h4 class="tw:font-semibold tw:text-center">{{ profile.name }}</h4>
 
                                 <fieldset class="tw:fieldset">
-                                    <legend class="tw:fieldset-legend tw:text-base! tw:text-left">Аватар</legend>
+                                    <legend class="tw:fieldset-legend tw:text-base!">Аватар</legend>
                                     <input id="avatar-file" type="file" name="avatar" accept="image/*"
                                            class="tw:file-input tw:text-base-content"
                                     />
@@ -34,13 +35,13 @@
                                 {% if profile.name|can_edit_profile_bg %}
                                     <div>
                                         <fieldset class="tw:fieldset">
-                                            <legend class="tw:fieldset-legend tw:text-base! tw:text-left">Фон</legend>
-                                            <input id="bg-file" type="file" name="background"
+                                            <legend class="tw:fieldset-legend tw:text-base!">Фон</legend>
+                                            <input id="bg-file" type="file" name="background" accept="image/*"
                                                    class="tw:file-input tw:text-base-content"
                                             />
                                         </fieldset>
 
-                                        <fieldset class="tw:fieldset tw:my-2! tw:ml-2! tw:text-left">
+                                        <fieldset class="tw:fieldset tw:my-1!">
                                             <label class="tw:fieldset-label tw:text-base tw:text-white!">
                                                 <input id="remove_bg" type="checkbox" name="remove_bg"
                                                        class="tw:checkbox tw:checkbox-sm" />
@@ -51,21 +52,16 @@
                                 {% endif %}
                             </div>
 
-                            <h4 class="tw:font-semibold">{{ profile.name }}</h4>
-                            <div>Рейтинг
-                                <span class="tw:badge tw:badge-sm {% if profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
-                                    {{ profile.karma }}
-                                </span>
-                            </div>
-                            <fieldset class="tw:fieldset tw:my-2!">
-                                <label class="tw:fieldset-label tw:text-base tw:text-white!">
+                            <div class="tw:inline-flex tw:gap-3 tw:mt-3">
+                                Комментарии к профилю
+                                <label class="tw:toggle tw:text-base-content tw:inline-grid!">
                                     <input type="checkbox" id="commentableCheck" name="commentable"
-                                           class="tw:checkbox tw:checkbox-sm"
                                            {% if profile.commentable %}checked{% endif %}
                                     />
-                                    <span class="tw:align-middle">Разрешено комментировать</span>
+                                    <svg aria-label="disabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                    <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"></path></g></svg>
                                 </label>
-                            </fieldset>
+                            </div>
                         </div>
                     </div>
 
