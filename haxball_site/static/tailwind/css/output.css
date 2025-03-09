@@ -3274,6 +3274,9 @@
   .tw\:underline {
     text-decoration-line: underline;
   }
+  .tw\:opacity-75 {
+    opacity: 75%;
+  }
   .tw\:opacity-85 {
     opacity: 85%;
   }
