@@ -2462,6 +2462,12 @@
   .tw\:grow-1 {
     flex-grow: 1;
   }
+  .tw\:table-auto {
+    table-layout: auto;
+  }
+  .tw\:table-fixed {
+    table-layout: fixed;
+  }
   .tw\:rotate-30 {
     rotate: 30deg;
   }

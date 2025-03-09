@@ -3,10 +3,10 @@
 {% load tournament_extras %}
 
 
-<table class="tw:table tw:table-pin-rows">
+<table class="tw:table tw:table-auto tw:table-pin-rows">
     <thead class="tw:py-2">
         <tr class="tw:bg-base-300">
-            <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200" width="11%">Место</th>
+            <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">Место</th>
             <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Команда</th>
             {% for season in seasons_rating %}
                 <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">
@@ -22,8 +22,8 @@
     <tbody class="tw:text-center">
         {% for rating_entry in filter.qs %}
             <tr class="rating-row tw:row-hover tw:border-b tw:border-neutral-200 {% if rating_entry.team in selected_season_teams %}current-season-team{% endif %}">
-                <td class="tw:pr-1 tw:border-r tw:border-neutral-200">
-                    <div class="tw:flex tw:gap-x-2 tw:text-lg">
+                <td class="tw:px-2 tw:border-r tw:border-neutral-200">
+                    <div class="tw:flex tw:flex-wrap tw:gap-x-2 tw:text-lg">
                         <span>{{rating_entry.rank}}</span>
                         {% if previous_rating %}
                             {% with previous_rank=rating_entry.team|previous_rating_rank:previous_rating %}
