@@ -3,7 +3,7 @@
 {% load thumbnail %}
 
 
-<div class="tw:flex tw:p-3 tw:pr-1 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}" id="r{{ comment.id }}">
+<div class="tw:flex tw:p-4 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}" id="r{{ comment.id }}">
 
     <div class="tw:pl-2">
         <a href="{{ comment.author.user_profile.get_absolute_url }}">
@@ -17,7 +17,7 @@
         </a>
     </div>
     <div class="comment-text tw:w-full">
-        <div class="tw:flex tw:justify-between tw:pr-2">
+        <div class="tw:flex tw:justify-between">
             <div class="tw:inline-flex tw:items-center">
 
                 <div class="tw:m-0 tw:flex tw:items-center">
