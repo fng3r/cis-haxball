@@ -31,7 +31,7 @@
                         {{ comment.author.username }}
                     </a>
 
-                    <span class="tw:ml-1 tw:badge tw:badge-sm {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
+                    <span class="tw:ml-1 tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
                         {{ comment.author.user_profile.karma }}
                     </span>
                 </div>
