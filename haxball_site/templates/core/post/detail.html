@@ -19,9 +19,13 @@
 
     <style>
         :where(.post-body) {
-            ol, ul {
-                padding-left: 2rem;
-                list-style-type: revert;
+            a {
+                color: var(--color-primary);
+                @media (hover: hover) {
+                    &:hover {
+                        color: color-mix(in oklab, var(--color-primary) 80%, #000);
+                    }
+                }
             }
         }
     </style>
@@ -65,7 +69,7 @@
         </div>
 
         <div class="tw:flex tw:flex-col tw:p-4">
-            <div class="post-body">
+            <div class="post-body tw:prose tw:max-w-none">
                 {{ post.body|safe }}
             </div>
         </div>

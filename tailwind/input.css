@@ -5,6 +5,8 @@
   exclude: scrollbar;
 }
 
+@plugin "@tailwindcss/typography";
+
 @layer base {
   img, video {
     max-width: none;
