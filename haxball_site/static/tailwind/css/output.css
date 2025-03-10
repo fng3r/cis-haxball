@@ -3350,6 +3350,33 @@
       }
     }
   }
+  .tw\:bg-\[\#c0c0c0\]\/75 {
+    background-color: color-mix(in oklab, #c0c0c0 75%, transparent);
+  }
+  .tw\:bg-\[\#c0c0c0\]\/80 {
+    background-color: color-mix(in oklab, #c0c0c0 80%, transparent);
+  }
+  .tw\:bg-\[\#c0c0c0\]\/100 {
+    background-color: color-mix(in oklab, #c0c0c0 100%, transparent);
+  }
+  .tw\:bg-\[\#ffa81c\]\/75 {
+    background-color: color-mix(in oklab, #ffa81c 75%, transparent);
+  }
+  .tw\:bg-\[\#ffa81c\]\/80 {
+    background-color: color-mix(in oklab, #ffa81c 80%, transparent);
+  }
+  .tw\:bg-\[\#ffa81c\]\/100 {
+    background-color: color-mix(in oklab, #ffa81c 100%, transparent);
+  }
+  .tw\:bg-\[\#ffd700\]\/75 {
+    background-color: color-mix(in oklab, #ffd700 75%, transparent);
+  }
+  .tw\:bg-\[\#ffd700\]\/80 {
+    background-color: color-mix(in oklab, #ffd700 80%, transparent);
+  }
+  .tw\:bg-\[\#ffd700\]\/100 {
+    background-color: color-mix(in oklab, #ffd700 100%, transparent);
+  }
   .tw\:bg-base-100 {
     background-color: var(--color-base-100);
   }

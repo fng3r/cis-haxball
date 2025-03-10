@@ -33,12 +33,12 @@
     <tbody>
         {% for team in teams %}
 
-            <tr class="team-rows tw:text-center"
-                {% if stage.type == 'REG' %}
-                    {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}bgcolor="#ffd700"{% endif %}
-                    {% if forloop.counter == 2 and forloop.counter <= stage.awarded_count %}bgcolor="silver"{% endif %}
-                    {% if forloop.counter == 3 and forloop.counter <= stage.awarded_count %}bgcolor="#ffa81c"{% endif %}
-                {% endif %}
+            <tr class="team-rows tw:text-center
+                       {% if stage.type == 'REG' %}
+                           {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}tw:bg-[#ffd700]/80{% endif %}
+                           {% if forloop.counter == 2 and forloop.counter <= stage.awarded_count %}tw:bg-[#c0c0c0]/80{% endif %}
+                           {% if forloop.counter == 3 and forloop.counter <= stage.awarded_count %}tw:bg-[#ffa81c]/80{% endif %}
+                       {% endif %}"
             >
                 <th scope="row" width="4%" class="tw:pl-1">
                     <div class="tw:flex">
