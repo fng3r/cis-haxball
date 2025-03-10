@@ -33,7 +33,7 @@
         <input type="radio" name="player-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="Общее" checked />
         <div class="tw:tab-content tw:pt-2 tw:border-0">
             <div id="general-stats-panel" role="tabpanel" aria-labelledby="general-stats-tab">
-                <table class="tw:table tw:table-zebra tw:**:[tr]:border-[#dee2e6]!">
+                <table class="table tw:table tw:table-zebra tw:**:[tr]:border-[#dee2e6]!">
                     <thead>
                         <tr>
                             <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Сезон</th>
@@ -129,7 +129,7 @@
                     </tbody>
                 </table>
 
-                <table class="table table-striped">
+                <table class="table tw:table tw:table-zebra tw:**:[tr]:border-[#dee2e6]!">
                     <thead>
                         <tr class="text">
                             <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Сезон</th>
@@ -458,7 +458,7 @@
         </div>
 
         <div class="tw:flex tw:ml-auto">
-            <a class="tw:mt-auto tw:mr-3 tw:btn tw:btn-primary tw:bg-primary! tw:text-primary-content! tw:no-underline! tw:border-0!"
+            <a class="tw:mt-auto tw:mr-3 tw:btn tw:btn-primary tw:bg-primary! tw:text-primary-content!"
                href="{% url 'tournament:compare_players' %}?player1={{ user.user_player.id }}" target="_blank">
                 Сравнить
             </a>
