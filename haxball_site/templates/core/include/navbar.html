@@ -402,7 +402,7 @@
                 </li>
 
                 <li>
-                    <a class="tw:text-warning! tw:no-underline!" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+                    <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
                 </li>
 
                 <li>
@@ -459,7 +459,7 @@
             </ul>
         </div>
 
-        <a class="tw:btn tw:btn-ghost tw:text-xl tw:no-underline! tw:text-blue-600!" href="{% url 'core:home' %}">CIS-HAXBALL</a>
+        <a class="tw:btn tw:btn-ghost tw:text-xl tw:text-blue-600!" href="{% url 'core:home' %}">CIS-HAXBALL</a>
 
         <div class="tw:hidden tw:lg:flex tw:flex-wrap tw:mr-3">
             <div class="tw:dropdown">
@@ -887,10 +887,19 @@
         </div>
     </div>
 
-    <div class="tw:flex tw:gap-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
         <form method="get" action="{% url 'core:filter' %}">
             <input type="search" name="q" placeholder="Поиск" aria-label="Search" class="tw:input tw:input-bordered tw:w-30 tw:sm:w-auto" />
         </form>
+
+        {% comment %} <label class="tw:toggle tw:text-base-content">
+            <input type="checkbox" value="dark" class="theme-controller">
+
+            <svg aria-label="sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></g></svg>
+
+            <svg aria-label="moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></g></svg>
+
+        </label> {% endcomment %}
 
         {% if user.is_authenticated %}
             <div class="tw:dropdown tw:dropdown-end">
@@ -915,7 +924,7 @@
                 </ul>
             </div>
         {% else %}
-            <button type="button" class="tw:btn tw:btn-primary tw:rounded! tw:mr-1!" onclick="login_modal.showModal()">
+            <button type="button" class="tw:btn tw:btn-primary tw:mr-1!" onclick="login_modal.showModal()">
                 Вход
             </button>
         {% endif %}

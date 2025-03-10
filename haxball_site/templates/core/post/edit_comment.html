@@ -23,14 +23,14 @@
                 <div class="tw:flex tw:justify-end tw:mt-auto tw:mb-2 tw:mr-2">
                     <img id="edit-comment-indicator" class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
 
-                    <button type="reset" class="tw:btn tw:btn-neutral tw:btn-soft tw:rounded! tw:mr-2!"
+                    <button type="reset" class="tw:btn tw:btn-neutral tw:btn-soft tw:mr-2!"
                             @click="editingComment = false"
                             hx-get="{% url 'core:comment' comment.id %}"
                     >
                         Отменить
                     </button>
 
-                    <button type="submit" class="tw:btn tw:btn-primary tw:rounded!"
+                    <button type="submit" class="tw:btn tw:btn-primary"
                             @click="editingComment = false"
                             hx-post="{% url 'core:edit_comment' comment.id %}"
                             hx-on::config-request="event.detail.parameters['edit_body'] = CKEDITOR.instances['id_edit_body'].getData();"

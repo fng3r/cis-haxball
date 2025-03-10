@@ -42,7 +42,7 @@
                                                     {{ match.team_home.short_title }}
                                                 </div>
                                                 <div class="tw:w-3/10 tw:grow tw:flex tw:justify-center tw:items-center tw:text-2xl tw:font-semibold">
-                                                    <a href="{% url 'tournament:match_detail' match.id %}" class="tw:text-base-content! tw:no-underline!">
+                                                    <a href="{% url 'tournament:match_detail' match.id %}">
                                                         <span class="tw:absolute tw:inset-0"></span>
                                                         {{ match.score_home }} : {{ match.score_guest }}
                                                     </a>
@@ -106,7 +106,7 @@
                                                     {{ upcoming_match.match.team_home.short_title }}
                                                 </div>
                                                 <div class="tw:w-3/10 tw:grow tw:flex tw:justify-center tw:items-center tw:text-2xl tw:font-semibold">
-                                                    <a href="{% url 'tournament:match_detail' upcoming_match.match.id %}" class="tw:text-base-content! tw:no-underline!">
+                                                    <a href="{% url 'tournament:match_detail' upcoming_match.match.id %}">
                                                         <span class="tw:absolute tw:inset-0"></span>
                                                         VS
                                                     </a>

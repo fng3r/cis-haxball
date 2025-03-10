@@ -12,17 +12,17 @@
             <div class="tw:divider tw:my-0!"></div>
 
             <div class="accordion" id="search-results-accordion">
-                <div class="tw:join tw:join-vertical tw:w-full tw:rounded-lg tw:border tw:border-neutral-300 tw:bg-neutral-100">
+                <div class="tw:join tw:join-vertical tw:w-full tw:rounded-lg tw:border tw:border-neutral-300 tw:bg-base-200">
                     <div class="tw:card tw:join-item tw:w-full tw:border-b tw:border-neutral-300">
                         <div class="tw:py-2" id="headingOne">
                             <h2 class="tw:mb-0!">
-                                <button class="tw:btn-block tw:text-center" type="button" data-toggle="collapse"
+                                <button class="tw:w-full tw:text-center" type="button" data-toggle="collapse"
                                         data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne"
                                         {% if teams.count == 0 %}disabled{% endif %}
                                 >
-                                    <h5 class="tw:m-0">
+                                    <h5 class="tw:m-0 {% if teams.count > 0 %}tw:cursor-pointer{% endif %}">
                                         {% if teams.count == 0 %}
-                                            <span class="tw:text-neutral-500">Команды по Вашему запросу не найдены</span>
+                                            <span class="tw:text-base-content/70">Команды по Вашему запросу не найдены</span>
                                         {% else %}
                                             <span>Команд найдено: {{ teams.count }}</span>
                                         {% endif %}
@@ -36,7 +36,7 @@
                             <div class="tw:card-body tw:bg-base-100 tw:p-0 tw:gap-0">
                                 {% for team in teams %}
                                     <div class="tw:py-2 tw:hover:bg-neutral-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
-                                        <a class="tw:btn-link-block tw:text-neutral-800! tw:font-semibold tw:text-base tw:justify-center! tw:mb-0 tw:no-underline!"
+                                        <a class="tw:btn-link-block tw:text-base-content/90 tw:font-semibold tw:text-base tw:justify-center! tw:mb-0"
                                            href="{{ team.get_absolute_url }}"><img
                                             src="{{ team.logo.url }}" alt="{{ team.title }}"
                                             width="25" height="25"
@@ -50,13 +50,13 @@
                     <div class="tw:card tw:join-item tw:w-full tw:border-b tw:border-neutral-300">
                         <div class="tw:py-2" id="headingTwo">
                             <h2 class="tw:mb-0!">
-                                <button class="tw:btn-block tw:text-center" type="button"
+                                <button class="tw:w-full tw:text-center" type="button"
                                         data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false"
                                         aria-controls="collapseTwo" {% if profiles.count == 0 %}disabled{% endif %}
                                 >
-                                    <h5 class="tw:m-0">
+                                    <h5 class="tw:m-0 {% if profiles.count > 0 %}tw:cursor-pointer{% endif %}">
                                         {% if profiles.count == 0 %}
-                                            <span class="tw:text-neutral-500">Пользователи по Вашему запросу не найдены</span>
+                                            <span class="tw:text-base-content/70">Пользователи по Вашему запросу не найдены</span>
                                         {% else %}
                                             <span>Пользователей найдено: {{ profiles.count }}</span>
                                         {% endif %}
@@ -68,7 +68,7 @@
                             <div class="tw:card-body tw:bg-base-100 tw:p-0 tw:gap-0">
                                 {% for profile in profiles %}
                                     <div class="tw:py-2 tw:hover:bg-neutral-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
-                                        <a class="tw:btn-link-block tw:text-neutral-800! tw:font-semibold tw:text-base tw:justify-center! tw:mb-0 tw:no-underline!"
+                                        <a class="tw:btn-link-block tw:text-base-content/90 tw:font-semibold tw:text-base tw:justify-center! tw:mb-0"
                                            href="{{ profile.get_absolute_url }}"><img
                                             src="{{ profile.avatar.url }}" alt="{{ profile.name.username }}"
                                             width="25" height="25" class="tw:mr-1">{{ profile.name }}</a>
@@ -81,13 +81,13 @@
                     <div class="tw:card tw:join-item tw:w-full">
                         <div class="tw:py-2" id="headingThree">
                             <h2 class="tw:mb-0">
-                                <button class="tw:btn-block tw:text-center" type="button"
+                                <button class="tw:w-full tw:text-center" type="button"
                                         data-toggle="collapse" data-target="#collapseThree" aria-expanded="false"
                                         aria-controls="collapseThree" {% if posts.count == 0 %}disabled{% endif %}>
 
-                                    <h5 class="tw:m-0">
+                                    <h5 class="tw:m-0 {% if posts.count > 0 %}tw:cursor-pointer{% endif %}">
                                         {% if posts.count == 0 %}
-                                            <span class="tw:text-neutral-500">Посты по Вашему запросу не найдены</span>
+                                            <span class="tw:text-base-content/70">Посты по Вашему запросу не найдены</span>
                                         {% else %}
                                             <span>Постов найдено: {{ posts.count }}</span>
                                         {% endif %}
@@ -98,7 +98,7 @@
                                 <div class="tw:card-body tw:bg-base-100 tw:p-0 tw:gap-0">
                                     {% for post in posts %}
                                         <div class="tw:py-2 tw:hover:bg-neutral-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
-                                            <a class="tw:btn-link-block tw:text-neutral-800! tw:font-semibold tw:text-base tw:justify-center! tw:mb-0 tw:no-underline!"
+                                            <a class="tw:btn-link-block tw:text-base-content/90 tw:font-semibold tw:text-base tw:justify-center! tw:mb-0"
                                                href="{{ post.get_absolute_url }}">
                                                 <div class="tw:inline-flex tw:w-full tw:justify-between">
                                                     <span> {{ post.title }}</span>
