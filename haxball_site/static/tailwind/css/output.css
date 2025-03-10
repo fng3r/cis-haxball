@@ -2920,11 +2920,17 @@
   .tw\:w-8 {
     width: calc(var(--tw-spacing) * 8);
   }
+  .tw\:w-9 {
+    width: calc(var(--tw-spacing) * 9);
+  }
   .tw\:w-9\/10 {
     width: calc(9/10 * 100%);
   }
   .tw\:w-10 {
     width: calc(var(--tw-spacing) * 10);
+  }
+  .tw\:w-11 {
+    width: calc(var(--tw-spacing) * 11);
   }
   .tw\:w-12 {
     width: calc(var(--tw-spacing) * 12);
@@ -2940,6 +2946,9 @@
   }
   .tw\:w-45 {
     width: calc(var(--tw-spacing) * 45);
+  }
+  .tw\:w-48 {
+    width: calc(var(--tw-spacing) * 48);
   }
   .tw\:w-\[5\%\] {
     width: 5%;
@@ -3265,11 +3274,17 @@
   .tw\:border-\[\#7b7b7b\] {
     border-color: #7b7b7b;
   }
+  .tw\:border-base-100 {
+    border-color: var(--color-base-100);
+  }
   .tw\:border-base-200 {
     border-color: var(--color-base-200);
   }
   .tw\:border-base-300 {
     border-color: var(--color-base-300);
+  }
+  .tw\:border-base-content {
+    border-color: var(--color-base-content);
   }
   .tw\:border-gray-300 {
     border-color: var(--tw-color-gray-300);
@@ -4155,6 +4170,16 @@
   .tw\:xl\:w-2\/3 {
     @media (width >= 80rem) {
       width: calc(2/3 * 100%);
+    }
+  }
+  .tw\:dark\:bg-base-300 {
+    @media (prefers-color-scheme: dark) {
+      background-color: var(--color-base-300);
+    }
+  }
+  .tw\:dark\:bg-base-300\! {
+    @media (prefers-color-scheme: dark) {
+      background-color: var(--color-base-300) !important;
     }
   }
   .tw\:\*\*\:\[td\]\:py-2 {
