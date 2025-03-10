@@ -18,13 +18,13 @@
                             <div class="tw:flex tw:justify-between tw:py-2 tw:px-4">
                                 <div class="tw:inline-block">
                                     <h5 class="tw:text-lg">
-                                        <a href="{{ subtheme.get_absolute_url }}">{{ subtheme.title }}</a>
+                                        <a href="{{ subtheme.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ subtheme.title }}</a>
                                     </h5>
                                     <div class="tw:text-base tw:text-neutral-500 tw:font-semibold">{{ subtheme.description }}</div>
                                 </div>
                                 <div class="tw:inline-block tw:min-w-1/6">
                                     <div class="tw:text-right tw:font-semibold"><i class="fa fa-bars tw:text-primary" aria-hidden="true"></i> Статей: {{ subtheme.posts_in_category.count }}</div>
-                                    <div class="tw:text-muted tw:text-sm tw:mt-2 tw:text-right tw:font-semibold">
+                                    <div class="tw:text-base-content/70 tw:text-sm tw:mt-2 tw:text-right tw:font-semibold">
                                         {% forum_last_activity subtheme %}
                                     </div>
                                 </div>

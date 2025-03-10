@@ -18,12 +18,12 @@
 
                 <div class="tw:flex tw:flex-col tw:justify-center tw:w-full">
                     <label class="tw:label tw:text-base-content tw:font-bold">{{ form.color_1.label }}</label>
-                    {% render_field form.color_1|add_class:'tw:w-full' %}
+                    {% render_field form.color_1 %}
                 </div>
 
                 <div class="tw:flex tw:flex-col tw:justify-center tw:w-full">
                     <label class="tw:label tw:text-base-content tw:font-bold">{{ form.color_2.label }}</label>
-                    {% render_field form.color_2|add_class:'tw:w-full' %}
+                    {% render_field form.color_2|add_class:'tw:w-full tw:input tw:input-bordered' %}
                 </div>
 
                 <div class="tw:flex tw:mt-auto tw:gap-2 tw:justify-end">

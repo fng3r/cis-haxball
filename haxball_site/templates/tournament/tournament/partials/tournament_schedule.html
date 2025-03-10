@@ -5,7 +5,7 @@
         <div class="tw:flex tw:items-center tw:text-xl tw:font-semibold tw:mb-1">
 
             <div class="tw:w-4/9 tw:text-right tw:justify-center">
-                <a class="text-dark" href="{{ match.team_home.get_absolute_url }}">
+                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_home.get_absolute_url }}">
                     {{ match.team_home.title }}
                     <img src="{{ match.team_home.logo.url }}"
                          alt="{{ match.team_home.title }}"
@@ -16,14 +16,14 @@
 
             <div class="tw:w-1/9 tw:px-0 tw:text-center">
                 {% if not match.is_played %}
-                    <a href="{{ match.get_absolute_url }}">vs</a>
+                    <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">vs</a>
                 {% else %}
-                    <a href="{{ match.get_absolute_url }}">{{ match.score_home }} : {{ match.score_guest }}</a>
+                    <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">{{ match.score_home }} : {{ match.score_guest }}</a>
                 {% endif %}
             </div>
 
             <div class="tw:w-4/9 tw:text-left">
-                <a class="text-dark" href="{{ match.team_guest.get_absolute_url }}">
+                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_guest.get_absolute_url }}">
                     <img src="{{ match.team_guest.logo.url }}"
                          alt="{{ match.team_guest.title }}"
                          width="25" height="25"

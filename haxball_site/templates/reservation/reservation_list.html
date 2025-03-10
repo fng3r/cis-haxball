@@ -20,14 +20,14 @@
                     </h2>
                 </div>
 
-                {% if user.is_authenticated %}
-                    {% if user|can_reserve_host %}
-                        {% reservation_form user %}
-                    {% endif %}
-                {% endif %}
-
                 <div id="reservations-table" class="container-fluid p-0 mx-0">
                     {% include 'alerts.html' %}
+
+                    {% if user.is_authenticated %}
+                        {% if user|can_reserve_host %}
+                            {% reservation_form user %}
+                        {% endif %}
+                    {% endif %}
 
                     <div class="tw:max-h-[700px] tw:overflow-y-auto tw:rounded-b-lg">
                         <table class="tw:table tw:table-pin-rows tw:border-t tw:border-neutral-200">
@@ -74,7 +74,9 @@
                                                                         |
                                                                         <img src="{{ res.match.team_home.logo.url }}" alt="{{ res.match.team_home.title }}"
                                                                              width="16px" height="16px">
-                                                                        <a href="{{ res.match.get_absolute_url }}">{{ res.match.team_home.short_title }} - {{ res.match.team_guest.short_title }}</a>
+                                                                        <a href="{{ res.match.get_absolute_url }}"
+                                                                           class="tw:link tw:link-hover tw:link-primary"
+                                                                        >{{ res.match.team_home.short_title }} - {{ res.match.team_guest.short_title }}</a>
                                                                         <img src="{{ res.match.team_guest.logo.url }}" alt="{{ res.match.team_guest.title }}"
                                                                              width="16px" height="16px">
                                                                     </span>
@@ -94,13 +96,13 @@
                                                                                       hx-target="#content-container"
                                                                                       hx-swap="outerHTML">
                                                                                     <img class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
-                                                                                    <button type="submit" class="btn btn-primary">
+                                                                                    <button type="submit" class="tw:btn tw:btn-primary">
                                                                                         Да, я уверен
                                                                                     </button>
                                                                                 </form>
 
                                                                                 <form method="dialog">
-                                                                                    <button class="tw:btn tw:rounded!">
+                                                                                    <button class="tw:btn">
                                                                                         Нет, подождите
                                                                                     </button>
                                                                                 </form>

@@ -14,7 +14,7 @@
             </div>
         </div>
 
-        <div class="tw:card-body tw:h-[570px] tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
+        <div class="tw:card-body tw:h-[560px] tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
             <ul class="tw:list tw:overflow-y-auto tw:mb-0!">
                 {% for team in teams %}
                     <li class="tw:list-row tw:w-full tw:px-2 tw:py-3 tw:border-b tw:border-base-300 tw:items-center tw:text-lg tw:gap-0!">
@@ -26,8 +26,8 @@
                             <img src="{{ team.logo.url }}" class="tw:mr-2" width="30" height="30">
 
                             <div class="tw:flex tw:flex-col tw:text-left">
-                                <div class="tw:font-bold tw:text tw:text-base">
-                                    <a class="tw:text-base-content!" href="{{ team.get_absolute_url }}">
+                                <div class="tw:text-base">
+                                    <a class="tw:link tw:link-hover tw:font-semibold" href="{{ team.get_absolute_url }}">
                                         {{ team.title }}
                                     </a>
                                 </div>

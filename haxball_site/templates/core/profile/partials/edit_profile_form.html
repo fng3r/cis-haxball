@@ -3,7 +3,7 @@
 
 {% if user == profile.name %}
 
-    <div id="edit-profile-form-container" class="card mt-2">
+    <div id="edit-profile-form-container" class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
         <h4 class="tw:text-center tw:mb-0! tw:pl-2 tw:pt-1 tw:pb-2 tw:border-b tw:border-neutral-300">Редактирование профиля</h4>
 
         <form method="post"
@@ -141,7 +141,6 @@
                                         <textarea class="tw:textarea tw:w-full tw:text-base!" rows="3" name="about">{{ profile.about }}</textarea>
                                     </fieldset>
                                 </div>
-
 
                                 <div class="tw:my-2">
                                     <fieldset class="tw:fieldset">

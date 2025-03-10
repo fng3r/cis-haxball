@@ -14,10 +14,10 @@
         <div class="tw:flex tw:items-center tw:gap-1 tw:pl-1 tw:text-base">
             <img class="tw:m-1" src="{{ player.player_nation.flag.url }}" width="24" height="24" title="{{ player.player_nation.country }}">
             {% if player.name %}
-                <a class="tw:text-neutral-800! tw:font-semibold tw:mr-1"
+                <a class="tw:link tw:link-hover tw:text-base-content/90 tw:font-semibold tw:mr-1"
                    href="{{ player.name.user_profile.get_absolute_url }}">{{ player }}</a>
             {% else %}
-                <span class="tw:text-neutral-600 tw:mr-1">{{ player }}</span>
+                <span class="tw:text-base-content/80 tw:mr-1">{{ player }}</span>
             {% endif %}
         </div>
         <div class="tw:text-left tw:pl-0 tw:font-weight-bold">

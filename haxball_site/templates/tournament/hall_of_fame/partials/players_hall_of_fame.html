@@ -3,7 +3,7 @@
 {% load tournament_extras %}
 
 <div id="players" class="tw:w-full tw:p-0 tw:mx-0">
-    <form id="filter-form" class="form-inline tw:mt-2 tw:mb-1 tw:mx-2"
+    <form id="filter-form" class="tw:flex tw:flex-wrap tw:items-center tw:mt-2 tw:mb-1 tw:mx-2"
           hx-get="{% url 'tournament:players_hall_of_fame' %}"
           hx-trigger="submit"
           hx-target="#players"
@@ -60,11 +60,11 @@
     </div>
 
     <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:mt-3">
-        {% with title='Вышел на поле' icon_cls='fa fa-arrow-up text-success' players=players_tops.subs_in %}
+        {% with title='Вышел на поле' icon_cls='fa fa-arrow-up tw:text-success' players=players_tops.subs_in %}
             {% include 'tournament/hall_of_fame/partials/players_top.html' %}
         {% endwith %}
 
-        {% with title='Ушел с поля' icon_cls='fa fa-arrow-down text-danger' players=players_tops.subs_out %}
+        {% with title='Ушел с поля' icon_cls='fa fa-arrow-down tw:text-error' players=players_tops.subs_out %}
             {% include 'tournament/hall_of_fame/partials/players_top.html' %}
         {% endwith %}
 

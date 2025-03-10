@@ -20,7 +20,7 @@
                          alt="{{ transfer.trans_player.nickname }}">
                 </div>
             </div>
-            <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}" class="tw:my-0 tw:font-semibold">{{ transfer.trans_player }}</a>
+            <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}" class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ transfer.trans_player }}</a>
         </div>
     </td>
 
@@ -29,7 +29,7 @@
             {% if transfer.from_team %}
                 <img src="{{ transfer.from_team.logo.url }}" class="tw:mr-2"
                      alt="{{ transfer.from_team.title }}" width="30">
-                <a href="{{ transfer.from_team.get_absolute_url }}" class="tw:my-0 tw:font-semibold">{{ transfer.from_team.title }}</a>
+                <a href="{{ transfer.from_team.get_absolute_url }}" class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ transfer.from_team.title }}</a>
             {% else %}
                 <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2"
                      alt="{{ transfer.from_team.title }}" width="30">
@@ -43,7 +43,7 @@
             {% if transfer.to_team %}
                 <img src="{{ transfer.to_team.logo.url }}" class="tw:mr-2"
                      alt="{{ transfer.to_team.title }}" width="30">
-                <a href="{{ transfer.to_team.get_absolute_url }}" class="tw:my-0 tw:font-semibold">{{ transfer.to_team.title }}</a>
+                <a href="{{ transfer.to_team.get_absolute_url }}" class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ transfer.to_team.title }}</a>
             {% else %}
                 <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2"
                      alt="{{ transfer.from_team.title }}" width="30" style="border-radius: 100%">

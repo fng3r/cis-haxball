@@ -2,7 +2,7 @@
     <div class="tw:modal-box">
         <h3 class="tw:text-lg tw:font-bold">Вход на сайт</h3>
         <h6 class="tw:text-base-content tw:mb-2">
-            Нет аккаунта? <a href="{% url 'account_signup' %}">Зарегистрируйтесь!</a>
+            Нет аккаунта? <a class="tw:link tw:link-primary tw:font-semibold" href="{% url 'account_signup' %}">Зарегистрируйтесь!</a>
         </h6>
 
         <form method="POST" action="{% url 'account_login' %}" class="tw:mt-3">

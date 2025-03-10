@@ -8,20 +8,20 @@
 
 {% block post %}
 
-    <div class="card mt-2">
-        <div class="card-header text-center">
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:card-title tw:justify-center">
             <h1>{% trans "Verify Your E-mail Address" %}</h1>
         </div>
 
-        <div class="card-body">
+        <div class="tw:card-body">
         <!-- <p>{% blocktrans %}We have sent an e-mail to you for verification. Follow the link provided to finalize the signup
         process. Please contact us if you do not receive it within a few minutes.{% endblocktrans %}</p> -->
-            <p class="ml-2">На ваш e-mail отправлено письмо с ссылкой для подтверждения регистрации. Перейдите по полученной
+            <p class="tw:ml-2">На ваш e-mail отправлено письмо с ссылкой для подтверждения регистрации. Перейдите по полученной
                 ссылке, чтобы завершить процедуру регистрации!
-                Свяжитесь с <a href="{% url 'core:profile_detail' '1918' 'fng3r' %}">администратором</a>, если письмо не
+                Свяжитесь с <a href="{% url 'core:profile_detail' '1918' 'fng3r' %}" class="tw:link tw:link-hover tw:link-primary">администратором</a>, если письмо не
                 приходит в течении нескольких минут.
             </p>
-            <p class="ml-2">P.S. Проверьте папку спам</p>
+            <p class="tw:ml-2">P.S. Проверьте папку спам</p>
         </div>
 
     </div>

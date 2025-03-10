@@ -39,9 +39,9 @@
                             </div>
 
                             <div class="tw:flex tw:flex-col tw:text-left">
-                                <div class="tw:font-bold tw:text tw:text-base">
+                                <div class="tw:text-base">
                                     {% if player.name %}
-                                        <a class="tw:text-base-content!" href="{{ player.name.user_profile.get_absolute_url }}">
+                                        <a class="tw:link tw:link-hover tw:font-semibold" href="{{ player.name.user_profile.get_absolute_url }}">
                                             {{ player.nickname }}
                                         </a>
                                     {% else %}

@@ -26,7 +26,7 @@
 
                 {% if user.is_authenticated %}
                     {% if not user|user_in_agents and user|can_add_entry %}
-                        <form method="POST" class="form-inline tw:mt-2 tw:mb-1 tw:mx-2"
+                        <form method="POST" class="tw:flex tw:flex-wrap tw:items-center tw:mt-2 tw:mb-1 tw:mx-2"
                               hx-post="{% url 'tournament:free_agents' %}"
                               hx-trigger="submit"
                               hx-target="#content-container"

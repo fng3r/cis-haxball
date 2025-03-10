@@ -80,7 +80,7 @@
 
                                             {% if profile.name.user_player.team %}
                                                 <div class="tw:mb-1">
-                                                    <a href="{{ profile.name.user_player.team.get_absolute_url }}" class="tw:text-base-100!">
+                                                    <a href="{{ profile.name.user_player.team.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold tw:text-base-100!">
                                                         <img src="{{ profile.name.user_player.team.logo.url }}"
                                                              alt="{{ profile.name.user_player.team.title }}" class="tw:mb-1"
                                                              style="width: 28px; height: 28px;">
@@ -153,17 +153,17 @@
                                                         <div class="tw:flex tw:flex-wrap tw:gap-y-2 tw:px-4 tw:py-2 profile-info-table">
                                                             <div class="tw:sm:w-1/2 tw:w-full">
                                                                 <div class="tw:font-semibold">Дата регистрации</div>
-                                                                <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">{{ profile.name.date_joined|date }}</div>
+                                                                <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">{{ profile.name.date_joined|date }}</div>
                                                             </div>
 
                                                             <div class="tw:sm:w-1/2 tw:w-full">
                                                                 <div class="tw:font-semibold">Последний визит</div>
-                                                                <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">{% user_last_activity profile.name %}</div>
+                                                                <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">{% user_last_activity profile.name %}</div>
                                                             </div>
 
                                                             <div class="tw:sm:w-1/2 tw:w-full">
                                                                 <div class="tw:font-semibold">Дата рождения</div>
-                                                                <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">
+                                                                <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">
                                                                     {% if profile.born_date %}
                                                                         {{ profile.born_date }}
                                                                         ({% age profile.born_date %})
@@ -175,7 +175,7 @@
 
                                                             <div class="tw:sm:w-1/2 tw:w-full">
                                                                 <div class="tw:font-semibold">Город</div>
-                                                                <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">
+                                                                <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">
                                                                     {% if profile.city %}
                                                                         {{ profile.city }}
                                                                     {% else %}
@@ -188,7 +188,7 @@
                                                             <div>
                                                                 <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">О себе</h5>
                                                                 <div class="tw:w-full">
-                                                                    <h6 class="text-secondary">
+                                                                    <h6 class="tw:text-base-content/70">
                                                                         {{ profile.about|linebreaks }}
                                                                     </h6>
                                                                 </div>
@@ -197,7 +197,7 @@
                                                             <div>
                                                                 <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">Любимые команды</h5>
                                                                 <div class="tw:w-full">
-                                                                    <h6 class="text-secondary">
+                                                                    <h6 class="tw:text-base-content/70">
                                                                         {{ profile.favourite_teams|default:"Не указано"|linebreaks }}
                                                                     </h6>
                                                                 </div>
@@ -206,7 +206,7 @@
                                                             <div>
                                                                 <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">Любимые игроки</h5>
                                                                 <div class="tw:w-full">
-                                                                    <h6 class="text-secondary">
+                                                                    <h6 class="tw:text-base-content/70">
                                                                         {{ profile.favourite_players|default:"Не указано"|linebreaks }}
                                                                     </h6>
                                                                 </div>
@@ -222,7 +222,7 @@
                                                               hx-target="#profile-container"
                                                               hx-swap="outerHTML"
                                                               hx-push-url="true">
-                                                            <i class="fa fa-pencil tw:mt-2.5" aria-hidden="true"></i>
+                                                            <i class="fa fa-pencil tw:mt-3 tw:-ml-3" aria-hidden="true"></i>
                                                         </span>
                                                     </div>
                                                 {% endif %}
@@ -264,7 +264,7 @@
                             <div id="player-stats-panel" role="tabpanel" aria-labelledby="player-stats-tab">
                                 <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
                                     <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                                    <h3 class="text-center">Загружаем статистику...</h3>
+                                    <h3 class="tw:text-center">Загружаем статистику...</h3>
                                 </div>
                             </div>
                         </div>

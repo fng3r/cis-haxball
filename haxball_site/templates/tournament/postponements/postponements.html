@@ -66,7 +66,8 @@
                                 {% for team in teams %}
                                     <tr class="tw:font-bold tw:text-center">
                                         <td class="tw:p-2 tw:border-r tw:border-neutral-200 tw:text-lg">
-                                            <img src="{{team.logo.url}}" alt="{{team.title}}" style="margin-right: 5px;" width="25" height="25">{{team.title}}
+                                            <img src="{{team.logo.url}}" alt="{{team.title}}" style="margin-right: 5px;" width="25" height="25">
+                                            <a href="{{team.get_absolute_url}}" class="tw:link tw:link-hover">{{team.title}}</a>
                                         </td>
                                         {% for postponement in team|postponements_in_league:league %}
                                             <td class="tw:h-20 tw:p-1 tw:border-r tw:border-neutral-200 tw:text-sm">
@@ -75,7 +76,7 @@
                                                         <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">
                                                             {{match.numb_tour.number}} тур<br>
                                                             <img src="{{match.team_home.logo.url}}" alt="{{match.team_home.short_title}}" width="16" height="16">
-                                                            <a href="{{match.get_absolute_url}}">
+                                                            <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary">
                                                                 {{match.team_home.short_title}} - {{match.team_guest.short_title}}
                                                             </a>
                                                             <img src="{{match.team_guest.logo.url}}" alt="{{match.team_guest.short_title}}" width="16" height="16">
@@ -163,7 +164,7 @@
                                                          title="{{ icon.description }}">
                                                 </div>
                                             {% endfor %}
-                                            <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}" class="tw:font-semibold">
+                                            <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
                                                 {{ postponement.taken_by.username }}
                                             </a>
 
@@ -201,7 +202,7 @@
                                 <div class="tw:flex tw:p-3 tw:pl-[7%] comment-row"
                                      id="postponement_c{{ postponement.id }}">
                                     <div class="tw:pl-2">
-                                        <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
+                                        <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}" >
                                             <div class="tw:mr-2 tw:avatar">
                                                 <div class="tw:w-[50px] tw:rounded-full">
                                                     {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
@@ -222,7 +223,7 @@
                                                              title="{{ icon.description }}">
                                                     </div>
                                                 {% endfor %}
-                                                <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}" class="tw:font-semibold">
+                                                <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
                                                     {{ postponement.cancelled_by.username }}
                                                 </a>
 

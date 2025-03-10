@@ -8,8 +8,8 @@
 
 
 {% block post %}
-    <div class="card">
-        <div class="card-header text-center">
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:card-body tw:text-center">
     {#% get_providers as socialaccount_providers %#}
             <h1>{% trans "Sign In" %}</h1>
             {% if socialaccount_providers %}
@@ -36,9 +36,8 @@
 
             <form class="login" method="POST" action="{% url 'account_login' %}">
                 {% csrf_token %}
-                <div class="form-group">
-                    {{ form.as_p }}
-                </div>
+                {{ form.as_p }}
+
                 {% if redirect_field_value %}
                     <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
                 {% endif %}

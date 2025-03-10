@@ -42,7 +42,9 @@
                                 {% endif %}
                             {% endfor %}
                             </th>
-                            <td class="tw:text-left tw:text-xl tw:font-semibold"><a href="{{ user.user_profile.get_absolute_url }}">{{ user.username }}</a></td>
+                            <td class="tw:text-left tw:text-xl tw:font-semibold">
+                                <a href="{{ user.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">{{ user.username }}</a>
+                            </td>
                             <td>
                                 {% if user.user_profile.vk %}
                                     <a href="https://vk.com/{{ user.user_profile.vk }}"

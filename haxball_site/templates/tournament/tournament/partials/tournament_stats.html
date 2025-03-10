@@ -38,7 +38,7 @@
                                     <img src="{% media player.last_team_logo %}" width="25px" height="25px">
                                 {% endif %}
                                 {% if player.name %}
-                                    <a class="tw:text-base-content! tw:text-base tw:font-semibold tw:ml-1" href="{{ player.name.user_profile.get_absolute_url }}">
+                                    <a class="tw:link tw:link-hover tw:text-base tw:font-semibold tw:ml-1" href="{{ player.name.user_profile.get_absolute_url }}">
                                         {{ player.nickname }}
                                     </a>
                                 {% else %}

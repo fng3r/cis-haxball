@@ -40,14 +40,14 @@
                     {% if post.category %}
                         <span class="tw:text-right"><span class="tw:italic tw:text-lg">В разделе</span>
                             <a href="{{ post.category.get_absolute_url }}"
-                               class="tw:font-semibold">{{ post.category.title }}</a>
+                               class="tw:link tw:link-primary tw:font-semibold">{{ post.category.title }}</a>
                         </span>
                     {% else %}
                         <span></span>
                     {% endif %}
                 </h4>
 
-                <small class="tw:flex tw:items-center tw:gap-x-1 tw:text-neutral-500">
+                <small class="tw:flex tw:items-center tw:gap-x-1 tw:text-base-content/70">
                     <div class="tw:flex tw:items-center">
                         <img src="{% static "img/ico/calendar_1.png" %}" height="21" width="21">
                         {{ post.publish|date:"SHORT_DATE_FORMAT" }}
@@ -58,7 +58,7 @@
                     </div>
                     <div class="tw:flex tw:items-center tw:gap-x-0.5">
                         <img src="{% static "img/ico/user_1.png" %}" height="19" width="19">
-                        <a href="{{ post.author.user_profile.get_absolute_url }}">{{ post.author }}</a>
+                        <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ post.author.user_profile.get_absolute_url }}">{{ post.author }}</a>
                     </div>
                 </small>
             </div>

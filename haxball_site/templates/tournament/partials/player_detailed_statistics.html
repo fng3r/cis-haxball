@@ -103,11 +103,13 @@
                                     <td rowspan="{{ league_stats|length }}" class="text">
                                         <img src="{{ team.logo.url }}" alt="{{ team.title }}"
                                              class="tw:mr-1 tw:align-bottom!">
-                                        <a class="tw:font-semibold tw:text-base" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
+                                        <a class="tw:link tw:link-hover tw:link-primary tw:font-semibold tw:text-base" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
 
                                     </td>
                                     {% for league, stats in league_stats|sorted_by_league %}
-                                        <td class="tw:font-semibold" style="font-size: 11pt;"><a href="{{ league.get_absolute_url }}">{{ league.title }}</a></td>
+                                        <td class="tw:font-semibold" style="font-size: 11pt;">
+                                            <a href="{{ league.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold tw:text-base">{{ league.title }}</a>
+                                        </td>
                                         {% for _, single_stat in stats|dd_items %}
                                             <td class="tw:text-center number">{{ single_stat }}</td>
                                         {% endfor %}
@@ -196,11 +198,11 @@
                                     <td rowspan="{{ league_stats|length }}" class="text">
                                         <img src="{{ team.logo.url }}" alt="{{ team.title }}"
                                              class="tw:mr-1 tw:align-bottom!">
-                                        <a class="tw:text-base tw:font-semibold" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
+                                        <a class="tw:link tw:link-hover tw:link-primary tw:font-semibold tw:text-base" href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
                                     </td>
                                     {% for league, stats in league_stats|sorted_by_league %}
                                         <td class="tw:font-semibold" style="font-size: 11pt;">
-                                            <a href="{{ league.get_absolute_url }}">{{ league.title }}</a>
+                                            <a href="{{ league.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold tw:text-base">{{ league.title }}</a>
                                         </td>
                                         {% for _, single_stat in stats|dd_items %}
                                             <td class="tw:text-center number">
@@ -249,7 +251,7 @@
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
                                             {{ match.score_home }}:{{ match.score_guest }}
                                         </a>
                                         {{ match.team_guest.title }}
@@ -272,7 +274,7 @@
                                         {{ goal|goal_time }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
                                             {{ match.score_home }}:{{ match.score_guest }}
                                         </a>
                                         {{ match.team_guest.title }}
@@ -295,7 +297,7 @@
                                         {{ goal|goal_time }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
                                             {{ match.score_home }}:{{ match.score_guest }}
                                         </a>
                                         {{ match.team_guest.title }}
@@ -318,7 +320,7 @@
                                         {{ match.goals }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
                                             {{ match.score_home }}:{{ match.score_guest }}
                                         </a>
                                         {{ match.team_guest.title }}
@@ -341,7 +343,7 @@
                                         {{ match.assists }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
                                             {{ match.score_home }}:{{ match.score_guest }}
                                         </a>
                                         {{ match.team_guest.title }}
@@ -364,7 +366,7 @@
                                         {{ match.actions }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
                                             {{ match.score_home }}:{{ match.score_guest }}
                                         </a>
                                         {{ match.team_guest.title }}
@@ -450,7 +452,7 @@
             <div id="charts-panel" role="tabpanel" aria-labelledby="charts-tab">
                 <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
                     <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                    <h3 class="text-center">Загружаем статистику...</h3>
+                    <h3 class="tw:text-center">Загружаем статистику...</h3>
                 </div>
             </div>
         </div>

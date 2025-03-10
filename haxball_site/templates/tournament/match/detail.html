@@ -26,7 +26,7 @@
     <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
         <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
             <h5 class="tw:text-center">
-                <a href="{{ match.league.get_absolute_url }}">{{ match.league }}</a>
+                <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.league.get_absolute_url }}">{{ match.league }}</a>
             </h5>
 
             <h5 class="tw:text-center">
@@ -49,14 +49,14 @@
             <div class="tw:flex">
 
                 <div class="tw:w-5/12 tw:text-center">
-                    <a class="tw:text-lg tw:font-semibold tw:text-neutral-800!"
+                    <a class="tw:link tw:link-hover tw:text-base-content/90 tw:text-lg tw:font-semibold"
                        href="{{ match.team_home.get_absolute_url }}">{{ match.team_home.title }}</a>
                 </div>
 
                 <div class="tw:w-2/12"></div>
 
                 <div class="tw:w-5/12 tw:text-center">
-                    <a class="tw:text-lg tw:font-semibold tw:text-neutral-800!"
+                    <a class="tw:link tw:link-hover tw:text-base-content/90 tw:text-lg tw:font-semibold"
                        href="{{ match.team_guest.get_absolute_url }}">{{ match.team_guest.title }}</a>
                 </div>
             </div>
@@ -149,7 +149,7 @@
                                 <h4 class="tw:text-warning">{{ all_matches_between.count }}</h4>
                                 <h6>
                                     Самый результативный матч:
-                                    <a href="{{ the_most_score.get_absolute_url }}">
+                                    <a href="{{ the_most_score.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">
                                         <img
                                             src="{{ the_most_score.team_home.logo.url }}"
                                             alt="{{ the_most_score.team_home.title }}"
@@ -287,10 +287,10 @@
                             <div class="tw:flex tw:flex-col tw:items-center">
                                 <h6>
                                     {% if not match.replay_link_second %}
-                                        <a href="{{ match.replay_link }}">Реплей</a>
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">Реплей</a>
                                     {% else %}
-                                        <a href="{{ match.replay_link }}">Реплей 1</a><br>
-                                        <a href="{{ match.replay_link_second }}">Реплей 2</a>
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">Реплей 1</a><br>
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link_second }}">Реплей 2</a>
                                     {% endif %}
                                 </h6>
                                 <h6>

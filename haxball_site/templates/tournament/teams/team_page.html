@@ -47,11 +47,8 @@
                             </h3>
 
                             <p>
-                                <a href="{{ team.office_link }}" style="color: #671af1; font-weight: bold;">
-                                    Офис
-                                    <img src="{% static "img/ico/team_office.png" %}" height="28" width="28"
-                                         title="Офис команды">
-                                </a>
+                                <a href="{{ team.office_link }}" class="tw:link tw:link-hover tw:link-primary tw:font-bold">Офис</a>
+                                <img src="{% static "img/ico/team_office.png" %}" height="28" width="28" title="Офис команды">
                             </p>
                         </div>
                     </div>
@@ -81,7 +78,7 @@
 
                                         <div class="tw:flex tw:items-center tw:mb-2">
                                             <fieldset class="tw:fieldset">
-                                                <legend class="tw:fieldset-legend tw:text-sm! tw:mb-0.5!">Сезон</legend>
+                                                <legend class="tw:fieldset-legend tw:text-sm">Сезон</legend>
                                                 <select name="season"
                                                         class="tw:select tw:select-sm"
                                                         hx-get="{% url 'tournament:team_squad_stats' team.id %}"
@@ -120,19 +117,22 @@
                                             />
                                             <div class="tw:tab-content tw:pt-1" role="tabpanel">
                                                 <div id="season-{{ season.id }}-panel" role="tabpanel" aria-labelledby="schedule-s{{ season.id }}-tab">
-                                                    {% for league in season.team_leagues %}
-                                                        <p class="text-center mb-2">
-                                                            <a href="{{ league.get_absolute_url }}"
-                                                               class="h5 text-center">{{ league.title }}</a>
-                                                        </p>
+                                                    <div class="tw:flex tw:flex-col tw:gap-4">
+                                                        {% for league in season.team_leagues %}
+                                                            <div>
+                                                                <h5 class="tw:text-center tw:mb-2">
+                                                                    <a href="{{ league.get_absolute_url }}"
+                                                                       class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ league.title }}</a>
+                                                                </h5>
 
-                                                        {% for stage in league.stages.all %}
-                                                            {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
-                                                                {% include 'tournament/teams/partials/team_matches.html' %}
-                                                            {% endwith %}
+                                                                {% for stage in league.stages.all %}
+                                                                    {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
+                                                                        {% include 'tournament/teams/partials/team_matches.html' %}
+                                                                    {% endwith %}
+                                                                {% endfor %}
+                                                            </div>
                                                         {% endfor %}
-
-                                                    {% endfor %}
+                                                    </div>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -151,7 +151,7 @@
                             <div id="stats-panel" role="tabpanel" aria-labelledby="stats-tab">
                                 <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
                                     <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                                    <h3 class="text-center">Загружаем статистику...</h3>
+                                    <h3 class="tw:text-center">Загружаем статистику...</h3>
                                 </div>
                             </div>
                         </div>
@@ -188,7 +188,7 @@
                                                 <tr>
                                                     <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Владелец</span></td>
                                                     <td>
-                                                        <a class="tw:text-lg tw:font-semibold"
+                                                        <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
                                                            href="{{ team.owner.user_profile.get_absolute_url }}">{{ team.owner.user_player }}</a>
                                                     </td>
                                                     <td class="tw:text-center">
@@ -212,7 +212,7 @@
                                                                 title="{{ team.owner.user_profile.telegram }}"></a>
                                                         {% endif %}
                                                         {% if not team.owner.user_profile.vk and not team.owner.user_profile.discord and not team.owner.user_profile.telegram %}
-                                                            <i class="fa fa-minus text-danger text-center"
+                                                            <i class="fa fa-minus tw:text-error tw:text-center"
                                                                aria-hidden="true"></i>
                                                         {% endif %}
 
@@ -223,11 +223,10 @@
                                                         <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span></td>
                                                         <td>
                                                             {% if cap.name %}
-                                                                <a class="tw:text-lg tw:font-semibold"
+                                                                <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
                                                                    href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
                                                             {% else %}
                                                                 <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
-
                                                             {% endif %}
                                                         </td>
                                                         <td class="tw:text-center">
@@ -253,7 +252,7 @@
                                                                     title="{{ cap.name.user_profile.telegram }}"></a>
                                                             {% endif %}
                                                             {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
-                                                                <i class="fa fa-minus text-danger text-center"
+                                                                <i class="fa fa-minus tw:text-error tw:text-center"
                                                                    aria-hidden="true"></i>
                                                             {% endif %}
 
@@ -266,7 +265,7 @@
                                                         <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Ассистент</span></td>
                                                         <td>
                                                             {% if cap.name %}
-                                                                <a class="tw:text-lg tw:font-semibold"
+                                                                <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
                                                                    href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
                                                             {% else %}
                                                                 <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
@@ -296,7 +295,7 @@
                                                                     title="{{ cap.name.user_profile.telegram }}"></a>
                                                             {% endif %}
                                                             {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
-                                                                <i class="fa fa-minus text-danger text-center"
+                                                                <i class="fa fa-minus tw:text-error tw:text-center"
                                                                    aria-hidden="true"></i>
                                                             {% endif %}
 

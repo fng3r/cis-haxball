@@ -14,7 +14,7 @@
                 <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>{{ category }}
             </h3>
             {% if user.is_authenticated and not category.is_official %}
-                <a href="{% url 'core:new_post' category.slug %}" class="tw:text-lg">
+                <a href="{% url 'core:new_post' category.slug %}" class="tw:link tw:text-lg">
                     <i class="fa fa-pencil tw:text-warning tw:mr-1" aria-hidden="true"></i>Создать пост
                 </a>
             {% endif %}

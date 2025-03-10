@@ -110,10 +110,10 @@
 
                                 {% for league, league_stats in stats_by_league|sorted_by_league %}
                                     <td class="tw:font-semibold" style="font-size: 11pt;">
-                                        <a href="{{ league.get_absolute_url }}">{{ league.title }}</a>
+                                        <a href="{{ league.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ league.title }}</a>
                                     </td>
                                     {% for _, single_stat in league_stats|dd_items %}
-                                        <td class="text-center number">{{ single_stat|floatformat:0 }}</td>
+                                        <td class="tw:text-center number">{{ single_stat|floatformat:0 }}</td>
                                     {% endfor %}
                                     </tr>
                                 {% endfor %}
@@ -176,7 +176,7 @@
 
                                 {% for league, league_stats in stats_by_league|sorted_by_league %}
                                     <td class="tw:font-semibold" style="font-size: 11pt;">
-                                        <a href="{{ league.get_absolute_url }}">{{ league.title }}</a>
+                                        <a href="{{ league.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ league.title }}</a>
                                     </td>
                                     {% for _, single_stat in league_stats|dd_items %}
                                         <td class="tw:text-center number">
@@ -225,7 +225,7 @@
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league.championship }})
@@ -241,11 +241,11 @@
                                 <th scope="row" class="tw:w-1/3">
                                     Самая крупная "домашняя" победа
                                 </th>
-                                <td class="text-left">
+                                <td class="tw:text-left">
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -265,7 +265,7 @@
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -285,7 +285,7 @@
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -305,7 +305,7 @@
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -325,7 +325,7 @@
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -346,7 +346,7 @@
                                         {{ goal|goal_time }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -367,7 +367,7 @@
                                         {{ goal|goal_time }} -
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }})
@@ -387,7 +387,7 @@
                                     {% if match %}
                                         <img src="{{match.team_home.logo.url}}" width=20 height=20>
                                         {{ match.team_home.title }}
-                                        <a href="{{match.get_absolute_url}}">{{ match.score_home }}:{{ match.score_guest }}</a>
+                                        <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ match.score_home }}:{{ match.score_guest }}</a>
                                         {{ match.team_guest.title }}
                                         <img src="{{match.team_guest.logo.url}}" width=20 height=20>
                                         ({{ match.league }}) - {{ match.cards_count }} {{ match.cards_count|ru_pluralize:'карточка,карточки,карточек' }}
@@ -417,7 +417,7 @@
                                                 {% endthumbnail %}
                                             </div>
                                         </div>
-                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
+                                        <a href="{{ player.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ player.username }}</a>
                                         <span>
                                             ({{ other_stats.greatest_player.count }})
                                         </span>
@@ -442,7 +442,7 @@
                                                 {% endthumbnail %}
                                             </div>
                                         </div>
-                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
+                                        <a href="{{ player.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ player.username }}</a>
                                         <span>
                                             ({{ other_stats.greatest_sub_in.count }})
                                         </span>
@@ -462,12 +462,12 @@
                                     {% if player %}
                                         <div class="tw:avatar">
                                             <div class="tw:w-[26px] tw:h-[26px] tw:rounded-full">
-                                                {% thumbnail player.user_profile.avatar "100x100" crop="center" as avatar %}
+                                                {% thumbnail player.user_profile.avatar "50x50" crop="center" as avatar %}
                                                     <img src="{{ avatar.url }}" alt="{{ player.username }}" class="tw:rounded-full">
                                                 {% endthumbnail %}
                                             </div>
                                         </div>
-                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
+                                        <a href="{{ player.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ player.username }}</a>
                                         -
                                         <span>
                                             {{ other_stats.greatest_goalscorer.count }} {{ other_stats.greatest_goalscorer.count|ru_pluralize:'гол,гола,голов' }}
@@ -488,12 +488,12 @@
                                     {% if player %}
                                         <div class="tw:avatar">
                                             <div class="tw:w-[26px] tw:h-[26px] tw:rounded-full">
-                                                {% thumbnail player.user_profile.avatar "100x100" crop="center" as avatar %}
+                                                {% thumbnail player.user_profile.avatar "50x50" crop="center" as avatar %}
                                                     <img src="{{ avatar.url }}" alt="{{ player.username }}" class="tw:rounded-full">
                                                 {% endthumbnail %}
                                             </div>
                                         </div>
-                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
+                                        <a href="{{ player.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ player.username }}</a>
                                         -
                                         <span>
                                             {{ other_stats.greatest_assistant.count }} {{ other_stats.greatest_assistant.count|ru_pluralize:'передача,передачи,передач' }}
@@ -519,7 +519,7 @@
                                                 {% endthumbnail %}
                                             </div>
                                         </div>
-                                        <a href="{{ player.user_profile.get_absolute_url }}">{{ player.username }}</a>
+                                        <a href="{{ player.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ player.username }}</a>
                                         -
                                         <span>
                                             {{ other_stats.greatest_goalkeeper.count }} "{{ other_stats.greatest_goalkeeper.count|ru_pluralize:'сухарь,сухаря,сухарей' }}"
@@ -546,7 +546,7 @@
             <div id="charts-panel" role="tabpanel" aria-labelledby="charts-tab">
                 <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
                     <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                    <h3 class="text-center">Загружаем статистику...</h3>
+                    <h3 class="tw:text-center">Загружаем статистику...</h3>
                 </div>
             </div>
         </div>

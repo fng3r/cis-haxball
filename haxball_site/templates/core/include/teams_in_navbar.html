@@ -13,7 +13,7 @@
                             <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1" width="25px" height="25px">
                         {% endthumbnail %}
 
-                        <a href="{{ team.get_absolute_url }}" class="tw:font-semibold tw:text-base">{{ team.title|truncatechars:18 }}</a>
+                        <a href="{{ team.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary tw:text-base">{{ team.title|truncatechars:18 }}</a>
                     </div>
                 {% endfor %}
             </div>
