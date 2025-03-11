@@ -464,7 +464,7 @@ def round_name(tour, all_tours):
         return tour.name
 
     # since match for third place played in extra tour, ignore that tour
-    if tour.stage.has_match_for_third_place:
+    if isinstance(tour.stage, PlayOffStage) and tour.stage.has_match_for_third_place:
         all_tours -= 1
 
     if tour.number == all_tours:
@@ -750,14 +750,6 @@ def team_seasons(team):
                 'tournaments_in_season',
                 queryset=League.objects.filter(teams=team)
                 .prefetch_related(
-                    'tours__league',
-                    Prefetch(
-                        'matches_in_league',
-                        queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                        .select_related('team_home', 'team_guest', 'numb_tour__league')
-                        .order_by('numb_tour'),
-                        to_attr='team_matches',
-                    ),
                     Prefetch(
                         'stages',
                         queryset=TournamentStage.objects.filter(teams=team)
@@ -767,7 +759,7 @@ def team_seasons(team):
                             Prefetch(
                                 'matches',
                                 queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                                .select_related('team_home', 'team_guest', 'numb_tour__league')
+                                .select_related('team_home', 'team_guest', 'numb_tour__league', 'numb_tour__stage')
                                 .order_by('numb_tour'),
                                 to_attr='team_matches',
                             ),
@@ -778,6 +770,56 @@ def team_seasons(team):
                 .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
                 .order_by('-id'),
                 to_attr='team_leagues',
+            ),
+        )
+        .order_by('-number')
+    )
+     
+     
+@register.simple_tag
+def player_seasons(player):
+    return (
+        Season.objects.filter(
+            Exists(PlayerMatchStatistics.objects.filter(player=player, league__championship=OuterRef('id')))
+        )
+        .prefetch_related(
+            Prefetch(
+                'tournaments_in_season',
+                queryset=League.objects.filter(
+                    Exists(PlayerMatchStatistics.objects.filter(player=player, league=OuterRef('id')))
+                )
+                .prefetch_related(
+                    Prefetch(
+                        'stages',
+                        queryset=TournamentStage.objects.filter(
+                            Exists(PlayerMatchStatistics.objects.filter(player=player, match__stage=OuterRef('id')))
+                        )
+                        .distinct()
+                        .prefetch_related(
+                            'tours__league',
+                            Prefetch(
+                                'matches',
+                                queryset=Match.objects.filter(
+                                    Exists(PlayerMatchStatistics.objects.filter(player=player, match=OuterRef('id'))),
+                                    is_played=True
+                                )
+                                .select_related('team_home', 'team_guest', 'numb_tour__league', 'numb_tour__stage')
+                                .annotate(player_team_id=Subquery(
+                                    PlayerMatchStatistics.objects.filter(
+                                        player=player,
+                                        match=OuterRef('id')).values('team')[:1]
+                                    )
+                                )
+                                .order_by('numb_tour'),
+                                to_attr='player_matches',
+                            ),
+                        )
+                        .order_by('order'),
+                    ),
+                )
+                .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
+                .order_by('-id'),
+                to_attr='player_leagues',
             ),
         )
         .order_by('-number')

@@ -193,6 +193,10 @@ class TournamentStage(PolymorphicModel):
     @property
     def is_playoff(self):
         return self.type == self.StageType.PLAYOFF
+    
+    @property
+    def is_regular(self):
+        return self.is_playoff and self.has_match_for_third_place
 
     @property
     def is_group_stage(self):

@@ -28,9 +28,9 @@
     }
 </style>
 
-<div class="tw:card tw:px-2 tw:bg-base-100 tw:rounded-b-lg">
-    <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:gap-x-2 tw:bg-base-100 tw:p-0! tw:rounded-b-lg">
-        <input type="radio" name="player-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="Общее" checked />
+<div class="tw:card tw:rounded-b-lg">
+    <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:gap-3 tw:bg-base-200 tw:p-0! tw:rounded-b-lg">
+        <input type="radio" name="player-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:bg-transparent!" aria-label="Общее" checked />
         <div class="tw:tab-content tw:pt-2 tw:border-0">
             <div id="general-stats-panel" role="tabpanel" aria-labelledby="general-stats-tab">
                 <table class="table tw:table tw:table-zebra tw:**:[tr]:border-[#dee2e6]!">
@@ -237,7 +237,7 @@
             </div>
         </div>
 
-        <input type="radio" name="player-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="Топ" />
+        <input type="radio" name="player-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:bg-transparent!" aria-label="Топ" />
         <div class="tw:tab-content tw:pt-2 tw:pb-2 tw:border-0">
             <div id="avg-stats-panel" role="tabpanel" aria-labelledby="avg-stats-tab">
                 <table class="tw:table tw:table-zebra tw:**:[tr]:border-[#dee2e6]!">
@@ -443,7 +443,7 @@
             </div>
         </div>
 
-        <input type="radio" name="player-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="Дашборд"
+        <input type="radio" name="player-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:bg-transparent!" aria-label="Дашборд"
                hx-trigger="click once"
                hx-get="{% url 'tournament:player_stats_charts' user.id %}"
                hx-target="#charts-panel"

@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
+from itertools import groupby
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
@@ -1468,7 +1469,7 @@ def player_detailed_statistics(request, pk):
     most_cs_in_season = (
         Season.objects.annotate(cs=Subquery(cs_subquery)).filter(cs__isnull=False).order_by('-cs').first()
     )
-
+    
     other_stats = {
         'first_match': first_match,
         'fastest_goal': fastest_goal,
@@ -1491,7 +1492,7 @@ def player_detailed_statistics(request, pk):
         'other_stats': other_stats,
     }
 
-    return render(request, 'tournament/partials/player_detailed_statistics.html', context)
+    return render(request, 'tournament/player/partials/player_statistics.html', context)
 
 
 def player_statistics_charts(request, pk):

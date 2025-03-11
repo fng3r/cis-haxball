@@ -878,6 +878,98 @@
       }
     }
   }
+  .tw\:tabs-lift\! {
+    --tabs-height: auto;
+    --tabs-direction: row;
+    > .tw\:tab {
+      --tab-border: 0 0 var(--border) 0;
+      --tab-radius-ss: min(var(--radius-field), var(--tab-radius-min));
+      --tab-radius-se: min(var(--radius-field), var(--tab-radius-min));
+      --tab-radius-es: 0;
+      --tab-radius-ee: 0;
+      --tab-paddings: var(--border) var(--tab-p) 0 var(--tab-p);
+      --tab-border-colors: #0000 #0000 var(--tab-border-color) #0000;
+      --tab-corner-width: calc(100% + min(var(--radius-field), var(--tab-radius-min)) * 2);
+      --tab-corner-height: min(var(--radius-field), var(--tab-radius-min));
+      --tab-corner-position: top left, top right;
+      border-width: var(--tab-border) !important;
+      border-start-start-radius: var(--tab-radius-ss) !important;
+      border-start-end-radius: var(--tab-radius-se) !important;
+      border-end-start-radius: var(--tab-radius-es) !important;
+      border-end-end-radius: var(--tab-radius-ee) !important;
+      padding: var(--tab-paddings) !important;
+      border-color: var(--tab-border-colors) !important;
+      &:is(.tw\:tab-active, [aria-selected="true"]):not(.tw\:tab-disabled, [disabled]), &:is(input:checked) {
+        --tab-border: var(--border) var(--border) 0 var(--border);
+        --tab-border-colors: var(--tab-border-color) var(--tab-border-color) #0000
+        var(--tab-border-color);
+        --tab-paddings: 0 calc(var(--tab-p) - var(--border)) var(--border)
+        calc(var(--tab-p) - var(--border));
+        --tab-inset: auto auto 0 auto;
+        --tab-grad: calc(69% - var(--border));
+        --radius-start: radial-gradient(
+        circle at top left,
+        #0000 var(--tab-grad),
+        var(--tab-border-color) calc(var(--tab-grad) + 0.25px),
+        var(--tab-border-color) calc(var(--tab-grad) + var(--border)),
+        var(--tab-bg) calc(var(--tab-grad) + var(--border) + 0.25px)
+      );
+        --radius-end: radial-gradient(
+        circle at top right,
+        #0000 var(--tab-grad),
+        var(--tab-border-color) calc(var(--tab-grad) + 0.25px),
+        var(--tab-border-color) calc(var(--tab-grad) + var(--border)),
+        var(--tab-bg) calc(var(--tab-grad) + var(--border) + 0.25px)
+      );
+        background-color: var(--tab-bg) !important;
+        &:before {
+          z-index: 1 !important;
+          content: "" !important;
+          display: block !important;
+          position: absolute !important;
+          width: var(--tab-corner-width) !important;
+          height: var(--tab-corner-height) !important;
+          background-position: var(--tab-corner-position) !important;
+          background-image: var(--radius-start), var(--radius-end) !important;
+          background-size: min(var(--radius-field), var(--tab-radius-min)) min(var(--radius-field), var(--tab-radius-min)) !important;
+          background-repeat: no-repeat !important;
+          inset: var(--tab-inset) !important;
+        }
+        &:first-child:before {
+          --radius-start: none;
+        }
+        [dir="rtl"] &:first-child:before {
+          transform: rotateY(180deg) !important;
+        }
+        &:last-child:before {
+          --radius-end: none;
+        }
+        [dir="rtl"] &:last-child:before {
+          transform: rotateY(180deg) !important;
+        }
+      }
+    }
+    &:has(.tw\:tab-content) {
+      > .tw\:tab:first-child {
+        &:not(.tw\:tab-active, [aria-selected="true"]) {
+          --tab-border-colors: var(--tab-border-color) var(--tab-border-color) #0000
+          var(--tab-border-color);
+        }
+      }
+    }
+    .tw\:tab-content {
+      --tabcontent-margin: calc(-1 * var(--border)) 0 0 0;
+      --tabcontent-radius-ss: 0;
+      --tabcontent-radius-se: var(--radius-box);
+      --tabcontent-radius-es: var(--radius-box);
+      --tabcontent-radius-ee: var(--radius-box);
+    }
+    :checked, :is(.tw\:tab-active, [aria-selected="true"]) {
+      & + .tw\:tab-content:not(:nth-child(2)) {
+        --tabcontent-radius-ss: var(--radius-box);
+      }
+    }
+  }
   .tw\:list {
     display: flex;
     flex-direction: column;
@@ -1839,6 +1931,9 @@
   .tw\:m-1 {
     margin: calc(var(--tw-spacing) * 1);
   }
+  .tw\:m-2 {
+    margin: calc(var(--tw-spacing) * 2);
+  }
   .tw\:mx-0 {
     margin-inline: calc(var(--tw-spacing) * 0);
   }
@@ -2794,6 +2889,12 @@
   .tw\:h-24 {
     height: calc(var(--tw-spacing) * 24);
   }
+  .tw\:h-30 {
+    height: calc(var(--tw-spacing) * 30);
+  }
+  .tw\:h-40 {
+    height: calc(var(--tw-spacing) * 40);
+  }
   .tw\:h-\[20px\] {
     height: 20px;
   }
@@ -3118,6 +3219,12 @@
   .tw\:gap-x-2 {
     column-gap: calc(var(--tw-spacing) * 2);
   }
+  .tw\:gap-x-3 {
+    column-gap: calc(var(--tw-spacing) * 3);
+  }
+  .tw\:gap-x-4 {
+    column-gap: calc(var(--tw-spacing) * 4);
+  }
   .tw\:gap-y-2 {
     row-gap: calc(var(--tw-spacing) * 2);
   }
@@ -3196,6 +3303,9 @@
   }
   .tw\:rounded-lg {
     border-radius: var(--tw-radius-lg);
+  }
+  .tw\:rounded-none {
+    border-radius: 0;
   }
   .tw\:rounded-sm\! {
     border-radius: var(--tw-radius-sm) !important;
@@ -3502,6 +3612,15 @@
   .tw\:p-4 {
     padding: calc(var(--tw-spacing) * 4);
   }
+  .tw\:table-sm {
+    :not(thead, tfoot) tr {
+      font-size: 0.75rem;
+    }
+    :where(th, td) {
+      padding-inline: calc(0.25rem * 3);
+      padding-block: calc(0.25rem * 2);
+    }
+  }
   .tw\:badge-sm {
     --size: calc(var(--size-selector, 0.25rem) * 5);
     font-size: 0.75rem;
@@ -3561,6 +3680,9 @@
   .tw\:py-4 {
     padding-block: calc(var(--tw-spacing) * 4);
   }
+  .tw\:pt-0 {
+    padding-top: calc(var(--tw-spacing) * 0);
+  }
   .tw\:pt-0\! {
     padding-top: calc(var(--tw-spacing) * 0) !important;
   }
@@ -3569,6 +3691,9 @@
   }
   .tw\:pt-1 {
     padding-top: calc(var(--tw-spacing) * 1);
+  }
+  .tw\:pt-1\! {
+    padding-top: calc(var(--tw-spacing) * 1) !important;
   }
   .tw\:pt-2 {
     padding-top: calc(var(--tw-spacing) * 2);
@@ -3667,6 +3792,10 @@
   .tw\:text-4xl {
     font-size: var(--tw-text-4xl);
     line-height: var(--tw-leading, var(--tw-text-4xl--line-height));
+  }
+  .tw\:text-4xl\! {
+    font-size: var(--tw-text-4xl) !important;
+    line-height: var(--tw-leading, var(--tw-text-4xl--line-height)) !important;
   }
   .tw\:text-base {
     font-size: var(--tw-text-base);
