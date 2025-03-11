@@ -1,8 +1,7 @@
 {% load static %}
 
 <table class="tw:table tw:**:[tr]:border-[#dee2e6]! tw:font-bold tw:text-center"
-       bgcolor="{{ team.color_table }}"
-       style="color: black;">
+       {% if team.color_table != '#FFFFFF' %}bgcolor="{{ team.color_table }}"{% endif %}>
     <thead>
         <tr>
             <th scope="col" class="tw:text-left! tw:text-base-content">
@@ -62,7 +61,7 @@
                             <img src="{{ player.player_nation.flag.url }}" width="24"
                                  height="24"
                                  title="{{ player.player_nation.country }}">
-                            <span class="tw:text-neutral-700 tw:align-middle">
+                            <span class="tw:text-base-content/80 tw:align-middle">
                                 {{ player }}
                             </span>
                         {% endif %}

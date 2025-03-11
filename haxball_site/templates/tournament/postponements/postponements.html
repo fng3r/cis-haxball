@@ -65,12 +65,12 @@
                             <tbody>
                                 {% for team in teams %}
                                     <tr class="tw:font-bold tw:text-center">
-                                        <td class="tw:p-2 tw:border-r tw:border-neutral-200 tw:text-lg">
+                                        <td class="tw:p-2 tw:border-r tw:border-neutral-200/50 tw:text-lg">
                                             <img src="{{team.logo.url}}" alt="{{team.title}}" style="margin-right: 5px;" width="25" height="25">
                                             <a href="{{team.get_absolute_url}}" class="tw:link tw:link-hover">{{team.title}}</a>
                                         </td>
                                         {% for postponement in team|postponements_in_league:league %}
-                                            <td class="tw:h-20 tw:p-1 tw:border-r tw:border-neutral-200 tw:text-sm">
+                                            <td class="tw:h-20 tw:p-1 tw:border-r tw:border-neutral-200/50 tw:text-sm">
                                                 {% if postponement is not None %}
                                                     {% with match=postponement.match %}
                                                         <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">

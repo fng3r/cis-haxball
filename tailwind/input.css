@@ -1,7 +1,7 @@
 @import "tailwindcss" prefix(tw) source("../haxball_site/templates");
 
 @plugin "daisyui" {
-  themes: light --default, dark;
+  themes: all;
   exclude: scrollbar;
 }
 

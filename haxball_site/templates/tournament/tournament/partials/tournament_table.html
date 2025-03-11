@@ -12,7 +12,7 @@
 </style>
 
 <table class="tw:table team-table-league tw:**:[td]:py-2">
-    <thead class="tw:text-neutral tw:text-base tw:font-semibold">
+    <thead class="tw:text-base-content tw:text-base tw:font-semibold">
         <tr class="tw:text-center">
             <th scope="col" class="tw:pl-2">#</th>
             <th scope="col" class="tw:text-left!">Команда</th>
@@ -57,7 +57,7 @@
                 </th>
 
                 <td class="tw:text-left tw:px-0 tw:w-1/3">
-                    <a class="tw:link tw:link-hover tw:text-base-content/90 tw:text-lg tw:font-semibold" href="{{ team.0.get_absolute_url }}">
+                    <a class="tw:link tw:link-hover tw:text-base-content/95 tw:text-lg tw:font-semibold" href="{{ team.0.get_absolute_url }}">
                         <img
                             src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28"
                             class="tw:mr-2">{% if team.0.title|length < 20 %}{{ team.0.title }}{% else %}{{ team.0.short_title }}{% endif %}

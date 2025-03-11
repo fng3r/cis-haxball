@@ -6,15 +6,15 @@
         <div class="carousel-inner">
             {% for period in comments_by_period %}
                 <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <div class="tw:card tw:mt-2 tw:rounded-t-lg tw:rounded-b-none tw:border tw:border-white">
-                        <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-lg tw:bg-gradient-to-r tw:from-teal-100 tw:to-violet-100">
-                            <a class="tw:inline tw:text-primary" href="#carouselExampleControls" role="button" data-slide="prev" style="height: 100%">
+                    <div class="tw:card tw:mt-2 tw:rounded-t-lg tw:rounded-b-none tw:border tw:border-neutral-100">
+                        <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-lg tw:bg-gradient-to-r tw:from-primary/70 tw:to-primary/90 tw:text-primary-content">
+                            <a class="tw:inline tw:text-primary-content" href="#carouselExampleControls" role="button" data-slide="prev" style="height: 100%">
                                 <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl!" aria-hidden="true"></i>
                             </a>
                             <span class="tw:mb-0 tw:inline tw:text-2xl!">
                                 <i class="fa fa-thumbs-o-up tw:text-success tw:mr-1" aria-hidden="true"></i>{{ period.title }}
                             </span>
-                            <a class="tw:inline tw:text-primary" href="#carouselExampleControls" role="button" data-slide="next">
+                            <a class="tw:inline tw:text-primary-content" href="#carouselExampleControls" role="button" data-slide="next">
                                 <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl!" aria-hidden="true"></i>
                             </a>
                         </div>
@@ -22,7 +22,7 @@
                         <div class="tw:w-full">
                             {% for comment in period.comments %}
                                 <a type="button" href="{{ comment.get_absolute_url }}" title="от {{ comment.author }} в {{ comment.content_object }}"
-                                   class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-gray-500! tw:hover:bg-gray-600! tw:text-white!">
+                                   class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-primary/40 tw:hover:bg-primary/60 tw:text-primary-content">
                                     <div class="tw:flex tw:overflow-hidden">
                                         <span class="tw:badge tw:badge-success tw:font-bold tw:mr-2">{{ comment.likes_count }}</span>
                                         <span class="tw:truncate">{{ comment.body|striptags|default:"*Медиа-контент*" }}</span>
