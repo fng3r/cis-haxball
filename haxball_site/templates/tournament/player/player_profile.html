@@ -1,0 +1,97 @@
+{% load static %}
+{% load tournament_extras %}
+
+<div class="tw:flex tw:items-center tw:bg-base-200 tw:gap-2 tw:p-3 tw:border-b tw:border-neutral-300">
+    <div class="tw:avatar">
+        <div class="tw:w-30 tw:h-30 tw:rounded">
+            <img src="{{ user.user_profile.avatar.url }}">
+        </div>
+    </div>
+    <div class="tw:flex tw:flex-col tw:justify-center">
+        <h2 class="tw:text-4xl! tw:font-semibold">{{ user.username }}</h2>
+        <h3 class="tw:text-lg tw:font-semibold tw:text-base-content/70">
+            {% if player.team %}
+                <a href="{% url 'tournament:team_stats' player.team.id %}" class="tw:link tw:link-hover">{{ player.team.title }}</a>
+            {% else %}
+                Без команды
+            {% endif %}
+        </h3>
+    </div>
+
+    <div class="tw:flex tw:items-center tw:ml-10">
+        <div class="tw:h-30 tw:flex tw:flex-col tw:flex-wrap tw:gap-1">
+            <div class="tw:flex tw:items-center tw:gap-1 tw:text-sm tw:font-semibold">
+                <img
+                    src="{% static "img/ico/statistic/calendar.png" %}" width="20" height="20"
+                    title="Сезоны">
+                Сезоны: {% if stats|length > 0 %}{{ stats|length }}{% else %}–{% endif %}
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-1 tw:text-sm tw:font-semibold">
+                <img
+                    src="{% static "img/ico/matches_icon.png" %}" width="20" height="20"
+                    title="Матчей сыграно">
+                Матчи:
+                {% if overall_stats.matches > 0 %}
+                    {{ overall_stats.matches }} ({{ ranks.matches.rank }}/{{ ranks.matches.total }})
+                {% else %}
+                    –
+                {% endif %}
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-1 tw:text-sm tw:font-semibold">
+                <img
+                    src="{% static "img/ico/statistic/ball-alt.PNG" %}" width="20" height="20"
+                    title="Забито">
+                Голы:
+                {% if overall_stats.goals > 0 %}
+                    {{ overall_stats.goals }} ({{ ranks.goals.rank }}/{{ ranks.goals.total }})
+                {% else %}
+                    –
+                {% endif %}
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-1 tw:text-sm tw:font-semibold">
+                <img
+                    src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}" width="20" height="20"
+                    title="Голевые передачи">
+                Голевые передачи: {% if overall_stats.assists > 0 %}
+                    {{ overall_stats.assists }} ({{ ranks.assists.rank }}/{{ ranks.assists.total }})
+                {% else %}
+                    –
+                {% endif %}
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-1 tw:text-sm tw:font-semibold">
+                <img
+                    src="{% static "img/ico/clean_sheet1.png" %}" width="20" height="20"
+                    title="Сухие таймы">
+                Сухие таймы:
+                {% if overall_stats.clean_sheets > 0 %}
+                    {{ overall_stats.clean_sheets }} ({{ ranks.clean_sheets.rank }}/{{ ranks.clean_sheets.total }})
+                {% else %}
+                    –
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="tw:tabs tw:tabs-box tw:w-full tw:px-2 tw:pt-2" role="tablist">
+    <input type="radio" id="player-stats-tab" name="player-profile-tabs" role="tab" aria-label="Статистика"
+           class="tw:tab"
+           checked
+    />
+    <div class="tw:tab-content">
+        <div id="player-stats-panel" role="tabpanel" aria-labelledby="player-stats-tab">
+            {% include 'tournament/player/partials/player_statistics.html' %}
+        </div>
+    </div>
+
+    <input type="radio" id="player-matches-tab" name="player-profile-tabs" role="tab" aria-label="Матчи"
+           class="tw:tab"
+    />
+    <div class="tw:tab-content tw:mt-2">
+        <div id="player-matches-panel" role="tabpanel" aria-labelledby="player-matches-tab">
+            {% include 'tournament/player/partials/player_matches.html' %}
+        </div>
+    </div>
+</div>

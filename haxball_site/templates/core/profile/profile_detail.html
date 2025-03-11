@@ -257,68 +257,14 @@
                         <input type="radio" name="user-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" role="tab" aria-label="Профиль игрока"
                                hx-get="{% url 'tournament:player_stats' profile.name.id %}"
                                hx-trigger="click once"
-                               hx-target="#player-stats-panel"
+                               hx-target="#player-profile-panel"
                                hx-swap="innerHTML"
                         />
                         <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
-                            <div class="tw:flex tw:items-center tw:bg-base-200 tw:gap-2 tw:p-3 tw:border-b tw:border-neutral-300">
-                                <img src="{{ profile.avatar.url }}" class="tw:w-30 tw:h-30 tw:rounded">
-                                <div class="tw:flex tw:flex-col tw:justify-center">
-                                    <h2 class="tw:text-4xl! tw:font-semibold">{{ profile.name }}</h2>
-                                    <h3 class="tw:text-lg tw:font-semibold tw:text-base-content/70">
-                                        {% if profile.name.user_player.team %}
-                                            {{ profile.name.user_player.team.title }}
-                                        {% else %}
-                                            Без команды
-                                        {% endif %}
-                                    </h3>
-                                </div>
-                            </div>
-
-                            <div class="tw:tabs tw:tabs-box tw:w-full tw:px-2 tw:pt-2" role="tablist">
-                                <input type="radio" id="player-stats-tab" name="player-profile-tabs" role="tab" aria-label="Статистика"
-                                       class="tw:tab"
-                                       checked
-                                />
-                                <div class="tw:tab-content">
-                                    <div id="player-stats-panel" role="tabpanel" aria-labelledby="player-stats-tab">
-                                        <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
-                                            <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                                            <h3 class="tw:text-center">Загружаем статистику...</h3>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <input type="radio" id="player-matches-tab" name="player-profile-tabs" role="tab" aria-label="Матчи"
-                                       class="tw:tab"
-                                />
-                                <div class="tw:tab-content tw:mt-2">
-                                    <div id="player-matches-panel" role="tabpanel" aria-labelledby="player-matches-tab">
-                                        {% player_seasons profile.name.user_player as player_seasons %}
-
-                                        <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
-                                            {% for season in player_seasons %}
-                                                <input type="radio" name="matches-tabs" class="tw:w-1/3 tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{{ season }}"
-                                                       {% if forloop.first %}checked{% endif %}
-                                                />
-                                                <div class="tw:tab-content tw:pt-2 tw:gap-4" role="tabpanel">
-
-                                                    {% for league in season.player_leagues %}
-                                                        <h5 class="tw:text-center tw:mb-2">
-                                                            <a href="{{ league.get_absolute_url }}"
-                                                               class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ league.title }}</a>
-                                                        </h5>
-
-                                                        {% for stage in league.stages.all %}
-                                                            {% with matches=stage.player_matches stage=stage show_stages=league.has_multiple_stages %}
-                                                                {% include 'tournament/player/partials/player_matches.html' %}
-                                                            {% endwith %}
-                                                        {% endfor %}
-                                                    {% endfor %}
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
+                            <div id="player-profile-panel" role="tabpanel" aria-labelledby="player-profile-tab">
+                                <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
+                                    <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
+                                    <h3 class="tw:text-center">Загружаем статистику...</h3>
                                 </div>
                             </div>
                         </div>

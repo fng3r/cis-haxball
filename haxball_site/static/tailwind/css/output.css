@@ -2590,8 +2590,20 @@
   .tw\:ml-4 {
     margin-left: calc(var(--tw-spacing) * 4);
   }
+  .tw\:ml-5 {
+    margin-left: calc(var(--tw-spacing) * 5);
+  }
   .tw\:ml-8\! {
     margin-left: calc(var(--tw-spacing) * 8) !important;
+  }
+  .tw\:ml-10 {
+    margin-left: calc(var(--tw-spacing) * 10);
+  }
+  .tw\:ml-15 {
+    margin-left: calc(var(--tw-spacing) * 15);
+  }
+  .tw\:ml-20 {
+    margin-left: calc(var(--tw-spacing) * 20);
   }
   .tw\:ml-auto {
     margin-left: auto;
@@ -2880,6 +2892,9 @@
   .tw\:h-5 {
     height: calc(var(--tw-spacing) * 5);
   }
+  .tw\:h-6 {
+    height: calc(var(--tw-spacing) * 6);
+  }
   .tw\:h-10 {
     height: calc(var(--tw-spacing) * 10);
   }
@@ -2888,6 +2903,12 @@
   }
   .tw\:h-24 {
     height: calc(var(--tw-spacing) * 24);
+  }
+  .tw\:h-25 {
+    height: calc(var(--tw-spacing) * 25);
+  }
+  .tw\:h-28 {
+    height: calc(var(--tw-spacing) * 28);
   }
   .tw\:h-30 {
     height: calc(var(--tw-spacing) * 30);
@@ -3039,6 +3060,12 @@
   .tw\:w-24 {
     width: calc(var(--tw-spacing) * 24);
   }
+  .tw\:w-25 {
+    width: calc(var(--tw-spacing) * 25);
+  }
+  .tw\:w-28 {
+    width: calc(var(--tw-spacing) * 28);
+  }
   .tw\:w-30 {
     width: calc(var(--tw-spacing) * 30);
   }
@@ -3050,6 +3077,9 @@
   }
   .tw\:w-48 {
     width: calc(var(--tw-spacing) * 48);
+  }
+  .tw\:w-85 {
+    width: calc(var(--tw-spacing) * 85);
   }
   .tw\:w-\[5\%\] {
     width: 5%;

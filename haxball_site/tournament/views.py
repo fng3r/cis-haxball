@@ -7,8 +7,8 @@ from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery
-from django.db.models.functions import Cast, Coalesce
+from django.db.models import Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery, Window
+from django.db.models.functions import Cast, Coalesce, Rank
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -1316,18 +1316,18 @@ def player_detailed_statistics(request, pk):
     overall_yellow_cards = all_yellow_cards.count()
     overall_red_cards = all_red_cards.count()
 
-    overall_stats = [
-        overall_matches,
-        overall_goals,
-        overall_assists,
-        overall_goals_assists,
-        overall_clean_sheets,
-        overall_subs_out,
-        overall_subs_in,
-        overall_ogs,
-        overall_yellow_cards,
-        overall_red_cards,
-    ]
+    overall_stats = {
+        'matches': overall_matches,
+        'goals': overall_goals,
+        'assists': overall_assists,
+        'goals_assists': overall_goals_assists,
+        'clean_sheets': overall_clean_sheets,
+        'subs_out': overall_subs_out,
+        'subs_in': overall_subs_in,
+        'ogs': overall_ogs,
+        'yellow_cards': overall_yellow_cards,
+        'red_cards': overall_red_cards,
+    }
 
     overall_avg_goals = overall_goals / (overall_matches or 1)
     overall_avg_assists = overall_assists / (overall_matches or 1)
@@ -1339,18 +1339,18 @@ def player_detailed_statistics(request, pk):
     overall_avg_subs_in = overall_subs_in / (overall_matches or 1)
     overall_avg_subs_out = overall_subs_out / (overall_matches or 1)
 
-    overall_extra_stats = [
-        overall_matches,
-        overall_avg_goals,
-        overall_avg_assists,
-        overall_avg_goals_assists,
-        overall_avg_clean_sheets,
-        overall_avg_subs_out,
-        overall_avg_subs_in,
-        overall_avg_own_goals,
-        overall_avg_yellow_cards,
-        overall_avg_red_cards,
-    ]
+    overall_extra_stats = {
+        'matches': overall_matches,
+        'avg_goals': overall_avg_goals,
+        'avg_assists': overall_avg_assists,
+        'avg_goals_assists': overall_avg_goals_assists,
+        'avg_clean_sheets': overall_avg_clean_sheets,
+        'avg_subs_out': overall_avg_subs_out,
+        'avg_subs_in': overall_avg_subs_in,
+        'avg_own_goals': overall_avg_own_goals,
+        'avg_yellow_cards': overall_avg_yellow_cards,
+        'avg_red_cards': overall_avg_red_cards,
+    }
 
     extra_stats_by_season = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(float))))
     if overall_matches > 0:
@@ -1482,17 +1482,65 @@ def player_detailed_statistics(request, pk):
         'most_goals_assists_in_season': most_goals_assists_in_season,
         'most_cs_in_season': most_cs_in_season,
     }
+    
+    ranks = get_player_ranks(player)
 
     context = {
         'user': user,
+        'player': player,
         'stats': stats_by_season,
         'extra_stats': extra_stats_by_season,
         'overall_stats': overall_stats,
         'overall_extra_stats': overall_extra_stats,
         'other_stats': other_stats,
+        'ranks': ranks,
     }
 
-    return render(request, 'tournament/player/partials/player_statistics.html', context)
+    return render(request, 'tournament/player/player_profile.html', context)
+
+
+def get_player_ranks(player):
+    matches_top = (
+        Player.objects
+        .annotate(count=Count('played_matches'), rank=Window(expression=Rank(), order_by=('-count',)))
+        .filter(count__gt=0)
+    )
+    matches_rank = next(filter(lambda p: p.id == player.id, matches_top), None)
+    matches_top_count = matches_top.count()
+
+    goals_top = (
+        Player.objects
+        .annotate(count=Count('goals'), rank=Window(expression=Rank(), order_by=('-count',)))
+        .filter(count__gt=0)
+    )
+    goals_rank = next(filter(lambda p: p.id == player.id, goals_top), None)
+    goals_top_count = goals_top.count()
+    
+    assists_top = (
+        Player.objects
+        .annotate(count=Count('assists'), rank=Window(expression=Rank(), order_by=('-count',)))
+        .filter(count__gt=0)
+    )
+    assists_rank = next(filter(lambda p: p.id == player.id, assists_top), None)
+    assists_top_count = assists_top.count()
+    
+    cs_top = (
+        Player.objects
+        .annotate(
+            count=Count('event', filter=Q(event__event=OtherEvents.CLEAN_SHEET)),
+            rank=Window(expression=Rank(), order_by=('-count',))
+        )
+        .filter(count__gt=0)
+    )
+    cs_rank = next(filter(lambda p: p.id == player.id, cs_top), None)
+    cs_top_count = cs_top.count()
+    
+    return {
+        'matches': {'rank': matches_rank.rank if matches_rank else None, 'total': matches_top_count},
+        'goals': {'rank': goals_rank.rank if goals_rank else None, 'total': goals_top_count},
+        'assists': {'rank': assists_rank.rank if assists_rank else None, 'total': assists_top_count},
+        'clean_sheets': {'rank': cs_rank.rank if cs_rank else None, 'total': cs_top_count},
+    }
 
 
 def player_statistics_charts(request, pk):

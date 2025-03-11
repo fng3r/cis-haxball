@@ -1,6 +1,7 @@
 import datetime
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import groupby
 from typing import Iterable
 
 from django import template
@@ -174,17 +175,12 @@ def get_player_matches(player, team, season=None):
     season_condition = Q(league__championship=season) if season else ~Q(pk__in=[])
     
     return (
-        Match.objects.filter(season_condition, team_guest=team, team_guest_start=player, is_played=True).count()
-        + Match.objects.filter(season_condition, team_home=team, team_home_start=player, is_played=True).count()
-        + Match.objects.filter(
+        PlayerMatchStatistics.objects.filter(
             season_condition,
-            ~(Q(team_guest_start=player) | Q(team_home_start=player)),
-            is_played=True,
-            match_substitutions__team=team,
-            match_substitutions__player_in=player,
-        )
-        .distinct()
-        .count()
+            player=player,
+            team=team,
+            match__is_played=True
+        ).count()
     )
 
 
@@ -824,6 +820,20 @@ def player_seasons(player):
         )
         .order_by('-number')
     )
+    
+    
+@register.simple_tag
+def player_transfers_by_season(player):
+    transfers = (
+        PlayerTransfer.objects
+        .filter(trans_player=player, is_technical=False)
+        .select_related('from_team', 'to_team', 'season_join', 'trans_player__name__user_profile')
+        .order_by('-date_join')
+    )
+    transfers = {season: list(transfers) for season, transfers in groupby(transfers, lambda x: x.season_join)}
+    print(transfers)
+    
+    return transfers
 
 
 def sort_teams(league: League):
