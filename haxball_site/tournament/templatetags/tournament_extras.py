@@ -180,7 +180,8 @@ def get_player_matches(player, team, season=None):
             player=player,
             team=team,
             match__is_played=True
-        ).count()
+        )
+        .count()
     )
 
 
