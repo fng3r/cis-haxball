@@ -2821,9 +2821,6 @@
   .tw\:h-\[96px\] {
     height: 96px;
   }
-  .tw\:h-\[250px\] {
-    height: 250px;
-  }
   .tw\:h-\[560px\] {
     height: 560px;
   }
@@ -2844,6 +2841,9 @@
   }
   .tw\:h-full {
     height: 100%;
+  }
+  .tw\:max-h-\[250px\] {
+    max-height: 250px;
   }
   .tw\:max-h-\[580px\] {
     max-height: 580px;
@@ -4184,7 +4184,7 @@
   }
   .tw\:avatar-offline {
     &:before {
-      background-color: var(--tw-color-gray-400) !important;
+      background-color: var(--tw-color-gray-300) !important;
     }
   }
   .tw\:btn-link-block {

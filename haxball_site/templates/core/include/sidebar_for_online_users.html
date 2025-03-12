@@ -1,10 +1,10 @@
 {% load static %}
 
 <div class="tw:card tw:border tw:border-gray-100 tw:rounded-lg tw:mb-2">
-    <div class="tw:card-title tw:rounded-t-lg tw:justify-center tw:p-2 tw:bg-card-header tw:text-card-header">
+    <div class="tw:card-title tw:rounded-t-lg tw:justify-center tw:p-2 tw:bg-card-header tw:text-card-header {% if users_online_count == 0 %}tw:rounded-b-lg{% endif %}">
         <span class="tw:mb-0">Сейчас онлайн: {{ users_online_count }}</span>
     </div>
-    <div class="tw:card-body tw:h-[250px] tw:overflow-auto tw:rounded-b-lg tw:p-0 tw:bg-base-100">
+    <div class="tw:card-body tw:max-h-[250px] tw:overflow-auto tw:rounded-b-lg tw:p-0 tw:bg-base-100">
         <div class="tw:flex tw:flex-col">
             {% for user in users_online %}
                 <a role="button" class="tw:btn-link-block tw:bg-card-button tw:text-card-button"
