@@ -2846,8 +2846,8 @@
   .tw\:h-3 {
     height: calc(var(--tw-spacing) * 3);
   }
-  .tw\:h-5 {
-    height: calc(var(--tw-spacing) * 5);
+  .tw\:h-6 {
+    height: calc(var(--tw-spacing) * 6);
   }
   .tw\:h-10 {
     height: calc(var(--tw-spacing) * 10);
@@ -2974,9 +2974,6 @@
   }
   .tw\:w-4\/9 {
     width: calc(4/9 * 100%);
-  }
-  .tw\:w-5 {
-    width: calc(var(--tw-spacing) * 5);
   }
   .tw\:w-5\! {
     width: calc(var(--tw-spacing) * 5) !important;
@@ -4097,16 +4094,6 @@
   .tw\:sm\:w-full {
     @media (width >= 40rem) {
       width: 100%;
-    }
-  }
-  .tw\:md\:hidden {
-    @media (width >= 48rem) {
-      display: none;
-    }
-  }
-  .tw\:md\:inline-flex {
-    @media (width >= 48rem) {
-      display: inline-flex;
     }
   }
   .tw\:md\:w-full {
