@@ -421,25 +421,27 @@ class MatchDetail(DetailView):
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
         
-        team_home_latest_matches = (
+        team_home_latest_matches = reversed(
             Match.objects.filter(
                 Q(team_home=match.team_home) | Q(team_guest=match.team_home),
                 ~Q(id=match.id),
+                Q(match_date__lte=match.match_date) if match.is_played else ~Q(pk__in=[]),  
                 league=match.league,
                 is_played=True
             )
             .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
-            .order_by('-match_date', '-numb_tour', '-id').reverse()[:5]
+            .order_by('-match_date', '-numb_tour', '-id')[:5]
         )
-        team_guest_latest_matches = (
+        team_guest_latest_matches = reversed(
             Match.objects.filter(
                 Q(team_home=match.team_guest) | Q(team_guest=match.team_guest),
                 ~Q(id=match.id),
+                Q(match_date__lte=match.match_date) if match.is_played else ~Q(pk__in=[]), 
                 league=match.league,
                 is_played=True
             )
             .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
-            .order_by('-match_date', '-numb_tour', '-id').reverse()[:5]
+            .order_by('-match_date', '-numb_tour', '-id')[:5]
         )
         
         context['latest_matches'] = {

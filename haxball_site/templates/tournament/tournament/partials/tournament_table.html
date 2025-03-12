@@ -82,7 +82,7 @@
                     </td>
                 {% endif %}
                 <td class="tw:p-1 tw:pr-2" width="18%">
-                    <div class="tw:flex tw:flex-wrap tw:justify-center tw:items-center tw:gap-1">
+                    <div class="tw:flex tw:justify-center tw:items-center tw:gap-1">
                         {% for result in team.9 %}
                             <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
                                  data-tip="{{ result.0.numb_tour|tour_name }}&#xa;{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}"
