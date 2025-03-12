@@ -1550,6 +1550,16 @@
   .tw\:relative {
     position: relative;
   }
+  .tw\:tooltip-left {
+    > .tw\:tooltip-content, &[data-tip]:before {
+      transform: translateX(calc(var(--tt-pos, 0.25rem) - 0.25rem)) translateY(-50%);
+      inset: 50% var(--tt-off) auto auto;
+    }
+    &:after {
+      transform: translateX(var(--tt-pos, 0.25rem)) translateY(-50%) rotate(-90deg);
+      inset: 50% calc(var(--tt-tail) + 1px) auto auto;
+    }
+  }
   .tw\:tooltip-top {
     > .tw\:tooltip-content, &[data-tip]:before {
       transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
@@ -2846,6 +2856,15 @@
   .tw\:h-3 {
     height: calc(var(--tw-spacing) * 3);
   }
+  .tw\:h-4\.5 {
+    height: calc(var(--tw-spacing) * 4.5);
+  }
+  .tw\:h-5 {
+    height: calc(var(--tw-spacing) * 5);
+  }
+  .tw\:h-5\.5 {
+    height: calc(var(--tw-spacing) * 5.5);
+  }
   .tw\:h-6 {
     height: calc(var(--tw-spacing) * 6);
   }
@@ -2972,11 +2991,20 @@
   .tw\:w-3\/10 {
     width: calc(3/10 * 100%);
   }
+  .tw\:w-4\.5 {
+    width: calc(var(--tw-spacing) * 4.5);
+  }
   .tw\:w-4\/9 {
     width: calc(4/9 * 100%);
   }
+  .tw\:w-5 {
+    width: calc(var(--tw-spacing) * 5);
+  }
   .tw\:w-5\! {
     width: calc(var(--tw-spacing) * 5) !important;
+  }
+  .tw\:w-5\.5 {
+    width: calc(var(--tw-spacing) * 5.5);
   }
   .tw\:w-5\/12 {
     width: calc(5/12 * 100%);
@@ -4106,6 +4134,18 @@
       flex: 1;
     }
   }
+  .tw\:lg\:tooltip-top {
+    @media (width >= 64rem) {
+      > .tw\:tooltip-content, &[data-tip]:before {
+        transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
+        inset: auto auto var(--tt-off) 50%;
+      }
+      &:after {
+        transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
+        inset: auto auto var(--tt-tail) 50%;
+      }
+    }
+  }
   .tw\:lg\:flex {
     @media (width >= 64rem) {
       display: flex;
@@ -4140,6 +4180,18 @@
     @media (width >= 64rem) {
       border-top-left-radius: 0.25rem;
       border-top-right-radius: 0.25rem;
+    }
+  }
+  .tw\:xl\:tooltip-top {
+    @media (width >= 80rem) {
+      > .tw\:tooltip-content, &[data-tip]:before {
+        transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
+        inset: auto auto var(--tt-off) 50%;
+      }
+      &:after {
+        transform: translateX(-50%) translateY(var(--tt-pos, 0.25rem));
+        inset: auto auto var(--tt-tail) 50%;
+      }
     }
   }
   .tw\:xl\:order-1 {
