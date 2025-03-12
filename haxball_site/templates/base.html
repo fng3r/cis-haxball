@@ -22,6 +22,7 @@
         <!-- /Yandex.Metrika counter -->
 
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{% block title %}{% endblock %}</title>
         <link rel="stylesheet" type="text/css" href="{% static "bootstrap/css/base.css" %}">
         <link rel="stylesheet" type="text/css" href="{% static "tailwind/css/output.css" %}">
@@ -58,135 +59,11 @@
         {% block scripts %} {% endblock %}
     </head>
 
-    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:min-h-screen tw:bg-fixed tw:pb-1!">
+    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:min-h-screen tw:pb-1! tw:bg-body">
+        <script type="text/javascript" src="{% static "scripts/themeController.js" %}"></script>
 
         {% include "core/include/navbar.html" %}
 
         {% block content %} {% endblock %}
-
-        <script>
-            function setTheme(theme) {
-                document.body.setAttribute('data-theme', theme);
-                const radio = document.querySelector(`input[name="theme-dropdown"][value="${theme}"]`);
-                if (radio) {
-                    radio.checked = true;
-                }
-
-                // Remove all background classes
-                const classes = document.body.className.split(' ');
-                const filteredClasses = classes.filter(cls =>
-                    !cls.startsWith('tw:bg-') &&
-                    !cls.startsWith('tw:from-') &&
-                    !cls.startsWith('tw:to-')
-                );
-                document.body.className = filteredClasses.join(' ');
-
-                console.log(theme);
-                // Add theme-specific background class
-                switch(theme) {
-                    case 'dark':
-                        document.body.classList.add('tw:bg-base-300/90');
-                        break;
-                    case 'bumblebee':
-                        document.body.classList.add('tw:bg-yellow-100');
-                        break;
-                    case 'emerald':
-                        document.body.classList.add('tw:bg-emerald-50');
-                        break;
-                    case 'corporate':
-                        document.body.classList.add('tw:bg-blue-50');
-                        break;
-                    case 'synthwave':
-                        document.body.classList.add('tw:bg-violet-950');
-                        break;
-                    case 'retro':
-                        document.body.classList.add('tw:bg-orange-50');
-                        break;
-                    case 'cyberpunk':
-                        document.body.classList.add('tw:bg-yellow-50');
-                        break;
-                    case 'valentine':
-                        document.body.classList.add('tw:bg-pink-300');
-                        break;
-                    case 'halloween':
-                        document.body.classList.add('tw:bg-neutral-800');
-                        break;
-                    case 'garden':
-                        document.body.classList.add('tw:bg-pink-50/50');
-                        break;
-                    case 'forest':
-                        document.body.classList.add('tw:bg-base-300/90');
-                        break;
-                    case 'aqua':
-                        document.body.classList.add('tw:bg-base-200/90');
-                        break;
-                    case 'lofi':
-                        document.body.classList.add('tw:bg-gray-200');
-                        break;
-                    case 'pastel':
-                        document.body.classList.add('tw:bg-pink-100');
-                        break;
-                    case 'fantasy':
-                        document.body.classList.add('tw:bg-purple-100/70');
-                        break;
-                    case 'black':
-                        document.body.classList.add('tw:bg-base-300/95');
-                        break;
-                    case 'luxury':
-                        document.body.classList.add('tw:bg-base-300/90');
-                        break;
-                    case 'dracula':
-                        document.body.classList.add('tw:bg-base-300/90');
-                        break;
-                    case 'autumn':
-                        document.body.classList.add('tw:bg-orange-50');
-                        break;
-                    case 'business':
-                        document.body.classList.add('tw:bg-base-300/90');
-                        break;
-                    case 'lemonade':
-                        document.body.classList.add('tw:bg-base-300/80');
-                        break;
-                    case 'acid':
-                        document.body.classList.add('tw:bg-pink-100');
-                        break;
-                    case 'night':
-                        document.body.classList.add('tw:bg-base-300/90');
-                        break;
-                    case 'coffee':
-                        document.body.classList.add('tw:bg-base-300/85');
-                        break;
-                    case 'winter':
-                        document.body.classList.add('tw:bg-blue-200/50');
-                        break;
-                    case 'dim':
-                        document.body.classList.add('tw:bg-gray-800/90');
-                        break;
-                    case 'nord':
-                        document.body.classList.add('tw:bg-blue-50');
-                        break;
-                    case 'sunset':
-                        document.body.classList.add('tw:bg-base-300/90');
-                        break;
-                    default:
-                        document.body.classList.add('tw:bg-gradient-to-r', 'tw:from-[#cfd9df]', 'tw:to-[#e2ebf0]');
-                }
-            }
-
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            setTheme(savedTheme);
-
-            // Add event listeners to theme radio buttons
-            document.addEventListener('DOMContentLoaded', function() {
-                const themeInputs = document.querySelectorAll('input[name="theme-dropdown"]');
-                themeInputs.forEach(input => {
-                    input.addEventListener('change', function(e) {
-                        const selectedTheme = e.target.value;
-                        localStorage.setItem('theme', selectedTheme);
-                        setTheme(selectedTheme);
-                    });
-                });
-            });
-        </script>
     </body>
 </html>

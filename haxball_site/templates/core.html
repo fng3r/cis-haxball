@@ -25,9 +25,8 @@
 
                 {% polls_list 2 user %}
 
-                {% cache 60 transfers_sidebar %}
-                    {% show_last_transfers %}
-                {% endcache %}
+                {% show_last_transfers %}
+
             </div>
             <div class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:lg:w-full tw:md:w-full tw:sm:w-full tw:mx-0 tw:px-1">
                 {% block match_results %}

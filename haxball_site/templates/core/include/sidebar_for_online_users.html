@@ -1,13 +1,13 @@
 {% load static %}
 
-<div class="tw:card tw:border tw:border-neutral-100 tw:rounded-lg tw:mb-2">
-    <div class="tw:card-title tw:rounded-t-lg tw:justify-center tw:p-2 tw:bg-gradient-to-r tw:from-primary/70 tw:to-primary/90 tw:text-primary-content">
+<div class="tw:card tw:border tw:border-gray-100 tw:rounded-lg tw:mb-2">
+    <div class="tw:card-title tw:rounded-t-lg tw:justify-center tw:p-2 tw:bg-card-header tw:text-card-header">
         <span class="tw:mb-0">Сейчас онлайн: {{ users_online_count }}</span>
     </div>
     <div class="tw:card-body tw:h-[250px] tw:overflow-auto tw:rounded-b-lg tw:p-0 tw:bg-base-100">
         <div class="tw:flex tw:flex-col">
             {% for user in users_online %}
-                <a role="button" class="tw:btn-link-block tw:bg-primary/40 tw:hover:bg-primary/60 tw:text-primary-content"
+                <a role="button" class="tw:btn-link-block tw:bg-card-button tw:text-card-button"
                    href="{{ user.user_profile.get_absolute_url }}">
                     <span class="tw:status tw:status-success tw:status-lg" aria-label="status"></span>
                     {{ user }}

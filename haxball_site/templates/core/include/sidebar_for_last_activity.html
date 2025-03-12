@@ -3,8 +3,8 @@
 
 {% cache 60 last_activity_cache %}
 
-    <div class="tw:card tw:rounded-t-lg tw:rounded-b-none tw:border tw:border-neutral-100">
-        <div class="tw:card-title tw:justify-center tw:p-2 tw:rounded-t-lg tw:bg-gradient-to-r tw:from-primary/70 tw:to-primary/90 tw:text-primary-content">
+    <div class="tw:card tw:rounded-lg tw:rounded-b-none tw:border tw:border-gray-100">
+        <div class="tw:card-title tw:justify-center tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
             <span class="tw:mb-0 tw:text-center">
                 <img src="{% static "img/ico/chat.png" %}" width="30" class="tw:align-top!" alt="New Comments">
                 Комментарии
@@ -14,7 +14,7 @@
         <div class="tw:w-full">
             {% for comment in last_comments %}
                 <a href="{{ comment.get_absolute_url }}" title="от {{ comment.author }}"
-                   class="tw:btn-link-block tw:p-2 tw:bg-primary/40 tw:hover:bg-primary/60 tw:text-primary-content">
+                   class="tw:btn-link-block tw:p-2 tw:bg-card-button tw:text-card-button">
                     <div class="tw:w-full tw:flex tw:justify-between tw:overflow-hidden">
                         <span class="tw:text-left tw:truncate tw:mr-2">{{ comment.content_object }}</span>
                         <img src="{% static "img/ico/reply.png" %}" height="30" width="30" alt="Reply">
