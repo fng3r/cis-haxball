@@ -48,16 +48,17 @@
 
                                             <div x-data="{showNicknamesHistory: false}">
                                                 <span class="tw:inline-block tw:mt-2 tw:mr-1">
-                                                    <h3 class="tw:font-semibold tw:mb-1.5!">{{ profile.name }}
+                                                    <h3 class="tw:font-semibold tw:mb-1.5! tw:gap-1">{{ profile.name }}
                                                         {% for icon in profile.user_icon.all %}
                                                             <img src="{{ icon.image.url }}" width="25px" height="25px"
                                                                  title="{{ icon.description }}"
                                                                  class="tw:mb-1">
                                                         {% endfor %}
                                                         {% if previous_nicknames.count > 0 %}
-                                                            <div @click="showNicknamesHistory = !showNicknamesHistory"
-                                                                 class="dropdown-toggle profile-triangle tw:-ml-1 tw:cursor-pointer">
-                                                            </div>
+                                                            <span @click="showNicknamesHistory = !showNicknamesHistory"
+                                                                  :style="showNicknamesHistory ? 'transform: rotate(180deg);' : ''"
+                                                                  class="dropdown-toggle profile-triangle tw:cursor-pointer">
+                                                            </span>
                                                         {% endif %}
                                                     </h3>
                                                 </span>
@@ -68,7 +69,7 @@
                                                          class="tw:relative tw:top-0 tw:left-0">
                                                         <div class="nicknames-history">
                                                             {% for nickname in previous_nicknames %}
-                                                                <div class="tw:py-1 tw:border-[#7b7b7b] {% if not forloop.last %}tw:border-b{% endif %}">
+                                                                <div class="tw:text-white tw:py-1 tw:border-[#7b7b7b] {% if not forloop.last %}tw:border-b{% endif %}">
                                                                     {{nickname.nickname}}
                                                                 </div>
                                                             {% endfor %}
@@ -99,16 +100,16 @@
 
                                             <div class="tw:mb-3">
                                                 <div class="tw:flex">
-                                                    <div class="tw:w-1/3 tw:text-center">
-                                                        <p class="m-b-10 tw:font-semibold"><i class="fa fa-comment-o tw:text-2xl!" aria-hidden="true"></i></p>
+                                                    <div class="tw:w-1/3 tw:flex tw:flex-col tw:items-center tw:gap-1">
+                                                        <span class="tw:font-semibold"><i class="fa fa-comment-o tw:text-2xl!" aria-hidden="true"></i></span>
                                                         <h6 class="tw:text-base-content/80 tw:text-normal">{{ profile.name.comments_by_user.count }}</h6>
                                                     </div>
-                                                    <div class="tw:w-1/3 tw:text-center">
-                                                        <p class="m-b-10 tw:font-semibold"><i class="fa fa-thumbs-o-up tw:text-2xl!" aria-hidden="true"></i></p>
+                                                    <div class="tw:w-1/3 tw:flex tw:flex-col tw:items-center tw:gap-1">
+                                                        <span class="tw:font-semibold"><i class="fa fa-thumbs-o-up tw:text-2xl!" aria-hidden="true"></i></span>
                                                         <h6 class="tw:text-base-content/80 tw:text-normal">{{ profile.name.likedislike_set.likes.count }}</h6>
                                                     </div>
-                                                    <div class="tw:w-1/3 tw:text-center">
-                                                        <p class="m-b-10 tw:font-semibold"><i class="fa fa-thumbs-o-down tw:text-2xl!" aria-hidden="true"></i></p>
+                                                    <div class="tw:w-1/3 tw:flex tw:flex-col tw:items-center tw:gap-1">
+                                                        <span class="tw:font-semibold"><i class="fa fa-thumbs-o-down tw:text-2xl!" aria-hidden="true"></i></span>
                                                         <h6 class="tw:text-base-content/80 tw:text-normal">{{ profile.name.likedislike_set.dislikes.count }}</h6>
                                                     </div>
                                                 </div>

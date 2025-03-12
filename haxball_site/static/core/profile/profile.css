@@ -28,15 +28,6 @@ h6 {
         font-size: 16px
     }
 }
-
-.b-b-default {
-    border-bottom: 1px solid #e0e0e0
-}
-
-.m-t-20 {
-    margin-top: 20px
-}
-
 .m-b-10 {
     margin-bottom: 10px
 }
@@ -116,7 +107,7 @@ h6 {
     left: 50%;
     width: 40%;
     background: #000000;
-    opacity: 0.8;
+    opacity: 0.87;
     border-radius: 6px;
     box-shadow: 0px 0px 10px #000000;
     transition: 0.6s;
@@ -129,4 +120,8 @@ h6 {
     transform: rotate(0deg);
     transform-origin: center;
     transition: 0.5s;
+}
+
+.profile-triangle.dropdown-toggle::after {
+    margin-left: 0;
 }
