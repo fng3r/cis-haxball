@@ -70,15 +70,15 @@
                         <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="60%">
 
                         <div class="tw:flex tw:justify-center tw:gap-2">
-                            {% for match in latest_matches.team_home %}
+                            {% for previous_match in latest_matches.team_home %}
                                 <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
-                                     data-tip="{{ match.numb_tour|tour_name }}&#xa;{{ match.team_home.title }} {{ match.score_home }} : {{ match.score_guest }} {{ match.team_guest.title }}"
+                                     data-tip="{{ previous_match.numb_tour|tour_name }}&#xa;{{ previous_match.team_home.title }} {{ previous_match.score_home }} : {{ previous_match.score_guest }} {{ previous_match.team_guest.title }}"
                                 >
-                                    <a href="{{ match.get_absolute_url }}"
+                                    <a href="{{ previous_match.get_absolute_url }}"
                                        class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content
-                                              {% if match.is_draw %}tw:bg-gray-400{% elif match.winner == match.team_home %}tw:bg-success{% else %}tw:bg-error{% endif %}"
+                                              {% if previous_match.is_draw %}tw:bg-gray-400{% elif previous_match.winner == match.team_home %}tw:bg-success{% else %}tw:bg-error{% endif %}"
                                     >
-                                        {% if match.is_draw %}Н{% elif match.winner == match.team_home %}В{% else %}П{% endif %}
+                                        {% if previous_match.is_draw %}Н{% elif previous_match.winner == match.team_home %}В{% else %}П{% endif %}
                                     </a>
                                 </div>
                             {% endfor %}
@@ -110,15 +110,15 @@
                         <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="60%">
 
                         <div class="tw:flex tw:justify-center tw:gap-2">
-                            {% for match in latest_matches.team_guest %}
+                            {% for previous_match in latest_matches.team_guest %}
                                 <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
-                                     data-tip="{{ match.numb_tour|tour_name }}&#xa;{{ match.team_home.title }} {{ match.score_home }} : {{ match.score_guest }} {{ match.team_guest.title }}"
+                                     data-tip="{{ previous_match.numb_tour|tour_name }}&#xa;{{ previous_match.team_home.title }} {{ previous_match.score_home }} : {{ previous_match.score_guest }} {{ previous_match.team_guest.title }}"
                                 >
-                                    <a href="{{ match.get_absolute_url }}"
+                                    <a href="{{ previous_match.get_absolute_url }}"
                                        class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content
-                                              {% if match.is_draw %}tw:bg-gray-400{% elif match.winner == match.team_guest %}tw:bg-success{% else %}tw:bg-error{% endif %}"
+                                              {% if previous_match.is_draw %}tw:bg-gray-400{% elif previous_match.winner == match.team_guest %}tw:bg-success{% else %}tw:bg-error{% endif %}"
                                     >
-                                        {% if match.is_draw %}Н{% elif match.winner == match.team_guest %}В{% else %}П{% endif %}
+                                        {% if previous_match.is_draw %}Н{% elif previous_match.winner == match.team_guest %}В{% else %}П{% endif %}
                                     </a>
                                 </div>
                             {% endfor %}
