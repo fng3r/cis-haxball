@@ -3325,6 +3325,14 @@
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 1px;
   }
+  .tw\:border-none {
+    --tw-border-style: none;
+    border-style: none;
+  }
+  .tw\:border-none\! {
+    --tw-border-style: none;
+    border-style: none !important;
+  }
   .tw\:alert-info {
     border-color: var(--color-info);
     color: var(--color-info-content);
@@ -3443,6 +3451,9 @@
   }
   .tw\:bg-error {
     background-color: var(--color-error);
+  }
+  .tw\:bg-gray-400 {
+    background-color: var(--tw-color-gray-400);
   }
   .tw\:bg-green-500 {
     background-color: var(--tw-color-green-500);
@@ -3734,6 +3745,11 @@
     font-size: 0.75rem;
     --btn-p: 0.75rem;
     --size: calc(var(--size-field, 0.25rem) * 8);
+  }
+  .tw\:btn-xs {
+    font-size: 0.6875rem;
+    --btn-p: 0.5rem;
+    --size: calc(var(--size-field, 0.25rem) * 6);
   }
   .tw\:select-sm {
     --size: calc(var(--size-field, 0.25rem) * 8);
@@ -4041,6 +4057,38 @@
   .tw\:not-last\:border-neutral-200 {
     &:not(*:last-child) {
       border-color: var(--tw-color-neutral-200);
+    }
+  }
+  .tw\:before\:whitespace-pre {
+    &::before {
+      content: var(--tw-content);
+      white-space: pre;
+    }
+  }
+  .tw\:before\:whitespace-pre\! {
+    &::before {
+      content: var(--tw-content);
+      white-space: pre !important;
+    }
+  }
+  .tw\:before\:content-\[\'asdasd\'\] {
+    &::before {
+      content: var(--tw-content);
+      --tw-content: 'asdasd';
+      content: var(--tw-content);
+    }
+  }
+  .tw\:before\:content-\[\'asdasd\'\]\! {
+    &::before {
+      content: var(--tw-content);
+      --tw-content: 'asdasd';
+      content: var(--tw-content) !important;
+    }
+  }
+  .tw\:after\:whitespace-pre {
+    &::after {
+      content: var(--tw-content);
+      white-space: pre;
     }
   }
   .tw\:checked\:bg-transparent\! {
@@ -7045,6 +7093,11 @@ video {
   syntax: "*";
   inherits: false;
   initial-value: 0 0 #0000;
+}
+@property --tw-content {
+  syntax: "*";
+  initial-value: "";
+  inherits: false;
 }
 @property --tw-scale-x {
   syntax: "*";

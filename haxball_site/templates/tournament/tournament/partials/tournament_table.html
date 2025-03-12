@@ -82,11 +82,14 @@
                     </td>
                 {% endif %}
                 <td class="tw:p-1" width="13%">{% for result in team.9 %}
-                    <div class="tw:tooltip tw:tooltip-top"
-                         data-tip="{{ result.0.numb_tour|tour_name }}. {{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}"
+                    <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
+                         data-tip="{{ result.0.numb_tour|tour_name }}&#xa;{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}"
                     >
                         <a href="{{ result.0.get_absolute_url }}"
-                           class="fa fa-circle tw:hover:text-lg/2! {% if result.1 == 1 %}tw:text-success{% elif result.1 == -1 %}tw:text-error{% elif result.1 == 0 %}tw:text-gray-400 {% endif %}">
+                           class="tw:btn tw:btn-square tw:btn-xs tw:border-none!
+                                  {% if result.1 == 1 %}tw:bg-success{% elif result.1 == -1 %}tw:bg-error{% elif result.1 == 0 %}tw:bg-gray-400 {% endif %}"
+                        >
+                            {% if result.1 == 1 %}В{% elif result.1 == -1 %}П{% elif result.1 == 0 %}Н{% endif %}
                         </a>
                     </div>
 

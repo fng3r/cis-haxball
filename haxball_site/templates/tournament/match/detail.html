@@ -63,9 +63,27 @@
         </div>
 
         <div class="tw:card-body tw:px-0 tw:pt-4 tw:py-0 tw:text-center">
-            <div class="tw:flex">
+            <div class="tw:flex tw:mb-1">
                 <div class="tw:w-5/12">
-                    <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="60%">
+
+                    <div class="tw:flex tw:flex-col tw:items-center tw:gap-3">
+                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="60%">
+
+                        <div class="tw:flex tw:justify-center tw:gap-2">
+                            {% for match in latest_matches.team_home %}
+                                <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
+                                     data-tip="{{ match.numb_tour|tour_name }}&#xa;{{ match.team_home.title }} {{ match.score_home }} : {{ match.score_guest }} {{ match.team_guest.title }}"
+                                >
+                                    <a href="{{ match.get_absolute_url }}"
+                                       class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content
+                                              {% if match.is_draw %}tw:bg-gray-400{% elif match.winner == match.team_home %}tw:bg-success{% else %}tw:bg-error{% endif %}"
+                                    >
+                                        {% if match.is_draw %}Н{% elif match.winner == match.team_home %}В{% else %}П{% endif %}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="tw:w-2/12 tw:flex tw:justify-center tw:items-center">
@@ -88,7 +106,24 @@
                 </div>
 
                 <div class="tw:w-5/12">
-                    <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="60%">
+                    <div class="tw:flex tw:flex-col tw:items-center tw:gap-3">
+                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="60%">
+
+                        <div class="tw:flex tw:justify-center tw:gap-2">
+                            {% for match in latest_matches.team_guest %}
+                                <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
+                                     data-tip="{{ match.numb_tour|tour_name }}&#xa;{{ match.team_home.title }} {{ match.score_home }} : {{ match.score_guest }} {{ match.team_guest.title }}"
+                                >
+                                    <a href="{{ match.get_absolute_url }}"
+                                       class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content
+                                              {% if match.is_draw %}tw:bg-gray-400{% elif match.winner == match.team_guest %}tw:bg-success{% else %}tw:bg-error{% endif %}"
+                                    >
+                                        {% if match.is_draw %}Н{% elif match.winner == match.team_guest %}В{% else %}П{% endif %}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -204,52 +239,58 @@
                            checked
                     />
                     <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
-                        <div id="match-recap" role="tabpanel" aria-labelledby="match-recap-tab">
-                            <h5>Cоставы</h5>
-                            <div class="tw:flex tw:w-full">
-                                <div class="tw:w-5/12 tw:flex tw:flex-col tw:items-center tw:pl-4">
-                                    {% include "tournament/partials/players_stats_summary.html" with players=match.team_home_start.all subs=team_home_substitutes %}
-                                </div>
+                        <div id="match-recap" role="tabpanel" aria-labelledby="match-recap-tab" class="tw:flex tw:flex-col tw:gap-3">
+                            <div>
+                                <h5>Cоставы</h5>
+                                <div class="tw:flex tw:w-full">
+                                    <div class="tw:w-5/12 tw:flex tw:flex-col tw:items-center tw:pl-4">
+                                        {% include "tournament/partials/players_stats_summary.html" with players=match.team_home_start.all subs=team_home_substitutes %}
+                                    </div>
 
-                                <div class="tw:w-2/12"></div>
+                                    <div class="tw:w-2/12"></div>
 
-                                <div class="tw:w-5/12 tw:flex tw:flex-col tw:items-center tw:pr-4">
-                                    {% include "tournament/partials/players_stats_summary.html" with players=match.team_guest_start.all subs=team_guest_substitutes %}
+                                    <div class="tw:w-5/12 tw:flex tw:flex-col tw:items-center tw:pr-4">
+                                        {% include "tournament/partials/players_stats_summary.html" with players=match.team_guest_start.all subs=team_guest_substitutes %}
+                                    </div>
                                 </div>
                             </div>
 
-                            {% comment %}
-                                Показывать секцию с карточками и дисквалификациями только после 11 сезона,
-                                ранее информация о них содержалась в комментариях инспекторов под матчами 
-                            {% endcomment %}
-                            {% if match.league.championship.number > 14 %}
-                                <h5>Нарушения</h5>
-                                <div class="tw:px-6 tw:text-base">
-                                    {% if cards|length > 0 %}
+                            <div>
+                                {% comment %}
+                                    Показывать секцию с карточками и дисквалификациями только после 11 сезона,
+                                    ранее информация о них содержалась в комментариях инспекторов под матчами 
+                                {% endcomment %}
+                                {% if match.league.championship.number > 14 %}
+                                    <h5>Нарушения</h5>
+                                    <div class="tw:px-6 tw:text-base">
+                                        {% if cards|length > 0 %}
+                                            <ul class="tw:text-left">
+                                                {% for card in cards %}
+                                                    <li>
+                                                        {{ card.author }} ({{ card.team }}) - <b>{{ card|card_name }}</b> {{ card.card_reason }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="tw:text-base">Нарушений не зафиксировано</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            {% if match.disqualifications.count > 0 %}
+                                <div>
+                                    <h5>Дисквалификации</h5>
+                                    <div class="tw:px-6 tw:text-base">
                                         <ul class="tw:text-left">
-                                            {% for card in cards %}
+                                            {% for disqualification in match.disqualifications.all %}
                                                 <li>
-                                                    {{ card.author }} ({{ card.team }}) - <b>{{ card|card_name }}</b> {{ card.card_reason }}
+                                                    {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
+                                                    Причина: {{ disqualification.reason }}
                                                 </li>
                                             {% endfor %}
                                         </ul>
-                                    {% else %}
-                                        <span class="tw:text-base">Нарушений не зафиксировано</span>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-
-                            {% if match.disqualifications.count > 0 %}
-                                <h5>Дисквалификации</h5>
-                                <div class="tw:px-6 tw:text-base">
-                                    <ul class="tw:text-left">
-                                        {% for disqualification in match.disqualifications.all %}
-                                            <li>
-                                                {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
-                                                Причина: {{ disqualification.reason }}
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>
