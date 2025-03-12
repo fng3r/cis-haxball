@@ -50,20 +50,6 @@
     }
 }
 
-.label {
-    padding: 3px 10px;
-    line-height: 13px;
-    color: #ffffff;
-    font-weight: 400;
-    border-radius: 4px;
-    font-size: 75%
-}
-
-.action-icons a {
-    vertical-align: middle;
-    color: #99abb4
-}
-
 .comment-edit {
     margin-left: 3px;
     font-size: 13px;

@@ -2380,8 +2380,14 @@
   .tw\:mt-0\! {
     margin-top: calc(var(--tw-spacing) * 0) !important;
   }
+  .tw\:mt-0\.5 {
+    margin-top: calc(var(--tw-spacing) * 0.5);
+  }
   .tw\:mt-1 {
     margin-top: calc(var(--tw-spacing) * 1);
+  }
+  .tw\:mt-1\.5 {
+    margin-top: calc(var(--tw-spacing) * 1.5);
   }
   .tw\:mt-2 {
     margin-top: calc(var(--tw-spacing) * 2);
