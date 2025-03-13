@@ -410,7 +410,7 @@ class MatchDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        match = context['match']
+        match: Match = context['match']
 
         page = self.request.GET.get('page')
         comments_obj = get_comments_for_object(Match, match.id)
@@ -421,32 +421,9 @@ class MatchDetail(DetailView):
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
         
-        team_home_latest_matches = reversed(
-            Match.objects.filter(
-                Q(team_home=match.team_home) | Q(team_guest=match.team_home),
-                ~Q(id=match.id),
-                Q(match_date__lte=match.match_date) if match.is_played else ~Q(pk__in=[]),  
-                league=match.league,
-                is_played=True
-            )
-            .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
-            .order_by('-match_date', '-numb_tour', '-id')[:5]
-        )
-        team_guest_latest_matches = reversed(
-            Match.objects.filter(
-                Q(team_home=match.team_guest) | Q(team_guest=match.team_guest),
-                ~Q(id=match.id),
-                Q(match_date__lte=match.match_date) if match.is_played else ~Q(pk__in=[]), 
-                league=match.league,
-                is_played=True
-            )
-            .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
-            .order_by('-match_date', '-numb_tour', '-id')[:5]
-        )
-        
         context['latest_matches'] = {
-            'team_home': team_home_latest_matches,
-            'team_guest': team_guest_latest_matches,
+            'team_home': self.get_latest_matches(match, match.team_home),
+            'team_guest': self.get_latest_matches(match, match.team_guest),
         }
 
         all_matches_between = Match.objects.filter(
@@ -568,7 +545,28 @@ class MatchDetail(DetailView):
         context['score_guest_all'] = score_guest_all
         context['score_home_average'] = round(score_home_all / all_matches_between.count(), 2)
         context['score_guest_average'] = round(score_guest_all / all_matches_between.count(), 2)
+        
         return context
+    
+    def get_latest_matches(self, match, team):
+        match_date_condition = ~Q(pk__in=[])
+        if match.is_played:
+            match_date_condition = (
+                Q(match_date__lt=match.match_date) |
+                Q(match_date=match.match_date, stage__order__lte=match.stage.order, numb_tour__lt=match.numb_tour)
+            )
+            
+        return reversed(
+            Match.objects.filter(
+                Q(team_home=team) | Q(team_guest=team),
+                ~Q(id=match.id),
+                match_date_condition,  
+                league=match.league,
+                is_played=True
+            )
+            .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
+            .order_by('-match_date', '-numb_tour', '-id')[:5]
+        )
 
 
 class PostponementFilter(FilterSet):
