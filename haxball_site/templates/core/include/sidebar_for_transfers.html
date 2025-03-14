@@ -14,7 +14,7 @@
                     <div class="tw:avatar tw:mr-4">
                         <div class="tw:w-[50px] tw:h-[50px] tw:rounded-full">
                             <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
-                                {% thumbnail transfer.trans_player.name.user_profile.avatar "100x100" crop="center" as avatar %}
+                                {% thumbnail transfer.trans_player.name.user_profile.avatar "50x50" crop="center" as avatar %}
                                     <img src="{{ avatar.url }}" alt="{{ transfer.trans_player.nickname }}" title="{{ transfer.trans_player }}">
                                 {% endthumbnail %}
                             </a>
