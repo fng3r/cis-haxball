@@ -6,7 +6,8 @@ from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Count, Exists, OuterRef, Prefetch, Q
+from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, Subquery, Window
+from django.db.models.functions import Coalesce, Rank
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -16,7 +17,6 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
 
-from .services.hall_of_fame import HallOfFameService
 from .charts import StatCharts
 from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm
 from .models import (
@@ -38,6 +38,7 @@ from .models import (
     Team,
     TeamRating,
 )
+from .services.hall_of_fame import HallOfFameService
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
 
 
@@ -813,7 +814,7 @@ def players_top_by_stat(request):
     
     return render(
         request,
-        f'tournament/hall_of_fame/partials/players_top.html#players_top_list',
+        'tournament/hall_of_fame/partials/players_top.html#players_top_list',
         {
             'players': players,
             'stat': stat,
