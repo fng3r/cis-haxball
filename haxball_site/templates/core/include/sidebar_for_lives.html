@@ -24,7 +24,7 @@
                             {% endif %}
                         </div>
                         <div class="tw:px-1 tw:flex tw:justify-start tw:items-center">
-                            <span>{{ stream.title|truncatechars:50 }}</span>
+                            <span title="{{ stream.title }}" class="tw:line-clamp-3">{{ stream.title }}</span>
                         </div>
                     </a>
                     {% if not stream.is_live %}
