@@ -406,3 +406,6 @@ MESSAGE_TAGS = {
     messages.WARNING: "alert-warning",
     messages.ERROR: "alert-danger",
 }
+
+YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
+YOUTUBE_CHANNEL_ID = config('YOUTUBE_CHANNEL_ID', default='UCQV_rveyeAE7e2M8C-osaGQ')
