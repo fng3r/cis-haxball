@@ -3832,9 +3832,6 @@
   .tw\:text-base-content\/40 {
     color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
   }
-  .tw\:text-base-content\/60 {
-    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
-  }
   .tw\:text-base-content\/70 {
     color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
   }
@@ -4157,11 +4154,6 @@
   .tw\:lg\:w-1\/4 {
     @media (width >= 64rem) {
       width: calc(1/4 * 100%);
-    }
-  }
-  .tw\:lg\:w-auto {
-    @media (width >= 64rem) {
-      width: auto;
     }
   }
   .tw\:lg\:w-full {
