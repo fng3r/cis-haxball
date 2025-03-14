@@ -1,13 +1,13 @@
 {% load static %}
 {% load tournament_extras %}
 
-<table class="table table-borderless">
+<table class="tw:table tw:**:[tr]:border-0!">
     {% if stage and show_stages %}
         <thead>
             <tr>
                 <th scope="colgroup" colspan="5"
                     class="{% if forloop.first %}pb-0{% else %}py-0{% endif %}">
-                    <h5 class="text-center mt-1">{{ stage.stage_name }}</h5>
+                    <h5 class="tw:text-center tw:mt-1 tw:text-base-content/90">{{ stage.stage_name }}</h5>
                 </th>
             </tr>
         </thead>
@@ -16,55 +16,60 @@
     <tbody>
         {% for match in matches %}
             <tr>
-                <td class="text-center h6 p0" style="width: 10%;">
-                    <div class="d-flex flex-row justify-content-center align-items-center">
+                <td class="tw:text-center tw:p-0 tw:text-base" style="width: 10%;">
+                    <div class="tw:flex tw:justify-center tw:items-center">
                         {% if stage.is_playoff %}
                             {% if stage.is_double_elimination %}
                                 <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
                                      title="{{ match.numb_tour.get_bracket_display }}"
-                                     width="28" class="mr-1">
+                                     width="28" class="tw:mr-1">
                             {% endif %}
                             <span>
                                 {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
                                     {% with tours_count=tours_by_bracket|length %}
-                                        {{ match.numb_tour|round_name:tours_count }}
+                                        <span class="tw:font-semibold">{{ match.numb_tour|round_name:tours_count }}</span>
                                     {% endwith %}
                                 {% endwith %}
                             </span>
                         {% else %}
-                            {{ match.numb_tour|tour_name }}
+                            <span class="tw:font-semibold">{{ match.numb_tour|tour_name }}</span>
                         {% endif %}
                     </div>
                 </td>
-                <td class="text-right" style="width: 35%;">
-                    {% if team == match.team_home %}
-                        <span class="text-dark font-weight-bold h6">{{ match.team_home.title }}</span>
-                    {% else %}
-                        <a class="text-dark"
-                           href="{{ match.team_home.get_absolute_url }}">
-                            {{ match.team_home.title }}</a>
-                    {% endif %}
+                <td style="width: 35%;">
+                    <div class="tw:flex tw:items-center tw:justify-end tw:gap-1">
+                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="25">
+                        {% if team == match.team_home %}
+                            <span class="tw:text-base-content tw:font-bold tw:text-base">{{ match.team_home.title }}</span>
+                        {% else %}
+                            <a class="tw:link tw:link-hover tw:text-base"
+                               href="{{ match.team_home.get_absolute_url }}"
+                            >{{ match.team_home.title }}</a>
+                        {% endif %}
+                    </div>
                 </td>
-                <td class="text-center" style="width: 10%;">
+                <td class="tw:text-center" style="width: 10%;">
                     {% if not match.is_played %}
-
                         <a href="{{ match.get_absolute_url }}"><span
-                            class="h6">vs</span>
+                            class="tw:link tw:link-hover tw:link-primary tw:text-base tw:font-semibold">vs</span>
                         </a>
                     {% else %}
                         <a href="{{ match.get_absolute_url }}"
-                           class="h6">{{ match.score_home }}
+                           class="tw:link tw:link-hover tw:link-primary tw:text-base tw:font-semibold">{{ match.score_home }}
                             : {{ match.score_guest }}</a>
                     {% endif %}
                 </td>
-                <td class="text-left" style="width: 35%;">
-                    {% if team == match.team_guest %}
-                        <span class="text-dark font-weight-bold h6">{{ match.team_guest.title }}</span>
-                    {% else %}
-                        <a class="text-dark"
-                           href="{{ match.team_guest.get_absolute_url }}"
-                           class="h6">{{ match.team_guest.title }}</a>
-                    {% endif %}
+                <td style="width: 35%;">
+                    <div class="tw:flex tw:items-center tw:justify-start tw:gap-1">
+                        {% if team == match.team_guest %}
+                            <span class="tw:text-base-content tw:font-bold tw:text-base">{{ match.team_guest.title }}</span>
+                        {% else %}
+                            <a class="tw:link tw:link-hover tw:text-base"
+                               href="{{ match.team_guest.get_absolute_url }}"
+                            >{{ match.team_guest.title }}</a>
+                        {% endif %}
+                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="25">
+                    </div>
                 </td>
                 <td style="width: 10%;">
 

@@ -1,0 +1,37 @@
+{% load static %}
+{% load widget_tweaks %}
+
+{% if user.is_authenticated %}
+    <div id="team-form-container" class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
+        <div class="tw:w-full tw:flex tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:pl-4 tw:border-b tw:border-b-neutral-300">
+            <h5>Изменить команду {{ team.title }}</h5>
+        </div>
+        <div class="tw:card-body tw:p-4 tw:rounded-b-lg">
+            {{ form.media }}
+            <form method="POST" class="tw:flex tw:flex-col tw:gap-3"
+                  hx-post="{% url 'tournament:edit_team' team.slug %}"
+                  hx-trigger="submit"
+                  hx-target="#team-form-container"
+                  hx-swap="outerHTML"
+                  hx-push-url="true"
+                  hx-disabled-elt="find button">
+
+                <div class="tw:flex tw:flex-col tw:justify-center tw:w-full">
+                    <label class="tw:label tw:text-base-content tw:font-bold">{{ form.color_1.label }}</label>
+                    {% render_field form.color_1 %}
+                </div>
+
+                <div class="tw:flex tw:flex-col tw:justify-center tw:w-full">
+                    <label class="tw:label tw:text-base-content tw:font-bold">{{ form.color_2.label }}</label>
+                    {% render_field form.color_2|add_class:'tw:w-full tw:input tw:input-bordered' %}
+                </div>
+
+                <div class="tw:flex tw:mt-auto tw:gap-2 tw:justify-end">
+                    <img class="htmx-indicator tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+                    <button class="tw:btn tw:btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endif %}

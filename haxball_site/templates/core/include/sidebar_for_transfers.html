@@ -1,60 +1,64 @@
+{% load cache %}
 {% load static %}
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/include/sidebar_for_transfers.css" %}">
-{% endblock %}
+{% load thumbnail %}
 
-<div class="card" style="border-radius: 20px 20px 0 0;">
-    <div class="card-header d-inline-flex mb-0 justify-content-center bg-for-online-head" style="border-radius: 20px 20px 0px 0;">
-        <h6 class="mb-0" style="font-size: 1rem">Последние трансферы</h6>
-    </div>
+{% cache 60 transfers_sidebar %}
+    <div class="tw:card tw:border tw:border-gray-100 tw:rounded-t-lg tw:rounded-b-none tw:mb-2">
+        <div class="tw:card-title tw:justify-center tw:rounded-t-lg tw:border-b tw:border-gray-100 tw:p-2 tw:bg-card-header tw:text-card-header">
+            <span class="tw:mb-0 tw:text-lg tw:text-center">Последние трансферы</span>
+        </div>
 
-    <div class="transfers btn-group-vertical w-100">
-        {% for transfer in transfers %}
+        <div class="tw:flex tw:flex-col tw:w-full tw:mb-0! tw:bg-base-100">
+            {% for transfer in transfers %}
+                <div class="tw:px-2 tw:flex tw:flex-wrap tw:justify-center tw:items-center tw:py-2 tw:not-last:border-b tw:not-last:border-gray-300">
+                    <div class="tw:avatar tw:mr-4">
+                        <div class="tw:w-[50px] tw:h-[50px] tw:rounded-full">
+                            <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
+                                {% thumbnail transfer.trans_player.name.user_profile.avatar "100x100" crop="center" as avatar %}
+                                    <img src="{{ avatar.url }}" alt="{{ transfer.trans_player.nickname }}" title="{{ transfer.trans_player }}">
+                                {% endthumbnail %}
+                            </a>
+                        </div>
+                    </div>
 
-            <div class="transfer w-100 py-1 d-flex justify-content-center align-items-center">
-                <div class="transfer-player d-flex justify-content-center">
-                    <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
-                        <img src="{{ transfer.trans_player.name.user_profile.avatar.url }}" class="align-self-start mr-1"
-                             alt="{{ transfer.trans_player.nickname }}" width="50" height="50" title="{{ transfer.trans_player }}"
-                             style="border-radius: 100%; background-position: center center; background-repeat: no-repeat;">
-                    </a>
+                    <div class="tw:flex tw:justify-center tw:items-center">
+                        <div class="tw:avatar tw:mr-2">
+                            <div class="tw:w-[55px]">
+                                {% if transfer.from_team %}
+                                    <a href="{{ transfer.from_team.get_absolute_url }}">
+                                        <img src="{{ transfer.from_team.logo.url }}" class="tw:rounded-lg"
+                                             alt="{{ transfer.from_team.title }}" title="{{ transfer.from_team.title }}">
+                                    </a>
+                                {% else %}
+                                    <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2"
+                                         alt="СА" width="55" title="Свободный агент">
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <i class="fa fa-long-arrow-right"></i>
+
+                        <div class="tw:avatar tw:ml-2">
+                            <div class="tw:w-[55px]">
+                                {% if transfer.to_team %}
+                                    <a href="{{ transfer.to_team.get_absolute_url }}">
+                                        <img src="{{ transfer.to_team.logo.url }}" class="tw:rounded-lg"
+                                             alt="{{ transfer.to_team.title }}" title="{{ transfer.to_team.title }}">
+                                    </a>
+                                {% else %}
+                                    <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2"
+                                         alt="СА" width="55" title="Свободный агент">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="transfer-teams">
-                    {% if transfer.from_team %}
-                        <a href="{{ transfer.from_team.get_absolute_url }}">
-                            <img src="{{ transfer.from_team.logo.url }}" class="align-self-start mr-1"
-                                 alt="{{ transfer.from_team.title }}" width="55"
-                                 title="{{ transfer.from_team.title }}">
-                        </a>
-                    {% else %}
-                        <img src="{% static 'img/ico/free.png' %}" class="align-self-start mr-1"
-                             alt="СА" width="55"
-                             title="Свободный агент">
-                    {% endif %}
+            {% endfor %}
+        </div>
 
-                    <i class="fa fa-long-arrow-right"></i>
-
-                    {% if transfer.to_team %}
-                        <a href="{{ transfer.to_team.get_absolute_url }}">
-                            <img src="{{ transfer.to_team.logo.url }}" class="align-self-start ml-1 my-1"
-                                 alt="{{ transfer.to_team.title }}" width="55"
-                                 title="{{ transfer.to_team.title }}">
-                        </a>
-                    {% else %}
-                        <img src="{% static 'img/ico/free.png' %}" class="align-self-start ml-1 my-1"
-                             alt="СА" width="55"
-                             title="Свободный агент">
-                    {% endif %}
-                </div>
-
-            </div>
-        {% endfor %}
-    </div>
-
-    <div class="p-0">
-        <a type="button" class="transfers-button btn btn-block text-center" style="background: cornflowerblue;"
+        <a class="tw:btn-link-block tw:justify-center tw:font-medium tw:bg-transfers-button tw:hover:bg-transfers-button-hover tw:text-transfers-button"
            href="{% url 'tournament:transfers' %}">
             Все трансферы
         </a>
     </div>
-</div>
+{% endcache %}

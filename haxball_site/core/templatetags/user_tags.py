@@ -66,11 +66,16 @@ def exceeds_edit_limit(comment: NewComment):
 def user_last_activity(user):
     try:
         user_activity = OnlineUserActivity.objects.get(user=user)
-        is_online = timezone.now() - user_activity.last_activity < timezone.timedelta(minutes=15)
+        is_online = timezone.now() - user_activity.last_activity < timezone.timedelta(minutes=5)
     except:
         return None
 
     return {'last_seen': user_activity.last_activity, 'is_online': is_online}
+
+
+@register.filter
+def is_online(user, users_online):
+    return user in users_online
 
 
 # Тег для отображения последней активности на форуме
@@ -96,18 +101,6 @@ def forum_last_activity(category):
         return {'last_act': last_comment.created}
 
     return {'last_act': last_post.created}
-
-
-# Сайдбар для пользователей онлайн(по дефолту 15 минут)
-@register.inclusion_tag('core/include/sidebar_for_users.html')
-def show_users_online():
-    user_activity_objects = OnlineUserActivity.get_user_activities(
-        time_delta=timezone.timedelta(minutes=5)
-    ).select_related('user__user_profile')
-    users_online_count = user_activity_objects.count()
-    users_online = (user.user for user in user_activity_objects)
-
-    return {'users_online': users_online, 'users_online_count': users_online_count}
 
 
 # Сайд-бар для last activity (выводит последние оставленные комментарии
@@ -139,7 +132,7 @@ def show_last_activity(count=10):
 @register.inclusion_tag('core/include/sidebar_for_top_comments.html')
 def show_top_comments(count=5):
     my_date = datetime.now()
-    year, week, day_of_week = my_date.isocalendar()
+    year, _, day_of_week = my_date.isocalendar()
     day = my_date.day
     month = my_date.month
 
@@ -150,37 +143,24 @@ def show_top_comments(count=5):
         .annotate(dislikes_count=Count('votes', filter=Q(votes__vote__lt=0)))
     )
 
-    top_com_today = comments.filter(created__year=year, created__month=month, created__day=day).order_by(
+    top_comments_today = comments.filter(created__year=year, created__month=month, created__day=day).order_by(
         '-likes_count'
     )[:count]
-    top_com_month = comments.filter(created__year=year, created__month=month).order_by('-likes_count')[:count]
-    top_com_year = comments.filter(created__year=year).order_by('-likes_count')[:count]
-
+    
     week_start = my_date - timezone.timedelta(days=day_of_week - 1, hours=my_date.hour, minutes=my_date.minute)
-
     week_end = my_date + timezone.timedelta(days=7 - day_of_week, hours=23 - my_date.hour, minutes=60 - my_date.minute)
-    top_com_week = comments.filter(created__gt=week_start, created__lt=week_end).order_by('-likes_count')[:count]
+    top_comments_by_week = comments.filter(created__gt=week_start, created__lt=week_end).order_by('-likes_count')[:count]
+    top_comments_by_month = comments.filter(created__year=year, created__month=month).order_by('-likes_count')[:count]
+    top_comments_by_year = comments.filter(created__year=year).order_by('-likes_count')[:count]
 
     return {
-        'top_comments_day': top_com_today,
-        'top_comments_month': top_com_month,
-        'top_comments_year': top_com_year,
-        'top_comments_week': top_com_week,
+        'comments_by_period': [
+            {'title': 'Сегодня', 'comments': top_comments_today},
+            {'title': 'Неделя', 'comments': top_comments_by_week},
+            {'title': 'Месяц', 'comments': top_comments_by_month},
+            {'title': 'Год', 'comments': top_comments_by_year},
+        ],
     }
-
-
-# Сайд-бар для отображеня топа лайков постов за всё время
-# (Потом надо будет переделать, чтобы в параметр передавать за какое время, для переключения)
-@register.inclusion_tag('core/include/sidebar_for_likes.html')
-def show_post_with_top_likes(count=5):
-    posts = (
-        Post.objects.annotate(like_count=Count('votes', filter=Q(votes__vote__gt=0)))
-        .annotate(dislike_count=Count('votes', filter=Q(votes__vote__lt=0)))
-        .filter(created__year=2020)
-        .order_by('-like_count')[:count]
-    )
-
-    return {'liked_posts': posts}
 
 
 # Фильтр, возращающий свежий ли пост или нет в зависимости от оффсета

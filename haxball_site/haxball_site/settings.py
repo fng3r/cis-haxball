@@ -94,7 +94,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'haxball_site.context_processors.running_line_context',
+                'haxball_site.context_processors.latest_matches_context',
+                'haxball_site.context_processors.upcoming_matches_context',
+                'haxball_site.context_processors.online_users_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },
@@ -172,14 +174,14 @@ if DEBUG:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-            'LOCATION': os.path.join(BASE_DIR, 'mycache'),
+            'LOCATION': config('CACHE_LOCATION', default=os.path.join(BASE_DIR, '.site_cache')),
         }
     }
 else:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-            'LOCATION': '/var/tmp/django_cache',
+            'LOCATION': config('CACHE_LOCATION', default='/var/tmp/django_cache'),
         }
     }
 
@@ -388,6 +390,8 @@ CKEDITOR_CONFIGS = {
         ]
     },
 }
+
+THUMBNAIL_PRESERVE_FORMAT = True
 
 INTERNAL_IPS = config('INTERNAL_IPS', cast=str.split)
 

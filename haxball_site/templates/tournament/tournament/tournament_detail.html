@@ -1,4 +1,4 @@
-{% extends "core/home.html" %}
+{% extends "core.html" %}
 {% load static %}
 {% load cache %}
 {% load tournament_extras %}
@@ -8,24 +8,94 @@
 {% endblock %}
 
 {% block title %}Чемпионат | {{ league.title }} ({{ league.championship.short_title }}) — CIS-HAXBALL{% endblock %}
+
 {% block profile_of_user %}
     {% cache 1 champ_table league.id %}
 
-        <div class="card mb-2 mt-2" style="border-radius: 25px">
-            <div class="card-header pb-0" style="border-radius: 25px 25px 0 0">
-                <h3 class="text-center">
-                    {% if league.logo %}
-                        <img src="{{ league.logo.url }}" width="36" height="36">
-                    {% endif %}
-                    {{ league.title }} ({{ league.championship.short_title }})
-                </h3>
-                <div class="row">
-                    <ul class="nav nav-pills nav-fill" id="myTab" style="width: 100%;">
+        <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-lg">
+            <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
+                <div class="tw:card-title tw:py-1">
+                    <h3 class="tw:text-center tw:flex tw:items-center tw:justify-center">
+                        {% if league.logo %}
+                            <img src="{{ league.logo.url }}" width="36" height="36" class="tw:mr-2">
+                        {% endif %}
+                        {{ league.title }} ({{ league.championship.short_title }})
+                    </h3>
+                </div>
+            </div>
+
+            <div class="tw:tabs tw:tabs-box tw:px-0! tw:py-0! tw:bg-base-200! tw:rounded-b-lg" role="tablist">
+                {% for stage in league.stages.all %}
+                    <input type="radio" name="tournament-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
+                           aria-label="{% if league.is_multistage_league %}{{ stage.stage_name }}{% else %}{% if stage.is_playoff %}Сетка{% else %}Таблица{% endif %}{% endif %}"
+                           {% if forloop.first %}checked{% endif %}
+                    />
+                    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
+                        <div id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
+                            {% if stage.is_playoff %}
+                                {% if stage.is_double_elimination %}
+                                    <div id="bracket-upper" class="tw:mt-2 tw:text-center">
+                                        {% cup_bracket stage 1 %}
+                                    </div>
+
+                                    <div class="tw:divider"></div>
+
+                                    <div id="bracket-lower" class="tw:text-center">
+                                        {% cup_bracket stage 0 %}
+                                    </div>
+                                {% else %}
+                                    <div id="bracket" class="tw:text-center">
+                                        {% cup_bracket stage None %}
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                {% if stage.is_group_stage %}
+                                    <div class="tw:mt-2">
+                                        {% for group in stage.groups.all %}
+                                            <div class="tw:text-center tw:mb-4">
+                                                <h4 class="tw:text-lg">{{ group.name }}</h4>
+                                                {% tournament_table league stage group %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {% tournament_table league stage None %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <input type="radio" name="tournament-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" aria-label="Статистика" />
+                <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
+                    {% include 'tournament/tournament/partials/tournament_stats.html' %}
+                </div>
+
+                <input type="radio" name="tournament-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" aria-label="Матчи" />
+                <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
+                    {% include 'tournament/tournament/partials/tournament_schedule.html' %}
+                </div>
+            </div>
+        </div>
+
+        {% comment %} <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-lg">
+            <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:pt-2 tw:border-b tw:border-gray-300">
+                <div class="tw:card-title tw:py-1 tw:items-center tw:justify-center">
+                    <h3 class="tw:text-center tw:flex ">
+                        {% if league.logo %}
+                            <img src="{{ league.logo.url }}" width="36" height="36" class="tw:mr-2">
+                        {% endif %}
+                        {{ league.title }} ({{ league.championship.short_title }})
+                    </h3>
+                </div>
+
+                <div class="tw:flex">
+                    <ul class="nav nav-pills nav-fill tw:w-full" id="myTab">
                         {% for stage in league.stages.all %}
-                            <li class="nav-item" style="width: 33%;">
-                                <a class="nav-link h5 {% if forloop.first %}active{% endif %}"
-                                   id="table-tab-{{ forloop.counter }}" data-toggle="tab" href="#table-{{ forloop.counter }}" role="tab"
-                                   aria-controls="tournament-table-tab-{{ forloop.counter }}" aria-selected="true">
+                            <li class="nav-item tw:w-1/3">
+                                <a class="nav-link tw:text-lg tw:font-semibold {% if forloop.first %}active{% endif %}"
+                                    id="table-tab-{{ forloop.counter }}" data-toggle="tab" href="#table-{{ forloop.counter }}" role="tab"
+                                    aria-controls="tournament-table-tab-{{ forloop.counter }}" aria-selected="true">
                                     {% if league.is_multistage_league %}
                                         {{ stage.stage_name }}
                                     {% else %}
@@ -38,29 +108,30 @@
                                 </a>
                             </li>
                         {% endfor %}
-                        <li class="nav-item" style="width: 33%;">
-                            <a class="nav-link h5" id="detail-tab" data-toggle="tab" href="#detail_stat" role="tab"
-                               aria-controls="detail_stat-tab" aria-selected="false">Статистика</a>
+                        <li class="nav-item tw:w-1/3">
+                            <a class="nav-link tw:text-lg tw:font-semibold" id="detail-tab" data-toggle="tab" href="#detail_stat" role="tab"
+                                aria-controls="detail_stat-tab" aria-selected="false">Статистика</a>
                         </li>
-                        <li class="nav-item" style="width: 33%;">
-                            <a class="nav-link h5" data-toggle="tab" href="#matches" role="tab"
-                               aria-controls="matches-tab" aria-selected="false">Матчи</a>
+                        <li class="nav-item tw:w-1/3">
+                            <a class="nav-link tw:text-lg tw:font-semibold" data-toggle="tab" href="#matches" role="tab"
+                                aria-controls="matches-tab" aria-selected="false">Матчи</a>
                         </li>
                     </ul>
                 </div>
             </div>
-            <div class="card-body text-center p-0">
+
+            <div class="tw:card-body tw:text-center tw:p-0">
                 <div class="tab-content" id="myTabContent">
                     {% for stage in league.stages.all %}
                         <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
-                             id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
+                                id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
                             {% if stage.is_playoff %}
                                 {% if stage.is_double_elimination %}
-                                    <div id="bracket-upper" class="mt-2">
+                                    <div id="bracket-upper" class="tw:mt-2">
                                         {% cup_bracket stage 1 %}
                                     </div>
 
-                                    <div class="dropdown-divider"></div>
+                                    <div class="tw:divider tw:my-0!"></div>
 
                                     <div id="bracket-lower">
                                         {% cup_bracket stage 0 %}
@@ -72,10 +143,10 @@
                                 {% endif %}
                             {% else %}
                                 {% if stage.is_group_stage %}
-                                    <div class="mt-2">
+                                    <div class="tw:mt-2">
                                         {% for group in stage.groups.all %}
-                                            <div class="mb-4">
-                                                <h4>{{ group.name }}</h4>
+                                            <div class="tw:mb-4">
+                                                <h4 class="tw:mb-1">{{ group.name }}</h4>
                                                 {% tournament_table league stage group %}
                                             </div>
                                         {% endfor %}
@@ -84,7 +155,6 @@
                                     {% tournament_table league stage None %}
                                 {% endif %}
                             {% endif %}
-
                         </div>
                     {% endfor %}
 
@@ -97,10 +167,10 @@
                     </div>
                 </div>
             </div>
-        </div>
-
+        </div> {% endcomment %}
     {% endcache %}
 {% endblock %}
+
 {% block comments %}
-    {% include 'core/include/new_comments.html' with object=league comments=comments %}
+    {% include 'core/comment/comments.html' with object=league comments=comments %}
 {% endblock %}

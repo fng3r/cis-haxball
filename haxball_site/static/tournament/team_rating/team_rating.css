@@ -1,36 +1,4 @@
-.tab-content {
-    & > .active {
-        height: 755px;
-    }
-
-    & > #ref-info-tab-content {
-        overflow-y: scroll;
-    }
-}
-
-.table-fix {
-    height: 675px;
-}
-
-.table-fix tr {
-    th:nth-child(-n+1) {
-        text-align: left;
-    }
-
-    th:nth-child(n+2) {
-        text-align: center;
-    }
-
-    td:nth-child(-n+2) {
-        text-align: left;
-    }
-
-    td:nth-child(n+3) {
-        text-align: center;
-    }
-}
-
-input#show-selected-season-teams-only:checked ~ #team-rating-table {
+div:has(* input#show-selected-season-teams-only:checked) ~ #team-rating-table {
     .rating-row:not(.current-season-team) {
         display: none;
     }

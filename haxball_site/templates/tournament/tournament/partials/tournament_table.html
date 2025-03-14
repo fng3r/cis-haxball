@@ -4,32 +4,18 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap');
 
-    .team-form a:hover {
-        font-size: 18px;
-        text-decoration: none;
-    }
     .team-rows {
         font-family: 'Roboto Slab', serif;
         font-size: 16px;
         font-weight: 400;
     }
-
-    .team-name{
-        font-family: 'Roboto Slab', serif;
-        font-weight: 500;
-        font-size: 19px;
-    }
-    .team-table-league td {
-        padding-bottom: 7px;
-        padding-top: 7px;
-    }
 </style>
 
-<table class="table table-hover team-table-league">
-    <thead>
-        <tr style="font-size: 16px">
-            <th scope="col" class="font-weight-bold h5 pl-2">#</th>
-            <th scope="col">Команда</th>
+<table class="tw:table team-table-league tw:**:[td]:py-2">
+    <thead class="tw:text-base-content tw:text-base tw:font-semibold">
+        <tr class="tw:text-center">
+            <th scope="col" class="tw:pl-2">#</th>
+            <th scope="col" class="tw:text-left!">Команда</th>
             <th scope="col">И</th>
             <th scope="col">В</th>
             <th scope="col">Н</th>
@@ -46,62 +32,71 @@
     </thead>
     <tbody>
         {% for team in teams %}
-            {% if stage.type == 'REG' %}
-                <tr {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}bgcolor="#ffd700"{% endif %}
-                    {% if forloop.counter == 2 and forloop.counter <= stage.awarded_count %}bgcolor="silver"{% endif %}
-                    {% if forloop.counter == 3 and forloop.counter <= stage.awarded_count %}bgcolor="#ffa81c"{% endif %}
-                    class="team-rows"
-                >
-            {% else %}
-                <tr class="team-rows">
-            {% endif %}
-            <th scope="row" width="4%" class="pl-1" style="font-weight: 600; font-size: 20px;">
-                <div class="d-flex">
-                    {% if forloop.counter <= stage.promoted_count %}
-                        <span class="mr-2 my-n1" style="width: 5px; background: green"></span>
-                    {% elif forloop.counter <= stage.promoted_count|add:stage.promoted_extra_count %}
-                        <span class="mr-2 my-n1" style="width: 5px; background: #ffee00"></span>
-                    {% elif forloop.counter > teams|length|sub:stage.relegated_count %}
-                        <span class="mr-2 my-n1" style="width: 5px; background: red"></span>
-                    {% else %}
-                        <span class="mr-2 my-n1" style="width: 5px; "></span>
-                    {% endif %}
-                    {{ forloop.counter }}
-                </div>
 
-            </th>
-
-            <td class="team-name text-left px-0" width="34%">
-
-                <a class="text-dark" href="{{ team.0.get_absolute_url }}"><img
-                    src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28"
-                    class="mr-2">{% if team.0.title|length < 20 %}{{ team.0.title }}{% else %}{{ team.0.short_title }}{% endif %}</a>
-            </td>
-            <td width="6%">{{ team.1 }}</td>
-            <td width="6%">{{ team.2 }}</td>
-            <td width="6%">{{ team.3 }}</td>
-            <td width="6%">{{ team.4 }}</td>
-            <td width="6%">{{ team.5 }}</td>
-            <td width="6%">{{ team.6 }}</td>
-            <td width="6%" {% if team.7 > 0 %} class="text-success"
-                {% elif team.7 < 0 %}class="text-danger"{% endif %}>{{ team.7 }}</td>
-            <td width="6%" style="font-weight: 500">{{ team.8 }}</td>
-            {% if has_penalties %}
-                <td width="3%">
-                    <span class="text-danger">
-                        {% if team.10 != 0 %}
-                            -{{ team.10 }}
+            <tr class="team-rows tw:text-center
+                       {% if stage.type == 'REG' %}
+                           {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}tw:bg-[#ffd700]/80{% endif %}
+                           {% if forloop.counter == 2 and forloop.counter <= stage.awarded_count %}tw:bg-[#c0c0c0]/80{% endif %}
+                           {% if forloop.counter == 3 and forloop.counter <= stage.awarded_count %}tw:bg-[#ffa81c]/80{% endif %}
+                       {% endif %}"
+            >
+                <th scope="row" width="4%" class="tw:pl-1">
+                    <div class="tw:flex">
+                        {% if forloop.counter <= stage.promoted_count %}
+                            <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-green-500"></span>
+                        {% elif forloop.counter <= stage.promoted_count|add:stage.promoted_extra_count %}
+                            <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-yellow-300"></span>
+                        {% elif forloop.counter > teams|length|sub:stage.relegated_count %}
+                            <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-red-500"></span>
+                        {% else %}
+                            <span class="tw:mr-2 tw:my-n1 tw:w-1"></span>
                         {% endif %}
-                    </span>
+                        {{ forloop.counter }}
+                    </div>
+
+                </th>
+
+                <td class="tw:text-left tw:px-0 tw:w-1/3">
+                    <a class="tw:link tw:link-hover tw:text-base-content/95 tw:text-lg tw:font-semibold" href="{{ team.0.get_absolute_url }}">
+                        <img
+                            src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28"
+                            class="tw:mr-2">{% if team.0.title|length < 20 %}{{ team.0.title }}{% else %}{{ team.0.short_title }}{% endif %}
+                    </a>
                 </td>
-            {% endif %}
-            <td class="team-form p-1" width="13%">{% for result in team.9 %}
-                <a href="{{ result.0.get_absolute_url }}"
-                   class="fa fa-circle {% if result.1 == 1 %} text-success {% elif result.1 == -1 %} text-danger {% elif result.1 == 0 %} text-secondary {% endif %}"
-                   title="{{ result.0.numb_tour|tour_name }}&#013;{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}">
-                </a>
-            {% endfor %}
-            </td>
+                <td width="6%">{{ team.1 }}</td>
+                <td width="6%">{{ team.2 }}</td>
+                <td width="6%">{{ team.3 }}</td>
+                <td width="6%">{{ team.4 }}</td>
+                <td width="6%">{{ team.5 }}</td>
+                <td width="6%">{{ team.6 }}</td>
+                <td width="6%" {% if team.7 > 0 %} class="tw:text-success"
+                    {% elif team.7 < 0 %}class="tw:text-error"{% endif %}>{{ team.7 }}</td>
+                <td width="6%" class="tw:font-semibold">{{ team.8 }}</td>
+                {% if has_penalties %}
+                    <td width="3%" class="tw:text-center">
+                        <span class="tw:text-error">
+                            {% if team.10 != 0 %}
+                                -{{ team.10 }}
+                            {% endif %}
+                        </span>
+                    </td>
+                {% endif %}
+                <td class="tw:p-1 tw:pr-2" width="18%">
+                    <div class="tw:flex tw:justify-center tw:items-center tw:gap-1">
+                        {% for result in team.9 %}
+                            <div class="tw:tooltip tw:tooltip-left tw:xl:tooltip-top tw:before:whitespace-pre!"
+                                 data-tip="{{ result.0.numb_tour|tour_name }}&#xa;{{ result.0.team_home.title }} {{ result.0.score_home }} : {{ result.0.score_guest }} {{ result.0.team_guest.title }}"
+                            >
+                                <a href="{{ result.0.get_absolute_url }}"
+                                   class="tw:w-5.5 tw:h-5.5 tw:btn tw:btn-square tw:btn-xs tw:border-none! tw:shadow-none!
+                                          {% if result.1 == 1 %}tw:bg-success{% elif result.1 == -1 %}tw:bg-error{% elif result.1 == 0 %}tw:bg-gray-400 {% endif %}"
+                                >
+                                    {% if result.1 == 1 %}В{% elif result.1 == -1 %}П{% elif result.1 == 0 %}Н{% endif %}
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </td>
             </tr>
         {% endfor %}
     </tbody>

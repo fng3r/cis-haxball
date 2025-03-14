@@ -1,4 +1,4 @@
-{% extends "core/home.html" %}
+{% extends "core.html" %}
 {% load static %}
 {% load account %}
 {% load i18n %}
@@ -8,12 +8,12 @@
 
 
 {% block post %}
-    <div class="card mt-2">
-        <div class="card-header text-center">
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:card-title tw:justify-center">
             <h1>{% trans "Confirm E-mail Address" %}</h1>
         </div>
 
-        <div class="card-body">
+        <div class="tw:card-body">
 
             {% if confirmation %}
 
@@ -23,9 +23,9 @@
                     <a href="mailto:{{ email }}">{{ email }}</a> является email-адресом для пользователя {{ user_display }}
                     .{% endblocktrans %}</p>
 
-                <form method="post" action="{% url 'account_confirm_email' confirmation.key %}" class="text-center">
+                <form method="post" action="{% url 'account_confirm_email' confirmation.key %}" class="tw:text-center">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-success">{% trans 'Confirm' %}</button>
+                    <button type="submit" class="tw:btn tw:btn-success">{% trans 'Confirm' %}</button>
                 </form>
 
             {% else %}
@@ -34,7 +34,6 @@
 
                 <p>{% blocktrans %}This e-mail confirmation link expired or is invalid. Please
                     <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.{% endblocktrans %}</p>
-
             {% endif %}
         </div>
     </div>

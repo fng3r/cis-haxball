@@ -5,295 +5,711 @@
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/include/navbar.css" %}">
 {% endblock %}
-<nav class="navbar navbar-light navbar_color nav-fill"
-     style="background-image:url({% static "img/backgrounds/banner.png" %}); height: 100px; background-position: center; ">
 
+{% partialdef championship_dropdown_content %}
+    <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">Турниры</li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-premier-league' %}">Высшая лига</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-first-league' %}">Первая лига</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-second-league' %}">Вторая лига</a>
+    </li>
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                Кубок лиги<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-pl' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-fl' %}">Первая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-sl' %}">Вторая лига</a>
+                </li>
+            </ul>
+        </div>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-russian-cup' %}">Кубок России</a>
+    </li>
 
-    <form class="form-inline" method="get" action="{% url 'core:filter' %}">
-        <input class="form-control mr-sm-2" type="search" name="q" placeholder="Поиск" aria-label="Search">
-        <button class="btn btn-success my-2 my-sm-0" type="submit">Поиск</button>
-    </form>
+    <div class="tw:divider tw:my-0"></div>
 
-    {% comment %} 
-    <div class="mr-100">
-        <iframe src="https://money.yandex.ru/quickpay/button-widget?targets=%D0%9F%D0%BE%D0%B6%D0%B5%D1%80%D1%82%D0%B2%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5&default-sum=200&button-text=14&yamoney-payment-type=on&button-size=m&button-color=black&successURL=&quickpay=small&account=410011043451485&"
-                width="250" height="36" frameborder="0" allowtransparency="true" scrolling="no"></iframe>
-    </div>
-    {% endcomment %}
-</nav>
+    <li>
+        <a class="tw:block" target="_blank"
+           href="https://docs.google.com/spreadsheets/d/1uO4L_LzPAJz28WDNICFxBep76OTWvaZ3tQlw5HIAaw4/edit?usp=sharing">
+            Календарь
+        </a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:postponements' %}">Переносы</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:cards' %}">Карточки</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '918' 'transfers-13' %}">Трансферы</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
+    </li>
 
-<nav class="navbar navbar-expand-xl bg-dark navbar-dark d-flex bd-highlight mb-0 sticky-top p-1">
-    <!-- Brand -->
-    <a class="navbar-brand font-weight-bold ml-2" href="{% url 'core:home' %}">
-        <img src="{% static "img/logo_try.png" %}" width="30" height="30" alt="Главная">
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <!-- Links -->
-        <ul class="navbar-nav mr-auto bd-highlight">
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle font-weight-bold mx-1 text-right" href="#" id="navbardrop"
-                   data-toggle="dropdown">
-                    Чемпионат
-                </a>
-                <div class="dropdown-menu">
-                    <h6 class="dropdown-header pl-3">Турниры</h6>
+    <div class="tw:divider tw:my-0"></div>
 
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's14-premier-league' %}">Высшая лига</a>
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's14-first-league' %}">Первая лига</a>
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's14-second-league' %}">Вторая лига</a>
-                    <a class="dropdown-item" href="{% url 'tournament:league' 's14-russian-cup' %}">Кубок России</a>
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '111' 'org_razdel' %}">Орг. раздел</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '817' 'regulations' %}">Регламент</a>
+    </li>
+{% endpartialdef %}
 
-                    <a class="dropdown-item submenu" href="#">Кубок лиги</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's14-league-cup-pl' %}">Высшая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's14-league-cup-fl' %}">Первая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's14-league-cup-sl' %}">Вторая лига</a>
+{% partialdef archive_dropdown_content %}
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '46' 'season_1' %}">ЧР #1</a>
+    </li>
+
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '47' 'season_2' %}">ЧР #2</a>
+    </li>
+
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">ЛЧ #1</a>
+    </li>
+
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '49' 'season_4' %}">ЧР #4</a>
+    </li>
+
+    <div class="tw:divider tw:my-0"></div>
+
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #5<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's5-premier-league' %}">Единая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's5-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
+
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s2' %}">ЛЧ #2</a>
+    </li>
+
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #6<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's6-premier-league' %}">Единая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's6-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
+
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #7<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's7-premier-league' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's7-first-league' %}">Первая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's7-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
+
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s3' %}">ЛЧ #3</a>
+    </li>
+
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #8<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's8-premier-league' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Первая лига<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's8-first-league-sharks' %}">Дивизион Акул</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's8-first-league-berkuts' %}">Дивизион Беркутов</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's8-league-cup' %}">Кубок лиги</a>
+                            </li>
+                        </ul>
                     </div>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's8-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
 
-                    <div class="dropdown-divider"></div>
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #9<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's9-premier-league' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Первая лига<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's9-first-league-volga' %}">Дивизион Волги</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's9-first-league-kama' %}">Дивизион Камы</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's9-league-cup' %}">Кубок лиги</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's9-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
 
-                    <a class="dropdown-item" target="_blank"
-                       href="https://docs.google.com/spreadsheets/d/1uO4L_LzPAJz28WDNICFxBep76OTWvaZ3tQlw5HIAaw4/edit?usp=sharing">
-                        Календарь
-                    </a>
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #10<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's10-premier-league' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's10-first-league' %}">Первая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's10-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
 
-                    <a class="dropdown-item" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
-                    <a class="dropdown-item" href="{% url 'tournament:postponements' %}">Переносы</a>
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #11<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's11-premier-league' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Первая лига<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-nadezhda' %}">Дивизион Надежды</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-vera' %}">Дивизион Веры</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-playoff' %}">Плей-офф</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-superfinal' %}">Суперфинал</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's11-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
 
-                    <a class="dropdown-item" href="{% url 'tournament:cards' %}">Карточки</a>
-                    <a class="dropdown-item" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #12<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-premier-league' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-first-league' %}">Первая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-second-league' %}">Вторая лига</a>
+                </li>
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Кубок лиги<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-pl' %}">Высшая лига</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-fl' %}">Первая лига</a>
+                            </li>
+                            <li>
+                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-sl' %}">Вторая лига</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
 
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '918' 'transfers-13' %}">Трансферы</a>
-                    <a class="dropdown-item" href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                ЧР #13<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-second-league' %}">Вторая лига</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-league-cup' %}">Кубок лиги</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-russian-cup' %}">Кубок России</a>
+                </li>
+            </ul>
+        </div>
+    </li>
 
-                    <div class="dropdown-divider"></div>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s4' %}">ЛЧ #4</a>
+    </li>
 
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '111' 'org_razdel' %}">Орг. раздел</a>
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '817' 'regulations' %}">Регламент</a>
+    <li>
+        <a class="tw:block" href="{% url 'tournament:league' 'finals-24' %}">ИТ'24</a>
+    </li>
+{% endpartialdef %}
+
+{% partialdef tournaments_dropdown_content %}
+    <li>
+        <a class="tw:block" href="{% url 'core:fastcups' %}">Фасткапы</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'core:tournaments' %}">Прочие турниры</a>
+    </li>
+{% endpartialdef %}
+
+{% partialdef rating_dropdown_content %}
+    <li>
+        <a class="tw:block" href="{% url 'tournament:team_rating' %}">Рейтинг команд</a>
+    </li>
+    <li>
+        <a class="tw:block" href="{% url 'core:post_detail' '958' 'player-rating-2025-1' %}">Рейтинг игроков</a>
+    </li>
+{% endpartialdef %}
+
+{% partialdef media_dropdown_content %}
+    <li>
+        <a class="tw:block" href="{% url 'core:lives' %}">Трансляции</a>
+    </li>
+    <li>
+        <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                Соцсети<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+                <li>
+                    <a class="tw:block" href="https://discord.gg/h6mgc4bTJh" target="_blank"><img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="https://www.youtube.com/@cis-haxball" target="_blank"><img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> YouTube</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="https://www.twitch.tv/cis_haxball" target="_blank"><img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> Twitch</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="https://t.me/+GRxpyqeJKosxODQy" target="_blank"><img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> Telegram</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="https://www.tiktok.com/@cishaxball3" target="_blank"><img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> TikTok</a>
+                </li>
+                <li>
+                    <a class="tw:block" href="https://vk.com/haxball_ru" target="_blank"><img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK</a>
+                </li>
+            </ul>
+        </div>
+    </li>
+{% endpartialdef %}
+
+<div class="tw:navbar tw:bg-base-200 tw:shadow-sm tw:justify-between">
+    <div class="tw:flex tw:items-center tw:text-lg">
+        <div class="tw:dropdown">
+            <div tabindex="0" role="button" class="tw:lg:hidden tw:btn tw:btn-ghost tw:btn-lg tw:btn-square">
+                <svg xmlns="http://www.w3.org/2000/svg" class="tw:h-6 tw:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /> </svg>
+            </div>
+            <ul
+                tabindex="0"
+                class="tw:menu tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-3 tw:w-40 tw:p-2 tw:shadow">
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Чемпионат<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                            {% partial championship_dropdown_content %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Команды<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                            {% teams_in_navbar %}
+                        </div>
+                    </div>
+                </li>
+
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Турниры<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                            {% partial tournaments_dropdown_content %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Архив<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                            {% partial archive_dropdown_content %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                            Рейтинг<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                            {% partial rating_dropdown_content %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+                </li>
+
+                <li>
+                    <div class="tw:dropdown tw:dropdown-right">
+                        <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
+                            Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                        </div>
+                        <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                            {% partial media_dropdown_content %}
+                        </ul>
+                    </div>
+                </li>
+
+                <li>
+                    <a href="{% url 'core:forum' %}">Форум</a>
+                </li>
+
+                <li>
+                    <a href="{% url 'core:admins' %}">Администрация</a>
+                </li>
+
+                <li>
+                    <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+                </li>
+            </ul>
+        </div>
+
+        <a class="tw:btn tw:btn-ghost tw:text-xl tw:text-blue-600!" href="{% url 'core:home' %}">CIS-HAXBALL</a>
+
+        <div class="tw:hidden tw:lg:flex tw:flex-wrap tw:mr-3">
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                    Чемпионат<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle font-weight-bold mx-1 text-right" href="#" id="navbardrop"
-                   data-toggle="dropdown">
-                    Команды
-                </a>
-                <div class="dropdown-menu" style="width: 700px;">
+                <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    {% partial championship_dropdown_content %}
+                </ul>
+            </div>
+
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                    Команды<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                </div>
+                <div tabindex="0" class="tw:w-[650px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                     {% teams_in_navbar %}
                 </div>
-            </li>
+            </div>
 
-            <li class="nav-item dropdown font-weight-bold mx-1 text-right">
-                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Турниры</a>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{% url 'core:fastcups' %}">Фасткапы</a>
-                    <a class="dropdown-item" href="{% url 'core:tournaments' %}">Прочие турниры</a>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                    Турниры<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
-            </li>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    {% partial tournaments_dropdown_content %}
+                </ul>
+            </div>
 
-            <li class="nav-item font-weight-bold dropdown mx-1 text-right">
-                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Архив</a>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '46' 'season_1' %}">ЧР #1</a>
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '47' 'season_2' %}">ЧР #2</a>
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '48' 'season_3' %}">ЧР #3</a>
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">ЛЧ #1</a>
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '49' 'season_4' %}">ЧР #4</a>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #5</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's5-premier-league' %}">Единая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's5-russian-cup' %}">Кубок России</a>
-                    </div>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 'champions-league-s2' %}">ЛЧ #2</a>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #6</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's6-premier-league' %}">Единая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's6-russian-cup' %}">Кубок России</a>
-                    </div>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #7</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's7-premier-league' %}">Высшая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's7-first-league' %}">Первая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's7-russian-cup' %}">Кубок России</a>
-                    </div>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 'champions-league-s3' %}">ЛЧ #3</a>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #8</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-premier-league' %}">Высшая лига</a>
-
-                        <a class="dropdown-item submenu" href="#">Первая лига</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-first-league-sharks' %}">Дивизион Акул</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-first-league-berkuts' %}">Дивизион Беркутов</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's8-league-cup' %}">Кубок лиги</a>
-                        </div>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's8-russian-cup' %}">Кубок России</a>
-                    </div>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #9</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-premier-league' %}">Высшая лига</a>
-
-                        <a class="dropdown-item submenu" href="#">Первая лига</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-volga' %}">Дивизион Волги</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-first-league-kama' %}">Дивизион Камы</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's9-league-cup' %}">Кубок лиги</a>
-                        </div>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's9-russian-cup' %}"> Кубок России</a>
-                    </div>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #10</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's10-premier-league' %}">Высшая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's10-first-league' %}">Первая лига</a>
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's10-russian-cup' %}">Кубок России</a>
-                    </div>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #11</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's11-premier-league' %}">Высшая лига</a>
-
-                        <a class="dropdown-item submenu" href="#">Первая лига</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-league-nadezhda' %}">Дивизион Надежды</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-league-vera' %}">Дивизион Веры</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-league-playoff' %}">Плей-офф</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's11-first-league-superfinal' %}">Суперфинал</a>
-                        </div>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's11-russian-cup' %}">Кубок России</a>
-                    </div>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #12</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's12-premier-league' %}">Высшая лига</a>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's12-first-league' %}">Первая лига</a>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's12-second-league' %}">Вторая лига</a>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's12-russian-cup' %}">Кубок России</a>
-
-                        <a class="dropdown-item submenu" href="#">Кубок лиги</a>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-pl' %}">Высшая лига</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-fl' %}">Первая лига</a>
-                            <a class="dropdown-item" href="{% url 'tournament:league' 's12-league-cup-sl' %}">Вторая лига</a>
-                        </div>
-                    </div>
-
-                    <a class="dropdown-item submenu" href="#">ЧР #13</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-second-league' %}">Вторая лига</a>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-russian-cup' %}">Кубок России</a>
-
-                        <a class="dropdown-item" href="{% url 'tournament:league' 's13-league-cup' %}">Кубок лиги</a>
-                    </div>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 'champions-league-s4' %}">ЛЧ #4</a>
-
-                    <a class="dropdown-item" href="{% url 'tournament:league' 'finals-24' %}">ИТ'24</a>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                    Архив<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
-            </li>
+                <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    {% partial archive_dropdown_content %}
+                </ul>
+            </div>
 
-            <li class="nav-item dropdown font-weight-bold mx-1 text-right">
-                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Рейтинг</a>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{% url 'tournament:team_rating' %}">Рейтинг команд</a>
-                    <a class="dropdown-item" href="{% url 'core:post_detail' '958' 'player-rating-2025-1' %}">Рейтинг игроков</a>
+
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                    Рейтинг<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
-            </li>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    {% partial rating_dropdown_content %}
+                </ul>
+            </div>
 
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold text-warning mx-1 text-right"
-                   href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
-            </li>
+            <a role="button" class="tw:btn tw:btn-ghost tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
 
-            <li class="nav-item font-weight-bold dropdown mx-1 text-right">
-                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Медиа</a>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{% url 'core:lives' %}">Трансляции</a>
-                    <a class="dropdown-item submenu" href="#">Соцсети</a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="https://discord.gg/h6mgc4bTJh">
-                            <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
-                        </a>
-                        <a class="dropdown-item" href="https://www.youtube.com/@cis-haxball">
-                            <img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> YouTube
-                        </a>
-                        <a class="dropdown-item" href="https://www.twitch.tv/cis_haxball">
-                            <img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> Twitch
-                        </a>
-                        <a class="dropdown-item" href="https://t.me/+GRxpyqeJKosxODQy">
-                            <img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> Telegram
-                        </a>
-                        <a class="dropdown-item" href="https://www.tiktok.com/@cishaxball3">
-                            <img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> TikTok
-                        </a>
-                        <a class="dropdown-item" href="https://vk.com/haxball_ru">
-                            <img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK
-                        </a>
-                        <a class="dropdown-item" href="https://discord.gg/h6mgc4bTJh">
-                            <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord
-                        </a>
-                    </div>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                    Медиа<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
-            </li>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    {% partial media_dropdown_content %}
+                </ul>
+            </div>
 
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold mx-1 text-right" href="{% url 'core:forum' %}">Форум</a>
-            </li>
+            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:forum' %}">Форум</a>
 
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold mx-1 text-right text-success"
-                   href="{% url 'core:forum_category' 'guides' %}">Гайды</a>
-            </li>
+            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:admins' %}">Администрация</a>
 
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold mx-1 text-right" href="{% url 'core:admins' %}">Администрация</a>
-            </li>
+            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+        </div>
+    </div>
 
-            <li class="nav-item">
-                <a class="nav-link font-weight-bold mx-1 text-right" href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
-            </li>
+    <div class="tw:flex tw:items-center tw:gap-2">
+        <form method="get" action="{% url 'core:filter' %}">
+            <label class="tw:input tw:input-bordered tw:w-35 tw:xl:w-auto">
+                <svg class="tw:w-3.5 tw:opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
+                <input type="search" name="q" placeholder="Поиск" aria-label="Search" />
+            </label>
+        </form>
 
-        </ul>
-
-
-
+        <div class="tw:dropdown tw:dropdown-end">
+            <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:m-1">
+                Тема
+                <svg
+                    class="tw:inline-block tw:w-3 tw:h-3 tw:mt-1 tw:fill-current tw:opacity-80"
+                    width="12px"
+                    height="12px"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 2048 2048">
+                    <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
+                </svg>
+            </div>
+            <ul tabindex="0" class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-40 tw:p-2 tw:shadow-2xl">
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Default" value="light" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dark" value="dark" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Cupcake" value="cupcake" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Bumblebee" value="bumblebee" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Emerald" value="emerald" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Corporate" value="corporate" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Synthwave" value="synthwave" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Retro" value="retro" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Cyberpunk" value="cyberpunk" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Valentine" value="valentine" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Halloween" value="halloween" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Garden" value="garden" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Forest" value="forest" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Aqua" value="aqua" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Lofi" value="lofi" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Pastel" value="pastel" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Fantasy" value="fantasy" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Wireframe" value="wireframe" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Black" value="black" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Luxury" value="luxury" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dracula" value="dracula" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="CMYK" value="cmyk" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Autumn" value="autumn" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Business" value="business" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Acid" value="acid" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Lemonade" value="lemonade" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Night" value="night" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Coffee" value="coffee" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Winter" value="winter" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dim" value="dim" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Nord" value="nord" />
+                </li>
+                <li>
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Sunset" value="sunset" />
+                </li>
+            </ul>
+        </div>
 
         {% if user.is_authenticated %}
-            <a class="p-2" href="{{ user.user_profile.get_absolute_url }}">{{ user.username }}</a>
-        {% else %}
-            <a role="button" class="btn btn-success mr-2" href="{% url 'account_signup' %}">Регистрация</a>
-        {% endif %}
+            <div class="tw:dropdown tw:dropdown-end">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar">
+                    <div class="tw:w-[45px] tw:rounded-full">
+                        <img src="{{ user.user_profile.avatar.url }}" />
+                    </div>
+                </div>
 
-        {% if user.is_authenticated %}
-            <button type="button" class="btn btn-danger mr-2" data-toggle="modal" data-target="#logoutModal">
-                Выход
-            </button>
+                <ul tabindex="0"
+                    class="tw:menu tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:w-45 tw:p-2 tw:shadow"
+                >
+                    <span class="tw:inline-block tw:w-full tw:truncate tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">{{ user.username }}</span>
+                    <li>
+                        <a class="tw:block" href="{{ user.user_profile.get_absolute_url }}">
+                            Профиль
+                        </a>
+                    </li>
+                    <li>
+                        <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">Выход</span>
+                    </li>
+                </ul>
+            </div>
         {% else %}
-            <button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#loginModal">
+            <button type="button" class="tw:btn tw:btn-primary tw:mr-1!" onclick="login_modal.showModal()">
                 Вход
             </button>
         {% endif %}
     </div>
-
-</nav>
+</div>

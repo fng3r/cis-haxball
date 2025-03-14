@@ -117,4 +117,7 @@ media/
 !**/migrations/__init__.py
 
 # site_cache
-/haxball_site/mycache/
+haxball_site/.site_cache
+
+# tailwind
+tailwind/node_modules

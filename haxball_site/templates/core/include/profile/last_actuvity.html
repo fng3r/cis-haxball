@@ -1,5 +1,8 @@
 {% if is_online %}
-    <i class="mr-1 fa fa-circle text-success" aria-hidden="true"></i>Сейчас на сайте
+    <div class="tw:flex tw:items-center tw:gap-1">
+        <span class="tw:status tw:status-lg tw:status-success" aria-hidden="true"></span>
+        Сейчас на сайте
+    </div>
 {% elif last_seen %}
     Был {{ last_seen|timesince }} назад
 {% else %}

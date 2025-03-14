@@ -1,69 +1,75 @@
 {% load static %}
+{% load thumbnail %}
 
-<div class="col px-1">
-    <div class="card" style="border-radius: 25px;">
-        <div class="card-header px-1"
-             style="background: linear-gradient(to right, rgba(193, 243, 229, 0.7), rgba(91, 142, 241, 0.32)); border-radius: 25px 25px 0 0;">
-            <h5 class="mb-0 font-weight-bold">
-                {{ title }}
-                {% if icon_url %}
-                    <img
-                        src="{% static icon_url %}"
-                        width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
-                        height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
-                        title="{{ title }}">
-                {% elif icon_cls %}
-                    <i class="{{ icon_cls }}" title="Выходов на замену" aria-hidden="true" style="font-size: 21px"></i>
-                {% endif %}
-            </h5>
+<div class="tw:px-1">
+    <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-neutral-200">
+        <div class="tw:w-full tw:flex tw:justify-center tw:items-center tw:bg-base-300 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
+            <div class="tw:card-title tw:px-2 tw:py-3">
+                <h5 class="tw:h-[28px] tw:mb-0! tw:flex tw:items-center tw:gap-1">
+                    <span class="tw:font-semibold">{{ title }}</span>
+                    {% if icon_url %}
+                        <img
+                            src="{% static icon_url %}"
+                            width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
+                            height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
+                            title="{{ icon_title }}">
+                    {% elif icon_cls %}
+                        <i class="{{ icon_cls }}" title="{{ title }}"></i>
+                    {% endif %}
+                </h5>
+            </div>
         </div>
 
-        <div class="card-body p-0" style="position: relative; height: 500px; overflow-y: auto; border-radius: 0 0 25px 25px;">
-            <table class="table table-hover mb-0">
-                <tbody>
-                    {% for player in players %}
-                        <tr>
-                            <td class="pl-1 pr-2">
-                                <div class="d-flex">
-                                    <div class="mr-2" style="width: 28px;">
-                                        <span class="h6 mb-0 text-center">{{ forloop.counter }}</span>
-                                    </div>
+        <div class="tw:card-body tw:h-[700px] tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
+            <ul class="tw:list tw:overflow-y-auto tw:mb-0!">
+                {% for player in players %}
+                    <li class="tw:list-row tw:w-full tw:px-2 tw:py-3 tw:border-b tw:border-base-300 tw:items-center tw:text-lg tw:gap-0!">
+                        <div class="tw:mr-2 tw:w-7 tw:text-center tw:text-nowrap">
+                            <span class="tw:mb-0 tw:text-center tw:font-semibold">{{ forloop.counter }}</span>
+                        </div>
 
-                                    <div class="d-flex mr-1">
-                                        <img src="{{ player.name.user_profile.avatar.url }}" width="25" height="25" class="d-inline" style="border-radius: 100%">
-                                        {% if player.team %}
-                                            <img src="{{ player.team.logo.url }}" width="20" height="20" style="position: relative; left: -11px; bottom: -11px;">
-                                        {% else %}
-                                            <img src="{% static "img/ico/free_player.png" %}" width="20" height="20" style="position: relative; left: -10px; bottom: -13px;">
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="text-left">
-                                        {% if player.name %}
-                                            <a class="text-dark h6" href="{{ player.name.user_profile.get_absolute_url }}">
-                                                {{ player.nickname }}
-                                            </a>
-                                        {% else %}
-                                            <span class="text-secondary h6">{{ player.nickname }}</span>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="ml-auto">
-                                        <span class="font-weight-bold h6">
-                                            {% if player.count %}
-                                                {{ player.count }}
-                                            {% else %}
-                                                {{ player.winrate|floatformat:1 }}
-                                            {% endif %}
-                                        </span>
-                                    </div>
-
+                        <div class="tw:flex tw:mr-3">
+                            <div class="tw:avatar tw:mr-2">
+                                <div class="tw:mask tw:mask-squircle tw:w-[40px]">
+                                    {% comment %} {% thumbnail player.name.user_profile.avatar "100x100" crop="center" as avatar %}
+                                        <img src="{{ avatar.url }}">
+                                    {% endthumbnail %} {% endcomment %}
+                                    <img src="{{ player.name.user_profile.avatar.url }}" title="{{ player.nickname }}">
                                 </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </div>
+
+                            <div class="tw:flex tw:flex-col tw:text-left">
+                                <div class="tw:text-base">
+                                    {% if player.name %}
+                                        <a class="tw:link tw:link-hover tw:font-semibold" href="{{ player.name.user_profile.get_absolute_url }}">
+                                            {{ player.nickname }}
+                                        </a>
+                                    {% else %}
+                                        <span class="tw:font-bold">{{ player.nickname }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="tw:opacity-85 tw:text-sm tw:font-normal">
+                                    {% if player.team %}
+                                        {{ player.team.title }}
+                                    {% else %}
+                                        Без команды
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="tw:font-semibold tw:text-base">
+                                {% if player.count %}
+                                    {{ player.count }}
+                                {% else %}
+                                    {{ player.winrate|floatformat:1 }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </div>

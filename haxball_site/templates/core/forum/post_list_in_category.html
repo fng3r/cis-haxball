@@ -1,4 +1,4 @@
-{% extends "core/home.html" %}
+{% extends "core.html" %}
 {% load static %}
 {% block scripts %}
 
@@ -8,31 +8,25 @@
 {% block title %} Форум | {{ category }} — CIS-HAXBALL {% endblock %}
 
 {% block postlist %}
-    <div class="card my-2"
-         style="border-radius: 25px; background-image: url({% static "img/backgrounds/background1.png" %})">
-
-        <div class="card-body">
-            <h3 class="text-center mt-1 mb-0"><i class="fa fa-list-alt text-primary" aria-hidden="true"></i>
-
-                {{ category }}
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
+            <h3 class="tw:text-center tw:mb-0">
+                <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>{{ category }}
             </h3>
             {% if user.is_authenticated and not category.is_official %}
-                <a href="{% url 'core:new_post' category.slug %}"> <i class="fa fa-pencil text-warning mr-1"
-                                                                      aria-hidden="true"></i>Создать пост </a>
+                <a href="{% url 'core:new_post' category.slug %}" class="tw:link tw:text-lg">
+                    <i class="fa fa-pencil tw:text-warning tw:mr-1" aria-hidden="true"></i>Создать пост
+                </a>
             {% endif %}
-            <hr>
+            <div class="tw:divider tw:my-0!"></div>
 
             {% for post in posts %}
-                {% include "core/include/post_important_in_list.html" with post=post %}
+                {% include "core/include/post_in_list.html" with post=post %}
             {% endfor %}
-
-
         </div>
 
         {% if category.posts_in_category.all.count > 6 %}
-            <div class="card-footer text-muted pb-0 pt-3">
-                {% include "core/include/pagination.html" with page=posts %}
-            </div>
+            {% include "core/include/pagination.html" with page=posts %}
         {% endif %}
     </div>
 {% endblock %}

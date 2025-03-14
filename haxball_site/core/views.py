@@ -21,7 +21,7 @@ from .utils import get_comments_for_object, get_paginated_comments
 
 
 # Вьюха для списка постов
-class PostListView(ListView):
+class HomeView(ListView):
     queryset = (
         Post.objects.select_related('category', 'author__user_profile')
         .prefetch_related('comments', 'votes')
@@ -33,19 +33,12 @@ class PostListView(ListView):
     )
     context_object_name = 'posts'
     paginate_by = 7
-    template_name = 'core/post/list.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        count_imp = Post.objects.filter(category__is_official=True, important=True).count()
-        context['count_imp'] = count_imp
-
-        return context
+    template_name = 'core/home.html'
 
 
 # Смотреть все новости
 class AllPostView(ListView):
-    queryset = Post.objects.filter(category__is_official=True).order_by('-created')
+    queryset = Post.objects.filter(category__is_official=True).order_by('-publish')
     context_object_name = 'posts'
     paginate_by = 7
     template_name = 'core/post/all_posts_list.html'
@@ -263,7 +256,7 @@ class CommentsListView(ListView):
             'comments': comments,
         }
 
-        return render(request, 'core/include/new_comments.html#comments-container', context)
+        return render(request, 'core/comment/comments.html#comments-container', context)
 
 
 class AddCommentView(View):
@@ -278,7 +271,7 @@ class AddCommentView(View):
             'comment_form': comment_form,
         }
 
-        return render(request, 'core/include/new_comments.html#comment-form-container', context)
+        return render(request, 'core/comment/comments.html#comment-form-container', context)
 
     def post(self, request, ct, pk):
         content_type = ContentType.objects.get(pk=ct)
@@ -303,7 +296,7 @@ class AddCommentView(View):
             'comment_form': comment_form,
         }
 
-        return render(request, 'core/include/new_comments.html#comments-container', context)
+        return render(request, 'core/comment/comments.html#comments-container', context)
 
 
 class EditCommentView(View):
@@ -339,7 +332,7 @@ class EditCommentView(View):
 
         return render(
             request,
-            'core/include/comment/comment-item.html',
+            'core/comment/comment-item.html',
             {
                 'comment': comment,
                 'object': comment.content_object
@@ -367,7 +360,7 @@ def get_comment(request, pk):
 
     return render(
         request,
-        'core/include/comment/comment-item.html',
+        'core/comment/comment-item.html',
         {
             'comment': comment,
             'object': comment.content_object
@@ -396,7 +389,7 @@ def delete_comment(request, pk):
             'comment_form': NewCommentForm(),
         }
 
-        return render(request, 'core/include/new_comments.html#comments-container', context)
+        return render(request, 'core/comment/comments.html#comments-container', context)
 
     return HttpResponse('Ошибка доступа или время истекло')
 
@@ -404,7 +397,13 @@ def delete_comment(request, pk):
 class EditProfile(DetailView, View):
     model = Profile
     context_object_name = 'profile'
-    template_name = 'core/include/profile_editor_form.html'
+    template_name = 'core/profile/partials/edit_profile_form.html'
+    
+    def get_template_names(self):
+        if self.request.htmx:
+            return 'core/profile/partials/edit_profile_form.html'
+        
+        return 'core/profile/edit_profile.html'
 
     def post(self, request, pk, slug):
         profile = Profile.objects.get(slug=slug, id=pk)

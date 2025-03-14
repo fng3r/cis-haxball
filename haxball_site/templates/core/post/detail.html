@@ -1,4 +1,4 @@
-{% extends "core/home.html" %}
+{% extends "core.html" %}
 
 {% block title %}
     {{ post.title }} — CIS-HAXBALL
@@ -17,58 +17,78 @@
 {% endblock %}
 {% block post %}
 
-    <div class="card mb-2 mt-2" style="border-radius: 25px">
-        <div class="card-header" style="border-radius: 25px">
-            <h4 class="card-title mb-1">
-                <div class="d-flex justify-content-between">
-                    <span>{{ post.title }}
+    <style>
+        :where(.post-body) {
+            a {
+                color: var(--color-primary);
+                @media (hover: hover) {
+                    &:hover {
+                        color: color-mix(in oklab, var(--color-primary) 80%, #000);
+                    }
+                }
+            }
+        }
+    </style>
+
+    <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:mt-2">
+        <div class="tw:w-full tw:bg-base-300 tw:rounded-t-lg tw:px-4 tw:py-3 tw:border-b tw:border-b-neutral-300">
+            <div class="tw:flex tw:flex-col">
+                <h4 class="tw:card-title tw:w-full tw:justify-between tw:items-center">
+                    <span>
+                        {{ post.title }}
                         {% if post.author == user or user.is_superuser %}
                             <a href="{% url 'core:post_edit' post.slug post.id %}"
-                               class="text-warning small text-right"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+                               class="tw:text-warning! tw:text-base tw:text-right"><i class="fa fa-pencil" aria-hidden="true"></i></a>
                         {% endif %}
                     </span>
                     {% if post.category %}
-                        <span class="text-right"><span class="font-italic h6">В разделе</span> <a
-                            href="{{ post.category.get_absolute_url }}"
-                            class="h5">{{ post.category.title }}</a></span>
+                        <span class="tw:text-right"><span class="tw:italic tw:text-lg">В разделе</span>
+                            <a href="{{ post.category.get_absolute_url }}"
+                               class="tw:link tw:link-primary tw:font-semibold">{{ post.category.title }}</a>
+                        </span>
                     {% else %}
                         <span></span>
                     {% endif %}
-                </div>
-            </h4>
-            <small class="text-muted">
-                <img src="{% static "img/ico/calendar_1.png" %}" height="21"
-                     width="21"> {{ post.publish|date:"SHORT_DATE_FORMAT" }} <img
-                    src="{% static "img/ico/clock_1.png" %}" height="19" width="19"> {{ post.publish|time:"H:i" }} <img
-                        src="{% static "img/ico/user_1.png" %}" height="19" width="19"><a
-                            href="{{ post.author.user_profile.get_absolute_url }}">{{ post.author }}</a>
+                </h4>
 
-            </small>
+                <small class="tw:flex tw:items-center tw:gap-x-1 tw:text-base-content/70">
+                    <div class="tw:flex tw:items-center">
+                        <img src="{% static "img/ico/calendar_1.png" %}" height="21" width="21">
+                        {{ post.publish|date:"SHORT_DATE_FORMAT" }}
+                    </div>
+                    <div class="tw:flex tw:items-center tw:gap-x-0.5">
+                        <img src="{% static "img/ico/clock_1.png" %}" height="19" width="19">
+                        {{ post.publish|time:"H:i" }}
+                    </div>
+                    <div class="tw:flex tw:items-center tw:gap-x-0.5">
+                        <img src="{% static "img/ico/user_1.png" %}" height="19" width="19">
+                        <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ post.author.user_profile.get_absolute_url }}">{{ post.author }}</a>
+                    </div>
+                </small>
+            </div>
         </div>
-        <div class="card-body">
 
-            <p class="card-text">
+        <div class="tw:flex tw:flex-col tw:p-4">
+            <div class="post-body tw:prose tw:max-w-none tw:text-base-content">
                 {{ post.body|safe }}
-            </p>
+            </div>
         </div>
-        <div class="card-footer d-inline-flex justify-content-between" style="cursor: pointer">
-            <span class="text-muted"> Комментариев: {{ post.comments.count }} </span>
+        <div class="tw:inline-flex tw:justify-between tw:rounded-b-lg tw:bg-base-300 tw:px-4 tw:py-2 tw:border-t tw:border-t-neutral-300">
+            <span class="tw:text-base-content/70"> Комментариев: {{ post.comments.count }} </span>
 
-            <div>
-
+            <div class="tw:inline-flex tw:items-center tw:gap-1">
                 {% include 'core/include/like_dislike_panel.html' %}
 
-
-                <span class="action-icons">
-                    {% if user.is_authenticated %}
-                        <a href="#addcomment" onclick="addComment('','')">
-                            <i class="fa fa-reply"></i>
-                        </a>
-                    {% else %}
-                        <a data-toggle="modal" data-target="#loginModal" style="cursor: pointer">
-                            <i class="fa fa-reply"></i>
-                        </a>
-                    {% endif %}
+                <span class="action-icons tw:ml-1">
+                    <a href="#addcomment" class="tw:align-middle tw:text-base-content/40 tw:hover:text-[#1976d2]!"
+                       {% if user.is_authenticated %}
+                           onclick="addComment('','')"
+                       {% else %}
+                           onclick="login_modal.showModal()"
+                       {% endif %}
+                    >
+                        <i class="fa fa-reply"></i>
+                    </a>
                 </span>
             </div>
 
@@ -78,7 +98,7 @@
 {% endblock %}
 
 {% block comments %}
-    {% include 'core/include/new_comments.html' with object=post comments=comments %}
+    {% include 'core/comment/comments.html' with object=post comments=comments %}
 {% endblock %}
 
 

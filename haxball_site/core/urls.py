@@ -7,7 +7,7 @@ from .models import LikeDislike, NewComment, Post
 app_name = 'core'
 
 urlpatterns = [
-    path('', views.PostListView.as_view(), name='home'),
+    path('', views.HomeView.as_view(), name='home'),
     path('post/<int:pk>/<slug:slug>', views.PostDetailView.as_view(), name='post_detail'),
     path('profile/<int:pk>/<slug:slug>/', views.ProfileDetail.as_view(), name='profile_detail'),
     path('profile/<slug:slug>/<int:pk>/edit', views.EditProfile.as_view(), name='edit_profile'),
@@ -20,7 +20,7 @@ urlpatterns = [
     #  Путь к админам
     path('admin_list/', views.AdminListView.as_view(), name='admins'),
     #  Все посты
-    path('news_all/', views.AllPostView.as_view(), name='all_posts'),
+    path('posts/', views.AllPostView.as_view(), name='all_posts'),
     #  Путь к трансляциям
     path('lives/', views.LivesView.as_view(), name='lives'),
     #  Путь на форум

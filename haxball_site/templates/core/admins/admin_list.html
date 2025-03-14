@@ -1,4 +1,4 @@
-{% extends "core/home.html" %}
+{% extends "core.html" %}
 {% load static %}
 
 
@@ -13,18 +13,17 @@
     </script>
 {% endblock %}
 
-{% block postlist %}
-    <div class="card my-2"
-         style="border-radius: 25px; background-image: url({% static "img/backgrounds/background1.png" %})">
-
-        <div class="card-body text-center">
-            <h3 class="text-center mt-1 mb-0"><i class="fa fa-user-circle text-primary" aria-hidden="true"></i>
+{% block main_content %}
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
+            <h2 class="tw:card-title tw:items-end">
+                <i class="fa fa-user-circle tw:text-info" aria-hidden="true"></i>
                 Администрация
-            </h3>
+            </h2>
+        </div>
 
-            <hr>
-
-            <table class="table">
+        <div class="tw:card-body tw:py-2">
+            <table class="tw:table tw:text-center">
                 <thead>
                     <tr>
                         <th scope="col"></th>
@@ -43,7 +42,9 @@
                                 {% endif %}
                             {% endfor %}
                             </th>
-                            <td class="text-left h4"><a href="{{ user.user_profile.get_absolute_url }}">{{ user.username }}</a></td>
+                            <td class="tw:text-left tw:text-xl tw:font-semibold">
+                                <a href="{{ user.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">{{ user.username }}</a>
+                            </td>
                             <td>
                                 {% if user.user_profile.vk %}
                                     <a href="https://vk.com/{{ user.user_profile.vk }}"
@@ -56,7 +57,7 @@
                                          onclick="myFunction(this)"
                                          height="30" width="30"
                                          title="{{ user.user_profile.discord }}"
-                                         style="cursor: pointer;">
+                                         class="tw:cursor-pointer">
                                 {% endif %}
                                 {% if user.user_profile.telegram %}
                                     <a href="https://t.me/{{ user.user_profile.telegram }}"
@@ -65,25 +66,14 @@
                                         title="{{ user.user_profile.telegram }}"></a>
                                 {% endif %}
                                 {% if not user.user_profile.vk and not user.user_profile.discord and not user.user_profile.telegram %}
-                                    <i class="fa fa-minus text-danger text-center" aria-hidden="true"></i>
+                                    <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
                                 {% endif %}
                             </td>
-                            <td> {% for group in user.groups.all %}
-                                {{ group.name }}
-                            {% endfor %}
-                            </td>
+                            <td>{{ user.groups.all|join:", " }}</td>
                         </tr>
                     {% endfor %}
-
                 </tbody>
             </table>
-
-
-
         </div>
-
     </div>
-
-
-
 {% endblock %}

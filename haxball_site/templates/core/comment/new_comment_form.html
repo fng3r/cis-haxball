@@ -2,7 +2,7 @@
 {% load user_tags %}
 
 {% with content_type=object|content_type %}
-  <form id="addcomment" class="text-center"
+  <form id="addcomment" class="tw:text-center"
         hx-post="{% url 'core:add_comment' content_type.pk object.id %}"
         hx-trigger="submit"
         hx-target="#comments-container"
@@ -15,13 +15,13 @@
     {{ comment_form.media }}
     <input type="hidden" name="parent" id="contactparent" value="">
 
-    <div class="form-group mt-2 ml-1">
+    <div class="tw:mt-2 tw:mb-1 tw:ml-1">
       {{ comment_form.body }}
     </div>
 
-    <div align="right">
-      <img class="htmx-indicator mr-2" height="24" src="{% static 'img/svg-loaders/bars.svg' %}">
-      <button type="submit" class="btn btn-primary mr-2">Отправить</button>
+    <div class="tw:flex tw:justify-end tw:mt-auto tw:mb-1 tw:mr-2">
+      <img class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+      <button type="submit" class="tw:btn tw:btn-primary">Отправить</button>
     </div>
 
   </form>

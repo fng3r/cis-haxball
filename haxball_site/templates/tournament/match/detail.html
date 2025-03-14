@@ -1,4 +1,4 @@
-{% extends "core/home.html" %}
+{% extends "core.html" %}
 {% load static %}
 {% load tournament_extras %}
 
@@ -23,13 +23,13 @@
 {% block title %}Чемпионат | {{ match }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
-    <div class="card mb-2 mt-2" style="border-radius: 25px">
-        <div class="card-header text-center" style="border-radius: 25px">
-            <h5>
-                <a href="{{ match.league.get_absolute_url }}">{{ match.league }}</a>
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
+            <h5 class="tw:text-center">
+                <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.league.get_absolute_url }}">{{ match.league }}</a>
             </h5>
 
-            <h5>
+            <h5 class="tw:text-center">
                 {% if match.league.is_multistage_league and match.stage.is_playoff %}
                     {{ match.stage.stage_name }} -
                 {% endif %}
@@ -46,86 +46,116 @@
                 {% endif %}
             </h5>
 
-            <div class="row">
+            <div class="tw:flex">
 
-                <div class="col-5 px-0">
-                    <a class="h4 text-dark"
+                <div class="tw:w-5/12 tw:text-center">
+                    <a class="tw:link tw:link-hover tw:text-base-content/90 tw:text-lg tw:font-semibold"
                        href="{{ match.team_home.get_absolute_url }}">{{ match.team_home.title }}</a>
                 </div>
-                <div class="col-2 p-0">
 
-                </div>
-                <div class="col-5 px-0">
-                    <a class="h4 text-dark"
+                <div class="tw:w-2/12"></div>
+
+                <div class="tw:w-5/12 tw:text-center">
+                    <a class="tw:link tw:link-hover tw:text-base-content/90 tw:text-lg tw:font-semibold"
                        href="{{ match.team_guest.get_absolute_url }}">{{ match.team_guest.title }}</a>
                 </div>
             </div>
         </div>
-        <div class="card-body text-center">
-            <div class="row">
-                <div class="col-5">
-                    <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="60%">
 
+        <div class="tw:card-body tw:px-0 tw:pt-4 tw:py-0 tw:text-center">
+            <div class="tw:flex tw:mb-1">
+                <div class="tw:w-5/12">
 
+                    <div class="tw:flex tw:flex-col tw:items-center tw:gap-3">
+                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="60%">
+
+                        <div class="tw:flex tw:justify-center tw:gap-2">
+                            {% for previous_match in latest_matches.team_home %}
+                                <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
+                                     data-tip="{{ previous_match.numb_tour|tour_name }}&#xa;{{ previous_match.team_home.title }} {{ previous_match.score_home }} : {{ previous_match.score_guest }} {{ previous_match.team_guest.title }}"
+                                >
+                                    <a href="{{ previous_match.get_absolute_url }}"
+                                       class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content
+                                              {% if previous_match.is_draw %}tw:bg-gray-400{% elif previous_match.winner == match.team_home %}tw:bg-success{% else %}tw:bg-error{% endif %}"
+                                    >
+                                        {% if previous_match.is_draw %}Н{% elif previous_match.winner == match.team_home %}В{% else %}П{% endif %}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-                <div class="col-2 px-0">
-                    <div class="mt-5">
+
+                <div class="tw:w-2/12 tw:flex tw:justify-center tw:items-center">
+                    <div class="tw:text-lg">
                         {% if match.is_played %}
-                            <h3 class="font-weight-bold">
+                            <h3 class="tw:font-bold! tw:text-[3rem]!">
                                 {{ match.score_home }} : {{ match.score_guest }}
                             </h3>
                             {% if match.is_tech_defeat %}
-                                <span style="font-weight: 600">
+                                <h3 class="tw:text-2xl!">
                                     <!-- MatchResult.MUTUAL_TECH_DEFEAT -->
                                     {% if match.result.value == 'MTD' %} Обоюдное {% endif %} ТП
-                                </span>
+                                </h3>
                             {% endif %}
-                            <h6 class="mt-3">{{ match.match_date|date:"SHORT_DATE_FORMAT" }}</h6>
+                            <h3 class="tw:mt-3 tw:text-2xl! tw:opacity-75">{{ match.match_date|date:"d.m.y" }}</h3>
                         {% else %}
-                            <h3>vs</h3>
+                            <h3 class="tw:font-semibold! tw:text-[3rem]!">vs</h3>
                         {% endif %}
-
                     </div>
                 </div>
-                <div class="col-5">
-                    <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="60%">
+
+                <div class="tw:w-5/12">
+                    <div class="tw:flex tw:flex-col tw:items-center tw:gap-3">
+                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="60%">
+
+                        <div class="tw:flex tw:justify-center tw:gap-2">
+                            {% for previous_match in latest_matches.team_guest %}
+                                <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
+                                     data-tip="{{ previous_match.numb_tour|tour_name }}&#xa;{{ previous_match.team_home.title }} {{ previous_match.score_home }} : {{ previous_match.score_guest }} {{ previous_match.team_guest.title }}"
+                                >
+                                    <a href="{{ previous_match.get_absolute_url }}"
+                                       class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content
+                                              {% if previous_match.is_draw %}tw:bg-gray-400{% elif previous_match.winner == match.team_guest %}tw:bg-success{% else %}tw:bg-error{% endif %}"
+                                    >
+                                        {% if previous_match.is_draw %}Н{% elif previous_match.winner == match.team_guest %}В{% else %}П{% endif %}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-12">
+            <div class="tw:flex tw:flex-col">
+                <div class="tw:w-full tw:flex tw:justify-center">
                     <div>
                         <p>
-                            <button class="btn btn-primary" type="button" data-toggle="collapse"
-                                    data-target="#collapseExample" aria-expanded="false"
-                                    aria-controls="collapseExample" {% if no_history %}disabled{% endif %}>
-
+                            <button class="tw:btn tw:btn-primary" type="button" data-toggle="collapse"
+                                    data-target="#matches-history-recap" aria-expanded="false"
+                                    aria-controls="matches-history-recap" {% if no_history %}disabled{% endif %}
+                            >
                                 {% if no_history %}Команды ранее не встречались{% else %}История встреч{% endif %}
-
                             </button>
                         </p>
                     </div>
                 </div>
-                <div class="collapse w-100" id="collapseExample">
-                    <div class="row mb-2">
-                        <div class="col-12">
-
-                            <div class="progress" style="height: 35px;">
-                                <div class="progress-bar bg-success justify-content-center" role="progressbar"
-                                     style="width: {{ win_home_percentage }}%"
-                                     aria-valuenow="{{ win_home_percentage }}"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
+                <div class="collapse tw:w-full tw:px-4 tw:mb-2" id="matches-history-recap">
+                    <div class="tw:flex tw:mb-2">
+                        <div class="tw:flex tw:w-full tw:gap-1" style="height: 35px;">
+                            {% if win_home_percentage > 0 %}
+                                <div class="tw:bg-success tw:text-success-content tw:flex tw:justify-center tw:items-center"
+                                     style="width: {{ win_home_percentage }}%">
                                     <div>
                                         <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}"
                                              width="25px">
                                         {{ win_home_percentage }}% ({{ win_home }})
                                     </div>
                                 </div>
-                                <div class="progress-bar bg-secondary" role="progressbar"
-                                     style="width: {{ draws_percentage }}%"
-                                     aria-valuenow="{{ draws_percentage }}"
-                                     aria-valuemin="0" aria-valuemax="100">
+                            {% endif %}
+                            {% if draws_percentage > 0 %}
+                                <div class="tw:bg-neutral-500 tw:text-neutral-content tw:flex tw:justify-center tw:items-center"
+                                     style="width: {{ draws_percentage }}%">
 
                                     <div>
                                         <img src="{% static 'img/ico/equals_icon.png' %}" alt="equals"
@@ -133,10 +163,10 @@
                                         {{ draws_percentage }}% ({{ draws }})
                                     </div>
                                 </div>
-                                <div class="progress-bar bg-primary" role="progressbar"
-                                     style="width: {{ win_guest_percentage }}%"
-                                     aria-valuenow="{{ win_guest_percentage }}"
-                                     aria-valuemin="0" aria-valuemax="100">
+                            {% endif %}
+                            {% if win_guest_percentage > 0 %}
+                                <div class="tw:bg-primary tw:text-primary-content tw:flex tw:justify-center tw:items-center"
+                                     style="width: {{ win_guest_percentage }}%">
 
                                     <div>
                                         <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}"
@@ -144,31 +174,39 @@
                                         {{ win_guest_percentage }}% ({{ win_guest }})
                                     </div>
                                 </div>
-                            </div>
-
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-4">
-                            <div>
-                                <h6 class="mb-0">Матчи</h6>
-                                <h4 class="text-warning">{{ all_matches_between.count }}</h4>
-                                <h6>Самый результативный матч: <a
-                                    href="{{ the_most_score.get_absolute_url }}">
-                                    <img
-                                        src="{{ the_most_score.team_home.logo.url }}"
-                                        alt="{{ the_most_score.team_home.title }}"
-                                        width="20px">
-                                    {{ the_most_score.score_home }}-{{ the_most_score.score_guest }}
-                                    <img
-                                        src="{{ the_most_score.team_guest.logo.url }}"
-                                        alt="{{ the_most_score.team_guest.title }}" width="20px">
-                                </a>
+                    <div class="tw:flex">
+                        <div class="tw:w-1/3 tw:flex tw:items-center">
+                            <div class="tw:flex tw:flex-col">
+                                <h6 class="tw:mb-0">Матчи</h6>
+                                <h4 class="tw:text-warning">{{ all_matches_between.count }}</h4>
+                                <h6>
+                                    Самый результативный матч:
+                                    <a href="{{ the_most_score.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">
+                                        <img
+                                            src="{{ the_most_score.team_home.logo.url }}"
+                                            alt="{{ the_most_score.team_home.title }}"
+                                            width="20px">
+                                        {{ the_most_score.score_home }}-{{ the_most_score.score_guest }}
+                                        <img
+                                            src="{{ the_most_score.team_guest.logo.url }}"
+                                            alt="{{ the_most_score.team_guest.title }}" width="20px">
+                                    </a>
                                 </h6>
                             </div>
                         </div>
-                        <div class="col-8">
-                            <table class="table table-borderless table-stat">
+                        <div class="tw:w-2/3">
+                            <table class="tw:table tw:text-center tw:**:[tr]:border-0 table-stat">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th><img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="30px"></th>
+                                        <th><img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="30px"></th>
+                                    </tr>
+                                </thead>
+
                                 <tbody>
                                     <tr>
                                         <td>Побед</td>
@@ -194,139 +232,124 @@
 
 
             {% if match.is_played %}
+                <div class="tw:tabs tw:tabs-lift tw:rounded-b-lg tw:mb-3" role="tablist">
+                    <input type="radio" name="match-tabs"
+                           class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!"
+                           aria-label="Общая сводка"
+                           checked
+                    />
+                    <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+                        <div id="match-recap" role="tabpanel" aria-labelledby="match-recap-tab" class="tw:flex tw:flex-col tw:gap-3">
+                            <div>
+                                <h5>Cоставы</h5>
+                                <div class="tw:flex tw:w-full">
+                                    <div class="tw:w-5/12 tw:flex tw:flex-col tw:items-center tw:pl-4">
+                                        {% include "tournament/partials/players_stats_summary.html" with players=match.team_home_start.all subs=team_home_substitutes %}
+                                    </div>
 
-                <div class="row justify-content-center mb-3">
-                    <ul class="nav nav-tabs" id="myTab" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="squad-tab" data-toggle="tab" href="#start_squad" role="tab"
-                               aria-controls="start_squad-tab" aria-selected="true">Общая сводка</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="detail-tab" data-toggle="tab" href="#detail_stat" role="tab"
-                               aria-controls="detail_stat-tab" aria-selected="false">Протокол</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="info_about" data-toggle="tab" href="#info" role="tab"
-                               aria-controls="info-tab" aria-selected="false" style="width: 164px">Информация</a>
-                        </li>
-                    </ul>
-                </div>
-            {% endif %}
+                                    <div class="tw:w-2/12"></div>
 
-            <div class="tab-content start_squad" id="myTabContent">
-                <div class="tab-pane fade show active" id="start_squad" role="tabpanel"
-                     aria-labelledby="start_squad-tab">
-
-                    <h5>Стартовые составы</h5>
-                    <div class="row">
-                        <div class="col-sm-1">
-
-                        </div>
-                        <div class="col-sm-4">
-                            {% include "tournament/partials/players_stats_summary.html" with players=match.team_home_start.all %}
-                        </div>
-                        <div class="col-sm-3">
-
-                        </div>
-                        <div class="col-sm-4">
-                            {% include "tournament/partials/players_stats_summary.html" with players=match.team_guest_start.all %}
-                        </div>
-
-                    </div>
-                    {% if team_home_substitutes|length > 0 or team_guest_substitutes|length > 0 %}
-                        <h5>Замены</h5>
-                        <div class="row">
-                            <div class="col-sm-1">
-
+                                    <div class="tw:w-5/12 tw:flex tw:flex-col tw:items-center tw:pr-4">
+                                        {% include "tournament/partials/players_stats_summary.html" with players=match.team_guest_start.all subs=team_guest_substitutes %}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-sm-4">
-                                {% include "tournament/partials/players_stats_summary.html" with players=team_home_substitutes %}
-                            </div>
-                            <div class="col-sm-3">
 
-                            </div>
-                            <div class="col-sm-4">
-                                {% include "tournament/partials/players_stats_summary.html" with players=team_guest_substitutes %}
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% comment %}
-                        Показывать секцию с карточками и дисквалификациями только после 11 сезона,
-                        ранее информация о них содержалась в комментариях инспекторов под матчами 
-                    {% endcomment %}
-                    {% if match.league.championship.number > 14 %}
-                        <h5>Нарушения</h5>
-                        <div class="row" style="text-align: left">
-                            <div class="col-sm-11">
-                                <ul style="text-align: left">
-                                    {% for card in cards %}
-                                        <li>
-                                            {{ card.author }} ({{ card.team }}) - <b>{{ card|card_name }}</b> {{ card.card_reason }}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    {% if match.disqualifications.count > 0 %}
-                        <h5>Дисквалификации</h5>
-                        <div class="row" style="text-align: left">
-                            <div class="col-sm-11">
-                                <ul>
-                                    {% for disqualification in match.disqualifications.all %}
-                                        <li>
-                                            {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
-                                            Причина: {{ disqualification.reason }}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="tab-pane fade" id="detail_stat" role="tabpanel" aria-labelledby="detail_stat-tab">
-                    {% with events_by_time=match|events_sorted %}
-                        <h4 class="mb-2">1 тайм</h4>
-                        {% include "tournament/include/match_events.html" with events=events_by_time.first_time %}
-
-                        <h4 class="mb-2">2 тайм</h4>
-                        {% include "tournament/include/match_events.html" with events=events_by_time.second_time %}
-
-                        {% if events_by_time.extra_time|length > 0 %}
-                            <h4>Доп. время</h4>
-                            {% include "tournament/include/match_events.html" with events=events_by_time.extra_time %}
-                        {% endif %}
-                    {% endwith %}
-                </div>
-                <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
-                    <div class="row">
-                        <div class="col-12">
-                            <h6>
-                                {% if not match.replay_link_second %}
-                                    <a href="{{ match.replay_link }}">Реплей</a>
-                                {% else %}
-                                    <a href="{{ match.replay_link }}">Реплей 1</a><br>
-                                    <a href="{{ match.replay_link_second }}">Реплей 2</a>
+                            <div>
+                                {% comment %}
+                                    Показывать секцию с карточками и дисквалификациями только после 11 сезона,
+                                    ранее информация о них содержалась в комментариях инспекторов под матчами 
+                                {% endcomment %}
+                                {% if match.league.championship.number > 14 %}
+                                    <h5>Нарушения</h5>
+                                    <div class="tw:px-6 tw:text-base">
+                                        {% if cards|length > 0 %}
+                                            <ul class="tw:text-left">
+                                                {% for card in cards %}
+                                                    <li>
+                                                        {{ card.author }} ({{ card.team }}) - <b>{{ card|card_name }}</b> {{ card.card_reason }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="tw:text-base">Нарушений не зафиксировано</span>
+                                        {% endif %}
+                                    </div>
                                 {% endif %}
-                            </h6>
-                            <h6>
-                                Инспектор: {{ match.inspector }}
-                            </h6>
-                            {% if match.comment %}
-                                <h6>Комментарий:</h6>
-                                <p>{{ match.comment|linebreaks }}</p>
+                            </div>
+
+                            {% if match.disqualifications.count > 0 %}
+                                <div>
+                                    <h5>Дисквалификации</h5>
+                                    <div class="tw:px-6 tw:text-base">
+                                        <ul class="tw:text-left">
+                                            {% for disqualification in match.disqualifications.all %}
+                                                <li>
+                                                    {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
+                                                    Причина: {{ disqualification.reason }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
                             {% endif %}
                         </div>
+                    </div>
 
+                    <input type="radio" name="match-tabs"
+                           class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!"
+                           aria-label="Протокол"
+                    />
+                    <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+                        <div id="match-details" role="tabpanel" aria-labelledby="match-details-tab">
+                            {% with events_by_time=match|events_sorted %}
+                                <div class="tw:flex tw:flex-col tw:gap-2">
+                                    <h4>1 тайм</h4>
+                                    {% include "tournament/include/match_events.html" with events=events_by_time.first_time %}
+
+                                    <h4>2 тайм</h4>
+                                    {% include "tournament/include/match_events.html" with events=events_by_time.second_time %}
+
+                                    {% if events_by_time.extra_time|length > 0 %}
+                                        <h4>Доп. время</h4>
+                                        {% include "tournament/include/match_events.html" with events=events_by_time.extra_time %}
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        </div>
+                    </div>
+
+                    <input type="radio" name="match-tabs"
+                           class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!"
+                           aria-label="Информация"
+                    />
+                    <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+                        <div id="match-info" role="tabpanel" aria-labelledby="match-info-tab">
+                            <div class="tw:flex tw:flex-col tw:items-center">
+                                <h6>
+                                    {% if not match.replay_link_second %}
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">Реплей</a>
+                                    {% else %}
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">Реплей 1</a><br>
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link_second }}">Реплей 2</a>
+                                    {% endif %}
+                                </h6>
+                                <h6>
+                                    Инспектор: {{ match.inspector }}
+                                </h6>
+                                {% if match.comment %}
+                                    <h6>Комментарий:</h6>
+                                    <p>{{ match.comment|linebreaks }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
 
 {% block comments %}
-    {% include 'core/include/new_comments.html' with object=match comments=comments %}
+    {% include 'core/comment/comments.html' with object=match comments=comments %}
 {% endblock %}

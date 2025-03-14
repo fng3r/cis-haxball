@@ -1,13 +1,14 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
+from itertools import groupby
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery
-from django.db.models.functions import Cast, Coalesce
+from django.db.models import Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery, Window
+from django.db.models.functions import Cast, Coalesce, Rank
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -287,7 +288,12 @@ def update_free_agent_entry(request, pk):
 class EditTeamView(DetailView, View):
     model = Team
     context_object_name = 'team'
-    template_name = 'tournament/teams/edit_team.html'
+    
+    def get_template_names(self):
+        if self.request.htmx:
+            return 'tournament/teams/partials/edit_team_form.html'
+
+        return 'tournament/teams/edit_team.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -404,7 +410,7 @@ class MatchDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        match = context['match']
+        match: Match = context['match']
 
         page = self.request.GET.get('page')
         comments_obj = get_comments_for_object(Match, match.id)
@@ -414,6 +420,11 @@ class MatchDetail(DetailView):
         context['comments'] = comments
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
+        
+        context['latest_matches'] = {
+            'team_home': self.get_latest_matches(match, match.team_home),
+            'team_guest': self.get_latest_matches(match, match.team_guest),
+        }
 
         all_matches_between = Match.objects.filter(
             Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True)
@@ -534,7 +545,28 @@ class MatchDetail(DetailView):
         context['score_guest_all'] = score_guest_all
         context['score_home_average'] = round(score_home_all / all_matches_between.count(), 2)
         context['score_guest_average'] = round(score_guest_all / all_matches_between.count(), 2)
+        
         return context
+    
+    def get_latest_matches(self, match, team):
+        match_date_condition = ~Q(pk__in=[])
+        if match.is_played:
+            match_date_condition = (
+                Q(match_date__lt=match.match_date) |
+                Q(match_date=match.match_date, stage__order__lte=match.stage.order, numb_tour__lt=match.numb_tour)
+            )
+            
+        return reversed(
+            Match.objects.filter(
+                Q(team_home=team) | Q(team_guest=team),
+                ~Q(id=match.id),
+                match_date_condition,  
+                league=match.league,
+                is_played=True
+            )
+            .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
+            .order_by('-match_date', '-numb_tour', '-id')[:5]
+        )
 
 
 class PostponementFilter(FilterSet):
@@ -754,7 +786,7 @@ def players_hall_of_fame(request):
     
     return render(
         request,
-        'tournament/hall_of_fame/hall_of_fame.html#players-hall-of-fame',
+        'tournament/hall_of_fame/partials/players_hall_of_fame.html',
         {
             'players_tops': players,
             'players_filter': HallOfFamePlayerFilter(request.GET, queryset=Player.objects.none()),
@@ -773,7 +805,7 @@ def teams_hall_of_fame(request):
     
     return render(
         request,
-        'tournament/hall_of_fame/hall_of_fame.html#teams-hall-of-fame',
+        'tournament/hall_of_fame/partials/teams_hall_of_fame.html',
         {
             'teams_tops': teams,
             'teams_filter': HallOfFameTeamFilter(request.GET, queryset=Team.objects.none()),
@@ -1310,18 +1342,18 @@ def player_detailed_statistics(request, pk):
     overall_yellow_cards = all_yellow_cards.count()
     overall_red_cards = all_red_cards.count()
 
-    overall_stats = [
-        overall_matches,
-        overall_goals,
-        overall_assists,
-        overall_goals_assists,
-        overall_clean_sheets,
-        overall_subs_out,
-        overall_subs_in,
-        overall_ogs,
-        overall_yellow_cards,
-        overall_red_cards,
-    ]
+    overall_stats = {
+        'matches': overall_matches,
+        'goals': overall_goals,
+        'assists': overall_assists,
+        'goals_assists': overall_goals_assists,
+        'clean_sheets': overall_clean_sheets,
+        'subs_out': overall_subs_out,
+        'subs_in': overall_subs_in,
+        'ogs': overall_ogs,
+        'yellow_cards': overall_yellow_cards,
+        'red_cards': overall_red_cards,
+    }
 
     overall_avg_goals = overall_goals / (overall_matches or 1)
     overall_avg_assists = overall_assists / (overall_matches or 1)
@@ -1333,18 +1365,18 @@ def player_detailed_statistics(request, pk):
     overall_avg_subs_in = overall_subs_in / (overall_matches or 1)
     overall_avg_subs_out = overall_subs_out / (overall_matches or 1)
 
-    overall_extra_stats = [
-        overall_matches,
-        overall_avg_goals,
-        overall_avg_assists,
-        overall_avg_goals_assists,
-        overall_avg_clean_sheets,
-        overall_avg_subs_out,
-        overall_avg_subs_in,
-        overall_avg_own_goals,
-        overall_avg_yellow_cards,
-        overall_avg_red_cards,
-    ]
+    overall_extra_stats = {
+        'matches': overall_matches,
+        'avg_goals': overall_avg_goals,
+        'avg_assists': overall_avg_assists,
+        'avg_goals_assists': overall_avg_goals_assists,
+        'avg_clean_sheets': overall_avg_clean_sheets,
+        'avg_subs_out': overall_avg_subs_out,
+        'avg_subs_in': overall_avg_subs_in,
+        'avg_own_goals': overall_avg_own_goals,
+        'avg_yellow_cards': overall_avg_yellow_cards,
+        'avg_red_cards': overall_avg_red_cards,
+    }
 
     extra_stats_by_season = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(float))))
     if overall_matches > 0:
@@ -1463,7 +1495,7 @@ def player_detailed_statistics(request, pk):
     most_cs_in_season = (
         Season.objects.annotate(cs=Subquery(cs_subquery)).filter(cs__isnull=False).order_by('-cs').first()
     )
-
+    
     other_stats = {
         'first_match': first_match,
         'fastest_goal': fastest_goal,
@@ -1476,17 +1508,65 @@ def player_detailed_statistics(request, pk):
         'most_goals_assists_in_season': most_goals_assists_in_season,
         'most_cs_in_season': most_cs_in_season,
     }
+    
+    ranks = get_player_ranks(player)
 
     context = {
         'user': user,
+        'player': player,
         'stats': stats_by_season,
         'extra_stats': extra_stats_by_season,
         'overall_stats': overall_stats,
         'overall_extra_stats': overall_extra_stats,
         'other_stats': other_stats,
+        'ranks': ranks,
     }
 
-    return render(request, 'tournament/partials/player_detailed_statistics.html', context)
+    return render(request, 'tournament/player/player_profile.html', context)
+
+
+def get_player_ranks(player):
+    matches_top = (
+        Player.objects
+        .annotate(count=Count('played_matches'), rank=Window(expression=Rank(), order_by=('-count',)))
+        .filter(count__gt=0)
+    )
+    matches_rank = next(filter(lambda p: p.id == player.id, matches_top), None)
+    matches_top_count = matches_top.count()
+
+    goals_top = (
+        Player.objects
+        .annotate(count=Count('goals'), rank=Window(expression=Rank(), order_by=('-count',)))
+        .filter(count__gt=0)
+    )
+    goals_rank = next(filter(lambda p: p.id == player.id, goals_top), None)
+    goals_top_count = goals_top.count()
+    
+    assists_top = (
+        Player.objects
+        .annotate(count=Count('assists'), rank=Window(expression=Rank(), order_by=('-count',)))
+        .filter(count__gt=0)
+    )
+    assists_rank = next(filter(lambda p: p.id == player.id, assists_top), None)
+    assists_top_count = assists_top.count()
+    
+    cs_top = (
+        Player.objects
+        .annotate(
+            count=Count('event', filter=Q(event__event=OtherEvents.CLEAN_SHEET)),
+            rank=Window(expression=Rank(), order_by=('-count',))
+        )
+        .filter(count__gt=0)
+    )
+    cs_rank = next(filter(lambda p: p.id == player.id, cs_top), None)
+    cs_top_count = cs_top.count()
+    
+    return {
+        'matches': {'rank': matches_rank.rank if matches_rank else None, 'total': matches_top_count},
+        'goals': {'rank': goals_rank.rank if goals_rank else None, 'total': goals_top_count},
+        'assists': {'rank': assists_rank.rank if assists_rank else None, 'total': assists_top_count},
+        'clean_sheets': {'rank': cs_rank.rank if cs_rank else None, 'total': cs_top_count},
+    }
 
 
 def player_statistics_charts(request, pk):
@@ -1869,7 +1949,7 @@ def team_squad_statistics(request, pk):
     season = Season.objects.get(number=season_number) if season_number else None
     stats = get_team_squad_stats(team, season=season)
     
-    return render(request, 'tournament/teams/partials/team_squad_stats.html', {'team_squad': stats})
+    return render(request, 'tournament/teams/partials/team_squad_stats.html', {'team': team, 'team_squad': stats})
 
 
 def team_statistics_charts(request, pk):

@@ -4,30 +4,30 @@
 
 
 {% partialdef statistics-card %}
-    <div class="card" style="border-radius: 25px;">
-        <div class="card-header"
-             style="background: linear-gradient(to right, rgba(193, 243, 229, 0.7), rgba(91, 142, 241, 0.32)); border-radius: 25px 25px 0 0;">
-            <h5 class="mb-0 font-weight-bold" style="height: 28px;">
-                {{ title }}
-                <img
-                    src="{% static icon_url %}"
-                    width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
-                    height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
-                    title="{{ icon_title }}">
-            </h5>
+    <div class="tw:card tw:h-[570px] tw:bg-base-100 tw:rounded-lg tw:border tw:border-neutral-200">
+        <div class="tw:w-full tw:flex tw:justify-center tw:items-center tw:bg-base-300 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
+            <div class="tw:card-title tw:px-2 tw:py-3">
+                <h5 class="tw:h-[28px] tw:mb-0!">
+                    <span>{{ title }}</span>
+                    <img
+                        src="{% static icon_url %}"
+                        width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
+                        height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
+                        title="{{ icon_title }}">
+                </h5>
+            </div>
         </div>
 
-        <div class="card-body p-0" style="position: relative; height: 515px; overflow: auto; border-radius: 0 0 25px 25px;">
-
-            <table class="table table-hover mb-0">
+        <div class="tw:card-body tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
+            <table class="tw:table tw:mb-0">
                 <tbody>
                     {% for player in players %}
                         <tr>
-                            <td width="24px" class="pl-2 pr-0">
-                                <span class="h6">{{ forloop.counter }}</span>
+                            <td width="24px" class="tw:pl-3 tw:pr-2 tw:text-center">
+                                <span class="tw:text-base tw:font-semibold">{{ forloop.counter }}</span>
                             </td>
 
-                            <td width="16%" class="px-1">
+                            <td class="tw:px-1! tw:truncate">
                                 {% if league.championship.is_active %}
                                     {% if player.team %}
                                         <img src="{{ player.team.logo.url }}" width="25px" height="25px">
@@ -37,21 +37,17 @@
                                 {% else %}
                                     <img src="{% media player.last_team_logo %}" width="25px" height="25px">
                                 {% endif %}
-                            </td>
-
-                            <td class="text-left pl-0">
                                 {% if player.name %}
-                                    <a class="text-dark h6" href="{{ player.name.user_profile.get_absolute_url }}">
+                                    <a class="tw:link tw:link-hover tw:text-base tw:font-semibold tw:ml-1" href="{{ player.name.user_profile.get_absolute_url }}">
                                         {{ player.nickname }}
                                     </a>
                                 {% else %}
-                                    <span class="text-secondary h6">{{ player.nickname }}</span>
+                                    <span class="tw:text-base-content tw:text-base tw:font-semibold tw:ml-1">{{ player.nickname }}</span>
                                 {% endif %}
                             </td>
 
-                            <td width="16%">
-
-                                <span class="font-weight-bold h6">
+                            <td width="16%" class="tw:text-center">
+                                <span class="tw:font-semibold tw:text-base">
                                     {% if stat_type == 'avg' %}
                                         {{ player.count|floatformat:2 }}
                                     {% else %}
@@ -67,107 +63,94 @@
     </div>
 {% endpartialdef %}
 
-<div class="container-fluid px-0">
-    <div class="p-0" style="bottom: 0;">
-        <ul class="nav nav-tabs" id="tabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="general-stats-tab" href="#general-stats-panel" data-toggle="tab"
-                   role="tab" aria-controls="general-stats-panel" aria-selected="true">
-                    Общая
-                </a>
-            </li>
+<div class="tw:flex tw:flex-col tw:w-full">
+    <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
+        <input type="radio" name="statistics-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="Общая" checked />
+        <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
+            <div role="tabpanel" aria-labelledby="general-stats-tab">
+                <div class="tw:flex tw:mx-0 tw:my-2">
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_goalscorers title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
 
-            <li class="nav-item">
-                <a class="nav-link" id="avg-stats-tab" href="#avg-stats-panel" data-toggle="tab"
-                   role="tab" aria-controls="avg-stats-panel" aria-selected="false">
-                    В среднем за матч
-                </a>
-            </li>
-        </ul>
-    </div>
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_assistants title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
 
-
-    <div class="tab-content" id="content">
-        <div class="tab-pane fade active show" id="general-stats-panel" role="tabpanel" aria-labelledby="general-stats-tab">
-            <div class="row mx-0 mt-2 mb-2">
-                <div class="col-4 px-1">
-                    {% with players=league|top_goalscorers title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_clean_sheets title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
                 </div>
 
-                <div class="col-4 px-1">
-                    {% with players=league|top_assistants title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
+                <div class="tw:flex tw:mx-0 tw:mb-2">
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_goals_assists title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
 
-                <div class="col-4 px-1">
-                    {% with players=league|top_clean_sheets title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
-            </div>
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_yellow_cards title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
 
-            <div class="row mx-0 mb-1">
-                <div class="col-4 px-1">
-                    {% with players=league|top_goals_assists title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
-
-                <div class="col-4 px-1">
-                    {% with players=league|top_yellow_cards title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
-
-                <div class="col-4 px-1">
-                    {% with players=league|top_red_cards title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_red_cards title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="tab-pane fade" id="avg-stats-panel" role="tabpanel" aria-labelledby="avg-stats-tab">
-            <div class="row mx-0 mt-2 mb-2">
-                <div class="col-4 px-1">
-                    {% with players=league|top_goalscorers_per_match stat_type='avg' title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
+        <input type="radio" name="statistics-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="В среднем за матч"  />
+        <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
+            <div role="tabpanel" aria-labelledby="avg-stats-tab">
+                <div class="tw:flex tw:mx-0 tw:my-2">
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_goalscorers_per_match stat_type='avg' title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
+
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_assistants_per_match stat_type='avg' title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
+
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_clean_sheets_per_match stat_type='avg' title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
                 </div>
 
-                <div class="col-4 px-1">
-                    {% with players=league|top_assistants_per_match stat_type='avg' title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
+                <div class="tw:flex tw:mx-0 tw:mb-2">
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_goals_assists_per_match stat_type='avg' title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
 
-                <div class="col-4 px-1">
-                    {% with players=league|top_clean_sheets_per_match stat_type='avg' title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
-            </div>
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_yellow_cards_per_match stat_type='avg' title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
 
-            <div class="row mx-0 mb-1">
-                <div class="col-4 px-1">
-                    {% with players=league|top_goals_assists_per_match stat_type='avg' title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
-
-                <div class="col-4 px-1">
-                    {% with players=league|top_yellow_cards_per_match stat_type='avg' title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
-                </div>
-
-                <div class="col-4 px-1">
-                    {% with players=league|top_red_cards_per_match stat_type='avg' title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
-                        {% partial statistics-card %}
-                    {% endwith %}
+                    <div class="tw:w-1/3 tw:px-1">
+                        {% with players=league|top_red_cards_per_match stat_type='avg' title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
+                            {% partial statistics-card %}
+                        {% endwith %}
+                    </div>
                 </div>
             </div>
         </div>

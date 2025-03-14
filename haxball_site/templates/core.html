@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% load cache %}
+
+{% load account %}
+{% load i18n %}
+{% load user_tags %}
+{% load polls_extras %}
+{% block title %}Добро пожаловать на CIS-HAXBALL! {% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static "core/core.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/include/popup_likes_styles.css' %}">
+{% endblock %}
+
+
+{% block content %}
+
+    <div class="tw:w-full tw:mx-auto tw:justify-center">
+        <div class="tw:max-w-[1600px] tw:flex tw:flex-wrap tw:relative tw:mx-auto">
+            <div class="tw:w-1/2 tw:order-2 tw:xl:w-1/6 tw:xl:order-1 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
+                {% include 'core/include/sidebar_for_online_users.html' %}
+
+                {% include 'core/include/sidebar_for_media.html' %}
+
+                {% polls_list 2 user %}
+
+                {% show_last_transfers %}
+
+            </div>
+            <div class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:lg:w-full tw:md:w-full tw:sm:w-full tw:mx-0 tw:px-1">
+                {% block match_results %}
+                {% endblock %}
+
+                {% block upcoming_matches %}
+                {% endblock %}
+
+                {% block main_content %}
+                {% endblock %}
+
+                {# Блок для отображение профиля пользователя #}
+                {% block profile_of_user %}
+                {% endblock %}
+
+                {# Блок для отображение одного поста, пост-детейл #}
+                {% block post %}
+                {% endblock %}
+
+                {# Блок для списка постов #}
+                {% block postlist %}
+                {% endblock %}
+
+                {# Блок для отображение списка комментариев #}
+                {% block comments %}
+                {% endblock %}
+            </div>
+
+            <div class="tw:w-1/2 tw:order-3 tw:xl:w-1/6 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
+
+                {% block sidebar_last_activity %}
+                    {% show_last_activity 12 %}
+                {% endblock %}
+
+                {% block sidebar_top_comments %}
+                    {% show_top_comments 5 %}
+                {% endblock %}
+
+            </div>
+        </div>
+    </div>
+
+    {% include 'core/include/login_modal.html' %}
+    {% include 'core/include/logout_modal.html' %}
+
+{% endblock %}
+

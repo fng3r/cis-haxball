@@ -1,39 +1,37 @@
 {% load static %}
 {% load user_tags %}
 
-<nav id="pagination" aria-label="Page navigation" class="bot_nav_page m-0">
-    <ul class="pagination justify-content-center">
-
-        {% if page.paginator.num_pages > 1 %}
-
+{% if page.paginator.num_pages > 1 %}
+    <div class="tw:flex tw:justify-center tw:rounded-b-lg tw:bg-base-200 tw:border-t tw:border-gray-300">
+        <div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
             {% for page_number in page|pages_to_show %}
                 {% if not page_number %}
-                    <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">...</a></li>
+                    <button class="tw:join-item tw:btn tw:btn-disabled">...</button>
                 {% elif page_number == page.number %}
-                    <li class="page-item disabled"><a class="page-link" href="" aria-disabled="true">{{ page_number }}</a></li>
+                    <button class="tw:join-item tw:btn tw:btn-active">{{ page_number }}</button>
                 {% else %}
                     {% with content_type=object|content_type %}
-                        <li class="page-item">
-                            {% if paginated_type == 'comments' %}
-                                <a class="page-link"
-                                   href="#"
-                                   hx-get="{% url 'core:comments' content_type.pk object.id %}?page={{ page_number }}"
-                                   hx-push-url="?page={{ page_number }}"
-                                   hx-target="#comments-container"
-                                   hx-swap="outerHTML show:top"
-                                   hx-indicator="#page-indicator">
+                        {% if paginated_type == 'comments' %}
+                            <button class="tw:join-item tw:btn"
+                                    hx-get="{% url 'core:comments' content_type.pk object.id %}{% querystring page=page_number %}"
+                                    hx-push-url="?page={{ page_number }}"
+                                    hx-target="#comments-container"
+                                    hx-swap="outerHTML show:top"
+                                    hx-indicator="#page-indicator">
+                                {{ page_number }}
+                            </button>
+                        {% else %}
+                            <a href="{{ object.get_absolute_url }}{% querystring page=page_number %}">
+                                <button class="tw:join-item tw:btn">
                                     {{ page_number }}
-                                </a>
-                            {% else %}
-                                <a class="page-link" href="{{ object.get_absolute_url }}?page={{ page_number }}">{{ page_number }}</a>
-                            {% endif %}
-                        </li>
+                                </button>
+                            </a>
+                        {% endif %}
                     {% endwith %}
                 {% endif %}
             {% endfor %}
 
-            <img id="page-indicator" height="24" class="htmx-indicator ml-2 mt-2" src="{% static 'img/svg-loaders/bars.svg' %}">
-
-        {% endif %}
-    </ul>
-</nav>
+            <img id="page-indicator" class="htmx-indicator tw:ml-2 tw:my-auto tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+        </div>
+    </div>
+{% endif %}

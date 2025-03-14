@@ -1,6 +1,7 @@
 import datetime
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import groupby
 from typing import Iterable
 
 from django import template
@@ -174,16 +175,12 @@ def get_player_matches(player, team, season=None):
     season_condition = Q(league__championship=season) if season else ~Q(pk__in=[])
     
     return (
-        Match.objects.filter(season_condition, team_guest=team, team_guest_start=player, is_played=True).count()
-        + Match.objects.filter(season_condition, team_home=team, team_home_start=player, is_played=True).count()
-        + Match.objects.filter(
+        PlayerMatchStatistics.objects.filter(
             season_condition,
-            ~(Q(team_guest_start=player) | Q(team_home_start=player)),
-            is_played=True,
-            match_substitutions__team=team,
-            match_substitutions__player_in=player,
+            player=player,
+            team=team,
+            match__is_played=True
         )
-        .distinct()
         .count()
     )
 
@@ -464,7 +461,7 @@ def round_name(tour, all_tours):
         return tour.name
 
     # since match for third place played in extra tour, ignore that tour
-    if tour.stage.has_match_for_third_place:
+    if isinstance(tour.stage, PlayOffStage) and tour.stage.has_match_for_third_place:
         all_tours -= 1
 
     if tour.number == all_tours:
@@ -750,14 +747,6 @@ def team_seasons(team):
                 'tournaments_in_season',
                 queryset=League.objects.filter(teams=team)
                 .prefetch_related(
-                    'tours__league',
-                    Prefetch(
-                        'matches_in_league',
-                        queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                        .select_related('team_home', 'team_guest', 'numb_tour__league')
-                        .order_by('numb_tour'),
-                        to_attr='team_matches',
-                    ),
                     Prefetch(
                         'stages',
                         queryset=TournamentStage.objects.filter(teams=team)
@@ -767,7 +756,7 @@ def team_seasons(team):
                             Prefetch(
                                 'matches',
                                 queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                                .select_related('team_home', 'team_guest', 'numb_tour__league')
+                                .select_related('team_home', 'team_guest', 'numb_tour__league', 'numb_tour__stage')
                                 .order_by('numb_tour'),
                                 to_attr='team_matches',
                             ),
@@ -782,6 +771,70 @@ def team_seasons(team):
         )
         .order_by('-number')
     )
+     
+     
+@register.simple_tag
+def player_seasons(player):
+    return (
+        Season.objects.filter(
+            Exists(PlayerMatchStatistics.objects.filter(player=player, league__championship=OuterRef('id')))
+        )
+        .prefetch_related(
+            Prefetch(
+                'tournaments_in_season',
+                queryset=League.objects.filter(
+                    Exists(PlayerMatchStatistics.objects.filter(player=player, league=OuterRef('id')))
+                )
+                .prefetch_related(
+                    Prefetch(
+                        'stages',
+                        queryset=TournamentStage.objects.filter(
+                            Exists(PlayerMatchStatistics.objects.filter(player=player, match__stage=OuterRef('id')))
+                        )
+                        .distinct()
+                        .prefetch_related(
+                            'tours__league',
+                            Prefetch(
+                                'matches',
+                                queryset=Match.objects.filter(
+                                    Exists(PlayerMatchStatistics.objects.filter(player=player, match=OuterRef('id'))),
+                                    is_played=True
+                                )
+                                .select_related('team_home', 'team_guest', 'numb_tour__league', 'numb_tour__stage')
+                                .annotate(player_team_id=Subquery(
+                                    PlayerMatchStatistics.objects.filter(
+                                        player=player,
+                                        match=OuterRef('id')).values('team')[:1]
+                                    )
+                                )
+                                .order_by('numb_tour'),
+                                to_attr='player_matches',
+                            ),
+                        )
+                        .order_by('order'),
+                    ),
+                )
+                .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
+                .order_by('-id'),
+                to_attr='player_leagues',
+            ),
+        )
+        .order_by('-number')
+    )
+    
+    
+@register.simple_tag
+def player_transfers_by_season(player):
+    transfers = (
+        PlayerTransfer.objects
+        .filter(trans_player=player, is_technical=False)
+        .select_related('from_team', 'to_team', 'season_join', 'trans_player__name__user_profile')
+        .order_by('-date_join')
+    )
+    transfers = {season: list(transfers) for season, transfers in groupby(transfers, lambda x: x.season_join)}
+    print(transfers)
+    
+    return transfers
 
 
 def sort_teams(league: League):

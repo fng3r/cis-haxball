@@ -1,126 +1,159 @@
-{% extends "base.html" %}
+{% extends "core.html" %}
 {% load static %}
 {% load cache %}
+{% load mathfilters %}
+{% load tournament_extras %}
+{% load utils %}
 
-{% load account %}
-{% load i18n %}
-{% load user_tags %}
-{% load polls_extras %}
-{% block title %}Добро пожаловать на CIS-HAXBALL! {% endblock %}
+{% block scripts %}
+    <!-- Аякс-скрипт проставления лайков-дизлайков к постам -->
+    <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/core.css" %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'core/include/popup_likes_styles.css' %}">
 {% endblock %}
 
+{% block match_results %}
+    {% if latest_matches %}
+        <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+            <div class="tw:card-body tw:p-0">
+                <div id="latestMatchesControls" class="carousel slide" data-interval="7500" data-ride="carousel">
+                    <div class="carousel-inner tw:rounded-lg">
+                        {% for matches_batch in latest_matches|batch:4 %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-4 tw:gap-4 tw:text-sm tw:px-5 tw:py-3">
+                                    {% for match in matches_batch %}
+                                        <div class="tw:glass tw:flex tw:flex-col tw:relative tw:px-2 tw:py-2 tw:bg-base-300/60 tw:hover:bg-base-300 tw:rounded-2xl">
+                                            <h6 class="tw:flex tw:flex-col tw:items-center tw:mb-3! tw:text-base-content/80 tw:text-sm!">
+                                                <span class="tw:text-center">
+                                                    {{ match.league.title }},
+                                                    {% if match.stage.is_playoff %}
+                                                        {{ match.numb_tour|round_name:match.stage.tours.count }}
+                                                    {% else %}
+                                                        {{ match.numb_tour|tour_name }}
+                                                    {% endif %}
+                                                </span>
+                                                <span>
+                                                    {{ match.match_date|date:"d.m" }}
+                                                </span>
+                                            </h6>
 
-{% block content %}
-
-
-    <div class="container-fluid justify-content-center">
-        <div class="row" style="max-width: 1600px; position: relative; margin: 0 auto;">
-            <div class="col-2 col-xl-2 col-lg-3 col-sm-6 order-xl-1 order-lg-2 order-md-2 order-sm-2 my-2 px-1">
-                {% block sidebar_users %}
-                    {% show_users_online %}
-                {% endblock %}
-                <div class="card mb-2" style="border-radius: 20px 20px 20px 20px;">
-                    <div class="card-header mb-0 py-1 justify-content-center bg-for-online-head text-center"
-                         style="border-radius: 20px 20px 0px 0">
-                        <h5 style="text-decoration: underline">Медиа</h5>
+                                            <div class="tw:flex tw:justify-center tw:text-sm">
+                                                <div class="tw:w-3/10 tw:flex tw:flex-col tw:gap-1 tw:self-end tw:items-center tw:justify-center tw:font-semibold">
+                                                    <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-10 tw:h-10">
+                                                    {{ match.team_home.short_title }}
+                                                </div>
+                                                <div class="tw:w-3/10 tw:grow tw:flex tw:justify-center tw:items-center tw:text-2xl tw:font-semibold">
+                                                    <a href="{% url 'tournament:match_detail' match.id %}">
+                                                        <span class="tw:absolute tw:inset-0"></span>
+                                                        {{ match.score_home }} : {{ match.score_guest }}
+                                                    </a>
+                                                </div>
+                                                <div class="tw:w-3/10 tw:flex tw:flex-col tw:gap-1 tw:self-start tw:items-center tw:justify-center tw:font-semibold">
+                                                    <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-10 tw:h-10">
+                                                    {{ match.team_guest.short_title }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                    <div class="card-body p-0 bg-for-online-body"
-                         style="position: relative; border-radius: 0px 0px 20px 20px; width: inherit; padding: 5%">
-                        <div class="d-flex justify-content-center">
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://discord.gg/h6mgc4bTJh" target="_blank" class="m-0 p-0" >
-                                    <img src="{% static 'img/ico/discord.PNG' %}" title="discord"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://t.me/+GRxpyqeJKosxODQy" target="_blank" class="m-0 p-0">
-                                    <img src="{% static 'img/ico/tg.png' %}" title="tg"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://www.youtube.com/@cis-haxball" target="_blank" class="m-0 p-0">
-                                    <img src="{% static 'img/ico/youtube.PNG' %}" title="youtube"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                            <div class="d-inline-flex mb-2" style="margin: 3% 1px 0 2px">
-                                <a href="https://www.tiktok.com/@cishaxball3" target="_blank" class="m-0 p-0">
-                                    <img src="{% static 'img/ico/tiktok.png' %}" title="tiktok"
-                                         style="cursor: pointer;" width="100%">
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+
+                    {% if latest_matches|length > 4 %}
+                        <a class="carousel-control-prev tw:text-base-content! tw:w-5!" href="#latestMatchesControls" role="button" data-slide="prev">
+                            <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next tw:text-base-content! tw:w-5!" href="#latestMatchesControls" role="button" data-slide="next">
+                            <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    {% endif %}
                 </div>
-
-                {% polls_list 2 user %}
-
-                {% cache 60 transfers_sidebar %}
-                    {% show_last_transfers %}
-                {% endcache %}
-            </div>
-            <div class="col-8 main-col col-xl-8 col-lg-12 col-md-12 col-sm-12 mx-0 order-xl-2 order-md-1 order-sm-1 order-lg-1 px-1">
-
-                <!-- Всплывающее окно входа на сайт -->
-                {% include 'core/include/login_logout_modal/log_out_modal.html' %}
-
-                <!-- Всплывающее окно выхода с сайта -->
-                <div class="modal" id="logoutModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 class="modal-title">Хотите выйти?</h4>
-                                <button type="button" class="close" data-dismiss="modal">×</button>
-                            </div>
-                            <div class="modal-footer">
-                                <form method="post" action="{% url 'account_logout' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary">Да</button>
-                                </form>
-                                <button type="button" class="btn btn-danger" data-dismiss="modal">Нет</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                {# Блок для отображение профиля пользователя #}
-                {% block profile_of_user %}
-                {% endblock %}
-
-                {# Блок для отображение одного поста, пост-детейл #}
-                {% block post %}
-                {% endblock %}
-
-                {# Блок для списка постов #}
-                {% block postlist %}
-                {% endblock %}
-
-                {# Блок для отображение списка комментариев #}
-                {% block comments %}
-                {% endblock %}
-
-            </div>
-            <div class="col-2 col-xl-2 col-lg-3 col-sm-6 order-3 order-xl-3 order-sm-3 px-1">
-
-                {% block sidebar_last_activity %}
-                    {% show_last_activity 12 %}
-                {% endblock %}
-
-                {% block sidebar_top_comments %}
-                    {% show_top_comments 5 %}
-                {% endblock %}
-
             </div>
         </div>
-    </div>
-
-
+    {% endif %}
 {% endblock %}
 
+{% block upcoming_matches %}
+    {% if upcoming_matches %}
+        <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+            <div class="tw:card-body tw:p-0">
+                <div id="upcomingMatchesControls" class="carousel slide" data-interval="7500" data-ride="carousel">
+                    <div class="carousel-inner tw:rounded-lg">
+                        {% for upcoming_matches_batch in upcoming_matches|batch:4 %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-4 tw:gap-4 tw:text-sm tw:px-5 tw:py-3">
+                                    {% for upcoming_match in upcoming_matches_batch %}
+                                        <div class="tw:glass tw:flex tw:flex-col tw:relative tw:px-2 tw:py-2 tw:bg-base-300/60 tw:hover:bg-base-300 tw:rounded-2xl">
+                                            <h6 class="tw:flex tw:flex-col tw:items-center tw:mb-3! tw:text-base-content/80 tw:text-sm!">
+                                                <span class="tw:text-center">
+                                                    {{ upcoming_match.match.league.title }},
+                                                    {% if upcoming_match.match.stage.is_playoff %}
+                                                        {{ upcoming_match.match.numb_tour|round_name:upcoming_match.match.stage.tours.count }}
+                                                    {% else %}
+                                                        {{ upcoming_match.match.numb_tour|tour_name }}
+                                                    {% endif %}
+                                                </span>
+                                                <span>
+                                                    {{ upcoming_match.time_date|date:"d.m / H:i" }}
+                                                </span>
+                                            </h6>
+
+                                            <div class="tw:flex tw:justify-center tw:text-sm">
+                                                <div class="tw:w-3/10 tw:flex tw:flex-col tw:gap-1 tw:self-end tw:items-center tw:justify-center tw:font-semibold">
+                                                    <img src="{{ upcoming_match.match.team_home.logo.url }}" alt="{{ upcoming_match.match.team_home.title }}" class="tw:w-10 tw:h-10">
+                                                    {{ upcoming_match.match.team_home.short_title }}
+                                                </div>
+                                                <div class="tw:w-3/10 tw:grow tw:flex tw:justify-center tw:items-center tw:text-2xl tw:font-semibold">
+                                                    <a href="{% url 'tournament:match_detail' upcoming_match.match.id %}">
+                                                        <span class="tw:absolute tw:inset-0"></span>
+                                                        VS
+                                                    </a>
+                                                </div>
+                                                <div class="tw:w-3/10 tw:flex tw:flex-col tw:gap-1 tw:self-start tw:items-center tw:justify-center tw:font-semibold">
+                                                    <img src="{{ upcoming_match.match.team_guest.logo.url }}" alt="{{ upcoming_match.match.team_guest.title }}" class="tw:w-10 tw:h-10">
+                                                    {{ upcoming_match.match.team_guest.short_title }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if upcoming_matches|length > 4 %}
+                        <a class="carousel-control-prev tw:text-base-content! tw:w-5!" href="#upcomingMatchesControls" role="button" data-slide="prev">
+                            <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next tw:text-base-content! tw:w-5!" href="#upcomingMatchesControls" role="button" data-slide="next">
+                            <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block postlist %}
+    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
+            <h3 class="tw:text-center tw:mb-0">
+                <i class="fa fa-list-alt tw:text-primary" aria-hidden="true"></i> Последние посты
+            </h3>
+            <div class="tw:divider tw:my-0!"></div>
+
+            {% for post in posts %}
+                {% include "core/include/post_in_list.html" with post=post is_on_homepage=True %}
+            {% endfor %}
+        </div>
+
+        <div class="tw:card-body tw:rounded-b-lg tw:bg-base-200 tw:border-t tw:border-gray-300 tw:py-2!">
+            <a href="{% url 'core:all_posts' %}" class="tw:link">Смотреть все посты</a>
+        </div>
+    </div>
+{% endblock %}
