@@ -685,6 +685,8 @@
         </div>
 
         {% if user.is_authenticated %}
+            {% include "notifications/notification_dropdown.html" %}
+
             <div class="tw:dropdown tw:dropdown-end">
                 <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar">
                     <div class="tw:w-[45px] tw:rounded-full">

@@ -1,0 +1,39 @@
+{% extends "core.html" %}
+{% load i18n %}
+
+{% block title %}Уведомления — CIS-HAXBALL{% endblock %}
+
+{% block main_content %}
+  <div class="tw:card tw:mt-2 tw:bg-base-100 tw:shadow-xl" x-data="{unreadOnly: false}">
+    <div class="tw:card-body">
+      <h2 class="tw:card-title tw:mb-4">Уведомления</h2>
+
+      <div class="tw:flex tw:justify-between">
+        <div class="tw:inline-flex tw:my-2! tw:ml-2! tw:gap-2">
+          <input type="checkbox" class="tw:checkbox tw:checkbox-sm" id="all-notifications" @change="unreadOnly = !unreadOnly">
+          <label for="all-notifications">Только непрочитанные</label>
+        </div>
+
+        <div>
+          <button class="tw:btn tw:btn-sm tw:btn-ghost"
+                  hx-post="{% url 'notifications:mark_all_as_read' %}"
+                  hx-target="#notification-container"
+                  hx-swap="none"
+                  title="Отметить все как прочитанное">
+            <svg xmlns="http://www.w3.org/2000/svg" class="tw:h-4 tw:w-4 tw:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Отметить все как прочитанное
+          </button>
+        </div>
+      </div>
+
+      <div class="tw:divider tw:my-1"></div>
+
+      <div id="notification-container">
+        {% include "notifications/notifications_list.html" %}
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

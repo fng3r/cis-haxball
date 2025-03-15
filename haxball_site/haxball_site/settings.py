@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'polls.apps.PollsConfig',
     'reservation.apps.ReservationConfig',
     'utils.apps.UtilsConfig',
+    'custom_notifications.apps.CustomNotificationsConfig',
     'django_filters',
     'smart_selects',
     'grappelli',
@@ -64,6 +65,7 @@ INSTALLED_APPS = [
     'django_htmx',
     'widget_tweaks',
     'polymorphic',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -97,11 +99,15 @@ TEMPLATES = [
                 'haxball_site.context_processors.latest_matches_context',
                 'haxball_site.context_processors.upcoming_matches_context',
                 'haxball_site.context_processors.online_users_context',
+                'haxball_site.context_processors.notifications_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },
     },
 ]
+
+# Notification settings
+DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 

@@ -35,6 +35,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('summernote/', include('django_summernote.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
+    path('notifications/', include('custom_notifications.urls', namespace='notifications')),
 ]
 
 if settings.URL_PREFIX:

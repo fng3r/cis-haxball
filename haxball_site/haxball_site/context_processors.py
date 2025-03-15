@@ -1,4 +1,5 @@
 from django.utils import timezone
+from notifications.models import Notification
 from online_users.models import OnlineUserActivity
 from reservation.models import ReservationEntry
 from tournament.models import Match
@@ -38,3 +39,14 @@ def online_users_context(request):
     users_online = [user_activity.user for user_activity in user_activity_objects]
 
     return {'users_online': users_online, 'users_online_count': len(users_online)}
+
+
+def notifications_context(request):
+    """
+    Add unread notifications to the context for all templates.
+    """
+    context = {}
+    if request.user.is_authenticated:
+        context['user_notifications'] = Notification.objects.filter(recipient=request.user, unread=True).order_by('-timestamp')[:10]
+        context['unread_count'] = Notification.objects.filter(recipient=request.user, unread=True).count()
+    return context

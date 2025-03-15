@@ -1,0 +1,100 @@
+<div x-data="{ totalCount: {{ total_count }}, unreadCount: {{ unread_count }} }"
+     @notification-read.window="unreadCount = unreadCount - 1"
+     @notification-removed.window="totalCount = totalCount - 1; if ($event.detail.was_unread) { unreadCount = unreadCount - 1 }"
+>
+    <div class="tw:space-y-2" id="notification-list" x-show="unreadOnly ? unreadCount > 0 : totalCount > 0">
+        {% for notification in notifications %}
+            <div id="notification-{{ notification.id }}">
+                {% partialdef notification-list-item inline=True %}
+                    <div class="tw:flex tw:items-start tw:gap-4 tw:p-4 tw:rounded-lg"
+                         :class="isUnread ? 'tw:bg-base-200' : ''"
+                         x-data="{notifcationId: {{ notification.id }}, isUnread: '{{ notification.unread }}' === 'True', isRemoved: false}"
+                         x-show="!isRemoved && (!unreadOnly || isUnread)"
+                         @notification-read.window="if (notifcationId === $event.detail.id) { isUnread = false }"
+                         @notification-removed.window="if (notifcationId === $event.detail.id) { isRemoved = true }"
+                         @all-notifications-read.window="isUnread = false"
+                    >
+                        <div class="tw:flex-shrink-0">
+                            {% if notification.actor.user_profile.avatar %}
+                                <img src="{{ notification.actor.user_profile.avatar.url }}" alt="{{ notification.actor }}" class="tw:w-10 tw:h-10 tw:rounded-full">
+                            {% else %}
+                                <div class="tw:w-10 tw:h-10 tw:rounded-full tw:bg-primary tw:flex tw:items-center tw:justify-center">
+                                    <span class="tw:text-primary-content">{{ notification.actor.username|slice:":1" }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="tw:flex-1">
+                            <div class="tw:flex tw:justify-between">
+                                <div>
+                                    {% if notification.data.type == 'comment_reply' %}
+                                        <div class="tw:text-lg tw:font-medium">
+                                            {{ notification.actor.username }}
+                                            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">ответил</a>
+                                            на ваш комментарий под темой
+                                            <a href="{{ notification.data.subject_url }}" class="tw:link tw:link-primary tw:link-hover"
+                                            >"{{ notification.data.subject_title }}"</a>
+                                        </div>
+                                    {% elif notification.data.type == 'profile_comment' %}
+                                        <div class="tw:text-lg tw:font-medium">
+                                            {{ notification.actor.username }}
+                                            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">оставил комментарий</a>
+                                            под Вашим профилем
+                                        </div>
+                                    {% elif notification.data.type == 'match_played' %}
+                                        <div class="tw:text-lg tw:font-medium">
+                                            Матч
+                                            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
+                                            >{{ notification.data.match_title }}</a> с участием Вашей команды был проинспектирован
+                                        </div>
+                                    {% else %}
+                                        {% if notification.data.url %}
+                                            <a href="{{ notification.data.url }}" class="tw:font-medium tw:text-lg">
+                                                {{ notification.verb }}
+                                            </a>
+                                        {% else %}
+                                            <span class="tw:font-medium tw:text-lg">{{ notification.verb }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                    <p class="tw:text-sm tw:text-base-content/70">
+                                        {{ notification.timesince }} назад
+                                    </p>
+                                </div>
+                                <div>
+                                    <div class="tw:status tw:status-lg tw:status-error" x-show="isUnread"></div>
+                                    <button class="tw:btn tw:btn-xs tw:btn-ghost tw:btn-circle"
+                                            hx-post="{% url 'notifications:mark_as_read' notification.id %}"
+                                            hx-target="#notification-{{ notification.id }}"
+                                            hx-swap="none"
+                                            x-show="isUnread"
+                                            title="Отметить как прочитанное">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                    <button class="tw:btn tw:btn-xs tw:btn-ghost tw:btn-circle"
+                                            hx-post="{% url 'notifications:delete' notification.id %}"
+                                            hx-target="#notification-{{ notification.id }}"
+                                            hx-swap="none"
+                                            hx-trigger="click"
+                                            title="Удалить">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if notification.description %}
+                                <p class="tw:mt-2">{{ notification.description|striptags }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {% endpartialdef %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="tw:text-center tw:py-8" x-show="unreadOnly ? unreadCount === 0 : totalCount === 0">
+        <p class="tw:text-lg tw:text-base-content/70">У Вас нет уведомлений</p>
+    </div>
+</div>
