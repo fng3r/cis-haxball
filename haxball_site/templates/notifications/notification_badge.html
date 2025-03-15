@@ -1,4 +1,4 @@
-<div class="tw:indicator">
+<div class="tw:indicator tw:mt-1">
   <span id="notification-badge-counter" class="tw:indicator-item tw:badge tw:badge-xs tw:badge-primary {% if unread_count == 0 %}tw:hidden{% endif %}"
         hx-trigger="unread-count-changed"
         hx-get="{% url 'notifications:badge' %}"

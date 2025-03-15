@@ -101,9 +101,9 @@ def notify_like(user, post):
     print('like notification sent')
 
 
-def notify_match_played(match: Match):
+def notify_match_inspected(match: Match):
     """
-    Send notification when a match is played.
+    Send notification when a match is inspected.
     """
     try:
         actor = match.inspector or User.objects.get(username='admin')
@@ -121,9 +121,9 @@ def notify_match_played(match: Match):
             verb=f'Матч {match_title} c участием Вашей команды был проинспектирован',
             target=match,
             url=match.get_absolute_url(),
-            type='match_played',
+            type='match_inspected',
             match_title=match_title
         )
     except Exception as e:
-        print(f'Error sending match played notification: {e}')
-    print('match played notification sent')
+        print(f'Error sending match inspected notification: {e}')
+    print('match inspected notification sent')

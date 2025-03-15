@@ -10,7 +10,9 @@
 >
   <div class="tw:flex-shrink-0">
     {% if notification.actor.user_profile.avatar %}
-      <img src="{{ notification.actor.user_profile.avatar.url }}" title="{{ notification.actor }}" class="tw:w-8 tw:h-8 tw:rounded-full">
+      <a href="{{ notification.actor.user_profile.get_absolute_url }}">
+        <img src="{{ notification.actor.user_profile.avatar.url }}" title="{{ notification.actor }}" class="tw:w-8 tw:h-8 tw:rounded-full">
+      </a>
     {% else %}
       <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-primary tw:flex tw:items-center tw:justify-center">
         <span class="tw:text-primary-content tw:text-xs">{{ notification.actor.username|slice:":1" }}</span>
@@ -24,7 +26,7 @@
           <div class="tw:font-medium">
             {{ notification.actor.username }}
             <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">ответил</a>
-            на ваш комментарий под темой
+            на Ваш комментарий под темой
             <a href="{{ notification.data.subject_url }}" class="tw:link tw:link-primary tw:link-hover"
             >"{{ notification.data.subject_title }}"</a>
           </div>
@@ -34,7 +36,7 @@
             <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">оставил комментарий</a>
             под Вашим профилем
           </div>
-        {% elif notification.data.type == 'match_played' %}
+        {% elif notification.data.type == 'match_inspected' %}
           <div class="tw:font-medium">
             Матч
             <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"

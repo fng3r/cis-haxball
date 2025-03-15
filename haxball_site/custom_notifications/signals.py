@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from tournament.models import Match
 
-from .utils import notify_comment_reply, notify_match_played, notify_profile_comment
+from .utils import notify_comment_reply, notify_match_inspected, notify_profile_comment
 
 
 @receiver(post_save, sender=NewComment)
@@ -23,10 +23,10 @@ def comment_created(sender, instance: NewComment, created, **kwargs):
 
 
 @receiver(post_save, sender=Match)
-def match_played(sender, instance: Match, created, **kwargs):
+def match_inspected(sender, instance: Match, created, **kwargs):
     """
     Signal handler that is triggered when a match is played.
     This will send a notification if the match is a reply to another match.
     """
     if instance.is_played and instance.tracker.has_changed('is_played'):
-        notify_match_played(instance)
+        notify_match_inspected(instance)
