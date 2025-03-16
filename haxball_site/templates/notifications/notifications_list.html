@@ -1,8 +1,9 @@
 <div x-data="{ totalCount: {{ total_count }}, unreadCount: {{ unread_count }} }"
      @notification-read.window="unreadCount = unreadCount - 1"
      @notification-removed.window="totalCount = totalCount - 1; if ($event.detail.was_unread) { unreadCount = unreadCount - 1 }"
+     @all-notifications-read.window="unreadCount = 0"
 >
-    <div class="tw:space-y-2" id="notification-list" x-show="unreadOnly ? unreadCount > 0 : totalCount > 0">
+    <div class="tw:space-y-2 tw:max-h-[100vh] tw:overflow-y-auto" id="notification-list" x-show="unreadOnly ? unreadCount > 0 : totalCount > 0">
         {% for notification in notifications %}
             <div id="notification-{{ notification.id }}">
                 {% partialdef notification-list-item inline=True %}
