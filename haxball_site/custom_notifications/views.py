@@ -25,7 +25,6 @@ class NotificationListView(ListView):
     """Custom view for listing notifications with HTMX support."""
     model = Notification
     context_object_name = 'notifications'
-    paginate_by = 10
     template_name = 'notifications/all.html'
     
     @method_decorator(login_required)
@@ -40,9 +39,7 @@ class NotificationListView(ListView):
         if notification_type == 'unread':
             qs = qs.unread()
             
-        qs = qs.prefetch_related('actor', 'actor__user_profile', 'action_object', 'target')
-            
-        return qs
+        return qs.prefetch_related('actor', 'actor__user_profile', 'action_object', 'target')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

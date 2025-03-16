@@ -42,6 +42,17 @@
             <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
             >{{ notification.data.match_title }}</a> с участием Вашей команды был проинспектирован
           </div>
+        {% elif notification.data.type == 'disqualification' %}
+          <div class="tw:font-medium">
+            {% if notification.data.disqualified_player_username == notification.recipient.username %}
+              Вы получили дисквалификацию
+            {% else %}
+              Игрок Вашей команды ({{ notification.data.disqualified_player_username }}) получил дисквалификацию
+            {% endif %}
+            по итогам матча
+            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
+            >{{ notification.data.match_title }}</a>
+          </div>
         {% else %}
           {% if notification.data.url %}
             <a href="{{ notification.data.url }}" class="tw:font-medium">

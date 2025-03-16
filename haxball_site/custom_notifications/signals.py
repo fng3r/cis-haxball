@@ -1,9 +1,9 @@
 from core.models import NewComment, Profile
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from tournament.models import Match
+from tournament.models import Disqualification, Match
 
-from .utils import notify_comment_reply, notify_match_inspected, notify_profile_comment
+from .notifications import notify_comment_reply, notify_disqualification, notify_match_inspected, notify_profile_comment
 
 
 @receiver(post_save, sender=NewComment)
@@ -26,7 +26,19 @@ def comment_created(sender, instance: NewComment, created, **kwargs):
 def match_inspected(sender, instance: Match, created, **kwargs):
     """
     Signal handler that is triggered when a match is played.
-    This will send a notification if the match is a reply to another match.
+    This will send a notification to all team's staff members.
     """
     if instance.is_played and instance.tracker.has_changed('is_played'):
         notify_match_inspected(instance)
+
+
+@receiver(post_save, sender=Disqualification)
+def disqualification_created(sender, instance: Disqualification, created, **kwargs):
+    """
+    Signal handler that is triggered when a disqualification is created.
+    This will send a notification to all team's staff members.
+    """
+    if not created:
+        return
+    
+    notify_disqualification(instance)

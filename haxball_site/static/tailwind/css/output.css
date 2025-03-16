@@ -3045,6 +3045,12 @@
   .tw\:max-h-100 {
     max-height: calc(var(--tw-spacing) * 100);
   }
+  .tw\:max-h-\[100\%\] {
+    max-height: 100%;
+  }
+  .tw\:max-h-\[100vh\] {
+    max-height: 100vh;
+  }
   .tw\:max-h-\[250px\] {
     max-height: 250px;
   }
@@ -3056,6 +3062,12 @@
   }
   .tw\:max-h-\[850px\] {
     max-height: 850px;
+  }
+  .tw\:max-h-\[calc\(100vh-10rem\)\] {
+    max-height: calc(100vh - 10rem);
+  }
+  .tw\:max-h-\[calc\(100vh-20rem\)\] {
+    max-height: calc(100vh - 20rem);
   }
   .tw\:min-h-screen {
     min-height: 100vh;
@@ -3357,6 +3369,9 @@
   }
   .tw\:gap-x-2 {
     column-gap: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:gap-x-5 {
+    column-gap: calc(var(--tw-spacing) * 5);
   }
   .tw\:gap-y-2 {
     row-gap: calc(var(--tw-spacing) * 2);

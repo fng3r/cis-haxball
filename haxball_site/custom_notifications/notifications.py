@@ -2,7 +2,7 @@ from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from notifications.signals import notify
-from tournament.models import Match
+from tournament.models import Disqualification, Match
 
 
 def notify_user(recipient, actor, verb, target=None, action_object=None, description=None, **kwargs):
@@ -50,12 +50,12 @@ def notify_comment_reply(comment: NewComment):
             type='comment_reply',
             url=comment.get_absolute_url(),
             subject_title=str(comment.content_object),
-                subject_url=comment.content_object.get_absolute_url()
-            )
+            subject_url=comment.content_object.get_absolute_url()
+        )
+        print('comment reply notification sent')
     except Exception as e:
         print(f'Error sending comment reply notification: {e}')
-    print('comment reply notification sent')
-    
+
     
 def notify_profile_comment(comment: NewComment):
     """
@@ -72,9 +72,9 @@ def notify_profile_comment(comment: NewComment):
             type='profile_comment',
             url=comment.get_absolute_url()
         )
+        print('profile comment notification sent')
     except Exception as e:
         print(f'Error sending profile comment notification: {e}')
-    print('profile comment notification sent')
     
 def notify_like(user, post):
     """
@@ -96,9 +96,9 @@ def notify_like(user, post):
             url=post.get_absolute_url(),
             subject_title=subject_title
         )
+        print('like notification sent')
     except Exception as e:
         print(f'Error sending like notification: {e}')
-    print('like notification sent')
 
 
 def notify_match_inspected(match: Match):
@@ -108,7 +108,7 @@ def notify_match_inspected(match: Match):
     try:
         actor = match.inspector or User.objects.get(username='admin')
         recipients = set((match.team_home.owner, match.team_guest.owner))
-        all_players = list(match.team_home.players_in_team.all()) + list(match.team_guest.players_in_team.all())
+        all_players = match.team_home.players_in_team.all() | match.team_guest.players_in_team.all()
         for player in all_players:
             if player.role == 'C' or player.role == 'AC':
                 recipients.add(player.name)
@@ -124,6 +124,36 @@ def notify_match_inspected(match: Match):
             type='match_inspected',
             match_title=match_title
         )
+        print('match inspected notification sent')
     except Exception as e:
         print(f'Error sending match inspected notification: {e}')
-    print('match inspected notification sent')
+    
+
+def notify_disqualification(disqualification: Disqualification):
+    """
+    Send notification when a disqualification is created.
+    """
+    try:
+        actor = disqualification.match.inspector or User.objects.get(username='admin')
+        recipients = set((disqualification.team.owner, disqualification.player.name))
+        for player in disqualification.team.players_in_team.all():
+            if player.role == 'C' or player.role == 'AC':
+                recipients.add(player.name)
+        print(recipients)
+        match_title = f'{disqualification.match.team_home.short_title} : {disqualification.match.team_guest.short_title}'
+        disqualified_player = disqualification.player
+        
+        notify_user(
+            recipient=list(recipients),
+            actor=actor,
+            verb=f'Игрок Вашей команды ({disqualified_player.nickname}) получил дисквалификацию по итогам матча {match_title}',
+            action_object=disqualification,
+            target=disqualification.match,
+            url=disqualification.match.get_absolute_url(),
+            type='disqualification',
+            match_title=match_title,
+            disqualified_player_username=disqualified_player.name.username
+        )
+        print('disqualification notification sent')
+    except Exception as e:
+        print(f'Error sending disqualification notification: {e}')
