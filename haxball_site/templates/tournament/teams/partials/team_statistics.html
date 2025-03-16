@@ -47,53 +47,53 @@
 
 <div class="tw:p-0">
     <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-transparent tw:p-0! tw:tabs-lg">
-        <input type="radio" name="team-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="Общее" checked />
+        <input type="radio" name="team-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="{% trans "Общее" %}" checked />
         <div class="tw:tab-content tw:pt-2">
             <div id="general-stats" role="tabpanel" aria-labelledby="general-stats-tab">
-                <h5 class="tw:text-left tw:mt-3 tw:ml-1">Абсолютные показатели</h5>
+                <h5 class="tw:text-left tw:mt-3 tw:ml-1">{% trans "Абсолютные показатели" %}</h5>
                 <table class="tw:table tw:**:[tr]:border-[#dee2e6]! team-stats-table">
                     <thead>
                         <tr>
-                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Сезон</th>
-                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Турнир</th>
+                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">{% trans "Сезон" %}</th>
+                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">{% trans "Турнир" %}</th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/matches_icon.png" %}" width="24" height="24" title="Матчей сыгранно">
+                                <img src="{% static "img/ico/matches_icon.png" %}" width="24" height="24" title="{% trans "Матчей сыгранно" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/win.png" %}" width="20" height="20" title="Победы">
+                                <img src="{% static "img/ico/statistic/win.png" %}" width="20" height="20" title="{% trans "Победы" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/draw.png" %}" width="20" height="20" title="Ничьи">
+                                <img src="{% static "img/ico/statistic/draw.png" %}" width="20" height="20" title="{% trans "Ничьи" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/loss.png" %}" width="20" height="20" title="Поражения">
+                                <img src="{% static "img/ico/statistic/loss.png" %}" width="20" height="20" title="{% trans "Поражения" %}">
                             </th>
                             <th scope="col" class="tw:text-center! tw:px-2">
-                                <img src="{% static "img/ico/statistic/winrate.png" %}" width="34" height="20" title="Процент побед">
+                                <img src="{% static "img/ico/statistic/winrate.png" %}" width="34" height="20" title="{% trans "Процент побед" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/ball-alt.PNG" %}" title="Забито">
+                                <img src="{% static "img/ico/statistic/ball-alt.PNG" %}" title="{% trans "Забито" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/ball-alt-red.png" %}" width="24" height="24" title="Пропущено">
+                                <img src="{% static "img/ico/statistic/ball-alt-red.png" %}" width="24" height="24" title="{% trans "Пропущено" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}" title="Голевые передачи">
+                                <img src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}" title="{% trans "Голевые передачи" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/gloves-alt2.PNG" %}" title="Сухие таймы">
+                                <img src="{% static "img/ico/statistic/gloves-alt2.PNG" %}" title="{% trans "Сухие таймы" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/sub.png" %}" title="Замены">
+                                <img src="{% static "img/ico/statistic/sub.png" %}" title="{% trans "Замены" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/dont-do.PNG" %}" title="Автоголы">
+                                <img src="{% static "img/ico/statistic/dont-do.PNG" %}" title="{% trans "Автоголы" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/yellow-card.PNG" %}" title="Жёлтые карточки">
+                                <img src="{% static "img/ico/statistic/yellow-card.PNG" %}" title="{% trans "Жёлтые карточки" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/red-card.PNG" %}" title="Красные карточки">
+                                <img src="{% static "img/ico/statistic/red-card.PNG" %}" title="{% trans "Красные карточки" %}">
                             </th>
                         </tr>
                     </thead>
@@ -127,40 +127,40 @@
                     </tbody>
                 </table>
 
-                <h5 class="tw:text-left tw:ml-1">Средние показатели</h5>
+                <h5 class="tw:text-left tw:ml-1">{% trans "Средние показатели" %}</h5>
                 <table class="tw:table tw:**:[tr]:border-[#dee2e6]! team-stats-table">
                     <thead>
                         <tr>
-                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Сезон</th>
-                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">Турнир</th>
+                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">{% trans "Сезон" %}</th>
+                            <th scope="col" class="tw:text-base tw:text-base-content tw:font-bold">{% trans "Турнир" %}</th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/matches_icon.png" %}" width="24" height="24" title="Матчей сыграно">
+                                <img src="{% static "img/ico/matches_icon.png" %}" width="24" height="24" title="{% trans "Матчей сыграно" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/ball-alt.PNG" %}" title="Забито (в среднем за матч)">
+                                <img src="{% static "img/ico/statistic/ball-alt.PNG" %}" title="{% trans "Забито (в среднем за матч)" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/ball-alt-red.png" %}" width="24" height="24" title="Пропущено (в среднем за матч)">
+                                <img src="{% static "img/ico/statistic/ball-alt-red.png" %}" width="24" height="24" title="{% trans "Пропущено (в среднем за матч)" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}" title="Голевые передачи (в среднем за матч)">
+                                <img src="{% static "img/ico/statistic/boots-alt-alt.PNG" %}" title="{% trans "Голевые передачи (в среднем за матч)" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/gloves-alt2.PNG" %}" title="Сухие таймы (в среднем за матч)">
+                                <img src="{% static "img/ico/statistic/gloves-alt2.PNG" %}" title="{% trans "Сухие таймы (в среднем за матч)" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
                                 <img
                                     src="{% static "img/ico/statistic/sub.png" %}"
-                                    title="Замены (в среднем за матч)">
+                                    title="{% trans "Замены (в среднем за матч)" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/dont-do.PNG" %}" title="Автоголы (в среднем за матч)">
+                                <img src="{% static "img/ico/statistic/dont-do.PNG" %}" title="{% trans "Автоголы (в среднем за матч)" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/yellow-card.PNG" %}" title="Жёлтые карточки (в среднем за матч)">
+                                <img src="{% static "img/ico/statistic/yellow-card.PNG" %}" title="{% trans "Жёлтые карточки (в среднем за матч)" %}">
                             </th>
                             <th scope="col" class="tw:text-center!">
-                                <img src="{% static "img/ico/statistic/red-card.PNG" %}" title="Красные карточки (в среднем за матч)">
+                                <img src="{% static "img/ico/statistic/red-card.PNG" %}" title="{% trans "Красные карточки (в среднем за матч)" %}">
                             </th>
                         </tr>
                     </thead>
@@ -206,16 +206,16 @@
             </div>
         </div>
 
-        <input type="radio" name="team-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="Топ" />
+        <input type="radio" name="team-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="{% trans "Топ" %}" />
         <div class="tw:tab-content tw:pt-2">
             <div id="top-stats" role="tabpanel" aria-labelledby="top-stats-tab">
-                <h5 class="tw:mt-3 tw:ml-1">Матчи</h5>
+                <h5 class="tw:mt-3 tw:ml-1">{% trans "Матчи" %}</h5>
                 <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
                     <tbody class="tw:text-base">
                         <tr>
                             {% with match=other_stats.first_match %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Первый матч
+                                    {% trans "Первый матч" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if match %}
@@ -235,7 +235,7 @@
                         <tr>
                             {% with match=other_stats.biggest_home_win %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самая крупная "домашняя" победа
+                                    {% trans 'Самая крупная "домашняя" победа' %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if match %}
@@ -255,7 +255,7 @@
                         <tr>
                             {% with match=other_stats.biggest_guest_win %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самая крупная "гостевая" победа
+                                    {% trans 'Самая крупная "гостевая" победа' %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if match %}
@@ -275,7 +275,7 @@
                         <tr>
                             {% with match=other_stats.biggest_home_loss %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самое крупное "домашнее" поражение
+                                    {% trans 'Самое крупное "домашнее" поражение' %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if match %}
@@ -295,7 +295,7 @@
                         <tr>
                             {% with match=other_stats.biggest_guest_loss %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самое крупное "гостевое" поражение
+                                    {% trans 'Самое крупное "гостевое" поражение' %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if match %}
@@ -315,7 +315,7 @@
                         <tr>
                             {% with match=other_stats.most_effective_draw %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самая результативная ничья
+                                    {% trans "Самая результативная ничья" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if match %}
@@ -335,7 +335,7 @@
                         <tr>
                             {% with goal=other_stats.fastest_goal match=other_stats.fastest_goal.match %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самый быстрый гол
+                                    {% trans "Самый быстрый гол" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if goal %}
@@ -356,7 +356,7 @@
                         <tr>
                             {% with goal=other_stats.latest_goal match=other_stats.latest_goal.match %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самый поздний гол
+                                    {% trans "Самый поздний гол" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if goal %}
@@ -377,7 +377,7 @@
                         <tr>
                             {% with match=other_stats.most_biggest_cards_given %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Самый "жаркий" матч
+                                    {% trans 'Самый "жаркий" матч' %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if match %}
@@ -396,13 +396,13 @@
                     </tbody>
                 </table>
 
-                <h5 class="tw:ml-1">Игроки</h5>
+                <h5 class="tw:ml-1">{% trans "Игроки" %}</h5>
                 <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
                     <tbody class="tw:text-base">
                         <tr>
                             {% with player=other_stats.greatest_player.player %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Наибольшее количество матчей
+                                    {% trans "Наибольшее количество матчей" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if player %}
@@ -427,7 +427,7 @@
                         <tr>
                             {% with player=other_stats.greatest_sub_in.player %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Наибольшее количество выходов на замену
+                                    {% trans "Наибольшее количество выходов на замену" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if player %}
@@ -452,7 +452,7 @@
                         <tr>
                             {% with player=other_stats.greatest_goalscorer.player %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Лучший бомбардир
+                                    {% trans "Лучший бомбардир" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if player %}
@@ -478,7 +478,7 @@
                         <tr>
                             {% with player=other_stats.greatest_assistant.player %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Лучший ассистент
+                                    {% trans "Лучший ассистент" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if player %}
@@ -504,7 +504,7 @@
                         <tr>
                             {% with player=other_stats.greatest_goalkeeper.player %}
                                 <th scope="row" class="tw:w-1/3">
-                                    Лучший голкипер
+                                    {% trans "Лучший голкипер" %}
                                 </th>
                                 <td class="tw:text-left">
                                     {% if player %}
@@ -533,7 +533,7 @@
             </div>
         </div>
 
-        <input type="radio" name="team-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="Дашборд"
+        <input type="radio" name="team-stats-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="{% trans "Дашборд" %}"
                hx-trigger="click once"
                hx-get="{% url 'tournament:team_stats_charts' team.id %}"
                hx-target="#charts-panel"
@@ -542,7 +542,7 @@
             <div id="charts-panel" role="tabpanel" aria-labelledby="charts-tab">
                 <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
                     <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                    <h3 class="tw:text-center">Загружаем статистику...</h3>
+                    <h3 class="tw:text-center">{% trans "Загружаем статистику..." %}</h3>
                 </div>
             </div>
         </div>
@@ -550,7 +550,7 @@
         <div class="tw:flex tw:ml-auto">
             <a class="tw:mt-auto tw:mr-2 tw:btn tw:btn-primary"
                href="{% url 'tournament:compare_teams' %}?team1={{ team.id }}" target="_blank">
-                Сравнить
+                {% trans "Сравнить" %}
             </a>
         </div>
     </div>

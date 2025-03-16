@@ -1,5 +1,7 @@
 {% extends 'core.html' %}
 {% load static %}
+{% load i18n %}
+
 {% block postlist %}
 
     <div class="tw:card tw:mt-2 tw:rounded-lg tw:bg-base-100">
@@ -7,7 +9,7 @@
         <div class="tw:card-body tw:py-4 tw:text-center">
             <h3 class="tw:text-center tw:mb-0">
                 <i class="fa fa-search tw:text-success tw:text-xl" aria-hidden="true"></i>
-                Результаты поиска
+                {% trans "Результаты поиска" %}
             </h3>
             <div class="tw:divider tw:my-0!"></div>
 
@@ -22,9 +24,9 @@
                                 >
                                     <h5 class="tw:m-0 {% if teams.count > 0 %}tw:cursor-pointer{% endif %}">
                                         {% if teams.count == 0 %}
-                                            <span class="tw:text-base-content/70">Команды по Вашему запросу не найдены</span>
+                                            <span class="tw:text-base-content/70">{% trans "Команды по Вашему запросу не найдены" %}</span>
                                         {% else %}
-                                            <span>Команд найдено: {{ teams.count }}</span>
+                                            <span>{% trans "Команд найдено" %}: {{ teams.count }}</span>
                                         {% endif %}
                                     </h5>
                                 </button>
@@ -56,9 +58,9 @@
                                 >
                                     <h5 class="tw:m-0 {% if profiles.count > 0 %}tw:cursor-pointer{% endif %}">
                                         {% if profiles.count == 0 %}
-                                            <span class="tw:text-base-content/70">Пользователи по Вашему запросу не найдены</span>
+                                            <span class="tw:text-base-content/70">{% trans "Пользователи по Вашему запросу не найдены" %}</span>
                                         {% else %}
-                                            <span>Пользователей найдено: {{ profiles.count }}</span>
+                                            <span>{% trans "Пользователей найдено" %}: {{ profiles.count }}</span>
                                         {% endif %}
                                     </h5>
                                 </button>
@@ -87,9 +89,9 @@
 
                                     <h5 class="tw:m-0 {% if posts.count > 0 %}tw:cursor-pointer{% endif %}">
                                         {% if posts.count == 0 %}
-                                            <span class="tw:text-base-content/70">Посты по Вашему запросу не найдены</span>
+                                            <span class="tw:text-base-content/70">{% trans "Посты по Вашему запросу не найдены" %}</span>
                                         {% else %}
-                                            <span>Постов найдено: {{ posts.count }}</span>
+                                            <span>{% trans "Постов найдено" %}: {{ posts.count }}</span>
                                         {% endif %}
                                     </h5>
                                 </button>

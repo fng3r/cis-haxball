@@ -1,5 +1,6 @@
 {% extends "core.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block postlist %}
     <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg"
@@ -9,7 +10,7 @@
             <div class="tw:card-body tw:p-4">
                 <h3 class="tw:text-center tw:mb-0">
                     <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>
-                    Создать пост в {{ category.title }}
+                    {% trans "Создать пост в" %} {{ category.title }}
                 </h3>
                 <div class="tw:divider tw:my-0!"></div>
 
@@ -18,11 +19,11 @@
                     {{ form.media }}
                     {{ form.as_p }}
 
-                    <button type="submit" class="tw:btn tw:btn-primary">Отправить</button>
+                    <button type="submit" class="tw:btn tw:btn-primary">{% trans "Отправить" %}</button>
                 </form>
             </div>
         {% else %}
-            <h1 class="tw:text-center tw:text-error">Только авторизованные пользоваватели могут создавать посты</h1>
+            <h1 class="tw:text-center tw:text-error">{% trans "Только авторизованные пользоваватели могут создавать посты" %}</h1>
         {% endif %}
     </div>
 {% endblock %}

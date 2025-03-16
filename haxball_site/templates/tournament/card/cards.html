@@ -2,15 +2,16 @@
 {% load static %}
 {% load tournament_extras %}
 {% load widget_tweaks %}
+{% load i18n %}
 
-{% block title %}Чемпионат | Карточки — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Чемпионат | Карточки" %} — CIS-HAXBALL {% endblock %}
 {% block profile_of_user %}
     <link rel="stylesheet" type="text/css" href="{% static 'tournament/card/cards_list.css' %}">
 
     <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
         <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
             <h2 class="tw:card-title">
-                <img src="{% static 'img/ico/statistic/cards.png' %}" width=32>Карточки
+                <img src="{% static 'img/ico/statistic/cards.png' %}" width=32>{% trans "Карточки" %}
             </h2>
         </div>
 
@@ -47,7 +48,7 @@
                 </div>
 
                 <div class="tw:flex tw:mt-auto tw:mb-2">
-                    <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+                    <button class="tw:btn tw:btn-primary">{% trans "Применить фильтр" %}</button>
                     <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
                 </div>
 
@@ -57,13 +58,13 @@
                 <table class="tw:table tw:table-zebra tw:table-pin-rows">
                     <thead class="tw:thead tw:text-left">
                         <tr class="tw:bg-base-300!">
-                            <th scope="col">Сезон</th>
-                            <th scope="col">Команда</th>
-                            <th scope="col">Игрок</th>
-                            <th scope="col">Матч</th>
-                            <th scope="col" class="tw:w-[5%]">Тип</th>
-                            <th scope="col">Причина</th>
-                            <th scope="col">Инспектор</th>
+                            <th scope="col">{% trans "Сезон" %}</th>
+                            <th scope="col">{% trans "Команда" %}</th>
+                            <th scope="col">{% trans "Игрок" %}</th>
+                            <th scope="col">{% trans "Матч" %}</th>
+                            <th scope="col" class="tw:w-[5%]">{% trans "Тип" %}</th>
+                            <th scope="col">{% trans "Причина" %}</th>
+                            <th scope="col">{% trans "Инспектор" %}</th>
                         </tr>
                     </thead>
                     <tbody id="cards-list-container">

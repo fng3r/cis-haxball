@@ -1,9 +1,11 @@
+{% load i18n %}
+
 <span>
     {% if last_act %}
         <i class="fa fa-reply tw:text-success" aria-hidden="true"></i>
-        {{ last_act|timesince }} назад
+        {{ last_act|timesince }} {% trans "назад" %}
     {% else %}
         <i class="fa fa-times tw:text-error" aria-hidden="true"></i>
-        Здесь ещё никто не писал
+        {% trans "Здесь ещё никто не писал" %}
     {% endif %}
 </span>

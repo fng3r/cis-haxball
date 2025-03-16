@@ -1,6 +1,7 @@
 {% load static %}
 {% load tournament_extras %}
 {% load widget_tweaks %}
+{% load i18n %}
 
 
 <div class="tw:p-1">
@@ -14,7 +15,7 @@
             <input type="hidden" name="author" value="{{ user.id }}">
 
             <div class="tw:flex tw:flex-wrap tw:items-center">
-                <label for="match" class="tw:label tw:text-base-content tw:font-bold">Матч</label>
+                <label for="match" class="tw:label tw:text-base-content tw:font-bold">{% trans "Матч" %}</label>
                 <select id="match" name="match" class="tw:select" >
                     {% for m in matches %}
                         <option {% if forloop.first %}selected{% endif %} value="{{ m.id }}">
@@ -25,15 +26,15 @@
             </div>
 
             <div class="tw:flex tw:flex-wrap tw:items-center">
-                <label for="match_date" class="tw:label tw:text-base-content tw:font-bold">Дата матча</label>
+                <label for="match_date" class="tw:label tw:text-base-content tw:font-bold">{% trans "Дата матча" %}</label>
                 <select class="tw:select" id="match_date" name="match_date">
-                    <option value="{{ date_today|date:"Y-m-d" }}" selected>Сегодня</option>
-                    <option value="{{ date_tomorrow|date:"Y-m-d" }}">Завтра</option>
+                    <option value="{{ date_today|date:"Y-m-d" }}" selected>{% trans "Сегодня" %}</option>
+                    <option value="{{ date_tomorrow|date:"Y-m-d" }}">{% trans "Завтра" %}</option>
                 </select>
             </div>
 
             <div class="tw:flex tw:flex-col tw:justify-center">
-                <label for="match_time" class="tw:label tw:text-base-content tw:font-bold">Время матча</label>
+                <label for="match_time" class="tw:label tw:text-base-content tw:font-bold">{% trans "Время матча" %}</label>
                 <div class="tw:flex tw:items-center tw:gap-2">
                     <select class="tw:select" id="match_hour" name="match_hour">
                         {% for hour in hours_list %}
@@ -53,7 +54,7 @@
             </div>
 
             <div class="tw:flex tw:flex-wrap tw:items-center">
-                <label for="match_host" class="tw:label tw:text-base-content tw:font-bold">Хост</label>
+                <label for="match_host" class="tw:label tw:text-base-content tw:font-bold">{% trans "Хост" %}</label>
                 <select class="tw:select" id="match_host" name="match_host">
                     {% for host in hosts %}
                         <option {% if forloop.first %}selected{% endif %} value="{{ host.id }}">
@@ -65,7 +66,7 @@
 
             <div class="tw:flex tw:mt-auto">
                 <button type="submit" class="tw:btn tw:btn-primary tw:items-center">
-                    <i class="fa fa-clock-o" aria-hidden="true"></i>Забронировать хост
+                    <i class="fa fa-clock-o" aria-hidden="true"></i>{% trans "Забронировать хост" %}
                 </button>
                 <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6"
                      src="{% static 'img/svg-loaders/bars.svg' %}">
@@ -74,7 +75,7 @@
     {% else %}
         <div role="alert" class="tw:alert tw:alert-info tw:gap-2">
             <i class="fa fa-info-circle" aria-hidden="true"></i>
-            <span>У Вас сыграны/забронированны все матчи</span>
+            <span>{% trans "У Вас сыграны/забронированны все матчи" %}</span>
         </div>
     {% endif %}
 </div>

@@ -1,8 +1,10 @@
+{% load i18n %}
+
 <dialog id="login_modal" class="tw:modal">
     <div class="tw:modal-box">
-        <h3 class="tw:text-lg tw:font-bold">Вход на сайт</h3>
+        <h3 class="tw:text-lg tw:font-bold">{% trans "Вход на сайт" %}</h3>
         <h6 class="tw:text-base-content tw:mb-2">
-            Нет аккаунта? <a class="tw:link tw:link-primary tw:font-semibold" href="{% url 'account_signup' %}">Зарегистрируйтесь!</a>
+            {% trans "Нет аккаунта?" %} <a class="tw:link tw:link-primary tw:font-semibold" href="{% url 'account_signup' %}">{% trans "Зарегистрируйтесь!" %}</a>
         </h6>
 
         <form method="POST" action="{% url 'account_login' %}" class="tw:mt-3">
@@ -10,22 +12,22 @@
 
             <div class="tw:flex tw:flex-col tw:gap-y-2! tw:mb-2">
                 <fieldset class="tw:fieldset tw:w-full">
-                    <legend class="tw:fieldset-legend tw:text-sm!">Имя пользователя</legend>
+                    <legend class="tw:fieldset-legend tw:text-sm!">{% trans "Имя пользователя" %}</legend>
                     <input type="text" name="login" class="tw:input tw:w-full" />
                 </fieldset>
 
                 <fieldset class="tw:fieldset tw:w-full">
-                    <legend class="tw:fieldset-legend tw:text-sm!">Пароль</legend>
+                    <legend class="tw:fieldset-legend tw:text-sm!">{% trans "Пароль" %}</legend>
                     <input type="password" name="password" class="tw:input tw:w-full" />
                 </fieldset>
             </div>
 
-            <a class="tw:link tw:text-sm tw:block tw:mb-2" href="{% url 'account_reset_password' %}">Забыли пароль?</a>
+            <a class="tw:link tw:text-sm tw:block tw:mb-2" href="{% url 'account_reset_password' %}">{% trans "Забыли пароль?" %}</a>
 
             <fieldset class="tw:fieldset">
                 <label class="tw:fieldset-label tw:text-sm">
                     <input type="checkbox" name="remember" class="tw:checkbox tw:checkbox-sm" />
-                    Запомнить меня
+                    {% trans "Запомнить меня" %}
                 </label>
             </fieldset>
 
@@ -35,7 +37,7 @@
             {% endif %}
 
             <div class="tw:modal-action">
-                <button type="submit" class="tw:btn tw:btn-primary">Войти</button>
+                <button type="submit" class="tw:btn tw:btn-primary">{% trans "Войти" %}</button>
             </div>
         </form>
     </div>

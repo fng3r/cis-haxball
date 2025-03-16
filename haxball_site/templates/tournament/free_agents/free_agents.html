@@ -2,15 +2,17 @@
 {% load static %}
 {% load tournament_extras %}
 {% load widget_tweaks %}
+{% load i18n %}
+
 {% block scripts %}
     <script>
         function myFunction(Element) {
             navigator.clipboard.writeText(Element.title);
-            alert("Скопировано " + Element.title);
+            alert("{% trans "Скопировано" %} " + Element.title);
         }
     </script>
 {% endblock %}
-{% block title %}Чемпионат | Свободные агенты — CIS-HAXBALL{% endblock %}
+{% block title %}{% trans "Чемпионат | Свободные агенты" %} — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
     {% partialdef content-container inline=True %}
         <div id="content-container">
@@ -18,7 +20,7 @@
                 <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
                     <h2 class="tw:card-title">
                         <i class="fa fa-search-plus tw:text-success" aria-hidden="true"></i>
-                        Поиск команды/игроков
+                        {% trans "Поиск команды/игроков" %}
                     </h2>
                 </div>
 
@@ -35,29 +37,29 @@
 
                             <div class="tw:flex tw:w-full">
                                 <div class="tw:w-1/4 tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
-                                    <label for="pos_main" class="tw:label tw:text-base-content tw:font-bold">Позиция</label>
+                                    <label for="pos_main" class="tw:label tw:text-base-content tw:font-bold">{% trans "Позиция" %}</label>
                                     <select id="pos_main" name="position_main" class="tw:select" >
-                                        <option selected value="Любая">Любая</option>
-                                        <option value="Нападающий">Нападающий</option>
-                                        <option value="Опорник">Опорник</option>
-                                        <option value="Вратарь">Вратарь</option>
-                                        <option value="Верхний нападающий">Верхний нападающий</option>
-                                        <option value="Нижний нападающий">Нижний нападающий</option>
-                                        <option value="Нападающий/опорник">Нападающий/Опорник</option>
-                                        <option value="Нападающий/вратарь">Нападающий/Вратарь</option>
-                                        <option value="Задняя линия">Задняя линия</option>
+                                        <option selected value="Любая">{% trans "Любая" %}</option>
+                                        <option value="Нападающий">{% trans "Нападающий" %}</option>
+                                        <option value="Опорник">{% trans "Опорник" %}</option>
+                                        <option value="Вратарь">{% trans "Вратарь" %}</option>
+                                        <option value="Верхний нападающий">{% trans "Верхний нападающий" %}</option>
+                                        <option value="Нижний нападающий">{% trans "Нижний нападающий" %}</option>
+                                        <option value="Нападающий/опорник">{% trans "Нападающий/Опорник" %}</option>
+                                        <option value="Нападающий/вратарь">{% trans "Нападающий/Вратарь" %}</option>
+                                        <option value="Задняя линия">{% trans "Задняя линия" %}</option>
                                     </select>
                                 </div>
 
                                 <div class="tw:w-3/4 tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
-                                    <label for="description" class="tw:label tw:text-base-content tw:font-bold">Краткий комментарий</label>
+                                    <label for="description" class="tw:label tw:text-base-content tw:font-bold">{% trans "Краткий комментарий" %}</label>
                                     <input id="description" name="description" type="text" class="tw:input tw:w-full" >
                                 </div>
                             </div>
 
                             <div class="tw:flex tw:mt-auto tw:mb-2">
                                 <button type="submit" class="tw:btn tw:btn-success tw:items-center">
-                                    <i class="fa fa-plus" aria-hidden="true"></i>Оставить заявку
+                                    <i class="fa fa-plus" aria-hidden="true"></i>{% trans "Оставить заявку" %}
                                 </button>
                                 <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6"
                                      src="{% static 'img/svg-loaders/bars.svg' %}">
@@ -73,7 +75,7 @@
                                   hx-disabled-elt="find button">
                                 <button type="submit" class="tw:btn tw:btn-error tw:items-center">
                                     <i class="fa fa-times" aria-hidden="true"></i>
-                                    Снять заявку
+                                    {% trans "Снять заявку" %}
                                 </button>
                             </form>
 
@@ -85,18 +87,18 @@
                                 <button type="submit" class="tw:btn tw:btn-success tw:items-center"
                                         {% if not user|can_add_entry %}
                                             disabled
-                                            title="Сможете через {{ user|date_can|timeuntil }}"
+                                            title="{% trans "Сможете через" %} {{ user|date_can|timeuntil }}"
                                             style="cursor: pointer"
                                         {% endif %}
                                 >
                                     <i class="fa fa-arrow-up" aria-hidden="true"
                                        {% if not user|can_add_entry %}
-                                           onclick="alert('Вы не можете поднять заявку, т.к. только недавно создали или подняли заявку' +
-                                                    'Следущее обновление возможно через {{ user|date_can|timeuntil }}. Если вы снимете ' +
-                                                    'свою заявку, то создать новую будет возможно через это же время.');"
+                                           onclick="alert('{% trans "Вы не можете поднять заявку, т.к. только недавно создали или подняли заявку" %}' +
+                                                    '{% trans "Следущее обновление возможно через" %} {{ user|date_can|timeuntil }}. {% trans "Если вы снимете" %} ' +
+                                                    '{% trans "свою заявку, то создать новую будет возможно через это же время." %}');"
                                        {% endif %}>
                                     </i>
-                                    Поднять заявку
+                                    {% trans "Поднять заявку" %}
                                 </button>
 
                                 <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6"
@@ -106,7 +108,7 @@
                     {% else %}
                         <div role="alert" class="tw:m-1 tw:alert tw:alert-warning tw:gap-2">
                             <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
-                            <span>Вы сможете оставить заявку повторно через {{ user|date_can|timeuntil }}</span>
+                            <span>{% trans "Вы сможете оставить заявку повторно через" %} {{ user|date_can|timeuntil }}</span>
                         </div>
                     {% endif %}
                 {% endif %}
@@ -116,11 +118,11 @@
                         <table class="tw:table tw:table-zebra tw:table-pin-rows">
                             <thead class="tw:thead tw:text-center">
                                 <tr class="tw:bg-base-300!">
-                                    <th scope="col" class="tw:text-left!">Игрок</th>
-                                    <th scope="col">Позиция</th>
-                                    <th scope="col">Контакты</th>
-                                    <th scope="col">Комментарий</th>
-                                    <th scope="col">Дата</th>
+                                    <th scope="col" class="tw:text-left!">{% trans "Игрок" %}</th>
+                                    <th scope="col">{% trans "Позиция" %}</th>
+                                    <th scope="col">{% trans "Контакты" %}</th>
+                                    <th scope="col">{% trans "Комментарий" %}</th>
+                                    <th scope="col">{% trans "Дата" %}</th>
                                 </tr>
                             </thead>
                             <tbody>

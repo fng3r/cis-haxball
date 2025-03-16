@@ -1,10 +1,12 @@
+{% load i18n %}
+
 {% if is_online %}
     <div class="tw:flex tw:items-center tw:gap-1">
         <span class="tw:status tw:status-lg tw:status-success" aria-hidden="true"></span>
-        Сейчас на сайте
+        {% trans "Сейчас на сайте" %}
     </div>
 {% elif last_seen %}
-    Был {{ last_seen|timesince }} назад
+    {% trans "Был" %} {{ last_seen|timesince }} {% trans "назад" %}
 {% else %}
-    Неизвестно(
+    {% trans "Неизвестно(" %}
 {% endif %}

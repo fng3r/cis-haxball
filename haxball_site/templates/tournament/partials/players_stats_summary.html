@@ -1,5 +1,6 @@
 {% load static %}
 {% load tournament_extras %}
+{% load i18n %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "tournament/include/player_stats_summary.css" %}">
@@ -24,7 +25,7 @@
             <span class="player-stats tw:ml-1">
                 {% if player.id in clean_sheets_by_player %}
                     <div class="tw:inline-flex tw:h-[20px]">
-                        <img class="player-stats-icon" src="{% static 'img/ico/clean_sheet1.png' %}" title="Сухой тайм">
+                        <img class="player-stats-icon" src="{% static 'img/ico/clean_sheet1.png' %}" title="{% trans "Сухой тайм" %}">
                         {% if clean_sheets_by_player|get:player.id > 1 %}
                             <span class="player-stats-count">x{{clean_sheets_by_player|get:player.id}}</span>
                         {% endif %}
@@ -32,7 +33,7 @@
                 {% endif %}
                 {% if player.id in goals_by_player %}
                     <div class="tw:inline-flex tw:h-[20px]">
-                        <img class="player-stats-icon" src="{% static 'img/ico/ball_2.png' %}" title="Гол">
+                        <img class="player-stats-icon" src="{% static 'img/ico/ball_2.png' %}" title="{% trans "Гол" %}">
                         {% if goals_by_player|get:player.id > 1 %}
                             <span class="player-stats-count">x{{goals_by_player|get:player.id}}</span>
                         {% endif %}
@@ -40,7 +41,7 @@
                 {% endif %}
                 {% if player.id in assists_by_player %}
                     <div class="tw:inline-flex tw:h-[20px]">
-                        <img class="player-stats-icon" src="{% static 'img/ico/boot_ass_2.png' %}" title="Голевая передача">
+                        <img class="player-stats-icon" src="{% static 'img/ico/boot_ass_2.png' %}" title="{% trans "Голевая передача" %}">
                         {% if assists_by_player|get:player.id > 1 %}
                             <span class="player-stats-count">x{{assists_by_player|get:player.id}}</span>
                         {% endif %}
@@ -60,7 +61,7 @@
         {% endfor %}
 
         {% if subs|length > 0 %}
-            <div class="tw:divider tw:my-1">Замены</div>
+            <div class="tw:divider tw:my-1">{% trans "Замены" %}</div>
             {% for sub in subs %}
                 {% with player=sub %}
                     {% partial player-stats %}

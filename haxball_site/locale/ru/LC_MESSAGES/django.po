@@ -1,0 +1,2444 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-03-16 20:38+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: haxball_site/templates/account/account_inactive.html:5
+#: haxball_site/templates/account/account_inactive.html:8
+msgid "Account Inactive"
+msgstr ""
+
+#: haxball_site/templates/account/account_inactive.html:10
+msgid "This account is inactive."
+msgstr ""
+
+#: haxball_site/templates/account/email.html:5
+#: haxball_site/templates/account/email.html:8
+msgid "E-mail Addresses"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:10
+msgid "The following e-mail addresses are associated with your account:"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:27
+msgid "Verified"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:29
+msgid "Unverified"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:31
+msgid "Primary"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:38
+msgid "Make Primary"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:40
+msgid "Re-send Verification"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:41
+msgid "Remove"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:49
+msgid "Warning:"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:49
+msgid ""
+"You currently do not have any e-mail address set up. You should really add "
+"an e-mail address so you can receive notifications, reset your password, etc."
+msgstr ""
+
+#: haxball_site/templates/account/email.html:55
+msgid "Add E-mail Address"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:60
+msgid "Add E-mail"
+msgstr ""
+
+#: haxball_site/templates/account/email.html:69
+msgid "Do you really want to remove the selected e-mail address?"
+msgstr ""
+
+#: haxball_site/templates/account/email_confirm.html:7
+#: haxball_site/templates/account/email_confirm.html:13
+msgid "Confirm E-mail Address"
+msgstr ""
+
+#: haxball_site/templates/account/email_confirm.html:22
+#, python-format
+msgid ""
+"Пожалуйста, подтвердите, что\n"
+"                    <a href=\"mailto:%(email)s\">%(email)s</a> является "
+"email-адресом для пользователя %(user_display)s\n"
+"                    ."
+msgstr ""
+
+#: haxball_site/templates/account/email_confirm.html:28
+msgid "Confirm"
+msgstr ""
+
+#: haxball_site/templates/account/email_confirm.html:35
+#, python-format
+msgid ""
+"This e-mail confirmation link expired or is invalid. Please\n"
+"                    <a href=\"%(email_url)s\">issue a new e-mail "
+"confirmation request</a>."
+msgstr ""
+
+#: haxball_site/templates/account/login.html:7
+#: haxball_site/templates/account/login.html:14
+#: haxball_site/templates/account/login.html:44
+msgid "Sign In"
+msgstr ""
+
+#: haxball_site/templates/account/login.html:16
+#, python-format
+msgid ""
+"Please sign in with one\n"
+"                    of your existing third party accounts. Or, <a href="
+"\"%(signup_url)s\">sign up</a>\n"
+"                    for a %(site_name)s account and sign in below:"
+msgstr ""
+
+#: haxball_site/templates/account/login.html:26
+msgid "or"
+msgstr ""
+
+#: haxball_site/templates/account/login.html:33
+msgid "Если у Вас нет аккаунта, сперва"
+msgstr ""
+
+#: haxball_site/templates/account/login.html:34
+msgid "зарегистрируйтесь"
+msgstr ""
+
+#: haxball_site/templates/account/logout.html:5
+#: haxball_site/templates/account/logout.html:11
+#: haxball_site/templates/account/logout.html:20
+msgid "Sign Out"
+msgstr ""
+
+#: haxball_site/templates/account/logout.html:13
+msgid "Are you sure you want to sign out?"
+msgstr ""
+
+#: haxball_site/templates/account/password_change.html:5
+#: haxball_site/templates/account/password_change.html:8
+#: haxball_site/templates/account/password_change.html:13
+#: haxball_site/templates/account/password_reset_from_key.html:4
+#: haxball_site/templates/account/password_reset_from_key.html:7
+#: haxball_site/templates/account/password_reset_from_key_done.html:4
+#: haxball_site/templates/account/password_reset_from_key_done.html:7
+msgid "Change Password"
+msgstr ""
+
+#: haxball_site/templates/account/password_reset.html:6
+#: haxball_site/templates/account/password_reset.html:10
+#: haxball_site/templates/account/password_reset_done.html:6
+#: haxball_site/templates/account/password_reset_done.html:9
+msgid "Password Reset"
+msgstr ""
+
+#: haxball_site/templates/account/password_reset.html:16
+msgid ""
+"Forgotten your password? Enter your e-mail address below, and we'll send you "
+"an e-mail allowing you to reset it."
+msgstr ""
+
+#: haxball_site/templates/account/password_reset.html:21
+msgid "Reset My Password"
+msgstr ""
+
+#: haxball_site/templates/account/password_reset.html:24
+msgid "Please contact us if you have any trouble resetting your password."
+msgstr ""
+
+#: haxball_site/templates/account/password_reset_done.html:15
+msgid ""
+"We have sent you an e-mail. Please contact us if you do not receive it "
+"within a few\n"
+"        minutes."
+msgstr ""
+
+#: haxball_site/templates/account/password_reset_from_key.html:7
+msgid "Bad Token"
+msgstr ""
+
+#: haxball_site/templates/account/password_reset_from_key.html:11
+#, python-format
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used.  Please\n"
+"            request a <a href=\"%(passwd_reset_url)s\">new password reset</"
+"a>."
+msgstr ""
+
+#: haxball_site/templates/account/password_reset_from_key.html:18
+msgid "change password"
+msgstr ""
+
+#: haxball_site/templates/account/password_reset_from_key.html:21
+#: haxball_site/templates/account/password_reset_from_key_done.html:8
+msgid "Your password is now changed."
+msgstr ""
+
+#: haxball_site/templates/account/password_set.html:5
+#: haxball_site/templates/account/password_set.html:8
+#: haxball_site/templates/account/password_set.html:13
+msgid "Set Password"
+msgstr ""
+
+#: haxball_site/templates/account/signup.html:6
+msgid "Signup"
+msgstr ""
+
+#: haxball_site/templates/account/signup.html:12
+msgid "Sign Up"
+msgstr ""
+
+#: haxball_site/templates/account/signup.html:13
+msgid ""
+"Уже есть аккаунт? <a class=\"tw:link tw:link-primary tw:font-semibold\" "
+"onclick=\"login_modal.showModal()\">Войдите</a>."
+msgstr ""
+
+#: haxball_site/templates/account/signup_closed.html:5
+#: haxball_site/templates/account/signup_closed.html:8
+msgid "Sign Up Closed"
+msgstr ""
+
+#: haxball_site/templates/account/signup_closed.html:10
+msgid "We are sorry, but the sign up is currently closed."
+msgstr ""
+
+#: haxball_site/templates/account/snippets/already_logged_in.html:5
+msgid "Note"
+msgstr ""
+
+#: haxball_site/templates/account/snippets/already_logged_in.html:5
+#, python-format
+msgid ""
+"you are already logged in as %(user_display)s\n"
+"    ."
+msgstr ""
+
+#: haxball_site/templates/account/verification_sent.html:13
+#: haxball_site/templates/account/verified_email_required.html:5
+#: haxball_site/templates/account/verified_email_required.html:8
+msgid "Verify Your E-mail Address"
+msgstr ""
+
+#: haxball_site/templates/account/verification_sent.html:17
+msgid ""
+"We have sent an e-mail to you for verification. Follow the link provided to "
+"finalize the signup\n"
+"        process. Please contact us if you do not receive it within a few "
+"minutes."
+msgstr ""
+
+#: haxball_site/templates/account/verified_email_required.html:12
+msgid ""
+"This part of the site requires us to verify that\n"
+"        you are who you claim to be. For this purpose, we require that you\n"
+"        verify ownership of your e-mail address. "
+msgstr ""
+
+#: haxball_site/templates/account/verified_email_required.html:16
+msgid ""
+"We have sent an e-mail to you for\n"
+"        verification. Please click on the link inside this e-mail. Please\n"
+"        contact us if you do not receive it within a few minutes."
+msgstr ""
+
+#: haxball_site/templates/account/verified_email_required.html:20
+#, python-format
+msgid ""
+"<strong>Note:</strong> you can still <a href=\"%(email_url)s\">change your e-"
+"mail address</a>\n"
+"        ."
+msgstr ""
+
+#: haxball_site/templates/core.html:9
+msgid "Добро пожаловать на CIS-HAXBALL!"
+msgstr ""
+
+#: haxball_site/templates/core/admins/admin_list.html:6
+#: haxball_site/templates/core/admins/admin_list.html:22
+#: haxball_site/templates/core/include/navbar.html:491
+#: haxball_site/templates/core/include/navbar.html:562
+msgid "Администрация"
+msgstr ""
+
+#: haxball_site/templates/core/admins/admin_list.html:12
+#: haxball_site/templates/core/profile/profile_detail.html:19
+#: haxball_site/templates/tournament/free_agents/free_agents.html:11
+#: haxball_site/templates/tournament/teams/team_page.html:15
+msgid "Скопировано"
+msgstr ""
+
+#: haxball_site/templates/core/admins/admin_list.html:32
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:106
+#: haxball_site/templates/tournament/free_agents/free_agents.html:123
+#: haxball_site/templates/tournament/teams/team_page.html:177
+msgid "Контакты"
+msgstr ""
+
+#: haxball_site/templates/core/admins/admin_list.html:33
+msgid "Должность"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:42
+#: haxball_site/templates/notifications/notification_dropdown_item.html:28
+#: haxball_site/templates/notifications/notifications_list.html:36
+msgid "ответил"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:70
+msgid "Редактировать"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:87
+msgid "Удалить комментарий?"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:98
+#: haxball_site/templates/reservation/reservation_list.html:101
+#: haxball_site/templates/tournament/postponements/postponements.html:106
+msgid "Да, я уверен"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:101
+#: haxball_site/templates/reservation/reservation_list.html:107
+#: haxball_site/templates/tournament/postponements/postponements.html:112
+msgid "Нет, подождите"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:119
+#: haxball_site/templates/core/comment/comment-item.html:122
+msgid "изм."
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:152
+msgid "Скрыть ответы"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comment-item.html:152
+msgid "Показать ответы"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comments.html:30
+msgid "Брумасик считает, что вам лучше не писать здесь :("
+msgstr ""
+
+#: haxball_site/templates/core/comment/comments.html:35
+#: haxball_site/templates/polls/include/polls_list.html:51
+msgid "Войдите"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comments.html:35
+msgid "чтобы оставить комментарий"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comments.html:42
+msgid "Пользователь закрыл свой профиль"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comments.html:44
+msgid "Комментарии закрыты"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comments.html:58
+#: haxball_site/templates/core/include/sidebar_for_last_activity.html:11
+msgid "Комментарии"
+msgstr ""
+
+#: haxball_site/templates/core/comment/comments.html:60
+msgid "Здесь пока пусто, не хочешь быть первым?"
+msgstr ""
+
+#: haxball_site/templates/core/comment/new_comment_form.html:25
+#: haxball_site/templates/core/forum/add_post.html:22
+#: haxball_site/templates/core/post/edit_comment.html:40
+msgid "Отправить"
+msgstr ""
+
+#: haxball_site/templates/core/fastcups/fastcups_list.html:13
+#: haxball_site/templates/core/fastcups/fastcups_list.html:19
+#: haxball_site/templates/core/include/navbar.html:358
+msgid "Фасткапы"
+msgstr ""
+
+#: haxball_site/templates/core/forum/add_post.html:13
+msgid "Создать пост в"
+msgstr ""
+
+#: haxball_site/templates/core/forum/add_post.html:26
+msgid "Только авторизованные пользоваватели могут создавать посты"
+msgstr ""
+
+#: haxball_site/templates/core/forum/forum_main.html:6
+#: haxball_site/templates/core/forum/post_list_in_category.html:9
+#: haxball_site/templates/core/include/navbar.html:487
+#: haxball_site/templates/core/include/navbar.html:560
+msgid "Форум"
+msgstr ""
+
+#: haxball_site/templates/core/forum/forum_main.html:27
+msgid "Статей"
+msgstr ""
+
+#: haxball_site/templates/core/forum/post_list_in_category.html:19
+msgid "Создать пост"
+msgstr ""
+
+#: haxball_site/templates/core/home.html:66
+#: haxball_site/templates/core/home.html:130
+msgid "Previous"
+msgstr ""
+
+#: haxball_site/templates/core/home.html:70
+#: haxball_site/templates/core/home.html:134
+msgid "Next"
+msgstr ""
+
+#: haxball_site/templates/core/home.html:112
+#: haxball_site/templates/tournament/compare_players.html:134
+#: haxball_site/templates/tournament/compare_teams.html:127
+msgid "VS"
+msgstr ""
+
+#: haxball_site/templates/core/home.html:147
+msgid "Последние посты"
+msgstr ""
+
+#: haxball_site/templates/core/home.html:157
+msgid "Смотреть все посты"
+msgstr ""
+
+#: haxball_site/templates/core/include/forum/last_activity_in_category.html:6
+#: haxball_site/templates/core/include/profile/last_actuvity.html:9
+#: haxball_site/templates/notifications/notification_dropdown_item.html:57
+#: haxball_site/templates/notifications/notifications_list.html:63
+msgid "назад"
+msgstr ""
+
+#: haxball_site/templates/core/include/forum/last_activity_in_category.html:9
+msgid "Здесь ещё никто не писал"
+msgstr ""
+
+#: haxball_site/templates/core/include/like_dislike_comment.html:13
+#: haxball_site/templates/core/include/like_dislike_comment.html:29
+#: haxball_site/templates/core/include/like_dislike_panel.html:10
+#: haxball_site/templates/core/include/like_dislike_panel.html:24
+msgid "Вам ограничен доступ к лайкам/дизлайкам!"
+msgstr ""
+
+#: haxball_site/templates/core/include/like_dislike_panel.html:8
+msgid "Нравится"
+msgstr ""
+
+#: haxball_site/templates/core/include/like_dislike_panel.html:22
+msgid "Не нравится"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:5
+msgid "Вход на сайт"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:7
+msgid "Нет аккаунта?"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:7
+msgid "Зарегистрируйтесь!"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:15
+msgid "Имя пользователя"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:20
+msgid "Пароль"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:25
+msgid "Забыли пароль?"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:30
+msgid "Запомнить меня"
+msgstr ""
+
+#: haxball_site/templates/core/include/login_modal.html:40
+msgid "Войти"
+msgstr ""
+
+#: haxball_site/templates/core/include/logout_modal.html:5
+msgid "Хотите выйти?"
+msgstr ""
+
+#: haxball_site/templates/core/include/logout_modal.html:9
+#: haxball_site/templates/tournament/disqualification/partials/disqualifications_list.html:77
+msgid "Да"
+msgstr ""
+
+#: haxball_site/templates/core/include/logout_modal.html:12
+#: haxball_site/templates/tournament/disqualification/partials/disqualifications_list.html:75
+msgid "Нет"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:11
+#: haxball_site/templates/core/include/navbar.html:441
+#: haxball_site/templates/core/include/navbar.html:523
+msgid "Турниры"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:13
+#: haxball_site/templates/core/include/navbar.html:28
+#: haxball_site/templates/core/include/navbar.html:142
+#: haxball_site/templates/core/include/navbar.html:165
+#: haxball_site/templates/core/include/navbar.html:199
+#: haxball_site/templates/core/include/navbar.html:233
+#: haxball_site/templates/core/include/navbar.html:252
+#: haxball_site/templates/core/include/navbar.html:289
+#: haxball_site/templates/core/include/navbar.html:304
+#: haxball_site/templates/core/include/navbar.html:329
+msgid "Высшая лига"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:16
+#: haxball_site/templates/core/include/navbar.html:31
+#: haxball_site/templates/core/include/navbar.html:145
+#: haxball_site/templates/core/include/navbar.html:170
+#: haxball_site/templates/core/include/navbar.html:204
+#: haxball_site/templates/core/include/navbar.html:236
+#: haxball_site/templates/core/include/navbar.html:257
+#: haxball_site/templates/core/include/navbar.html:292
+#: haxball_site/templates/core/include/navbar.html:307
+#: haxball_site/templates/core/include/navbar.html:332
+msgid "Первая лига"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:19
+#: haxball_site/templates/core/include/navbar.html:34
+#: haxball_site/templates/core/include/navbar.html:295
+#: haxball_site/templates/core/include/navbar.html:310
+#: haxball_site/templates/core/include/navbar.html:335
+msgid "Вторая лига"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:24
+#: haxball_site/templates/core/include/navbar.html:180
+#: haxball_site/templates/core/include/navbar.html:214
+#: haxball_site/templates/core/include/navbar.html:300
+#: haxball_site/templates/core/include/navbar.html:338
+msgid "Кубок лиги"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:40
+#: haxball_site/templates/core/include/navbar.html:109
+#: haxball_site/templates/core/include/navbar.html:129
+#: haxball_site/templates/core/include/navbar.html:148
+#: haxball_site/templates/core/include/navbar.html:186
+#: haxball_site/templates/core/include/navbar.html:220
+#: haxball_site/templates/core/include/navbar.html:239
+#: haxball_site/templates/core/include/navbar.html:276
+#: haxball_site/templates/core/include/navbar.html:316
+#: haxball_site/templates/core/include/navbar.html:341
+msgid "Кубок России"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:48
+msgid "Календарь"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:52
+#: haxball_site/templates/reservation/reservation_list.html:20
+msgid "Бронь хоста"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:55
+#: haxball_site/templates/tournament/postponements/postponements.html:24
+msgid "Переносы"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:58
+#: haxball_site/templates/tournament/card/cards.html:14
+#: haxball_site/templates/tournament/partials/player_stats_charts.html:18
+#: haxball_site/templates/tournament/partials/team_stats_charts.html:18
+msgid "Карточки"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:61
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:14
+#: haxball_site/templates/tournament/match/detail.html:285
+msgid "Дисквалификации"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:64
+#: haxball_site/templates/tournament/transfers/transfers.html:12
+msgid "Трансферы"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:67
+msgid "Свободные агенты"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:73
+msgid "Орг. раздел"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:76
+msgid "Регламент"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:82
+msgid "ЧР #1"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:86
+msgid "ЧР #2"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:90
+msgid "ЛЧ #1"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:94
+msgid "ЧР #4"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:102
+msgid "ЧР #5"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:106
+#: haxball_site/templates/core/include/navbar.html:126
+msgid "Единая лига"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:116
+msgid "ЛЧ #2"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:122
+msgid "ЧР #6"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:138
+msgid "ЧР #7"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:155
+msgid "ЛЧ #3"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:161
+msgid "ЧР #8"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:174
+msgid "Дивизион Акул"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:177
+msgid "Дивизион Беркутов"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:195
+msgid "ЧР #9"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:208
+msgid "Дивизион Волги"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:211
+msgid "Дивизион Камы"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:229
+msgid "ЧР #10"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:248
+msgid "ЧР #11"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:261
+msgid "Дивизион Надежды"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:264
+msgid "Дивизион Веры"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:267
+msgid "Плей-офф"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:270
+msgid "Суперфинал"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:285
+msgid "ЧР #12"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:325
+msgid "ЧР #13"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:348
+msgid "ЛЧ #4"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:352
+msgid "ИТ'24"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:361
+msgid "Прочие турниры"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:367
+#: haxball_site/templates/tournament/team_rating.html:17
+msgid "Рейтинг команд"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:370
+msgid "Рейтинг игроков"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:376
+#: haxball_site/templates/core/include/sidebar_for_lives.html:6
+#: haxball_site/templates/core/lives/lives_list.html:9
+#: haxball_site/templates/core/lives/lives_list.html:16
+msgid "Трансляции"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:381
+msgid "Соцсети"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:385
+#: haxball_site/templates/core/include/sidebar_for_media.html:10
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:128
+msgid "Discord"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:388
+#: haxball_site/templates/core/include/sidebar_for_media.html:13
+msgid "YouTube"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:391
+#: haxball_site/templates/core/include/sidebar_for_media.html:16
+msgid "Twitch"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:394
+#: haxball_site/templates/core/include/sidebar_for_media.html:19
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:119
+msgid "Telegram"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:397
+msgid "TikTok"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:400
+msgid "VK"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:419
+#: haxball_site/templates/core/include/navbar.html:505
+#: haxball_site/templates/tournament/match/detail.html:24
+#: haxball_site/templates/tournament/tournament/tournament_detail.html:11
+msgid "Чемпионат"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:430
+#: haxball_site/templates/core/include/navbar.html:514
+#: haxball_site/templates/tournament/hall_of_fame/hall_of_fame.html:29
+msgid "Команды"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:452
+#: haxball_site/templates/core/include/navbar.html:532
+msgid "Архив"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:463
+#: haxball_site/templates/core/include/navbar.html:542
+#: haxball_site/templates/tournament/team_rating.html:22
+msgid "Рейтинг"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:472
+#: haxball_site/templates/core/include/navbar.html:549
+#: haxball_site/templates/tournament/hall_of_fame/hall_of_fame.html:12
+msgid "Зал славы"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:478
+#: haxball_site/templates/core/include/navbar.html:553
+#: haxball_site/templates/core/include/sidebar_for_media.html:6
+msgid "Медиа"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:495
+#: haxball_site/templates/core/include/navbar.html:564
+#: haxball_site/templates/core/rules/rules_list.html:6
+msgid "Правила"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:572
+msgid "Поиск"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:572
+msgid "Search"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:578
+msgid "Тема"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:590
+msgid "Default"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:593
+msgid "Dark"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:596
+msgid "Cupcake"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:599
+msgid "Bumblebee"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:602
+msgid "Emerald"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:605
+msgid "Corporate"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:608
+msgid "Synthwave"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:611
+msgid "Retro"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:614
+msgid "Cyberpunk"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:617
+msgid "Valentine"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:620
+msgid "Halloween"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:623
+msgid "Garden"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:626
+msgid "Forest"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:629
+msgid "Aqua"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:632
+msgid "Lofi"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:635
+msgid "Pastel"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:638
+msgid "Fantasy"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:641
+msgid "Wireframe"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:644
+msgid "Black"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:647
+msgid "Luxury"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:650
+msgid "Dracula"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:653
+msgid "CMYK"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:656
+msgid "Autumn"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:659
+msgid "Business"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:662
+msgid "Acid"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:665
+msgid "Lemonade"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:668
+msgid "Night"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:671
+msgid "Coffee"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:674
+msgid "Winter"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:677
+msgid "Dim"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:680
+msgid "Nord"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:683
+msgid "Sunset"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:704
+#: haxball_site/templates/core/profile/edit_profile.html:10
+#: haxball_site/templates/core/profile/profile_detail.html:25
+msgid "Профиль"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:708
+msgid "Выход"
+msgstr ""
+
+#: haxball_site/templates/core/include/navbar.html:714
+msgid "Вход"
+msgstr ""
+
+#: haxball_site/templates/core/include/post_in_list.html:12
+msgid "Новый!"
+msgstr ""
+
+#: haxball_site/templates/core/include/profile/last_actuvity.html:6
+msgid "Сейчас на сайте"
+msgstr ""
+
+#: haxball_site/templates/core/include/profile/last_actuvity.html:9
+msgid "Был"
+msgstr ""
+
+#: haxball_site/templates/core/include/profile/last_actuvity.html:11
+msgid "Неизвестно("
+msgstr ""
+
+#: haxball_site/templates/core/include/running_line.html:48
+msgid "Результаты матчей:"
+msgstr ""
+
+#: haxball_site/templates/core/include/running_line.html:68
+msgid "Нет актуальных матчей"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_last_activity.html:17
+#: haxball_site/templates/core/include/sidebar_for_top_comments.html:25
+msgid "от"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_lives.html:17
+msgid "LIVE"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_online_users.html:6
+msgid "Сейчас онлайн:"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_top_comments.html:25
+msgid "в"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_top_comments.html:29
+msgid "*Медиа-контент*"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_transfers.html:9
+msgid "Последние трансферы"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_transfers.html:35
+#: haxball_site/templates/core/include/sidebar_for_transfers.html:51
+#: haxball_site/templates/tournament/transfers/partials/transfers_list.html:37
+#: haxball_site/templates/tournament/transfers/partials/transfers_list.html:51
+msgid "Свободный агент"
+msgstr ""
+
+#: haxball_site/templates/core/include/sidebar_for_transfers.html:62
+msgid "Все трансферы"
+msgstr ""
+
+#: haxball_site/templates/core/post/all_posts_list.html:5
+msgid "Все новости"
+msgstr ""
+
+#: haxball_site/templates/core/post/all_posts_list.html:15
+msgid "Все посты"
+msgstr ""
+
+#: haxball_site/templates/core/post/detail.html:46
+msgid "В разделе"
+msgstr ""
+
+#: haxball_site/templates/core/post/detail.html:78
+msgid "Комментариев:"
+msgstr ""
+
+#: haxball_site/templates/core/post/edit_comment.html:12
+msgid "Изменить комменатарий"
+msgstr ""
+
+#: haxball_site/templates/core/post/edit_comment.html:31
+msgid "Отменить"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:8
+msgid "Редактирование профиля"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:30
+msgid "Аватар"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:39
+msgid "Фон"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:49
+msgid "Удалить фон"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:57
+msgid "Комментарии к профилю"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:72
+#: haxball_site/templates/core/profile/profile_detail.html:153
+msgid "Основная информация"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:75
+#: haxball_site/templates/tournament/teams/partials/edit_team_form.html:32
+msgid "Сохранить"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:81
+#: haxball_site/templates/core/profile/profile_detail.html:158
+msgid "Дата регистрации"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:85
+#: haxball_site/templates/core/profile/profile_detail.html:163
+msgid "Последний визит"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:89
+#: haxball_site/templates/core/profile/profile_detail.html:168
+msgid "Дата рождения"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:98
+#: haxball_site/templates/core/profile/profile_detail.html:180
+msgid "Город"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:110
+msgid "Вк"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:111
+msgid "id/никнейм (id12345)"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:120
+msgid "Никнейм (без @)"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:129
+msgid "Имя#1234"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:138
+msgid "Доп. информация"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:141
+#: haxball_site/templates/core/profile/profile_detail.html:192
+msgid "О себе"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:148
+#: haxball_site/templates/core/profile/profile_detail.html:201
+msgid "Любимые команды"
+msgstr ""
+
+#: haxball_site/templates/core/profile/partials/edit_profile_form.html:155
+#: haxball_site/templates/core/profile/profile_detail.html:210
+msgid "Любимые игроки"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:37
+msgid "Профиль пользователя"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:94
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_top.html:44
+#: haxball_site/templates/tournament/player/player_profile.html:17
+msgid "Без команды"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:97
+msgid "Репутация"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:121
+msgid "Просмотров"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:174
+msgid "не указана"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:185
+msgid "не указан"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:233
+#: haxball_site/templates/core/profile/profile_detail.html:237
+#: haxball_site/templates/tournament/teams/team_page.html:155
+msgid "Достижения"
+msgstr ""
+
+#: haxball_site/templates/core/profile/profile_detail.html:260
+msgid "Профиль игрока"
+msgstr ""
+
+#: haxball_site/templates/core/search_result/search_result.html:12
+msgid "Результаты поиска"
+msgstr ""
+
+#: haxball_site/templates/core/search_result/search_result.html:27
+msgid "Команды по Вашему запросу не найдены"
+msgstr ""
+
+#: haxball_site/templates/core/search_result/search_result.html:29
+msgid "Команд найдено"
+msgstr ""
+
+#: haxball_site/templates/core/search_result/search_result.html:61
+msgid "Пользователи по Вашему запросу не найдены"
+msgstr ""
+
+#: haxball_site/templates/core/search_result/search_result.html:63
+msgid "Пользователей найдено"
+msgstr ""
+
+#: haxball_site/templates/core/search_result/search_result.html:92
+msgid "Посты по Вашему запросу не найдены"
+msgstr ""
+
+#: haxball_site/templates/core/search_result/search_result.html:94
+msgid "Постов найдено"
+msgstr ""
+
+#: haxball_site/templates/notifications/all.html:4
+#: haxball_site/templates/notifications/all.html:9
+#: haxball_site/templates/notifications/notification_dropdown.html:12
+msgid "Уведомления"
+msgstr ""
+
+#: haxball_site/templates/notifications/all.html:14
+msgid "Только непрочитанные"
+msgstr ""
+
+#: haxball_site/templates/notifications/all.html:22
+#: haxball_site/templates/notifications/all.html:26
+#: haxball_site/templates/notifications/notification_dropdown.html:32
+msgid "Отметить все как прочитанное"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown.html:21
+msgid "У Вас нет новых уведомлений"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown.html:35
+msgid "Все уведомления"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown_item.html:29
+#: haxball_site/templates/notifications/notifications_list.html:37
+msgid "на Ваш комментарий под темой"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown_item.html:36
+#: haxball_site/templates/notifications/notifications_list.html:44
+msgid "оставил комментарий"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown_item.html:37
+#: haxball_site/templates/notifications/notifications_list.html:45
+msgid "под Вашим профилем"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown_item.html:41
+#: haxball_site/templates/notifications/notifications_list.html:49
+#: haxball_site/templates/reservation/reservation_form.html:18
+#: haxball_site/templates/tournament/card/cards.html:64
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:59
+msgid "Матч"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown_item.html:43
+#: haxball_site/templates/notifications/notifications_list.html:51
+msgid "с участием Вашей команды был проинспектирован"
+msgstr ""
+
+#: haxball_site/templates/notifications/notification_dropdown_item.html:67
+#: haxball_site/templates/notifications/notifications_list.html:73
+msgid "Отметить как прочитанное"
+msgstr ""
+
+#: haxball_site/templates/notifications/notifications_list.html:83
+msgid "Удалить"
+msgstr ""
+
+#: haxball_site/templates/notifications/notifications_list.html:102
+msgid "У Вас нет уведомлений"
+msgstr ""
+
+#: haxball_site/templates/polls/include/polls_list.html:11
+msgid "анонимно"
+msgstr ""
+
+#: haxball_site/templates/polls/include/polls_list.html:21
+msgid "Опрос анонимен"
+msgstr ""
+
+#: haxball_site/templates/polls/include/polls_list.html:27
+msgid "Спасибо за голос"
+msgstr ""
+
+#: haxball_site/templates/polls/include/polls_list.html:44
+msgid "Проголосовать"
+msgstr ""
+
+#: haxball_site/templates/polls/include/polls_list.html:51
+msgid "чтобы голосовать"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_form.html:29
+msgid "Дата матча"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_form.html:31
+msgid "Сегодня"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_form.html:32
+msgid "Завтра"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_form.html:37
+msgid "Время матча"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_form.html:57
+msgid "Хост"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_form.html:69
+msgid "Забронировать хост"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_form.html:78
+msgid "У Вас сыграны/забронированны все матчи"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_list.html:13
+msgid "Чемпионат | Бронь хоста"
+msgstr ""
+
+#: haxball_site/templates/reservation/reservation_list.html:91
+msgid "Снять бронь?"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:7
+msgid "Чемпионат | Карточки"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:51
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:47
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:30
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:25
+#: haxball_site/templates/tournament/postponements/postponements.html:44
+#: haxball_site/templates/tournament/team_rating.html:39
+#: haxball_site/templates/tournament/transfers/transfers.html:45
+msgid "Применить фильтр"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:61
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:56
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:39
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:135
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:57
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:134
+#: haxball_site/templates/tournament/teams/team_page.html:81
+msgid "Сезон"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:62
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:57
+#: haxball_site/templates/tournament/partials/team_rating_table.html:11
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:40
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:136
+#: haxball_site/templates/tournament/postponements/postponements.html:53
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:19
+msgid "Команда"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:63
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:58
+#: haxball_site/templates/tournament/free_agents/free_agents.html:121
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:9
+#: haxball_site/templates/tournament/transfers/transfers.html:54
+msgid "Игрок"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:65
+msgid "Тип"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:66
+#: haxball_site/templates/tournament/match/detail.html:291
+msgid "Причина"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/cards.html:67
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:63
+#: haxball_site/templates/tournament/match/detail.html:340
+msgid "Инспектор"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/partials/cards_list.html:63
+msgid "ЖК"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/partials/cards_list.html:65
+msgid "КК"
+msgstr ""
+
+#: haxball_site/templates/tournament/card/partials/cards_list.html:75
+msgid "Не указана"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:36
+msgid "Чемпионат | Сравнить игроков — CIS-HAXBALL"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:44
+msgid "Сравнить игроков"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:67
+#: haxball_site/templates/tournament/compare_teams.html:63
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:463
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:553
+msgid "Сравнить"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:81
+#: haxball_site/templates/tournament/compare_teams.html:77
+msgid "Фильтры"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:128
+#: haxball_site/templates/tournament/compare_players.html:159
+msgid "Выберите игрока"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:168
+#: haxball_site/templates/tournament/compare_teams.html:158
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:50
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:45
+#: haxball_site/templates/tournament/match/detail.html:184
+#: haxball_site/templates/tournament/partials/player_stats_charts.html:6
+#: haxball_site/templates/tournament/partials/team_stats_charts.html:6
+#: haxball_site/templates/tournament/player/player_profile.html:34
+#: haxball_site/templates/tournament/player/player_profile.html:90
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:212
+#: haxball_site/templates/tournament/teams/team_page.html:105
+#: haxball_site/templates/tournament/tournament/tournament_detail.html:75
+msgid "Матчи"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:172
+#: haxball_site/templates/tournament/compare_teams.html:162
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:54
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:49
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:63
+msgid "Победы"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:176
+#: haxball_site/templates/tournament/compare_teams.html:166
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:58
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:53
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:72
+msgid "Процент побед"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:180
+#: haxball_site/templates/tournament/compare_teams.html:170
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:31
+#: haxball_site/templates/tournament/player/player_profile.html:45
+msgid "Голы"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:184
+#: haxball_site/templates/tournament/compare_teams.html:174
+msgid "Голы (ср. за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:188
+#: haxball_site/templates/tournament/compare_teams.html:186
+#: haxball_site/templates/tournament/include/match_team_events.html:37
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:55
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:64
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:160
+#: haxball_site/templates/tournament/player/player_profile.html:55
+#: haxball_site/templates/tournament/player/player_profile.html:56
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:18
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:81
+msgid "Голевые передачи"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:192
+#: haxball_site/templates/tournament/compare_teams.html:190
+msgid "Голевые передачи (ср. за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:196
+#: haxball_site/templates/tournament/partials/player_stats_charts.html:10
+#: haxball_site/templates/tournament/partials/team_stats_charts.html:10
+msgid "Результативные действия"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:200
+msgid "Результативные действия (ср. за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:204
+#: haxball_site/templates/tournament/compare_teams.html:194
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:44
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:39
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:69
+#: haxball_site/templates/tournament/player/player_profile.html:65
+#: haxball_site/templates/tournament/player/player_profile.html:66
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:21
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:84
+msgid "Сухие таймы"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:208
+#: haxball_site/templates/tournament/compare_teams.html:198
+msgid "Сухие таймы (ср. за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:212
+#: haxball_site/templates/tournament/compare_teams.html:202
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:78
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:63
+msgid "Желтые карточки"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_players.html:216
+#: haxball_site/templates/tournament/compare_teams.html:206
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:82
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:67
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:92
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:46
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:96
+msgid "Красные карточки"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:34
+msgid "Чемпионат | Сравнить команды — CIS-HAXBALL"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:41
+msgid "Сравнить команды"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:121
+#: haxball_site/templates/tournament/compare_teams.html:149
+msgid "Выберите команду"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:178
+msgid "Пропущенные голы"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:182
+msgid "Пропущенные голы (ср. за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:215
+#: haxball_site/templates/tournament/hall_of_fame/hall_of_fame.html:20
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:399
+msgid "Игроки"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:217
+msgid "Наибольшее кол-во матчей"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:221
+msgid "Наибольшее кол-во побед"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:225
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:455
+msgid "Лучший бомбардир"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:229
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:481
+msgid "Лучший ассистент"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:233
+msgid "Лучший по результативным действиям"
+msgstr ""
+
+#: haxball_site/templates/tournament/compare_teams.html:237
+msgid "Лучший по сухим таймам"
+msgstr ""
+
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:7
+msgid "Чемпионат | Дисквалификации"
+msgstr ""
+
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:60
+msgid "Причина дисквалификации"
+msgstr ""
+
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:61
+msgid "Распостраняется на"
+msgstr ""
+
+#: haxball_site/templates/tournament/disqualification/disqualifications.html:62
+msgid "Снята"
+msgstr ""
+
+#: haxball_site/templates/tournament/disqualification/partials/disqualifications_list.html:79
+msgid "Частично"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:15
+msgid "Чемпионат | Свободные агенты"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:23
+msgid "Поиск команды/игроков"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:40
+#: haxball_site/templates/tournament/free_agents/free_agents.html:122
+msgid "Позиция"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:42
+msgid "Любая"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:43
+msgid "Нападающий"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:44
+msgid "Опорник"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:45
+msgid "Вратарь"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:46
+msgid "Верхний нападающий"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:47
+msgid "Нижний нападающий"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:48
+msgid "Нападающий/Опорник"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:49
+msgid "Нападающий/Вратарь"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:50
+msgid "Задняя линия"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:55
+msgid "Краткий комментарий"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:62
+msgid "Оставить заявку"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:78
+msgid "Снять заявку"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:90
+msgid "Сможете через"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:96
+msgid ""
+"Вы не можете поднять заявку, т.к. только недавно создали или подняли заявку"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:97
+msgid "Следущее обновление возможно через"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:97
+msgid "Если вы снимете"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:98
+msgid "свою заявку, то создать новую будет возможно через это же время."
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:101
+msgid "Поднять заявку"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:111
+msgid "Вы сможете оставить заявку повторно через"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:124
+#: haxball_site/templates/tournament/match/detail.html:343
+msgid "Комментарий"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/free_agents.html:125
+#: haxball_site/templates/tournament/transfers/transfers.html:57
+msgid "Дата"
+msgstr ""
+
+#: haxball_site/templates/tournament/free_agents/partials/free_agents_list.html:63
+msgid "Нет свободных агентов"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/hall_of_fame.html:6
+msgid "Чемпионат | Зал славы"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:36
+msgid "Бомбардиры"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:40
+msgid "Ассистенты"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:64
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:12
+msgid "Вышел на поле"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:68
+msgid "Ушел с поля"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_hall_of_fame.html:72
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:73
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:83
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:40
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:90
+msgid "Автоголы"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/players_top.html:91
+msgid "Не найдено игроков, подходящих под фильтр"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:35
+msgid "Передачи"
+msgstr ""
+
+#: haxball_site/templates/tournament/hall_of_fame/partials/teams_hall_of_fame.html:59
+#: haxball_site/templates/tournament/partials/players_stats_summary.html:64
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:87
+msgid "Замены"
+msgstr ""
+
+#: haxball_site/templates/tournament/include/match_team_events.html:8
+#: haxball_site/templates/tournament/partials/players_stats_summary.html:28
+msgid "Сухой тайм"
+msgstr ""
+
+#: haxball_site/templates/tournament/include/match_team_events.html:11
+msgid "Жёлтая"
+msgstr ""
+
+#: haxball_site/templates/tournament/include/match_team_events.html:14
+msgid "Красная"
+msgstr ""
+
+#: haxball_site/templates/tournament/include/match_team_events.html:17
+msgid "Автогол"
+msgstr ""
+
+#: haxball_site/templates/tournament/include/match_team_events.html:20
+msgid "Игрок вышел"
+msgstr ""
+
+#: haxball_site/templates/tournament/include/match_team_events.html:24
+msgid "Игрок ушёл"
+msgstr ""
+
+#: haxball_site/templates/tournament/include/match_team_events.html:32
+#: haxball_site/templates/tournament/partials/players_stats_summary.html:36
+msgid "Гол"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:104
+msgid "vs"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:139
+msgid "Команды ранее не встречались"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:139
+msgid "История встреч"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:187
+msgid "Самый результативный матч"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:213
+msgid "Побед"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:218
+msgid "Забитых мячей"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:223
+msgid "В среднем за матч"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:239
+msgid "Общая сводка"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:245
+msgid "Cоставы"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:266
+msgid "Нарушения"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:277
+msgid "Нарушений не зафиксировано"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:290
+msgid "дисквалифицирован на"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:303
+msgid "Протокол"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:309
+msgid "1 тайм"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:312
+msgid "2 тайм"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:316
+msgid "Доп. время"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:326
+msgid "Информация"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:333
+msgid "Реплей"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:335
+msgid "Реплей 1"
+msgstr ""
+
+#: haxball_site/templates/tournament/match/detail.html:336
+msgid "Реплей 2"
+msgstr ""
+
+#: haxball_site/templates/tournament/partials/player_stats_charts.html:14
+#: haxball_site/templates/tournament/partials/team_stats_charts.html:14
+msgid "Сухари"
+msgstr ""
+
+#: haxball_site/templates/tournament/partials/players_stats_summary.html:44
+msgid "Голевая передача"
+msgstr ""
+
+#: haxball_site/templates/tournament/partials/summary_chart_section.html:7
+msgid "Сводка"
+msgstr ""
+
+#: haxball_site/templates/tournament/partials/team_rating_table.html:10
+msgid "Место"
+msgstr ""
+
+#: haxball_site/templates/tournament/partials/team_rating_table.html:16
+msgid "коэф."
+msgstr ""
+
+#: haxball_site/templates/tournament/partials/team_rating_table.html:20
+msgid "Итого"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:33
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:50
+msgid "Общее"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:41
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:137
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:58
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:135
+msgid "Турнир"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:45
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:141
+#: haxball_site/templates/tournament/player/player_profile.html:33
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:137
+msgid "Матчей сыграно"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:50
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:60
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:156
+#: haxball_site/templates/tournament/player/player_profile.html:44
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:15
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:75
+msgid "Забито"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:74
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:25
+msgid "Заменён"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:79
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:33
+msgid "Вышел на замену"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:88
+#: haxball_site/templates/tournament/teams/partials/team_squad_stats.html:43
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:93
+msgid "Жёлтые карточки"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:146
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:140
+msgid "Забито (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:151
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:146
+msgid "Голевые передачи (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:165
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:149
+msgid "Сухие таймы (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:170
+msgid "Заменён (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:175
+msgid "Вышел на замену (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:179
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:157
+msgid "Автоголы (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:184
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:160
+msgid "Жёлтые карточки (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:188
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:163
+msgid "Красные карточки (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:240
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:209
+msgid "Топ"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:248
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:218
+msgid "Первый матч"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:270
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:338
+msgid "Самый быстрый гол"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:293
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:359
+msgid "Самый поздний гол"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:316
+msgid "Больше всего голов за матч"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:339
+msgid "Больше всего голевых передач за матч"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:362
+msgid "Больше всего результативных действий за матч"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:385
+msgid "Больше всего голов за сезон"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:400
+msgid "Больше всего голевых передач за сезон"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:415
+msgid "Больше всего результативных действий за сезон"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:430
+msgid "Больше всего \"сухарей\" за сезон"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:446
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:536
+msgid "Дашборд"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/partials/player_statistics.html:455
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:545
+#: haxball_site/templates/tournament/teams/team_page.html:150
+msgid "Загружаем статистику..."
+msgstr ""
+
+#: haxball_site/templates/tournament/player/player_profile.html:27
+#: haxball_site/templates/tournament/player/player_profile.html:28
+msgid "Сезоны"
+msgstr ""
+
+#: haxball_site/templates/tournament/player/player_profile.html:80
+#: haxball_site/templates/tournament/teams/team_page.html:140
+#: haxball_site/templates/tournament/tournament/tournament_detail.html:70
+msgid "Статистика"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:15
+msgid "Чемпионат | Переносы"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:55
+msgid "Обычн."
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:58
+msgid "Экстр."
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:61
+msgid "Платн."
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:78
+#: haxball_site/templates/tournament/postponements/postponements.html:186
+msgid "тур"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:94
+msgid "Отменить перенос?"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:140
+msgid "Журнал событий"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:190
+msgid "экстренный"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:193
+msgid "обоюдный перенос"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:195
+msgid "перенос на команду"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements.html:244
+msgid "Отмена переноса"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:11
+msgid "Тур"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:14
+msgid "Хозяева"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:17
+msgid "Гости"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:20
+msgid "Чей перенос"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:23
+msgid "Тип переноса"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:26
+msgid "Подтверждение"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:53
+msgid "Обоюдный"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:59
+msgid "Обычный"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:60
+msgid "Экстренный"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:64
+msgid "Перенос"
+msgstr ""
+
+#: haxball_site/templates/tournament/postponements/postponements_form.html:71
+msgid "На текущий момент у Вас нет несыгранных матчей в данном турнире"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:7
+msgid "Чемпионат | Рейтинг команд"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:51
+msgid "Только команды, принимавшие участие в сезоне"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:61
+msgid "Справка"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:66
+msgid "Рейтинг рассчитывается следующим образом:"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:69
+msgid ""
+"Итоговое место команды рейтинге формируется в зависимости от количества "
+"набранных очков;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:71
+msgid ""
+"Промежуток времени, который учитывается при формирование рейтинга - 3 года "
+"(6 сезонов с последнего завершенного)."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:72
+msgid ""
+"При этом учитываются только те сезоны, что проводились на сайте (начиная с 5-"
+"го сезона);"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:75
+msgid ""
+"Общее количество очков, полученное командой за расчетный период, равняется "
+"взвешенной сумме очков за каждый из сезонов."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:76
+msgid "Веса распределяются следующим образом:"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:78
+msgid "Последний проведенный сезон S<sub>n</sub> - 1;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:79
+msgid "S<sub>n-1</sub> - 1;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:80
+msgid "S<sub>n-2</sub> - 1;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:81
+msgid "S<sub>n-3</sub> - 0.9;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:82
+msgid "S<sub>n-4</sub> - 0.8;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:83
+msgid "S<sub>n-5</sub> - 0.7;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:85
+msgid ""
+"Прим. Лига Чемпионов не считается отдельным сезоном и учитывается с весом "
+"того сезона, вместе с которым она проводилась (ЛЧ#2 - ЧР#6, ЧР#7 - ЛЧ#3);"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:90
+msgid ""
+"Количество очков, набранное командой в конкретном сезоне, является суммой "
+"очков, набранных в каждом из турниров данного сезона."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:91
+msgid ""
+"Сумма очков, добытых в каждом из турниров, складывается из двух компонентов: "
+"очки за результат в матче и очки за результат во всем турнире."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:94
+msgid "1) За победу в матче начисляется 1 очко, за ничью - 0.5;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:95
+msgid ""
+"2) За достигнутый в турнире результат очки начисляются согласно следующим "
+"правилам:"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:99
+msgid "Победитель ВЛ/ПЛ/2Л - 5 баллов, 2 место - 3б., 3 место - 2б."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:100
+msgid ""
+"- Для 8-го и 9-го сезона победитель каждого из дивизионов ПЛ получает 3.5 "
+"б., 2 место - 1.5 б."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:101
+msgid ""
+"- В 10-м сезоне баллы распределяются согласно итогам Суперфинала и плей-офф "
+"ПЛ"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:103
+msgid ""
+"Победитель КР/ЛЧ - 5 баллов, финалист - 3б., полуфиналист либо победитель "
+"матча за 3-е место - 1б."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:104
+msgid "Победитель КВЛ/КПЛ/К2Л - 3 балла, финалист - 2б., полуфиналист - 1б."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:108
+msgid ""
+"Каждый турнир имеет коэффициент, на который умножается количество очков, "
+"полученное командой за выступление в данном первенстве."
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:108
+msgid "Далее представлены коэффициенты для каждого турнира:"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:111
+msgid "Высшая (Единая) лига, Кубок Высшей лиги - 1;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:112
+msgid "Кубок России, Лига Чемпионов - 0.75;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:113
+msgid "Первая лига, Кубок Первой лиги - 0.5;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:114
+msgid "Вторая лига, Кубок Второй лиги - 0.25;"
+msgstr ""
+
+#: haxball_site/templates/tournament/team_rating.html:118
+msgid ""
+"Очередная версия рейтинга будет выходить каждые полгода по завершении "
+"соответствующего сезона."
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/edit_team_form.html:8
+msgid "Изменить команду"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:53
+msgid "Абсолютные показатели"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:60
+msgid "Матчей сыгранно"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:66
+msgid "Ничьи"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:69
+msgid "Поражения"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:78
+msgid "Пропущено"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:130
+msgid "Средние показатели"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:143
+msgid "Пропущено (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:154
+msgid "Замены (в среднем за матч)"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:238
+msgid "Самая крупная \"домашняя\" победа"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:258
+msgid "Самая крупная \"гостевая\" победа"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:278
+msgid "Самое крупное \"домашнее\" поражение"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:298
+msgid "Самое крупное \"гостевое\" поражение"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:318
+msgid "Самая результативная ничья"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:380
+msgid "Самый \"жаркий\" матч"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:405
+msgid "Наибольшее количество матчей"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:430
+msgid "Наибольшее количество выходов на замену"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/partials/team_statistics.html:507
+msgid "Лучший голкипер"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:20
+msgid "Чемпионат | Команда"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:51
+msgid "Офис"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:52
+msgid "Офис команды"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:63
+msgid "Состав"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:66
+msgid "Текущий"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:75
+msgid "За всё время"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:87
+msgid "Все"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:185
+msgid "Владелец"
+msgstr ""
+
+#: haxball_site/templates/tournament/teams/team_page.html:219
+msgid "Капитан"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/cup_bracket.html:46
+msgid "Верхняя сетка"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/cup_bracket.html:48
+msgid "Нижняя сетка"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:20
+msgid "И"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:21
+msgid "В"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:22
+msgid "Н"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:23
+msgid "П"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:24
+msgid "ЗМ"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:25
+msgid "ПМ"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:26
+msgid "РМ"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/partials/tournament_table.html:27
+msgid "О"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/tournament_detail.html:31
+msgid "Сетка"
+msgstr ""
+
+#: haxball_site/templates/tournament/tournament/tournament_detail.html:31
+msgid "Таблица"
+msgstr ""
+
+#: haxball_site/templates/tournament/transfers/transfers.html:7
+msgid "Чемпионат | Трансферы"
+msgstr ""
+
+#: haxball_site/templates/tournament/transfers/transfers.html:55
+msgid "Из команды"
+msgstr ""
+
+#: haxball_site/templates/tournament/transfers/transfers.html:56
+msgid "В команду"
+msgstr ""

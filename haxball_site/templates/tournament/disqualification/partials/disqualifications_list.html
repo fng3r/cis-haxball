@@ -1,5 +1,7 @@
 {% load static %}
 {% load thumbnail %}
+{% load i18n %}
+
 {% for disqualification in disqualifications %}
     {% if forloop.last and disqualifications.number < disqualifications.paginator.num_pages %}
         <tr hx-get="{% url 'tournament:disqualifications' %}?page={{ disqualifications.number|add:1 }}"
@@ -70,11 +72,11 @@
     <td class="disqualification-row">
         <div class="ttw:text-[12px]">
             {% if disqualification.lifted_tours.count == 0 %}
-                Нет
+                {% trans "Нет" %}
             {% elif disqualification.tours.count == disqualification.lifted_tours.count %}
-                Да
+                {% trans "Да" %}
             {% else %}
-                Частично<br>
+                {% trans "Частично" %}<br>
                 {% for tour in disqualification.lifted_tours.all %}
                     {{ tour }}<br>
                 {% endfor %}

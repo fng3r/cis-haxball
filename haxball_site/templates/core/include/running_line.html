@@ -1,5 +1,6 @@
 {% load tournament_extras %}
 {% load cache %}
+{% load i18n %}
 
 <style>
     .marquee {
@@ -44,7 +45,7 @@
     <div class="marquee">
         <span class="mb-1">
             {% if latest_matches.count > 0 %}
-                Результаты матчей:
+                {% trans "Результаты матчей:" %}
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 {% for match in latest_matches %}
                     <a class="match-link" href="{{match.get_absolute_url}}">
@@ -64,7 +65,7 @@
                     </a>
                 {% endfor %}
             {% else %}
-                Нет актуальных матчей
+                {% trans "Нет актуальных матчей" %}
             {% endif %}
         </span>
     </div>

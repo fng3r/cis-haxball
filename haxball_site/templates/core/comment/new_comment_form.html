@@ -1,5 +1,6 @@
 {% load static %}
 {% load user_tags %}
+{% load i18n %}
 
 {% with content_type=object|content_type %}
   <form id="addcomment" class="tw:text-center"
@@ -21,7 +22,7 @@
 
     <div class="tw:flex tw:justify-end tw:mt-auto tw:mb-1 tw:mr-2">
       <img class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
-      <button type="submit" class="tw:btn tw:btn-primary">Отправить</button>
+      <button type="submit" class="tw:btn tw:btn-primary">{% trans "Отправить" %}</button>
     </div>
 
   </form>

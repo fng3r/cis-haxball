@@ -2,6 +2,7 @@
 {% load static %}
 {% load cache %}
 {% load tournament_extras %}
+{% load i18n %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static 'tournament/teams/team_page.css' %}">
@@ -11,12 +12,12 @@
     <script>
         function myFunction(Element) {
             navigator.clipboard.writeText(Element.title);
-            alert("Скопировано " + Element.title);
+            alert("{% trans "Скопировано" %} " + Element.title);
         }
     </script>
 {% endblock %}
 
-{% block title %}Чемпионат | Команда {{ team.title }} — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Чемпионат | Команда" %} {{ team.title }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
 
@@ -47,8 +48,8 @@
                             </h3>
 
                             <p>
-                                <a href="{{ team.office_link }}" class="tw:link tw:link-hover tw:link-primary tw:font-bold">Офис</a>
-                                <img src="{% static "img/ico/team_office.png" %}" height="28" width="28" title="Офис команды">
+                                <a href="{{ team.office_link }}" class="tw:link tw:link-hover tw:link-primary tw:font-bold">{% trans "Офис" %}</a>
+                                <img src="{% static "img/ico/team_office.png" %}" height="28" width="28" title="{% trans "Офис команды" %}">
                             </p>
                         </div>
                     </div>
@@ -59,10 +60,10 @@
                 </div>
 
                 <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Состав" checked />
+                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{% trans "Состав" %}" checked />
                     <div class="tw:tab-content tw:pt-3">
                         <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-transparent tw:p-0! tw:tabs-lg">
-                            <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="Текущий" checked />
+                            <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="{% trans "Текущий" %}" checked />
                             <div class="tw:tab-content tw:pt-2">
                                 <div id="current-players-panel" role="tabpanel" aria-labelledby="current-players-tab">
                                     {% with team_squad=team|current_squad_stats %}
@@ -71,19 +72,19 @@
                                 </div>
                             </div>
 
-                            <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="За всё время" />
+                            <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="{% trans "За всё время" %}" />
                             <div class="tw:tab-content tw:pt-3">
                                 <div id="alltime-players-panel" role="tabpanel" aria-labelledby="alltime-players-tab">
 
                                     <div class="tw:flex tw:items-center tw:mb-2">
                                         <fieldset class="tw:fieldset">
-                                            <legend class="tw:fieldset-legend tw:text-sm">Сезон</legend>
+                                            <legend class="tw:fieldset-legend tw:text-sm">{% trans "Сезон" %}</legend>
                                             <select name="season"
                                                     class="tw:select tw:select-sm"
                                                     hx-get="{% url 'tournament:team_squad_stats' team.id %}"
                                                     hx-target="#team-squad-stats"
                                                     hx-swap="innerHTML">
-                                                <option selected value>Все</option>
+                                                <option selected value>{% trans "Все" %}</option>
                                                 {% for season in seasons %}
                                                     <option value="{{ season.number }}">{{ season.title }}</option>
                                                 {% endfor %}
@@ -101,7 +102,7 @@
                         </div>
                     </div>
 
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Матчи" />
+                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{% trans "Матчи" %}" />
                     <div class="tw:tab-content tw:pt-2">
                         <div id="matches-panel" role="tabpanel" aria-labelledby="matches-tab">
                             <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
@@ -136,7 +137,7 @@
                         </div>
                     </div>
 
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Статистика"
+                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{% trans "Статистика" %}"
                            hx-get="{% url 'tournament:team_stats' team.id %}"
                            hx-trigger="click once"
                            hx-target="#stats-panel"
@@ -146,12 +147,12 @@
                         <div id="stats-panel" role="tabpanel" aria-labelledby="stats-tab">
                             <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
                                 <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                                <h3 class="tw:text-center">Загружаем статистику...</h3>
+                                <h3 class="tw:text-center">{% trans "Загружаем статистику..." %}</h3>
                             </div>
                         </div>
                     </div>
 
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Достижения" />
+                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{% trans "Достижения" %}" />
                     <div class="tw:tab-content tw:pt-2 tw:mb-2">
                         <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
                             {% if team.achievements.count %}
@@ -173,7 +174,7 @@
                         </div>
                     </div>
 
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Контакты" />
+                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{% trans "Контакты" %}" />
                     <div class="tw:tab-content tw:pt-2">
                         <div id="other-panel" role="tabpanel" aria-labelledby="other-tab">
                             <div class="tw:flex tw:justify-center">
@@ -181,7 +182,7 @@
                                     <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
                                         <tbody>
                                             <tr>
-                                                <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Владелец</span></td>
+                                                <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{% trans "Владелец" %}</span></td>
                                                 <td>
                                                     <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
                                                        href="{{ team.owner.user_profile.get_absolute_url }}">{{ team.owner.user_player }}</a>
@@ -215,7 +216,7 @@
                                             </tr>
                                             {% for cap in team|get_captain %}
                                                 <tr>
-                                                    <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span></td>
+                                                    <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{% trans "Капитан" %}</span></td>
                                                     <td>
                                                         {% if cap.name %}
                                                             <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"

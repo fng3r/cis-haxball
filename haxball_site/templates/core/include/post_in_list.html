@@ -1,5 +1,6 @@
 {% load static %}
 {% load user_tags %}
+{% load i18n %}
 
 <div class="tw:flex tw:flex-col tw:my-2">
     <div class="tw:card-body tw:gap-0 tw:p-0">
@@ -8,7 +9,7 @@
                   class="tw:btn tw:btn-block tw:btn-lg tw:btn-outline tw:rounded-lg tw:rounded-b-none {% if post.important and is_on_homepage %}tw:btn-error{%else%}tw:btn-info{%endif%}">
                 {{ post.title }}
                 {% if post.publish|is_fresh:5 %}
-                    <span class="tw:badge tw:badge-pill tw:badge-success">Новый!</span>
+                    <span class="tw:badge tw:badge-pill tw:badge-success">{% trans "Новый!" %}</span>
                 {% endif %}
                 {% if post.important and is_on_homepage %}
                     <i class="fa fa-thumb-tack tw:text-yellow-400 tw:rotate-30 tw:ml-1" aria-hidden="true"></i>

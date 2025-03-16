@@ -1,5 +1,6 @@
 {% load static %}
 {% load cache %}
+{% load i18n %}
 
 {% cache 60 last_activity_cache %}
 
@@ -7,13 +8,13 @@
         <div class="tw:card-title tw:justify-center tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
             <span class="tw:mb-0 tw:text-center">
                 <img src="{% static "img/ico/chat.png" %}" width="30" class="tw:align-top!" alt="New Comments">
-                Комментарии
+                {% trans "Комментарии" %}
             </span>
         </div>
 
         <div class="tw:w-full">
             {% for comment in last_comments %}
-                <a href="{{ comment.get_absolute_url }}" title="от {{ comment.author }}"
+                <a href="{{ comment.get_absolute_url }}" title="{% trans "от" %} {{ comment.author }}"
                    class="tw:btn-link-block tw:p-2 tw:bg-card-button tw:text-card-button">
                     <div class="tw:w-full tw:flex tw:justify-between tw:overflow-hidden">
                         <span class="tw:text-left tw:truncate tw:mr-2">{{ comment.content_object }}</span>

@@ -1,42 +1,43 @@
 {% load static %}
 {% load user_tags %}
 {% load tournament_extras %}
+{% load i18n %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/include/navbar.css" %}">
 {% endblock %}
 
 {% partialdef championship_dropdown_content %}
-    <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">Турниры</li>
+    <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">{% trans "Турниры" %}</li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 's14-premier-league' %}">Высшая лига</a>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-premier-league' %}">{% trans "Высшая лига" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 's14-first-league' %}">Первая лига</a>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-first-league' %}">{% trans "Первая лига" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 's14-second-league' %}">Вторая лига</a>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-second-league' %}">{% trans "Вторая лига" %}</a>
     </li>
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                Кубок лиги<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "Кубок лиги" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-pl' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-pl' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-fl' %}">Первая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-fl' %}">{% trans "Первая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-sl' %}">Вторая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-sl' %}">{% trans "Вторая лига" %}</a>
                 </li>
             </ul>
         </div>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 's14-russian-cup' %}">Кубок России</a>
+        <a class="tw:block" href="{% url 'tournament:league' 's14-russian-cup' %}">{% trans "Кубок России" %}</a>
     </li>
 
     <div class="tw:divider tw:my-0"></div>
@@ -44,53 +45,53 @@
     <li>
         <a class="tw:block" target="_blank"
            href="https://docs.google.com/spreadsheets/d/1uO4L_LzPAJz28WDNICFxBep76OTWvaZ3tQlw5HIAaw4/edit?usp=sharing">
-            Календарь
+            {% trans "Календарь" %}
         </a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
+        <a class="tw:block" href="{% url 'reservation:host_reservation' %}">{% trans "Бронь хоста" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:postponements' %}">Переносы</a>
+        <a class="tw:block" href="{% url 'tournament:postponements' %}">{% trans "Переносы" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:cards' %}">Карточки</a>
+        <a class="tw:block" href="{% url 'tournament:cards' %}">{% trans "Карточки" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
+        <a class="tw:block" href="{% url 'tournament:disqualifications' %}">{% trans "Дисквалификации" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '918' 'transfers-13' %}">Трансферы</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '918' 'transfers-13' %}">{% trans "Трансферы" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
+        <a class="tw:block" href="{% url 'tournament:free_agents' %}">{% trans "Свободные агенты" %}</a>
     </li>
 
     <div class="tw:divider tw:my-0"></div>
 
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '111' 'org_razdel' %}">Орг. раздел</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '111' 'org_razdel' %}">{% trans "Орг. раздел" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '817' 'regulations' %}">Регламент</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '817' 'regulations' %}">{% trans "Регламент" %}</a>
     </li>
 {% endpartialdef %}
 
 {% partialdef archive_dropdown_content %}
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '46' 'season_1' %}">ЧР #1</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '46' 'season_1' %}">{% trans "ЧР #1" %}</a>
     </li>
 
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '47' 'season_2' %}">ЧР #2</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '47' 'season_2' %}">{% trans "ЧР #2" %}</a>
     </li>
 
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">ЛЧ #1</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '50' 'champions_league_1' %}">{% trans "ЛЧ #1" %}</a>
     </li>
 
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '49' 'season_4' %}">ЧР #4</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '49' 'season_4' %}">{% trans "ЧР #4" %}</a>
     </li>
 
     <div class="tw:divider tw:my-0"></div>
@@ -98,34 +99,34 @@
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #5<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #5" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's5-premier-league' %}">Единая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's5-premier-league' %}">{% trans "Единая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's5-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's5-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
     </li>
 
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s2' %}">ЛЧ #2</a>
+        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s2' %}">{% trans "ЛЧ #2" %}</a>
     </li>
 
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #6<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #6" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's6-premier-league' %}">Единая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's6-premier-league' %}">{% trans "Единая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's6-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's6-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
@@ -134,55 +135,55 @@
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #7<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #7" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's7-premier-league' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's7-premier-league' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's7-first-league' %}">Первая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's7-first-league' %}">{% trans "Первая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's7-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's7-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
     </li>
 
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s3' %}">ЛЧ #3</a>
+        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s3' %}">{% trans "ЛЧ #3" %}</a>
     </li>
 
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #8<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #8" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's8-premier-league' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's8-premier-league' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Первая лига<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Первая лига" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's8-first-league-sharks' %}">Дивизион Акул</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's8-first-league-sharks' %}">{% trans "Дивизион Акул" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's8-first-league-berkuts' %}">Дивизион Беркутов</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's8-first-league-berkuts' %}">{% trans "Дивизион Беркутов" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's8-league-cup' %}">Кубок лиги</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's8-league-cup' %}">{% trans "Кубок лиги" %}</a>
                             </li>
                         </ul>
                     </div>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's8-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's8-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
@@ -191,32 +192,32 @@
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #9<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #9" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's9-premier-league' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's9-premier-league' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Первая лига<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Первая лига" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's9-first-league-volga' %}">Дивизион Волги</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's9-first-league-volga' %}">{% trans "Дивизион Волги" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's9-first-league-kama' %}">Дивизион Камы</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's9-first-league-kama' %}">{% trans "Дивизион Камы" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's9-league-cup' %}">Кубок лиги</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's9-league-cup' %}">{% trans "Кубок лиги" %}</a>
                             </li>
                         </ul>
                     </div>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's9-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's9-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
@@ -225,17 +226,17 @@
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #10<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #10" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's10-premier-league' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's10-premier-league' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's10-first-league' %}">Первая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's10-first-league' %}">{% trans "Первая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's10-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's10-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
@@ -244,35 +245,35 @@
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #11<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #11" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's11-premier-league' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's11-premier-league' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Первая лига<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Первая лига" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-nadezhda' %}">Дивизион Надежды</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-nadezhda' %}">{% trans "Дивизион Надежды" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-vera' %}">Дивизион Веры</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-vera' %}">{% trans "Дивизион Веры" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-playoff' %}">Плей-офф</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-playoff' %}">{% trans "Плей-офф" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-superfinal' %}">Суперфинал</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's11-first-league-superfinal' %}">{% trans "Суперфинал" %}</a>
                             </li>
                         </ul>
                     </div>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's11-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's11-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
@@ -281,38 +282,38 @@
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #12<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #12" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's12-premier-league' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-premier-league' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's12-first-league' %}">Первая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-first-league' %}">{% trans "Первая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's12-second-league' %}">Вторая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-second-league' %}">{% trans "Вторая лига" %}</a>
                 </li>
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Кубок лиги<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Кубок лиги" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-pl' %}">Высшая лига</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-pl' %}">{% trans "Высшая лига" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-fl' %}">Первая лига</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-fl' %}">{% trans "Первая лига" %}</a>
                             </li>
                             <li>
-                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-sl' %}">Вторая лига</a>
+                                <a class="tw:block" href="{% url 'tournament:league' 's12-league-cup-sl' %}">{% trans "Вторая лига" %}</a>
                             </li>
                         </ul>
                     </div>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's12-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's12-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
@@ -321,82 +322,82 @@
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                ЧР #13<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "ЧР #13" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's13-premier-league' %}">Высшая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-premier-league' %}">{% trans "Высшая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's13-first-league' %}">Первая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-first-league' %}">{% trans "Первая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's13-second-league' %}">Вторая лига</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-second-league' %}">{% trans "Вторая лига" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's13-league-cup' %}">Кубок лиги</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-league-cup' %}">{% trans "Кубок лиги" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="{% url 'tournament:league' 's13-russian-cup' %}">Кубок России</a>
+                    <a class="tw:block" href="{% url 'tournament:league' 's13-russian-cup' %}">{% trans "Кубок России" %}</a>
                 </li>
             </ul>
         </div>
     </li>
 
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s4' %}">ЛЧ #4</a>
+        <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s4' %}">{% trans "ЛЧ #4" %}</a>
     </li>
 
     <li>
-        <a class="tw:block" href="{% url 'tournament:league' 'finals-24' %}">ИТ'24</a>
+        <a class="tw:block" href="{% url 'tournament:league' 'finals-24' %}">{% trans "ИТ'24" %}</a>
     </li>
 {% endpartialdef %}
 
 {% partialdef tournaments_dropdown_content %}
     <li>
-        <a class="tw:block" href="{% url 'core:fastcups' %}">Фасткапы</a>
+        <a class="tw:block" href="{% url 'core:fastcups' %}">{% trans "Фасткапы" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'core:tournaments' %}">Прочие турниры</a>
+        <a class="tw:block" href="{% url 'core:tournaments' %}">{% trans "Прочие турниры" %}</a>
     </li>
 {% endpartialdef %}
 
 {% partialdef rating_dropdown_content %}
     <li>
-        <a class="tw:block" href="{% url 'tournament:team_rating' %}">Рейтинг команд</a>
+        <a class="tw:block" href="{% url 'tournament:team_rating' %}">{% trans "Рейтинг команд" %}</a>
     </li>
     <li>
-        <a class="tw:block" href="{% url 'core:post_detail' '958' 'player-rating-2025-1' %}">Рейтинг игроков</a>
+        <a class="tw:block" href="{% url 'core:post_detail' '958' 'player-rating-2025-1' %}">{% trans "Рейтинг игроков" %}</a>
     </li>
 {% endpartialdef %}
 
 {% partialdef media_dropdown_content %}
     <li>
-        <a class="tw:block" href="{% url 'core:lives' %}">Трансляции</a>
+        <a class="tw:block" href="{% url 'core:lives' %}">{% trans "Трансляции" %}</a>
     </li>
     <li>
         <div class="tw:dropdown tw:dropdown-right">
             <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                Соцсети<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                {% trans "Соцсети" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
             </div>
             <ul tabindex="0" class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
                 <li>
-                    <a class="tw:block" href="https://discord.gg/h6mgc4bTJh" target="_blank"><img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> Discord</a>
+                    <a class="tw:block" href="https://discord.gg/h6mgc4bTJh" target="_blank"><img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%"> {% trans "Discord" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="https://www.youtube.com/@cis-haxball" target="_blank"><img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> YouTube</a>
+                    <a class="tw:block" href="https://www.youtube.com/@cis-haxball" target="_blank"><img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%"> {% trans "YouTube" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="https://www.twitch.tv/cis_haxball" target="_blank"><img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> Twitch</a>
+                    <a class="tw:block" href="https://www.twitch.tv/cis_haxball" target="_blank"><img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%"> {% trans "Twitch" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="https://t.me/+GRxpyqeJKosxODQy" target="_blank"><img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> Telegram</a>
+                    <a class="tw:block" href="https://t.me/+GRxpyqeJKosxODQy" target="_blank"><img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram"> {% trans "Telegram" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="https://www.tiktok.com/@cishaxball3" target="_blank"><img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> TikTok</a>
+                    <a class="tw:block" href="https://www.tiktok.com/@cishaxball3" target="_blank"><img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok"> {% trans "TikTok" %}</a>
                 </li>
                 <li>
-                    <a class="tw:block" href="https://vk.com/haxball_ru" target="_blank"><img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> VK</a>
+                    <a class="tw:block" href="https://vk.com/haxball_ru" target="_blank"><img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk"> {% trans "VK" %}</a>
                 </li>
             </ul>
         </div>
@@ -415,7 +416,7 @@
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Чемпионат<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Чемпионат" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                             {% partial championship_dropdown_content %}
@@ -426,7 +427,7 @@
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Команды<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Команды" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                             {% teams_in_navbar %}
@@ -437,7 +438,7 @@
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Турниры<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Турниры" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                             {% partial tournaments_dropdown_content %}
@@ -448,7 +449,7 @@
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Архив<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Архив" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                             {% partial archive_dropdown_content %}
@@ -459,7 +460,7 @@
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                            Рейтинг<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Рейтинг" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                             {% partial rating_dropdown_content %}
@@ -468,13 +469,13 @@
                 </li>
 
                 <li>
-                    <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+                    <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">{% trans "Зал славы" %}</a>
                 </li>
 
                 <li>
                     <div class="tw:dropdown tw:dropdown-right">
                         <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
-                            Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                            {% trans "Медиа" %}<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                         </div>
                         <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                             {% partial media_dropdown_content %}
@@ -483,15 +484,15 @@
                 </li>
 
                 <li>
-                    <a href="{% url 'core:forum' %}">Форум</a>
+                    <a href="{% url 'core:forum' %}">{% trans "Форум" %}</a>
                 </li>
 
                 <li>
-                    <a href="{% url 'core:admins' %}">Администрация</a>
+                    <a href="{% url 'core:admins' %}">{% trans "Администрация" %}</a>
                 </li>
 
                 <li>
-                    <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+                    <a href="{% url 'core:post_detail' '16' 'rules' %}">{% trans "Правила" %}</a>
                 </li>
             </ul>
         </div>
@@ -501,7 +502,7 @@
         <div class="tw:hidden tw:lg:flex tw:flex-wrap tw:mr-3">
             <div class="tw:dropdown">
                 <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-                    Чемпионат<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                    {% trans "Чемпионат" %}<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
                 <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                     {% partial championship_dropdown_content %}
@@ -510,7 +511,7 @@
 
             <div class="tw:dropdown">
                 <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-                    Команды<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                    {% trans "Команды" %}<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
                 <div tabindex="0" class="tw:w-[650px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                     {% teams_in_navbar %}
@@ -519,7 +520,7 @@
 
             <div class="tw:dropdown">
                 <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-                    Турниры<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                    {% trans "Турниры" %}<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
                 <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                     {% partial tournaments_dropdown_content %}
@@ -528,7 +529,7 @@
 
             <div class="tw:dropdown">
                 <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-                    Архив<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                    {% trans "Архив" %}<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
                 <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                     {% partial archive_dropdown_content %}
@@ -538,29 +539,29 @@
 
             <div class="tw:dropdown">
                 <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-                    Рейтинг<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                    {% trans "Рейтинг" %}<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
                 <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                     {% partial rating_dropdown_content %}
                 </ul>
             </div>
 
-            <a role="button" class="tw:btn tw:btn-ghost tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+            <a role="button" class="tw:btn tw:btn-ghost tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">{% trans "Зал славы" %}</a>
 
             <div class="tw:dropdown">
                 <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-                    Медиа<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                    {% trans "Медиа" %}<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </div>
                 <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
                     {% partial media_dropdown_content %}
                 </ul>
             </div>
 
-            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:forum' %}">Форум</a>
+            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:forum' %}">{% trans "Форум" %}</a>
 
-            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:admins' %}">Администрация</a>
+            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:admins' %}">{% trans "Администрация" %}</a>
 
-            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:post_detail' '16' 'rules' %}">{% trans "Правила" %}</a>
         </div>
     </div>
 
@@ -568,13 +569,13 @@
         <form method="get" action="{% url 'core:filter' %}">
             <label class="tw:input tw:input-bordered tw:w-35 tw:xl:w-auto">
                 <svg class="tw:w-3.5 tw:opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
-                <input type="search" name="q" placeholder="Поиск" aria-label="Search" />
+                <input type="search" name="q" placeholder="{% trans "Поиск" %}" aria-label="{% trans "Search" %}" />
             </label>
         </form>
 
         <div class="tw:dropdown tw:dropdown-end">
             <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:m-1">
-                Тема
+                {% trans "Тема" %}
                 <svg
                     class="tw:inline-block tw:w-3 tw:h-3 tw:mt-1 tw:fill-current tw:opacity-80"
                     width="12px"
@@ -586,100 +587,100 @@
             </div>
             <ul tabindex="0" class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-40 tw:p-2 tw:shadow-2xl">
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Default" value="light" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Default" %}" value="light" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dark" value="dark" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Dark" %}" value="dark" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Cupcake" value="cupcake" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Cupcake" %}" value="cupcake" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Bumblebee" value="bumblebee" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Bumblebee" %}" value="bumblebee" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Emerald" value="emerald" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Emerald" %}" value="emerald" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Corporate" value="corporate" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Corporate" %}" value="corporate" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Synthwave" value="synthwave" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Synthwave" %}" value="synthwave" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Retro" value="retro" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Retro" %}" value="retro" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Cyberpunk" value="cyberpunk" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Cyberpunk" %}" value="cyberpunk" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Valentine" value="valentine" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Valentine" %}" value="valentine" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Halloween" value="halloween" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Halloween" %}" value="halloween" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Garden" value="garden" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Garden" %}" value="garden" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Forest" value="forest" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Forest" %}" value="forest" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Aqua" value="aqua" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Aqua" %}" value="aqua" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Lofi" value="lofi" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Lofi" %}" value="lofi" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Pastel" value="pastel" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Pastel" %}" value="pastel" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Fantasy" value="fantasy" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Fantasy" %}" value="fantasy" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Wireframe" value="wireframe" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Wireframe" %}" value="wireframe" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Black" value="black" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Black" %}" value="black" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Luxury" value="luxury" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Luxury" %}" value="luxury" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dracula" value="dracula" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Dracula" %}" value="dracula" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="CMYK" value="cmyk" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "CMYK" %}" value="cmyk" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Autumn" value="autumn" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Autumn" %}" value="autumn" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Business" value="business" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Business" %}" value="business" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Acid" value="acid" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Acid" %}" value="acid" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Lemonade" value="lemonade" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Lemonade" %}" value="lemonade" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Night" value="night" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Night" %}" value="night" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Coffee" value="coffee" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Coffee" %}" value="coffee" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Winter" value="winter" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Winter" %}" value="winter" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dim" value="dim" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Dim" %}" value="dim" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Nord" value="nord" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Nord" %}" value="nord" />
                 </li>
                 <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Sunset" value="sunset" />
+                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="{% trans "Sunset" %}" value="sunset" />
                 </li>
             </ul>
         </div>
@@ -700,17 +701,17 @@
                     <span class="tw:inline-block tw:w-full tw:truncate tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">{{ user.username }}</span>
                     <li>
                         <a class="tw:block" href="{{ user.user_profile.get_absolute_url }}">
-                            Профиль
+                            {% trans "Профиль" %}
                         </a>
                     </li>
                     <li>
-                        <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">Выход</span>
+                        <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">{% trans "Выход" %}</span>
                     </li>
                 </ul>
             </div>
         {% else %}
             <button type="button" class="tw:btn tw:btn-primary tw:mr-1!" onclick="login_modal.showModal()">
-                Вход
+                {% trans "Вход" %}
             </button>
         {% endif %}
     </div>

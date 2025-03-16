@@ -1,12 +1,13 @@
 {% load user_tags %}
+{% load i18n %}
 
 <ul class="tw:inline-flex tw:items-center tw:mb-0!">
     <li class="action-like fa fa-thumbs-up tw:pl-2 tw:cursor-pointer tw:text-base-content/40 tw:hover:text-success {% if post.votes.likes.all|user_in:user %}tw:text-success{% endif %}"
         {% if user.is_authenticated %}
             {% if user.user_profile.can_vote %}
-                data-id="{{ post.id }}" data-type="post" data-action="like" id="lpost{{ post.id }}" title="Нравится"
+                data-id="{{ post.id }}" data-type="post" data-action="like" id="lpost{{ post.id }}" title="{% trans "Нравится" %}"
             {% else %}
-                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
+                onclick="alert('{% trans "Вам ограничен доступ к лайкам/дизлайкам!" %}')"
             {% endif %}
         {% else %}
             onclick="login_modal.showModal()"
@@ -18,9 +19,9 @@
     <li class="action-dislike fa fa-thumbs-down tw:pl-2 tw:cursor-pointer tw:text-base-content/40 tw:hover:text-error {% if post.votes.dislikes.all|user_in:user %}tw:text-error{% endif %}"
         {% if user.is_authenticated %}
             {% if user.user_profile.can_vote %}
-                data-id="{{ post.id }}" data-type="post" data-action="dislike" id="dpost{{ post.id }}" title="Не нравится"
+                data-id="{{ post.id }}" data-type="post" data-action="dislike" id="dpost{{ post.id }}" title="{% trans "Не нравится" %}"
             {% else %}
-                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
+                onclick="alert('{% trans "Вам ограничен доступ к лайкам/дизлайкам!" %}')"
             {% endif %}
         {% else %}
             onclick="login_modal.showModal()"

@@ -1,6 +1,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tournament_extras %}
+{% load i18n %}
 
 <div id="teams" class="tw:w-full tw:p-0 tw:mx-0">
     <form id="filter-form" class="tw:flex tw:flex-wrap tw:items-center tw:mt-2 tw:mb-1 tw:mx-2"
@@ -21,55 +22,55 @@
         </div>
 
         <div class="tw:flex tw:mt-auto tw:mb-2">
-            <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+            <button class="tw:btn tw:btn-primary">{% trans "Применить фильтр" %}</button>
             <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
         </div>
     </form>
 
     <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:mt-2">
-        {% with title='Голы' icon_url='img/ico/ball_2.png' teams=teams_tops.goals %}
+        {% with title=_("Голы") icon_url='img/ico/ball_2.png' teams=teams_tops.goals %}
             {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
         {% endwith %}
 
-        {% with title='Передачи' icon_url='img/ico/boot_ass_2.png' teams=teams_tops.assists %}
+        {% with title=_("Передачи") icon_url='img/ico/boot_ass_2.png' teams=teams_tops.assists %}
             {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
         {% endwith %}
 
-        {% with title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' teams=teams_tops.clean_sheets %}
-            {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-        {% endwith %}
-    </div>
-
-    <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:mt-3">
-        {% with title='Матчи' icon_url='img/ico/matches_icon.png' teams=teams_tops.matches %}
-            {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-        {% endwith %}
-
-        {% with title='Победы' icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 teams=teams_tops.wins %}
-            {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-        {% endwith %}
-
-        {% with title='Процент побед' icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 teams=teams_tops.winrates %}
+        {% with title=_("Сухие таймы") icon_url='img/ico/clean_sheet1.png' teams=teams_tops.clean_sheets %}
             {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
         {% endwith %}
     </div>
 
     <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:mt-3">
-        {% with title='Замены' icon_url='img/ico/statistic/sub.png' teams=teams_tops.subs %}
+        {% with title=_("Матчи") icon_url='img/ico/matches_icon.png' teams=teams_tops.matches %}
             {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
         {% endwith %}
 
-        {% with title='Желтые карточки' icon_url='img/ico/yellow_card.png' teams=teams_tops.yellow_cards %}
+        {% with title=_("Победы") icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 teams=teams_tops.wins %}
             {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
         {% endwith %}
 
-        {% with title='Красные карточки' icon_url='img/ico/red_card.png' teams=teams_tops.red_cards %}
+        {% with title=_("Процент побед") icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 teams=teams_tops.winrates %}
+            {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+    </div>
+
+    <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:mt-3">
+        {% with title=_("Замены") icon_url='img/ico/statistic/sub.png' teams=teams_tops.subs %}
+            {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title=_("Желтые карточки") icon_url='img/ico/yellow_card.png' teams=teams_tops.yellow_cards %}
+            {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title=_("Красные карточки") icon_url='img/ico/red_card.png' teams=teams_tops.red_cards %}
             {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
         {% endwith %}
     </div>
 
     <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:mt-3 tw:mb-3">
-        {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' teams=teams_tops.ogs %}
+        {% with title=_("Автоголы") icon_url='img/ico/ball_2_og.png' teams=teams_tops.ogs %}
             {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
         {% endwith %}
     </div>

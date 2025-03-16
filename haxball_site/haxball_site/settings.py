@@ -14,6 +14,7 @@ import os
 
 from decouple import config
 from django.contrib.messages import constants as messages
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
@@ -160,6 +161,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru'
 
+LANGUAGES = [
+    ('ru', _('Russian')),
+    ('en', _('English')),
+]
+
 TIME_ZONE = 'Europe/Moscow'
 
 USE_TZ = True
@@ -167,6 +173,10 @@ USE_TZ = True
 USE_I18N = True
 
 USE_L10N = True
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

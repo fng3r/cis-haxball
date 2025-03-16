@@ -1,3 +1,5 @@
+{% load i18n %}
+
 <div class="tw:dropdown tw:dropdown-end">
   <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:btn-circle">
     <div id="notification-badge">
@@ -7,7 +9,7 @@
   <div tabindex="0" class="tw:dropdown-content tw:z-1 tw:menu tw:p-2 tw:shadow tw:bg-base-100 tw:rounded-box tw:w-80">
     <div class="tw:card">
       <div class="tw:card-body tw:p-2">
-        <h4 class="tw:card-title tw:text-base tw:mb-0!">Уведомления</h4>
+        <h4 class="tw:card-title tw:text-base tw:mb-0!">{% trans "Уведомления" %}</h4>
         <div class="tw:divider tw:my-0"></div>
         <div class="tw:max-h-80 tw:overflow-y-auto" id="dropdown-notifications">
           {% if user_notifications %}
@@ -16,7 +18,7 @@
             {% endfor %}
           {% else %}
             <div class="tw:text-center tw:py-4">
-              <p class="tw:text-sm tw:text-base-content/70 tw:mb-2">У Вас нет новых уведомлений</p>
+              <p class="tw:text-sm tw:text-base-content/70 tw:mb-2">{% trans "У Вас нет новых уведомлений" %}</p>
             </div>
           {% endif %}
         </div>
@@ -27,10 +29,10 @@
                     hx-target="#dropdown-notifications"
                     hx-swap="none"
                     hx-trigger="click">
-              Отметить все как прочитанное
+              {% trans "Отметить все как прочитанное" %}
             </button>
           {% endif %}
-          <a href="{% url 'notifications:all' %}" class="tw:btn tw:btn-sm tw:btn-primary">Все уведомления</a>
+          <a href="{% url 'notifications:all' %}" class="tw:btn tw:btn-sm tw:btn-primary">{% trans "Все уведомления" %}</a>
         </div>
       </div>
     </div>

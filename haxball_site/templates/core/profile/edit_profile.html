@@ -1,12 +1,13 @@
 {% extends "core.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/profile/profile.css" %}">
     <link rel="stylesheet" type="text/css" href="{% static "core/core.css" %}">
 {% endblock %}
 
-{% block title %}Профиль {{ profile.name }} — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Профиль" %} {{ profile.name }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
     {% if user == profile.name %}

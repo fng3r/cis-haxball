@@ -25,22 +25,22 @@
         {% if notification.data.type == 'comment_reply' %}
           <div class="tw:font-medium">
             {{ notification.actor.username }}
-            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">ответил</a>
-            на Ваш комментарий под темой
+            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">{% trans "ответил" %}</a>
+            {% trans "на Ваш комментарий под темой" %}
             <a href="{{ notification.data.subject_url }}" class="tw:link tw:link-primary tw:link-hover"
             >"{{ notification.data.subject_title }}"</a>
           </div>
         {% elif notification.data.type == 'profile_comment' %}
           <div class="tw:font-medium">
             {{ notification.actor.username }}
-            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">оставил комментарий</a>
-            под Вашим профилем
+            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">{% trans "оставил комментарий" %}</a>
+            {% trans "под Вашим профилем" %}
           </div>
         {% elif notification.data.type == 'match_inspected' %}
           <div class="tw:font-medium">
-            Матч
+            {% trans "Матч" %}
             <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
-            >{{ notification.data.match_title }}</a> с участием Вашей команды был проинспектирован
+            >{{ notification.data.match_title }}</a> {% trans "с участием Вашей команды был проинспектирован" %}
           </div>
         {% else %}
           {% if notification.data.url %}
@@ -54,7 +54,7 @@
       {% endwith %}
     </div>
     <div class="tw:text-xs tw:text-base-content/70">
-      {{ notification.timesince }} назад
+      {{ notification.timesince }} {% trans "назад" %}
     </div>
   </div>
   <div class="tw:flex-shrink-0 tw:flex tw:gap-1">
@@ -64,7 +64,7 @@
           hx-swap="none"
           hx-trigger="click"
           @click="isUnread = false; $event.stopPropagation();"
-          title="Отметить как прочитанное">
+          title="{% trans "Отметить как прочитанное" %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="tw:h-4 tw:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
       </svg>

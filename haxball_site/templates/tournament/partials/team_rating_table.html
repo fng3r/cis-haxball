@@ -1,22 +1,23 @@
 {% load static %}
 {% load mathfilters %}
 {% load tournament_extras %}
+{% load i18n %}
 
 
 <table class="tw:table tw:table-auto tw:table-pin-rows">
     <thead class="tw:py-2">
         <tr class="tw:bg-base-300">
-            <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">Место</th>
-            <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Команда</th>
+            <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">{% trans "Место" %}</th>
+            <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">{% trans "Команда" %}</th>
             {% for season in seasons_rating %}
                 <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">
                     <div class="tw:flex tw:flex-col tw:justify-center tw:items-center">
                         <span class="tw:text-sm">{{season.short_title}}</span>
-                        <span class="tw:text-xs">коэф. {{season|get_season_weight:seasons_weights}}</span>
+                        <span class="tw:text-xs">{% trans "коэф." %} {{season|get_season_weight:seasons_weights}}</span>
                     </div>
                 </th>
             {% endfor %}
-            <th scope="col" class="tw:bg-base-300 tw:text-center!">Итого</th>
+            <th scope="col" class="tw:bg-base-300 tw:text-center!">{% trans "Итого" %}</th>
         </tr>
     </thead>
     <tbody class="tw:text-center">

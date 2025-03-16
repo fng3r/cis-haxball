@@ -1,11 +1,12 @@
 {% extends "core.html" %}
 {% load static %}
+{% load i18n %}
+
 {% block scripts %}
-
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
-
 {% endblock %}
-{% block title %} Форум | {{ category }} — CIS-HAXBALL {% endblock %}
+
+{% block title %} {% trans "Форум" %} | {{ category }} — CIS-HAXBALL {% endblock %}
 
 {% block postlist %}
     <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
@@ -15,7 +16,7 @@
             </h3>
             {% if user.is_authenticated and not category.is_official %}
                 <a href="{% url 'core:new_post' category.slug %}" class="tw:link tw:text-lg">
-                    <i class="fa fa-pencil tw:text-warning tw:mr-1" aria-hidden="true"></i>Создать пост
+                    <i class="fa fa-pencil tw:text-warning tw:mr-1" aria-hidden="true"></i>{% trans "Создать пост" %}
                 </a>
             {% endif %}
             <div class="tw:divider tw:my-0!"></div>

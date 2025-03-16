@@ -1,5 +1,6 @@
 {% load user_tags %}
 {% load static %}
+{% load i18n %}
 
 <ul id="comment-reactions-{{comment.id}}" class="tw:inline-flex tw:mb-0!">
     <li class="tw:pl-2 fa fa-thumbs-up tw:text-base-content/40 tw:hover:text-success {% if comment|get_likes|user_in_list:user %}tw:text-success{% endif %}"
@@ -9,7 +10,7 @@
                 hx-target="#comment-reactions-{{comment.id}}"
                 hx-swap="outerHTML"
             {% else %}
-                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
+                onclick="alert('{% trans "Вам ограничен доступ к лайкам/дизлайкам!" %}')"
             {% endif %}
         {% else %}
             onclick="login_modal.showModal()"
@@ -25,7 +26,7 @@
                 hx-target="#comment-reactions-{{comment.id}}"
                 hx-swap="outerHTML"
             {% else %}
-                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
+                onclick="alert('{% trans "Вам ограничен доступ к лайкам/дизлайкам!" %}')"
             {% endif %}
         {% else %}
             onclick="login_modal.showModal()"

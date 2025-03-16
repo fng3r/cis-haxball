@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 
 
 <div class="tw:card tw:bg-base-100 tw:mb-2 tw:rounded-lg">
@@ -7,22 +8,22 @@
 
             <div class="tw:flex tw:px-3 tw:py-2 tw:bg-base-300 tw:font-bold tw:text-center tw:rounded-t-lg">
                 <div class="tw:text-center tw:ml-2" style="width: 4%">
-                    <label>Тур</label>
+                    <label>{% trans "Тур" %}</label>
                 </div>
                 <div  style="width: 20%">
-                    <label>Хозяева</label>
+                    <label>{% trans "Хозяева" %}</label>
                 </div>
                 <div style="width: 20%">
-                    <label>Гости</label>
+                    <label>{% trans "Гости" %}</label>
                 </div>
                 <div class="tw:w-1/6">
-                    <label>Чей перенос</label>
+                    <label>{% trans "Чей перенос" %}</label>
                 </div>
                 <div class="tw:w-1/6 tw:ml-3">
-                    <label>Тип переноса</label>
+                    <label>{% trans "Тип переноса" %}</label>
                 </div>
                 <div class="tw:w-1/6 tw:mx-auto">
-                    <label>Подтверждение</label>
+                    <label>{% trans "Подтверждение" %}</label>
                 </div>
             </div>
 
@@ -49,25 +50,25 @@
                     </div>
 
                     <select class="postponements-select tw:w-1/6" name="team">
-                        <option value="mutual">Обоюдный</option>
+                        <option value="mutual">{% trans "Обоюдный" %}</option>
                         <option value="{{ match.team_home.id }}">{{ match.team_home }}</option>
                         <option value="{{ match.team_guest.id }}">{{ match.team_guest }}</option>
                     </select>
 
                     <select class="postponements-select tw:w-1/6 tw:ml-3" name="type">
-                        <option value="common">Обычный</option>
-                        <option value="emergency">Экстренный</option>
+                        <option value="common">{% trans "Обычный" %}</option>
+                        <option value="emergency">{% trans "Экстренный" %}</option>
                     </select>
 
                     <div class="tw:flex tw:justify-center tw:grow">
-                        <button class="postponements-button tw:ml-8!" type="submit">Перенос</button>
+                        <button class="postponements-button tw:ml-8!" type="submit">{% trans "Перенос" %}</button>
                         <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
                     </div>
                 </form>
             {% endfor %}
         {% else %}
             <div class="tw:flex tw:justify-center bg-c-lite-unknown tw:p-3 tw:w-full tw:rounded-lg">
-                <h6 class="tw:mb-0">На текущий момент у Вас нет несыгранных матчей в данном турнире</h6>
+                <h6 class="tw:mb-0">{% trans "На текущий момент у Вас нет несыгранных матчей в данном турнире" %}</h6>
             </div>
         {% endif %}
     </div>

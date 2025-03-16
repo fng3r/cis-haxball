@@ -3,6 +3,7 @@
 {% load tournament_extras %}
 {% load widget_tweaks %}
 {% load utils %}
+{% load i18n %}
 
 {% partialdef stat-row %}
     <div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
@@ -30,14 +31,14 @@
     </div>
 {% endpartialdef %}
 
-{% block title %}Чемпионат | Сравнить команды — CIS-HAXBALL{% endblock %}
+{% block title %}{% trans "Чемпионат | Сравнить команды — CIS-HAXBALL" %}{% endblock %}
 
 {% block post %}
     <div class="tw:mt-2 tw:px-0">
         <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
             <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
                 <h3 class="tw:text-center">
-                    Сравнить команды
+                    {% trans "Сравнить команды" %}
                 </h3>
             </div>
 
@@ -59,7 +60,7 @@
 
                         <div class="tw:w-1/5 tw:self-end">
                             <div class="tw:flex tw:justify-center tw:ml-3 tw:mb-2">
-                                <button class="tw:btn tw:btn-primary">Сравнить</button>
+                                <button class="tw:btn tw:btn-primary">{% trans "Сравнить" %}</button>
                                 <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
                             </div>
                         </div>
@@ -73,7 +74,7 @@
                     </div>
 
                     <div class="tw:text-sm tw:w-full tw:font-bold tw:text-base-content/85">
-                        Фильтры <i class="fa fa-filter"></i>
+                        {% trans "Фильтры" %} <i class="fa fa-filter"></i>
                     </div>
 
                     <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
@@ -117,13 +118,13 @@
                                                 {{ team.title }}
                                             </a>
                                         {% else %}
-                                            <span>Выберите команду</span>
+                                            <span>{% trans "Выберите команду" %}</span>
                                         {% endif %}
                                     </div>
                                 {% endwith %}
                             </div>
 
-                            <div class="tw:w-1/7 tw:divider tw:divider-horizontal tw:text-4xl">VS</div>
+                            <div class="tw:w-1/7 tw:divider tw:divider-horizontal tw:text-4xl">{% trans "VS" %}</div>
 
                             <div class="tw:w-3/7 tw:grow-1 tw:flex tw:flex-col tw:gap-1 tw:justify-center">
                                 {% with team=team2.team %}
@@ -145,7 +146,7 @@
                                                 {{ team.title }}
                                             </a>
                                         {% else %}
-                                            <span>Выберите команду</span>
+                                            <span>{% trans "Выберите команду" %}</span>
                                         {% endif %}
                                     </div>
                                 {% endwith %}
@@ -154,55 +155,55 @@
 
                         {% if team1.stats and team2.stats %}
                             <div class="tw:flex tw:flex-col tw:gap-1">
-                                {% with stat_name='Матчи' team1_stat=team1.stats.matches team2_stat=team2.stats.matches %}
+                                {% with stat_name=_('Матчи') team1_stat=team1.stats.matches team2_stat=team2.stats.matches %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Победы' team1_stat=team1.stats.wins team2_stat=team2.stats.wins %}
+                                {% with stat_name=_('Победы') team1_stat=team1.stats.wins team2_stat=team2.stats.wins %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Процент побед' team1_stat=team1.stats.winrate team2_stat=team2.stats.winrate %}
+                                {% with stat_name=_('Процент побед') team1_stat=team1.stats.winrate team2_stat=team2.stats.winrate %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голы' team1_stat=team1.stats.goals team2_stat=team2.stats.goals %}
+                                {% with stat_name=_('Голы') team1_stat=team1.stats.goals team2_stat=team2.stats.goals %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голы (ср. за матч)' team1_stat=team1.stats.goals_per_match team2_stat=team2.stats.goals_per_match %}
+                                {% with stat_name=_('Голы (ср. за матч)') team1_stat=team1.stats.goals_per_match team2_stat=team2.stats.goals_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Пропущенные голы' team1_stat=team1.stats.conceded_goals team2_stat=team2.stats.conceded_goals %}
+                                {% with stat_name=_('Пропущенные голы') team1_stat=team1.stats.conceded_goals team2_stat=team2.stats.conceded_goals %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Пропущенные голы (ср. за матч)' team1_stat=team1.stats.conceded_goals_per_match team2_stat=team2.stats.conceded_goals_per_match %}
+                                {% with stat_name=_('Пропущенные голы (ср. за матч)') team1_stat=team1.stats.conceded_goals_per_match team2_stat=team2.stats.conceded_goals_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голевые передачи' team1_stat=team1.stats.assists team2_stat=team2.stats.assists %}
+                                {% with stat_name=_('Голевые передачи') team1_stat=team1.stats.assists team2_stat=team2.stats.assists %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Голевые передачи (ср. за матч)' team1_stat=team1.stats.assists_per_match team2_stat=team2.stats.assists_per_match %}
+                                {% with stat_name=_('Голевые передачи (ср. за матч)') team1_stat=team1.stats.assists_per_match team2_stat=team2.stats.assists_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Сухие таймы' team1_stat=team1.stats.cs team2_stat=team2.stats.cs %}
+                                {% with stat_name=_('Сухие таймы') team1_stat=team1.stats.cs team2_stat=team2.stats.cs %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Сухие таймы (ср. за матч)' team1_stat=team1.stats.cs_per_match team2_stat=team2.stats.cs_per_match %}
+                                {% with stat_name=_('Сухие таймы (ср. за матч)') team1_stat=team1.stats.cs_per_match team2_stat=team2.stats.cs_per_match %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Желтые карточки' team1_stat=team1.stats.yellow_cards team2_stat=team2.stats.yellow_cards %}
+                                {% with stat_name=_('Желтые карточки') team1_stat=team1.stats.yellow_cards team2_stat=team2.stats.yellow_cards %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Красные карточки' team1_stat=team1.stats.red_cards team2_stat=team2.stats.red_cards %}
+                                {% with stat_name=_('Красные карточки') team1_stat=team1.stats.red_cards team2_stat=team2.stats.red_cards %}
                                     {% partial stat-row %}
                                 {% endwith %}
                             </div>
@@ -211,29 +212,29 @@
                         {% if team1.player_stats and team2.player_stats %}
                             <div class="tw:flex tw:flex-col tw:gap-1 tw:text-base-content">
                                 <div class="tw:w-full">
-                                    <div class="tw:text-center tw:text-base-content/90 tw:text-2xl tw:font-semibold tw:mt-1">Игроки</div>
+                                    <div class="tw:text-center tw:text-base-content/90 tw:text-2xl tw:font-semibold tw:mt-1">{% trans "Игроки" %}</div>
                                 </div>
-                                {% with stat_name='Наибольшее кол-во матчей' team1_player=team1.player_stats.matches.pl team2_player=team2.player_stats.matches.pl team1_stat=team1.player_stats.matches.count team2_stat=team2.player_stats.matches.count %}
+                                {% with stat_name=_('Наибольшее кол-во матчей') team1_player=team1.player_stats.matches.pl team2_player=team2.player_stats.matches.pl team1_stat=team1.player_stats.matches.count team2_stat=team2.player_stats.matches.count %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Наибольшее кол-во побед' team1_player=team1.player_stats.wins.pl team2_player=team2.player_stats.wins.pl team1_stat=team1.player_stats.wins.count team2_stat=team2.player_stats.wins.count %}
+                                {% with stat_name=_('Наибольшее кол-во побед') team1_player=team1.player_stats.wins.pl team2_player=team2.player_stats.wins.pl team1_stat=team1.player_stats.wins.count team2_stat=team2.player_stats.wins.count %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Лучший бомбардир' team1_player=team1.player_stats.goals.pl team2_player=team2.player_stats.goals.pl team1_stat=team1.player_stats.goals.count team2_stat=team2.player_stats.goals.count %}
+                                {% with stat_name=_('Лучший бомбардир') team1_player=team1.player_stats.goals.pl team2_player=team2.player_stats.goals.pl team1_stat=team1.player_stats.goals.count team2_stat=team2.player_stats.goals.count %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Лучший ассистент' team1_player=team1.player_stats.assists.pl team2_player=team2.player_stats.assists.pl team1_stat=team1.player_stats.assists.count team2_stat=team2.player_stats.assists.count %}
+                                {% with stat_name=_('Лучший ассистент') team1_player=team1.player_stats.assists.pl team2_player=team2.player_stats.assists.pl team1_stat=team1.player_stats.assists.count team2_stat=team2.player_stats.assists.count %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Лучший по результативным действиям' team1_player=team1.player_stats.goals_assists.pl team2_player=team2.player_stats.goals_assists.pl team1_stat=team1.player_stats.goals_assists.count team2_stat=team2.player_stats.goals_assists.count %}
+                                {% with stat_name=_('Лучший по результативным действиям') team1_player=team1.player_stats.goals_assists.pl team2_player=team2.player_stats.goals_assists.pl team1_stat=team1.player_stats.goals_assists.count team2_stat=team2.player_stats.goals_assists.count %}
                                     {% partial stat-row %}
                                 {% endwith %}
 
-                                {% with stat_name='Лучший по сухим таймам' team1_player=team1.player_stats.cs.pl team2_player=team2.player_stats.cs.pl team1_stat=team1.player_stats.cs.count team2_stat=team2.player_stats.cs.count %}
+                                {% with stat_name=_('Лучший по сухим таймам') team1_player=team1.player_stats.cs.pl team2_player=team2.player_stats.cs.pl team1_stat=team1.player_stats.cs.count team2_stat=team2.player_stats.cs.count %}
                                     {% partial stat-row %}
                                 {% endwith %}
                             </div>

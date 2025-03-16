@@ -30,8 +30,8 @@
                 {% include "socialaccount/snippets/login_extra.html" %}
 
             {% else %}
-                <p>Если у Вас нет аккаунта, сперва
-                    <a class="tw:link tw:link-primary" href="{{ signup_url }}">зарегистрируйтесь</a>.</p>
+                <p>{% trans "Если у Вас нет аккаунта, сперва" %}
+                    <a class="tw:link tw:link-primary" href="{{ signup_url }}">{% trans "зарегистрируйтесь" %}</a>.</p>
             {% endif %}
 
             <form class="login" method="POST" action="{% url 'account_login' %}">

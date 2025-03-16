@@ -1,7 +1,9 @@
+{% load i18n %}
+
 {% if livestreams|length > 0 %}
     <div class="tw:card tw:border tw:border-gray-100 tw:rounded-lg tw:mb-2">
         <div class="tw:card-title tw:justify-center tw:rounded-t-lg tw:border-b tw:border-gray-100 tw:p-2 tw:bg-card-header tw:text-card-header">
-            <span class="tw:mb-0 tw:text-lg tw:text-center">Трансляции</span>
+            <span class="tw:mb-0 tw:text-lg tw:text-center">{% trans "Трансляции" %}</span>
         </div>
 
         <div class="tw:flex tw:flex-col tw:w-full tw:mb-0! tw:bg-base-100 tw:p-2 tw:rounded-b-lg tw:gap-2">
@@ -12,7 +14,7 @@
                             <img src="{{ stream.thumbnail_url }}" alt="{{ stream.title }}" class="tw:w-full tw:rounded">
                             {% if stream.is_live %}
                                 <div class="tw:absolute tw:top-2 tw:right-2 tw:bg-red-500 tw:text-white tw:px-1 tw:rounded-sm tw:text-base">
-                                    LIVE
+                                    {% trans "LIVE" %}
                                 </div>
                             {% else %}
                                 <div class="tw:absolute tw:top-2 tw:right-2 tw:bg-black/60 tw:text-white tw:px-1 tw:rounded-sm tw:text-sm">

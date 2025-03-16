@@ -1,8 +1,9 @@
 {% extends "core.html" %}
 {% load static %}
 {% load user_tags %}
+{% load i18n %}
 
-{% block title %}Форум{% endblock %}
+{% block title %}{% trans "Форум" %}{% endblock %}
 {% block postlist %}
     <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
         <div class="tw:card-body tw:rounded-t-lg tw:gap-3 tw:py-4">
@@ -23,7 +24,7 @@
                                     <div class="tw:text-base tw:text-neutral-500 tw:font-semibold">{{ subtheme.description }}</div>
                                 </div>
                                 <div class="tw:inline-block tw:min-w-1/6">
-                                    <div class="tw:text-right tw:font-semibold"><i class="fa fa-bars tw:text-primary" aria-hidden="true"></i> Статей: {{ subtheme.posts_in_category.count }}</div>
+                                    <div class="tw:text-right tw:font-semibold"><i class="fa fa-bars tw:text-primary" aria-hidden="true"></i> {% trans "Статей" %}: {{ subtheme.posts_in_category.count }}</div>
                                     <div class="tw:text-base-content/70 tw:text-sm tw:mt-2 tw:text-right tw:font-semibold">
                                         {% forum_last_activity subtheme %}
                                     </div>

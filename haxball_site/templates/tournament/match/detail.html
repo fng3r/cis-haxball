@@ -1,6 +1,7 @@
 {% extends "core.html" %}
 {% load static %}
 {% load tournament_extras %}
+{% load i18n %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "tournament/teams/team_page.css" %}">
@@ -20,7 +21,7 @@
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
 
-{% block title %}Чемпионат | {{ match }} — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Чемпионат" %} | {{ match }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
     <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
@@ -100,7 +101,7 @@
                             {% endif %}
                             <h3 class="tw:mt-3 tw:text-2xl! tw:opacity-75">{{ match.match_date|date:"d.m.y" }}</h3>
                         {% else %}
-                            <h3 class="tw:font-semibold! tw:text-[3rem]!">vs</h3>
+                            <h3 class="tw:font-semibold! tw:text-[3rem]!">{% trans "vs" %}</h3>
                         {% endif %}
                     </div>
                 </div>
@@ -135,7 +136,7 @@
                                     data-target="#matches-history-recap" aria-expanded="false"
                                     aria-controls="matches-history-recap" {% if no_history %}disabled{% endif %}
                             >
-                                {% if no_history %}Команды ранее не встречались{% else %}История встреч{% endif %}
+                                {% if no_history %}{% trans "Команды ранее не встречались" %}{% else %}{% trans "История встреч" %}{% endif %}
                             </button>
                         </p>
                     </div>
@@ -180,10 +181,10 @@
                     <div class="tw:flex">
                         <div class="tw:w-1/3 tw:flex tw:items-center">
                             <div class="tw:flex tw:flex-col">
-                                <h6 class="tw:mb-0">Матчи</h6>
+                                <h6 class="tw:mb-0">{% trans "Матчи" %}</h6>
                                 <h4 class="tw:text-warning">{{ all_matches_between.count }}</h4>
                                 <h6>
-                                    Самый результативный матч:
+                                    {% trans "Самый результативный матч" %}:
                                     <a href="{{ the_most_score.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">
                                         <img
                                             src="{{ the_most_score.team_home.logo.url }}"
@@ -209,17 +210,17 @@
 
                                 <tbody>
                                     <tr>
-                                        <td>Побед</td>
+                                        <td>{% trans "Побед" %}</td>
                                         <td class="font-weight-bold">{{ win_home }}</td>
                                         <td class="font-weight-bold">{{ win_guest }}</td>
                                     </tr>
                                     <tr>
-                                        <td>Забитых мячей</td>
+                                        <td>{% trans "Забитых мячей" %}</td>
                                         <td class="font-weight-bold">{{ score_home_all }}</td>
                                         <td class="font-weight-bold">{{ score_guest_all }}</td>
                                     </tr>
                                     <tr>
-                                        <td>В среднем за матч</td>
+                                        <td>{% trans "В среднем за матч" %}</td>
                                         <td class="font-weight-bold">{{ score_home_average }}</td>
                                         <td class="font-weight-bold">{{ score_guest_average }}</td>
                                     </tr>
@@ -235,13 +236,13 @@
                 <div class="tw:tabs tw:tabs-lift tw:rounded-b-lg tw:mb-3" role="tablist">
                     <input type="radio" name="match-tabs"
                            class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!"
-                           aria-label="Общая сводка"
+                           aria-label="{% trans "Общая сводка" %}"
                            checked
                     />
                     <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
                         <div id="match-recap" role="tabpanel" aria-labelledby="match-recap-tab" class="tw:flex tw:flex-col tw:gap-3">
                             <div>
-                                <h5>Cоставы</h5>
+                                <h5>{% trans "Cоставы" %}</h5>
                                 <div class="tw:flex tw:w-full">
                                     <div class="tw:w-5/12 tw:flex tw:flex-col tw:items-center tw:pl-4">
                                         {% include "tournament/partials/players_stats_summary.html" with players=match.team_home_start.all subs=team_home_substitutes %}
@@ -261,7 +262,7 @@
                                     ранее информация о них содержалась в комментариях инспекторов под матчами 
                                 {% endcomment %}
                                 {% if match.league.championship.number > 14 %}
-                                    <h5>Нарушения</h5>
+                                    <h5>{% trans "Нарушения" %}</h5>
                                     <div class="tw:px-6 tw:text-base">
                                         {% if cards|length > 0 %}
                                             <ul class="tw:text-left">
@@ -272,7 +273,7 @@
                                                 {% endfor %}
                                             </ul>
                                         {% else %}
-                                            <span class="tw:text-base">Нарушений не зафиксировано</span>
+                                            <span class="tw:text-base">{% trans "Нарушений не зафиксировано" %}</span>
                                         {% endif %}
                                     </div>
                                 {% endif %}
@@ -280,13 +281,13 @@
 
                             {% if match.disqualifications.count > 0 %}
                                 <div>
-                                    <h5>Дисквалификации</h5>
+                                    <h5>{% trans "Дисквалификации" %}</h5>
                                     <div class="tw:px-6 tw:text-base">
                                         <ul class="tw:text-left">
                                             {% for disqualification in match.disqualifications.all %}
                                                 <li>
-                                                    {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
-                                                    Причина: {{ disqualification.reason }}
+                                                    {{ disqualification.player.nickname }} ({{ disqualification.team }}) {% trans "дисквалифицирован на" %} {{ disqualification.tours.all|join:", " }}.
+                                                    {% trans "Причина" %}: {{ disqualification.reason }}
                                                 </li>
                                             {% endfor %}
                                         </ul>
@@ -298,20 +299,20 @@
 
                     <input type="radio" name="match-tabs"
                            class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!"
-                           aria-label="Протокол"
+                           aria-label="{% trans "Протокол" %}"
                     />
                     <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
                         <div id="match-details" role="tabpanel" aria-labelledby="match-details-tab">
                             {% with events_by_time=match|events_sorted %}
                                 <div class="tw:flex tw:flex-col tw:gap-2">
-                                    <h4>1 тайм</h4>
+                                    <h4>{% trans "1 тайм" %}</h4>
                                     {% include "tournament/include/match_events.html" with events=events_by_time.first_time %}
 
-                                    <h4>2 тайм</h4>
+                                    <h4>{% trans "2 тайм" %}</h4>
                                     {% include "tournament/include/match_events.html" with events=events_by_time.second_time %}
 
                                     {% if events_by_time.extra_time|length > 0 %}
-                                        <h4>Доп. время</h4>
+                                        <h4>{% trans "Доп. время" %}</h4>
                                         {% include "tournament/include/match_events.html" with events=events_by_time.extra_time %}
                                     {% endif %}
                                 </div>
@@ -321,24 +322,24 @@
 
                     <input type="radio" name="match-tabs"
                            class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!"
-                           aria-label="Информация"
+                           aria-label="{% trans "Информация" %}"
                     />
                     <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
                         <div id="match-info" role="tabpanel" aria-labelledby="match-info-tab">
                             <div class="tw:flex tw:flex-col tw:items-center">
                                 <h6>
                                     {% if not match.replay_link_second %}
-                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">Реплей</a>
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">{% trans "Реплей" %}</a>
                                     {% else %}
-                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">Реплей 1</a><br>
-                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link_second }}">Реплей 2</a>
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link }}">{% trans "Реплей 1" %}</a><br>
+                                        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.replay_link_second }}">{% trans "Реплей 2" %}</a>
                                     {% endif %}
                                 </h6>
                                 <h6>
-                                    Инспектор: {{ match.inspector }}
+                                    {% trans "Инспектор" %}: {{ match.inspector }}
                                 </h6>
                                 {% if match.comment %}
-                                    <h6>Комментарий:</h6>
+                                    <h6>{% trans "Комментарий" %}:</h6>
                                     <p>{{ match.comment|linebreaks }}</p>
                                 {% endif %}
                             </div>

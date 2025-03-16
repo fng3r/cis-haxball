@@ -1,4 +1,5 @@
 {% extends "core.html" %}
+{% load i18n %}
 
 {% block title %}
     {{ post.title }} — CIS-HAXBALL
@@ -42,7 +43,7 @@
                         {% endif %}
                     </span>
                     {% if post.category %}
-                        <span class="tw:text-right"><span class="tw:italic tw:text-lg">В разделе</span>
+                        <span class="tw:text-right"><span class="tw:italic tw:text-lg">{% trans "В разделе" %}</span>
                             <a href="{{ post.category.get_absolute_url }}"
                                class="tw:link tw:link-primary tw:font-semibold">{{ post.category.title }}</a>
                         </span>
@@ -74,7 +75,7 @@
             </div>
         </div>
         <div class="tw:inline-flex tw:justify-between tw:rounded-b-lg tw:bg-base-300 tw:px-4 tw:py-2 tw:border-t tw:border-t-neutral-300">
-            <span class="tw:text-base-content/70"> Комментариев: {{ post.comments.count }} </span>
+            <span class="tw:text-base-content/70">{% trans "Комментариев:" %} {{ post.comments.count }} </span>
 
             <div class="tw:inline-flex tw:items-center tw:gap-1">
                 {% include 'core/include/like_dislike_panel.html' %}

@@ -1,14 +1,15 @@
 {% extends "core.html" %}
 {% load static %}
+{% load i18n %}
 
 
-{% block title %}Администрация{% endblock %}
+{% block title %}{% trans "Администрация" %}{% endblock %}
 
 {% block scripts %}
     <script>
         function myFunction(Element) {
             navigator.clipboard.writeText(Element.title);
-            alert("Скопировано " + Element.title);
+            alert("{% trans "Скопировано" %} " + Element.title);
         }
     </script>
 {% endblock %}
@@ -18,7 +19,7 @@
         <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
             <h2 class="tw:card-title tw:items-end">
                 <i class="fa fa-user-circle tw:text-info" aria-hidden="true"></i>
-                Администрация
+                {% trans "Администрация" %}
             </h2>
         </div>
 
@@ -28,8 +29,8 @@
                     <tr>
                         <th scope="col"></th>
                         <th scope="col"></th>
-                        <th scope="col">Контакты</th>
-                        <th scope="col">Должность</th>
+                        <th scope="col">{% trans "Контакты" %}</th>
+                        <th scope="col">{% trans "Должность" %}</th>
                     </tr>
                 </thead>
                 <tbody>

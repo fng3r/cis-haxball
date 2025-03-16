@@ -4,6 +4,7 @@
 {% load tournament_extras %}
 {% load user_tags %}
 {% load widget_tweaks %}
+{% load i18n %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static 'core/include/comments.css' %}">
@@ -11,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'tournament/postponements/postponements.css' %}">
 {% endblock %}
 
-{% block title %}Чемпионат | Переносы — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Чемпионат | Переносы" %} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
     {% partialdef content-container inline=True %}
@@ -20,7 +21,7 @@
                 <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
                     <h2 class="tw:card-title">
                         <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
-                        Переносы
+                        {% trans "Переносы" %}
                     </h2>
                 </div>
 
@@ -40,7 +41,7 @@
                         </div>
 
                         <div class="tw:flex tw:mt-auto">
-                            <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+                            <button class="tw:btn tw:btn-primary">{% trans "Применить фильтр" %}</button>
                             <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
                         </div>
                     </form>
@@ -49,15 +50,15 @@
                         <table id="postponements-table" class="tw:table tw:table-pin-rows tw:border-t tw:border-neutral-200">
                             <thead class="tw:text-center">
                                 <tr class="tw:bg-base-300!">
-                                    <th scope="col" class="tw:border-r tw:border-neutral-200">Команда</th>
+                                    <th scope="col" class="tw:border-r tw:border-neutral-200">{% trans "Команда" %}</th>
                                     {% for i in ''|rjust:league.get_postponement_slots.common_count %}
-                                        <th scope="col" class="tw:border-r tw:border-neutral-200">Обычн. {{ forloop.counter }}</th>
+                                        <th scope="col" class="tw:border-r tw:border-neutral-200">{% trans "Обычн." %} {{ forloop.counter }}</th>
                                     {% endfor %}
                                     {% for i in ''|rjust:league.get_postponement_slots.emergency_count %}
-                                        <th scope="col" class="tw:border-r tw:border-neutral-200">Экстр. {{ forloop.counter }}</th>
+                                        <th scope="col" class="tw:border-r tw:border-neutral-200">{% trans "Экстр." %} {{ forloop.counter }}</th>
                                     {% endfor %}
                                     {% for i in ''|rjust:league.get_postponement_slots.extra_count %}
-                                        <th scope="col" class="tw:border-r tw:border-neutral-200">Платн. {{ forloop.counter }}</th>
+                                        <th scope="col" class="tw:border-r tw:border-neutral-200">{% trans "Платн." %} {{ forloop.counter }}</th>
                                     {% endfor %}
                                 </tr>
                             </thead>
@@ -74,7 +75,7 @@
                                                 {% if postponement is not None %}
                                                     {% with match=postponement.match %}
                                                         <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">
-                                                            {{match.numb_tour.number}} тур<br>
+                                                            {{match.numb_tour.number}} {% trans "тур" %}<br>
                                                             <img src="{{match.team_home.logo.url}}" alt="{{match.team_home.short_title}}" width="16" height="16">
                                                             <a href="{{match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary">
                                                                 {{match.team_home.short_title}} - {{match.team_guest.short_title}}
@@ -90,7 +91,7 @@
                                                                 <dialog class="tw:modal" id="cancel_postponement{{ postponement.id }}">
 
                                                                     <div class="tw:modal-box">
-                                                                        <h4 class="tw:text-left">Отменить перенос?</h4>
+                                                                        <h4 class="tw:text-left">{% trans "Отменить перенос?" %}</h4>
                                                                         <div class="tw:modal-action">
                                                                             <form method="POST"
                                                                                   hx-post="{% url 'tournament:cancel_postponement' postponement.id %}"
@@ -102,13 +103,13 @@
                                                                                 <img class="htmx-indicator tw:mr-2 tw:w-6"
                                                                                      src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
                                                                                 <button type="submit" class="tw:btn tw:btn-primary">
-                                                                                    Да, я уверен
+                                                                                    {% trans "Да, я уверен" %}
                                                                                 </button>
                                                                             </form>
 
                                                                             <form method="dialog">
                                                                                 <button class="tw:btn">
-                                                                                    Нет, подождите
+                                                                                    {% trans "Нет, подождите" %}
                                                                                 </button>
                                                                             </form>
                                                                         </div>
@@ -136,7 +137,7 @@
             {% partialdef postponements-events inline=True %}
                 <div id="postponements-events" class="tw:card tw:bg-base-100 tw:rounded-lg">
                     <div class="tw:card-title tw:rounded-t-lg tw:p-4">
-                        <h4 class="tw:card-title">Журнал событий ({{ postponements.paginator.count }})</h4>
+                        <h4 class="tw:card-title">{% trans "Журнал событий" %} ({{ postponements.paginator.count }})</h4>
                     </div>
 
                     <div class="comment-widgets">
@@ -182,16 +183,16 @@
                                     <div class="comment-body">
                                         <p></p>
                                         <div id="postponement-log-entry">
-                                            <span>{{ postponement.match.numb_tour.number }} тур</span><br>
+                                            <span>{{ postponement.match.numb_tour.number }} {% trans "тур" %}</span><br>
                                             <span>{{ postponement.match.team_home }} - {{ postponement.match.team_guest }}</span><br>
                                             <p class="postponements-log-text">
                                                 {% if postponement.is_emergency %}
-                                                    экстренный
+                                                    {% trans "экстренный" %}
                                                 {% endif %}
                                                 {% if postponement.teams.count > 1 %}
-                                                    обоюдный перенос
+                                                    {% trans "обоюдный перенос" %}
                                                 {% else %}
-                                                    перенос на команду {{ postponement.teams.all.0.title }}
+                                                    {% trans "перенос на команду" %} {{ postponement.teams.all.0.title }}
                                                 {% endif %}
                                             </p>
                                         </div>
@@ -240,13 +241,12 @@
                                         <div class="comment-body">
                                             <p></p>
                                             <p>
-                                                <span>Отмена переноса</span>
+                                                <span>{% trans "Отмена переноса" %}</span>
                                             </p>
                                             <p></p>
                                         </div>
                                     </div>
                                 </div>
-
                             {% endif %}
                         {% endfor %}
                     </div>

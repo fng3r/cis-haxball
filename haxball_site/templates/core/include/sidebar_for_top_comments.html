@@ -1,5 +1,6 @@
 {% load static %}
 {% load cache %}
+{% load i18n %}
 
 {% cache 60 top_comments_cache %}
     <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
@@ -21,11 +22,11 @@
 
                         <div class="tw:w-full">
                             {% for comment in period.comments %}
-                                <a type="button" href="{{ comment.get_absolute_url }}" title="от {{ comment.author }} в {{ comment.content_object }}"
+                                <a type="button" href="{{ comment.get_absolute_url }}" title="{% trans "от" %} {{ comment.author }} {% trans "в" %} {{ comment.content_object }}"
                                    class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-card-button tw:text-card-button">
                                     <div class="tw:flex tw:overflow-hidden">
                                         <span class="tw:badge tw:badge-success tw:font-bold tw:mr-2">{{ comment.likes_count }}</span>
-                                        <span class="tw:truncate">{{ comment.body|striptags|default:"*Медиа-контент*" }}</span>
+                                        <span class="tw:truncate">{{ comment.body|striptags|default:_("*Медиа-контент*") }}</span>
                                     </div>
                                     <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
                                 </a>

@@ -2,6 +2,7 @@
 {% load static %}
 {% load reservation_extras %}
 {% load tournament_extras %}
+{% load i18n %}
 
 {% block styles %}
 
@@ -9,14 +10,14 @@
 {% endblock %}
 
 
-{% block title %}Чемпионат | Бронь хоста — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Чемпионат | Бронь хоста" %} — CIS-HAXBALL {% endblock %}
 {% block profile_of_user %}
     {% partialdef content-container inline=True %}
         <div id="content-container">
             <div class="tw:card tw:bg-base-100 tw:mt-2 tw:pb-1 tw:rounded-lg">
                 <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
                     <h2 class="tw:card-title">
-                        <i class="fa fa-th tw:text-warning tw:self-end" aria-hidden="true"></i>Бронь хоста
+                        <i class="fa fa-th tw:text-warning tw:self-end" aria-hidden="true"></i>{% trans "Бронь хоста" %}
                     </h2>
                 </div>
 
@@ -87,7 +88,7 @@
                                                                     </span>
                                                                     <dialog class="tw:modal" id="deleteres{{ res.id }}">
                                                                         <div class="tw:modal-box">
-                                                                            <h4 class="modal-title">Снять бронь?</h4>
+                                                                            <h4 class="modal-title">{% trans "Снять бронь?" %}</h4>
 
                                                                             <div class="tw:modal-action">
                                                                                 <form method="POST"
@@ -97,13 +98,13 @@
                                                                                       hx-swap="outerHTML">
                                                                                     <img class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
                                                                                     <button type="submit" class="tw:btn tw:btn-primary">
-                                                                                        Да, я уверен
+                                                                                        {% trans "Да, я уверен" %}
                                                                                     </button>
                                                                                 </form>
 
                                                                                 <form method="dialog">
                                                                                     <button class="tw:btn">
-                                                                                        Нет, подождите
+                                                                                        {% trans "Нет, подождите" %}
                                                                                     </button>
                                                                                 </form>
                                                                             </div>

@@ -2,6 +2,7 @@
 {% load static %}
 {% load user_tags %}
 {% load tournament_extras %}
+{% load i18n %}
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/profile/profile.css" %}">
@@ -15,13 +16,13 @@
         function myFunction() {
             var discord = document.getElementById("discord");
             navigator.clipboard.writeText(discord.title);
-            alert("Скопировано " + discord.title);
+            alert("{% trans "Скопировано" %} " + discord.title);
         }
 
     </script>
 {% endblock %}
 
-{% block title %}Профиль {{ profile.name }} — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Профиль" %} {{ profile.name }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
     <style>
@@ -33,7 +34,7 @@
         <div id="profile-container">
             <div class="tw:card tw:mt-2 tw:rounded-lg">
                 <div class="tw:tabs tw:tabs-box tw:px-0! tw:py-0! tw:bg-base-200 tw:rounded-lg" role="tablist">
-                    <input type="radio" name="user-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" role="tab" aria-label="Профиль пользователя" checked />
+                    <input type="radio" name="user-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" role="tab" aria-label="{% trans "Профиль пользователя" %}" checked />
                     <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
                         <div id="profile-panel" role="tabpanel" aria-labelledby="profile-tab">
                             <div class="tw:card user-card-full">
@@ -90,10 +91,10 @@
                                                     </a>
                                                 </div>
                                             {% else %}
-                                                <div class="tw:mb-1">Без команды</div>
+                                                <div class="tw:mb-1">{% trans "Без команды" %}</div>
                                             {% endif %}
                                             <div class="tw:mb-4">
-                                                Репутация
+                                                {% trans "Репутация" %}
                                                 <span class="tw:badge tw:badge-sm tw:font-bold {% if profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
                                                     {{ profile.karma }}
                                                 </span>
@@ -117,7 +118,7 @@
                                             </div>
 
                                             <div class="tw:mb-3">
-                                                Просмотров <i class="fa fa-eye tw:text-warning" aria-hidden="true"></i>
+                                                {% trans "Просмотров" %} <i class="fa fa-eye tw:text-warning" aria-hidden="true"></i>
                                                 {{ profile.views }}
                                             </div>
 
@@ -149,46 +150,46 @@
                                         <div class="tw:card tw:px-6 tw:pt-2 tw:pb-3 tw:rounded-br-lg">
 
                                             <div class="tw:tabs tw:tabs-border tw:gap-8 tw:bg-transparent!" role="tablist">
-                                                <input type="radio" name="profile-tabs" class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!" role="tab" aria-label="Основная информация" checked />
+                                                <input type="radio" name="profile-tabs" class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!" role="tab" aria-label="{% trans "Основная информация" %}" checked />
                                                 <div class="tw:tab-content">
                                                     <div id="profile-info-panel" role="tabpanel" aria-labelledby="profile-info-tab">
                                                         <div class="tw:flex tw:flex-wrap tw:gap-y-2 tw:px-4 tw:py-2 profile-info-table">
                                                             <div class="tw:sm:w-1/2 tw:w-full">
-                                                                <div class="tw:font-semibold">Дата регистрации</div>
+                                                                <div class="tw:font-semibold">{% trans "Дата регистрации" %}</div>
                                                                 <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">{{ profile.name.date_joined|date }}</div>
                                                             </div>
 
                                                             <div class="tw:sm:w-1/2 tw:w-full">
-                                                                <div class="tw:font-semibold">Последний визит</div>
+                                                                <div class="tw:font-semibold">{% trans "Последний визит" %}</div>
                                                                 <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">{% user_last_activity profile.name %}</div>
                                                             </div>
 
                                                             <div class="tw:sm:w-1/2 tw:w-full">
-                                                                <div class="tw:font-semibold">Дата рождения</div>
+                                                                <div class="tw:font-semibold">{% trans "Дата рождения" %}</div>
                                                                 <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">
                                                                     {% if profile.born_date %}
                                                                         {{ profile.born_date }}
                                                                         ({% age profile.born_date %})
                                                                     {% else %}
-                                                                        не указана
+                                                                        {% trans "не указана" %}
                                                                     {% endif %}
                                                                 </div>
                                                             </div>
 
                                                             <div class="tw:sm:w-1/2 tw:w-full">
-                                                                <div class="tw:font-semibold">Город</div>
+                                                                <div class="tw:font-semibold">{% trans "Город" %}</div>
                                                                 <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">
                                                                     {% if profile.city %}
                                                                         {{ profile.city }}
                                                                     {% else %}
-                                                                        не указан
+                                                                        {% trans "не указан" %}
                                                                     {% endif %}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <div class="profile-about tw:flex tw:flex-col tw:gap-2">
                                                             <div>
-                                                                <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">О себе</h5>
+                                                                <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">{% trans "О себе" %}</h5>
                                                                 <div class="tw:w-full">
                                                                     <h6 class="tw:text-base-content/70">
                                                                         {{ profile.about|linebreaks }}
@@ -197,7 +198,7 @@
                                                             </div>
 
                                                             <div>
-                                                                <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">Любимые команды</h5>
+                                                                <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">{% trans "Любимые команды" %}</h5>
                                                                 <div class="tw:w-full">
                                                                     <h6 class="tw:text-base-content/70">
                                                                         {{ profile.favourite_teams|default:"Не указано"|linebreaks }}
@@ -206,7 +207,7 @@
                                                             </div>
 
                                                             <div>
-                                                                <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">Любимые игроки</h5>
+                                                                <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">{% trans "Любимые игроки" %}</h5>
                                                                 <div class="tw:w-full">
                                                                     <h6 class="tw:text-base-content/70">
                                                                         {{ profile.favourite_players|default:"Не указано"|linebreaks }}
@@ -229,11 +230,11 @@
                                                     </div>
                                                 {% endif %}
 
-                                                <input type="radio" name="profile-tabs" class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!" role="tab" aria-label="Достижения" />
+                                                <input type="radio" name="profile-tabs" class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!" role="tab" aria-label="{% trans "Достижения" %}" />
                                                 <div class="tw:tab-content">
                                                     <div class="tw:overflow-y-auto tw:max-h-[580px] tw:mt-0" id="profile-achievements-panel" role="tabpanel" aria-labelledby="profile-achievements-tab">
                                                         {% if achievements_by_category %}
-                                                            <h5 class="tw:mb-1! tw:pb-1 tw:border-b tw:border-base-200 tw:font-semibold">Достижения</h5>
+                                                            <h5 class="tw:mb-1! tw:pb-1 tw:border-b tw:border-base-200 tw:font-semibold">{% trans "Достижения" %}</h5>
                                                             {% for category, achievements in achievements_by_category %}
                                                                 <p class="profile_achievements-text tw:text-base-content/90">{{ category }}</p>
                                                                 <div class="profile_achievements-medals">
@@ -256,7 +257,7 @@
                     </div>
 
                     {% if profile.name.user_player %}
-                        <input type="radio" name="user-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" role="tab" aria-label="Профиль игрока"
+                        <input type="radio" name="user-tabs" class="tw:tab tw:w-1/3 tw:grow tw:font-semibold" role="tab" aria-label="{% trans "Профиль игрока" %}"
                                hx-get="{% url 'tournament:player_stats' profile.name.id %}"
                                hx-trigger="click once"
                                hx-target="#player-profile-panel"

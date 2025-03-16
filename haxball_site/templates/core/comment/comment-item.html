@@ -1,6 +1,7 @@
 {% load static %}
 {% load user_tags %}
 {% load thumbnail %}
+{% load i18n %}
 
 
 <div class="tw:flex tw:p-4 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}" id="r{{ comment.id }}">
@@ -38,7 +39,7 @@
 
                 {% if not comment.is_parent %}
                     <i class="tw:ml-2 tw:text-sm">
-                        ответил
+                        {% trans "ответил" %}
                     </i>
 
                     <div class="tw:m-0 tw:flex tw:ml-2 tw:font-semibold">
@@ -65,7 +66,7 @@
 
                 <a class="tw:link" href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ comment.id }}">#{{ comment.id }}</a>
                 {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
-                    <a :style="editingComment && {'pointer-events': 'none'}" @click="editingComment = true" class="tw:ml-1" title="Редактировать"
+                    <a :style="editingComment && {'pointer-events': 'none'}" @click="editingComment = true" class="tw:ml-1" title="{% trans "Редактировать" %}"
                        hx-trigger="click"
                        hx-get="{% url 'core:edit_comment' comment.id %}"
                        hx-target="#r{{ comment.id }}"
@@ -82,7 +83,7 @@
 
                     <dialog id="delete_comment_{{ comment.id }}_modal" class="tw:modal">
                         <div class="tw:modal-box">
-                            <h4 class="tw:font-bold">Удалить комментарий?</h4>
+                            <h4 class="tw:font-bold">{% trans "Удалить комментарий?" %}</h4>
                             <div class="tw:modal-action">
                                 <form method="post"
                                       hx-post="{% url 'core:delete_comment' comment.id %}"
@@ -93,10 +94,10 @@
                                 >
                                     <img id="delete-comment-indicator" class="htmx-indicator tw:mr-1 tw:w-6"
                                          src="{% static 'img/svg-loaders/bars.svg' %}" height="24">
-                                    <button type="submit" class="tw:btn tw:btn-error tw:rounded-sm!">Да, я уверен</button>
+                                    <button type="submit" class="tw:btn tw:btn-error tw:rounded-sm!">{% trans "Да, я уверен" %}</button>
                                 </form>
                                 <form method="dialog">
-                                    <button class="tw:btn tw:rounded-sm! tw:mb-0! tw:inline-flex!">Нет, подождите</button>
+                                    <button class="tw:btn tw:rounded-sm! tw:mb-0! tw:inline-flex!">{% trans "Нет, подождите" %}</button>
                                 </form>
                             </div>
                         </div>
@@ -114,10 +115,10 @@
                 {% if comment.edited %}
                     {% if comment.edited.date == comment.created.date %}
                         <i class="fa fa-pencil comment-edit" aria-hidden="true"
-                           data-comment-edit-title='изм. {{comment.edited|time:"H:i"}}'></i>
+                           data-comment-edit-title='{% trans "изм." %} {{comment.edited|time:"H:i"}}'></i>
                     {% else %}
                         <i class="fa fa-pencil comment-edit" aria-hidden="true"
-                           data-comment-edit-title='изм. {{comment.edited|date:"d.m.y"}} {{comment.edited|time:"H:i"}}'></i>
+                           data-comment-edit-title='{% trans "изм." %} {{comment.edited|date:"d.m.y"}} {{comment.edited|time:"H:i"}}'></i>
                     {% endif %}
                 {% endif %}
             </span>
@@ -147,7 +148,7 @@
                    aria-expanded="true"
                    aria-controls="commentcollapse{{ comment.id }}" class="small">
                     <i class="fa" :class="showReplies ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                    <span x-text="showReplies ? 'Скрыть ответы' : 'Показать ответы'"></span>
+                    <span x-text="showReplies ? '{% trans "Скрыть ответы" %}' : '{% trans "Показать ответы" %}'"></span>
                 </a>
                 <small>({{ comment.childs_count }})</small>
             {% endif %}

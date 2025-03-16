@@ -1,10 +1,11 @@
 {% load static %}
 {% load user_tags %}
+{% load i18n %}
 
 {% if user == profile.name %}
 
     <div id="edit-profile-form-container" class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
-        <h4 class="tw:text-center tw:mb-0! tw:pl-2 tw:pt-1 tw:pb-2 tw:border-b tw:border-neutral-300">Редактирование профиля</h4>
+        <h4 class="tw:text-center tw:mb-0! tw:pl-2 tw:pt-1 tw:pb-2 tw:border-b tw:border-neutral-300">{% trans "Редактирование профиля" %}</h4>
 
         <form method="post"
               enctype="multipart/form-data"
@@ -26,7 +27,7 @@
                                 <h4 class="tw:font-semibold tw:text-center">{{ profile.name }}</h4>
 
                                 <fieldset class="tw:fieldset">
-                                    <legend class="tw:fieldset-legend tw:text-base!">Аватар</legend>
+                                    <legend class="tw:fieldset-legend tw:text-base!">{% trans "Аватар" %}</legend>
                                     <input id="avatar-file" type="file" name="avatar" accept="image/*"
                                            class="tw:file-input tw:text-base-content"
                                     />
@@ -35,7 +36,7 @@
                                 {% if profile.name|can_edit_profile_bg %}
                                     <div>
                                         <fieldset class="tw:fieldset">
-                                            <legend class="tw:fieldset-legend tw:text-base!">Фон</legend>
+                                            <legend class="tw:fieldset-legend tw:text-base!">{% trans "Фон" %}</legend>
                                             <input id="bg-file" type="file" name="background" accept="image/*"
                                                    class="tw:file-input tw:text-base-content"
                                             />
@@ -45,7 +46,7 @@
                                             <label class="tw:fieldset-label tw:text-base tw:text-white!">
                                                 <input id="remove_bg" type="checkbox" name="remove_bg"
                                                        class="tw:checkbox tw:checkbox-sm" />
-                                                <span class="tw:align-middle">Удалить фон</span>
+                                                <span class="tw:align-middle">{% trans "Удалить фон" %}</span>
                                             </label>
                                         </fieldset>
                                     </div>
@@ -53,7 +54,7 @@
                             </div>
 
                             <div class="tw:inline-flex tw:gap-3 tw:mt-3">
-                                Комментарии к профилю
+                                {% trans "Комментарии к профилю" %}
                                 <label class="tw:toggle tw:text-base-content tw:inline-grid!">
                                     <input type="checkbox" id="commentableCheck" name="commentable"
                                            {% if profile.commentable %}checked{% endif %}
@@ -68,24 +69,24 @@
                     <div class="tw:w-2/3">
                         <div class="tw:flex tw:flex-col tw:px-4 tw:py-2 tw:gap-2">
                             <div class="tw:flex tw:justify-between tw:pb-2 tw:border-b tw:border-neutral-300">
-                                <h5 class="tw:font-semibold tw:self-end tw:mb-0!">Основная информация</h5>
+                                <h5 class="tw:font-semibold tw:self-end tw:mb-0!">{% trans "Основная информация" %}</h5>
                                 <div class="tw:flex tw:mt-auto tw:gap-2 tw:justify-end">
                                     <img class="htmx-indicator tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
-                                    <button class="tw:btn tw:btn-primary">Сохранить</button>
+                                    <button class="tw:btn tw:btn-primary">{% trans "Сохранить" %}</button>
                                 </div>
                             </div>
 
                             <div class="tw:flex tw:flex-wrap tw:gap-y-2">
                                 <div class="tw:sm:w-1/2 tw:w-full">
-                                    <div class="tw:font-semibold">Дата регистрации</div>
+                                    <div class="tw:font-semibold">{% trans "Дата регистрации" %}</div>
                                     <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">{{ profile.name.date_joined|date }}</div>
                                 </div>
                                 <div class="tw:sm:w-1/2 tw:w-full">
-                                    <div class="tw:font-semibold">Последний визит</div>
+                                    <div class="tw:font-semibold">{% trans "Последний визит" %}</div>
                                     <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">{{ profile.name.last_login }}</div>
                                 </div>
                                 <div class="tw:sm:w-1/2 tw:w-full">
-                                    <div class="tw:font-semibold tw:mb-1">Дата рождения</div>
+                                    <div class="tw:font-semibold tw:mb-1">{% trans "Дата рождения" %}</div>
                                     <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">
                                         <input type="date" id="start" name="born_date"
                                                value="{{ profile.born_date|date:"Y-m-d" }}"
@@ -94,7 +95,7 @@
                                     </div>
                                 </div>
                                 <div class="tw:sm:w-1/2 tw:w-full">
-                                    <div class="tw:font-semibold tw:mb-1">Город</div>
+                                    <div class="tw:font-semibold tw:mb-1">{% trans "Город" %}</div>
                                     <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">
                                         <input type="text" class="tw:input tw:input-bordered" name="city" value="{{ profile.city }}">
                                     </div>
@@ -102,12 +103,12 @@
                             </div>
 
                             <div class="tw:my-3">
-                                <h5 class="tw:pb-1 tw:border-b tw:border-neutral-300">Контакты</h5>
+                                <h5 class="tw:pb-1 tw:border-b tw:border-neutral-300">{% trans "Контакты" %}</h5>
                                 <div class="tw:flex tw:flex-wrap tw:gap-2">
                                     <div class="tw:w-full tw:md:flex-1">
                                         <div class="tw:flex tw:flex-col">
-                                            <div class="tw:font-semibold" style="margin-bottom: 0">Вк</div>
-                                            <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">id/никнейм (id12345)</div>
+                                            <div class="tw:font-semibold" style="margin-bottom: 0">{% trans "Вк" %}</div>
+                                            <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">{% trans "id/никнейм (id12345)" %}</div>
 
                                             <input type="text" class="tw:input tw:input-bordered" name="vk" value="{{ profile.vk }}">
                                         </div>
@@ -115,8 +116,8 @@
 
                                     <div class="tw:w-full tw:md:flex-1">
                                         <div class="tw:flex tw:flex-col">
-                                            <div class="tw:font-semibold" style="margin-bottom: 0">Telegram</div>
-                                            <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">Никнейм (без @)</div>
+                                            <div class="tw:font-semibold" style="margin-bottom: 0">{% trans "Telegram" %}</div>
+                                            <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">{% trans "Никнейм (без @)" %}</div>
 
                                             <input type="text" class="tw:input tw:input-bordered" name="telegram" value="{{ profile.telegram }}">
                                         </div>
@@ -124,8 +125,8 @@
 
                                     <div class="tw:w-full tw:md:flex-1">
                                         <div class="tw:flex tw:flex-col">
-                                            <div class="tw:font-semibold" style="margin-bottom: 0">Discord</div>
-                                            <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">Имя#1234</div>
+                                            <div class="tw:font-semibold" style="margin-bottom: 0">{% trans "Discord" %}</div>
+                                            <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">{% trans "Имя#1234" %}</div>
 
                                             <input type="text" class="tw:input tw:input-bordered" name="discord" value="{{ profile.discord }}">
                                         </div>
@@ -134,24 +135,24 @@
                             </div>
 
                             <div class="tw:mt-3">
-                                <h5 class="tw:pb-1 tw:border-b tw:border-neutral-300">Доп. информация</h5>
+                                <h5 class="tw:pb-1 tw:border-b tw:border-neutral-300">{% trans "Доп. информация" %}</h5>
                                 <div class="tw:my-2">
                                     <fieldset class="tw:fieldset">
-                                        <legend class="tw:fieldset-legend tw:text-lg!">О себе</legend>
+                                        <legend class="tw:fieldset-legend tw:text-lg!">{% trans "О себе" %}</legend>
                                         <textarea class="tw:textarea tw:w-full tw:text-base!" rows="3" name="about">{{ profile.about }}</textarea>
                                     </fieldset>
                                 </div>
 
                                 <div class="tw:my-2">
                                     <fieldset class="tw:fieldset">
-                                        <legend class="tw:fieldset-legend tw:text-lg!">Любимые команды</legend>
+                                        <legend class="tw:fieldset-legend tw:text-lg!">{% trans "Любимые команды" %}</legend>
                                         <textarea class="tw:textarea tw:w-full tw:text-base!" rows="2" name="favourite_teams">{{ profile.favourite_teams }}</textarea>
                                     </fieldset>
                                 </div>
 
                                 <div class="tw:my-2">
                                     <fieldset class="tw:fieldset">
-                                        <legend class="tw:fieldset-legend tw:text-lg!">Любимые игроки</legend>
+                                        <legend class="tw:fieldset-legend tw:text-lg!">{% trans "Любимые игроки" %}</legend>
                                         <textarea class="tw:textarea tw:w-full tw:text-base!" rows="2" name="favourite_players">{{ profile.favourite_players }}</textarea>
                                     </fieldset>
                                 </div>

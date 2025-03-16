@@ -1,5 +1,6 @@
 {% load mathfilters %}
 {% load tournament_extras %}
+{% load i18n %}
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap');
@@ -15,15 +16,15 @@
     <thead class="tw:text-base-content tw:text-base tw:font-semibold">
         <tr class="tw:text-center">
             <th scope="col" class="tw:pl-2">#</th>
-            <th scope="col" class="tw:text-left!">Команда</th>
-            <th scope="col">И</th>
-            <th scope="col">В</th>
-            <th scope="col">Н</th>
-            <th scope="col">П</th>
-            <th scope="col">ЗМ</th>
-            <th scope="col">ПМ</th>
-            <th scope="col">РМ</th>
-            <th scope="col">O</th>
+            <th scope="col" class="tw:text-left!">{% trans "Команда" %}</th>
+            <th scope="col">{% trans "И" %}</th>
+            <th scope="col">{% trans "В" %}</th>
+            <th scope="col">{% trans "Н" %}</th>
+            <th scope="col">{% trans "П" %}</th>
+            <th scope="col">{% trans "ЗМ" %}</th>
+            <th scope="col">{% trans "ПМ" %}</th>
+            <th scope="col">{% trans "РМ" %}</th>
+            <th scope="col">{% trans "О" %}</th>
             {% if has_penalties %}
                 <th scope="col">Штр</th>
             {% endif %}

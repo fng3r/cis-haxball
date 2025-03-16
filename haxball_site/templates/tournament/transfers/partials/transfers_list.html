@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 
 {% for transfer in transfers %}
     {% if forloop.last and transfers.number < transfers.paginator.num_pages %}
@@ -33,7 +34,7 @@
             {% else %}
                 <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2"
                      alt="{{ transfer.from_team.title }}" width="30">
-                <span>Свободный агент</span>
+                <span>{% trans "Свободный агент" %}</span>
             {% endif %}
         </div>
     </td>
@@ -47,7 +48,7 @@
             {% else %}
                 <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2"
                      alt="{{ transfer.from_team.title }}" width="30" style="border-radius: 100%">
-                <span>Свободный агент</span>
+                <span>{% trans "Свободный агент" %}</span>
             {% endif %}
         </div>
     </td>

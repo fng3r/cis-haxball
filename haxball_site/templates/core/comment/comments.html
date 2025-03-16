@@ -1,6 +1,7 @@
 {% load static %}
 {% load user_tags %}
 {% load thumbnail %}
+{% load i18n %}
 
 
 {% block styles %}
@@ -26,21 +27,21 @@
                         {% include 'core/comment/new_comment_form.html' %}
                     {% elif user.is_authenticated and not user.user_profile.can_comment %}
                         <h6 class="tw:text-center">
-                            Брумасик считает, что вам лучше не писать здесь :(
+                            {% trans "Брумасик считает, что вам лучше не писать здесь :(" %}
                         </h6>
                     {% else %}
                         <h6 class="tw:text-center">
                             <a class="tw:link tw:link-hover tw:link-primary" href="#" onclick="login_modal.showModal()">
-                                Войдите</a>, чтобы оставить комментарий
+                                {% trans "Войдите" %}</a>, {% trans "чтобы оставить комментарий" %}
                         </h6>
                     {% endif %}
                 </div>
                 <div x-show="!commentable" x-cloak>
                     <h5 class="tw:text-center">
                         {% if object|get_class == 'Profile' %}
-                            Пользователь закрыл свой профиль
+                            {% trans "Пользователь закрыл свой профиль" %}
                         {% else %}
-                            Комментарии закрыты
+                            {% trans "Комментарии закрыты" %}
                         {% endif %}
                     </h5>
                 </div>
@@ -54,9 +55,9 @@
             <div class="tw:card tw:bg-base-100 tw:rounded-lg" id="comments-container">
                 <div class="tw:card-title tw:flex-col tw:items-start tw:px-4 tw:py-4 tw:gap-1 card-body-comment">
                     {% if comments|length > 0 %}
-                        <div class=" tw:text-2xl">Комментарии ({{ object.comments.count }})</div>
+                        <div class=" tw:text-2xl">{% trans "Комментарии" %} ({{ object.comments.count }})</div>
                     {% elif object.commentable %}
-                        <div class="tw:text-base">Здесь пока пусто, не хочешь быть первым?</div>
+                        <div class="tw:text-base">{% trans "Здесь пока пусто, не хочешь быть первым?" %}</div>
                     {% endif %}
                 </div>
                 <div class="tw:flex tw:flex-col tw:gap-1">

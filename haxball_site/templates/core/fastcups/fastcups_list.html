@@ -1,5 +1,6 @@
 {% extends "core.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block scripts %}
 
@@ -9,13 +10,13 @@
 
 {% endblock %}
 
-{% block title %}Фасткапы — CIS-HAXBALL {% endblock %}
+{% block title %}{% trans "Фасткапы" %} — CIS-HAXBALL {% endblock %}
 
 {% block postlist %}
     <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
         <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
             <h3 class="tw:text-center tw:mb-0">
-                <i class="fa fa-trophy tw:text-yellow-400 tw:mr-1" aria-hidden="true"></i>Фасткапы
+                <i class="fa fa-trophy tw:text-yellow-400 tw:mr-1" aria-hidden="true"></i>{% trans "Фасткапы" %}
             </h3>
             <div class="tw:divider tw:my-0!"></div>
 
