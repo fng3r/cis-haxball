@@ -558,9 +558,19 @@
 
             <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:forum' %}">Форум</a>
 
-            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:admins' %}">Администрация</a>
-
-            <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+            <div class="tw:dropdown">
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+                    Ещё<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                </div>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                    <li>
+                        <a href="{% url 'core:admins' %}">Администрация</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
