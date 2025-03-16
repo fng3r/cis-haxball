@@ -19,8 +19,6 @@
     <div class="tw:w-full tw:mx-auto tw:justify-center">
         <div class="tw:max-w-[1600px] tw:flex tw:flex-wrap tw:relative tw:mx-auto">
             <div class="tw:w-1/2 tw:order-2 tw:xl:w-1/6 tw:xl:order-1 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
-                {% include 'core/include/sidebar_for_online_users.html' %}
-
                 {% include 'core/include/sidebar_for_media.html' %}
 
                 {% show_latest_lives %}
@@ -58,6 +56,7 @@
             </div>
 
             <div class="tw:w-1/2 tw:order-3 tw:xl:w-1/6 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
+                {% include 'core/include/sidebar_for_online_users.html' %}
 
                 {% block sidebar_last_activity %}
                     {% show_last_activity 12 %}
