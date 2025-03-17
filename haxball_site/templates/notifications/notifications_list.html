@@ -29,49 +29,7 @@
                         <div class="tw:flex-1">
                             <div class="tw:flex tw:justify-between tw:items-start tw:gap-x-5">
                                 <div>
-                                    {% if notification.data.type == 'comment_reply' %}
-                                        <div class="tw:text-lg tw:font-medium">
-                                            {{ notification.actor.username }}
-                                            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">ответил</a>
-                                            на Ваш комментарий под темой
-                                            <a href="{{ notification.data.subject_url }}" class="tw:link tw:link-primary tw:link-hover"
-                                            >"{{ notification.data.subject_title }}"</a>
-                                        </div>
-                                    {% elif notification.data.type == 'profile_comment' %}
-                                        <div class="tw:text-lg tw:font-medium">
-                                            {{ notification.actor.username }}
-                                            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">оставил комментарий</a>
-                                            под Вашим профилем
-                                        </div>
-                                    {% elif notification.data.type == 'match_inspected' %}
-                                        <div class="tw:text-lg tw:font-medium">
-                                            Матч
-                                            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
-                                            >{{ notification.data.match_title }}</a> с участием Вашей команды был проинспектирован
-                                        </div>
-                                    {% elif notification.data.type == 'disqualification' %}
-                                        <div class="tw:text-lg tw:font-medium">
-                                            {% if notification.data.disqualified_player_username == notification.recipient.username %}
-                                                Вы получили дисквалификацию
-                                            {% else %}
-                                                Игрок Вашей команды ({{ notification.data.disqualified_player_username }}) получил дисквалификацию
-                                            {% endif %}
-                                            по итогам матча
-                                            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
-                                            >{{ notification.data.match_title }}</a>
-                                        </div>
-                                    {% else %}
-                                        {% if notification.data.url %}
-                                            <a href="{{ notification.data.url }}" class="tw:font-medium tw:text-lg">
-                                                {{ notification.verb }}
-                                            </a>
-                                        {% else %}
-                                            <span class="tw:font-medium tw:text-lg">{{ notification.verb }}</span>
-                                        {% endif %}
-                                    {% endif %}
-                                    <p class="tw:text-sm tw:text-base-content/70">
-                                        {{ notification.timesince }} назад
-                                    </p>
+                                    {% include "notifications/notification_content.html" with is_list_view=True %}
                                 </div>
                                 <div class="tw:flex tw:items-center tw:gap-1">
                                     <div class="tw:status tw:status-lg tw:status-error tw:mr-2" x-show="isUnread"></div>
@@ -97,12 +55,8 @@
                                     </button>
                                 </div>
                             </div>
-                            {% if notification.description %}
-                                <p class="tw:mt-2">{{ notification.description|striptags }}</p>
-                            {% endif %}
                         </div>
                     </div>
-
                 {% endpartialdef %}
             </div>
         {% endfor %}

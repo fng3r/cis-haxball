@@ -34,7 +34,6 @@ class NotificationListView(ListView):
     def get_queryset(self):
         qs = self.request.user.notifications.all()
         
-        # Filter by notification type if specified
         notification_type = self.request.GET.get('type')
         if notification_type == 'unread':
             qs = qs.unread()
@@ -49,9 +48,8 @@ class NotificationListView(ListView):
         return context
     
     def get_template_names(self):
-        # Return different template if it's an HTMX request
         if self.request.htmx:
-            return ['notifications/notification_list_partial.html']
+            return ['notifications/notifications_list.html']
         return [self.template_name]
 
 
@@ -88,17 +86,13 @@ def delete_notification(request, notification_id=None):
     was_unread = notification.unread
     notification.delete()
     
-    if request.htmx:
-        # Return success message or trigger removal via HTMX
-        response = HttpResponse(status=204)
-        response = trigger_client_event(response, 'notification-removed', {'id': notification_id, 'was_unread': was_unread})
-        # Only trigger badge update if the notification was unread
-        if was_unread:
-            response = trigger_client_event(response, 'unread-count-changed', {'target': '#notification-badge-counter'})
-        return response
-    
-    next_url = request.GET.get('next', reverse('notifications:all'))
-    return redirect(next_url)
+    # Return success message or trigger removal via HTMX
+    response = HttpResponse(status=204)
+    response = trigger_client_event(response, 'notification-removed', {'id': notification_id, 'was_unread': was_unread})
+    # Only trigger badge update if the notification was unread
+    if was_unread:
+        response = trigger_client_event(response, 'unread-count-changed', {'target': '#notification-badge-counter'})
+    return response
 
 
 @login_required
