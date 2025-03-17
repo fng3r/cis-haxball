@@ -7,7 +7,7 @@ from notifications.signals import notify
 from tournament.models import Disqualification, Match
 
 # Get a logger for this module
-logger = logging.getLogger('haxball_site.notificationsa')
+logger = logging.getLogger('haxball_site')
 
 
 def notify_user(recipient, actor, verb, target=None, action_object=None, description=None, **kwargs):

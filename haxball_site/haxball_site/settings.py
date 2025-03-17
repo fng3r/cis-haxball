@@ -446,7 +446,7 @@ LOGGING = {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'simple',
         },
         'file': {
             'level': 'INFO',
@@ -472,6 +472,11 @@ LOGGING = {
             'propagate': True,
         },
         'django.request': {
+            'handlers': ['mail_admins', 'console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.server': {
             'handlers': ['mail_admins', 'console', 'file'],
             'level': 'INFO',
             'propagate': False,
