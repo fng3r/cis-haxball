@@ -425,11 +425,11 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{asctime} [{levelname}] [{module}] {process:d} {thread:d} {message}',
+            'format': '[{asctime}] [{levelname}] [{module}] {process:d} {thread:d} {message}',
             'style': '{',
         },
-        'simple': {
-            'format': '{asctime} [{levelname}] [{module}] {message}',
+        'dev': {
+            'format': '[{asctime}] [{levelname}] [{module}] {filename}:{lineno} {message}',
             'style': '{',
         },
     },
@@ -446,7 +446,7 @@ LOGGING = {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+            'formatter': 'dev',
         },
         'file': {
             'level': 'INFO',
