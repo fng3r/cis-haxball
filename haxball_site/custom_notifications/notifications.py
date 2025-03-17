@@ -1,8 +1,13 @@
+import logging
+
 from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from notifications.signals import notify
 from tournament.models import Disqualification, Match
+
+# Get a logger for this module
+logger = logging.getLogger('haxball_site.notificationsa')
 
 
 def notify_user(recipient, actor, verb, target=None, action_object=None, description=None, **kwargs):
@@ -20,8 +25,7 @@ def notify_user(recipient, actor, verb, target=None, action_object=None, descrip
         **kwargs: Additional data to store with the notification
     """
     
-    # Print debug info
-    print(f"Sending notification with data: {kwargs}")
+    logger.debug(f"Sending notification with data: {kwargs}")
     
     notify.send(
         sender=actor,
@@ -52,9 +56,9 @@ def notify_comment_reply(comment: NewComment):
             subject_title=str(comment.content_object),
             subject_url=comment.content_object.get_absolute_url()
         )
-        print('comment reply notification sent')
+        logger.debug('Comment reply notification sent')
     except Exception as e:
-        print(f'Error sending comment reply notification: {e}')
+        logger.error(f'Error sending comment reply notification: {e}', exc_info=True)
 
     
 def notify_profile_comment(comment: NewComment):
@@ -72,9 +76,9 @@ def notify_profile_comment(comment: NewComment):
             type='profile_comment',
             url=comment.get_absolute_url()
         )
-        print('profile comment notification sent')
+        logger.debug('Profile comment notification sent')
     except Exception as e:
-        print(f'Error sending profile comment notification: {e}')
+        logger.error(f'Error sending profile comment notification: {e}', exc_info=True)
     
 def notify_like(user, post):
     """
@@ -96,9 +100,9 @@ def notify_like(user, post):
             url=post.get_absolute_url(),
             subject_title=subject_title
         )
-        print('like notification sent')
+        logger.debug('Like notification sent')
     except Exception as e:
-        print(f'Error sending like notification: {e}')
+        logger.error(f'Error sending like notification: {e}', exc_info=True)
 
 
 def notify_match_inspected(match: Match):
@@ -112,7 +116,7 @@ def notify_match_inspected(match: Match):
         for player in all_players:
             if player.role == 'C' or player.role == 'AC':
                 recipients.add(player.name)
-        print(recipients)
+        logger.debug(f'Match inspection notification recipients: {recipients}')
         match_title = f'{match.team_home.short_title} : {match.team_guest.short_title}'
         
         notify_user(
@@ -124,9 +128,9 @@ def notify_match_inspected(match: Match):
             type='match_inspected',
             match_title=match_title
         )
-        print('match inspected notification sent')
+        logger.debug(f'Match inspected notification sent for match {match_title}')
     except Exception as e:
-        print(f'Error sending match inspected notification: {e}')
+        logger.error(f'Error sending match inspected notification: {e}', exc_info=True)
     
 
 def notify_disqualification(disqualification: Disqualification):
@@ -139,7 +143,7 @@ def notify_disqualification(disqualification: Disqualification):
         for player in disqualification.team.players_in_team.all():
             if player.role == 'C' or player.role == 'AC':
                 recipients.add(player.name)
-        print(recipients)
+        logger.debug(f'Disqualification notification recipients: {recipients}')
         match_title = f'{disqualification.match.team_home.short_title} : {disqualification.match.team_guest.short_title}'
         disqualified_player = disqualification.player
         
@@ -154,6 +158,6 @@ def notify_disqualification(disqualification: Disqualification):
             match_title=match_title,
             disqualified_player_username=disqualified_player.name.username
         )
-        print('disqualification notification sent')
+        logger.debug(f'Disqualification notification sent for player {disqualified_player.nickname} in match {match_title}')
     except Exception as e:
-        print(f'Error sending disqualification notification: {e}')
+        logger.error(f'Error sending disqualification notification: {e}', exc_info=True)
