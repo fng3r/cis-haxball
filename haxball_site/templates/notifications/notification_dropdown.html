@@ -1,8 +1,6 @@
 <div class="tw:dropdown tw:dropdown-end">
   <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:btn-circle">
-    <div id="notification-badge">
-      {% include 'notifications/notification_badge.html' with unread_count=unread_count %}
-    </div>
+    {% include 'notifications/notification_badge.html' with unread_count=unread_count %}
   </div>
   <div tabindex="0" class="tw:dropdown-content tw:z-1 tw:menu tw:p-2 tw:shadow tw:bg-base-100 tw:rounded-box tw:w-80">
     <div class="tw:card">

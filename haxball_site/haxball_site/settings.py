@@ -450,7 +450,7 @@ LOGGING = {
         },
         'file': {
             'level': 'INFO',
-            'filters': ['require_debug_true'],
+            'filters': ['require_debug_false'],
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(LOGS_DIR, 'haxball_site.log'),
             'when': 'midnight',
