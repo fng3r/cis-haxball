@@ -100,6 +100,7 @@ TEMPLATES = [
                 'haxball_site.context_processors.upcoming_matches_context',
                 'haxball_site.context_processors.online_users_context',
                 'haxball_site.context_processors.notifications_context',
+                'haxball_site.context_processors.youtube_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },
@@ -415,6 +416,7 @@ MESSAGE_TAGS = {
 
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 YOUTUBE_CHANNEL_ID = config('YOUTUBE_CHANNEL_ID', default='UCQV_rveyeAE7e2M8C-osaGQ')
+YOUTUBE_FEATURED_VIDEO_IDS = config('YOUTUBE_FEATURED_VIDEO_IDS', cast=str.split, default='')
 
 LOGS_DIR = config('LOGS_DIR', default=os.path.join(BASE_DIR, '.logs'))
 if not os.path.exists(LOGS_DIR):

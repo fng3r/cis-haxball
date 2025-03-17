@@ -21,7 +21,9 @@
             <div class="tw:w-1/2 tw:order-2 tw:xl:w-1/6 tw:xl:order-1 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
                 {% include 'core/include/sidebar_for_media.html' %}
 
-                {% show_latest_livestreams %}
+                {% include 'core/include/sidebar_for_lives.html' %}
+
+                {% include 'core/include/sidebar_for_videos.html' %}
 
                 {% polls_list 2 user %}
 

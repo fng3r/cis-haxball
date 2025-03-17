@@ -3373,6 +3373,9 @@
   .tw\:gap-4 {
     gap: calc(var(--tw-spacing) * 4);
   }
+  .tw\:gap-5 {
+    gap: calc(var(--tw-spacing) * 5);
+  }
   .tw\:gap-8 {
     gap: calc(var(--tw-spacing) * 8);
   }
