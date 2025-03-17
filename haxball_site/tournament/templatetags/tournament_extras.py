@@ -831,10 +831,8 @@ def player_transfers_by_season(player):
         .select_related('from_team', 'to_team', 'season_join', 'trans_player__name__user_profile')
         .order_by('-date_join')
     )
-    transfers = {season: list(transfers) for season, transfers in groupby(transfers, lambda x: x.season_join)}
-    print(transfers)
+    return {season: list(transfers) for season, transfers in groupby(transfers, lambda x: x.season_join)}
     
-    return transfers
 
 
 def sort_teams(league: League):

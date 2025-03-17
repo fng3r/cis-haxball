@@ -134,6 +134,7 @@ dependencies = [
     { name = "django-markdownx" },
     { name = "django-mathfilters" },
     { name = "django-model-utils" },
+    { name = "django-notifications-hq" },
     { name = "django-online-users" },
     { name = "django-polymorphic" },
     { name = "django-smart-selects" },
@@ -211,6 +212,7 @@ requires-dist = [
     { name = "django-markdownx", specifier = "==3.0.1" },
     { name = "django-mathfilters", specifier = "==1.0.0" },
     { name = "django-model-utils", specifier = "==4.5.1" },
+    { name = "django-notifications-hq", specifier = ">=1.8.3" },
     { name = "django-online-users", specifier = "==0.3" },
     { name = "django-polymorphic", specifier = "==3.1.0" },
     { name = "django-smart-selects", specifier = "==1.7.2" },
@@ -462,6 +464,19 @@ wheels = [
 ]
 
 [[package]]
+name = "django-notifications-hq"
+version = "1.8.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "django-model-utils" },
+    { name = "jsonfield" },
+    { name = "pytz" },
+    { name = "swapper" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/36/18/1b42038963d8b0aeeb380a24ff86a650067833cf6d2d87b678be2d27c609/django-notifications-hq-1.8.3.tar.gz", hash = "sha256:0f4b216bb382b7c7c4eef273eb211e59c1c6a0ea38cba6077415ac031d330725", size = 32238 }
+
+[[package]]
 name = "django-online-users"
 version = "0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -705,6 +720,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/39/67/50d1653038dafe06ca2cc55c4598c5f8318d519c12a7a288d7826280ee22/jedi-0.17.2.tar.gz", hash = "sha256:86ed7d9b750603e4ba582ea8edc678657fb4007894a12bcf6f4bb97892f31d20", size = 1139617 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c3/d4/36136b18daae06ad798966735f6c3fb96869c1be9f8245d2a8f556e40c36/jedi-0.17.2-py2.py3-none-any.whl", hash = "sha256:98cc583fa0f2f8304968199b01b6b4b94f469a1f4a74c1560506ca2a211378b5", size = 1424244 },
+]
+
+[[package]]
+name = "jsonfield"
+version = "3.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/10/3b/4542fd9465908380ba4321329d3cdfeb959769ec48d878dead978286b48d/jsonfield-3.1.0.tar.gz", hash = "sha256:7e4e84597de21eeaeeaaa7cc5da08c61c48a9b64d0c446b2d71255d01812887a", size = 14870 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7c/97/3a4805532a9c1982368fd9f37b58133419e83704744b733ccab9e9827176/jsonfield-3.1.0-py3-none-any.whl", hash = "sha256:df857811587f252b97bafba42e02805e70a398a7a47870bc6358a0308dd689ed", size = 7974 },
 ]
 
 [[package]]
@@ -1175,6 +1202,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/67/4b/253b6902c1526885af6d361ca8c6b1400292e649f0e9c95ee0d2e8ec8681/sqlparse-0.3.1.tar.gz", hash = "sha256:e162203737712307dfe78860cc56c8da8a852ab2ee33750e33aeadf38d12c548", size = 67572 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/85/ee/6e821932f413a5c4b76be9c5936e313e4fc626b33f16e027866e1d60f588/sqlparse-0.3.1-py2.py3-none-any.whl", hash = "sha256:022fb9c87b524d1f7862b3037e541f68597a730a8843245c349fc93e1643dc4e", size = 40759 },
+]
+
+[[package]]
+name = "swapper"
+version = "1.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/3b/98ea1cfc04dc9805d58c5a96dd006f5d88a5a32b7b05e1f5a1c00363bb9a/swapper-1.4.0.tar.gz", hash = "sha256:9e083af114ee0593241a7b877e3e0e7d3a580454f5d59016c667a5563306f8fe", size = 12668 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e9/53/c59363308ef97507a680372471e25e1ebab2e706a45a7c416eea6474c928/swapper-1.4.0-py2.py3-none-any.whl", hash = "sha256:57b8378aad234242542fe32dc6e8cff0ed24b63493d20b3c88ee01f894b9345e", size = 7106 },
 ]
 
 [[package]]

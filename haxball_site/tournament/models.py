@@ -601,6 +601,8 @@ class Match(models.Model):
 
     comments = GenericRelation(NewComment, related_query_name='match_comments')
     commentable = models.BooleanField('Комментируемый матч', default=True)
+    
+    tracker = FieldTracker()
 
     def cards(self):
         return (
