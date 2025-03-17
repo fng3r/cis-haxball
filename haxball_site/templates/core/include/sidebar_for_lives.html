@@ -24,8 +24,8 @@
                             {% endif %}
                         </div>
                         <div class="tw:px-2 tw:pt-1 tw:pb-2 tw:flex tw:flex-col tw:justify-center tw:items-start">
-                            <span class="tw:font-semibold tw:line-clamp-2">{{ stream.title }}</span>
-                            <span class="tw:text-base-content/70 tw:text-sm tw:text-center">{{ stream.channel_title }}</span>
+                            <span class="tw:font-semibold tw:line-clamp-2" title="{{ stream.title }}">{{ stream.title }}</span>
+                            <span class="tw:text-base-content/70 tw:text-sm tw:text-center tw:line-clamp-1">{{ stream.channel_title }}</span>
                             {% if not stream.is_live %}
                                 <span class="tw:text-base-content/70 tw:text-sm tw:text-center tw:self-end">
                                     {{ stream.actual_start_time|date }}
