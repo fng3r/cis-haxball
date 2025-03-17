@@ -9,6 +9,7 @@ from django.utils import timezone
 from online_users.models import OnlineUserActivity
 from tournament.models import League, Player, PlayerTransfer, Team
 
+from core.services.youtube import YoutubeService
 from haxball_site import settings
 
 from ..models import NewComment, Post, Subscription
@@ -161,6 +162,18 @@ def show_top_comments(count=5):
             {'title': 'Год', 'comments': top_comments_by_year},
         ],
     }
+    
+    
+@register.inclusion_tag('core/include/sidebar_for_lives.html')
+def show_latest_livestreams():
+    try:
+        yt = YoutubeService()
+        livestreams = yt.search_channel_livestreams()
+        return {
+            'livestreams': (livestreams['active'] + livestreams['completed'])[:2]
+        }
+    except:
+        return { 'livestreams': [] }
 
 
 # Фильтр, возращающий свежий ли пост или нет в зависимости от оффсета

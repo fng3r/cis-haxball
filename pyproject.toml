@@ -69,6 +69,8 @@ dependencies = [
     "urllib3==2.2.1",
     "wcwidth==0.2.5",
     "webencodings==0.5.1",
+    "google-api-python-client>=2.164.0",
+    "isodate>=0.7.2",
 ]
 
 [tool.uv]
