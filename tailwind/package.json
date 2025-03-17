@@ -1,7 +1,9 @@
 {
   "scripts": {
     "dev": "npx @tailwindcss/cli -i ./input.css -o ../haxball_site/static/tailwind/css/output.css --watch",
-    "build": "npx @tailwindcss/cli -i ./input.css -o ../haxball_site/static/tailwind/css/output.css --optimize"
+    "build": "npx @tailwindcss/cli -i ./input.css -o ../haxball_site/static/tailwind/css/output.css --optimize",
+    "vite-dev": "vite",
+    "vite-build": "vite build"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.0.9",
@@ -9,6 +11,8 @@
     "tailwindcss": "^4.0.9"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.16"
+    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/vite": "^4.0.14",
+    "vite": "^6.2.2"
   }
 }

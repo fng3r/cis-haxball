@@ -1,5 +1,6 @@
 {% load static %}
 {% load user_tags %}
+{% load django_vite %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -23,8 +24,11 @@
 
         <meta charset="UTF-8">
         <title>{% block title %}{% endblock %}</title>
+
+        {% vite_hmr_client %}
+        {% vite_asset 'input.css' %}
+
         <link rel="stylesheet" type="text/css" href="{% static "bootstrap/css/base.css" %}">
-        <link rel="stylesheet" type="text/css" href="{% static "tailwind/css/output.css" %}">
         <link rel="stylesheet" href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
         <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css'>
         <link rel="shortcut icon" href="{% static "img/logo_try.png" %}" type="image/x-icon">
