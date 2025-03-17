@@ -27,7 +27,7 @@ class YoutubeService:
     def __init__(self):
         self.youtube = build('youtube', 'v3', developerKey=settings.YOUTUBE_API_KEY)
 
-    @cache_with_timeout(300)  # Cache for 5 minutes
+    @cache_with_timeout(180)  # Cache for 3 minutes
     def search_channel_livestreams(self):
         # First get the uploads playlist ID for the channel
         channel_response = self.youtube.channels().list(
@@ -102,7 +102,6 @@ class YoutubeService:
         duration = isodate.parse_duration(iso_duration)
         seconds = duration.total_seconds()
     
-        # Convert to hours, minutes, seconds
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         
@@ -110,5 +109,8 @@ class YoutubeService:
             'hours': int(hours),
             'minutes': int(minutes),
             'seconds': int(seconds),
-            'formatted': f'{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}' if hours else f'{int(minutes):02d}:{int(seconds):02d}'
+            'formatted': (
+                f'{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}' if hours
+                else f'{int(minutes):02d}:{int(seconds):02d}'
+            )
         }

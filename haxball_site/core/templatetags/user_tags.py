@@ -165,7 +165,7 @@ def show_top_comments(count=5):
     
     
 @register.inclusion_tag('core/include/sidebar_for_lives.html')
-def show_latest_lives():
+def show_latest_livestreams():
     try:
         yt = YoutubeService()
         livestreams = yt.search_channel_livestreams()
