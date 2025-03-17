@@ -68,7 +68,7 @@
             {% include 'tournament/hall_of_fame/partials/players_top.html' %}
         {% endwith %}
 
-        {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' players=players_tops.ogs stat='ogs' %}
+        {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' players=players_tops.own_goals stat='own_goals' %}
             {% include 'tournament/hall_of_fame/partials/players_top.html' %}
         {% endwith %}
     </div>
