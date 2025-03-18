@@ -107,7 +107,7 @@ def forum_last_activity(category):
 # Сайд-бар для last activity (выводит последние оставленные комментарии
 # но максимум 1 для каждого поста(если 3 коммента в одном посте были последними - выведет 1)
 @register.inclusion_tag('core/include/sidebar_for_last_activity.html')
-def show_last_activity(count=10):
+def show_last_activity(count=15):
     # Последняя активность ваще везде-везде
     latest_comments = (
         NewComment.objects.select_related('author')
