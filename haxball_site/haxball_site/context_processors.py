@@ -1,9 +1,15 @@
+import logging
+
+from core.services.youtube import YoutubeService
 from django.utils import timezone
 from notifications.models import Notification
 from online_users.models import OnlineUserActivity
 from reservation.models import ReservationEntry
 from tournament.models import Match
 
+from haxball_site import settings
+
+logger = logging.getLogger('haxball_site')
 
 def latest_matches_context(request):
     today = timezone.now().today()
@@ -50,3 +56,21 @@ def notifications_context(request):
         context['user_notifications'] = Notification.objects.filter(recipient=request.user, unread=True).order_by('-timestamp')[:10]
         context['unread_count'] = Notification.objects.filter(recipient=request.user, unread=True).count()
     return context
+
+
+def youtube_context(request):
+    """
+    Add featured YouTube videos to the context for all templates.
+    """
+    try:
+        youtube_service = YoutubeService()
+        livestreams = youtube_service.search_channel_livestreams(settings.YOUTUBE_CHANNEL_ID)
+        videos = youtube_service.get_videos_by_ids(settings.YOUTUBE_FEATURED_VIDEO_IDS)
+        
+        return {
+            'livestreams': (livestreams['active'] + livestreams['completed'])[:2],
+            'featured_videos': videos[:2]
+        }
+    except Exception as e:
+        logger.error(f'Error fetching YouTube videos and livestreams for sidebars: {str(e)}')
+        return {'featured_videos': [], 'livestreams': []}

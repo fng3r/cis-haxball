@@ -1,26 +1,32 @@
 {% load static %}
 {% load cache %}
+{% load humanize %}
+{% load i18n %}
 
-{% cache 60 last_activity_cache %}
-
-    <div class="tw:card tw:rounded-lg tw:rounded-b-none tw:border tw:border-gray-100">
-        <div class="tw:card-title tw:justify-center tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
-            <span class="tw:mb-0 tw:text-center">
-                <img src="{% static "img/ico/chat.png" %}" width="30" class="tw:align-top!" alt="New Comments">
-                Комментарии
-            </span>
-        </div>
-
-        <div class="tw:w-full">
-            {% for comment in last_comments %}
-                <a href="{{ comment.get_absolute_url }}" title="от {{ comment.author }}"
-                   class="tw:btn-link-block tw:p-2 tw:bg-card-button tw:text-card-button">
-                    <div class="tw:w-full tw:flex tw:justify-between tw:overflow-hidden">
-                        <span class="tw:text-left tw:truncate tw:mr-2">{{ comment.content_object }}</span>
-                        <img src="{% static "img/ico/reply.png" %}" height="30" width="30" alt="Reply">
-                    </div>
-                </a>
-            {% endfor %}
-        </div>
+{% comment %} {% cache 60 last_activity_cache %} {% endcomment %}
+<div class="tw:card tw:rounded-lg tw:rounded-b-none tw:border tw:border-gray-100">
+    <div class="tw:card-title tw:justify-center tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
+        <span class="tw:mb-0 tw:text-center">
+            <img src="{% static "img/ico/chat.png" %}" width="30" class="tw:align-top!" alt="New Comments">
+            Комментарии
+        </span>
     </div>
-{% endcache %}
+
+    <div class="tw:w-full">
+        {% for comment in last_comments %}
+            <a href="{{ comment.get_absolute_url }}"
+               class="tw:btn-link-block tw:h-auto! tw:justify-between tw:items-center tw:p-2 tw:py-1 tw:bg-card-button tw:text-card-button">
+                <div class="tw:flex tw:flex-col tw:w-full tw:overflow-hidden">
+                    <span class="tw:text-base tw:text-left tw:truncate tw:mr-2">{{ comment.content_object }}</span>
+                    <span class="tw:text-left tw:truncate tw:mr-2 tw:text-sm tw:opacity-80">
+                        {% blocktranslate with date=comment.created|naturalday:"j b."|capfirst time=comment.created|time author=comment.author %}
+                            {{ date }} в {{ time }} от {{ author }}
+                        {% endblocktranslate %}
+                    </span>
+                </div>
+                <img src="{% static "img/ico/reply.png" %}" height="30" width="30" alt="Reply">
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% comment %} {% endcache %} {% endcomment %}
