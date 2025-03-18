@@ -13,7 +13,7 @@ export default defineConfig({
     manifest: 'manifest.json',
     rollupOptions: {
       input: {
-        tailwind: resolve('./input.css'),
+        tailwind: resolve('./main.js'),
       },
     },
   },

@@ -1,9 +1,12 @@
 {% load static %}
 {% load user_tags %}
 {% load django_vite %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
     <head>
         <!-- Yandex.Metrika counter -->
         <script type="text/javascript">
@@ -26,7 +29,7 @@
         <title>{% block title %}{% endblock %}</title>
 
         {% vite_hmr_client %}
-        {% vite_asset 'input.css' %}
+        {% vite_asset 'main.js' %}
 
         <link rel="stylesheet" type="text/css" href="{% static "bootstrap/css/base.css" %}">
         <link rel="stylesheet" href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
