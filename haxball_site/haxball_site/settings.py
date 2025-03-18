@@ -199,21 +199,21 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = config('APP_STATIC_URL', default='/static/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
+MEDIA_URL = '/media/'
 if DEBUG:
-    STATIC_DIR = os.path.join(BASE_DIR, 'static')
-    STATICFILES_DIRS = [STATIC_DIR]
-    MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 else:
-    MEDIA_URL = '/media/'
     MEDIA_ROOT = '/home/site/media'
     
 DJANGO_VITE = {
     'default': {
         'dev_mode': DEBUG,
+        # rm this setting when static files will be served from STATIC_ROOT directory in production
+        'manifest_path': os.path.join(BASE_DIR, 'static', 'manifest.json'),
     }
 }
 
