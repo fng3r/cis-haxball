@@ -52,8 +52,7 @@
                                                         <span class="tw:line-clamp-2" title="{{ profile.name.username }}">{{ profile.name.username }}</span>
                                                         {% for icon in profile.user_icon.all %}
                                                             <img src="{{ icon.image.url }}" width="25px" height="25px"
-                                                                 title="{{ icon.description }}"
-                                                                 class="tw:mb-1">
+                                                                 title="{{ icon.description }}">
                                                         {% endfor %}
                                                         {% if previous_nicknames.count > 0 %}
                                                             <span @click="showNicknamesHistory = !showNicknamesHistory"
@@ -76,7 +75,6 @@
                                                             {% endfor %}
                                                         </div>
                                                     </div>
-
                                                 {% endif %}
                                             </div>
 

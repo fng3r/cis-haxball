@@ -548,12 +548,13 @@ class MatchDetail(DetailView):
         
         return context
     
-    def get_latest_matches(self, match, team):
+    def get_latest_matches(self, match: Match, team: Team):
         match_date_condition = ~Q(pk__in=[])
         if match.is_played:
+            match_date = match.match_date or match.numb_tour.date_to
             match_date_condition = (
-                Q(match_date__lt=match.match_date) |
-                Q(match_date=match.match_date, stage__order__lte=match.stage.order, numb_tour__lt=match.numb_tour)
+                Q(match_date__lt=match_date) |
+                Q(match_date=match_date, stage__order__lte=match.stage.order, numb_tour__lt=match.numb_tour)
             )
             
         return reversed(

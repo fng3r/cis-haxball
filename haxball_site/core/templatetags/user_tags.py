@@ -107,7 +107,7 @@ def forum_last_activity(category):
 # Сайд-бар для last activity (выводит последние оставленные комментарии
 # но максимум 1 для каждого поста(если 3 коммента в одном посте были последними - выведет 1)
 @register.inclusion_tag('core/include/sidebar_for_last_activity.html')
-def show_last_activity(count=10):
+def show_last_activity(count=15):
     # Последняя активность ваще везде-везде
     latest_comments = (
         NewComment.objects.select_related('author')
@@ -162,18 +162,6 @@ def show_top_comments(count=5):
             {'title': 'Год', 'comments': top_comments_by_year},
         ],
     }
-    
-    
-@register.inclusion_tag('core/include/sidebar_for_lives.html')
-def show_latest_livestreams():
-    try:
-        yt = YoutubeService()
-        livestreams = yt.search_channel_livestreams()
-        return {
-            'livestreams': (livestreams['active'] + livestreams['completed'])[:2]
-        }
-    except:
-        return { 'livestreams': [] }
 
 
 # Фильтр, возращающий свежий ли пост или нет в зависимости от оффсета
