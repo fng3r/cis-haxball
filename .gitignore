@@ -121,3 +121,5 @@ haxball_site/.site_cache
 
 # tailwind
 tailwind/node_modules
+haxball_site/static/manifest.json
+haxball_site/static/tailwind

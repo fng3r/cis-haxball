@@ -30,4 +30,4 @@
 
 ### Запуск
 - Поднимаем development server - `python manage.py runserver`
-- Параллельно запускаем утилиту Tailwind, которая будет пересобирать css при изменениях в файлах - `cd tailwind && npn run dev`
+- Параллельно запускаем [vite](https://vite.dev/) dev server для сборки Tailwind'а и автоматического обновления при изменении шаблонов - `cd tailwind && npn run dev`

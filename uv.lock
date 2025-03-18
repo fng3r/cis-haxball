@@ -140,6 +140,7 @@ dependencies = [
     { name = "django-smart-selects" },
     { name = "django-summernote" },
     { name = "django-template-partials" },
+    { name = "django-vite" },
     { name = "django-widget-tweaks" },
     { name = "google-api-python-client" },
     { name = "gunicorn" },
@@ -212,19 +213,20 @@ requires-dist = [
     { name = "django-markdownx", specifier = "==3.0.1" },
     { name = "django-mathfilters", specifier = "==1.0.0" },
     { name = "django-model-utils", specifier = "==4.5.1" },
-    { name = "django-notifications-hq", specifier = ">=1.8.3" },
+    { name = "django-notifications-hq", specifier = "==1.8.3" },
     { name = "django-online-users", specifier = "==0.3" },
     { name = "django-polymorphic", specifier = "==3.1.0" },
     { name = "django-smart-selects", specifier = "==1.7.2" },
     { name = "django-summernote", specifier = "==0.8.20.0" },
     { name = "django-template-partials", specifier = "==24.4" },
+    { name = "django-vite", specifier = ">=3.1.0" },
     { name = "django-widget-tweaks", specifier = "==1.5.0" },
-    { name = "google-api-python-client", specifier = ">=2.164.0" },
+    { name = "google-api-python-client", specifier = "==2.164.0" },
     { name = "gunicorn", specifier = "==20.0.4" },
     { name = "idna", specifier = "==2.10" },
     { name = "ipython", specifier = "==7.17.0" },
     { name = "ipython-genutils", specifier = "==0.2.0" },
-    { name = "isodate", specifier = ">=0.7.2" },
+    { name = "isodate", specifier = "==0.7.2" },
     { name = "jedi", specifier = "==0.17.2" },
     { name = "markdown", specifier = "==3.2.2" },
     { name = "numpy", specifier = "==2.0.2" },
@@ -531,6 +533,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1c/ff/2a7ddae12ca8e5fea1a41af05924c04f1bb4aec7157b04a88b829dd93d4a/django_template_partials-24.4.tar.gz", hash = "sha256:25b67301470fc274ecc419e5e5fd4686a5020b1c038fd241a70eb087809034b6", size = 14538 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/31/72/d8eea70683b25230e0d2647b5cf6f2db4a7e7d35cb6170506d9618196374/django_template_partials-24.4-py2.py3-none-any.whl", hash = "sha256:ee59d3839385d7f648907c3fa8d5923fcd66cd8090f141fe2a1c338b917984e2", size = 8439 },
+]
+
+[[package]]
+name = "django-vite"
+version = "3.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/fe/4be07f538bbf9bf8bf73b045552ec2a1b4fba67e3176abb30490b643368e/django_vite-3.1.0.tar.gz", hash = "sha256:8b4ffe4a9fa81ff568bfb195e74dde8694aaf13fd4b656ae60bf59cce08b85e8", size = 25434 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/30/59/7df4b1077fa41b43b4e542696d75138dbb86a65f44248c607b3e0f1014ce/django_vite-3.1.0-py3-none-any.whl", hash = "sha256:4e46572bd6b1ce70784be129205dc2ffcbc7a3c19fea50bebfb72b327bbde5fc", size = 23579 },
 ]
 
 [[package]]
