@@ -20,16 +20,12 @@
                     </div>
                     <div class="tw:px-2 tw:pt-1 tw:pb-2 tw:flex tw:flex-col tw:justify-center tw:items-start">
                         <span class="tw:font-semibold tw:line-clamp-2" title="{{ video.title }}">{{ video.title }}</span>
-                        <span class="tw:text-base-content/70 tw:text-sm tw:text-center tw:line-clamp-1">{{ video.channel_title }}</span>
-                        <span class="tw:text-base-content/70 tw:text-sm tw:text-center tw:self-end tw:select-none">
+                        <span class="tw:text-base-content/70 tw:text-sm tw:line-clamp-1" title="{{ video.channel_title }}">{{ video.channel_title }}</span>
+                        <span class="tw:text-base-content/70 tw:text-sm tw:self-end tw:select-none">
                             {{ video.published_at|date }}
                         </span>
                     </div>
                 </a>
-
-                {% if not forloop.last %}
-                    <div class="tw:divider tw:my-0"></div>
-                {% endif %}
             {% endfor %}
         </div>
     </div>

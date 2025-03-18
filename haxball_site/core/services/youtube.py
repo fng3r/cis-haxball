@@ -1,6 +1,6 @@
+import logging
 from datetime import datetime
 from functools import wraps
-import logging
 from typing import Dict, List, Optional, Union
 
 import isodate
@@ -17,12 +17,12 @@ logger = logging.getLogger('haxball_site')
 def cache_with_timeout(timeout_seconds):
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}"
+        def wrapper(*args):
+            cache_key = f"{func.__name__}__{'_'.join([str(arg) for arg in args])}"
             result = cache.get(cache_key)
             
             if result is None:
-                result = func(*args, **kwargs)
+                result = func(*args)
                 cache.set(cache_key, result, timeout_seconds)
             
             return result
