@@ -9,13 +9,11 @@
             {% for user in users_online %}
                 <a role="button" class="tw:btn-link-block tw:bg-card-button tw:text-card-button tw:transform-gpu tw:will-change-transform"
                    href="{{ user.user_profile.get_absolute_url }}">
-                    <span class="tw:status tw:status-success tw:status-lg" aria-label="status"></span>
-                    {{ user }}
-                    <span>
-                        {% for icon in user.user_profile.user_icon.all %}
-                            <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                        {% endfor %}
-                    </span>
+                    <span class="tw:status tw:status-success tw:status-lg" aria-label="status"></span>{{ user }}
+
+                    {% for icon in user.user_profile.user_icon.all %}
+                        <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                    {% endfor %}
                 </a>
             {% endfor %}
         </div>
