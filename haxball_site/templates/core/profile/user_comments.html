@@ -58,6 +58,10 @@
                     <span class="tw:text-sm tw:ml-2 tw:font-normal tw:truncate">
                         {% if comment.content_type.model == 'post' %}
                             под постом "{{ comment.content_object.title }}"
+                        {% elif comment.content_type.model == 'match' %}
+                            под матчем {{ comment.content_object.team_home.title }} - {{ comment.content_object.team_guest.title }}
+                        {% elif comment.content_type.model == 'league' %}
+                            в турнире "{{ comment.content_object }}"
                         {% elif comment.content_type.model == 'profile' %}
                             в профиле {{ comment.content_object.name.username }}
                         {% endif %}
