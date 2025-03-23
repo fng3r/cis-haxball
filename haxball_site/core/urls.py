@@ -59,4 +59,5 @@ urlpatterns = [
         login_required(views.VotesView.as_view(model=NewComment, vote_type=LikeDislike.DISLIKE)),
         name='comment_dislike',
     ),
+    path('user/<int:user_id>/comments/', views.UserCommentsView.as_view(), name='user_comments'),
 ]
