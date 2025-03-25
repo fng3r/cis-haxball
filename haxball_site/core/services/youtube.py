@@ -10,24 +10,26 @@ from googleapiclient.errors import HttpError
 
 from haxball_site import settings
 
-# Use the configured logger for the core app
 logger = logging.getLogger('haxball_site')
-
 
 def cache_with_timeout(timeout_seconds):
     def decorator(func):
         @wraps(func)
         def wrapper(*args):
-            cache_key = f"{func.__name__}__{'_'.join([str(arg) for arg in args])}"
+            cache_key = f"{func.__name__}__{'_'.join([str(arg) for arg in args[1:]])}"
             result = cache.get(cache_key)
             
-            if result is None:
+            if result:
+                logger.debug(f'Cache hit for key: {cache_key}')
+            else:
+                logger.debug(f'Cache miss for key: {cache_key}')
                 result = func(*args)
                 cache.set(cache_key, result, timeout_seconds)
             
             return result
         return wrapper
     return decorator
+
 
 class YoutubeService:
     def __init__(self):

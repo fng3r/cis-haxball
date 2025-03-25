@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Max, Prefetch
+from django.db.models import Max, Prefetch, Count
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -483,3 +483,36 @@ def search_result(request):
         'core/search_result/search_result.html',
         {'profiles': profile_list, 'teams': team_list, 'posts': post_list},
     )
+
+
+def get_paginated_comments(comments_obj, page=1):
+    paginator = Paginator(comments_obj, 20)
+    try:
+        comments = paginator.page(page)
+    except:
+        comments = paginator.page(1)
+    return comments
+
+
+class UserCommentsView(View):
+    def get(self, request, user_id):
+        page = request.GET.get('page')
+        user_comments = (
+            NewComment.objects
+            .select_related('author__user_profile', 'content_type')
+            .prefetch_related(
+                'author__user_profile__user_icon',
+                'votes',
+            )
+            .filter(author__id=user_id)
+            .order_by('-created')
+        )
+        comments = get_paginated_comments(user_comments, page)
+        
+        context = {
+            'comments': comments,
+            'page': comments,
+            'user_id': user_id,
+        }
+        
+        return render(request, 'core/profile/user_comments.html', context)

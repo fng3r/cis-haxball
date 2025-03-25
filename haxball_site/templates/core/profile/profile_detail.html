@@ -6,6 +6,7 @@
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/profile/profile.css" %}">
     <link rel="stylesheet" type="text/css" href="{% static "core/core.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "core/comment/comment.css" %}">
 {% endblock %}
 
 {% block scripts %}
@@ -99,9 +100,13 @@
 
                                             <div class="tw:mb-3">
                                                 <div class="tw:flex">
-                                                    <div class="tw:w-1/3 tw:flex tw:flex-col tw:items-center tw:gap-1">
+                                                    <div class="tw:w-1/3 tw:flex tw:flex-col tw:items-center tw:gap-1 tw:cursor-pointer tw:hover:scale-120 tw:transition-transform tw:duration-100"
+                                                         onclick="user_comments_modal_{{ profile.id }}.showModal()"
+                                                    >
                                                         <span class="tw:font-semibold"><i class="fa fa-comment-o tw:text-2xl!" aria-hidden="true"></i></span>
-                                                        <h6 class="tw:text-base-content/80 tw:text-normal">{{ profile.name.comments_by_user.count }}</h6>
+                                                        <h6 class="tw:text-base-content/80 tw:text-normal">
+                                                            {{ profile.name.comments_by_user.count }}
+                                                        </h6>
                                                     </div>
                                                     <div class="tw:w-1/3 tw:flex tw:flex-col tw:items-center tw:gap-1">
                                                         <span class="tw:font-semibold"><i class="fa fa-thumbs-o-up tw:text-2xl!" aria-hidden="true"></i></span>
@@ -272,6 +277,24 @@
                 </div>
             </div>
         </div>
+
+        <dialog id="user_comments_modal_{{ profile.id }}" class="tw:modal">
+            <div class="tw:modal-box tw:w-11/12 tw:max-w-5xl tw:max-h-[95%] tw:overflow-y-auto tw:py-4">
+                <h3 class="tw:font-bold tw:text-lg">Комментарии пользователя {{ profile.name.username }}</h3>
+                <div class="tw:py-4" id="user-comments-container"
+                     hx-get="{% url 'core:user_comments' profile.name.id %}"
+                     hx-trigger="load"
+                     hx-target="this"
+                     hx-swap="innerHTML">
+                    <div class="tw:flex tw:justify-center">
+                        <span class="tw:loading tw:loading-spinner tw:loading-lg"></span>
+                    </div>
+                </div>
+            </div>
+            <form method="dialog" class="tw:modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
     {% endpartialdef profile-container %}
 {% endblock %}
 
