@@ -59,4 +59,5 @@ urlpatterns = [
         login_required(views.VotesView.as_view(model=NewComment, vote_type=LikeDislike.DISLIKE)),
         name='comment_dislike',
     ),
+    path('toggle-invisibility/', views.ToggleInvisibilityMode.as_view(), name='toggle_invisibility'),
 ]

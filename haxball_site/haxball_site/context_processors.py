@@ -42,7 +42,11 @@ def online_users_context(request):
     user_activity_objects = OnlineUserActivity.get_user_activities(
         time_delta=timezone.timedelta(minutes=5)
     ).select_related('user__user_profile')
-    users_online = [user_activity.user for user_activity in user_activity_objects]
+    
+    users_online = [
+        user_activity.user for user_activity in user_activity_objects
+        if not (user_activity.user.user_profile.invisibility_enabled)
+    ]
 
     return {'users_online': users_online, 'users_online_count': len(users_online)}
 

@@ -64,8 +64,11 @@ def exceeds_edit_limit(comment: NewComment):
 
 
 @register.inclusion_tag('core/include/profile/last_actuvity.html')
-def user_last_activity(user):
+def user_last_activity(user: User):
     try:
+        if user.user_profile.invisibility_enabled:
+            return {'last_seen': user.user_profile.invisibility_activated_at, 'is_online': False}
+
         user_activity = OnlineUserActivity.objects.get(user=user)
         is_online = timezone.now() - user_activity.last_activity < timezone.timedelta(minutes=5)
     except:

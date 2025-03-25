@@ -697,8 +697,10 @@
         {% if user.is_authenticated %}
             {% include "notifications/notification_dropdown.html" %}
 
-            <div class="tw:dropdown tw:dropdown-end">
-                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar">
+            <div class="tw:dropdown tw:dropdown-end"
+                 x-data="{ is_invisibility_enabled: {{ user.user_profile.invisibility_enabled|yesno:'true,false' }} }"
+            >
+                <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar" :class="{ 'tw:avatar-offline': is_invisibility_enabled }">
                     <div class="tw:w-[45px] tw:rounded-full">
                         <img src="{{ user.user_profile.avatar.url }}" />
                     </div>
@@ -713,6 +715,21 @@
                             Профиль
                         </a>
                     </li>
+                    {% if user.is_superuser %}
+                        <div class="tw:ml-3 tw:flex tw:items-center tw:gap-2">
+                            <span class="tw:text-base-content tw:py-1">Невидимка</span>
+                            <label class="tw:toggle tw:toggle-xs">
+                                <input type="checkbox" name="is_enabled"
+                                       x-model="is_invisibility_enabled"
+                                       hx-post="{% url 'core:toggle_invisibility' %}"
+                                       hx-trigger="change"
+                                       hx-swap="none"
+                                       :hx-vals="JSON.stringify({is_enabled: is_invisibility_enabled})" />
+                                <svg aria-label="disabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"></path></g></svg>
+                            </label>
+                        </div>
+                    {% endif %}
                     <li>
                         <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">Выход</span>
                     </li>
