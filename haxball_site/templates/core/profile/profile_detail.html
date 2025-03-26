@@ -128,8 +128,8 @@
                                             </div>
 
                                             <div class="tw:mb-3">
-                                                Просмотров <i class="fa fa-eye tw:text-warning" aria-hidden="true"></i>
-                                                {{ profile.views }}
+                                                <i class="fa fa-eye tw:text-warning" aria-hidden="true"></i> Просмотры: {{ profile.views }}
+
                                             </div>
 
                                             <div>
@@ -230,7 +230,7 @@
 
                                                 {% if profile.name.username == user.username %}
                                                     <div class="tw:-ml-6">
-                                                        <span class="tw:text-warning tw:cursor-pointer"
+                                                        <span class="tw:text-warning tw:hover:text-warning/85 tw:cursor-pointer"
                                                               hx-get="{% url 'core:edit_profile' profile.slug profile.id %}"
                                                               hx-target="#profile-container"
                                                               hx-swap="outerHTML"
