@@ -50,47 +50,55 @@
                                             <div x-data="{showNicknamesHistory: false}">
                                                 <div class="tw:mt-2 tw:mr-1">
                                                     <h3 class="tw:flex tw:justify-center tw:items-center tw:font-semibold tw:mb-1.5! tw:gap-2">
-                                                        <span class="tw:line-clamp-2" title="{{ profile.name.username }}">{{ profile.name.username }}</span>
-                                                        {% for icon in profile.user_icon.all %}
-                                                            <img src="{{ icon.image.url }}" width="25px" height="25px"
-                                                                 title="{{ icon.description }}">
-                                                        {% endfor %}
+                                                        <span class="tw:min-w-0 tw:max-w-full tw:overflow-hidden">
+                                                            {% for icon in profile.user_icon.all %}
+                                                                <img src="{{ icon.image.url }}"
+                                                                     class="tw:size-6" title="{{ icon.description }}">
+                                                            {% endfor %}
+                                                            <span class="tw:break-words" title="{{ profile.name.username }}">{{ profile.name.username|truncatechars:50 }}</span>
+                                                            {% if profile.tag %}
+                                                                <span class="tw:text-base-content/85">[{{ profile.tag }}]</span>
+                                                            {% endif %}
+                                                        </span>
                                                         {% if previous_nicknames.count > 0 %}
-                                                            <span @click="showNicknamesHistory = !showNicknamesHistory"
-                                                                  :style="showNicknamesHistory ? 'transform: rotate(180deg);' : ''"
-                                                                  class="tw:mt-2 dropdown-toggle profile-triangle tw:cursor-pointer">
-                                                            </span>
+                                                            <div class="tw:relative">
+                                                                <span @click="showNicknamesHistory = !showNicknamesHistory"
+                                                                      :style="showNicknamesHistory ? 'transform: rotate(180deg);' : ''"
+                                                                      class="tw:mt-2 dropdown-toggle profile-triangle tw:cursor-pointer">
+                                                                </span>
+
+                                                                <div x-show="showNicknamesHistory" x-transition.duration.200ms x-cloak
+                                                                     @click.outside="showNicknamesHistory = false"
+                                                                     class="tw:relative tw:top-1">
+                                                                    <div class="nicknames-history tw:rounded tw:-translate-x-1/2">
+                                                                        {% for nickname in previous_nicknames %}
+                                                                            <div class="tw:text-white tw:text-lg tw:font-normal tw:px-2 tw:py-1 tw:border-[#7b7b7b] {% if not forloop.last %}tw:border-b{% endif %}">
+                                                                                {{nickname.nickname}}
+                                                                            </div>
+                                                                        {% endfor %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         {% endif %}
                                                     </h3>
                                                 </div>
 
-                                                {% if previous_nicknames.count > 0 %}
-                                                    <div x-show="showNicknamesHistory" x-transition.duration.200ms x-cloak
-                                                         @click.outside="showNicknamesHistory = false"
-                                                         class="tw:relative tw:top-0 tw:left-0">
-                                                        <div class="nicknames-history">
-                                                            {% for nickname in previous_nicknames %}
-                                                                <div class="tw:text-white tw:py-1 tw:border-[#7b7b7b] {% if not forloop.last %}tw:border-b{% endif %}">
-                                                                    {{nickname.nickname}}
-                                                                </div>
-                                                            {% endfor %}
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
+
                                             </div>
 
-                                            {% if profile.name.user_player.team %}
-                                                <div class="tw:mb-1">
+                                            <div class="tw:mb-1">
+                                                {% if profile.name.user_player.team %}
                                                     <a href="{{ profile.name.user_player.team.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">
                                                         <img src="{{ profile.name.user_player.team.logo.url }}"
                                                              alt="{{ profile.name.user_player.team.title }}" class="tw:mb-1"
                                                              style="width: 28px; height: 28px;">
                                                         <span class="tw:font-bold tw:text-lg">{{ profile.name.user_player.team.title }}</span>
                                                     </a>
-                                                </div>
-                                            {% else %}
-                                                <div class="tw:mb-1">Без команды</div>
-                                            {% endif %}
+                                                {% else %}
+                                                    <span class="tw:text-base">Без команды</span>
+                                                {% endif %}
+                                            </div>
+
                                             <div class="tw:mb-4">
                                                 Репутация
                                                 <span class="tw:badge tw:badge-sm tw:font-bold {% if profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">

@@ -25,8 +25,24 @@
 
                                 <h4 class="tw:font-semibold tw:text-center">{{ profile.name }}</h4>
 
+                                {# disable tag input if user has no permissions to edit it instead of not rendering it at all #}
+                                {% if user.is_superuser %}
+                                    <div class="tw:mt-2">
+                                        <fieldset class="tw:fieldset">
+                                            <legend class="tw:fieldset-legend tw:gap-0 tw:text-base">
+                                                Тег
+                                                <div class="tw:tooltip tw:tooltip-right tw:inline-block tw:ml-1"
+                                                     data-tip="Тег - это набор символов, который отображается рядом с именем пользователя в профиле и комментариях в формате username [tag]">
+                                                    <i class="fa fa-info-circle tw:text-sm!" aria-hidden="true"></i>
+                                                </div>
+                                            </legend>
+                                            <input type="text" name="tag" value="{{ profile.tag }}" maxlength="7" class="tw:input tw:input-bordered tw:w-full tw:text-base-content" placeholder="Максимум 7 символов">
+                                        </fieldset>
+                                    </div>
+                                {% endif %}
+
                                 <fieldset class="tw:fieldset">
-                                    <legend class="tw:fieldset-legend tw:text-base!">Аватар</legend>
+                                    <legend class="tw:fieldset-legend tw:text-base">Аватар</legend>
                                     <input id="avatar-file" type="file" name="avatar" accept="image/*"
                                            class="tw:file-input tw:text-base-content"
                                     />
@@ -35,7 +51,7 @@
                                 {% if profile.name|can_edit_profile_bg %}
                                     <div>
                                         <fieldset class="tw:fieldset">
-                                            <legend class="tw:fieldset-legend tw:text-base!">Фон</legend>
+                                            <legend class="tw:fieldset-legend tw:text-base">Фон</legend>
                                             <input id="bg-file" type="file" name="background" accept="image/*"
                                                    class="tw:file-input tw:text-base-content"
                                             />
