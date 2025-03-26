@@ -55,9 +55,9 @@
                                                                 <img src="{{ icon.image.url }}"
                                                                      class="tw:size-6" title="{{ icon.description }}">
                                                             {% endfor %}
-                                                            <span title="{{ profile.name.username }}">{{ profile.name.username }}</span>
+                                                            <span class="tw:break-words" title="{{ profile.name.username }}">{{ profile.name.username|truncatechars:50 }}</span>
                                                             {% if profile.tag %}
-                                                                <span class="tw:text-base-content/90">[{{ profile.tag }}]</span>
+                                                                <span class="tw:text-base-content/85">[{{ profile.tag }}]</span>
                                                             {% endif %}
                                                         </span>
                                                         {% if previous_nicknames.count > 0 %}
@@ -86,18 +86,19 @@
 
                                             </div>
 
-                                            {% if profile.name.user_player.team %}
-                                                <div class="tw:mb-1">
+                                            <div class="tw:mb-1">
+                                                {% if profile.name.user_player.team %}
                                                     <a href="{{ profile.name.user_player.team.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">
                                                         <img src="{{ profile.name.user_player.team.logo.url }}"
                                                              alt="{{ profile.name.user_player.team.title }}" class="tw:mb-1"
                                                              style="width: 28px; height: 28px;">
                                                         <span class="tw:font-bold tw:text-lg">{{ profile.name.user_player.team.title }}</span>
                                                     </a>
-                                                </div>
-                                            {% else %}
-                                                <div class="tw:mb-1">Без команды</div>
-                                            {% endif %}
+                                                {% else %}
+                                                    <span class="tw:text-base">Без команды</span>
+                                                {% endif %}
+                                            </div>
+
                                             <div class="tw:mb-4">
                                                 Репутация
                                                 <span class="tw:badge tw:badge-sm tw:font-bold {% if profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
