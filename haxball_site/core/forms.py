@@ -27,7 +27,7 @@ class EditProfileForm(forms.ModelForm):
         model = Profile
         fields = (
             'about', 'born_date', 'avatar', 'city', 'vk', 'discord', 'telegram', 'commentable',
-            'remove_bg', 'favourite_teams', 'favourite_players'
+            'remove_bg', 'favourite_teams', 'favourite_players', 'tag'
         )
 
 

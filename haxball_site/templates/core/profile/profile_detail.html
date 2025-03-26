@@ -49,12 +49,17 @@
 
                                             <div x-data="{showNicknamesHistory: false}">
                                                 <div class="tw:mt-2 tw:mr-1">
-                                                    <h3 class="tw:flex tw:justify-center tw:items-center tw:font-semibold tw:mb-1.5! tw:gap-2">
-                                                        <span class="tw:line-clamp-2" title="{{ profile.name.username }}">{{ profile.name.username }}</span>
+                                                    <h3 class="tw:flex tw:justify-center tw:items-start tw:font-semibold tw:mb-1.5! tw:gap-2">
                                                         {% for icon in profile.user_icon.all %}
                                                             <img src="{{ icon.image.url }}" width="25px" height="25px"
-                                                                 title="{{ icon.description }}">
+                                                                 class="tw:mt-2" title="{{ icon.description }}">
                                                         {% endfor %}
+                                                        <span class="tw:overflow-hidden">
+                                                            <span class="tw:line-clamp-2" title="{{ profile.name.username }}">{{ profile.name.username }}</span>
+                                                            {% if profile.tag %}
+                                                                <span class="tw:text-base-content">[{{ profile.tag }}]</span>
+                                                            {% endif %}
+                                                        </span>
                                                         {% if previous_nicknames.count > 0 %}
                                                             <span @click="showNicknamesHistory = !showNicknamesHistory"
                                                                   :style="showNicknamesHistory ? 'transform: rotate(180deg);' : ''"

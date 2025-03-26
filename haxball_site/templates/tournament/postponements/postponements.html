@@ -166,6 +166,9 @@
                                             {% endfor %}
                                             <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
                                                 {{ postponement.taken_by.username }}
+                                                {% if postponement.taken_by.user_profile.tag %}
+                                                    <span>[{{ postponement.taken_by.user_profile.tag }}]</span>
+                                                {% endif %}
                                             </a>
 
                                         </div>
@@ -225,6 +228,9 @@
                                                 {% endfor %}
                                                 <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
                                                     {{ postponement.cancelled_by.username }}
+                                                    {% if postponement.cancelled_by.user_profile.tag %}
+                                                        <span>[{{ postponement.cancelled_by.user_profile.tag }}]</span>
+                                                    {% endif %}
                                                 </a>
 
                                             </div>

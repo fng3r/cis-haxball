@@ -287,6 +287,7 @@ class Profile(models.Model):
     name = models.OneToOneField(
         User, verbose_name='Пользователь', on_delete=models.CASCADE, related_name='user_profile'
     )
+    tag = models.CharField('Тег', max_length=7, blank=True, help_text='Максимальная длина тега - 7 символов')
     slug = AutoSlugField(always_update=True, populate_from='name')
     avatar = models.ImageField('Аватар', upload_to='users_avatars/', default='users_avatars/default/default.png')
     background = models.ImageField('Фон профиля', upload_to='users_background/', blank=True, null=True)
