@@ -1,23 +1,26 @@
 import json
 from datetime import datetime
+from django.utils import timezone
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Max, Prefetch, Count
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, View
 from django.views.generic.base import View
 from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
 from tournament.models import Achievements, Team
+from django.contrib.auth.decorators import user_passes_test
+from django.utils.decorators import method_decorator
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
-from .utils import get_comments_for_object, get_paginated_comments
+from .utils import get_comments_for_object, get_paginated_comments, strtobool
 
 
 # Вьюха для списка постов
@@ -485,15 +488,6 @@ def search_result(request):
     )
 
 
-def get_paginated_comments(comments_obj, page=1):
-    paginator = Paginator(comments_obj, 20)
-    try:
-        comments = paginator.page(page)
-    except:
-        comments = paginator.page(1)
-    return comments
-
-
 class UserCommentsView(View):
     def get(self, request, user_id):
         page = request.GET.get('page')
@@ -516,3 +510,17 @@ class UserCommentsView(View):
         }
         
         return render(request, 'core/profile/user_comments.html', context)
+
+
+class ToggleInvisibilityMode(View):
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def post(self, request):
+        is_enabled = strtobool(request.POST.get('is_enabled'))
+        
+        profile = request.user.user_profile
+        profile.invisibility_enabled = is_enabled
+        if profile.invisibility_enabled:
+            profile.invisibility_activated_at = timezone.now()
+        profile.save(update_fields=['invisibility_enabled', 'invisibility_activated_at'])
+        
+        return JsonResponse({'is_invisibility_enabled': is_enabled})

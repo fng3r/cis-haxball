@@ -304,6 +304,8 @@ class Profile(models.Model):
     commentable = models.BooleanField('Комментируемый профиль', default=True)
     can_vote = models.BooleanField('Может голосовать', default=True)
     can_comment = models.BooleanField('Может комментировать', default=True)
+    invisibility_enabled = models.BooleanField('Режим невидимки', default=False)
+    invisibility_activated_at = models.DateTimeField('Время активации режима невидимки', null=True, blank=True)
 
     @receiver(post_save, sender=User)
     def create_user_profile(sender, instance, created, **kwargs):
