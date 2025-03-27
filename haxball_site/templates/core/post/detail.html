@@ -1,22 +1,22 @@
 {% extends "core.html" %}
+{% load static %}
+{% load user_tags %}
 
 {% block title %}
     {{ post.title }} — CIS-HAXBALL
 {% endblock %}
-{% load static %}
-{% load user_tags %}
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/core.css" %}">
-    <link rel="stylesheet" type="text/css" href="{% static "ckeditor/ckeditor/plugins/spoiler/spoiler.css" %}">
 
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static "ckeditor/ckeditor/plugins/spoiler/spoiler.css" %}">
 {% endblock %}
+
 {% block scripts %}
     <script type="text/javascript" src="{% static "ckeditor/ckeditor/plugins/spoiler/spoiler.js" %}"></script>
     <!-- Аякс-скрипт проставления лайков-дизлайков к постам -->
     <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
-{% block post %}
 
+{% block post %}
     <style>
         :where(.post-body) {
             a {
