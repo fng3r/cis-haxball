@@ -74,17 +74,17 @@
             </div>
 
             <div class="tw:inline-flex tw:items-center">
-                <span class="tw:mt-1 tw:text-base-content/70 tw:text-xs">
+                <span class="tw:mt-1 tw:text-base-content/70 tw:text-[13px]!">
                     <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
                     {{ comment.created|date:"d.m.y" }}
                     <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
                     {{ comment.created|time:"H:i" }}
                     {% if comment.edited %}
                         {% if comment.edited.date == comment.created.date %}
-                            <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                            <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5 " aria-hidden="true"
                                data-comment-edit-title='изм. {{comment.edited|time:"H:i"}}'></i>
                         {% else %}
-                            <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                            <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5" aria-hidden="true"
                                data-comment-edit-title='изм. {{comment.edited|date:"d.m.y"}} {{comment.edited|time:"H:i"}}'></i>
                         {% endif %}
                     {% endif %}

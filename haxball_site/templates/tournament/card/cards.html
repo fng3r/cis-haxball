@@ -5,8 +5,6 @@
 
 {% block title %}Чемпионат | Карточки — CIS-HAXBALL {% endblock %}
 {% block profile_of_user %}
-    <link rel="stylesheet" type="text/css" href="{% static 'tournament/card/cards_list.css' %}">
-
     <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
         <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
             <h2 class="tw:card-title">
@@ -53,7 +51,7 @@
 
             </form>
 
-            <div class="tw:h-[675px] tw:overflow-y-auto tw:rounded-b-lg">
+            <div class="tw:max-h-[880px] tw:overflow-y-auto tw:rounded-b-lg">
                 <table class="tw:table tw:table-zebra tw:table-pin-rows">
                     <thead class="tw:thead tw:text-left">
                         <tr class="tw:bg-base-300!">

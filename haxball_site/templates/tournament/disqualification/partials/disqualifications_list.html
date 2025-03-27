@@ -1,5 +1,6 @@
 {% load static %}
 {% load thumbnail %}
+
 {% for disqualification in disqualifications %}
     {% if forloop.last and disqualifications.number < disqualifications.paginator.num_pages %}
         <tr hx-get="{% url 'tournament:disqualifications' %}?page={{ disqualifications.number|add:1 }}"
@@ -17,7 +18,7 @@
         </div>
     </td>
 
-    <td class="disqualification-row tw:pl-2 tw:pr-1">
+    <td class="tw:px-2">
         <div class="tw:flex tw:items-center tw:text-[12px]">
             <img src="{{ disqualification.team.logo.url }}" class="tw:mr-1"
                  alt="{{ disqualification.team.title }}" width="20" height="20">
@@ -25,7 +26,7 @@
         </div>
     </td>
 
-    <td class="disqualification-row tw:pl-2 tw:pr-1">
+    <td class="tw:px-2">
         <div class="tw:flex tw:items-center tw:text-[12px]">
             <div class="tw:avatar tw:mr-1">
                 <div class="tw:w-[20px] tw:h-[20px] tw:rounded-full">
@@ -39,9 +40,9 @@
         </div>
     </td>
 
-    <td class="disqualification-row tw:pl-2 tw:pr-1">
+    <td class="tw:px-2">
         <a href="{{disqualification.match.get_absolute_url}}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-            <div class="tw:flex tw:flex-col tw:items-left">
+            <div class="tw:flex tw:flex-col">
                 <div class="tw:flex tw:items-center">
                     <img src="{{ disqualification.match.team_home.logo.url }}" class="tw:mr-1"
                          alt="{{ disqualification.match.team_home }}" width="20" height="20">{{disqualification.match.team_home.short_title}}
@@ -55,11 +56,11 @@
         </a>
     </td>
 
-    <td class="disqualification-row" width="15%">
+    <td width="15%">
         <div class="tw:text-[12px] tw:text-left">{{ disqualification.reason }}</div>
     </td>
 
-    <td class="disqualification-row">
+    <td>
         <div class="tw:text-[12px]">
             {% for tour in disqualification.tours.all %}
                 {{ tour }}<br>
@@ -67,8 +68,8 @@
         </div>
     </td>
 
-    <td class="disqualification-row">
-        <div class="ttw:text-[12px]">
+    <td>
+        <div class="tw:text-[12px]">
             {% if disqualification.lifted_tours.count == 0 %}
                 Нет
             {% elif disqualification.tours.count == disqualification.lifted_tours.count %}
@@ -82,7 +83,7 @@
         </div>
     </td>
 
-    <td class="tw:pl-2 tw:pr-1">
+    <td class="tw:px-2">
         <div class="tw:flex tw:items-center tw:text-[12px]">
             {% if disqualification.match.inspector %}
                 <div class="tw:avatar tw:mr-1">

@@ -4,7 +4,6 @@
 {% load widget_tweaks %}
 
 {% block title %}Чемпионат | Дисквалификации — CIS-HAXBALL{% endblock %}
-<link rel="stylesheet" type="text/css" href="{% static 'tournament/disqualification/disqualifications_list.css' %}">
 
 {% block profile_of_user %}
     <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
@@ -48,7 +47,7 @@
                 </div>
             </form>
 
-            <div class="tw:h-[675px] tw:overflow-auto tw:rounded-b-lg">
+            <div class="tw:max-h-[880px] tw:overflow-auto tw:rounded-b-lg">
                 <table class="tw:table tw:table-zebra tw:table-pin-rows">
                     <thead class="tw:thead tw:text-left">
                         <tr class="tw:bg-base-300!">

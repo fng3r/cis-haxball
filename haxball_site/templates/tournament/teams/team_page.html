@@ -25,7 +25,7 @@
             <div class="tw:flex tw:flex-col tw:rounded-lg tw:mt-2 tw:gap-2 tw:bg-base-100 tw:pt-4 tw:pb-2 tw:px-4"
                  style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})">
                 <div class="tw:flex">
-                    <div class="tw:w-1/4 tw:px-4">
+                    <div class="tw:w-1/4">
                         <div class="profile-img tw:mb-3">
                             <img src="{{ team.logo.url }}" alt="{{ team.title }}">
                         </div>
@@ -41,7 +41,7 @@
                                        hx-target="#team-page-container"
                                        hx-push-url="true"
                                        hx-swap="outerHTML">
-                                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                                        <i class="fa fa-pencil tw:text-warning tw:hover:text-warning/85" aria-hidden="true"></i>
                                     </a>
                                 {% endif %}
                             </h3>
@@ -53,7 +53,7 @@
                         </div>
                     </div>
 
-                    <div class="tw:ml-auto tw:px-4">
+                    <div class="tw:ml-auto">
                         <img src="{% static "img/ico/best_logo.png" %}" class="tw:w-12">
                     </div>
                 </div>

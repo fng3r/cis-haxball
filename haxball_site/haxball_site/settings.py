@@ -103,6 +103,7 @@ TEMPLATES = [
                 'haxball_site.context_processors.online_users_context',
                 'haxball_site.context_processors.notifications_context',
                 'haxball_site.context_processors.youtube_context',
+                'haxball_site.context_processors.themes_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },

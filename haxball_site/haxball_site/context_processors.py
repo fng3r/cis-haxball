@@ -78,3 +78,44 @@ def youtube_context(request):
     except Exception as e:
         logger.error(f'Error fetching YouTube videos and livestreams for sidebars: {str(e)}')
         return {'featured_videos': [], 'livestreams': []}
+
+
+def themes_context(request):
+    """
+    Add available themes to the context for all templates.
+    """
+    themes = [
+        {'value': 'light', 'label': 'Default'},
+        {'value': 'dark', 'label': 'Dark'},
+        {'value': 'cupcake', 'label': 'Cupcake'},
+        {'value': 'bumblebee', 'label': 'Bumblebee'},
+        {'value': 'emerald', 'label': 'Emerald'},
+        {'value': 'corporate', 'label': 'Corporate'},
+        {'value': 'synthwave', 'label': 'Synthwave'},
+        {'value': 'retro', 'label': 'Retro'},
+        {'value': 'cyberpunk', 'label': 'Cyberpunk'},
+        {'value': 'valentine', 'label': 'Valentine'},
+        {'value': 'halloween', 'label': 'Halloween'},
+        {'value': 'garden', 'label': 'Garden'},
+        {'value': 'forest', 'label': 'Forest'},
+        {'value': 'aqua', 'label': 'Aqua'},
+        {'value': 'lofi', 'label': 'Lofi'},
+        {'value': 'pastel', 'label': 'Pastel'},
+        {'value': 'fantasy', 'label': 'Fantasy'},
+        {'value': 'wireframe', 'label': 'Wireframe'},
+        {'value': 'black', 'label': 'Black'},
+        {'value': 'luxury', 'label': 'Luxury'},
+        {'value': 'dracula', 'label': 'Dracula'},
+        {'value': 'cmyk', 'label': 'CMYK'},
+        {'value': 'autumn', 'label': 'Autumn'},
+        {'value': 'business', 'label': 'Business'},
+        {'value': 'acid', 'label': 'Acid'},
+        {'value': 'lemonade', 'label': 'Lemonade'},
+        {'value': 'night', 'label': 'Night'},
+        {'value': 'coffee', 'label': 'Coffee'},
+        {'value': 'winter', 'label': 'Winter'},
+        {'value': 'dim', 'label': 'Dim'},
+        {'value': 'nord', 'label': 'Nord'},
+        {'value': 'sunset', 'label': 'Sunset'},
+    ]
+    return {'themes': themes}

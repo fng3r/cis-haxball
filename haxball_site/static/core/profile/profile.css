@@ -1,27 +1,6 @@
-.card {
-  border-radius: 5px;
-  -webkit-box-shadow: 0 1px 20px 0 rgba(69, 90, 100, 0.08);
-  box-shadow: 0 1px 20px 0 rgba(69, 90, 100, 0.08);
-  border: none;
-}
-
 .bg-c-lite-green {
-  background: -webkit-gradient(
-    linear,
-    left top,
-    right top,
-    from(#f29263),
-    to(#ee5a6f)
-  );
+  background: -webkit-gradient(linear, left top, right top, from(#f29263), to(#ee5a6f));
   background: linear-gradient(to right, #ee5a6f, #f29263);
-}
-
-.m-b-25 {
-  margin-bottom: 25px;
-}
-
-h6 {
-  font-size: 14px;
 }
 
 @media only screen and (min-width: 1200px) {
@@ -29,32 +8,11 @@ h6 {
     font-size: 14px;
   }
 }
+
 @media only screen and (min-width: 700px) {
   p {
     font-size: 16px;
   }
-}
-.m-b-10 {
-  margin-bottom: 10px;
-}
-
-.m-b-20 {
-  margin-bottom: 20px;
-}
-
-.p-b-5 {
-  padding-bottom: 5px !important;
-}
-
-.user-card-full .social-link li {
-  display: inline-block;
-}
-
-.user-card-full .social-link li a {
-  font-size: 20px;
-  margin: 0 10px 0 0;
-  -webkit-transition: all 0.3s ease-in-out;
-  transition: all 0.3s ease-in-out;
 }
 
 .profile_achievements-text {
@@ -78,20 +36,6 @@ h6 {
   margin-right: 6px;
 }
 
-.tabs-decoration {
-  width: 100%;
-  border-radius: 10px;
-  box-shadow: 0px 0px 10px #000000;
-  text-align: center;
-  font-family: sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
-  letter-spacing: 1.5px;
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 30px;
-  border: 0;
-}
-
 .profile-info-table {
   margin-bottom: 30px;
   box-shadow: 0px 0px 10px #000000;
@@ -106,15 +50,6 @@ h6 {
   padding: 15px;
   height: 430px;
   overflow-y: auto;
-}
-
-.nicknames-history {
-  position: absolute;
-  background: #000000;
-  opacity: 0.87;
-  box-shadow: 0px 0px 10px #000000;
-  transition: 0.6s;
-  z-index: 999;
 }
 
 .profile-triangle {

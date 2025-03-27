@@ -36,7 +36,7 @@
                              data-parent="#search-results-accordion">
                             <div class="tw:card-body tw:bg-base-100 tw:p-0 tw:gap-0">
                                 {% for team in teams %}
-                                    <div class="tw:py-2 tw:hover:bg-neutral-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
+                                    <div class="tw:py-2 tw:hover:bg-base-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
                                         <a class="tw:btn-link-block tw:text-base-content/90 tw:font-semibold tw:text-base tw:justify-center! tw:mb-0"
                                            href="{{ team.get_absolute_url }}"><img
                                             src="{{ team.logo.url }}" alt="{{ team.title }}"
@@ -68,7 +68,7 @@
                         <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#search-results-accordion">
                             <div class="tw:card-body tw:bg-base-100 tw:p-0 tw:gap-0">
                                 {% for profile in profiles %}
-                                    <div class="tw:py-2 tw:hover:bg-neutral-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
+                                    <div class="tw:py-2 tw:hover:bg-base-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
                                         <a class="tw:btn-link-block tw:text-base-content/90 tw:font-semibold tw:text-base tw:justify-center! tw:mb-0"
                                            href="{{ profile.get_absolute_url }}"><img
                                             src="{{ profile.avatar.url }}" alt="{{ profile.name.username }}"
@@ -98,7 +98,7 @@
                             <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#search-results-accordion">
                                 <div class="tw:card-body tw:bg-base-100 tw:p-0 tw:gap-0">
                                     {% for post in posts %}
-                                        <div class="tw:py-2 tw:hover:bg-neutral-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
+                                        <div class="tw:py-2 tw:hover:bg-base-300 {% if not forloop.last %}tw:border-b{% endif %} tw:border-neutral-200">
                                             <a class="tw:btn-link-block tw:text-base-content/90 tw:font-semibold tw:text-base tw:justify-center! tw:mb-0"
                                                href="{{ post.get_absolute_url }}">
                                                 <div class="tw:inline-flex tw:w-full tw:justify-between">

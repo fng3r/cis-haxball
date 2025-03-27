@@ -1,38 +1,34 @@
-.table-fix {
-    height: 780px;
+.postponements-select {
+  font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+  font-weight: 600;
+  border: 0;
+  border-radius: 0.25rem;
+  text-align: center;
+  font-size: 13px;
+  background: none;
 }
 
-.postponements-select{
-    font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
-    font-weight: 600;
-    border: 0;
-    border-radius: 0.25rem;
-    text-align: center;
-    font-size: 13px;
-    background: none;
+.postponements-button {
+  background: #27a327;
+  width: 100px;
+  height: 30px;
+  font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+  font-size: 13px;
+  text-align: center;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 0;
+  transition: 0.5s;
 }
 
-.postponements-button{
-    background: #27a327;
-    width: 100px;
-    height: 30px;
-    font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
-    font-size: 13px;
-    text-align: center;
-    border-radius: 10px;
-    font-weight: 600;
-    border: 0;
-    transition: 0.5s;
+.postponements-button:hover {
+  background: #1d7a1d;
 }
 
-.postponements-button:hover{
-    background: #1d7a1d;
-}
-
-.postponements-log-text::first-letter{
-    text-transform: uppercase;
+.postponements-log-text::first-letter {
+  text-transform: uppercase;
 }
 
 .postponement_played {
-    text-decoration: line-through;
+  text-decoration: line-through;
 }

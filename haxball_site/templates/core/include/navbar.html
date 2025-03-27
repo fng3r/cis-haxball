@@ -2,10 +2,6 @@
 {% load user_tags %}
 {% load tournament_extras %}
 
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/include/navbar.css" %}">
-{% endblock %}
-
 {% partialdef championship_dropdown_content %}
     <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">Турниры</li>
     <li>
@@ -594,103 +590,16 @@
                     <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
                 </svg>
             </div>
-            <ul tabindex="0" class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-40 tw:p-2 tw:shadow-2xl">
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Default" value="light" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dark" value="dark" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Cupcake" value="cupcake" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Bumblebee" value="bumblebee" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Emerald" value="emerald" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Corporate" value="corporate" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Synthwave" value="synthwave" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Retro" value="retro" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Cyberpunk" value="cyberpunk" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Valentine" value="valentine" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Halloween" value="halloween" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Garden" value="garden" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Forest" value="forest" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Aqua" value="aqua" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Lofi" value="lofi" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Pastel" value="pastel" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Fantasy" value="fantasy" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Wireframe" value="wireframe" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Black" value="black" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Luxury" value="luxury" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dracula" value="dracula" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="CMYK" value="cmyk" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Autumn" value="autumn" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Business" value="business" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Acid" value="acid" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Lemonade" value="lemonade" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Night" value="night" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Coffee" value="coffee" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Winter" value="winter" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Dim" value="dim" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Nord" value="nord" />
-                </li>
-                <li>
-                    <input type="radio" name="theme-dropdown" class="tw:theme-controller tw:btn tw:btn-sm tw:btn-block tw:btn-ghost tw:justify-start" aria-label="Sunset" value="sunset" />
-                </li>
+            <ul tabindex="0" class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-45 tw:p-2 tw:shadow-2xl">
+                {% for theme in themes %}
+                    <li>
+                        <div class="tw:flex tw:items-center tw:justify-between tw:gap-1">
+                            <input type="radio" name="theme-dropdown" aria-label="{{ theme.label }}" value="{{ theme.value }}"
+                                   class="theme-controller tw:flex-grow tw:btn tw:btn-ghost tw:btn-sm tw:justify-start tw:peer" />
+                            <i class="fa fa-check tw:size-4! tw:opacity-0 tw:peer-checked:opacity-100" aria-hidden="true"></i>
+                        </div>
+                    </li>
+                {% endfor %}
             </ul>
         </div>
 

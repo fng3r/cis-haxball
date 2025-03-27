@@ -76,14 +76,13 @@
                        hx-get="{% url 'core:edit_comment' comment.id %}"
                        hx-target="#r{{ comment.id }}"
                        hx-swap="outerHTML">
-                        <i class="fa fa-pencil tw:text-warning" aria-hidden="true">
-                        </i>
+                        <i class="fa fa-pencil tw:text-warning tw:hover:text-warning/85" aria-hidden="true"></i>
                     </a>
                 {% endif %}
 
                 {% if user.is_superuser or comment.author == user and comment|can_delete or comment.content_object.name == user %}
                     <a :style="editingComment && {'pointer-events': 'none'}" class="tw:text-error">
-                        <i class="fa fa-times tw:text-error" aria-hidden="true" style="font-size: 20px" onclick="delete_comment_{{ comment.id }}_modal.showModal()"></i>
+                        <i class="fa fa-times tw:text-error tw:hover:text-error/85" aria-hidden="true" style="font-size: 20px" onclick="delete_comment_{{ comment.id }}_modal.showModal()"></i>
                     </a>
 
                     <dialog id="delete_comment_{{ comment.id }}_modal" class="tw:modal">
@@ -112,17 +111,17 @@
         </div>
 
         <div class="tw:inline-flex tw:items-center">
-            <span class="tw:mt-1 tw:text-base-content/70 tw:text-xs">
+            <span class="tw:mt-1 tw:text-base-content/70 tw:text-[13px]!">
                 <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
                 {{ comment.created|date:"d.m.y" }}
                 <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
                 {{ comment.created|time:"H:i" }}
                 {% if comment.edited %}
                     {% if comment.edited.date == comment.created.date %}
-                        <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                        <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5" aria-hidden="true"
                            data-comment-edit-title='изм. {{comment.edited|time:"H:i"}}'></i>
                     {% else %}
-                        <i class="fa fa-pencil comment-edit" aria-hidden="true"
+                        <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5" aria-hidden="true"
                            data-comment-edit-title='изм. {{comment.edited|date:"d.m.y"}} {{comment.edited|time:"H:i"}}'></i>
                     {% endif %}
                 {% endif %}

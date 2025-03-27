@@ -1,5 +1,0 @@
-div:has(* input#show-selected-season-teams-only:checked) ~ #team-rating-table {
-    .rating-row:not(.current-season-team) {
-        display: none;
-    }
-}
