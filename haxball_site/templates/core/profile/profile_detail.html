@@ -6,29 +6,26 @@
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{% static "core/profile/profile.css" %}">
     <link rel="stylesheet" type="text/css" href="{% static "core/include/comments.css" %}">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
 {% endblock %}
 
 {% block scripts %}
     <script type="text/javascript" src="{% static 'core/js/like-dislike.js' %}"></script>
-    <script>
 
+    <script>
         function myFunction() {
             var discord = document.getElementById("discord");
             navigator.clipboard.writeText(discord.title);
             alert("Скопировано " + discord.title);
         }
-
     </script>
 {% endblock %}
 
 {% block title %}Профиль {{ profile.name }} — CIS-HAXBALL {% endblock %}
 
 {% block profile_of_user %}
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
-    </style>
-
     {% partialdef profile-container inline=True %}
         <div id="profile-container">
             <div class="tw:card tw:mt-2 tw:rounded-lg">
@@ -69,9 +66,9 @@
                                                                 <div x-show="showNicknamesHistory" x-transition.duration.200ms x-cloak
                                                                      @click.outside="showNicknamesHistory = false"
                                                                      class="tw:relative tw:top-1">
-                                                                    <div class="nicknames-history tw:rounded tw:-translate-x-1/2">
+                                                                    <div class="tw:absolute tw:bg-black tw:opacity-90 tw:shadow-lg tw:z-999 tw:rounded tw:-translate-x-1/2">
                                                                         {% for nickname in previous_nicknames %}
-                                                                            <div class="tw:text-white tw:text-lg tw:font-normal tw:px-2 tw:py-1 tw:border-[#7b7b7b] {% if not forloop.last %}tw:border-b{% endif %}">
+                                                                            <div class="tw:text-white tw:text-base tw:font-normal tw:px-2 tw:py-1 tw:border-[#7b7b7b] {% if not forloop.last %}tw:border-b{% endif %}">
                                                                                 {{nickname.nickname}}
                                                                             </div>
                                                                         {% endfor %}
@@ -81,8 +78,6 @@
                                                         {% endif %}
                                                     </h3>
                                                 </div>
-
-
                                             </div>
 
                                             <div class="tw:mb-1">
@@ -128,7 +123,6 @@
 
                                             <div class="tw:mb-3">
                                                 <i class="fa fa-eye tw:text-warning" aria-hidden="true"></i> Просмотры: {{ profile.views }}
-
                                             </div>
 
                                             <div>

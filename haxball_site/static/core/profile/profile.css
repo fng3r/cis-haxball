@@ -1,11 +1,5 @@
 .bg-c-lite-green {
-  background: -webkit-gradient(
-    linear,
-    left top,
-    right top,
-    from(#f29263),
-    to(#ee5a6f)
-  );
+  background: -webkit-gradient(linear, left top, right top, from(#f29263), to(#ee5a6f));
   background: linear-gradient(to right, #ee5a6f, #f29263);
 }
 
@@ -56,15 +50,6 @@
   padding: 15px;
   height: 430px;
   overflow-y: auto;
-}
-
-.nicknames-history {
-  position: absolute;
-  background: #000000;
-  opacity: 0.87;
-  box-shadow: 0px 0px 10px #000000;
-  transition: 0.6s;
-  z-index: 999;
 }
 
 .profile-triangle {
