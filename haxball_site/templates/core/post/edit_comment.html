@@ -1,48 +1,36 @@
-{% block title %}
-    {{ post.title }}
-{% endblock %}
+{% block title %}{{ post.title }}{% endblock %}
 {% load static %}
 {% load user_tags %}
 
-
 <div class="tw:mt-3" id="edit-comment-form-container">
-    <div class="tw:mb-2 tw:py-2 tw:px-1 tw:rounded-lg">
-        <div class="tw:ml-1">
-            <h5 class="tw:mb-1">Изменить комменатарий</h5>
-            <form id="edit-comment-form"
-                  hx-target="#edit-comment-form-container"
-                  hx-swap="outerHTML"
-                  hx-indicator="#edit-comment-indicator"
-                  hx-disabled-elt="#edit-comment-form button">
+  <div class="tw:mb-2 tw:py-2 tw:px-1 tw:rounded-lg">
+    <div class="tw:ml-1">
+      <h5 class="tw:mb-1">Изменить комменатарий</h5>
+      <form id="edit-comment-form"
+            hx-target="#edit-comment-form-container"
+            hx-swap="outerHTML"
+            hx-indicator="#edit-comment-indicator"
+            hx-disabled-elt="#edit-comment-form button">
 
-                {{ comment_form.media }}
-                <div class="tw:mt-2 tw:ml-1 tw:mb-1">
-                    {{ comment_form.edit_body }}
-                </div>
+        {{ comment_form.media }}
+        <div class="tw:mt-2 tw:ml-1 tw:mb-1">{{ comment_form.edit_body }}</div>
 
-                <div class="tw:flex tw:justify-end tw:mt-auto tw:mb-2 tw:mr-2">
-                    <img id="edit-comment-indicator" class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+        <div class="tw:flex tw:justify-end tw:mt-auto tw:mb-2 tw:mr-2">
+          <img id="edit-comment-indicator" class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
 
-                    <button type="reset" class="tw:btn tw:btn-neutral tw:btn-soft tw:mr-2!"
-                            @click="editingComment = false"
-                            hx-get="{% url 'core:comment' comment.id %}"
-                    >
-                        Отменить
-                    </button>
+          <button type="reset"
+                  class="tw:btn tw:btn-neutral tw:btn-soft tw:mr-2!"
+                  @click="editingComment = false"
+                  hx-get="{% url 'core:comment' comment.id %}">Отменить</button>
 
-                    <button type="submit" class="tw:btn tw:btn-primary"
-                            @click="editingComment = false"
-                            hx-post="{% url 'core:edit_comment' comment.id %}"
-                            hx-on::config-request="event.detail.parameters['edit_body'] = CKEDITOR.instances['id_edit_body'].getData();"
-                            hx-on::before-request="document.getElementById('cke_id_edit_body').style.filter = 'blur(1px)';"
-                    >
-                        Отправить
-                    </button>
-                </div>
-            </form>
-
-
+          <button type="submit"
+                  class="tw:btn tw:btn-primary"
+                  @click="editingComment = false"
+                  hx-post="{% url 'core:edit_comment' comment.id %}"
+                  hx-on::config-request="event.detail.parameters['edit_body'] = CKEDITOR.instances['id_edit_body'].getData();"
+                  hx-on::before-request="document.getElementById('cke_id_edit_body').style.filter = 'blur(1px)';">Отправить</button>
         </div>
-
+      </form>
     </div>
+  </div>
 </div>

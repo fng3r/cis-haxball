@@ -1,14 +1,15 @@
 {% extends "core.html" %}
+
 {% load static %}
 
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/profile/profile.css" %}">
+  <link rel="stylesheet" type="text/css" href="{% static "core/profile/profile.css" %}">
 {% endblock %}
 
-{% block title %}Профиль {{ profile.name }} — CIS-HAXBALL {% endblock %}
+{% block title %}Профиль {{ profile.name }} — CIS-HAXBALL{% endblock %}
 
 {% block profile_of_user %}
-    {% if user == profile.name %}
-        {% include "core/profile/partials/edit_profile_form.html" %}
-    {% endif %}
+  {% if user == profile.name %}
+    {% include "core/profile/partials/edit_profile_form.html" %}
+  {% endif %}
 {% endblock %}

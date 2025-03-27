@@ -2,47 +2,45 @@
 {% load user_tags %}
 
 <div class="tw:flex tw:flex-col tw:my-2">
-    <div class="tw:card-body tw:gap-0 tw:p-0">
-        <a href="{{ post.get_absolute_url }}">
-            <span type="button"
-                  class="tw:btn tw:btn-block tw:btn-lg tw:btn-outline tw:rounded-lg tw:rounded-b-none {% if post.important and is_on_homepage %}tw:btn-error{%else%}tw:btn-info{%endif%}">
-                {{ post.title }}
-                {% if post.publish|is_fresh:5 %}
-                    <span class="tw:badge tw:badge-pill tw:badge-success">Новый!</span>
-                {% endif %}
-                {% if post.important and is_on_homepage %}
-                    <i class="fa fa-thumb-tack tw:text-yellow-400 tw:rotate-30 tw:ml-1" aria-hidden="true"></i>
-                {% endif %}
-            </span>
-        </a>
-    </div>
+  <div class="tw:card-body tw:gap-0 tw:p-0">
+    <a href="{{ post.get_absolute_url }}">
+      <span type="button"
+            class="tw:btn tw:btn-block tw:btn-lg tw:btn-outline tw:rounded-lg tw:rounded-b-none {% if post.important and is_on_homepage %}tw:btn-error{% else %}tw:btn-info{% endif %}">
+        {{ post.title }}
+        {% if post.publish|is_fresh:5 %}<span class="tw:badge tw:badge-pill tw:badge-success">Новый!</span>{% endif %}
+        {% if post.important and is_on_homepage %}
+          <i class="fa fa-thumb-tack tw:text-yellow-400 tw:rotate-30 tw:ml-1" aria-hidden="true"></i>
+        {% endif %}
+      </span>
+    </a>
+  </div>
 
-    <div class="tw:flex tw:rounded-b-lg tw:bg-base-300 tw:px-4 tw:py-2 tw:justify-between">
-        <span class="tw:text-base-content/70 tw:inline-flex tw:items-center tw:gap-2">
-            <div>
-                <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
-                {{ post.publish|date:"SHORT_DATE_FORMAT" }}
+  <div class="tw:flex tw:rounded-b-lg tw:bg-base-300 tw:px-4 tw:py-2 tw:justify-between">
+    <span class="tw:text-base-content/70 tw:inline-flex tw:items-center tw:gap-2">
+      <div>
+        <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
+        {{ post.publish|date:"SHORT_DATE_FORMAT" }}
 
-                <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
-                {{ post.publish|time:"H:i" }}
-            </div>
+        <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
+        {{ post.publish|time:"H:i" }}
+      </div>
 
-            <div>
-                <i class="fa fa-user tw:text-primary" aria-hidden="true"></i>
-                <a href="{{ post.author.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:text-base-content/90">{{ post.author }}</a>,
-            </div>
+      <div>
+        <i class="fa fa-user tw:text-primary" aria-hidden="true"></i>
+        <a href="{{ post.author.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:text-base-content/90">{{ post.author }}</a>,
+      </div>
 
-            <div>
-                <i class="fa fa-comments-o tw:text-primary" aria-hidden="true"></i>
-                {{ post.comments.count }},
-            </div>
+      <div>
+        <i class="fa fa-comments-o tw:text-primary" aria-hidden="true"></i>
+        {{ post.comments.count }},
+      </div>
 
-            <div>
-                <i class="fa fa-eye tw:text-primary" aria-hidden="true"></i>
-                {{ post.views }}
-            </div>
-        </span>
+      <div>
+        <i class="fa fa-eye tw:text-primary" aria-hidden="true"></i>
+        {{ post.views }}
+      </div>
+    </span>
 
-        {% include 'core/include/like_dislike_panel.html' %}
-    </div>
+    {% include 'core/include/like_dislike_panel.html' %}
+  </div>
 </div>

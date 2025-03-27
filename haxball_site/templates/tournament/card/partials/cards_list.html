@@ -1,97 +1,96 @@
 {% load static %}
 {% load thumbnail %}
+
 {% for card in cards %}
+  <tr
+    {# djlint:off #}
     {% if forloop.last and cards.number < cards.paginator.num_pages %}
-        <tr hx-get="{% url 'tournament:cards' %}?page={{ cards.number|add:1 }}"
-            hx-trigger="intersect once"
-            hx-target="this"
-            hx-swap="afterend"
-            hx-include="#filter-form"
-            hx-indicator="#scroll-indicator">
-    {% else %}
-        <tr>
+      hx-get="{% url 'tournament:cards' %}?page={{ cards.number|add:1 }}"
+      hx-trigger="intersect once"
+      hx-target="this"
+      hx-swap="afterend"
+      hx-include="#filter-form"
+      hx-indicator="#scroll-indicator"
     {% endif %}
+    {# djlint:on #}
+  >
     <td class="tw:pr-1">
-        <div class="tw:text-sm">
-            {{ card.match.league.championship.short_title }}
-        </div>
+      <div class="tw:text-sm">{{ card.match.league.championship.short_title }}</div>
     </td>
 
     <td class="tw:pl-2 tw:pr-1">
-        <div class="tw:flex tw:items-center">
-            <img src="{{ card.team.logo.url }}" class="tw:mr-1"
-                 alt="{{ card.team.title }}" width="20" height="20">
-            <a href="{{ card.team.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ card.team.title }}</a>
-        </div>
+      <div class="tw:flex tw:items-center">
+        <img src="{{ card.team.logo.url }}" class="tw:mr-1" alt="{{ card.team.title }}" width="20" height="20">
+        <a href="{{ card.team.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ card.team.title }}</a>
+      </div>
     </td>
 
     <td class="tw:pl-2 tw:pr-1">
-        <div class="tw:flex tw:items-center">
-            <div class="tw:avatar tw:mr-1">
-                <div class="tw:w-[22px] tw:h-[22px] tw:rounded-full">
-                    {% thumbnail card.author.name.user_profile.avatar "50x50" crop="center" as avatar %}
-                        <img src="{{ avatar.url }}" class="tw:rounded-full"
-                             alt="{{ card.author.nickname }}">
-                    {% endthumbnail %}
-                </div>
-            </div>
-            <a href="{{ card.author.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ card.author.nickname }}</a>
+      <div class="tw:flex tw:items-center">
+        <div class="tw:avatar tw:mr-1">
+          <div class="tw:w-[22px] tw:h-[22px] tw:rounded-full">
+            {% thumbnail card.author.name.user_profile.avatar "50x50" crop="center" as avatar %}
+              <img src="{{ avatar.url }}" class="tw:rounded-full" alt="{{ card.author.nickname }}">
+            {% endthumbnail %}
+          </div>
         </div>
+        <a href="{{ card.author.name.user_profile.get_absolute_url }}"
+           class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ card.author.nickname }}</a>
+      </div>
     </td>
 
     <td class="tw:pl-2 tw:pr-1">
-        <a href="{{card.match.get_absolute_url}}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
-            <div class="tw:flex tw:flex-col tw:items-left">
-                <div class="tw:flex tw:items-center">
-                    <img src="{{ card.match.team_home.logo.url }}" class="tw:mr-1"
-                         alt="{{ card.match.team_home }}" width="20" height="20">{{card.match.team_home.short_title}}
-                </div>
-                <div class="tw:text-base-content/70! tw:text-center tw:text-xs">vs</div>
-                <div class="tw:flex tw:items-center">
-                    <img src="{{ card.match.team_guest.logo.url }}" class="tw:mr-1"
-                         alt="{{ card.match.team_guest }}" width="20" height="20">{{card.match.team_guest.short_title}}
-                </div>
-            </div>
-        </a>
+      <a href="{{ card.match.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
+        <div class="tw:flex tw:flex-col tw:items-left">
+          <div class="tw:flex tw:items-center">
+            <img src="{{ card.match.team_home.logo.url }}" class="tw:mr-1" alt="{{ card.match.team_home }}" width="20" height="20">
+            {{ card.match.team_home.short_title }}
+          </div>
+          <div class="tw:text-base-content/70! tw:text-center tw:text-xs">vs</div>
+          <div class="tw:flex tw:items-center">
+            <img src="{{ card.match.team_guest.logo.url }}" class="tw:mr-1" alt="{{ card.match.team_guest }}" width="20" height="20">
+            {{ card.match.team_guest.short_title }}
+          </div>
+        </div>
+      </a>
     </td>
 
     <td>
-        <div class="tw:text-sm">
-            {% if card.event == 'YEL' %}
-                <img src="{% static 'img/ico/statistic/yellow-card.PNG' %}" width=24 title="ЖК" alt="ЖК">
-            {% else %}
-                <img src="{% static 'img/ico/statistic/red-card.PNG' %}" width=24 title="КК" alt="КК">
-            {% endif %}
-        </div>
-    </td>
-
-    <td>
-        <div class="tw:text-sm">
-            {% if card.card_reason %}
-                {{ card.card_reason }}
-            {% else %}
-                Не указана
-            {% endif %}
-        </div>
-    </td>
-
-    <td class="tw:pl-2 tw:pr-1">
-        {% if card.match.inspector %}
-            <div class="tw:flex tw:items-center">
-                <div class="tw:avatar tw:mr-1">
-                    <div class="tw:w-[22px] tw:h-[22px] tw:rounded-full">
-                        {% thumbnail card.match.inspector.user_profile.avatar "50x50" crop="center" as avatar %}
-                            <img src="{{ avatar.url }}" class="tw:rounded-full"
-                                 alt="{{ card.match.inspector.username }}">
-                        {% endthumbnail %}
-                    </div>
-                </div>
-                <a href="{{ card.match.inspector.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ card.match.inspector.username }}</a>
-            </div>
+      <div class="tw:text-sm">
+        {% if card.event == 'YEL' %}
+          <img src="{% static 'img/ico/statistic/yellow-card.PNG' %}" width=24 title="ЖК" alt="ЖК">
         {% else %}
-            —
+          <img src="{% static 'img/ico/statistic/red-card.PNG' %}" width=24 title="КК" alt="КК">
         {% endif %}
+      </div>
     </td>
 
-    </tr>
+    <td>
+      <div class="tw:text-sm">
+        {% if card.card_reason %}
+          {{ card.card_reason }}
+        {% else %}
+          Не указана
+        {% endif %}
+      </div>
+    </td>
+
+    <td class="tw:pl-2 tw:pr-1">
+      {% if card.match.inspector %}
+        <div class="tw:flex tw:items-center">
+          <div class="tw:avatar tw:mr-1">
+            <div class="tw:w-[22px] tw:h-[22px] tw:rounded-full">
+              {% thumbnail card.match.inspector.user_profile.avatar "50x50" crop="center" as avatar %}
+                <img src="{{ avatar.url }}" class="tw:rounded-full" alt="{{ card.match.inspector.username }}">
+              {% endthumbnail %}
+            </div>
+          </div>
+          <a href="{{ card.match.inspector.user_profile.get_absolute_url }}"
+             class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ card.match.inspector.username }}</a>
+        </div>
+      {% else %}
+        —
+      {% endif %}
+    </td>
+  </tr>
 {% endfor %}

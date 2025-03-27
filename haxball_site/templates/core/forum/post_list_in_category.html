@@ -1,32 +1,33 @@
 {% extends "core.html" %}
+
 {% load static %}
+
 {% block scripts %}
-
-    <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
-
+  <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
-{% block title %} Форум | {{ category }} — CIS-HAXBALL {% endblock %}
+
+{% block title %}Форум | {{ category }} — CIS-HAXBALL{% endblock %}
 
 {% block postlist %}
-    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
-        <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
-            <h3 class="tw:text-center tw:mb-0">
-                <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>{{ category }}
-            </h3>
-            {% if user.is_authenticated and not category.is_official %}
-                <a href="{% url 'core:new_post' category.slug %}" class="tw:link tw:text-lg">
-                    <i class="fa fa-pencil tw:text-warning tw:mr-1" aria-hidden="true"></i>Создать пост
-                </a>
-            {% endif %}
-            <div class="tw:divider tw:my-0!"></div>
+  <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
+      <h3 class="tw:text-center tw:mb-0">
+        <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>{{ category }}
+      </h3>
+      {% if user.is_authenticated and not category.is_official %}
+        <a href="{% url 'core:new_post' category.slug %}" class="tw:link tw:text-lg">
+          <i class="fa fa-pencil tw:text-warning tw:mr-1" aria-hidden="true"></i>Создать пост
+        </a>
+      {% endif %}
+      <div class="tw:divider tw:my-0!"></div>
 
-            {% for post in posts %}
-                {% include "core/include/post_in_list.html" with post=post %}
-            {% endfor %}
-        </div>
-
-        {% if category.posts_in_category.all.count > 6 %}
-            {% include "core/include/pagination.html" with page=posts %}
-        {% endif %}
+      {% for post in posts %}
+        {% include "core/include/post_in_list.html" with post=post %}
+      {% endfor %}
     </div>
+
+    {% if category.posts_in_category.all.count > 6 %}
+      {% include "core/include/pagination.html" with page=posts %}
+    {% endif %}
+  </div>
 {% endblock %}

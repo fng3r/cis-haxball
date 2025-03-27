@@ -1,312 +1,322 @@
 {% extends "core.html" %}
+
 {% load static %}
 {% load cache %}
 {% load tournament_extras %}
 
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static 'tournament/teams/team_page.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'tournament/teams/team_page.css' %}">
 {% endblock %}
 
 {% block scripts %}
-    <script>
-        function myFunction(Element) {
-            navigator.clipboard.writeText(Element.title);
-            alert("Скопировано " + Element.title);
-        }
-    </script>
+  <script>
+    function myFunction(Element) {
+      navigator.clipboard.writeText(Element.title);
+      alert("Скопировано " + Element.title);
+    }
+  </script>
 {% endblock %}
 
-{% block title %}Чемпионат | Команда {{ team.title }} — CIS-HAXBALL {% endblock %}
+{% block title %}Чемпионат | Команда {{ team.title }} — CIS-HAXBALL{% endblock %}
 
 {% block profile_of_user %}
 
-    {% partialdef team-page-container inline=True %}
-        <div id="team-page-container">
-            <div class="tw:flex tw:flex-col tw:rounded-lg tw:mt-2 tw:gap-2 tw:bg-base-100 tw:pt-4 tw:pb-2 tw:px-4"
-                 style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})">
-                <div class="tw:flex">
-                    <div class="tw:w-1/4">
-                        <div class="profile-img tw:mb-3">
-                            <img src="{{ team.logo.url }}" alt="{{ team.title }}">
-                        </div>
-                    </div>
-
-                    <div class="tw:grow tw:relative tw:px-4">
-                        <div class="profile-head">
-                            <h3>
-                                {{ team.title }}
-                                {% if team.owner == user or user.is_superuser %}
-                                    <a href="#" class="tw:text-warning! tw:text-xl"
-                                       hx-get="{% url 'tournament:edit_team' team.slug %}"
-                                       hx-target="#team-page-container"
-                                       hx-push-url="true"
-                                       hx-swap="outerHTML">
-                                        <i class="fa fa-pencil tw:text-warning tw:hover:text-warning/85" aria-hidden="true"></i>
-                                    </a>
-                                {% endif %}
-                            </h3>
-
-                            <p>
-                                <a href="{{ team.office_link }}" class="tw:link tw:link-hover tw:link-primary tw:font-bold">Офис</a>
-                                <img src="{% static "img/ico/team_office.png" %}" height="28" width="28" title="Офис команды">
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="tw:ml-auto">
-                        <img src="{% static "img/ico/best_logo.png" %}" class="tw:w-12">
-                    </div>
-                </div>
-
-                <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Состав" checked />
-                    <div class="tw:tab-content tw:pt-3">
-                        <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-transparent tw:p-0! tw:tabs-lg">
-                            <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="Текущий" checked />
-                            <div class="tw:tab-content tw:pt-2">
-                                <div id="current-players-panel" role="tabpanel" aria-labelledby="current-players-tab">
-                                    {% with team_squad=team|current_squad_stats %}
-                                        {% include 'tournament/teams/partials/team_squad_stats.html' %}
-                                    {% endwith %}
-                                </div>
-                            </div>
-
-                            <input type="radio" name="team-squad-tabs" class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!" aria-label="За всё время" />
-                            <div class="tw:tab-content tw:pt-3">
-                                <div id="alltime-players-panel" role="tabpanel" aria-labelledby="alltime-players-tab">
-
-                                    <div class="tw:flex tw:items-center tw:mb-2">
-                                        <fieldset class="tw:fieldset">
-                                            <legend class="tw:fieldset-legend tw:text-sm">Сезон</legend>
-                                            <select name="season"
-                                                    class="tw:select tw:select-sm"
-                                                    hx-get="{% url 'tournament:team_squad_stats' team.id %}"
-                                                    hx-target="#team-squad-stats"
-                                                    hx-swap="innerHTML">
-                                                <option selected value>Все</option>
-                                                {% for season in seasons %}
-                                                    <option value="{{ season.number }}">{{ season.title }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </fieldset>
-                                    </div>
-
-                                    {% with team_squad=team|all_time_squad_stats %}
-                                        <div id="team-squad-stats">
-                                            {% include 'tournament/teams/partials/team_squad_stats.html' %}
-                                        </div>
-                                    {% endwith %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Матчи" />
-                    <div class="tw:tab-content tw:pt-2">
-                        <div id="matches-panel" role="tabpanel" aria-labelledby="matches-tab">
-                            <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
-                                {% team_seasons team as all_team_seasons %}
-
-                                {% for season in all_team_seasons %}
-                                    <input type="radio" name="matches-tabs" class="tw:w-1/3 tw:grow tw:tab tw:font-semibold" role="tab" aria-label="{{ season }}"
-                                           {% if forloop.first %}checked{% endif %}
-                                    />
-                                    <div class="tw:tab-content tw:pt-1" role="tabpanel">
-                                        <div id="season-{{ season.id }}-panel" role="tabpanel" aria-labelledby="schedule-s{{ season.id }}-tab">
-                                            <div class="tw:flex tw:flex-col tw:gap-4">
-                                                {% for league in season.team_leagues %}
-                                                    <div>
-                                                        <h5 class="tw:text-center tw:mb-2">
-                                                            <a href="{{ league.get_absolute_url }}"
-                                                               class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ league.title }}</a>
-                                                        </h5>
-
-                                                        {% for stage in league.stages.all %}
-                                                            {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
-                                                                {% include 'tournament/teams/partials/team_matches.html' %}
-                                                            {% endwith %}
-                                                        {% endfor %}
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Статистика"
-                           hx-get="{% url 'tournament:team_stats' team.id %}"
-                           hx-trigger="click once"
-                           hx-target="#stats-panel"
-                           hx-swap="innerHTML"
-                    />
-                    <div class="tw:tab-content tw:pt-2">
-                        <div id="stats-panel" role="tabpanel" aria-labelledby="stats-tab">
-                            <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0" style="min-height: 450px; background: transparent">
-                                <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
-                                <h3 class="tw:text-center">Загружаем статистику...</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Достижения" />
-                    <div class="tw:tab-content tw:pt-2 tw:mb-2">
-                        <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
-                            {% if team.achievements.count %}
-                                {% for season, achievements in team|team_achievements_by_season %}
-                                    <div class="team_achievements tw:py-1">
-                                        <div class="team_achievements-season">{{season.title}}</div>
-                                        <div class="team_achievements-medals">
-                                            {% for achievement in achievements %}
-                                                <div class="team_achievements-medal" >
-                                                    <img src="{{ achievement.image.url }}" title="{{ achievement.description }}"
-                                                         width="80px" height="80px" alt="{{ achievement.title }}">
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                        <div class="team_achievements-squad">{{achievements|team_squad_in_season}}</div>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Контакты" />
-                    <div class="tw:tab-content tw:pt-2">
-                        <div id="other-panel" role="tabpanel" aria-labelledby="other-tab">
-                            <div class="tw:flex tw:justify-center">
-                                <div class="tw:w-2/3 tw:flex tw:justify-center">
-                                    <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
-                                        <tbody>
-                                            <tr>
-                                                <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Владелец</span></td>
-                                                <td>
-                                                    <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
-                                                       href="{{ team.owner.user_profile.get_absolute_url }}">{{ team.owner.user_player }}</a>
-                                                </td>
-                                                <td class="tw:text-center">
-                                                    {% if team.owner.user_profile.vk %}
-                                                        <a href="https://vk.com/{{ team.owner.user_profile.vk }}"
-                                                           target="_blank"><img
-                                                            src="{% static "img/ico/vk_1.png" %}" height="30" width="30"
-                                                            title="{{ team.owner.user_profile.vk }}"></a>
-                                                    {% endif %}
-                                                    {% if team.owner.user_profile.discord %}
-                                                        <img src='{% static "img/ico/discord_1.png" %}'
-                                                             onclick="myFunction(this)"
-                                                             height="30" width="30"
-                                                             title="{{ team.owner.user_profile.discord }}"
-                                                             style="cursor: pointer;">
-                                                    {% endif %}
-                                                    {% if team.owner.user_profile.telegram %}
-                                                        <a href="https://t.me/{{ team.owner.user_profile.telegram }}"
-                                                           target="_blank"><img
-                                                            src="{% static "img/ico/tg_1.png" %}" height="30" width="30"
-                                                            title="{{ team.owner.user_profile.telegram }}"></a>
-                                                    {% endif %}
-                                                    {% if not team.owner.user_profile.vk and not team.owner.user_profile.discord and not team.owner.user_profile.telegram %}
-                                                        <i class="fa fa-minus tw:text-error tw:text-center"
-                                                           aria-hidden="true"></i>
-                                                    {% endif %}
-
-                                                </td>
-                                            </tr>
-                                            {% for cap in team|get_captain %}
-                                                <tr>
-                                                    <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span></td>
-                                                    <td>
-                                                        {% if cap.name %}
-                                                            <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
-                                                               href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
-                                                        {% else %}
-                                                            <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="tw:text-center">
-                                                        {% if cap.name.user_profile.vk %}
-                                                            <a href="https://vk.com/{{ cap.name.user_profile.vk }}"
-                                                               target="_blank"><img
-                                                                src="{% static "img/ico/vk_1.png" %}" height="30"
-                                                                width="30"
-                                                                title="{{ cap.name.user_profile.vk }}"></a>
-                                                        {% endif %}
-                                                        {% if cap.name.user_profile.discord %}
-                                                            <img src='{% static "img/ico/discord_1.png" %}'
-                                                                 onclick="myFunction(this)"
-                                                                 height="30" width="30"
-                                                                 title="{{ cap.name.user_profile.discord }}"
-                                                                 style="cursor: pointer;">
-                                                        {% endif %}
-                                                        {% if cap.name.user_profile.telegram %}
-                                                            <a href="https://t.me/{{ cap.name.user_profile.telegram }}"
-                                                               target="_blank"><img
-                                                                src="{% static "img/ico/tg_1.png" %}" height="30"
-                                                                width="30"
-                                                                title="{{ cap.name.user_profile.telegram }}"></a>
-                                                        {% endif %}
-                                                        {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
-                                                            <i class="fa fa-minus tw:text-error tw:text-center"
-                                                               aria-hidden="true"></i>
-                                                        {% endif %}
-
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-
-                                            {% for cap in team|get_team_assistent %}
-                                                <tr>
-                                                    <td><span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Ассистент</span></td>
-                                                    <td>
-                                                        {% if cap.name %}
-                                                            <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
-                                                               href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
-                                                        {% else %}
-                                                            <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
-
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="tw:text-center">
-                                                        {% if cap.name.user_profile.vk %}
-                                                            <a href="https://vk.com/{{ team.owner.user_profile.vk }}"
-                                                               target="_blank"><img
-                                                                src="{% static "img/ico/vk_1.png" %}" height="30"
-                                                                width="30"
-                                                                title="{{ cap.name.user_profile.vk }}"></a>
-                                                        {% endif %}
-                                                        {% if cap.name.user_profile.discord %}
-                                                            <img src='{% static "img/ico/discord_1.png" %}'
-                                                                 onclick="myFunction(this)"
-                                                                 height="30" width="30"
-                                                                 title="{{ cap.name.user_profile.discord }}"
-                                                                 style="cursor: pointer;">
-                                                        {% endif %}
-                                                        {% if cap.name.user_profile.telegram %}
-                                                            <a href="https://t.me/{{ cap.name.user_profile.telegram }}"
-                                                               target="_blank"><img
-                                                                src="{% static "img/ico/tg_1.png" %}" height="30"
-                                                                width="30"
-                                                                title="{{ cap.name.user_profile.telegram }}"></a>
-                                                        {% endif %}
-                                                        {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
-                                                            <i class="fa fa-minus tw:text-error tw:text-center"
-                                                               aria-hidden="true"></i>
-                                                        {% endif %}
-
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
+  {% partialdef team-page-container inline=True %}
+    <div id="team-page-container">
+      <div class="tw:flex tw:flex-col tw:rounded-lg tw:mt-2 tw:gap-2 tw:bg-base-100 tw:pt-4 tw:pb-2 tw:px-4"
+           style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})">
+        <div class="tw:flex">
+          <div class="tw:w-1/4">
+            <div class="profile-img tw:mb-3">
+              <img src="{{ team.logo.url }}" alt="{{ team.title }}">
             </div>
-        </div>
-    {% endpartialdef team-page-container %}
+          </div>
 
+          <div class="tw:grow tw:relative tw:px-4">
+            <div class="profile-head">
+              <h3>
+                {{ team.title }}
+                {% if team.owner == user or user.is_superuser %}
+                  <a href="#"
+                     class="tw:text-warning! tw:text-xl"
+                     hx-get="{% url 'tournament:edit_team' team.slug %}"
+                     hx-target="#team-page-container"
+                     hx-push-url="true"
+                     hx-swap="outerHTML">
+                    <i class="fa fa-pencil tw:text-warning tw:hover:text-warning/85" aria-hidden="true"></i>
+                  </a>
+                {% endif %}
+              </h3>
+
+              <p>
+                <a href="{{ team.office_link }}" class="tw:link tw:link-hover tw:link-primary tw:font-bold">Офис</a>
+                <img src="{% static "img/ico/team_office.png" %}" height="28" width="28" title="Офис команды">
+              </p>
+            </div>
+          </div>
+
+          <div class="tw:ml-auto">
+            <img src="{% static "img/ico/best_logo.png" %}" class="tw:w-12">
+          </div>
+        </div>
+
+        <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
+          <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Состав" checked />
+          <div class="tw:tab-content tw:pt-3">
+            <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-transparent tw:p-0! tw:tabs-lg">
+              <input type="radio"
+                     name="team-squad-tabs"
+                     class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!"
+                     aria-label="Текущий"
+                     checked />
+              <div class="tw:tab-content tw:pt-2">
+                <div id="current-players-panel" role="tabpanel" aria-labelledby="current-players-tab">
+                  {% with team_squad=team|current_squad_stats %}
+                    {% include 'tournament/teams/partials/team_squad_stats.html' %}
+                  {% endwith %}
+                </div>
+              </div>
+
+              <input type="radio"
+                     name="team-squad-tabs"
+                     class="tw:tab tw:px-3! tw:shadow-none! tw:checked:bg-transparent!"
+                     aria-label="За всё время" />
+              <div class="tw:tab-content tw:pt-3">
+                <div id="alltime-players-panel" role="tabpanel" aria-labelledby="alltime-players-tab">
+
+                  <div class="tw:flex tw:items-center tw:mb-2">
+                    <fieldset class="tw:fieldset">
+                      <legend class="tw:fieldset-legend tw:text-sm">Сезон</legend>
+                      <select name="season"
+                              class="tw:select tw:select-sm"
+                              hx-get="{% url 'tournament:team_squad_stats' team.id %}"
+                              hx-target="#team-squad-stats"
+                              hx-swap="innerHTML">
+                        <option selected value>Все</option>
+                        {% for season in seasons %}<option value="{{ season.number }}">{{ season.title }}</option>{% endfor %}
+                      </select>
+                    </fieldset>
+                  </div>
+
+                  {% with team_squad=team|all_time_squad_stats %}
+                    <div id="team-squad-stats">{% include 'tournament/teams/partials/team_squad_stats.html' %}</div>
+                  {% endwith %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Матчи" />
+          <div class="tw:tab-content tw:pt-2">
+            <div id="matches-panel" role="tabpanel" aria-labelledby="matches-tab">
+              <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
+                {% team_seasons team as all_team_seasons %}
+
+                {% for season in all_team_seasons %}
+                  <input type="radio"
+                         name="matches-tabs"
+                         class="tw:w-1/3 tw:grow tw:tab tw:font-semibold"
+                         role="tab"
+                         aria-label="{{ season }}"
+                         {% if forloop.first %}checked{% endif %} />
+                  <div class="tw:tab-content tw:pt-1" role="tabpanel">
+                    <div id="season-{{ season.id }}-panel" role="tabpanel" aria-labelledby="schedule-s{{ season.id }}-tab">
+                      <div class="tw:flex tw:flex-col tw:gap-4">
+                        {% for league in season.team_leagues %}
+                          <div>
+                            <h5 class="tw:text-center tw:mb-2">
+                              <a href="{{ league.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ league.title }}</a>
+                            </h5>
+
+                            {% for stage in league.stages.all %}
+                              {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
+                                {% include 'tournament/teams/partials/team_matches.html' %}
+                              {% endwith %}
+                            {% endfor %}
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <input type="radio"
+                 name="team-tabs"
+                 class="tw:grow tw:tab tw:font-semibold"
+                 role="tab"
+                 aria-label="Статистика"
+                 hx-get="{% url 'tournament:team_stats' team.id %}"
+                 hx-trigger="click once"
+                 hx-target="#stats-panel"
+                 hx-swap="innerHTML" />
+          <div class="tw:tab-content tw:pt-2">
+            <div id="stats-panel" role="tabpanel" aria-labelledby="stats-tab">
+              <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0"
+                   style="min-height: 450px;
+                          background: transparent">
+                <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
+                <h3 class="tw:text-center">Загружаем статистику...</h3>
+              </div>
+            </div>
+          </div>
+
+          <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Достижения" />
+          <div class="tw:tab-content tw:pt-2 tw:mb-2">
+            <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
+              {% if team.achievements.count %}
+                {% for season, achievements in team|team_achievements_by_season %}
+                  <div class="team_achievements tw:py-1">
+                    <div class="team_achievements-season">{{ season.title }}</div>
+                    <div class="team_achievements-medals">
+                      {% for achievement in achievements %}
+                        <div class="team_achievements-medal">
+                          <img src="{{ achievement.image.url }}"
+                               title="{{ achievement.description }}"
+                               width="80px"
+                               height="80px"
+                               alt="{{ achievement.title }}">
+                        </div>
+                      {% endfor %}
+                    </div>
+                    <div class="team_achievements-squad">{{ achievements|team_squad_in_season }}</div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+
+          <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Контакты" />
+          <div class="tw:tab-content tw:pt-2">
+            <div id="other-panel" role="tabpanel" aria-labelledby="other-tab">
+              <div class="tw:flex tw:justify-center">
+                <div class="tw:w-2/3 tw:flex tw:justify-center">
+                  <table class="tw:table tw:**:[tr]:border-[#dee2e6]!">
+                    <tbody>
+                      <tr>
+                        <td>
+                          <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Владелец</span>
+                        </td>
+                        <td>
+                          <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
+                             href="{{ team.owner.user_profile.get_absolute_url }}">{{ team.owner.user_player }}</a>
+                        </td>
+                        <td class="tw:text-center">
+                          {% if team.owner.user_profile.vk %}
+                            <a href="https://vk.com/{{ team.owner.user_profile.vk }}" target="_blank">
+                              <img src="{% static "img/ico/vk_1.png" %}" height="30" width="30" title="{{ team.owner.user_profile.vk }}">
+                            </a>
+                          {% endif %}
+                          {% if team.owner.user_profile.discord %}
+                            <img src='{% static "img/ico/discord_1.png" %}'
+                                 onclick="myFunction(this)"
+                                 height="30"
+                                 width="30"
+                                 title="{{ team.owner.user_profile.discord }}"
+                                 style="cursor: pointer">
+                          {% endif %}
+                          {% if team.owner.user_profile.telegram %}
+                            <a href="https://t.me/{{ team.owner.user_profile.telegram }}" target="_blank">
+                              <img src="{% static "img/ico/tg_1.png" %}" height="30" width="30" title="{{ team.owner.user_profile.telegram }}">
+                            </a>
+                          {% endif %}
+                          {% if not team.owner.user_profile.vk and not team.owner.user_profile.discord and not team.owner.user_profile.telegram %}
+                            <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
+                          {% endif %}
+
+                        </td>
+                      </tr>
+                      {% for cap in team|get_captain %}
+                        <tr>
+                          <td>
+                            <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span>
+                          </td>
+                          <td>
+                            {% if cap.name %}
+                              <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
+                                 href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
+                            {% else %}
+                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
+                            {% endif %}
+                          </td>
+                          <td class="tw:text-center">
+                            {% if cap.name.user_profile.vk %}
+                              <a href="https://vk.com/{{ cap.name.user_profile.vk }}" target="_blank">
+                                <img src="{% static "img/ico/vk_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.vk }}">
+                              </a>
+                            {% endif %}
+                            {% if cap.name.user_profile.discord %}
+                              <img src='{% static "img/ico/discord_1.png" %}'
+                                   onclick="myFunction(this)"
+                                   height="30"
+                                   width="30"
+                                   title="{{ cap.name.user_profile.discord }}"
+                                   style="cursor: pointer">
+                            {% endif %}
+                            {% if cap.name.user_profile.telegram %}
+                              <a href="https://t.me/{{ cap.name.user_profile.telegram }}" target="_blank">
+                                <img src="{% static "img/ico/tg_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.telegram }}">
+                              </a>
+                            {% endif %}
+                            {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
+                              <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
+                            {% endif %}
+
+                          </td>
+                        </tr>
+                      {% endfor %}
+
+                      {% for cap in team|get_team_assistent %}
+                        <tr>
+                          <td>
+                            <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Ассистент</span>
+                          </td>
+                          <td>
+                            {% if cap.name %}
+                              <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
+                                 href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
+                            {% else %}
+                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
+
+                            {% endif %}
+                          </td>
+                          <td class="tw:text-center">
+                            {% if cap.name.user_profile.vk %}
+                              <a href="https://vk.com/{{ team.owner.user_profile.vk }}" target="_blank">
+                                <img src="{% static "img/ico/vk_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.vk }}">
+                              </a>
+                            {% endif %}
+                            {% if cap.name.user_profile.discord %}
+                              <img src='{% static "img/ico/discord_1.png" %}'
+                                   onclick="myFunction(this)"
+                                   height="30"
+                                   width="30"
+                                   title="{{ cap.name.user_profile.discord }}"
+                                   style="cursor: pointer">
+                            {% endif %}
+                            {% if cap.name.user_profile.telegram %}
+                              <a href="https://t.me/{{ cap.name.user_profile.telegram }}" target="_blank">
+                                <img src="{% static "img/ico/tg_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.telegram }}">
+                              </a>
+                            {% endif %}
+                            {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
+                              <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
+                            {% endif %}
+
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endpartialdef team-page-container %}
 {% endblock %}

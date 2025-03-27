@@ -1,157 +1,190 @@
 {% extends "core.html" %}
+
 {% load static %}
 
 {% load i18n %}
 
-{% block title %}{% trans "Signup" %}{% endblock %}
+{% block title %}
+  {% trans "Signup" %}
+{% endblock %}
 
 {% block post %}
 
-    <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
-        <div class="tw:text-center tw:py-2">
-            <h2 class="mb-1">{% trans "Sign Up" %}</h2>
-            <p class="mb-1">{% blocktrans %}Уже есть аккаунт? <a class="tw:link tw:link-primary tw:font-semibold" onclick="login_modal.showModal()">Войдите</a>.{% endblocktrans %}</p>
-        </div>
-
-        <div class="tw:card-body">
-            <form id="signup_form" method="post" action="{% url 'account_signup' %}">
-                {% csrf_token %}
-
-                <div class="tw:flex tw:flex-col tw:gap-1">
-                    <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
-                        <fieldset class="tw:fieldset tw:w-full">
-                            <legend class="tw:fieldset-legend">Имя пользователя</legend>
-                            <input type="text" class="tw:input tw:w-full" id="exampleInputEmail1" name="username">
-                            <p class="tw:fieldset-label">Ваш игровой никнейм</p>
-                        </fieldset>
-                        <span class="tw:text-error">{{ form.errors.username }}</span>
-                    </div>
-
-                    <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
-                        <fieldset class="tw:fieldset tw:w-full">
-                            <legend class="tw:fieldset-legend">Email-адрес</legend>
-                            <input type="email" class="tw:input tw:w-full" id="exampleInputEmail2" name="email">
-                        </fieldset>
-                        <span class="tw:text-error">{{ form.errors.email }}</span>
-                    </div>
-
-                    <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
-                        <fieldset class="tw:fieldset tw:w-full">
-                            <legend class="tw:fieldset-legend">Пароль</legend>
-                            <input type="password" class="tw:input tw:w-full" id="exampleInputPassword1" name="password1">
-                        </fieldset>
-                        <span class="tw:text-error">{{ form.errors.password1 }}</span>
-                    </div>
-
-                    <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
-                        <fieldset class="tw:fieldset tw:w-full">
-                            <legend class="tw:fieldset-legend">Повторите пароль</legend>
-                            <input type="password" class="tw:input tw:w-full" id="exampleInputPassword2" name="password2">
-                        </fieldset>
-                        <span class="tw:text-error">{{ form.errors.password2 }}</span>
-                    </div>
-                </div>
-
-                <h4 class="tw:text-center tw:mt-2">Правила</h4>
-                <div class="bd-example tw:mt-1 tw:border-2 tw:border-base-300 tw:rounded">
-                    <div class="tw:flex">
-                        <div class="tw:w-1/3">
-                            <div id="list-example" class="list-group">
-                                <a class="list-group-item list-group-item-action" href="#list-item-1">Регистрация</a>
-                                <a class="list-group-item list-group-item-action" href="#list-item-2">Общие правила</a>
-                                <a class="list-group-item list-group-item-action" href="#list-item-3">Форум</a>
-                                <a class="list-group-item list-group-item-action" href="#list-item-4">Подтверждение</a>
-                            </div>
-                        </div>
-                        <div class="tw:w-2/3 tw:px-4">
-                            <div data-spy="scroll" data-target="#list-example" data-offset="0"
-                                 class="scrollspy-example" style="position: relative; height: 180px; overflow: auto">
-
-                                <h4 id="list-item-1">Регистрация</h4>
-                                <p><span style="font-size:14px"><strong>Запрещается:</strong></span></p>
-
-                                <p><span style="font-size:14px">&mdash; регистрация нескольких аккаунтов;</span></p>
-
-                                <p><span style="font-size:14px">&mdash; использование некорректных выражений в никнейме пользователя;</span>
-                                </p>
-
-                                <p><span style="font-size:14px">&mdash; использование никнеймов, схожих с никнеймами других пользователей сайта;</span>
-                                </p>
-
-                                <p><span style="font-size:14px"><strong>Наказание:</strong> перманентный бан аккаунта(-ов), без права создания нового.</span>
-                                </p>
-
-                                <p>&nbsp;</p>
-
-                                <h4 id="list-item-2">Общие правила</h4>
-                                <p>
-                                    <p><span
-                                        style="font-size:14px"><strong>Запрещается публиковать информацию, содержащую:</strong></span>
-                                    </p>
-
-                                    <p><span style="font-size:14px">&mdash; чрезмерное количество жаргонных слов, грубые и нецензурные слова или выражения;</span>
-                                    </p>
-
-                                    <p><span style="font-size:14px">&mdash; рекламу;</span></p>
-
-                                    <p><span style="font-size:14px">&mdash; порнографию;</span></p>
-
-                                    <p><span style="font-size:14px">&mdash; чужую личную информацию;</span></p>
-
-                                    <p><span style="font-size:14px">&mdash; оскорбления, угрозы, клевету;</span></p>
-
-                                    <p><span style="font-size:14px">&mdash; объекты расистского характера и разжигания межнациональной розни;</span>
-                                    </p>
-
-                                    <p><span
-                                        style="font-size:14px">&mdash; политическую, религиозную и иную пропаганду;</span>
-                                    </p>
-
-                                    <p><span style="font-size:14px">&mdash; призывы к насилию или нарушению действующего законодательства.</span>
-                                    </p>
-
-                                    <p><span style="font-size:14px"><strong>Наказание:</strong> редактирование или удаление информации, мьют или бан пользователя.</span>
-                                    </p>
-
-                                </p>
-
-                                <h4 id="list-item-3">Форум</h4>
-                                <p>
-                                    <p><span style="font-size:14px"><strong>Запрещается:</strong></span></p>
-
-                                    <p><span style="font-size:14px">&mdash; дублирование уже существующих тем;</span></p>
-
-                                    <p><span style="font-size:14px">&mdash; создание тем, которые не соответствуют тематике раздела;</span>
-                                    </p>
-
-                                    <p><span style="font-size:14px">&mdash; создание тем, оскорбляющих конкретного пользователя сайта.</span>
-                                    </p>
-
-                                    <p><span style="font-size:14px"><strong>Наказание:</strong> удаление темы или перенос её в соответствующий раздел, лишение возможности создавать темы на форуме, мьют или бан пользователя.</span>
-                                    </p>
-
-                                </p>
-
-                                <h4 id="list-item-4">Подтверждение</h4>
-                                <p>
-                                    <div class="form-group form-check">
-                                        <input type="checkbox" class="form-check-input" id="exampleCheck1"
-                                               required="True">
-                                        <label class="form-check-label" for="exampleCheck1">С правилами ознакомлен</label>
-                                    </div>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {% if redirect_field_value %}
-                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-                {% endif %}
-                <div class="tw:flex tw:justify-end tw:mt-2">
-                    <button type="submit" class="tw:btn tw:btn-success">Зарегистрироваться</button>
-                </div>
-            </form>
-        </div>
+  <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
+    <div class="tw:text-center tw:py-2">
+      <h2 class="mb-1">{% trans "Sign Up" %}</h2>
+      <p class="mb-1">
+        {% blocktrans %}Уже есть аккаунт? <a class="tw:link tw:link-primary tw:font-semibold" onclick="login_modal.showModal()">Войдите</a>.{% endblocktrans %}
+      </p>
     </div>
+
+    <div class="tw:card-body">
+      <form id="signup_form" method="post" action="{% url 'account_signup' %}">
+        {% csrf_token %}
+
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+            <fieldset class="tw:fieldset tw:w-full">
+              <legend class="tw:fieldset-legend">Имя пользователя</legend>
+              <input type="text" class="tw:input tw:w-full" id="exampleInputEmail1" name="username">
+              <p class="tw:fieldset-label">Ваш игровой никнейм</p>
+            </fieldset>
+            <span class="tw:text-error">{{ form.errors.username }}</span>
+          </div>
+
+          <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
+            <fieldset class="tw:fieldset tw:w-full">
+              <legend class="tw:fieldset-legend">Email-адрес</legend>
+              <input type="email" class="tw:input tw:w-full" id="exampleInputEmail2" name="email">
+            </fieldset>
+            <span class="tw:text-error">{{ form.errors.email }}</span>
+          </div>
+
+          <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
+            <fieldset class="tw:fieldset tw:w-full">
+              <legend class="tw:fieldset-legend">Пароль</legend>
+              <input type="password" class="tw:input tw:w-full" id="exampleInputPassword1" name="password1">
+            </fieldset>
+            <span class="tw:text-error">{{ form.errors.password1 }}</span>
+          </div>
+
+          <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
+            <fieldset class="tw:fieldset tw:w-full">
+              <legend class="tw:fieldset-legend">Повторите пароль</legend>
+              <input type="password" class="tw:input tw:w-full" id="exampleInputPassword2" name="password2">
+            </fieldset>
+            <span class="tw:text-error">{{ form.errors.password2 }}</span>
+          </div>
+        </div>
+
+        <h4 class="tw:text-center tw:mt-2">Правила</h4>
+        <div class="bd-example tw:mt-1 tw:border-2 tw:border-base-300 tw:rounded">
+          <div class="tw:flex">
+            <div class="tw:w-1/3">
+              <div id="list-example" class="list-group">
+                <a class="list-group-item list-group-item-action" href="#list-item-1">Регистрация</a>
+                <a class="list-group-item list-group-item-action" href="#list-item-2">Общие правила</a>
+                <a class="list-group-item list-group-item-action" href="#list-item-3">Форум</a>
+                <a class="list-group-item list-group-item-action" href="#list-item-4">Подтверждение</a>
+              </div>
+            </div>
+            <div class="tw:w-2/3 tw:pl-4">
+              <div data-spy="scroll"
+                   data-target="#list-example"
+                   data-offset="0"
+                   class="scrollspy-example"
+                   style="position: relative;
+                          height: 180px;
+                          overflow: auto">
+
+                <h4 id="list-item-1">Регистрация</h4>
+                <p>
+                  <span style="font-size:14px"><strong>Запрещается:</strong></span>
+                </p>
+
+                <p>
+                  <span style="font-size:14px">&mdash; регистрация нескольких аккаунтов;</span>
+                </p>
+
+                <p>
+                  <span style="font-size:14px">&mdash; использование некорректных выражений в никнейме пользователя;</span>
+                </p>
+
+                <p>
+                  <span style="font-size:14px">&mdash; использование никнеймов, схожих с никнеймами других пользователей сайта;</span>
+                </p>
+
+                <p>
+                  <span style="font-size:14px"><strong>Наказание:</strong> перманентный бан аккаунта(-ов), без права создания нового.</span>
+                </p>
+
+                <p>&nbsp;</p>
+
+                <h4 id="list-item-2">Общие правила</h4>
+                <p>
+                  <p>
+                    <span style="font-size:14px"><strong>Запрещается публиковать информацию, содержащую:</strong></span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; чрезмерное количество жаргонных слов, грубые и нецензурные слова или выражения;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; рекламу;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; порнографию;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; чужую личную информацию;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; оскорбления, угрозы, клевету;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; объекты расистского характера и разжигания межнациональной розни;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; политическую, религиозную и иную пропаганду;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; призывы к насилию или нарушению действующего законодательства.</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px"><strong>Наказание:</strong> редактирование или удаление информации, мьют или бан пользователя.</span>
+                  </p>
+
+                </p>
+
+                <h4 id="list-item-3">Форум</h4>
+                <p>
+                  <p>
+                    <span style="font-size:14px"><strong>Запрещается:</strong></span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; дублирование уже существующих тем;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; создание тем, которые не соответствуют тематике раздела;</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px">&mdash; создание тем, оскорбляющих конкретного пользователя сайта.</span>
+                  </p>
+
+                  <p>
+                    <span style="font-size:14px"><strong>Наказание:</strong> удаление темы или перенос её в соответствующий раздел, лишение возможности создавать темы на форуме, мьют или бан пользователя.</span>
+                  </p>
+
+                </p>
+
+                <h4 id="list-item-4">Подтверждение</h4>
+                <p>
+                  <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="exampleCheck1" required="True">
+                    <label class="form-check-label" for="exampleCheck1">С правилами ознакомлен</label>
+                  </div>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if redirect_field_value %}<input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />{% endif %}
+        <div class="tw:flex tw:justify-end tw:mt-2">
+          <button type="submit" class="tw:btn tw:btn-success">Зарегистрироваться</button>
+        </div>
+      </form>
+    </div>
+  </div>
 {% endblock %}

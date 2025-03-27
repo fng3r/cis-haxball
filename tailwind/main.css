@@ -215,13 +215,7 @@
 
 @layer utilities {
   .tw\:tab {
-    &:not(
-        :checked,
-        label:has(:checked),
-        :hover,
-        .tw\:tab-active,
-        [aria-selected="true"]
-      ) {
+    &:not(:checked, label:has(:checked), :hover, .tw\:tab-active, [aria-selected="true"]) {
       color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
     }
   }
@@ -248,16 +242,10 @@
   }
 
   .tw\:bg-card-button {
-    background-color: var(
-      --bg-card-button,
-      color-mix(in oklab, var(--color-primary) 40%, transparent)
-    );
+    background-color: var(--bg-card-button, color-mix(in oklab, var(--color-primary) 40%, transparent));
 
     &:hover {
-      background-color: var(
-        --bg-card-button-hover,
-        color-mix(in oklab, var(--color-primary) 60%, transparent)
-      );
+      background-color: var(--bg-card-button-hover, color-mix(in oklab, var(--color-primary) 60%, transparent));
     }
   }
 
@@ -274,16 +262,10 @@
   }
 
   .tw\:bg-transfers-button {
-    background-color: var(
-      --bg-transfers-button,
-      color-mix(in oklab, var(--color-primary) 70%, transparent)
-    );
+    background-color: var(--bg-transfers-button, color-mix(in oklab, var(--color-primary) 70%, transparent));
 
     &:hover {
-      background-color: var(
-        --bg-transfers-button-hover,
-        color-mix(in oklab, var(--color-primary) 90%, transparent)
-      );
+      background-color: var(--bg-transfers-button-hover, color-mix(in oklab, var(--color-primary) 90%, transparent));
     }
   }
 

@@ -1,46 +1,49 @@
 {% load user_tags %}
 {% load static %}
 
-<ul id="comment-reactions-{{comment.id}}" class="tw:inline-flex tw:mb-0!">
-    <li class="tw:pl-2 fa fa-thumbs-up tw:text-base-content/40 tw:hover:text-success {% if comment|get_likes|user_in_list:user %}tw:text-success{% endif %}"
-        {% if user.is_authenticated %}
-            {% if user.user_profile.can_vote %}
-                hx-post="{% url 'core:comment_like' comment.id %}"
-                hx-target="#comment-reactions-{{comment.id}}"
-                hx-swap="outerHTML"
-            {% else %}
-                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
-            {% endif %}
+<ul id="comment-reactions-{{ comment.id }}" class="tw:inline-flex tw:mb-0!">
+  <li class="tw:pl-2 fa fa-thumbs-up tw:text-base-content/40 tw:hover:text-success {% if comment|get_likes|user_in_list:user %}tw:text-success{% endif %}"
+    {# djlint:off #}
+      {% if user.is_authenticated %}
+        {% if user.user_profile.can_vote %}
+          hx-post="{% url 'core:comment_like' comment.id %}"
+          hx-target="#comment-reactions-{{comment.id}}"
+          hx-swap="outerHTML"
         {% else %}
-            onclick="login_modal.showModal()"
+          onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
         {% endif %}
-    >
-        <span data-count="like">{{ comment|likes_count }}</span>
-    </li>
+      {% else %}
+        onclick="login_modal.showModal()"
+      {% endif %}
+  >
+    {# djlint:on #}
+    <span data-count="like">{{ comment|likes_count }}</span>
+  </li>
 
-    <li class="tw:pl-2 fa fa-thumbs-down tw:text-base-content/40 tw:hover:text-error {% if comment|get_dislikes|user_in_list:user %}tw:text-error{% endif %}"
-        {% if user.is_authenticated %}
-            {% if user.user_profile.can_vote %}
-                hx-post="{% url 'core:comment_dislike' comment.id %}"
-                hx-target="#comment-reactions-{{comment.id}}"
-                hx-swap="outerHTML"
-            {% else %}
-                onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
-            {% endif %}
+  <li class="tw:pl-2 fa fa-thumbs-down tw:text-base-content/40 tw:hover:text-error {% if comment|get_dislikes|user_in_list:user %}tw:text-error{% endif %}"
+    {# djlint:off #}
+      {% if user.is_authenticated %}
+        {% if user.user_profile.can_vote %}
+          hx-post="{% url 'core:comment_dislike' comment.id %}" hx-target="#comment-reactions-{{ comment.id }}" hx-swap="outerHTML"
         {% else %}
-            onclick="login_modal.showModal()"
+          onclick="alert('Вам ограничен доступ к лайкам/дизлайкам!')"
         {% endif %}
-    >
-        <span data-count="dislike">{{ comment|dislikes_count }}</span>
-    </li>
+      {% else %}
+        onclick="login_modal.showModal()"
+      {% endif %}
+  >
+    {# djlint:on #}
+    <span data-count="dislike">{{ comment|dislikes_count }}</span>
+  </li>
 
-    {% if comment|likes_count > 0 or comment|dislikes_count > 0 %}
-        {% if user|can_view_likes_details %}
-            <div onclick="popupLikeDislike_{{comment.id}}.showModal()" class="tw:cursor-pointer tw:ml-2 tw:mb-0! tw:mt-[1px] tw:text-base-content/40 tw:hover:text-purple-500 fa fa-list">
-                <span data-count="like"></span>
-            </div>
+  {% if comment|likes_count > 0 or comment|dislikes_count > 0 %}
+    {% if user|can_view_likes_details %}
+      <div onclick="popupLikeDislike_{{ comment.id }}.showModal()"
+           class="tw:cursor-pointer tw:ml-2 tw:mb-0! tw:mt-[1px] tw:text-base-content/40 tw:hover:text-purple-500 fa fa-list">
+        <span data-count="like"></span>
+      </div>
 
-            {% include 'core/include/popup_like_view.html' with comment=comment %}
-        {% endif %}
+      {% include 'core/include/popup_like_view.html' with comment=comment %}
     {% endif %}
+  {% endif %}
 </ul>

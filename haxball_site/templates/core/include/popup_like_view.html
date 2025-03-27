@@ -2,53 +2,47 @@
 {% load user_tags %}
 
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static 'core/include/popup_likes_styles.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'core/include/popup_likes_styles.css' %}">
 {% endblock %}
 
-<dialog id="popupLikeDislike_{{comment.id}}" class="tw:modal" role="dialog">
-    <div class="tw:modal-box tw:p-0!">
-        <div class="popup-content">
-            <div class="popup-tab">
-                <div class="popup-tab-like" id="like{{comment.id}}">
-                    <div class="fa fa-thumbs-up"  style="padding-top: 2px"></div>
-                    <div class="popup-tab-count">
-                        {{ comment|likes_count }}</div>
-                </div>
-                <div class="popup-tab-dislike" id="dislike{{comment.id}}">
-                    <div class="fa fa-thumbs-down"  style="padding-top: 2px"></div>
-                    <div class=popup-tab-count>
-                        {{ comment|dislikes_count }}</div>
-                </div>
-            </div>
-            <div class="popup-user-reactions">
-                <div class="vote-like" id="vote-like{{comment.id}}">
-                    {% for like in comment|get_likes %}
-
-                        <div class="voter-user">
-                            <img class="voter-avatar" src="{{ like.user.user_profile.avatar.url }}" alt="...">
-                            <p class="voter-nickname">{{like.user.username}}</p>
-                        </div>
-
-                    {% endfor %}
-                </div>
-
-                <div class="vote-dislike" id="vote-dislike{{comment.id}}">
-                    {% for dislike in comment|get_dislikes %}
-
-                        <div class="voter-user">
-                            <img class="voter-avatar" src="{{ dislike.user.user_profile.avatar.url }}" alt="...">
-                            <p class="voter-nickname">{{dislike.user.username}}</p>
-                        </div>
-
-                    {% endfor %}
-                </div>
-            </div>
+<dialog id="popupLikeDislike_{{ comment.id }}" class="tw:modal" role="dialog">
+  <div class="tw:modal-box tw:p-0!">
+    <div class="popup-content">
+      <div class="popup-tab">
+        <div class="popup-tab-like" id="like{{ comment.id }}">
+          <div class="fa fa-thumbs-up"  style="padding-top: 2px"></div>
+          <div class="popup-tab-count">{{ comment|likes_count }}</div>
         </div>
-    </div>
+        <div class="popup-tab-dislike" id="dislike{{ comment.id }}">
+          <div class="fa fa-thumbs-down"  style="padding-top: 2px"></div>
+          <div class=popup-tab-count>{{ comment|dislikes_count }}</div>
+        </div>
+      </div>
+      <div class="popup-user-reactions">
+        <div class="vote-like" id="vote-like{{ comment.id }}">
+          {% for like in comment|get_likes %}
+            <div class="voter-user">
+              <img class="voter-avatar" src="{{ like.user.user_profile.avatar.url }}" alt="...">
+              <p class="voter-nickname">{{ like.user.username }}</p>
+            </div>
+          {% endfor %}
+        </div>
 
-    <form method="dialog" class="tw:modal-backdrop">
-        <button />
-    </form>
+        <div class="vote-dislike" id="vote-dislike{{ comment.id }}">
+          {% for dislike in comment|get_dislikes %}
+            <div class="voter-user">
+              <img class="voter-avatar" src="{{ dislike.user.user_profile.avatar.url }}" alt="...">
+              <p class="voter-nickname">{{ dislike.user.username }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="dialog" class="tw:modal-backdrop">
+    <button />
+  </form>
 </dialog>
 
 <script type="text/javascript" src="{% static 'scripts/LikeViewPopup.js' %}"></script>

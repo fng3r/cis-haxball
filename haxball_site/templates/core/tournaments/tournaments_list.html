@@ -1,25 +1,28 @@
 {% extends "core.html" %}
+
 {% load static %}
 
 {% block scripts %}
-    <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
+  <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
 
-{% block title %}Турниры — CIS-HAXBALL {% endblock %}
+{% block title %}Турниры — CIS-HAXBALL{% endblock %}
 
 {% block postlist %}
-    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
-        <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
-            <h3 class="tw:text-center tw:mb-0">
-                <img src="{% static "img/ico/pocal_1.png" %}" height="35" width="40">Турниры
-            </h3>
-            <div class="tw:divider tw:my-0!"></div>
+  <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
+      <h3 class="tw:text-center tw:mb-0">
+        <img src="{% static "img/ico/pocal_1.png" %}" height="35" width="40">
+        Турниры
+      </h3>
 
-            {% for post in posts %}
-                {% include "core/include/post_in_list.html" with post=post %}
-            {% endfor %}
-        </div>
+      <div class="tw:divider tw:my-0!"></div>
 
-        {% include "core/include/pagination.html" with page=page_obj %}
+      {% for post in posts %}
+        {% include "core/include/post_in_list.html" with post=post %}
+      {% endfor %}
     </div>
+
+    {% include "core/include/pagination.html" with page=page_obj %}
+  </div>
 {% endblock %}

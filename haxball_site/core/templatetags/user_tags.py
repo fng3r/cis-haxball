@@ -63,7 +63,7 @@ def exceeds_edit_limit(comment: NewComment):
     return comment.version > settings.EDIT_COMMENT_LIMIT
 
 
-@register.inclusion_tag('core/include/profile/last_actuvity.html')
+@register.inclusion_tag('core/include/profile/last_activity.html')
 def user_last_activity(user: User):
     try:
         if user.user_profile.invisibility_enabled:
@@ -107,7 +107,7 @@ def forum_last_activity(category):
     return {'last_act': last_post.created}
 
 
-# Сайд-бар для last activity (выводит последние оставленные комментарии
+# Сайд-бар для last activity выводит последние оставленные комментарии
 # но максимум 1 для каждого поста(если 3 коммента в одном посте были последними - выведет 1)
 @register.inclusion_tag('core/include/sidebar_for_last_activity.html')
 def show_last_activity(count=15):

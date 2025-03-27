@@ -2,107 +2,93 @@
 {% load user_tags %}
 {% load thumbnail %}
 
-
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/include/comments.css" %}">
+  <link rel="stylesheet" type="text/css" href="{% static "core/include/comments.css" %}">
 
-    <style>
-        .django-ckeditor-widget {
-            width: 100% !important;
-        }
-    </style>
+  <style>
+    .django-ckeditor-widget {
+      width: 100% !important;
+    }
+  </style>
 {% endblock %}
 
-
 <div class="tw:flex tw:flex-col tw:gap-2 tw:mt-2">
-    {% partialdef comment-form-container inline=True %}
-        {% with content_type=object|content_type %}
-            <div id="comment-form-container" class="tw:card tw:bg-base-100 tw:rounded-lg tw:py-2 tw:px-1"
-                 x-data="{commentable: '{{object.commentable}}' === 'True' }"
-                 @commentable-changed.window="commentable = $event.detail.commentable">
+  {% partialdef comment-form-container inline=True %}
+    {% with content_type=object|content_type %}
+      <div id="comment-form-container"
+           class="tw:card tw:bg-base-100 tw:rounded-lg tw:py-2 tw:px-1"
+           x-data="{commentable: '{{ object.commentable }}' === 'True' }"
+           @commentable-changed.window="commentable = $event.detail.commentable">
 
-                <div x-show="commentable" x-cloak>
-                    {% if user.is_authenticated and user.user_profile.can_comment %}
-                        {% include 'core/comment/new_comment_form.html' %}
-                    {% elif user.is_authenticated and not user.user_profile.can_comment %}
-                        <h6 class="tw:text-center">
-                            Брумасик считает, что вам лучше не писать здесь :(
-                        </h6>
-                    {% else %}
-                        <h6 class="tw:text-center">
-                            <a class="tw:link tw:link-hover tw:link-primary" href="#" onclick="login_modal.showModal()">
-                                Войдите</a>, чтобы оставить комментарий
-                        </h6>
-                    {% endif %}
-                </div>
-                <div x-show="!commentable" x-cloak>
-                    <h5 class="tw:text-center">
-                        {% if object|get_class == 'Profile' %}
-                            Пользователь закрыл свой профиль
-                        {% else %}
-                            Комментарии закрыты
-                        {% endif %}
-                    </h5>
-                </div>
+        <div x-show="commentable" x-cloak>
+          {% if user.is_authenticated and user.user_profile.can_comment %}
+            {% include 'core/comment/new_comment_form.html' %}
+          {% elif user.is_authenticated and not user.user_profile.can_comment %}
+            <h6 class="tw:text-center">Брумасик считает, что вам лучше не писать здесь :(</h6>
+          {% else %}
+            <h6 class="tw:text-center">
+              <a class="tw:link tw:link-hover tw:link-primary" href="#" onclick="login_modal.showModal()">Войдите</a>, чтобы оставить комментарий
+            </h6>
+          {% endif %}
+        </div>
+        <div x-show="!commentable" x-cloak>
+          <h5 class="tw:text-center">
+            {% if object|get_class == 'Profile' %}
+              Пользователь закрыл свой профиль
+            {% else %}
+              Комментарии закрыты
+            {% endif %}
+          </h5>
+        </div>
+      </div>
+    {% endwith %}
+  {% endpartialdef comment-form-container %}
 
-            </div>
-        {% endwith %}
-    {% endpartialdef comment-form-container %}
+  {% partialdef comments-container inline=True %}
+    {% if comments|length > 0 or object.commentable %}
+      <div class="tw:card tw:bg-base-100 tw:rounded-lg" id="comments-container">
+        <div class="tw:card-title tw:flex-col tw:items-start tw:px-4 tw:py-4 tw:gap-1 card-body-comment">
+          {% if comments|length > 0 %}
+            <div class=" tw:text-2xl">Комментарии ({{ object.comments.count }})</div>
+          {% elif object.commentable %}
+            <div class="tw:text-base">Здесь пока пусто, не хочешь быть первым?</div>
+          {% endif %}
+        </div>
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <div class="comment-widgets" x-data="{editingComment: false}">
+            {% for comment in comments %}
+              {% if comment.is_parent %}
+                {% include 'core/comment/comment-item.html' with comment=comment %}
 
-    {% partialdef comments-container inline=True %}
-        {% if comments|length > 0 or object.commentable %}
-            <div class="tw:card tw:bg-base-100 tw:rounded-lg" id="comments-container">
-                <div class="tw:card-title tw:flex-col tw:items-start tw:px-4 tw:py-4 tw:gap-1 card-body-comment">
-                    {% if comments|length > 0 %}
-                        <div class=" tw:text-2xl">Комментарии ({{ object.comments.count }})</div>
-                    {% elif object.commentable %}
-                        <div class="tw:text-base">Здесь пока пусто, не хочешь быть первым?</div>
-                    {% endif %}
-                </div>
-                <div class="tw:flex tw:flex-col tw:gap-1">
-                    <div class="comment-widgets" x-data="{editingComment: false}">
-                        {% for comment in comments %}
+                {% if comment.has_childs %}
+                  {% if comment.childs_count > 2 %}<div class="collapse show" id="commentcollapse{{ comment.id }}">{% endif %}
 
-                            {% if comment.is_parent %}
-                                {% include 'core/comment/comment-item.html' with comment=comment %}
+                  {% for child_comment in comment.all_childs %}
+                    {% include 'core/comment/comment-item.html' with comment=child_comment %}
+                  {% endfor %}
 
-                                {% if comment.has_childs %}
-                                    {% if comment.childs_count > 2 %}
-                                        <div class="collapse show" id="commentcollapse{{ comment.id }}">
-                                    {% endif %}
-
-                                    {% for child_comment in comment.all_childs %}
-                                        {% include 'core/comment/comment-item.html' with comment=child_comment %}
-                                    {% endfor %}
-
-                                    {% if comment.childs_count > 2 %}
-                                        </div>
-                                    {% endif %}
-                                {% endif %}
-                            {% endif %}
-
-                        {% endfor %}
-                    </div>
-                </div>
-
-                {% if object.comments.count > 2 %}
-                    {% include "core/include/pagination.html" with page=comments paginated_type="comments" %}
+                  {% if comment.childs_count > 2 %}</div>{% endif %}
                 {% endif %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
 
-            </div>
+        {% if object.comments.count > 2 %}
+          {% include "core/include/pagination.html" with page=comments paginated_type="comments" %}
         {% endif %}
-    {% endpartialdef %}
+      </div>
+    {% endif %}
+  {% endpartialdef %}
 </div>
 
-
 <script>
-    function addComment(name, id) {
-        document.getElementById('contactparent').value = id;
-    }
+  function addComment(name, id) {
+    document.getElementById('contactparent').value = id;
+  }
 
-    document.body.addEventListener('htmx:afterRequest', (event) => {
-        $('body').removeClass('modal-open');
-        $('.modal-backdrop').remove();
-    })
-
+  document.body.addEventListener('htmx:afterRequest', (event) => {
+    $('body').removeClass('modal-open');
+    $('.modal-backdrop').remove();
+  })
 </script>
