@@ -71,11 +71,10 @@
                   {% if reservation.match.league.is_multistage_league %}{{ reservation.match.stage.stage_name }} -{% endif %}
                   {% if reservation.match.stage.is_playoff %}
                     {% if reservation.match.stage.is_double_elimination %}{{ reservation.match.numb_tour.get_bracket_display }},{% endif %}
-                    {{ reservation.match.numb_tour|cup_round_name }}
+                    {{ reservation.match.numb_tour|cup_round_name }})
                   {% else %}
-                    {{ reservation.match.numb_tour|tour_name }}
+                    {{ reservation.match.numb_tour|tour_name }})
                   {% endif %}
-                  )
                 </span>
                 <span>Хост: {{ reservation.host.name }}</span>
                 <span>Дата и время: {{ reservation.time_date|date:"d.m H:i" }}</span>
