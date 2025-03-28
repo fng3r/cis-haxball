@@ -55,7 +55,7 @@
               <p></p>
               <p class="tw:flex tw:flex-col">
                 <span class="tw:inline-flex tw:flex-wrap tw:items-center tw:gap-x-1">
-                  Матч:
+                  <span class="tw:font-semibold">Матч:</span>
                   <img src="{{ reservation.match.team_home.logo.url }}"
                        width="20px"
                        height="20px"
@@ -76,8 +76,8 @@
                     {{ reservation.match.numb_tour|tour_name }})
                   {% endif %}
                 </span>
-                <span>Хост: {{ reservation.host.name }}</span>
-                <span>Дата и время: {{ reservation.time_date|date:"d.m H:i" }}</span>
+                <span><span class="tw:font-semibold">Хост:</span> {{ reservation.host.name }}</span>
+                <span><span class="tw:font-semibold">Дата и время:</span> {{ reservation.time_date|date:"d.m H:i" }}</span>
               </p>
             </div>
           </div>

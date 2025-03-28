@@ -41,10 +41,10 @@ def reservation_form(user):
     matches_to_choose = (
         Match.objects.filter(
             (Q(team_home__in=teams) | Q(team_guest__in=teams)),
+            (Q(match_reservation=None) | Q(match_reservation__cancelled_at__isnull=False)),
             is_played=False,
             league__championship__is_active=True,
             numb_tour__date_from__lte=tomorrow,
-            match_reservation=None,
         )
         .distinct()
         .order_by('league', 'numb_tour__number')

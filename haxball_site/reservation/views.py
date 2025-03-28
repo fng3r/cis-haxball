@@ -63,7 +63,11 @@ class ReservationList(ListView):
         prev_match_date = match_date - timedelta(minutes=29)
         next_match_date = match_date + timedelta(minutes=29)
 
-        reserved = ReservationEntry.objects.filter(time_date__range=[prev_match_date, next_match_date], host_id=host_id)
+        reserved = ReservationEntry.objects.filter(
+            time_date__range=[prev_match_date, next_match_date],
+            host_id=host_id,
+            cancelled_at__isnull=True,
+        )
         if not reserved.exists():
             ReservationEntry.objects.create(
                 author=request.user, time_date=match_date, match_id=match_id, host_id=host_id
