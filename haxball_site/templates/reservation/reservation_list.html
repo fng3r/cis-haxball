@@ -1,128 +1,121 @@
 {% extends "core.html" %}
+
 {% load static %}
 {% load reservation_extras %}
 {% load tournament_extras %}
 
-
-{% block title %}Чемпионат | Бронь хоста — CIS-HAXBALL {% endblock %}
+{% block title %}Чемпионат | Бронь хоста — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
-    {% partialdef content-container inline=True %}
-        <div id="content-container">
-            <div class="tw:card tw:bg-base-100 tw:mt-2 tw:pb-1 tw:rounded-lg">
-                <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
-                    <h2 class="tw:card-title">
-                        <i class="fa fa-th tw:text-warning tw:self-end" aria-hidden="true"></i>Бронь хоста
-                    </h2>
-                </div>
-
-                <div id="reservations-table" class="container-fluid p-0 mx-0">
-                    {% include 'alerts.html' %}
-
-                    {% if user.is_authenticated %}
-                        {% if user|can_reserve_host %}
-                            {% reservation_form user %}
-                        {% endif %}
-                    {% endif %}
-
-                    <div class="tw:max-h-[700px] tw:overflow-y-auto tw:rounded-b-lg">
-                        <table class="tw:table tw:table-pin-rows tw:border-t tw:border-neutral-200">
-                            <thead>
-                                <tr>
-                                    {% for host in active_hosts %}
-                                        <th width="{{ active_hosts.count|cols_span }}%" class="tw:text-center! tw:text-lg tw:not-last:border-r tw:not-last:border-neutral-200">
-                                            <span class="tw:text-wrap!">
-                                                <i class="fa fa-trophy tw:text-warning tw:align-middle" aria-hidden="true"></i>
-                                                {{ host.name }}
-                                            </span>
-                                        </th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for match_day in reservations|match_dates %}
-                                    <tr class="tw:bg-base-200">
-                                        <th class="tw:text-center! tw:text-base tw:font-semibold" scope="col" colspan="{{ active_hosts.count }}">
-                                            <i class="fa fa-calendar tw:text-neutral-500" aria-hidden="true"></i>
-                                            {{ match_day|date }}
-                                        </th>
-                                    </tr>
-
-                                    <tr>
-                                        {% for host in active_hosts %}
-                                            <td class="tw:p-0 tw:not-last:border-r tw:not-last:border-neutral-200" style="vertical-align: initial;">
-                                                <div class="tw:flex tw:flex-col">
-                                                    {% for res in reservations %}
-
-                                                        {% if res.host == host and res.time_date|date_equal:match_day %}
-                                                            <div class="tw:flex tw:p-2">
-
-                                                                <div class="tw:text-sm">
-                                                                    <span class="tw:font-bold"> {{ res.time_date|time:"H:i" }} | </span>
-                                                                    <span>
-                                                                        {% if res.match.stage.is_playoff %}
-                                                                            {{ res.match.numb_tour|round_name:res.match.stage.tours.count }}
-                                                                        {% else %}
-                                                                            {{ res.match.numb_tour|tour_name }}
-                                                                        {% endif %}
-                                                                    </span>
-                                                                    <span class="tw:font-bold">
-                                                                        |
-                                                                        <img src="{{ res.match.team_home.logo.url }}" alt="{{ res.match.team_home.title }}"
-                                                                             width="16px" height="16px">
-                                                                        <a href="{{ res.match.get_absolute_url }}"
-                                                                           class="tw:link tw:link-hover tw:link-primary"
-                                                                        >{{ res.match.team_home.short_title }} - {{ res.match.team_guest.short_title }}</a>
-                                                                        <img src="{{ res.match.team_guest.logo.url }}" alt="{{ res.match.team_guest.title }}"
-                                                                             width="16px" height="16px">
-                                                                    </span>
-                                                                </div>
-                                                                {% if user|match_can_delete:res.match %}
-                                                                    <span class="tw:text-error" onclick="deleteres{{ res.id }}.showModal()">
-                                                                        <i class="fa fa-times tw:cursor-pointer tw:text-[20px]" aria-hidden="true"></i>
-                                                                    </span>
-                                                                    <dialog class="tw:modal" id="deleteres{{ res.id }}">
-                                                                        <div class="tw:modal-box">
-                                                                            <h4 class="modal-title">Снять бронь?</h4>
-
-                                                                            <div class="tw:modal-action">
-                                                                                <form method="POST"
-                                                                                      hx-post="{% url 'reservation:delete_entry' res.id %}"
-                                                                                      hx-trigger="submit"
-                                                                                      hx-target="#content-container"
-                                                                                      hx-swap="outerHTML">
-                                                                                    <img class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
-                                                                                    <button type="submit" class="tw:btn tw:btn-primary">
-                                                                                        Да, я уверен
-                                                                                    </button>
-                                                                                </form>
-
-                                                                                <form method="dialog">
-                                                                                    <button class="tw:btn">
-                                                                                        Нет, подождите
-                                                                                    </button>
-                                                                                </form>
-                                                                            </div>
-                                                                        </div>
-                                                                    </dialog>
-                                                                {% else %}
-                                                                    <span></span>
-                                                                {% endif %}
-
-                                                            </div>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </div>
-                                            </td>
-                                        {% endfor %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+  {% partialdef content-container inline=True %}
+    <div id="content-container">
+      <div class="tw:card tw:bg-base-100 tw:mt-2 tw:pb-1 tw:rounded-lg">
+        <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
+          <h2 class="tw:card-title">
+            <i class="fa fa-th tw:text-warning tw:self-end" aria-hidden="true"></i>Бронь хоста
+          </h2>
         </div>
 
-    {% endpartialdef content-container %}
+        <div id="reservations-table" class="container-fluid p-0 mx-0">
+          {% include 'alerts.html' %}
+
+          {% if user.is_authenticated %}
+            {% if user|can_reserve_host %}
+              {% reservation_form user %}
+            {% endif %}
+          {% endif %}
+
+          <div class="tw:max-h-[700px] tw:overflow-y-auto tw:rounded-b-lg">
+            <table class="tw:table tw:table-pin-rows tw:border-t tw:border-neutral-200">
+              <thead>
+                <tr>
+                  {% for host in active_hosts %}
+                    <th width="{{ active_hosts.count|cols_span }}%"
+                        class="tw:text-center! tw:text-lg tw:not-last:border-r tw:not-last:border-neutral-200">
+                      <span class="tw:text-wrap!">
+                        <i class="fa fa-trophy tw:text-warning tw:align-middle" aria-hidden="true"></i>
+                        {{ host.name }}
+                      </span>
+                    </th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for match_day in reservations|match_dates %}
+                  <tr class="tw:bg-base-200">
+                    <th class="tw:text-center! tw:text-base tw:font-semibold" scope="col" colspan="{{ active_hosts.count }}">
+                      <i class="fa fa-calendar tw:text-neutral-500" aria-hidden="true"></i>
+                      {{ match_day|date }}
+                    </th>
+                  </tr>
+
+                  <tr>
+                    {% for host in active_hosts %}
+                      <td class="tw:p-0 tw:not-last:border-r tw:not-last:border-neutral-200" style="vertical-align: initial;">
+                        <div class="tw:flex tw:flex-col">
+                          {% for res in reservations %}
+
+                            {% if res.host == host and res.time_date|date_equal:match_day %}
+                              <div class="tw:flex tw:p-2">
+
+                                <div class="tw:text-sm">
+                                  <span class="tw:font-bold">{{ res.time_date|time:"H:i" }} |</span>
+                                  <span>
+                                    {% if res.match.stage.is_playoff %}
+                                      {{ res.match.numb_tour|round_name:res.match.stage.tours.count }}
+                                    {% else %}
+                                      {{ res.match.numb_tour|tour_name }}
+                                    {% endif %}
+                                  </span>
+                                  <span class="tw:font-bold">
+                                    |
+                                    <img src="{{ res.match.team_home.logo.url }}" alt="{{ res.match.team_home.title }}" width="16px" height="16px">
+                                    <a href="{{ res.match.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ res.match.team_home.short_title }} - {{ res.match.team_guest.short_title }}</a>
+                                    <img src="{{ res.match.team_guest.logo.url }}" alt="{{ res.match.team_guest.title }}" width="16px" height="16px">
+                                  </span>
+                                </div>
+                                {% if user|match_can_delete:res.match %}
+                                  <span class="tw:text-error" onclick="deleteres{{ res.id }}.showModal()">
+                                    <i class="fa fa-times tw:cursor-pointer tw:text-[20px]" aria-hidden="true"></i>
+                                  </span>
+                                  <dialog class="tw:modal" id="deleteres{{ res.id }}">
+                                    <div class="tw:modal-box">
+                                      <h4 class="modal-title">Снять бронь?</h4>
+
+                                      <div class="tw:modal-action">
+                                        <form method="POST"
+                                              hx-post="{% url 'reservation:delete_entry' res.id %}"
+                                              hx-trigger="submit"
+                                              hx-target="#content-container"
+                                              hx-swap="outerHTML">
+                                          <img class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+                                          <button type="submit" class="tw:btn tw:btn-primary">Да, я уверен</button>
+                                        </form>
+
+                                        <form method="dialog">
+                                          <button class="tw:btn">Нет, подождите</button>
+                                        </form>
+                                      </div>
+                                    </div>
+                                  </dialog>
+                                {% else %}
+                                  <span></span>
+                                {% endif %}
+
+                              </div>
+                            {% endif %}
+                          {% endfor %}
+                        </div>
+                      </td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% endpartialdef content-container %}
 
 {% endblock %}

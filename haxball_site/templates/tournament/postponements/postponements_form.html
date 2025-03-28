@@ -1,82 +1,72 @@
 {% load static %}
 
-<style>
-    .bg-c-lite-unknown {
-        background: -webkit-gradient(linear, left top, right top, from(#8d3e11), to(#3f6804));
-        background: linear-gradient(to right, #ea99d4, rgba(126, 255, 239, 0.49));
-    }
-</style>
-
-
 <div class="tw:card tw:bg-base-100 tw:mb-2 tw:rounded-lg">
-    <div class="tw:p-0 tw:mx-0 tw:rounded-lg">
-        {% if matches %}
+  <div class="tw:p-0 tw:mx-0 tw:rounded-lg">
+    {% if matches %}
+      <div class="tw:flex tw:px-3 tw:py-2 tw:bg-base-300 tw:font-bold tw:text-center tw:rounded-t-lg">
+        <div class="tw:text-center tw:ml-2" style="width: 4%">
+          <label>Тур</label>
+        </div>
+        <div style="width: 20%">
+          <label>Хозяева</label>
+        </div>
+        <div style="width: 20%">
+          <label>Гости</label>
+        </div>
+        <div class="tw:w-1/6">
+          <label>Чей перенос</label>
+        </div>
+        <div class="tw:w-1/6 tw:ml-3">
+          <label>Тип переноса</label>
+        </div>
+        <div class="tw:w-1/6 tw:mx-auto">
+          <label>Подтверждение</label>
+        </div>
+      </div>
 
-            <div class="tw:flex tw:px-3 tw:py-2 tw:bg-base-300 tw:font-bold tw:text-center tw:rounded-t-lg">
-                <div class="tw:text-center tw:ml-2" style="width: 4%">
-                    <label>Тур</label>
-                </div>
-                <div  style="width: 20%">
-                    <label>Хозяева</label>
-                </div>
-                <div style="width: 20%">
-                    <label>Гости</label>
-                </div>
-                <div class="tw:w-1/6">
-                    <label>Чей перенос</label>
-                </div>
-                <div class="tw:w-1/6 tw:ml-3">
-                    <label>Тип переноса</label>
-                </div>
-                <div class="tw:w-1/6 tw:mx-auto">
-                    <label>Подтверждение</label>
-                </div>
-            </div>
+      {% for match in matches %}
+        <form class="tw:flex tw:flex-wrap tw:items-center tw:p-3 tw:text-base tw:font-bold tw:rounded-b-lg"
+              hx-post="{% url 'tournament:postponements' %}"
+              hx-trigger="submit"
+              hx-target="#content-container"
+              hx-swap="outerHTML"
+              hx-vals='{"tournament": "{{ league.id }}"}'
+              hx-disabled-elt="find button">
 
-            {% for match in matches %}
-                <form class="tw:flex tw:flex-wrap tw:items-center tw:p-3 tw:text-base tw:font-bold tw:rounded-b-lg"
-                      hx-post="{% url 'tournament:postponements' %}"
-                      hx-trigger="submit"
-                      hx-target="#content-container"
-                      hx-swap="outerHTML"
-                      hx-vals='{"tournament": "{{ league.id }}"}'
-                      hx-disabled-elt="find button">
+          <input type="hidden" name="match_id" value="{{ match.id }}" />
 
-                    <input type="hidden" name="match_id" value="{{ match.id }}"/>
+          <label class="tw:ml-2" style="width: 4%">{{ match.numb_tour.number }}</label>
+          <div class="tw:flex tw:justify-center" style="width: 20%">
+            <img src="{{ match.team_home.logo.url }}" title="{{ match.team_home.title }}" width="25" height="25">
+            <span class="tw:inline-block tw:text-truncate">&nbsp;{{ match.team_home.title }}</span>
+          </div>
 
-                    <label class="tw:ml-2" style="width: 4%">{{ match.numb_tour.number }}</label>
-                    <div class="tw:flex tw:justify-center" style="width: 20%">
-                        <img src="{{match.team_home.logo.url}}" title="{{ match.team_home.title }}" width="25" height="25">
-                        <span class="tw:inline-block tw:text-truncate">&nbsp;{{ match.team_home.title }}</span>
-                    </div>
+          <div class="tw:flex tw:justify-center" style="width: 20%">
+            <img src="{{ match.team_guest.logo.url }}" title="{{ match.team_guest.title }}" width="25" height="25">
+            <span class="tw:inline-block tw:text-truncate">&nbsp;{{ match.team_guest.title }}</span>
+          </div>
 
-                    <div class="tw:flex tw:justify-center" style="width: 20%">
-                        <img src="{{match.team_guest.logo.url}}" title="{{ match.team_guest.title }}" width="25" height="25">
-                        <span class="tw:inline-block tw:text-truncate">&nbsp;{{ match.team_guest.title }}</span>
-                    </div>
+          <select class="postponements-select tw:w-1/6" name="team">
+            <option value="mutual">Обоюдный</option>
+            <option value="{{ match.team_home.id }}">{{ match.team_home }}</option>
+            <option value="{{ match.team_guest.id }}">{{ match.team_guest }}</option>
+          </select>
 
-                    <select class="postponements-select tw:w-1/6" name="team">
-                        <option value="mutual">Обоюдный</option>
-                        <option value="{{ match.team_home.id }}">{{ match.team_home }}</option>
-                        <option value="{{ match.team_guest.id }}">{{ match.team_guest }}</option>
-                    </select>
+          <select class="postponements-select tw:w-1/6 tw:ml-3" name="type">
+            <option value="common">Обычный</option>
+            <option value="emergency">Экстренный</option>
+          </select>
 
-                    <select class="postponements-select tw:w-1/6 tw:ml-3" name="type">
-                        <option value="common">Обычный</option>
-                        <option value="emergency">Экстренный</option>
-                    </select>
-
-                    <div class="tw:flex tw:justify-center tw:grow">
-                        <button class="postponements-button tw:ml-8!" type="submit">Перенос</button>
-                        <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
-                    </div>
-                </form>
-            {% endfor %}
-        {% else %}
-            <div class="tw:flex tw:justify-center bg-c-lite-unknown tw:p-3 tw:w-full tw:rounded-lg">
-                <h6 class="tw:mb-0">На текущий момент у Вас нет несыгранных матчей в данном турнире</h6>
-            </div>
-        {% endif %}
-    </div>
-
+          <div class="tw:flex tw:justify-center tw:grow">
+            <button class="postponements-button tw:ml-8!" type="submit">Перенос</button>
+            <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+          </div>
+        </form>
+      {% endfor %}
+    {% else %}
+      <div class="tw:flex tw:justify-center tw:p-3 tw:w-full tw:rounded-lg">
+        <h6 class="tw:mb-0">На текущий момент у Вас нет несыгранных матчей в данном турнире</h6>
+      </div>
+    {% endif %}
+  </div>
 </div>

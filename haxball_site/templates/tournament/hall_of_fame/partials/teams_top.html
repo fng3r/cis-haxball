@@ -1,51 +1,49 @@
 {% load static %}
 
 <div class="tw:px-1">
-    <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-neutral-200">
-        <div class="tw:w-full tw:flex tw:justify-center tw:items-center tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
-            <div class="tw:card-title tw:px-2 tw:py-3">
-                <h5 class="tw:h-[28px] tw:mb-0! tw:flex tw:items-center tw:gap-1">
-                    <span class="tw:font-semibold">{{ title }}</span>
-                    <img src="{% static icon_url %}"
-                         width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
-                         height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
-                         title="{{ title }}">
-                </h5>
-            </div>
-        </div>
-
-        <div class="tw:card-body tw:h-[560px] tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
-            <ul class="tw:list tw:overflow-y-auto tw:mb-0!">
-                {% for team in teams %}
-                    <li class="tw:list-row tw:w-full tw:px-2 tw:py-3 tw:border-b tw:border-base-300 tw:items-center tw:text-lg tw:gap-0!">
-                        <div class="tw:mr-2 tw:w-7 tw:text-center tw:text-nowrap">
-                            <span class="tw:mb-0 tw:text-center tw:font-semibold">{{ forloop.counter }}</span>
-                        </div>
-
-                        <div class="tw:flex tw:mr-3 tw:items-center">
-                            <img src="{{ team.logo.url }}" class="tw:mr-2" width="30" height="30">
-
-                            <div class="tw:flex tw:flex-col tw:text-left">
-                                <div class="tw:text-base">
-                                    <a class="tw:link tw:link-hover tw:font-semibold" href="{{ team.get_absolute_url }}">
-                                        {{ team.title }}
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <span class="tw:font-semibold">
-                                {% if team.count %}
-                                    {{ team.count }}
-                                {% else %}
-                                    {{ team.winrate|floatformat:1 }}
-                                {% endif %}
-                            </span>
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-neutral-200">
+    <div class="tw:w-full tw:flex tw:justify-center tw:items-center tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
+      <div class="tw:card-title tw:px-2 tw:py-3">
+        <h5 class="tw:h-[28px] tw:mb-0! tw:flex tw:items-center tw:gap-1">
+          <span class="tw:font-semibold">{{ title }}</span>
+          <img src="{% static icon_url %}"
+               width="{% if icon_width %}{{ icon_width }}{% else %}24{% endif %}"
+               height="{% if icon_height %}{{ icon_height }}{% else %}24{% endif %}"
+               title="{{ title }}">
+        </h5>
+      </div>
     </div>
+
+    <div class="tw:card-body tw:h-[560px] tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
+      <ul class="tw:list tw:overflow-y-auto tw:mb-0!">
+        {% for team in teams %}
+          <li class="tw:list-row tw:w-full tw:px-2 tw:py-3 tw:border-b tw:border-base-300 tw:items-center tw:text-lg tw:gap-0!">
+            <div class="tw:mr-2 tw:w-7 tw:text-center tw:text-nowrap">
+              <span class="tw:mb-0 tw:text-center tw:font-semibold">{{ forloop.counter }}</span>
+            </div>
+
+            <div class="tw:flex tw:mr-3 tw:items-center">
+              <img src="{{ team.logo.url }}" class="tw:mr-2" width="30" height="30">
+
+              <div class="tw:flex tw:flex-col tw:text-left">
+                <div class="tw:text-base">
+                  <a class="tw:link tw:link-hover tw:font-semibold" href="{{ team.get_absolute_url }}">{{ team.title }}</a>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <span class="tw:font-semibold">
+                {% if team.count %}
+                  {{ team.count }}
+                {% else %}
+                  {{ team.winrate|floatformat:1 }}
+                {% endif %}
+              </span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
 </div>

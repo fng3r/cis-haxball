@@ -1,23 +1,22 @@
 {% load thumbnail %}
 
 <div class="tw:flex tw:flex-col tw:mx-auto">
-    {% for league in leagues %}
-        <div class="tw:ml-1 tw:mb-2">
-            <h5 class="tw:text-center">{{ league.title }}</h5>
+  {% for league in leagues %}
+    <div class="tw:ml-1 tw:mb-2">
+      <h5 class="tw:text-center">{{ league.title }}</h5>
 
-            <div class="tw:flex tw:flex-wrap tw:justify-start">
+      <div class="tw:flex tw:flex-wrap tw:justify-start">
 
-                {% for team in league.teams.all %}
-                    <div class="tw:w-1/2 tw:lg:w-1/3 tw:grow tw:justify-center tw:mb-1">
-                        {% thumbnail team.logo "25x25" format="PNG" as im %}
-                            <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1" width="25px" height="25px">
-                        {% endthumbnail %}
+        {% for team in league.teams.all %}
+          <div class="tw:w-1/2 tw:lg:w-1/3 tw:grow tw:justify-center tw:mb-1">
+            {% thumbnail team.logo "25x25" format="PNG" as im %}
+              <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1" width="25px" height="25px">
+            {% endthumbnail %}
 
-                        <a href="{{ team.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary tw:text-base">{{ team.title|truncatechars:18 }}</a>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endfor %}
+            <a href="{{ team.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary tw:text-base">{{ team.title|truncatechars:18 }}</a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
 </div>
-

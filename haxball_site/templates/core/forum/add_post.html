@@ -1,28 +1,28 @@
 {% extends "core.html" %}
+
 {% load static %}
 
 {% block postlist %}
-    <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg"
-         style="background-image: url({% static "img/backgrounds/background1.png" %})"
-    >
-        {% if user.is_authenticated %}
-            <div class="tw:card-body tw:p-4">
-                <h3 class="tw:text-center tw:mb-0">
-                    <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>
-                    Создать пост в {{ category.title }}
-                </h3>
-                <div class="tw:divider tw:my-0!"></div>
+  <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg"
+       style="background-image: url({% static "img/backgrounds/background1.png" %})">
+    {% if user.is_authenticated %}
+      <div class="tw:card-body tw:p-4">
+        <h3 class="tw:text-center tw:mb-0">
+          <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>
+          Создать пост в {{ category.title }}
+        </h3>
+        <div class="tw:divider tw:my-0!"></div>
 
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form.media }}
-                    {{ form.as_p }}
+        <form method="POST">
+          {% csrf_token %}
+          {{ form.media }}
+          {{ form.as_p }}
 
-                    <button type="submit" class="tw:btn tw:btn-primary">Отправить</button>
-                </form>
-            </div>
-        {% else %}
-            <h1 class="tw:text-center tw:text-error">Только авторизованные пользоваватели могут создавать посты</h1>
-        {% endif %}
-    </div>
+          <button type="submit" class="tw:btn tw:btn-primary">Отправить</button>
+        </form>
+      </div>
+    {% else %}
+      <h1 class="tw:text-center tw:text-error">Только авторизованные пользоваватели могут создавать посты</h1>
+    {% endif %}
+  </div>
 {% endblock %}

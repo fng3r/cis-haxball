@@ -1,92 +1,79 @@
 {% load tournament_extras %}
 
 {% partialdef tour-matches %}
-    {% for match in matches %}
-        <div class="tw:flex tw:items-center tw:text-xl tw:font-semibold tw:mb-1">
+  {% for match in matches %}
+    <div class="tw:flex tw:items-center tw:text-xl tw:font-semibold tw:mb-1">
+      <div class="tw:w-4/9 tw:text-right tw:justify-center">
+        <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_home.get_absolute_url }}">
+          {{ match.team_home.title }}
+          <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="25" height="25" class="tw:ml-1">
+        </a>
+      </div>
 
-            <div class="tw:w-4/9 tw:text-right tw:justify-center">
-                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_home.get_absolute_url }}">
-                    {{ match.team_home.title }}
-                    <img src="{{ match.team_home.logo.url }}"
-                         alt="{{ match.team_home.title }}"
-                         width="25" height="25"
-                         class="tw:ml-1">
-                </a>
-            </div>
+      <div class="tw:w-1/9 tw:px-0 tw:text-center">
+        {% if not match.is_played %}
+          <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">vs</a>
+        {% else %}
+          <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">{{ match.score_home }} : {{ match.score_guest }}</a>
+        {% endif %}
+      </div>
 
-            <div class="tw:w-1/9 tw:px-0 tw:text-center">
-                {% if not match.is_played %}
-                    <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">vs</a>
-                {% else %}
-                    <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">{{ match.score_home }} : {{ match.score_guest }}</a>
-                {% endif %}
-            </div>
-
-            <div class="tw:w-4/9 tw:text-left">
-                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_guest.get_absolute_url }}">
-                    <img src="{{ match.team_guest.logo.url }}"
-                         alt="{{ match.team_guest.title }}"
-                         width="25" height="25"
-                         class="tw:mr-1">
-                    {{ match.team_guest.title }}
-                </a>
-            </div>
-
-        </div>
-    {% endfor %}
+      <div class="tw:w-4/9 tw:text-left">
+        <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_guest.get_absolute_url }}">
+          <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="25" height="25" class="tw:mr-1">
+          {{ match.team_guest.title }}
+        </a>
+      </div>
+    </div>
+  {% endfor %}
 {% endpartialdef %}
 
 {% for stage in league.stages.all %}
-    <div class="tw:py-2 tw:flex tw:flex-col tw:justify-center tw:items-center">
-        {% if league.is_multistage_league %}
-            <h4 class="tw:w-full tw:text-center tw:mb-1">{{ stage.stage_name }}</h4>
+  <div class="tw:py-2 tw:flex tw:flex-col tw:justify-center tw:items-center">
+    {% if league.is_multistage_league %}<h4 class="tw:w-full tw:text-center tw:mb-1">{{ stage.stage_name }}</h4>{% endif %}
+
+    {% for tour in stage.tours.all %}
+      <div class="tw:flex tw:w-9/10">
+        <div class="tw:w-full tw:my-1">
+          <button class="tw:btn tw:w-full tw:bg-base-300"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}"
+                  aria-expanded="false"
+                  aria-controls="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}">
+            <span class="tw:text-xl tw:font-semibold">
+              {% if not stage.is_playoff %}
+                {{ tour|tour_name }}
+              {% else %}
+                {% if tour.stage.is_double_elimination %}{{ tour.get_bracket_display }},{% endif %}
+                {% with tours_by_bracket=stage.tours|bracket_tours:tour.bracket %}
+                  {% with tours_count=tours_by_bracket|length %}{{ tour|round_name:tours_count }}{% endwith %}
+                {% endwith %}
+              {% endif %}
+              ({{ tour.date_from|date:"d.m" }} - {{ tour.date_to|date:"d.m" }})
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="collapse tw:w-9/10 tw:flex tw:flex-col tw:gap-1 tw:my-2 {% if tour.is_actual %}show{% endif %}"
+           id="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}">
+        {% if stage.is_group_stage %}
+          {% with matches_by_group=tour.tour_matches.all|group_matches %}
+            {% for group, matches in matches_by_group.items %}
+              <div class="tw:text-center tw:text-xl tw:font-semibold tw:mb-1">{{ group.name }}</div>
+              {% with matches=matches %}
+                {% partial tour-matches %}
+              {% endwith %}
+            {% endfor %}
+          {% endwith %}
+        {% else %}
+          {% with matches=tour.tour_matches.all %}
+            {% partial tour-matches %}
+          {% endwith %}
         {% endif %}
-
-        {% for tour in stage.tours.all %}
-            <div class="tw:flex tw:w-9/10">
-                <div class="tw:w-full tw:my-1">
-                    <button class="tw:btn tw:w-full tw:bg-base-300"
-                            type="button" data-toggle="collapse"
-                            data-target="#stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}" aria-expanded="false"
-                            aria-controls="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}">
-                        <span class="tw:text-xl tw:font-semibold">
-                            {% if not stage.is_playoff %}
-                                {{ tour|tour_name }}
-                            {% else %}
-                                {% if tour.stage.is_double_elimination %}
-                                    {{ tour.get_bracket_display }},
-                                {% endif %}
-                                {% with tours_by_bracket=stage.tours|bracket_tours:tour.bracket %}
-                                    {% with tours_count=tours_by_bracket|length %}
-                                        {{ tour|round_name:tours_count }}
-                                    {% endwith %}
-                                {% endwith %}
-                            {% endif %}
-                            ({{ tour.date_from|date:"d.m" }} - {{ tour.date_to|date:"d.m" }})
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="collapse tw:w-9/10 tw:flex tw:flex-col tw:gap-1 tw:my-2 {% if tour.is_actual %}show{% endif %}"
-                 id="stage-{{ stage.order }}-tour{{ tour.number }}-bracket-{{ tour.bracket }}">
-
-                {% if stage.is_group_stage %}
-                    {% with matches_by_group=tour.tour_matches.all|group_matches %}
-                        {% for group, matches in matches_by_group.items %}
-                            <div class="tw:text-center tw:text-xl tw:font-semibold tw:mb-1">{{ group.name }}</div>
-                            {% with matches=matches %}
-                                {% partial tour-matches %}
-                            {% endwith %}
-                        {% endfor %}
-                    {% endwith %}
-                {% else %}
-                    {% with matches=tour.tour_matches.all %}
-                        {% partial tour-matches %}
-                    {% endwith %}
-                {% endif %}
-            </div>
-        {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
+  </div>
 
 {% endfor %}

@@ -1,39 +1,38 @@
 {% extends "core.html" %}
+
 {% load static %}
 {% load user_tags %}
 
 {% block title %}Форум{% endblock %}
 {% block postlist %}
-    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
-        <div class="tw:card-body tw:rounded-t-lg tw:gap-3 tw:py-4">
-            {% for theme in themes %}
-                <div class="tw:flex tw:flex-col">
-                    <h3 class="tw:text-center">
-                        {{ theme.title }}
-                    </h3>
-                    <div class="tw:divider tw:my-0!"></div>
+  <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:card-body tw:rounded-t-lg tw:gap-3 tw:py-4">
+      {% for theme in themes %}
+        <div class="tw:flex tw:flex-col">
+          <h3 class="tw:text-center">{{ theme.title }}</h3>
+          <div class="tw:divider tw:my-0!"></div>
 
-                    {% for subtheme in theme.category_in_theme.all %}
-                        <div class="tw:mx-1 tw:my-2 tw:rounded-xl tw:border tw:border-neutral-300">
-                            <div class="tw:flex tw:justify-between tw:py-2 tw:px-4">
-                                <div class="tw:inline-block">
-                                    <h5 class="tw:text-lg">
-                                        <a href="{{ subtheme.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ subtheme.title }}</a>
-                                    </h5>
-                                    <div class="tw:text-base tw:text-neutral-500 tw:font-semibold">{{ subtheme.description }}</div>
-                                </div>
-                                <div class="tw:inline-block tw:min-w-1/6">
-                                    <div class="tw:text-right tw:font-semibold"><i class="fa fa-bars tw:text-primary" aria-hidden="true"></i> Статей: {{ subtheme.posts_in_category.count }}</div>
-                                    <div class="tw:text-base-content/70 tw:text-sm tw:mt-2 tw:text-right tw:font-semibold">
-                                        {% forum_last_activity subtheme %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
+          {% for subtheme in theme.category_in_theme.all %}
+            <div class="tw:mx-1 tw:my-2 tw:rounded-xl tw:border tw:border-neutral-300">
+              <div class="tw:flex tw:justify-between tw:py-2 tw:px-4">
+                <div class="tw:inline-block">
+                  <h5 class="tw:text-lg">
+                    <a href="{{ subtheme.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ subtheme.title }}</a>
+                  </h5>
+                  <div class="tw:text-base tw:text-neutral-500 tw:font-semibold">{{ subtheme.description }}</div>
                 </div>
-
-            {% endfor %}
+                <div class="tw:inline-block tw:min-w-1/6">
+                  <div class="tw:text-right tw:font-semibold">
+                    <i class="fa fa-bars tw:text-primary" aria-hidden="true"></i> Статей: {{ subtheme.posts_in_category.count }}
+                  </div>
+                  <div class="tw:text-base-content/70 tw:text-sm tw:mt-2 tw:text-right tw:font-semibold">{% forum_last_activity subtheme %}</div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
         </div>
+
+      {% endfor %}
     </div>
+  </div>
 {% endblock %}

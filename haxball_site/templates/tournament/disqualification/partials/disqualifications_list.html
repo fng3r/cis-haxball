@@ -2,105 +2,120 @@
 {% load thumbnail %}
 
 {% for disqualification in disqualifications %}
+  <tr
+    {# djlint:off #}
     {% if forloop.last and disqualifications.number < disqualifications.paginator.num_pages %}
-        <tr hx-get="{% url 'tournament:disqualifications' %}?page={{ disqualifications.number|add:1 }}"
-            hx-trigger="intersect once"
-            hx-target="this"
-            hx-swap="afterend"
-            hx-include="#filter-form"
-            hx-indicator="#scroll-indicator">
-    {% else %}
-        <tr>
+      hx-get="{% url 'tournament:disqualifications' %}?page={{ disqualifications.number|add:1 }}"
+      hx-trigger="intersect once"
+      hx-target="this"
+      hx-swap="afterend"
+      hx-include="#filter-form"
+      hx-indicator="#scroll-indicator"
     {% endif %}
+    {# djlint:on #}
+  >
     <td class="tw:pr-1">
-        <div class="tw:text-sm">
-            {{ disqualification.match.league.championship.short_title }}
-        </div>
+      <div class="tw:text-sm">{{ disqualification.match.league.championship.short_title }}</div>
     </td>
 
     <td class="tw:px-2">
-        <div class="tw:flex tw:items-center tw:text-[12px]">
-            <img src="{{ disqualification.team.logo.url }}" class="tw:mr-1"
-                 alt="{{ disqualification.team.title }}" width="20" height="20">
-            <a href="{{ disqualification.team.get_absolute_url }}" class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ disqualification.team.title }}</a>
-        </div>
+      <div class="tw:flex tw:items-center tw:text-[12px]">
+        <img src="{{ disqualification.team.logo.url }}"
+             class="tw:mr-1"
+             alt="{{ disqualification.team.title }}"
+             width="20"
+             height="20">
+        <a href="{{ disqualification.team.get_absolute_url }}"
+           class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ disqualification.team.title }}</a>
+      </div>
     </td>
 
     <td class="tw:px-2">
-        <div class="tw:flex tw:items-center tw:text-[12px]">
-            <div class="tw:avatar tw:mr-1">
-                <div class="tw:w-[20px] tw:h-[20px] tw:rounded-full">
-                    {% thumbnail disqualification.player.name.user_profile.avatar "50x50" crop="center" as avatar %}
-                        <img src="{{ avatar.url }}" class="tw:rounded-full"
-                             alt="{{ disqualification.player.nickname }}">
-                    {% endthumbnail %}
-                </div>
-            </div>
-            <a href="{{ disqualification.player.name.user_profile.get_absolute_url }}" class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ disqualification.player }}</a>
+      <div class="tw:flex tw:items-center tw:text-[12px]">
+        <div class="tw:avatar tw:mr-1">
+          <div class="tw:w-[20px] tw:h-[20px] tw:rounded-full">
+            {% thumbnail disqualification.player.name.user_profile.avatar "50x50" crop="center" as avatar %}
+              <img src="{{ avatar.url }}" class="tw:rounded-full" alt="{{ disqualification.player.nickname }}">
+            {% endthumbnail %}
+          </div>
         </div>
+        <a href="{{ disqualification.player.name.user_profile.get_absolute_url }}"
+           class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ disqualification.player }}</a>
+      </div>
     </td>
 
     <td class="tw:px-2">
-        <a href="{{disqualification.match.get_absolute_url}}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-            <div class="tw:flex tw:flex-col">
-                <div class="tw:flex tw:items-center">
-                    <img src="{{ disqualification.match.team_home.logo.url }}" class="tw:mr-1"
-                         alt="{{ disqualification.match.team_home }}" width="20" height="20">{{disqualification.match.team_home.short_title}}
-                </div>
-                <div class="tw:text-base-content/70! tw:text-center tw:text-xs">vs</div>
-                <div class="tw:flex tw:items-center">
-                    <img src="{{ disqualification.match.team_guest.logo.url }}" class="tw:mr-1"
-                         alt="{{ disqualification.match.team_guest }}" width="20" height="20">{{disqualification.match.team_guest.short_title}}
-                </div>
-            </div>
-        </a>
+      <a href="{{ disqualification.match.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
+        <div class="tw:flex tw:flex-col">
+          <div class="tw:flex tw:items-center">
+            <img src="{{ disqualification.match.team_home.logo.url }}"
+                 class="tw:mr-1"
+                 alt="{{ disqualification.match.team_home }}"
+                 width="20"
+                 height="20">
+            {{ disqualification.match.team_home.short_title }}
+          </div>
+          <div class="tw:text-base-content/70! tw:text-center tw:text-xs">vs</div>
+          <div class="tw:flex tw:items-center">
+            <img src="{{ disqualification.match.team_guest.logo.url }}"
+                 class="tw:mr-1"
+                 alt="{{ disqualification.match.team_guest }}"
+                 width="20"
+                 height="20">
+            {{ disqualification.match.team_guest.short_title }}
+          </div>
+        </div>
+      </a>
     </td>
 
     <td width="15%">
-        <div class="tw:text-[12px] tw:text-left">{{ disqualification.reason }}</div>
+      <div class="tw:text-[12px] tw:text-left">{{ disqualification.reason }}</div>
     </td>
 
     <td>
-        <div class="tw:text-[12px]">
-            {% for tour in disqualification.tours.all %}
-                {{ tour }}<br>
-            {% endfor %}
-        </div>
+      <div class="tw:text-[12px]">
+        {% for tour in disqualification.tours.all %}
+          {{ tour }}
+          <br>
+        {% endfor %}
+      </div>
     </td>
 
     <td>
-        <div class="tw:text-[12px]">
-            {% if disqualification.lifted_tours.count == 0 %}
-                Нет
-            {% elif disqualification.tours.count == disqualification.lifted_tours.count %}
-                Да
-            {% else %}
-                Частично<br>
-                {% for tour in disqualification.lifted_tours.all %}
-                    {{ tour }}<br>
-                {% endfor %}
-            {% endif %}
-        </div>
+      <div class="tw:text-[12px]">
+        {% if disqualification.lifted_tours.count == 0 %}
+          Нет
+        {% elif disqualification.tours.count == disqualification.lifted_tours.count %}
+          Да
+        {% else %}
+          Частично
+          <br>
+          {% for tour in disqualification.lifted_tours.all %}
+            {{ tour }}
+            <br>
+          {% endfor %}
+        {% endif %}
+      </div>
     </td>
 
     <td class="tw:px-2">
-        <div class="tw:flex tw:items-center tw:text-[12px]">
-            {% if disqualification.match.inspector %}
-                <div class="tw:avatar tw:mr-1">
-                    <div class="tw:w-[20px] tw:h-[20px] tw:rounded-full">
-                        {% thumbnail disqualification.match.inspector.user_profile.avatar "50x50" crop="center" as avatar %}
-                            <img src="{{ avatar.url }}" class="tw:mr-1 tw:rounded-full"
-                                 alt="{{ disqualification.match.inspector.username }}">
-                        {% endthumbnail %}
-                    </div>
-                </div>
-                <div class="tw:text-sm">
-                    <a href="{{ disqualification.match.inspector.user_profile.get_absolute_url }}" class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ disqualification.match.inspector.username }}</a>
-                </div>
-            {% else %}
-                —
-            {% endif %}
-        </div>
+      <div class="tw:flex tw:items-center tw:text-[12px]">
+        {% if disqualification.match.inspector %}
+          <div class="tw:avatar tw:mr-1">
+            <div class="tw:w-[20px] tw:h-[20px] tw:rounded-full">
+              {% thumbnail disqualification.match.inspector.user_profile.avatar "50x50" crop="center" as avatar %}
+                <img src="{{ avatar.url }}" class="tw:mr-1 tw:rounded-full" alt="{{ disqualification.match.inspector.username }}">
+              {% endthumbnail %}
+            </div>
+          </div>
+          <div class="tw:text-sm">
+            <a href="{{ disqualification.match.inspector.user_profile.get_absolute_url }}"
+               class="tw:my-0 tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ disqualification.match.inspector.username }}</a>
+          </div>
+        {% else %}
+          —
+        {% endif %}
+      </div>
     </td>
-    </tr>
+  </tr>
 {% endfor %}

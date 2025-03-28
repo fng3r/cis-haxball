@@ -1,138 +1,133 @@
 {% extends "core.html" %}
+
 {% load static %}
 {% load tournament_extras %}
 {% load widget_tweaks %}
+
 {% block scripts %}
-    <script>
-        function myFunction(Element) {
-            navigator.clipboard.writeText(Element.title);
-            alert("Скопировано " + Element.title);
-        }
-    </script>
+  <script>
+    function myFunction(Element) {
+      navigator.clipboard.writeText(Element.title);
+      alert("Скопировано " + Element.title);
+    }
+  </script>
 {% endblock %}
+
 {% block title %}Чемпионат | Свободные агенты — CIS-HAXBALL{% endblock %}
 {% block profile_of_user %}
-    {% partialdef content-container inline=True %}
-        <div id="content-container">
-            <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
-                <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
-                    <h2 class="tw:card-title">
-                        <i class="fa fa-search-plus tw:text-success" aria-hidden="true"></i>
-                        Поиск команды/игроков
-                    </h2>
-                </div>
-
-                {% include 'alerts.html' %}
-
-                {% if user.is_authenticated %}
-                    {% if not user|user_in_agents and user|can_add_entry %}
-                        <form method="POST" class="tw:flex tw:flex-wrap tw:items-center tw:mt-2 tw:mb-1 tw:mx-2"
-                              hx-post="{% url 'tournament:free_agents' %}"
-                              hx-trigger="submit"
-                              hx-target="#content-container"
-                              hx-swap="outerHTML"
-                              hx-disabled-elt="find button">
-
-                            <div class="tw:flex tw:w-full">
-                                <div class="tw:w-1/4 tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
-                                    <label for="pos_main" class="tw:label tw:text-base-content tw:font-bold">Позиция</label>
-                                    <select id="pos_main" name="position_main" class="tw:select" >
-                                        <option selected value="Любая">Любая</option>
-                                        <option value="Нападающий">Нападающий</option>
-                                        <option value="Опорник">Опорник</option>
-                                        <option value="Вратарь">Вратарь</option>
-                                        <option value="Верхний нападающий">Верхний нападающий</option>
-                                        <option value="Нижний нападающий">Нижний нападающий</option>
-                                        <option value="Нападающий/опорник">Нападающий/Опорник</option>
-                                        <option value="Нападающий/вратарь">Нападающий/Вратарь</option>
-                                        <option value="Задняя линия">Задняя линия</option>
-                                    </select>
-                                </div>
-
-                                <div class="tw:w-3/4 tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
-                                    <label for="description" class="tw:label tw:text-base-content tw:font-bold">Краткий комментарий</label>
-                                    <input id="description" name="description" type="text" class="tw:input tw:w-full" >
-                                </div>
-                            </div>
-
-                            <div class="tw:flex tw:mt-auto tw:mb-2">
-                                <button type="submit" class="tw:btn tw:btn-success tw:items-center">
-                                    <i class="fa fa-plus" aria-hidden="true"></i>Оставить заявку
-                                </button>
-                                <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6"
-                                     src="{% static 'img/svg-loaders/bars.svg' %}">
-                            </div>
-                        </form>
-                    {% elif user|user_in_agents %}
-                        <div hx-indicator="#free-agents-actions-indicator" class="tw:inline-flex tw:justify-start tw:my-2 tw:mx-2">
-                            <form class="tw:mr-1"
-                                  hx-post="{% url 'tournament:remove_entry' user.user_free_agent.id %}"
-                                  hx-trigger="submit"
-                                  hx-target="#content-container"
-                                  hx-swap="outerHTML"
-                                  hx-disabled-elt="find button">
-                                <button type="submit" class="tw:btn tw:btn-error tw:items-center">
-                                    <i class="fa fa-times" aria-hidden="true"></i>
-                                    Снять заявку
-                                </button>
-                            </form>
-
-                            <form hx-post="{% url 'tournament:update_entry' user.user_free_agent.id %}"
-                                  hx-trigger="submit"
-                                  hx-target="#content-container"
-                                  hx-swap="outerHTML"
-                                  hx-disabled-elt="find button">
-                                <button type="submit" class="tw:btn tw:btn-success tw:items-center"
-                                        {% if not user|can_add_entry %}
-                                            disabled
-                                            title="Сможете через {{ user|date_can|timeuntil }}"
-                                            style="cursor: pointer"
-                                        {% endif %}
-                                >
-                                    <i class="fa fa-arrow-up" aria-hidden="true"
-                                       {% if not user|can_add_entry %}
-                                           onclick="alert('Вы не можете поднять заявку, т.к. только недавно создали или подняли заявку' +
-                                                    'Следущее обновление возможно через {{ user|date_can|timeuntil }}. Если вы снимете ' +
-                                                    'свою заявку, то создать новую будет возможно через это же время.');"
-                                       {% endif %}>
-                                    </i>
-                                    Поднять заявку
-                                </button>
-
-                                <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6"
-                                     src="{% static 'img/svg-loaders/bars.svg' %}">
-                            </form>
-                        </div>
-                    {% else %}
-                        <div role="alert" class="tw:m-1 tw:alert tw:alert-warning tw:gap-2">
-                            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
-                            <span>Вы сможете оставить заявку повторно через {{ user|date_can|timeuntil }}</span>
-                        </div>
-                    {% endif %}
-                {% endif %}
-
-                <div class="tw:w-full tw:p-0 tw:mx-0">
-                    <div class="tw:h-[755px] tw:overflow-y-auto tw:rounded-b-lg">
-                        <table class="tw:table tw:table-zebra tw:table-pin-rows">
-                            <thead class="tw:thead tw:text-center">
-                                <tr class="tw:bg-base-300!">
-                                    <th scope="col" class="tw:text-left!">Игрок</th>
-                                    <th scope="col">Позиция</th>
-                                    <th scope="col">Контакты</th>
-                                    <th scope="col">Комментарий</th>
-                                    <th scope="col">Дата</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% include 'tournament/free_agents/partials/free_agents_list.html' %}
-                            </tbody>
-                        </table>
-                        <img id="scroll-indicator" class="htmx-indicator tw:ml-2 tw:mb-1 tw:w-6 tw:absolute tw:bottom-0 tw:left-1/2"
-                             src="{% static 'img/svg-loaders/bars.svg' %}">
-                    </div>
-                </div>
-            </div>
+  {% partialdef content-container inline=True %}
+    <div id="content-container">
+      <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
+        <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
+          <h2 class="tw:card-title">
+            <i class="fa fa-search-plus tw:text-success" aria-hidden="true"></i>
+            Поиск команды/игроков
+          </h2>
         </div>
-    {% endpartialdef content-container %}
 
+        {% include 'alerts.html' %}
+
+        {% if user.is_authenticated %}
+          {% if not user|user_in_agents and user|can_add_entry %}
+            <form method="POST"
+                  class="tw:flex tw:flex-wrap tw:items-center tw:mt-2 tw:mb-1 tw:mx-2"
+                  hx-post="{% url 'tournament:free_agents' %}"
+                  hx-trigger="submit"
+                  hx-target="#content-container"
+                  hx-swap="outerHTML"
+                  hx-disabled-elt="find button">
+
+              <div class="tw:flex tw:w-full">
+                <div class="tw:w-1/4 tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
+                  <label for="pos_main" class="tw:label tw:text-base-content tw:font-bold">Позиция</label>
+                  <select id="pos_main" name="position_main" class="tw:select">
+                    <option selected value="Любая">Любая</option>
+                    <option value="Нападающий">Нападающий</option>
+                    <option value="Опорник">Опорник</option>
+                    <option value="Вратарь">Вратарь</option>
+                    <option value="Верхний нападающий">Верхний нападающий</option>
+                    <option value="Нижний нападающий">Нижний нападающий</option>
+                    <option value="Нападающий/опорник">Нападающий/Опорник</option>
+                    <option value="Нападающий/вратарь">Нападающий/Вратарь</option>
+                    <option value="Задняя линия">Задняя линия</option>
+                  </select>
+                </div>
+
+                <div class="tw:w-3/4 tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
+                  <label for="description" class="tw:label tw:text-base-content tw:font-bold">Краткий комментарий</label>
+                  <input id="description" name="description" type="text" class="tw:input tw:w-full">
+                </div>
+              </div>
+
+              <div class="tw:flex tw:mt-auto tw:mb-2">
+                <button type="submit" class="tw:btn tw:btn-success tw:items-center">
+                  <i class="fa fa-plus" aria-hidden="true"></i>Оставить заявку
+                </button>
+                <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+              </div>
+            </form>
+          {% elif user|user_in_agents %}
+            <div hx-indicator="#free-agents-actions-indicator" class="tw:inline-flex tw:justify-start tw:my-2 tw:mx-2">
+              <form class="tw:mr-1"
+                    hx-post="{% url 'tournament:remove_entry' user.user_free_agent.id %}"
+                    hx-trigger="submit"
+                    hx-target="#content-container"
+                    hx-swap="outerHTML"
+                    hx-disabled-elt="find button">
+                <button type="submit" class="tw:btn tw:btn-error tw:items-center">
+                  <i class="fa fa-times" aria-hidden="true"></i>
+                  Снять заявку
+                </button>
+              </form>
+
+              <form hx-post="{% url 'tournament:update_entry' user.user_free_agent.id %}"
+                    hx-trigger="submit"
+                    hx-target="#content-container"
+                    hx-swap="outerHTML"
+                    hx-disabled-elt="find button">
+                <button type="submit"
+                        class="tw:btn tw:btn-success tw:items-center"
+                        {% if not user|can_add_entry %}disabled title="Сможете через {{ user|date_can|timeuntil }}" style="cursor: pointer"{% endif %}>
+                  <i class="fa fa-arrow-up"
+                     aria-hidden="true"
+                     {% if not user|can_add_entry %} onclick="alert('Вы не можете поднять заявку, т.к. только недавно создали или подняли заявку' + 'Следущее обновление возможно через {{ user|date_can|timeuntil }}. Если вы снимете ' + 'свою заявку, то создать новую будет возможно через это же время.');" {% endif %}>
+                  </i>
+                  Поднять заявку
+                </button>
+
+                <img id="free-agents-actions-indicator" class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+              </form>
+            </div>
+          {% else %}
+            <div role="alert" class="tw:m-1 tw:alert tw:alert-warning tw:gap-2">
+              <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+              <span>Вы сможете оставить заявку повторно через {{ user|date_can|timeuntil }}</span>
+            </div>
+          {% endif %}
+        {% endif %}
+
+        <div class="tw:w-full tw:p-0 tw:mx-0">
+          <div class="tw:h-[755px] tw:overflow-y-auto tw:rounded-b-lg">
+            <table class="tw:table tw:table-zebra tw:table-pin-rows">
+              <thead class="tw:thead tw:text-center">
+                <tr class="tw:bg-base-300!">
+                  <th scope="col" class="tw:text-left!">Игрок</th>
+                  <th scope="col">Позиция</th>
+                  <th scope="col">Контакты</th>
+                  <th scope="col">Комментарий</th>
+                  <th scope="col">Дата</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% include 'tournament/free_agents/partials/free_agents_list.html' %}
+              </tbody>
+            </table>
+            <img id="scroll-indicator"
+                 class="htmx-indicator tw:ml-2 tw:mb-1 tw:w-6 tw:absolute tw:bottom-0 tw:left-1/2"
+                 src="{% static 'img/svg-loaders/bars.svg' %}">
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endpartialdef content-container %}
 {% endblock %}

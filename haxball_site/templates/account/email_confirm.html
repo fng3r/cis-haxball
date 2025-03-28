@@ -1,41 +1,44 @@
 {% extends "core.html" %}
+
 {% load static %}
 {% load account %}
 {% load i18n %}
 
-
-{% block title %}{% trans "Confirm E-mail Address" %}{% endblock %}
-
+{% block title %}
+  {% trans "Confirm E-mail Address" %}
+{% endblock %}
 
 {% block post %}
-    <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
-        <div class="tw:card-title tw:justify-center">
-            <h1>{% trans "Confirm E-mail Address" %}</h1>
-        </div>
-
-        <div class="tw:card-body">
-
-            {% if confirmation %}
-
-                {% user_display confirmation.email_address.user as user_display %}
-
-                <p>{% blocktrans with confirmation.email_address.email as email %}Пожалуйста, подтвердите, что
-                    <a href="mailto:{{ email }}">{{ email }}</a> является email-адресом для пользователя {{ user_display }}
-                    .{% endblocktrans %}</p>
-
-                <form method="post" action="{% url 'account_confirm_email' confirmation.key %}" class="tw:text-center">
-                    {% csrf_token %}
-                    <button type="submit" class="tw:btn tw:btn-success">{% trans 'Confirm' %}</button>
-                </form>
-
-            {% else %}
-
-                {% url 'account_email' as email_url %}
-
-                <p>{% blocktrans %}This e-mail confirmation link expired or is invalid. Please
-                    <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.{% endblocktrans %}</p>
-            {% endif %}
-        </div>
+  <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:card-title tw:justify-center">
+      <h1>{% trans "Confirm E-mail Address" %}</h1>
     </div>
 
+    <div class="tw:card-body">
+      {% if confirmation %}
+        {% user_display confirmation.email_address.user as user_display %}
+
+        <p>
+          {% blocktrans with confirmation.email_address.email as email %}
+            Пожалуйста, подтвердите, что
+            <a href="mailto:{{ email }}">{{ email }}</a> является email-адресом для пользователя {{ user_display }}.
+          {% endblocktrans %}
+        </p>
+
+        <form method="post" action="{% url 'account_confirm_email' confirmation.key %}" class="tw:text-center">
+          {% csrf_token %}
+          <button type="submit" class="tw:btn tw:btn-success">{% trans 'Confirm' %}</button>
+        </form>
+
+      {% else %}
+        {% url 'account_email' as email_url %}
+
+        <p>
+          {% blocktrans %}
+            This e-mail confirmation link expired or is invalid. Please <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.
+          {% endblocktrans %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
 {% endblock %}
