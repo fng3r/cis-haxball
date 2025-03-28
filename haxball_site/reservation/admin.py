@@ -14,7 +14,7 @@ class ReservationHostAdmin(admin.ModelAdmin):
 
 @admin.register(ReservationEntry)
 class ReservationEntryAdmin(admin.ModelAdmin):
-    list_display = ('author', 'match', 'time_date', 'host', 'created')
+    list_display = ('author', 'match', 'time_date', 'host', 'created', 'cancelled_at', 'cancelled_by')
     raw_id_fields = ('match',)
     list_filter = ('host', 'author')
 

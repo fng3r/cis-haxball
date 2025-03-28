@@ -53,10 +53,8 @@
                       <td class="tw:p-0 tw:not-last:border-r tw:not-last:border-neutral-200" style="vertical-align: initial;">
                         <div class="tw:flex tw:flex-col">
                           {% for res in reservations %}
-
                             {% if res.host == host and res.time_date|date_equal:match_day %}
                               <div class="tw:flex tw:p-2">
-
                                 <div class="tw:text-sm">
                                   <span class="tw:font-bold">{{ res.time_date|time:"H:i" }} |</span>
                                   <span>
@@ -100,7 +98,6 @@
                                 {% else %}
                                   <span></span>
                                 {% endif %}
-
                               </div>
                             {% endif %}
                           {% endfor %}
@@ -114,8 +111,10 @@
           </div>
         </div>
       </div>
+
+      <div id="reservations-events-container" class="tw:mt-2">
+        {% include 'reservation/reservations_events.html' with reservations=all_reservations %}
+      </div>
     </div>
-
   {% endpartialdef content-container %}
-
 {% endblock %}
