@@ -8,14 +8,14 @@
 {% block profile_of_user %}
   {% partialdef content-container inline=True %}
     <div id="content-container">
-      <div class="tw:card tw:bg-base-100 tw:mt-2 tw:pb-1 tw:rounded-lg">
+      <div class="tw:card tw:bg-base-100 tw:pb-1 tw:rounded-lg">
         <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
           <h2 class="tw:card-title">
             <i class="fa fa-th tw:text-warning tw:self-end" aria-hidden="true"></i>Бронь хоста
           </h2>
         </div>
 
-        <div id="reservations-table" class="container-fluid p-0 mx-0">
+        <div id="reservations-table" class="tw:p-0 tw:mx-0">
           {% include 'alerts.html' %}
 
           {% if user.is_authenticated %}

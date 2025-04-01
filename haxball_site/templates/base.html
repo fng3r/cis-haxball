@@ -70,7 +70,7 @@
     {% block scripts %}{% endblock %}
   </head>
 
-  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:min-h-screen tw:pb-1! tw:bg-body">
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:min-h-screen tw:bg-body">
     <script type="text/javascript" src="{% static "scripts/themeController.js" %}"></script>
 
     {% include "core/include/navbar.html" %}

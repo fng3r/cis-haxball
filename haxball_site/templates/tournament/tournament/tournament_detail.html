@@ -10,9 +10,9 @@
 
 {% block title %}Чемпионат | {{ league.title }} ({{ league.championship.short_title }}) — CIS-HAXBALL{% endblock %}
 
-{% block profile_of_user %}
+{% block main_content %}
   {% cache 60 champ_table league.id %}
-    <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-lg">
+    <div class="tw:card tw:bg-base-100 tw:rounded-lg">
       <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
         <div class="tw:card-title tw:py-1">
           <h3 class="tw:text-center tw:flex tw:items-center tw:justify-center">

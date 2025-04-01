@@ -3,7 +3,7 @@
 {% load polls_extras %}
 
 {% for poll in active_polls %}
-  <div class="tw:card tw:my-2 tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
     <div class="tw:p-2 tw:text-center tw:rounded-t-lg">
       <h6 class="tw:text-center tw:mb-0! tw:text-base">{{ poll.question_text }}</h6>
       {% if poll.anonymously %}<i>(анонимно)</i>{% endif %}

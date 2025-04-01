@@ -1,10 +1,11 @@
 {% extends "core.html" %}
+
 {% load i18n %}
 
 {% block title %}Уведомления — CIS-HAXBALL{% endblock %}
 
 {% block main_content %}
-  <div class="tw:card tw:mt-2 tw:bg-base-100 tw:shadow-xl" x-data="{unreadOnly: false}">
+  <div class="tw:card tw:bg-base-100 tw:shadow-xl" x-data="{unreadOnly: false}">
     <div class="tw:card-body">
       <h2 class="tw:card-title tw:mb-4">Уведомления</h2>
 
@@ -30,9 +31,7 @@
 
       <div class="tw:divider tw:my-1"></div>
 
-      <div id="notification-container">
-        {% include "notifications/notifications_list.html" %}
-      </div>
+      <div id="notification-container">{% include "notifications/notifications_list.html" %}</div>
     </div>
   </div>
 
