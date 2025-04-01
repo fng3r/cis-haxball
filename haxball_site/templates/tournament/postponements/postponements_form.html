@@ -4,13 +4,13 @@
   <div class="tw:p-0 tw:mx-0 tw:rounded-lg">
     {% if matches %}
       <div class="tw:flex tw:px-3 tw:py-2 tw:bg-base-300 tw:font-bold tw:text-center tw:rounded-t-lg">
-        <div class="tw:text-center tw:ml-2" style="width: 4%">
+        <div class="tw:w-[4%]">
           <label>Тур</label>
         </div>
-        <div style="width: 20%">
+        <div class="tw:w-[20%]">
           <label>Хозяева</label>
         </div>
-        <div style="width: 20%">
+        <div class="tw:w-[20%]">
           <label>Гости</label>
         </div>
         <div class="tw:w-1/6">
@@ -19,13 +19,13 @@
         <div class="tw:w-1/6 tw:ml-3">
           <label>Тип переноса</label>
         </div>
-        <div class="tw:w-1/6 tw:mx-auto">
+        <div class="tw:grow tw:mx-auto">
           <label>Подтверждение</label>
         </div>
       </div>
 
       {% for match in matches %}
-        <form class="tw:flex tw:flex-wrap tw:items-center tw:p-3 tw:text-base tw:font-bold tw:rounded-b-lg"
+        <form class="tw:flex tw:items-center tw:p-3 tw:text-base tw:font-bold tw:rounded-b-lg"
               hx-post="{% url 'tournament:postponements' %}"
               hx-trigger="submit"
               hx-target="#content-container"
@@ -35,13 +35,14 @@
 
           <input type="hidden" name="match_id" value="{{ match.id }}" />
 
-          <label class="tw:ml-2" style="width: 4%">{{ match.numb_tour.number }}</label>
-          <div class="tw:flex tw:justify-center" style="width: 20%">
+          <div class="tw:w-[4%] tw:text-center">{{ match.numb_tour.number }}</div>
+
+          <div class="tw:flex tw:justify-center tw:items-center tw:w-[20%] tw:gap-x-0.5">
             <img src="{{ match.team_home.logo.url }}" title="{{ match.team_home.title }}" width="25" height="25">
             <span class="tw:inline-block tw:text-truncate">&nbsp;{{ match.team_home.title }}</span>
           </div>
 
-          <div class="tw:flex tw:justify-center" style="width: 20%">
+          <div class="tw:flex tw:justify-center tw:items-center tw:w-[20%] tw:gap-x-0.5">
             <img src="{{ match.team_guest.logo.url }}" title="{{ match.team_guest.title }}" width="25" height="25">
             <span class="tw:inline-block tw:text-truncate">&nbsp;{{ match.team_guest.title }}</span>
           </div>

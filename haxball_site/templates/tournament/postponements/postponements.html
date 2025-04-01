@@ -26,8 +26,8 @@
 
         {% include 'alerts.html' %}
 
-        <div class="tw:flex tw:flex-col tw:w-full tw:p-0 tw:mx-0">
-          <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:mt-1 tw:mb-3 tw:ml-2"
+        <div class="tw:flex tw:flex-col tw:w-full tw:p-2 tw:gap-y-3">
+          <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-2"
                 hx-get="{% url 'tournament:postponements' %}"
                 hx-trigger="submit"
                 hx-target="#content-container"
@@ -45,8 +45,8 @@
             </div>
           </form>
 
-          <div id="postponements-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:rounded-b-lg">
-            <table id="postponements-table" class="tw:table tw:table-pin-rows tw:border-t tw:border-neutral-200">
+          <div id="postponements-table" class="tw:max-h-[850px] tw:overflow-y-auto">
+            <table id="postponements-table" class="tw:table tw:table-pin-rows">
               <thead class="tw:text-center">
                 <tr class="tw:bg-base-300!">
                   <th scope="col" class="tw:border-r tw:border-neutral-200">Команда</th>

@@ -13,42 +13,42 @@
       </h2>
     </div>
 
-    <div class="tw:w-full tw:p-0 tw:mx-0">
+    <div class="tw:flex tw:flex-col tw:gap-y-3 tw:p-2">
       <form id="filter-form"
-            class="tw:flex tw:flex-wrap tw:items-center tw:mt-2 tw:mb-1 tw:mx-2"
+            class="tw:flex tw:flex-wrap tw:items-center tw:gap-2"
             hx-get="{% url 'tournament:transfers' %}"
             hx-trigger="submit"
             hx-target="#transfers-list-container"
             hx-swap="innerHTML show:top"
             hx-disabled-elt="find button">
 
-        <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
+        <div class="tw:flex tw:flex-wrap tw:items-center">
           <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.season.label }}</label>
           {% render_field filter.form.season|add_class:'tw:select' %}
         </div>
 
-        <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
+        <div class="tw:flex tw:flex-wrap tw:items-center">
           <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.team_from.label }}</label>
           {% render_field filter.form.team_from|add_class:'tw:select' %}
         </div>
 
-        <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
+        <div class="tw:flex tw:flex-wrap tw:items-center">
           <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.team_to.label }}</label>
           {% render_field filter.form.team_to|add_class:'tw:select' %}
         </div>
 
-        <div class="tw:flex tw:flex-wrap tw:items-center tw:mr-2 tw:mb-2">
+        <div class="tw:flex tw:flex-wrap tw:items-center">
           <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.player.label }}</label>
           {% render_field filter.form.player|add_class:'tw:select' %}
         </div>
 
-        <div class="tw:flex tw:mt-auto tw:mb-2">
+        <div class="tw:flex tw:mt-auto">
           <button class="tw:btn tw:btn-primary">Применить фильтр</button>
           <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
         </div>
       </form>
 
-      <div class="tw:max-h-[875px] tw:overflow-y-auto tw:rounded-b-lg">
+      <div class="tw:max-h-[875px] tw:overflow-y-auto">
         <table class="tw:table tw:table-zebra tw:table-pin-rows">
           <thead class="tw:thead tw:text-left">
             <tr class="tw:bg-base-300!">

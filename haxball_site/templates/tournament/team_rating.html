@@ -16,12 +16,12 @@
     </div>
 
     <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:bg-base-100 tw:rounded-b-lg" role="tablist">
-      <input type="radio" name="rating-tabs" class="tw:tab tw:pl-2! tw:font-semibold" role="tab" aria-label="Рейтинг" checked />
-      <div class="tw:tab-content tw:pt-2">
+      <input type="radio" name="rating-tabs" class="tw:tab tw:pl-3! tw:font-semibold" role="tab" aria-label="Рейтинг" checked />
+      <div class="tw:tab-content">
         <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
-          <div class="tw:flex tw:flex-col tw:p-0 tw:mx-0" x-data="{ showSelectedSeasonTeamsOnly: false }">
+          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2" x-data="{ showSelectedSeasonTeamsOnly: false }">
             <form id="filter-form"
-                  class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:mt-1 tw:mb-1 tw:ml-2"
+                  class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
                   hx-get="{% url 'tournament:team_rating' %}"
                   hx-trigger="submit"
                   hx-target="#team-rating-table"
@@ -39,7 +39,7 @@
               </div>
             </form>
 
-            <div class="tw:inline-flex tw:my-2! tw:ml-2! tw:gap-2">
+            <div class="tw:inline-flex tw:gap-2 tw:pl-1">
               <label class="tw:toggle tw:text-base-content tw:inline-grid!">
                 <input id="show-selected-season-teams-only" type="checkbox" x-model="showSelectedSeasonTeamsOnly" />
                 <svg aria-label="disabled"
