@@ -433,94 +433,96 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
         </svg>
       </div>
-      <ul tabindex="0" class="tw:menu tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-3 tw:w-40 tw:p-2 tw:shadow">
-        <li>
-          <div class="tw:dropdown tw:dropdown-right">
-            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-              Чемпионат<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+      <nav class="tw:dropdown-content tw:mt-1">
+        <ul tabindex="0" class="tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:w-40 tw:p-2 tw:shadow">
+          <li>
+            <div class="tw:dropdown tw:dropdown-right">
+              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                Чемпионат<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+              </div>
+              <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                {% partial championship_dropdown_content %}
+              </ul>
             </div>
-            <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-              {% partial championship_dropdown_content %}
-            </ul>
-          </div>
-        </li>
+          </li>
 
-        <li>
-          <div class="tw:dropdown tw:dropdown-right">
-            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-              Команды<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+          <li>
+            <div class="tw:dropdown tw:dropdown-right">
+              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                Команды<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+              </div>
+              <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                {% teams_in_navbar %}
+              </div>
             </div>
-            <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-              {% teams_in_navbar %}
+          </li>
+
+          <li>
+            <div class="tw:dropdown tw:dropdown-right">
+              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                Турниры<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+              </div>
+              <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                {% partial tournaments_dropdown_content %}
+              </ul>
             </div>
-          </div>
-        </li>
+          </li>
 
-        <li>
-          <div class="tw:dropdown tw:dropdown-right">
-            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-              Турниры<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+          <li>
+            <div class="tw:dropdown tw:dropdown-right">
+              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                Архив<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+              </div>
+              <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                {% partial archive_dropdown_content %}
+              </ul>
             </div>
-            <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-              {% partial tournaments_dropdown_content %}
-            </ul>
-          </div>
-        </li>
+          </li>
 
-        <li>
-          <div class="tw:dropdown tw:dropdown-right">
-            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-              Архив<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+          <li>
+            <div class="tw:dropdown tw:dropdown-right">
+              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                Рейтинг<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+              </div>
+              <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                {% partial rating_dropdown_content %}
+              </ul>
             </div>
-            <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-              {% partial archive_dropdown_content %}
-            </ul>
-          </div>
-        </li>
+          </li>
 
-        <li>
-          <div class="tw:dropdown tw:dropdown-right">
-            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-              Рейтинг<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+          <li>
+            <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+          </li>
+
+          <li>
+            <div class="tw:dropdown tw:dropdown-right">
+              <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
+                Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+              </div>
+              <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                {% partial media_dropdown_content %}
+              </ul>
             </div>
-            <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-              {% partial rating_dropdown_content %}
-            </ul>
-          </div>
-        </li>
+          </li>
 
-        <li>
-          <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
-        </li>
+          <li>
+            <a href="{% url 'core:forum' %}">Форум</a>
+          </li>
 
-        <li>
-          <div class="tw:dropdown tw:dropdown-right">
-            <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
-              Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
-            </div>
-            <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-              {% partial media_dropdown_content %}
-            </ul>
-          </div>
-        </li>
+          <li>
+            <a href="{% url 'core:admins' %}">Администрация</a>
+          </li>
 
-        <li>
-          <a href="{% url 'core:forum' %}">Форум</a>
-        </li>
-
-        <li>
-          <a href="{% url 'core:admins' %}">Администрация</a>
-        </li>
-
-        <li>
-          <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
-        </li>
-      </ul>
+          <li>
+            <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+          </li>
+        </ul>
+      </nav>
     </div>
 
     <a class="tw:btn tw:btn-ghost tw:text-xl tw:text-blue-600!" href="{% url 'core:home' %}">CIS-HAXBALL</a>
 
-    <div class="tw:hidden tw:lg:flex tw:flex-wrap tw:mr-3">
+    <nav class="tw:hidden tw:lg:flex tw:flex-wrap tw:mr-3">
       <div class="tw:dropdown">
         <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
           Чемпионат<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
@@ -592,7 +594,7 @@
           </li>
         </ul>
       </div>
-    </div>
+    </nav>
   </div>
 
   <div class="tw:flex tw:items-center tw:gap-2">
