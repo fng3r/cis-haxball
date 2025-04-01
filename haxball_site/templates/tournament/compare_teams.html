@@ -8,8 +8,8 @@
 {% partialdef stat-row %}
   <div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
     {% stats_percentage team1_stat team2_stat as percentages %}
-    <div class="tw:flex tw:mx-5">
-      <div class="tw:w-1/4 tw:px-1 tw:flex tw:flex-col tw:text-lg tw:font-semibold">
+    <div class="tw:flex">
+      <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold">
         <div>
           {% if team1_player %}{{ team1_player }}{% endif %}
         </div>
@@ -38,7 +38,7 @@
       </div>
     </div>
 
-    <div class="tw:flex tw:mx-5 tw:h-2 {% if percentages.0 == 0 and percentages.1 == 0 %}tw:bg-secondary{% endif %}">
+    <div class="tw:flex tw:h-2 {% if percentages.0 == 0 and percentages.1 == 0 %}tw:bg-secondary{% endif %}">
       <div class="tw:bg-error"
            style="width: {{ percentages.0 }}%;
                   height: 10px;
@@ -61,9 +61,9 @@
       <h3 class="tw:text-center">Сравнить команды</h3>
     </div>
 
-    <div class="tw:card-body tw:px-2 tw:pb-2">
+    <div class="tw:card-body tw:px-2 tw:py-4">
       <form id="teams-comparison-form"
-            class="tw:flex tw:flex-wrap tw:items-center tw:mt-1 tw:mb-2 tw:ml-2 tw:px-3"
+            class="tw:flex tw:flex-wrap tw:items-center tw:px-3"
             hx-get="{% url 'tournament:compare_teams' %}"
             hx-trigger="submit"
             hx-target="#teams-comparison-container"
@@ -79,14 +79,14 @@
           </div>
 
           <div class="tw:w-1/5 tw:self-end">
-            <div class="tw:flex tw:justify-center tw:ml-3 tw:mb-2">
+            <div class="tw:flex tw:justify-center tw:ml-8 tw:mb-2">
               <button class="tw:btn tw:btn-primary">Сравнить</button>
               <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
             </div>
           </div>
 
           <div class="tw:w-2/5">
-            <div class="tw:flex tw:flex-col tw:items-end tw:mr-2 tw:mb-2">
+            <div class="tw:flex tw:flex-col tw:items-end tw:ml-2 tw:mb-2">
               <label class="tw:label tw:text-left tw:text-base-content tw:font-bold">{{ compare_form.team2.label }}</label>
               {% render_field compare_form.team2|add_class:'tw:select' %}
             </div>
@@ -115,9 +115,9 @@
 
       <div class="tw:divider tw:mt-0!"></div>
 
-      <div id="teams-comparison-container">
+      <div id="teams-comparison-container" class="tw:flex tw:flex-col">
         {% partialdef teams-comparison inline=True %}
-          <div class="tw:flex tw:w-full tw:mb-3">
+          <div class="tw:flex tw:w-full tw:mb-2">
             <div class="tw:w-3/7 tw:grow-1 tw:flex tw:flex-col tw:gap-1 tw:justify-center">
               {% with team=team1.team %}
                 <div class="tw:flex tw:justify-center tw:mb-1">
@@ -134,7 +134,7 @@
 
                 <div class="tw:text-center tw:text-base-content/80 tw:text-3xl tw:font-semibold">
                   {% if team %}
-                    <a class="tw:text-base-content/80! tw:text-3xl tw:font-semibold" href="{{ team.get_absolute_url }}">{{ team.title }}</a>
+                    <a class="tw:link tw:link-hover tw:text-base-content/80 tw:text-3xl" href="{{ team.get_absolute_url }}">{{ team.title }}</a>
                   {% else %}
                     <span>Выберите команду</span>
                   {% endif %}
@@ -160,7 +160,7 @@
 
                 <div class="tw:text-center tw:text-base-content/80 tw:text-3xl tw:font-semibold">
                   {% if team %}
-                    <a class="tw:text-base-content/80! tw:text-3xl tw:font-semibold" href="{{ team.get_absolute_url }}">{{ team.title }}</a>
+                    <a class="tw:link tw:link-hover tw:text-base-content/80 tw:text-3xl" href="{{ team.get_absolute_url }}">{{ team.title }}</a>
                   {% else %}
                     <span>Выберите команду</span>
                   {% endif %}
@@ -170,7 +170,7 @@
           </div>
 
           {% if team1.stats and team2.stats %}
-            <div class="tw:flex tw:flex-col tw:gap-1">
+            <div class="tw:flex tw:flex-col tw:gap-1 tw:mt-3 tw:px-4">
               {% with stat_name='Матчи' team1_stat=team1.stats.matches team2_stat=team2.stats.matches %}
                 {% partial stat-row %}
               {% endwith %}
@@ -226,10 +226,9 @@
           {% endif %}
 
           {% if team1.player_stats and team2.player_stats %}
-            <div class="tw:flex tw:flex-col tw:gap-1 tw:text-base-content">
-              <div class="tw:w-full">
-                <div class="tw:text-center tw:text-base-content/90 tw:text-2xl tw:font-semibold tw:mt-1">Игроки</div>
-              </div>
+            <div class="tw:flex tw:flex-col tw:gap-1 tw:text-base-content tw:mt-3 tw:px-4">
+              <div class="tw:text-center tw:text-base-content/90 tw:text-2xl tw:font-semibold">Игроки</div>
+
               {% with stat_name='Наибольшее кол-во матчей' team1_player=team1.player_stats.matches.pl team2_player=team2.player_stats.matches.pl team1_stat=team1.player_stats.matches.count team2_stat=team2.player_stats.matches.count %}
                 {% partial stat-row %}
               {% endwith %}
