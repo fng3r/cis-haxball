@@ -30,20 +30,23 @@
                  aria-label="{% if league.is_multistage_league %}{{ stage.stage_name }}{% else %}{% if stage.is_playoff %}Сетка{% else %}Таблица{% endif %}{% endif %}"
                  {% if forloop.first %}checked{% endif %} />
           <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
-            <div id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
+            <div id="table-{{ forloop.counter }}"
+                 role="tabpanel"
+                 aria-labelledby="tournament-table-tab-{{ forloop.counter }}"
+                 class="tw:p-1">
               {% if stage.is_playoff %}
                 {% if stage.is_double_elimination %}
                   <div id="bracket-upper" class="tw:mt-2 tw:text-center">{% cup_bracket stage 1 %}</div>
-                  <div class="tw:divider"></div>
+                  <div class="tw:divider tw:my-2"></div>
                   <div id="bracket-lower" class="tw:text-center">{% cup_bracket stage 0 %}</div>
                 {% else %}
                   <div id="bracket" class="tw:text-center">{% cup_bracket stage None %}</div>
                 {% endif %}
               {% else %}
                 {% if stage.is_group_stage %}
-                  <div class="tw:mt-2">
+                  <div class="tw:flex tw:flex-col tw:gap-2 tw:py-1">
                     {% for group in stage.groups.all %}
-                      <div class="tw:text-center tw:mb-4">
+                      <div class="tw:text-center">
                         <h4 class="tw:text-lg">{{ group.name }}</h4>
                         {% tournament_table league stage group %}
                       </div>
