@@ -34,11 +34,11 @@
         <th scope="row" width="4%" class="tw:pl-1">
           <div class="tw:flex">
             {% if forloop.counter <= stage.promoted_count %}
-              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-green-500"></span>
+              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-green-500 tw:rounded-2xl"></span>
             {% elif forloop.counter <= stage.promoted_count|add:stage.promoted_extra_count %}
-              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-yellow-300"></span>
+              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-yellow-300 tw:rounded-2xl"></span>
             {% elif forloop.counter > teams|length|sub:stage.relegated_count %}
-              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-red-500"></span>
+              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-red-500 tw:rounded-2xl"></span>
             {% else %}
               <span class="tw:mr-2 tw:my-n1 tw:w-1"></span>
             {% endif %}

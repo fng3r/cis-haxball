@@ -14,9 +14,9 @@
 {% endblock %}
 
 {% block content %}
-  <div class="tw:w-full tw:mx-auto tw:justify-center">
+  <div class="tw:w-full tw:mx-auto tw:justify-center tw:pt-2 tw:pb-1">
     <div class="tw:max-w-[1600px] tw:flex tw:flex-wrap tw:relative tw:mx-auto">
-      <div class="tw:w-1/2 tw:order-2 tw:xl:w-1/6 tw:xl:order-1 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
+      <aside class="tw:w-1/2 tw:order-2 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:xl:order-1 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
         {% include 'core/include/sidebar_for_media.html' %}
 
         {% include 'core/include/sidebar_for_lives.html' %}
@@ -26,13 +26,9 @@
         {% polls_list 2 user %}
 
         {% show_last_transfers %}
+      </aside>
 
-      </div>
-      <div class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:lg:w-full tw:md:w-full tw:sm:w-full tw:mx-0 tw:px-1">
-        {% block match_results %}{% endblock %}
-
-        {% block upcoming_matches %}{% endblock %}
-
+      <main class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:px-1">
         {% block main_content %}{% endblock %}
 
         {# Блок для отображение профиля пользователя #}
@@ -46,9 +42,9 @@
 
         {# Блок для отображение списка комментариев #}
         {% block comments %}{% endblock %}
-      </div>
+      </main>
 
-      <div class="tw:w-1/2 tw:order-3 tw:xl:w-1/6 tw:lg:w-1/4 tw:sm:w-1/2 tw:my-2 tw:px-1">
+      <aside class="tw:w-1/2 tw:order-3 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
         {% include 'core/include/sidebar_for_online_users.html' %}
 
         {% block sidebar_last_activity %}
@@ -58,7 +54,7 @@
         {% block sidebar_top_comments %}
           {% show_top_comments 5 %}
         {% endblock %}
-      </div>
+      </aside>
     </div>
   </div>
 
