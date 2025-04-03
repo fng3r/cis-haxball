@@ -358,6 +358,7 @@ CKEDITOR_CONFIGS = {
                 'textwatcher',
                 'textmatch',
                 'image2',
+                'mentions',
             ]
         ),
     },
@@ -409,10 +410,24 @@ CKEDITOR_CONFIGS = {
             'textmatch',
             'editorplaceholder',
             'image2',
+            'mentions',
         ]),
         
         'editorplaceholder': 'Введите текст комментария...',
         'editorplaceholder_delay': 200,
+        
+        'mentions': [
+            {
+                'feed': '/api/users/search?query={encodedQuery}',
+                'marker': '@',
+                'minChars': 1,
+                'followingSpace': True,
+                'pattern': r'@[_a-zA-Z0-9а-яА-ЯёЁ]{1,}$',
+                'itemTemplate': '<li data-id="{id}" class="tw:flex tw:items-center tw:gap-x-2"><img src="{avatar}" class="tw:avatar tw:size-6 tw:rounded-full" onerror="this.src=\'/static/img/default-avatar.png\'"><span class="tw:text-black/80 tw:truncate">{username}</span></li>',
+                'outputTemplate': '<a href="{link}" data-mentioned-user-id="{id}" class="tw:mention">@{username}</a>',
+                
+            },
+        ]
     },
 }
 

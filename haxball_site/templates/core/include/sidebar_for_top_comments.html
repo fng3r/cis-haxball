@@ -31,7 +31,7 @@
                    class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-card-button tw:text-card-button">
                   <div class="tw:flex tw:overflow-hidden">
                     <span class="tw:badge tw:badge-success tw:font-bold tw:mr-2">{{ comment.likes_count }}</span>
-                    <span class="tw:truncate">{{ comment.body|striptags|default:"*Медиа-контент*" }}</span>
+                    <span class="tw:truncate">{{ comment.body|striptags|safe|default:"*Медиа-контент*" }}</span>
                   </div>
                   <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
                 </a>

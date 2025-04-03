@@ -61,4 +61,6 @@ urlpatterns = [
     ),
     path('user/<int:user_id>/comments/', views.UserCommentsView.as_view(), name='user_comments'),
     path('toggle_invisibility/', views.ToggleInvisibilityMode.as_view(), name='toggle_invisibility'),
+
+    path('api/users/search', views.UserSearchView.as_view(), name='user_search'),
 ]
