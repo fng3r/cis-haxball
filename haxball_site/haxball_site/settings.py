@@ -323,7 +323,7 @@ CKEDITOR_CONFIGS = {
             {'name': 'links', 'items': ['Link', 'Unlink', 'Anchor']},
             {
                 'name': 'insert',
-                'items': ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe'],
+                'items': ['Image', 'Flash', 'Table', 'HorizontalRule', 'Emojione', 'SpecialChar', 'PageBreak', 'Iframe'],
             },
             '/',
             {'name': 'styles', 'items': ['Styles', 'Format', 'Font', 'FontSize']},
@@ -359,9 +359,12 @@ CKEDITOR_CONFIGS = {
                 'dialogui',
                 'elementspath',
                 'youtube',
+                'html5video',
+                'emojione',
             ]
         ),
     },
+    
     'comment': {
         'skin': 'moono-lisa',
         'removePlugins': 'stylesheetparser',
@@ -380,7 +383,7 @@ CKEDITOR_CONFIGS = {
                 'Image',
                 'Youtube',
                 'Html5video',
-                'Smiley',
+                'Emojione',
                 '-',
                 'NumberedList',
                 'BulletedList',
@@ -389,21 +392,22 @@ CKEDITOR_CONFIGS = {
                 'Redo',
             ]
         ],
-        'extraPlugins': [
-                'uploadimage',
-                'div',
-                'autolink',
-                'embedsemantic',
-                'autogrow',
-                'widget',
-                'lineutils',
-                'clipboard',
-                'dialog',
-                'dialogui',
-                'elementspath',
-                'youtube',
-                'html5video',
-        ]
+        'extraPlugins': ','.join([
+            'uploadimage',
+            'div',
+            'autolink',
+            'embedsemantic',
+            'autogrow',
+            'widget',
+            'lineutils',
+            'clipboard',
+            'dialog',
+            'dialogui',
+            'elementspath',
+            'youtube',
+            'html5video',
+            'emojione',
+        ]),
     },
 }
 
