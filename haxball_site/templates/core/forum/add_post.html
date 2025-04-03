@@ -1,6 +1,7 @@
 {% extends "core.html" %}
 
 {% load static %}
+{% load widget_tweaks %}
 
 {% block postlist %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg"
@@ -13,12 +14,21 @@
         </h3>
         <div class="tw:divider tw:my-0!"></div>
 
-        <form method="POST">
+        <form method="POST" class="tw:flex tw:flex-col tw:gap-2">
           {% csrf_token %}
           {{ form.media }}
-          {{ form.as_p }}
 
-          <button type="submit" class="tw:btn tw:btn-primary">Отправить</button>
+          <fieldset class="tw:fieldset">
+            <legend class="tw:fieldset-legend">Название</legend>
+            {{ form.title|add_class:'tw:input tw:input-sm' }}
+          </fieldset>
+
+          <fieldset class="tw:fieldset tw:w-full">
+            <legend class="tw:fieldset-legend">Пост</legend>
+            {{ form.body }}
+          </fieldset>
+
+          <button type="submit" class="tw:btn tw:btn-primary tw:self-end">Сохранить</button>
         </form>
       </div>
     {% else %}

@@ -298,6 +298,9 @@ CKEDITOR_CONFIGS = {
                 'name': 'basicstyles',
                 'items': ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
             },
+            {'name': 'styles', 'items': ['Styles', 'Format', 'Font', 'FontSize']},
+            {'name': 'colors', 'items': ['TextColor', 'BGColor']},
+            '/',
             {
                 'name': 'paragraph',
                 'items': [
@@ -323,23 +326,13 @@ CKEDITOR_CONFIGS = {
             {'name': 'links', 'items': ['Link', 'Unlink', 'Anchor']},
             {
                 'name': 'insert',
-                'items': ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe'],
-            },
-            '/',
-            {'name': 'styles', 'items': ['Styles', 'Format', 'Font', 'FontSize']},
-            {'name': 'colors', 'items': ['TextColor', 'BGColor']},
-            {'name': 'tools', 'items': ['Maximize', 'ShowBlocks']},
-            {'name': 'about', 'items': ['About', 'Spoiler']},
-            '/',  # put this to force next toolbar on new line
-            {
-                'name': 'yourcustomtools',
                 'items': [
-                    # put the name of your editor.ui.addButton here
-                    'Preview',
-                    'Maximize',
-                    'Youtube',
+                    'EmojiPanel', 'Image', 'Youtube', 'Html5video', 'Table',
+                    'HorizontalRule', 'SpecialChar', 'PageBreak', 'Iframe', 'Spoiler',
                 ],
             },
+            '/',
+            {'name': 'tools', 'items': ['Maximize', 'ShowBlocks', 'Preview']},
         ],
         'toolbar': 'YourCustomToolbarConfig',  # put selected toolbar config here
         'tabSpaces': 4,
@@ -359,9 +352,16 @@ CKEDITOR_CONFIGS = {
                 'dialogui',
                 'elementspath',
                 'youtube',
+                'html5video',
+                'emoji',
+                'autocomplete',
+                'textwatcher',
+                'textmatch',
+                'image2',
             ]
         ),
     },
+    
     'comment': {
         'skin': 'moono-lisa',
         'removePlugins': 'stylesheetparser',
@@ -380,7 +380,7 @@ CKEDITOR_CONFIGS = {
                 'Image',
                 'Youtube',
                 'Html5video',
-                'Smiley',
+                'EmojiPanel',
                 '-',
                 'NumberedList',
                 'BulletedList',
@@ -389,21 +389,30 @@ CKEDITOR_CONFIGS = {
                 'Redo',
             ]
         ],
-        'extraPlugins': [
-                'uploadimage',
-                'div',
-                'autolink',
-                'embedsemantic',
-                'autogrow',
-                'widget',
-                'lineutils',
-                'clipboard',
-                'dialog',
-                'dialogui',
-                'elementspath',
-                'youtube',
-                'html5video',
-        ]
+        'extraPlugins': ','.join([
+            'uploadimage',
+            'div',
+            'autolink',
+            'embedsemantic',
+            'autogrow',
+            'widget',
+            'lineutils',
+            'clipboard',
+            'dialog',
+            'dialogui',
+            'elementspath',
+            'youtube',
+            'html5video',
+            'emoji',
+            'autocomplete',
+            'textwatcher',
+            'textmatch',
+            'editorplaceholder',
+            'image2',
+        ]),
+        
+        'editorplaceholder': 'Введите текст комментария...',
+        'editorplaceholder_delay': 200,
     },
 }
 
