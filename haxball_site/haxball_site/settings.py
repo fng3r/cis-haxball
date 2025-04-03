@@ -357,6 +357,7 @@ CKEDITOR_CONFIGS = {
                 'autocomplete',
                 'textwatcher',
                 'textmatch',
+                'image2',
             ]
         ),
     },
@@ -407,6 +408,7 @@ CKEDITOR_CONFIGS = {
             'textwatcher',
             'textmatch',
             'editorplaceholder',
+            'image2',
         ]),
         
         'editorplaceholder': 'Введите текст комментария...',

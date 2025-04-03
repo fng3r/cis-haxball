@@ -141,7 +141,7 @@
         </a>
       </span>
     </div>
-    <div class="comment-body tw:mt-3 tw:prose tw:max-w-none tw:text-base-content">{{ comment.body|safe }}</div>
+    <div class="comment-body tw:mt-3 tw:prose tw:max-w-none tw:text-base-content tw:prose-img:my-0">{{ comment.body|safe }}</div>
 
     <div class="comment-footer" x-data="{showReplies: true}">
       {% if comment.is_parent and comment.childs_count > 2 %}
