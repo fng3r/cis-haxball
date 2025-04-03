@@ -406,7 +406,11 @@ CKEDITOR_CONFIGS = {
             'autocomplete',
             'textwatcher',
             'textmatch',
+            'editorplaceholder',
         ]),
+        
+        'editorplaceholder': 'Введите текст комментария...',
+        'editorplaceholder_delay': 200,
     },
 }
 
