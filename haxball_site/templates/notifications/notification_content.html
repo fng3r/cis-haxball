@@ -6,52 +6,55 @@ Parameters:
 {% endcomment %}
 
 <div class="tw:flex tw:flex-col {% if is_list_view %}tw:text-lg{% endif %}">
-    {% if notification.data.type == 'comment_reply' %}
-        <div class="tw:font-medium">
-            {{ notification.actor.username }}
-            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">ответил</a>
-            на Ваш комментарий под темой
-            <a href="{{ notification.data.subject_url }}" class="tw:link tw:link-primary tw:link-hover"
-            >"{{ notification.data.subject_title }}"</a>
-        </div>
-    {% elif notification.data.type == 'profile_comment' %}
-        <div class="tw:font-medium">
-            {{ notification.actor.username }}
-            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">оставил комментарий</a>
-            под Вашим профилем
-        </div>
-    {% elif notification.data.type == 'match_inspected' %}
-        <div class="tw:font-medium">
-            Матч
-            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
-            >{{ notification.data.match_title }}</a> с участием Вашей команды был проинспектирован
-        </div>
-    {% elif notification.data.type == 'disqualification' %}
-        <div class="tw:font-medium">
-            {% if notification.data.disqualified_player_username == notification.recipient.username %}
-                Вы получили дисквалификацию
-            {% else %}
-                Игрок Вашей команды ({{ notification.data.disqualified_player_username }}) получил дисквалификацию
-            {% endif %}
-            по итогам матча
-            <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover"
-            >{{ notification.data.match_title }}</a>
-        </div>
-    {% else %}
-        {% if notification.data.url %}
-            <a href="{{ notification.data.url }}" class="tw:font-medium">
-                {{ notification.verb }}
-            </a>
-        {% else %}
-            <span class="tw:font-medium">{{ notification.verb }}</span>
-        {% endif %}
-    {% endif %}
-
-    <div class="{% if is_list_view %}tw:text-sm{% else %}tw:text-xs{% endif %} tw:text-base-content/70">
-        {{ notification.timesince }} назад
+  {% if notification.data.type == 'comment_reply' %}
+    <div class="tw:font-medium">
+      {{ notification.actor.username }}
+      <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">ответил</a>
+      на Ваш комментарий под темой
+      <a href="{{ notification.data.subject_url }}" class="tw:link tw:link-primary tw:link-hover">"{{ notification.data.subject_title }}"</a>
     </div>
-
-    {% if notification.description and is_list_view %}
-        <p class="tw:mt-4! tw:text-base">{{ notification.description|striptags }}</p>
+  {% elif notification.data.type == 'profile_comment' %}
+    <div class="tw:font-medium">
+      {{ notification.actor.username }}
+      <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">оставил комментарий</a>
+      под Вашим профилем
+    </div>
+  {% elif notification.data.type == 'match_inspected' %}
+    <div class="tw:font-medium">
+      Матч
+      <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">{{ notification.data.match_title }}</a> с участием Вашей команды был проинспектирован
+    </div>
+  {% elif notification.data.type == 'disqualification' %}
+    <div class="tw:font-medium">
+      {% if notification.data.disqualified_player_username == notification.recipient.username %}
+        Вы получили дисквалификацию
+      {% else %}
+        Игрок Вашей команды ({{ notification.data.disqualified_player_username }}) получил дисквалификацию
+      {% endif %}
+      по итогам матча
+      <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">{{ notification.data.match_title }}</a>
+    </div>
+  {% elif notification.data.type == 'user_mention' %}
+    <div class="tw:font-medium">
+      {{ notification.actor.username }}
+      упомянул Вас в
+      <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">комментарии</a>
+      под темой
+      <a href="{{ notification.data.subject_url }}" class="tw:link tw:link-primary tw:link-hover">"{{ notification.data.subject_title }}"</a>
+    </div>
+  {% else %}
+    {% if notification.data.url %}
+      <a href="{{ notification.data.url }}" class="tw:font-medium">{{ notification.verb }}</a>
+    {% else %}
+      <span class="tw:font-medium">{{ notification.verb }}</span>
     {% endif %}
+  {% endif %}
+
+  <div class="{% if is_list_view %}tw:text-sm{% else %}tw:text-xs{% endif %} tw:text-base-content/70">
+    {{ notification.timesince }} назад
+  </div>
+
+  {% if notification.description and is_list_view %}
+    <p class="tw:mt-4! tw:text-base">{{ notification.description|striptags|safe }}</p>
+  {% endif %}
 </div>

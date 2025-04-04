@@ -1,4 +1,5 @@
 import logging
+import re
 
 from core.models import NewComment
 from django.contrib.auth.models import User
@@ -47,7 +48,7 @@ def notify_comment_reply(comment: NewComment):
         notify_user(
             recipient=parent.author,
             actor=comment.author,
-            verb=f"{comment.author.username} ответил на ваш комментарий",
+            verb=f"{comment.author.username} ответил на Ваш комментарий",
             target=parent,
             action_object=comment,
             description=comment.body[:200] + ('...' if len(comment.body) > 200 else ''),
@@ -95,7 +96,7 @@ def notify_like(user, post):
         notify_user(
             recipient=post.author,
             actor=user,
-            verb=f"{user.username} оценил ваш пост",
+            verb=f"{user.username} оценил Ваш пост",
             target=post,
             url=post.get_absolute_url(),
             subject_title=subject_title
@@ -158,6 +159,55 @@ def notify_disqualification(disqualification: Disqualification):
             match_title=match_title,
             disqualified_player_username=disqualified_player.name.username
         )
-        logger.debug(f'Disqualification notification sent for player {disqualified_player.nickname} in match {match_title}')
+        logger.debug('Disqualification notification sent')
     except Exception as e:
         logger.error(f'Error sending disqualification notification: {e}', exc_info=True)
+
+
+def notify_user_mention(comment: NewComment):
+    """
+    Send notification when a user is mentioned in a comment.
+    
+    Args:
+        comment: The comment containing the mention
+        mentioned_user: The user who was mentioned
+    """
+    try:
+        mentioned_users = _parse_mentions(comment)
+        
+        notify_user(
+            recipient=list(mentioned_users),
+            actor=comment.author,
+            verb=f"{comment.author.username} упомянул Вас в комментарии",
+            target=comment.content_object,
+            action_object=comment,
+            description=comment.body[:200] + ('...' if len(comment.body) > 200 else ''),
+            type='user_mention',
+            url=comment.get_absolute_url(),
+            subject_title=str(comment.content_object),
+            subject_url=comment.content_object.get_absolute_url()
+        )
+        logger.debug(f'User mention notification sent to users: {", ".join([user.username for user in mentioned_users])}')
+    except Exception as e:
+        logger.error(f'Error sending user mention notification: {e}', exc_info=True)
+        
+        
+def _parse_mentions(comment: NewComment):
+    """
+    Parse a comment for user mentions and send notifications to mentioned users.
+    
+    Args:
+        comment: The comment to parse for mentions
+    """
+    # Find all data-mentioned-user-id attributes in the comment body
+    # This regex looks for data-mentioned-user-id="123" pattern
+    mention_pattern = r'data-mentioned-user-id="(\d+)"'
+    mentioned_user_ids = re.findall(mention_pattern, comment.body)
+    
+    if not mentioned_user_ids:
+        return []
+        
+    # Convert to integers and get unique user IDs
+    mentioned_user_ids = set(int(user_id) for user_id in mentioned_user_ids)
+
+    return User.objects.filter(id__in=mentioned_user_ids).exclude(id=comment.author.id)

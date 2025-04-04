@@ -1,26 +1,29 @@
 import json
+import logging
 from datetime import datetime
-from django.utils import timezone
 
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Max, Prefetch, Count
+from django.db.models import F, Func, Max, Prefetch, Q, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import DetailView, ListView, View
-from django.views.generic.base import View
 from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
 from tournament.models import Achievements, Team
-from django.contrib.auth.decorators import user_passes_test
-from django.utils.decorators import method_decorator
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments, strtobool
+
+logger = logging.getLogger('haxball_site')
 
 
 # Вьюха для списка постов
@@ -524,3 +527,37 @@ class ToggleInvisibilityMode(View):
         profile.save(update_fields=['invisibility_enabled', 'invisibility_activated_at'])
         
         return JsonResponse({'is_invisibility_enabled': is_enabled})
+
+
+class UserSearchView(View):
+    """
+    View for searching users to support the mentions plugin.
+    Returns a JSON response with user data in the format expected by the CKEditor mentions plugin.
+    """
+    @method_decorator(cache_page(120))
+    def get(self, request):
+        query = request.GET.get('query', '')
+        if not query:
+            return JsonResponse([], safe=False)
+            
+        users = User.objects.annotate(
+            clean_username=Func(F('username'), Value('\\s+'), Value(''), Value('g'), function='regexp_replace')
+        ).filter(
+            Q(username__icontains=query) |
+            Q(clean_username__icontains=query)
+        ).exclude(is_active=False)[:15]
+        
+        # Format the response for the mentions plugin
+        items = []
+        for user in users:
+            try:
+                items.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'link': f'/profile/{user.user_profile.id}/{user.user_profile.slug}/',
+                    'avatar': user.user_profile.avatar.url
+                })
+            except:
+                logger.warning(f'Error getting user profile for {user.username}')
+            
+        return JsonResponse(items, safe=False)
