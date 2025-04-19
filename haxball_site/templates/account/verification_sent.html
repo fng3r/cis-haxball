@@ -11,15 +11,16 @@
 {% block main_content %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:card-title tw:justify-center">
-      <h1>{% trans "Verify Your E-mail Address" %}</h1>
+      <h1>{% trans "Подтвердите свой e-mail адрес" %}</h1>
     </div>
 
     <div class="tw:card-body">
       <p class="tw:ml-2">
+        {% url 'core:profile_detail' '1918' 'fng3r' as admin_url %}
         {% blocktrans %}
           На ваш e-mail отправлено письмо с ссылкой для подтверждения регистрации. Перейдите по полученной
           ссылке, чтобы завершить процедуру регистрации!
-          Свяжитесь с <a href="{% url 'core:profile_detail' '1918' 'fng3r' %}" class="tw:link tw:link-hover tw:link-primary">администратором</a>, если письмо не
+          Свяжитесь с <a href="{{ admin_url }}" class="tw:link tw:link-hover tw:link-primary">администратором</a>, если письмо не
           приходит в течении нескольких минут.
         {% endblocktrans %}
       </p>
