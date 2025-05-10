@@ -858,7 +858,6 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
     losses = [0 for _ in range(teams_count)]  # Поражений
     last_matches = [[] for _ in range(teams_count)]
     teams_indexes = {}
-    buccholz = [0 for _ in range(teams_count)]
     opponents_by_team = defaultdict(list)
     for i, team in enumerate(teams):
         teams_indexes[team] = i
@@ -911,17 +910,18 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
         losses[i] = losses_count
         draws[i] = draws_count
         
-    if league.championship.number == 20 and league.title == 'Лига Чемпионов':
+    if stage is not None and stage.use_buchholz:
+        buccholz = [0 for _ in range(teams_count)]
         for i, team in enumerate(teams):
             for opponent in opponents_by_team[team]:
                 opponent_index = teams_indexes[opponent]
                 buccholz[i] += points[opponent_index]
         
         table = zip(
-            teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties, buccholz
+            teams, matches_played, wins, draws, losses, scored, conceded, goal_diff,
+            points, last_matches, penalties, buccholz
         )
-        sorted_table = sorted(table, key=lambda x: (x[8], x[11], x[7], x[5]), reverse=True)
-        return sorted_table
+        return sorted(table, key=lambda x: (x[8], x[11], x[7], x[5]), reverse=True)
 
     table = zip(
         teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties

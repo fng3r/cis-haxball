@@ -262,7 +262,7 @@ class TournamentStageInline(StackedPolymorphicInline):
 
     class PlayOffStageInline(StackedPolymorphicInline.Child):
         model = PlayOffStage
-        exclude = ('type', 'postponable',)
+        exclude = ('type', 'postponable', 'use_buchholz')
         filter_horizontal = ('teams',)
 
     model = TournamentStage
