@@ -857,7 +857,10 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
     draws = [0 for _ in range(teams_count)]  # Ничей
     losses = [0 for _ in range(teams_count)]  # Поражений
     last_matches = [[] for _ in range(teams_count)]
+    teams_indexes = {}
+    opponents_by_team = defaultdict(list)
     for i, team in enumerate(teams):
+        teams_indexes[team] = i
         matches = (
             Match.objects
             .select_related('team_home', 'team_guest', 'result__winner', 'numb_tour')
@@ -892,6 +895,11 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
                 losses_count += 1
                 last_matches[i].append((match, -1))
 
+            if team == match.team_home:
+                opponents_by_team[team].append(match.team_guest)
+            elif team == match.team_guest:
+                opponents_by_team[team].append(match.team_home)
+
         last_matches[i] = sorted(last_matches[i], key=lambda x: x[0].numb_tour.number)[-5:]
         points[i] = wins_count * 3 + draws_count * 1 - penalty_points
         penalties[i] = penalty_points 
@@ -901,12 +909,24 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
         wins[i] = wins_count
         losses[i] = losses_count
         draws[i] = draws_count
+        
+    if stage is not None and stage.use_buchholz:
+        buccholz = [0 for _ in range(teams_count)]
+        for i, team in enumerate(teams):
+            for opponent in opponents_by_team[team]:
+                opponent_index = teams_indexes[opponent]
+                buccholz[i] += points[opponent_index]
+        
+        table = zip(
+            teams, matches_played, wins, draws, losses, scored, conceded, goal_diff,
+            points, last_matches, penalties, buccholz
+        )
+        return sorted(table, key=lambda x: (x[8], x[11], x[7], x[5]), reverse=True)
 
     table = zip(
         teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties
     )
     sorted_table = sorted(table, key=lambda x: (x[8], x[7], x[5]), reverse=True)
-
     result = []
     i = 0
     while i < len(sorted_table) - 1:
@@ -977,6 +997,7 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
         else:
             result.append(mini_res[0])
         i = k
+        
     if len(result) < len(sorted_table):
         result.append(sorted_table[len(sorted_table) - 1])
 
