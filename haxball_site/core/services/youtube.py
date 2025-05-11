@@ -90,6 +90,7 @@ class YoutubeService:
                         stream['concurrent_viewers'] = live_details.get('concurrentViewers')
                         active_streams.append(stream)
                     else:
+                        stream['total_views'] = video_data['statistics'].get('viewCount')
                         stream['duration'] = self._parse_iso_duration(video_data['contentDetails'].get('duration'))
                         completed_streams.append(stream)
         
