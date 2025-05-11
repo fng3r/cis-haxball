@@ -346,7 +346,7 @@ class PlayoffBracketSlotStub(models.Model):
     slot = models.PositiveSmallIntegerField('Номер слота в раунде')
     top_team = ChainedForeignKey(
         Team,
-        verbose_name='Команд в верхней строчке слота',
+        verbose_name='Команда в верхней строчке слота',
         chained_field='playoff_stage',
         chained_model_field='stages',
         related_name='stubs_top',
@@ -362,7 +362,7 @@ class PlayoffBracketSlotStub(models.Model):
     )
     bottom_team = ChainedForeignKey(
         Team,
-        verbose_name='Команд в нижней строчке слота',
+        verbose_name='Команда в нижней строчке слота',
         chained_field='playoff_stage',
         chained_model_field='stages',
         related_name='stubs_bottom',
