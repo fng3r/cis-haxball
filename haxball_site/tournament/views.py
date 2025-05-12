@@ -1350,8 +1350,8 @@ def team_statistics(request, pk):
         else:
             stats_by_league['losses'] += 1
         stats_by_league['winrate'] = 0
-        stats_by_league['goals'] += len(match.goals)
-        stats_by_league['conceded_goals'] += len(match.conceded_goals)
+        stats_by_league['goals'] += match.scored_by(team)
+        stats_by_league['conceded_goals'] += match.conceded_by(team)
         stats_by_league['assists'] += len(match.assists)
         stats_by_league['cs'] += len(match.cs)
         stats_by_league['subs'] += len(match.subs)
