@@ -1299,10 +1299,6 @@ def player_statistics_charts(request, pk):
 def team_statistics(request, pk):
     team = Team.objects.get(pk=pk)
     prefetches = (
-        Prefetch('match_goal', queryset=Goal.objects.filter(team=team, match__is_played=True), to_attr='goals'),
-        Prefetch(
-            'match_goal', queryset=Goal.objects.filter(~Q(team=team), match__is_played=True), to_attr='conceded_goals'
-        ),
         Prefetch(
             'match_goal',
             queryset=Goal.objects.filter(team=team, assistent__isnull=False, match__is_played=True),
