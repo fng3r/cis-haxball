@@ -4,6 +4,11 @@
 
 {% partialdef championship_dropdown_content %}
   <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">Турниры</li>
+
+  <li>
+    <a class="tw:block" href="{% url 'tournament:league' 'champions-league-s5' %}">Лига Чемпионов</a>
+  </li>
+
   <li>
     <a class="tw:block" href="{% url 'tournament:league' 's14-premier-league' %}">Высшая лига</a>
   </li>
@@ -41,7 +46,7 @@
   <li>
     <a class="tw:block"
        target="_blank"
-       href="https://docs.google.com/spreadsheets/d/1uO4L_LzPAJz28WDNICFxBep76OTWvaZ3tQlw5HIAaw4/edit?usp=sharing">Календарь</a>
+       href="https://docs.google.com/spreadsheets/d/1kNkBIwFxWB_5Whlg1zWm-xN8PwltVKY2mSP-KJXTM1M/edit?usp=sharing">Календарь</a>
   </li>
   <li>
     <a class="tw:block" href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
@@ -56,7 +61,7 @@
     <a class="tw:block" href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
   </li>
   <li>
-    <a class="tw:block" href="{% url 'core:post_detail' '918' 'transfers-13' %}">Трансферы</a>
+    <a class="tw:block" href="{% url 'core:post_detail' '1012' 'transfers-cl-5' %}">Трансферы</a>
   </li>
   <li>
     <a class="tw:block" href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
@@ -362,6 +367,48 @@
 
   <li>
     <a class="tw:block" href="{% url 'tournament:league' 'finals-24' %}">ИТ'24</a>
+  </li>
+
+  <li>
+    <div class="tw:dropdown tw:dropdown-right">
+      <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+        ЧР #14<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+      </div>
+      <ul tabindex="0"
+          class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+        <li>
+          <a class="tw:block" href="{% url 'tournament:league' 's14-premier-league' %}">Высшая лига</a>
+        </li>
+        <li>
+          <a class="tw:block" href="{% url 'tournament:league' 's14-first-league' %}">Первая лига</a>
+        </li>
+        <li>
+          <a class="tw:block" href="{% url 'tournament:league' 's14-second-league' %}">Вторая лига</a>
+        </li>
+        <li>
+          <div class="tw:dropdown tw:dropdown-right">
+            <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+              Кубок лиги<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+            </div>
+            <ul tabindex="0"
+                class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+              <li>
+                <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-pl' %}">Высшая лига</a>
+              </li>
+              <li>
+                <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-fl' %}">Первая лига</a>
+              </li>
+              <li>
+                <a class="tw:block" href="{% url 'tournament:league' 's14-league-cup-sl' %}">Вторая лига</a>
+              </li>
+            </ul>
+          </div>
+        </li>
+        <li>
+          <a class="tw:block" href="{% url 'tournament:league' 's14-russian-cup' %}">Кубок России</a>
+        </li>
+      </ul>
+    </div>
   </li>
 {% endpartialdef %}
 

@@ -124,10 +124,11 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'slug', 'background', 'karma', 'views', 'can_comment')
-    list_filter = ('id', 'name')
+    list_display = ('id', 'name', 'slug', 'can_comment', 'can_vote', 'views', 'karma', 'background')
+    list_filter = ('id', 'name', 'can_comment', 'can_vote')
     list_display_links = ('name',)
     search_fields = ('name__username',)
+    list_editable = ('can_comment', 'can_vote')
 
 
 @admin.register(Themes)
@@ -137,10 +138,7 @@ class ThemesAdmin(admin.ModelAdmin):
 
 @admin.register(UserIcon)
 class UserIconAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-        'description',
-    )
+    list_display = ('title', 'description',)
     filter_horizontal = ('user',)
 
 
