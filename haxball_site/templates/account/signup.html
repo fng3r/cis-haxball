@@ -8,9 +8,8 @@
   {% trans "Signup" %}
 {% endblock %}
 
-{% block post %}
-
-  <div class="tw:card tw:bg-base-100 tw:mt-2 tw:rounded-lg">
+{% block main_content %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:text-center tw:py-2">
       <h2 class="mb-1">{% trans "Sign Up" %}</h2>
       <p class="mb-1">
@@ -23,35 +22,35 @@
         {% csrf_token %}
 
         <div class="tw:flex tw:flex-col tw:gap-1">
-          <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+          <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1">
             <fieldset class="tw:fieldset tw:w-full">
               <legend class="tw:fieldset-legend">Имя пользователя</legend>
-              <input type="text" class="tw:input tw:w-full" id="exampleInputEmail1" name="username">
-              <p class="tw:fieldset-label">Ваш игровой никнейм</p>
+              <input type="text" class="tw:input tw:w-full" id="exampleInputEmail1" name="username" required>
+              <span class="tw:fieldset-label">Ваш игровой никнейм</span>
             </fieldset>
             <span class="tw:text-error">{{ form.errors.username }}</span>
           </div>
 
-          <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
+          <div class="tw:flex tw:flex-wrap tw:item tw:gap-1">
             <fieldset class="tw:fieldset tw:w-full">
               <legend class="tw:fieldset-legend">Email-адрес</legend>
-              <input type="email" class="tw:input tw:w-full" id="exampleInputEmail2" name="email">
+              <input type="email" class="tw:input tw:w-full" id="exampleInputEmail2" name="email" required>
             </fieldset>
             <span class="tw:text-error">{{ form.errors.email }}</span>
           </div>
 
-          <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
+          <div class="tw:flex tw:flex-wrap tw:item tw:gap-1">
             <fieldset class="tw:fieldset tw:w-full">
               <legend class="tw:fieldset-legend">Пароль</legend>
-              <input type="password" class="tw:input tw:w-full" id="exampleInputPassword1" name="password1">
+              <input type="password" class="tw:input tw:w-full" id="exampleInputPassword1" name="password1" required>
             </fieldset>
             <span class="tw:text-error">{{ form.errors.password1 }}</span>
           </div>
 
-          <div class="tw:flex tw:flex-wrap tw:item tw:gap-3">
+          <div class="tw:flex tw:flex-wrap tw:item tw:gap-1">
             <fieldset class="tw:fieldset tw:w-full">
               <legend class="tw:fieldset-legend">Повторите пароль</legend>
-              <input type="password" class="tw:input tw:w-full" id="exampleInputPassword2" name="password2">
+              <input type="password" class="tw:input tw:w-full" id="exampleInputPassword2" name="password2" required>
             </fieldset>
             <span class="tw:text-error">{{ form.errors.password2 }}</span>
           </div>
@@ -169,12 +168,10 @@
                 </p>
 
                 <h4 id="list-item-4">Подтверждение</h4>
-                <p>
-                  <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="exampleCheck1" required="True">
-                    <label class="form-check-label" for="exampleCheck1">С правилами ознакомлен</label>
-                  </div>
-                </p>
+                <label class="tw:text-sm tw:label tw:text-base-content/80" for="exampleCheck1">
+                  <input type="checkbox" class="tw:checkbox tw:checkbox-sm" id="exampleCheck1" required="True">
+                  С правилами ознакомлен
+                </label>
               </div>
             </div>
           </div>

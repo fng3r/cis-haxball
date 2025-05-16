@@ -54,7 +54,7 @@ class YoutubeService:
         
         video_ids = [item['snippet']['resourceId']['videoId'] for item in playlist_response.get('items', [])]
         
-        live_streams = []
+        active_streams = []
         completed_streams = []
         
         video_response = self.youtube.videos().list(
@@ -68,39 +68,37 @@ class YoutubeService:
                 live_details = video_data['liveStreamingDetails']
                 start_time = live_details.get('actualStartTime')
                 end_time = live_details.get('actualEndTime')
-                thumbnail = video_data['snippet']['thumbnails']['maxres']['url']
+                thumbnails = video_data['snippet']['thumbnails']
+                thumbnail = ''
+                for quality in ['maxres', 'high', 'medium', 'default']:
+                    if quality in thumbnails:
+                        thumbnail = thumbnails[quality]['url']
+                        break
                 
-                # Active livestream: has started but not ended
-                if start_time and not end_time:
-                    live_streams.append({
-                        'is_live': True,
+                if start_time:
+                    is_live = end_time is None
+                    stream = {
+                        'is_live': is_live,
                         'id': video_data['id'],
                         'title': video_data['snippet']['title'],
                         'thumbnail_url': thumbnail,
                         'channelTitle': video_data['snippet']['channelTitle'],
                         'url': f"https://www.youtube.com/watch?v={video_data['id']}",
                         'actual_start_time': datetime.fromisoformat(start_time.replace('Z', '+00:00')),
-                        'concurrent_viewers': live_details.get('concurrentViewers')
-                    })
-                # Completed livestream: has both start and end time
-                elif start_time and end_time:
-                    completed_streams.append({
-                        'is_live': False,
-                        'id': video_data['id'],
-                        'title': video_data['snippet']['title'],
-                        'thumbnail_url': thumbnail,
-                        'channel_title': video_data['snippet']['channelTitle'],
-                        'url': f"https://www.youtube.com/watch?v={video_data['id']}",
-                        'total_views': video_data['statistics'].get('viewCount'),
-                        'actual_start_time': datetime.fromisoformat(start_time.replace('Z', '+00:00')),
-                        'duration': self._parse_iso_duration(video_data['contentDetails'].get('duration')),
-                    })
+                    }
+                    if is_live:
+                        stream['concurrent_viewers'] = live_details.get('concurrentViewers')
+                        active_streams.append(stream)
+                    else:
+                        stream['total_views'] = video_data['statistics'].get('viewCount')
+                        stream['duration'] = self._parse_iso_duration(video_data['contentDetails'].get('duration'))
+                        completed_streams.append(stream)
         
         completed_streams.sort(key=lambda x: x['actual_start_time'], reverse=True)
         completed_streams = completed_streams[:2]
         
         return {
-            'active': live_streams,
+            'active': active_streams,
             'completed': completed_streams
         }
     

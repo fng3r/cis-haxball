@@ -6,7 +6,7 @@
     <div class="carousel-inner">
       {% for period in comments_by_period %}
         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-          <div class="tw:card tw:mt-2 tw:rounded-lg tw:rounded-b-none tw:border tw:border-gray-100">
+          <div class="tw:card tw:rounded-lg tw:rounded-b-none tw:border tw:border-gray-100">
             <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
               <a class="tw:inline tw:text-primary-content"
                  href="#carouselExampleControls"
@@ -31,7 +31,7 @@
                    class="tw:btn-link-block tw:justify-between tw:p-2 tw:bg-card-button tw:text-card-button">
                   <div class="tw:flex tw:overflow-hidden">
                     <span class="tw:badge tw:badge-success tw:font-bold tw:mr-2">{{ comment.likes_count }}</span>
-                    <span class="tw:truncate">{{ comment.body|striptags|default:"*Медиа-контент*" }}</span>
+                    <span class="tw:truncate">{{ comment.body|striptags|safe|default:"*Медиа-контент*" }}</span>
                   </div>
                   <img src="{% static "img/ico/reply.png" %}" height="30" width="30">
                 </a>

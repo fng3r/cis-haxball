@@ -1,5 +1,7 @@
 @import "tailwindcss" prefix(tw) source("../haxball_site/templates");
 
+@source "../haxball_site/haxball_site/settings.py";
+
 @plugin "daisyui" {
   themes: all;
   exclude: [ "scrollbar"];
@@ -271,6 +273,10 @@
 
   .tw\:text-transfers-button {
     color: var(--text-transfers-button, var(--color-primary-content));
+  }
+
+  .tw\:mention {
+    @apply tw:rounded-sm tw:bg-primary/75 tw:text-primary-content/90! tw:hover:bg-primary/90 tw:hover:text-primary-content tw:font-semibold tw:px-1 tw:py-0.5 tw:no-underline;
   }
 }
 

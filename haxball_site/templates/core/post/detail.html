@@ -18,6 +18,9 @@
 {% block post %}
   <style>
     :where(.post-body) {
+      font-family: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji Limited", "Apple Color Emoji",
+                   "Segoe UI Emoji", "Segoe UI Symbol";
+
       a {
         color: var(--color-primary);
 
@@ -30,7 +33,7 @@
     }
   </style>
 
-  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:mt-2">
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:w-full tw:bg-base-300 tw:rounded-t-lg tw:px-4 tw:py-3 tw:border-b tw:border-b-neutral-300">
       <div class="tw:flex tw:flex-col">
         <h4 class="tw:card-title tw:w-full tw:justify-between tw:items-center">
@@ -41,8 +44,10 @@
             {% endif %}
           </span>
           {% if post.category %}
-            <span class="tw:text-right"><span class="tw:italic tw:text-lg">В разделе</span>
+            <span class="tw:text-right">
+              <span class="tw:italic tw:text-xl">В разделе</span>
               <a href="{{ post.category.get_absolute_url }}" class="tw:link tw:link-primary tw:font-semibold">{{ post.category.title }}</a>
+            </span>
           {% else %}
             <span></span>
           {% endif %}
@@ -66,7 +71,7 @@
     </div>
 
     <div class="tw:flex tw:flex-col tw:p-4">
-      <div class="post-body tw:prose tw:max-w-none tw:text-base-content">{{ post.body|safe }}</div>
+      <div class="post-body tw:prose tw:max-w-none tw:text-base-content tw:prose-img:my-0">{{ post.body|safe }}</div>
     </div>
 
     <div class="tw:inline-flex tw:justify-between tw:rounded-b-lg tw:bg-base-300 tw:px-4 tw:py-2 tw:border-t tw:border-t-neutral-300">

@@ -10,9 +10,9 @@
 
 {% block title %}Чемпионат | {{ league.title }} ({{ league.championship.short_title }}) — CIS-HAXBALL{% endblock %}
 
-{% block profile_of_user %}
+{% block main_content %}
   {% cache 60 champ_table league.id %}
-    <div class="tw:card tw:bg-base-100 tw:mb-2 tw:mt-2 tw:rounded-lg">
+    <div class="tw:card tw:bg-base-100 tw:rounded-lg">
       <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
         <div class="tw:card-title tw:py-1">
           <h3 class="tw:text-center tw:flex tw:items-center tw:justify-center">
@@ -30,20 +30,23 @@
                  aria-label="{% if league.is_multistage_league %}{{ stage.stage_name }}{% else %}{% if stage.is_playoff %}Сетка{% else %}Таблица{% endif %}{% endif %}"
                  {% if forloop.first %}checked{% endif %} />
           <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
-            <div id="table-{{ forloop.counter }}" role="tabpanel" aria-labelledby="tournament-table-tab-{{ forloop.counter }}">
+            <div id="table-{{ forloop.counter }}"
+                 role="tabpanel"
+                 aria-labelledby="tournament-table-tab-{{ forloop.counter }}"
+                 class="tw:p-1">
               {% if stage.is_playoff %}
                 {% if stage.is_double_elimination %}
                   <div id="bracket-upper" class="tw:mt-2 tw:text-center">{% cup_bracket stage 1 %}</div>
-                  <div class="tw:divider"></div>
+                  <div class="tw:divider tw:my-2"></div>
                   <div id="bracket-lower" class="tw:text-center">{% cup_bracket stage 0 %}</div>
                 {% else %}
                   <div id="bracket" class="tw:text-center">{% cup_bracket stage None %}</div>
                 {% endif %}
               {% else %}
                 {% if stage.is_group_stage %}
-                  <div class="tw:mt-2">
+                  <div class="tw:flex tw:flex-col tw:gap-2 tw:py-1">
                     {% for group in stage.groups.all %}
-                      <div class="tw:text-center tw:mb-4">
+                      <div class="tw:text-center">
                         <h4 class="tw:text-lg">{{ group.name }}</h4>
                         {% tournament_table league stage group %}
                       </div>

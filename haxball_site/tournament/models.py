@@ -183,8 +183,9 @@ class TournamentStage(PolymorphicModel):
     name = models.CharField('Название (опционально)', max_length=50, null=True, blank=True)
     league = models.ForeignKey(League, verbose_name='Турнир', related_name='stages', on_delete=models.CASCADE)
     teams = models.ManyToManyField(Team, verbose_name='Команды', related_name='stages', blank=True)
-    order = models.PositiveSmallIntegerField('Порядок этапа')
+    order = models.PositiveSmallIntegerField('Порядковый номер этапа')
     postponable = models.BooleanField('Можно ли переносить матчи этапа', default=False, blank=True)
+    use_buchholz = models.BooleanField('Использовать коэффициент Бухгольца при равенстве очков', default=False)
     
     @property
     def stage_name(self):
@@ -231,13 +232,13 @@ class RegularStage(TournamentStage):
     )
     promoted_count = models.PositiveSmallIntegerField(
         'Кол-во команд, поднимающихся в лигу выше',
-        choices=[(i,i) for i in range(0, 5)],
+        choices=[(i,i) for i in range(0, 17)],
         default=4,
         null=False,
     )
     relegated_count = models.PositiveSmallIntegerField(
         'Кол-во команд, вылетающих в лигу ниже',
-        choices=[(i,i) for i in range(0, 5)],
+        choices=[(i,i) for i in range(0, 17)],
         default=2,
     )
 
@@ -345,7 +346,7 @@ class PlayoffBracketSlotStub(models.Model):
     slot = models.PositiveSmallIntegerField('Номер слота в раунде')
     top_team = ChainedForeignKey(
         Team,
-        verbose_name='Команд в верхней строчке слота',
+        verbose_name='Команда в верхней строчке слота',
         chained_field='playoff_stage',
         chained_model_field='stages',
         related_name='stubs_top',
@@ -361,7 +362,7 @@ class PlayoffBracketSlotStub(models.Model):
     )
     bottom_team = ChainedForeignKey(
         Team,
-        verbose_name='Команд в нижней строчке слота',
+        verbose_name='Команда в нижней строчке слота',
         chained_field='playoff_stage',
         chained_model_field='stages',
         related_name='stubs_bottom',

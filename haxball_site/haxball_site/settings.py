@@ -298,6 +298,9 @@ CKEDITOR_CONFIGS = {
                 'name': 'basicstyles',
                 'items': ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
             },
+            {'name': 'styles', 'items': ['Styles', 'Format', 'Font', 'FontSize']},
+            {'name': 'colors', 'items': ['TextColor', 'BGColor']},
+            '/',
             {
                 'name': 'paragraph',
                 'items': [
@@ -323,23 +326,13 @@ CKEDITOR_CONFIGS = {
             {'name': 'links', 'items': ['Link', 'Unlink', 'Anchor']},
             {
                 'name': 'insert',
-                'items': ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe'],
-            },
-            '/',
-            {'name': 'styles', 'items': ['Styles', 'Format', 'Font', 'FontSize']},
-            {'name': 'colors', 'items': ['TextColor', 'BGColor']},
-            {'name': 'tools', 'items': ['Maximize', 'ShowBlocks']},
-            {'name': 'about', 'items': ['About', 'Spoiler']},
-            '/',  # put this to force next toolbar on new line
-            {
-                'name': 'yourcustomtools',
                 'items': [
-                    # put the name of your editor.ui.addButton here
-                    'Preview',
-                    'Maximize',
-                    'Youtube',
+                    'EmojiPanel', 'Image', 'Youtube', 'Html5video', 'Table',
+                    'HorizontalRule', 'SpecialChar', 'PageBreak', 'Iframe', 'Spoiler',
                 ],
             },
+            '/',
+            {'name': 'tools', 'items': ['Maximize', 'ShowBlocks', 'Preview']},
         ],
         'toolbar': 'YourCustomToolbarConfig',  # put selected toolbar config here
         'tabSpaces': 4,
@@ -359,9 +352,17 @@ CKEDITOR_CONFIGS = {
                 'dialogui',
                 'elementspath',
                 'youtube',
+                'html5video',
+                'emoji',
+                'autocomplete',
+                'textwatcher',
+                'textmatch',
+                'image2',
+                'mentions',
             ]
         ),
     },
+    
     'comment': {
         'skin': 'moono-lisa',
         'removePlugins': 'stylesheetparser',
@@ -380,7 +381,7 @@ CKEDITOR_CONFIGS = {
                 'Image',
                 'Youtube',
                 'Html5video',
-                'Smiley',
+                'EmojiPanel',
                 '-',
                 'NumberedList',
                 'BulletedList',
@@ -389,20 +390,47 @@ CKEDITOR_CONFIGS = {
                 'Redo',
             ]
         ],
-        'extraPlugins': [
-                'uploadimage',
-                'div',
-                'autolink',
-                'embedsemantic',
-                'autogrow',
-                'widget',
-                'lineutils',
-                'clipboard',
-                'dialog',
-                'dialogui',
-                'elementspath',
-                'youtube',
-                'html5video',
+        'extraPlugins': ','.join([
+            'uploadimage',
+            'div',
+            'autolink',
+            'embedsemantic',
+            'autogrow',
+            'widget',
+            'lineutils',
+            'clipboard',
+            'dialog',
+            'dialogui',
+            'elementspath',
+            'youtube',
+            'html5video',
+            'emoji',
+            'autocomplete',
+            'textwatcher',
+            'textmatch',
+            'editorplaceholder',
+            'image2',
+            'mentions',
+        ]),
+        
+        'editorplaceholder': 'Введите текст комментария...',
+        'editorplaceholder_delay': 200,
+        
+        'mentions': [
+            {
+                'feed': '/api/users/search?query={encodedQuery}',
+                'marker': '@',
+                'minChars': 1,
+                'followingSpace': True,
+                'pattern': r'@[_a-zA-Z0-9а-яА-ЯёЁ]{1,}$',
+                'itemTemplate': 
+                    '''<li data-id="{id}" class="tw:flex tw:items-center tw:gap-x-2">
+                          <img src="{avatar}" class="tw:avatar tw:size-6 tw:rounded-full">
+                          <span class="tw:text-black/80 tw:truncate">{username}</span>
+                       </li>''',
+                'outputTemplate': '<a href="{link}" data-mentioned-user-id="{id}" class="tw:mention">@{username}</a>',
+                
+            },
         ]
     },
 }

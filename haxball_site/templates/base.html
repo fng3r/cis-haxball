@@ -46,8 +46,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Open+Sans&family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Source+Serif+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap"
           rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
 
     <style>
+      @font-face {
+        font-family: "Noto Color Emoji Limited";
+        unicode-range: U+1F1E6-1F1FF;
+        src: url(https://fonts.gstatic.com/s/notocoloremoji/v34/Yq6P-KqIXTD0t4D9z1ESnKM3-HpFabsE4tq3luCC7p-aXxcn.0.woff2) format('woff2');
+      }
+
       [x-cloak] {
         display: none !important;
       }
@@ -56,6 +63,9 @@
         display: block !important;
       }
     </style>
+
+    {% comment %} Enhanced mentions styling for CKEditor {% endcomment %}
+    <link rel="stylesheet" type="text/css" href="{% static "core/css/mentions.css" %}">
 
     {% block styles %}{% endblock %}
 
@@ -70,7 +80,7 @@
     {% block scripts %}{% endblock %}
   </head>
 
-  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:min-h-screen tw:pb-1! tw:bg-body">
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="tw:min-h-screen tw:bg-body">
     <script type="text/javascript" src="{% static "scripts/themeController.js" %}"></script>
 
     {% include "core/include/navbar.html" %}

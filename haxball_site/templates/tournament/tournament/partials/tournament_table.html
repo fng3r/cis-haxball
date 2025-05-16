@@ -23,6 +23,12 @@
       <th scope="col">ЗМ</th>
       <th scope="col">ПМ</th>
       <th scope="col">РМ</th>
+      {% if stage.use_buchholz %}
+        <th scope="col">
+          <div class="tw:tooltip tw:tooltip-top"
+               data-tip="Коэффициент Бухгольца - сумма очков всех соперников, против которых играла команда">КБ</div>
+        </th>
+      {% endif %}
       <th scope="col">O</th>
       {% if has_penalties %}<th scope="col">Штр</th>{% endif %}
       <th scope="col">Форма</th>
@@ -34,11 +40,11 @@
         <th scope="row" width="4%" class="tw:pl-1">
           <div class="tw:flex">
             {% if forloop.counter <= stage.promoted_count %}
-              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-green-500"></span>
+              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-green-500 tw:rounded-2xl"></span>
             {% elif forloop.counter <= stage.promoted_count|add:stage.promoted_extra_count %}
-              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-yellow-300"></span>
+              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-yellow-300 tw:rounded-2xl"></span>
             {% elif forloop.counter > teams|length|sub:stage.relegated_count %}
-              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-red-500"></span>
+              <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:bg-red-500 tw:rounded-2xl"></span>
             {% else %}
               <span class="tw:mr-2 tw:my-n1 tw:w-1"></span>
             {% endif %}
@@ -63,6 +69,9 @@
         <td width="6%">{{ team.5 }}</td>
         <td width="6%">{{ team.6 }}</td>
         <td width="6%" {% if team.7 > 0 %} class="tw:text-success" {% elif team.7 < 0 %}class="tw:text-error"{% endif %}>{{ team.7 }}</td>
+        {% if stage.use_buchholz %}
+          <td width="6%">{{ team.11 }}</td>
+        {% endif %}
         <td width="6%" class="tw:font-semibold">{{ team.8 }}</td>
 
         {% if has_penalties %}

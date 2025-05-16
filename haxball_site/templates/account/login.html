@@ -9,9 +9,9 @@
 {% endblock %}
 
 {% block post %}
-  <div class="tw:card tw:mt-2 tw:bg-base-100 tw:rounded-lg">
-    <div class="tw:card-body tw:text-center">
-      <h1>{% trans "Sign In" %}</h1>
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:card-body tw:items-center">
+      <h1 class="tw:text-center">{% trans "Sign In" %}</h1>
       {% if socialaccount_providers %}
         <p>
           {% blocktrans with site.name as site_name %}Please sign in with one
@@ -38,12 +38,43 @@
         </p>
       {% endif %}
 
-      <form class="login" method="POST" action="{% url 'account_login' %}">
+      <form method="POST" action="{% url 'account_login' %}" class="tw:flex tw:flex-col tw:w-70">
         {% csrf_token %}
-        {{ form.as_p }}
+
+        {% if form.errors %}
+          <ul class="tw:text-error">
+            {% for error in form.errors.values %}<li>{{ error }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+
+        <div class="tw:flex tw:flex-col tw:justify-center tw:gap-1">
+          <div class="tw:flex tw:flex-wrap tw:items-center">
+            <fieldset class="tw:fieldset tw:w-full">
+              <legend class="tw:fieldset-legend tw:text-left">Имя пользователя</legend>
+              <input type="text" name="login" class="tw:input" id="id_login" required>
+              <span class="tw:fieldset-label">Ваш игровой никнейм</span>
+            </fieldset>
+          </div>
+
+          <div class="tw:flex tw:flex-wrap tw:items-center">
+            <fieldset class="tw:fieldset tw:w-full">
+              <legend class="tw:fieldset-legend tw:text-left">Пароль</legend>
+              <input type="password" name="password" class="tw:input" id="id_password" required>
+            </fieldset>
+          </div>
+
+          <a class="tw:link tw:text-sm tw:block tw:mb-2" href="{% url 'account_reset_password' %}">Забыли пароль?</a>
+
+          <fieldset class="tw:fieldset">
+            <label class="tw:fieldset-label tw:text-sm">
+              <input type="checkbox" name="remember" class="tw:checkbox tw:checkbox-sm" />
+              Запомнить меня
+            </label>
+          </fieldset>
+        </div>
 
         {% if redirect_field_value %}<input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />{% endif %}
-        <button class="tw:btn tw:btn-primary" type="submit">{% trans "Sign In" %}</button>
+        <button class="tw:btn tw:btn-primary tw:mt-3" type="submit">{% trans "Sign In" %}</button>
       </form>
     </div>
   </div>
