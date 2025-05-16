@@ -10,7 +10,7 @@ class ReservationHost(models.Model):
     is_active = models.BooleanField('Активный')
 
     def __str__(self):
-        return f'Хост {self.name}'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = 'Хост'
@@ -22,16 +22,30 @@ class ReservationEntry(models.Model):
     author = models.ForeignKey(
         User, verbose_name='Автор заявки', on_delete=models.CASCADE, related_name='user_reservation_authors'
     )
-    match = models.OneToOneField(
-        Match, verbose_name='На какой матч', on_delete=models.CASCADE, related_name='match_reservation'
+    match = models.ForeignKey(
+        Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='match_reservations'
     )
-    time_date = models.DateTimeField('На какое время')
+    time_date = models.DateTimeField('Дата и время')
 
-    host = models.ForeignKey(ReservationHost, verbose_name='На каком хосте', on_delete=models.SET_NULL, null=True)
-    created = models.DateTimeField(auto_now_add=True)
+    host = models.ForeignKey(ReservationHost, verbose_name='Хост', on_delete=models.SET_NULL, null=True)
+    created = models.DateTimeField('Когда создана', auto_now_add=True)
+    
+    cancelled_at = models.DateTimeField('Когда отменена', null=True, blank=True)
+    cancelled_by = models.ForeignKey(
+        User,
+        verbose_name='Кем отменена', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='cancelled_reservations'
+    )
 
     def __str__(self):
         return f'Бронь матча {self.match} на {self.time_date.astimezone()}'
+
+    @property
+    def is_cancelled(self):
+        return self.cancelled_at is not None
 
     class Meta:
         verbose_name = 'Бронь хоста'

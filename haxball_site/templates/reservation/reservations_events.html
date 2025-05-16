@@ -1,0 +1,161 @@
+{% load static %}
+{% load thumbnail %}
+{% load tournament_extras %}
+{% load user_tags %}
+
+{% block styles %}
+  <link rel="stylesheet" type="text/css" href="{% static 'core/include/comments.css' %}">
+{% endblock %}
+
+<div id="reservations-events" class="tw:card tw:bg-base-100 tw:rounded-lg">
+  <div class="tw:card-title tw:rounded-t-lg tw:p-4">
+    <h4 class="tw:card-title">Журнал событий ({{ reservations.paginator.count }})</h4>
+  </div>
+
+  <div class="comment-widgets">
+    {% for reservation in reservations %}
+      <div class="tw:flex tw:p-3 comment-row" id="reservation{{ reservation.id }}">
+        <div class="tw:pl-2">
+          <a href="{{ reservation.author.user_profile.get_absolute_url }}">
+            <div class="tw:mr-2 tw:avatar">
+              <div class="tw:w-[50px] tw:rounded-full">
+                {% thumbnail reservation.author.user_profile.avatar "50x50" crop="center" as avatar %}
+                  <img src="{{ avatar.url }}" alt="{{ reservation.author.username }}" width="50" class="tw:rounded-full">
+                {% endthumbnail %}
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="comment-text tw:w-full">
+          <div class="tw:flex tw:justify-between">
+            <div class="tw:m-0 tw:flex">
+              {% for icon in reservation.author.user_profile.user_icon.all %}
+                <div class="tw:mr-1 tw:align-middle">
+                  <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                </div>
+              {% endfor %}
+              <a href="{{ reservation.author.user_profile.get_absolute_url }}"
+                 class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
+                {{ reservation.author.username }}
+                {% if reservation.author.user_profile.tag %}<span>[{{ reservation.author.user_profile.tag }}]</span>{% endif %}
+              </a>
+            </div>
+          </div>
+
+          <div class="tw:inline-flex tw:items-center">
+            <span class="tw:text-base-content/70 tw:text-xs">
+              <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
+              {{ reservation.created|date:"d.m.y" }}
+              <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
+              {{ reservation.created|time:"H:i" }}
+            </span>
+          </div>
+          <div class="comment-body">
+            <div id="reservation-log-entry">
+              <p></p>
+              <p class="tw:flex tw:flex-col">
+                <span class="tw:inline-flex tw:flex-wrap tw:items-center tw:gap-x-1">
+                  <span class="tw:font-semibold">Матч:</span>
+                  <img src="{{ reservation.match.team_home.logo.url }}"
+                       width="20px"
+                       height="20px"
+                       title="{{ reservation.match.team_home.title }}">
+                  {{ reservation.match.team_home.title }}
+                  -
+                  {{ reservation.match.team_guest.title }}
+                  <img src="{{ reservation.match.team_guest.logo.url }}"
+                       width="20px"
+                       height="20px"
+                       title="{{ reservation.match.team_guest.title }}">
+                  ({{ reservation.match.league.title }}.
+                  {% if reservation.match.league.is_multistage_league %}{{ reservation.match.stage.stage_name }} -{% endif %}
+                  {% if reservation.match.stage.is_playoff %}
+                    {% if reservation.match.stage.is_double_elimination %}{{ reservation.match.numb_tour.get_bracket_display }},{% endif %}
+                    {{ reservation.match.numb_tour|cup_round_name }})
+                  {% else %}
+                    {{ reservation.match.numb_tour|tour_name }})
+                  {% endif %}
+                </span>
+                <span><span class="tw:font-semibold">Хост:</span> {{ reservation.host.name }}</span>
+                <span><span class="tw:font-semibold">Дата и время:</span> {{ reservation.time_date|date:"d.m / H:i" }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if reservation.is_cancelled %}
+        <div class="tw:flex tw:p-3 tw:pl-[7%] comment-row" id="reservation_c{{ reservation.id }}">
+          <div class="tw:pl-2">
+            <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}">
+              <div class="tw:mr-2 tw:avatar">
+                <div class="tw:w-[50px] tw:rounded-full">
+                  {% thumbnail reservation.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                    <img src="{{ avatar.url }}" alt="{{ reservation.cancelled_by.username }}" width="50" class="tw:rounded-full">
+                  {% endthumbnail %}
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="comment-text tw:w-full">
+            <div class="tw:flex tw:justify-between">
+              <div class="tw:m-0 tw:flex">
+                {% for icon in reservation.cancelled_by.user_profile.user_icon.all %}
+                  <div class="tw:mr-1 tw:align-middle">
+                    <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                  </div>
+                {% endfor %}
+                <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}"
+                   class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
+                  {{ reservation.cancelled_by.username }}
+                  {% if reservation.cancelled_by.user_profile.tag %}<span>[{{ reservation.cancelled_by.user_profile.tag }}]</span>{% endif %}
+                </a>
+              </div>
+            </div>
+            <div class="tw:inline-flex tw:items-center">
+              <span class="tw:text-base-content/70 tw:text-xs">
+                <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
+                {{ reservation.cancelled_at|date:"d.m.y" }}
+                <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
+                {{ reservation.cancelled_at|time:"H:i" }}
+              </span>
+            </div>
+            <div class="comment-body">
+              <p></p>
+              <p>
+                <span>Отмена брони</span>
+              </p>
+              <p></p>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if reservations.paginator.num_pages > 1 %}
+    <div class="tw:flex tw:justify-center tw:rounded-b-lg tw:bg-base-200 tw:border-t tw:border-gray-300">
+      <div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
+        {% with page=reservations %}
+          {% for page_number in page|pages_to_show %}
+            {% if not page_number %}
+              <button class="tw:join-item tw:btn tw:btn-disabled">...</button>
+            {% elif page_number == page.number %}
+              <button class="tw:join-item tw:btn tw:btn-active">{{ page_number }}</button>
+            {% else %}
+              <button class="tw:join-item tw:btn"
+                      hx-get="{% url 'reservation:reservation_events' %}?page={{ page_number }}"
+                      hx-push-url="?page={{ page_number }}"
+                      hx-target="#reservations-events"
+                      hx-swap="outerHTML show:top"
+                      hx-indicator="#page-indicator">{{ page_number }}</button>
+            {% endif %}
+          {% endfor %}
+        {% endwith %}
+
+        <img id="page-indicator" class="htmx-indicator tw:ml-2 tw:my-auto tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+      </div>
+    </div>
+  {% endif %}
+</div>
