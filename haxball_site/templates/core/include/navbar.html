@@ -482,276 +482,278 @@
   </li>
 {% endpartialdef %}
 
-<div class="tw:navbar tw:bg-base-200 tw:shadow-sm tw:justify-between">
-  <div class="tw:flex tw:items-center tw:text-lg">
-    <div class="tw:dropdown">
-      <div tabindex="0" role="button" class="tw:lg:hidden tw:btn tw:btn-ghost tw:btn-lg tw:btn-square">
-        <svg xmlns="http://www.w3.org/2000/svg" class="tw:h-6 tw:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
-        </svg>
-      </div>
-      <nav class="tw:dropdown-content tw:mt-1">
-        <ul tabindex="0" class="tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:w-40 tw:p-2 tw:shadow">
-          <li>
-            <div class="tw:dropdown tw:dropdown-right">
-              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                Чемпионат<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
-              </div>
-              <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                {% partial championship_dropdown_content %}
-              </ul>
-            </div>
-          </li>
-
-          <li>
-            <div class="tw:dropdown tw:dropdown-right">
-              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                Команды<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
-              </div>
-              <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                {% teams_in_navbar %}
-              </div>
-            </div>
-          </li>
-
-          <li>
-            <div class="tw:dropdown tw:dropdown-right">
-              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                Турниры<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
-              </div>
-              <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                {% partial tournaments_dropdown_content %}
-              </ul>
-            </div>
-          </li>
-
-          <li>
-            <div class="tw:dropdown tw:dropdown-right">
-              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                Архив<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
-              </div>
-              <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                {% partial archive_dropdown_content %}
-              </ul>
-            </div>
-          </li>
-
-          <li>
-            <div class="tw:dropdown tw:dropdown-right">
-              <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
-                Рейтинг<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
-              </div>
-              <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                {% partial rating_dropdown_content %}
-              </ul>
-            </div>
-          </li>
-
-          <li>
-            <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
-          </li>
-
-          <li>
-            <div class="tw:dropdown tw:dropdown-right">
-              <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
-                Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
-              </div>
-              <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-                {% partial media_dropdown_content %}
-              </ul>
-            </div>
-          </li>
-
-          <li>
-            <a href="{% url 'core:forum' %}">Форум</a>
-          </li>
-
-          <li>
-            <a href="{% url 'core:admins' %}">Администрация</a>
-          </li>
-
-          <li>
-            <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
-          </li>
-        </ul>
-      </nav>
-    </div>
-
-    <a class="tw:btn tw:btn-ghost tw:text-xl tw:text-blue-600!" href="{% url 'core:home' %}">CIS-HAXBALL</a>
-
-    <nav class="tw:hidden tw:lg:flex tw:flex-wrap tw:mr-3">
+<header class="tw:bg-base-200 tw:shadow-sm">
+  <div class="tw:mx-auto tw:navbar tw:px-1 tw:max-w-[1600px] tw:justify-between">
+    <div class="tw:flex tw:items-center tw:text-lg">
       <div class="tw:dropdown">
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-          Чемпионат<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+        <div tabindex="0" role="button" class="tw:lg:hidden tw:btn tw:btn-ghost tw:btn-lg tw:btn-square">
+          <svg xmlns="http://www.w3.org/2000/svg" class="tw:h-6 tw:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+          </svg>
         </div>
-        <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-          {% partial championship_dropdown_content %}
-        </ul>
+        <nav class="tw:dropdown-content tw:mt-1">
+          <ul tabindex="0" class="tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:w-40 tw:p-2 tw:shadow">
+            <li>
+              <div class="tw:dropdown tw:dropdown-right">
+                <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                  Чемпионат<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                </div>
+                <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                  {% partial championship_dropdown_content %}
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <div class="tw:dropdown tw:dropdown-right">
+                <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                  Команды<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                </div>
+                <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                  {% teams_in_navbar %}
+                </div>
+              </div>
+            </li>
+
+            <li>
+              <div class="tw:dropdown tw:dropdown-right">
+                <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                  Турниры<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                </div>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                  {% partial tournaments_dropdown_content %}
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <div class="tw:dropdown tw:dropdown-right">
+                <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                  Архив<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                </div>
+                <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                  {% partial archive_dropdown_content %}
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <div class="tw:dropdown tw:dropdown-right">
+                <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+                  Рейтинг<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                </div>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                  {% partial rating_dropdown_content %}
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <a class="tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+            </li>
+
+            <li>
+              <div class="tw:dropdown tw:dropdown-right">
+                <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
+                  Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+                </div>
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                  {% partial media_dropdown_content %}
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <a href="{% url 'core:forum' %}">Форум</a>
+            </li>
+
+            <li>
+              <a href="{% url 'core:admins' %}">Администрация</a>
+            </li>
+
+            <li>
+              <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+            </li>
+          </ul>
+        </nav>
       </div>
 
-      <div class="tw:dropdown">
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-          Команды<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+      <a class="tw:btn tw:btn-ghost tw:text-xl tw:text-blue-600!" href="{% url 'core:home' %}">CIS-HAXBALL</a>
+
+      <nav class="tw:hidden tw:lg:flex tw:flex-wrap tw:mr-3">
+        <div class="tw:dropdown">
+          <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+            Чемпионат<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+          </div>
+          <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+            {% partial championship_dropdown_content %}
+          </ul>
         </div>
-        <div tabindex="0" class="tw:w-[650px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-          {% teams_in_navbar %}
-        </div>
-      </div>
 
-      <div class="tw:dropdown">
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-          Турниры<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
-        </div>
-        <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-          {% partial tournaments_dropdown_content %}
-        </ul>
-      </div>
-
-      <div class="tw:dropdown">
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-          Архив<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
-        </div>
-        <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-          {% partial archive_dropdown_content %}
-        </ul>
-      </div>
-
-      <div class="tw:dropdown">
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-          Рейтинг<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
-        </div>
-        <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-          {% partial rating_dropdown_content %}
-        </ul>
-      </div>
-
-      <a role="button" class="tw:btn tw:btn-ghost tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
-
-      <div class="tw:dropdown">
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-          Медиа<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
-        </div>
-        <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-          {% partial media_dropdown_content %}
-        </ul>
-      </div>
-
-      <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:forum' %}">Форум</a>
-
-      <div class="tw:dropdown">
-        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
-          Ещё<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
-        </div>
-        <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
-          <li>
-            <a href="{% url 'core:admins' %}">Администрация</a>
-          </li>
-          <li>
-            <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-  </div>
-
-  <div class="tw:flex tw:items-center tw:gap-2">
-    <form method="get" action="{% url 'core:filter' %}">
-      <label class="tw:input tw:input-bordered tw:w-35 tw:xl:w-auto">
-        <svg class="tw:w-3.5 tw:opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.3-4.3"></path>
-          </g>
-        </svg>
-        <input type="search" name="q" placeholder="Поиск" aria-label="Search" />
-      </label>
-    </form>
-
-    <div class="tw:dropdown tw:dropdown-end">
-      <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:m-1">
-        Тема
-        <svg class="tw:inline-block tw:w-3 tw:h-3 tw:mt-1 tw:fill-current tw:opacity-80"
-             width="12px"
-             height="12px"
-             xmlns="http://www.w3.org/2000/svg"
-             viewBox="0 0 2048 2048">
-          <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
-        </svg>
-      </div>
-      <ul tabindex="0"
-          class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-45 tw:p-2 tw:shadow-2xl">
-        {% for theme in themes %}
-          <li>
-            <div class="tw:flex tw:items-center tw:justify-between tw:gap-1">
-              <input type="radio"
-                     name="theme-dropdown"
-                     aria-label="{{ theme.label }}"
-                     value="{{ theme.value }}"
-                     class="theme-controller tw:flex-grow tw:btn tw:btn-ghost tw:btn-sm tw:justify-start tw:peer" />
-              <i class="fa fa-check tw:size-4! tw:opacity-0 tw:peer-checked:opacity-100" aria-hidden="true"></i>
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-
-    {% if user.is_authenticated %}
-      {% include "notifications/notification_dropdown.html" %}
-
-      <div class="tw:dropdown tw:dropdown-end"
-           x-data="{ is_invisibility_enabled: {{ user.user_profile.invisibility_enabled|yesno:'true,false' }} }">
-        <div tabindex="0"
-             role="button"
-             class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar"
-             :class="{ 'tw:avatar-offline': is_invisibility_enabled }">
-          <div class="tw:w-[45px] tw:rounded-full">
-            <img src="{{ user.user_profile.avatar.url }}" />
+        <div class="tw:dropdown">
+          <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+            Команды<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+          </div>
+          <div tabindex="0" class="tw:w-[650px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+            {% teams_in_navbar %}
           </div>
         </div>
 
+        <div class="tw:dropdown">
+          <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+            Турниры<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+          </div>
+          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+            {% partial tournaments_dropdown_content %}
+          </ul>
+        </div>
+
+        <div class="tw:dropdown">
+          <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+            Архив<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+          </div>
+          <ul tabindex="0" class="tw:min-w-30 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+            {% partial archive_dropdown_content %}
+          </ul>
+        </div>
+
+        <div class="tw:dropdown">
+          <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+            Рейтинг<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+          </div>
+          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+            {% partial rating_dropdown_content %}
+          </ul>
+        </div>
+
+        <a role="button" class="tw:btn tw:btn-ghost tw:text-warning" href="{% url 'tournament:hall_of_fame' %}">Зал славы</a>
+
+        <div class="tw:dropdown">
+          <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+            Медиа<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+          </div>
+          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+            {% partial media_dropdown_content %}
+          </ul>
+        </div>
+
+        <a role="button" class="tw:btn tw:btn-ghost" href="{% url 'core:forum' %}">Форум</a>
+
+        <div class="tw:dropdown">
+          <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
+            Ещё<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+          </div>
+          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+            <li>
+              <a href="{% url 'core:admins' %}">Администрация</a>
+            </li>
+            <li>
+              <a href="{% url 'core:post_detail' '16' 'rules' %}">Правила</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <form method="get" action="{% url 'core:filter' %}">
+        <label class="tw:input tw:input-bordered tw:w-35 tw:xl:w-auto">
+          <svg class="tw:w-3.5 tw:opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </g>
+          </svg>
+          <input type="search" name="q" placeholder="Поиск" aria-label="Search" />
+        </label>
+      </form>
+
+      <div class="tw:dropdown tw:dropdown-end">
+        <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:m-1">
+          Тема
+          <svg class="tw:inline-block tw:w-3 tw:h-3 tw:mt-1 tw:fill-current tw:opacity-80"
+               width="12px"
+               height="12px"
+               xmlns="http://www.w3.org/2000/svg"
+               viewBox="0 0 2048 2048">
+            <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
+          </svg>
+        </div>
         <ul tabindex="0"
-            class="tw:menu tw:dropdown-content tw:min-w-30 tw:max-w-40 tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:p-2 tw:shadow">
-          <span class="tw:px-1 tw:w-full tw:line-clamp-2 tw:break-words tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">{{ user.username }}</span>
-          <li>
-            <a class="tw:block" href="{{ user.user_profile.get_absolute_url }}">Профиль</a>
-          </li>
-          {% if user.is_superuser %}
-            <div class="tw:px-3 tw:flex tw:items-center tw:gap-2">
-              <span class="tw:text-base-content tw:py-1">Невидимка</span>
-              <label class="tw:toggle tw:toggle-xs">
-                <input type="checkbox"
-                       name="is_enabled"
-                       x-model="is_invisibility_enabled"
-                       hx-post="{% url 'core:toggle_invisibility' %}"
-                       hx-trigger="change"
-                       hx-swap="none"
-                       :hx-vals="JSON.stringify({is_enabled: is_invisibility_enabled})" />
-                <svg aria-label="disabled"
-                     xmlns="http://www.w3.org/2000/svg"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="4"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-                <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor">
-                    <path d="M20 6 9 17l-5-5"></path>
-                  </g>
-                </svg>
-              </label>
-            </div>
-          {% endif %}
-          <li>
-            <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">Выход</span>
-          </li>
+            class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-45 tw:p-2 tw:shadow-2xl">
+          {% for theme in themes %}
+            <li>
+              <div class="tw:flex tw:items-center tw:justify-between tw:gap-1">
+                <input type="radio"
+                       name="theme-dropdown"
+                       aria-label="{{ theme.label }}"
+                       value="{{ theme.value }}"
+                       class="theme-controller tw:flex-grow tw:btn tw:btn-ghost tw:btn-sm tw:justify-start tw:peer" />
+                <i class="fa fa-check tw:size-4! tw:opacity-0 tw:peer-checked:opacity-100" aria-hidden="true"></i>
+              </div>
+            </li>
+          {% endfor %}
         </ul>
       </div>
-    {% else %}
-      <button type="button" class="tw:btn tw:btn-primary tw:mr-1!" onclick="login_modal.showModal()">Вход</button>
-    {% endif %}
+
+      {% if user.is_authenticated %}
+        {% include "notifications/notification_dropdown.html" %}
+
+        <div class="tw:dropdown tw:dropdown-end"
+             x-data="{ is_invisibility_enabled: {{ user.user_profile.invisibility_enabled|yesno:'true,false' }} }">
+          <div tabindex="0"
+               role="button"
+               class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar"
+               :class="{ 'tw:avatar-offline': is_invisibility_enabled }">
+            <div class="tw:w-[45px] tw:rounded-full">
+              <img src="{{ user.user_profile.avatar.url }}" />
+            </div>
+          </div>
+
+          <ul tabindex="0"
+              class="tw:menu tw:dropdown-content tw:min-w-30 tw:max-w-40 tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:p-2 tw:shadow">
+            <span class="tw:px-1 tw:w-full tw:line-clamp-2 tw:break-words tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">{{ user.username }}</span>
+            <li>
+              <a class="tw:block" href="{{ user.user_profile.get_absolute_url }}">Профиль</a>
+            </li>
+            {% if user.is_superuser %}
+              <div class="tw:px-3 tw:flex tw:items-center tw:gap-2">
+                <span class="tw:text-base-content tw:py-1">Невидимка</span>
+                <label class="tw:toggle tw:toggle-xs">
+                  <input type="checkbox"
+                         name="is_enabled"
+                         x-model="is_invisibility_enabled"
+                         hx-post="{% url 'core:toggle_invisibility' %}"
+                         hx-trigger="change"
+                         hx-swap="none"
+                         :hx-vals="JSON.stringify({is_enabled: is_invisibility_enabled})" />
+                  <svg aria-label="disabled"
+                       xmlns="http://www.w3.org/2000/svg"
+                       viewBox="0 0 24 24"
+                       fill="none"
+                       stroke="currentColor"
+                       stroke-width="4"
+                       stroke-linecap="round"
+                       stroke-linejoin="round">
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                  <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor">
+                      <path d="M20 6 9 17l-5-5"></path>
+                    </g>
+                  </svg>
+                </label>
+              </div>
+            {% endif %}
+            <li>
+              <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">Выход</span>
+            </li>
+          </ul>
+        </div>
+      {% else %}
+        <button type="button" class="tw:btn tw:btn-primary tw:mr-1!" onclick="login_modal.showModal()">Вход</button>
+      {% endif %}
+    </div>
   </div>
-</div>
+</header>

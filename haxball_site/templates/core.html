@@ -14,48 +14,46 @@
 {% endblock %}
 
 {% block content %}
-  <div class="tw:w-full tw:mx-auto tw:justify-center tw:py-2">
-    <div class="tw:max-w-[1600px] tw:flex tw:flex-wrap tw:relative tw:mx-auto">
-      <aside class="tw:w-1/2 tw:order-2 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:xl:order-1 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
-        {% include 'core/include/sidebar_for_media.html' %}
+  <div class="tw:mx-auto tw:max-w-[1600px] tw:py-2 tw:flex tw:flex-wrap">
+    <aside class="tw:w-1/2 tw:order-2 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:xl:order-1 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
+      {% include 'core/include/sidebar_for_media.html' %}
 
-        {% polls_list 2 user %}
+      {% polls_list 2 user %}
 
-        {% include 'core/include/sidebar_for_lives.html' %}
+      {% include 'core/include/sidebar_for_lives.html' %}
 
-        {% include 'core/include/sidebar_for_videos.html' %}
+      {% include 'core/include/sidebar_for_videos.html' %}
 
-        {% show_last_transfers %}
-      </aside>
+      {% show_last_transfers %}
+    </aside>
 
-      <main class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:px-1">
-        {% block main_content %}{% endblock %}
+    <main class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:px-1">
+      {% block main_content %}{% endblock %}
 
-        {# Блок для отображение профиля пользователя #}
-        {% block profile_of_user %}{% endblock %}
+      {# Блок для отображение профиля пользователя #}
+      {% block profile_of_user %}{% endblock %}
 
-        {# Блок для отображение одного поста, пост-детейл #}
-        {% block post %}{% endblock %}
+      {# Блок для отображение одного поста, пост-детейл #}
+      {% block post %}{% endblock %}
 
-        {# Блок для списка постов #}
-        {% block postlist %}{% endblock %}
+      {# Блок для списка постов #}
+      {% block postlist %}{% endblock %}
 
-        {# Блок для отображение списка комментариев #}
-        {% block comments %}{% endblock %}
-      </main>
+      {# Блок для отображение списка комментариев #}
+      {% block comments %}{% endblock %}
+    </main>
 
-      <aside class="tw:w-1/2 tw:order-3 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
-        {% include 'core/include/sidebar_for_online_users.html' %}
+    <aside class="tw:w-1/2 tw:order-3 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
+      {% include 'core/include/sidebar_for_online_users.html' %}
 
-        {% block sidebar_last_activity %}
-          {% show_last_activity 15 %}
-        {% endblock %}
+      {% block sidebar_last_activity %}
+        {% show_last_activity 15 %}
+      {% endblock %}
 
-        {% block sidebar_top_comments %}
-          {% show_top_comments 5 %}
-        {% endblock %}
-      </aside>
-    </div>
+      {% block sidebar_top_comments %}
+        {% show_top_comments 5 %}
+      {% endblock %}
+    </aside>
   </div>
 
   {% include 'core/include/login_modal.html' %}
