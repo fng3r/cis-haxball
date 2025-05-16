@@ -22,8 +22,8 @@ class ReservationEntry(models.Model):
     author = models.ForeignKey(
         User, verbose_name='Автор заявки', on_delete=models.CASCADE, related_name='user_reservation_authors'
     )
-    match = models.OneToOneField(
-        Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='match_reservation'
+    match = models.ForeignKey(
+        Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='match_reservations'
     )
     time_date = models.DateTimeField('Дата и время')
 

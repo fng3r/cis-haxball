@@ -71,7 +71,7 @@
                                     <img src="{{ res.match.team_guest.logo.url }}" alt="{{ res.match.team_guest.title }}" width="16px" height="16px">
                                   </span>
                                 </div>
-                                {% if user|match_can_delete:res.match %}
+                                {% if user|match_can_delete:res %}
                                   <span class="tw:text-error" onclick="deleteres{{ res.id }}.showModal()">
                                     <i class="fa fa-times tw:cursor-pointer tw:text-[20px]" aria-hidden="true"></i>
                                   </span>
