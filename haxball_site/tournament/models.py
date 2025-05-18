@@ -120,6 +120,19 @@ class Team(models.Model):
             .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
             .order_by('taken_at')
         )
+        
+    @receiver(post_save, sender='tournament.PlayerTransfer')
+    def clean_executives_if_needed(sender, instance, created, **kwargs):  # noqa: N805
+        transfer = instance
+        player = transfer.trans_player
+        team = transfer.from_team
+        if team is not None:
+            if player == team.captain:
+                team.captain = None
+                team.save(update_fields=['captain'])
+            if player == team.captain_assistant:
+                team.captain_assistant = None
+                team.save(update_fields=['captain_assistant'])
 
     def __str__(self):
         return f'{self.title}'
@@ -1126,6 +1139,8 @@ class PlayerTransfer(models.Model):
             self.trans_player.save()
 
         super(PlayerTransfer, self).save(*args, **kwargs)
+        
+    
 
     def __str__(self):
         return f'Переход {self.trans_player} в команду {self.to_team} (из {self.from_team})'
