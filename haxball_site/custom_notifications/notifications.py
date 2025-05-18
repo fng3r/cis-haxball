@@ -5,7 +5,7 @@ from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from notifications.signals import notify
-from tournament.models import Disqualification, Match
+from tournament.models import Disqualification, Match, Team
 
 # Get a logger for this module
 logger = logging.getLogger('haxball_site')
@@ -112,11 +112,11 @@ def notify_match_inspected(match: Match):
     """
     try:
         actor = match.inspector or User.objects.get(username='admin')
-        recipients = set((match.team_home.owner, match.team_guest.owner))
-        all_players = match.team_home.players_in_team.all() | match.team_guest.players_in_team.all()
-        for player in all_players:
-            if player.role == 'C' or player.role == 'AC':
-                recipients.add(player.name)
+        recipients = set()
+        recipients.update(
+            _get_team_executives(match.team_home),
+            _get_team_executives(match.team_guest)
+        )
         logger.debug(f'Match inspection notification recipients: {recipients}')
         match_title = f'{match.team_home.short_title} : {match.team_guest.short_title}'
         
@@ -140,10 +140,9 @@ def notify_disqualification(disqualification: Disqualification):
     """
     try:
         actor = disqualification.match.inspector or User.objects.get(username='admin')
-        recipients = set((disqualification.team.owner, disqualification.player.name))
-        for player in disqualification.team.players_in_team.all():
-            if player.role == 'C' or player.role == 'AC':
-                recipients.add(player.name)
+        recipients = set()
+        recipients.add(disqualification.player.name)
+        recipients.update(_get_team_executives(disqualification.team))
         logger.debug(f'Disqualification notification recipients: {recipients}')
         match_title = f'{disqualification.match.team_home.short_title} : {disqualification.match.team_guest.short_title}'
         disqualified_player = disqualification.player
@@ -211,3 +210,14 @@ def _parse_mentions(comment: NewComment):
     mentioned_user_ids = set(int(user_id) for user_id in mentioned_user_ids)
 
     return User.objects.filter(id__in=mentioned_user_ids).exclude(id=comment.author.id)
+
+
+def _get_team_executives(team: Team):
+    result = set()
+    result.add(team.owner)
+    if team.captain is not None:
+        result.add(team.captain.name)
+    if team.captain_assistant is not None:
+        result.add(team.captain_assistant.name)
+        
+    return result

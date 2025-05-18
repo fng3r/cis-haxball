@@ -79,7 +79,7 @@ class Season(models.Model):
 
 class Team(models.Model):
     title = models.CharField('Название', max_length=128)
-    slug = models.SlugField('слаг', max_length=250)
+    slug = models.SlugField(max_length=250)
     date_found = models.DateField('Дата основания', default=timezone.now)
     short_title = models.CharField('Сокращение', help_text='До 5 символов', max_length=5)
     logo = models.ImageField('Логотип', upload_to='team_logos/', default='team_logos/default.png')
@@ -88,6 +88,22 @@ class Team(models.Model):
     color_table = ColorField(default='#FFFFFF', verbose_name='Цвет Таблички')
     owner = models.ForeignKey(
         User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='owner'
+    )
+    captain = models.OneToOneField(
+        'Player',
+        verbose_name='Капитан',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+'
+    )
+    captain_assistant = models.OneToOneField(
+        'Player',
+        verbose_name='Ассистент капитана',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+'
     )
     office_link = models.URLField('Офис', blank=True)
     rating = models.SmallIntegerField('Рейтинг команды', blank=True, null=True)

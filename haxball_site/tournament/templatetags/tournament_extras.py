@@ -726,17 +726,6 @@ def get_player_assists_subquery(league: League):
     )
 
 
-#  Капитан и ассистент для профиля команды(контактов)
-@register.filter
-def get_captain(team):
-    return Player.objects.filter(team=team, role='C').select_related('name__user_profile')
-
-
-@register.filter
-def get_team_assistent(team):
-    return Player.objects.filter(team=team, role='AC').select_related('name__user_profile')
-
-
 @register.simple_tag
 def team_seasons(team):
      return (
@@ -1163,8 +1152,9 @@ def get_user_teams(user: User):
     except:
         return []
     teams = []
-    if player.role == Player.CAPTAIN or player.role == Player.ASSISTENT:
-        teams.append(player.team)
+    current_team = player.team
+    if current_team is not None and (player == current_team.captain or player == current_team.captain_assistant):
+        teams.append(current_team)
 
     owned_teams = Team.objects.filter(owner=user, leagues__championship__is_active=True)
     for team in owned_teams:
