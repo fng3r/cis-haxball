@@ -1187,7 +1187,7 @@ class Postponement(models.Model):
         return self.match.league
 
     def __str__(self):
-        return 'Переноса матча {} - {}, {} тур ({} - {})'.format(
+        return 'Перенос матча {} - {}, {} тур ({} - {})'.format(
             self.match.team_home,
             self.match.team_guest,
             self.match.numb_tour.number,
