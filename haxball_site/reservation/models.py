@@ -39,13 +39,19 @@ class ReservationEntry(models.Model):
         blank=True,
         related_name='cancelled_reservations'
     )
+    is_cancelled = models.GeneratedField(
+        verbose_name = 'Отменена',
+        expression=models.Case(
+            models.When(cancelled_at__isnull=False, then=True),
+            default=False,
+            output_field=models.BooleanField(),
+        ),
+        db_persist=True,
+        output_field=models.BooleanField(),
+    )
 
     def __str__(self):
         return f'Бронь матча {self.match} на {self.time_date.astimezone()}'
-
-    @property
-    def is_cancelled(self):
-        return self.cancelled_at is not None
 
     class Meta:
         verbose_name = 'Бронь хоста'

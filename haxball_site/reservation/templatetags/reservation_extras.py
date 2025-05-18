@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django import template
+from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.utils import timezone
 from tournament.models import Match, Team
@@ -10,37 +11,37 @@ from reservation.models import ReservationEntry, ReservationHost
 register = template.Library()
 
 
-def teams_can_reserve(user):
+def get_managed_teams(user):
     try:
-        a = user.user_player
+        player = user.user_player
     except:
-        return False
-    t = []
-    if a.role == 'C' or a.role == 'AC':
-        t.append(a.team)
+        return []
+    teams = []
+    if player.role == 'C' or player.role == 'AC':
+        teams.append(player.team)
 
-    tt = Team.objects.filter(owner=user)
+    owned_teams = Team.objects.filter(owner=user)
     active_teams = Team.objects.filter(leagues__championship__is_active=True)
-    for i in tt:
+    for i in owned_teams:
         if i in active_teams:
-            t.append(i)
+            teams.append(i)
 
-    return t
+    return teams
 
 
 @register.filter
 def can_reserve_host(user):
-    return bool(teams_can_reserve(user))
+    return len(get_managed_teams(user)) > 0
 
 
 @register.inclusion_tag('reservation/reservation_form.html')
 def reservation_form(user):
-    teams = teams_can_reserve(user)
+    teams = get_managed_teams(user)
     today = timezone.localdate()
     tomorrow = today + timedelta(days=1)
     matches_to_choose = (
         Match.objects
-        .annotate(reservations_count=Count('match_reservations', filter=Q(match_reservations__cancelled_at__isnull=True)))
+        .annotate(reservations_count=Count('match_reservations', filter=Q(match_reservations__is_cancelled=False)))
         .filter(
             (Q(team_home__in=teams) | Q(team_guest__in=teams)),
             reservations_count=0,
@@ -68,14 +69,14 @@ def reservation_form(user):
 
 
 @register.filter
-def match_can_delete(user, reservation: ReservationEntry):
+def can_cancel_reservation(user: User, reservation: ReservationEntry):
     if user.is_anonymous:
         return False
     try:
         user.user_player
     except:
         return False
-    teams = teams_can_reserve(user)
+    teams = get_managed_teams(user)
     delt_time = reservation.time_date - timezone.now()
     
     return (

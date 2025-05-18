@@ -28,7 +28,7 @@ def upcoming_matches_context(request):
     today = timezone.localdate()
     upcoming_matches = (
         ReservationEntry.objects
-        .filter(time_date__range=[today, today + timezone.timedelta(days=2)])
+        .filter(time_date__range=[today, today + timezone.timedelta(days=2)], is_cancelled=False)
         .order_by('time_date', 'match__league__priority',)
         .select_related(
             'match', 'match__league', 'match__stage', 'match__numb_tour', 'match__team_home', 'match__team_guest'
