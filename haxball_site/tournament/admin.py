@@ -88,14 +88,14 @@ class PlayerAdmin(admin.ModelAdmin):
         'nickname',
         'team',
         'player_nation',
-        'role',
     )
     raw_id_fields = ('name',)
-    list_filter = ('role', 'team', 'name')
+    list_filter = ('team', 'name', 'player_nation')
     search_fields = (
         'nickname',
         'name__username',
     )
+    exclude = ('position',)
 
 
 @admin.register(PlayerTransfer)

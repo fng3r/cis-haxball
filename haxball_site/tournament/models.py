@@ -472,12 +472,6 @@ class Player(models.Model):
     player_nation = models.ForeignKey(
         Nation, verbose_name='Национальность', related_name='country_players', null=True, on_delete=models.SET_NULL
     )
-    JUST_PLAYER = 'PL'
-    CAPTAIN = 'C'
-    ASSISTENT = 'AC'
-    ROLES = [(JUST_PLAYER, 'Игрок'), (CAPTAIN, 'Капитан'), (ASSISTENT, 'Ассистент')]
-
-    role = models.CharField('Должность', max_length=2, choices=ROLES, default=JUST_PLAYER)
 
     @receiver(post_save, sender=User)
     def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
