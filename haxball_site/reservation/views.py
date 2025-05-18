@@ -11,7 +11,7 @@ from django.views.generic import ListView
 from tournament.models import Match
 
 from .models import Replay, ReservationEntry, ReservationHost
-from .templatetags.reservation_extras import teams_can_reserve
+from .templatetags.reservation_extras import get_managed_teams
 
 
 class ReservationList(ListView):
@@ -20,7 +20,7 @@ class ReservationList(ListView):
     def get(self, request, **kwargs):
         reservations = (
             ReservationEntry.objects
-            .filter(match__is_played=False, cancelled_at__isnull=True)
+            .filter(match__is_played=False, is_cancelled=False)
             .select_related('match__team_home', 'match__team_guest', 'match__numb_tour',
                             'match__stage', 'match__numb_tour__stage', 'host')
             .order_by('time_date')
@@ -72,7 +72,7 @@ class ReservationList(ListView):
             .filter(
                 Q(match__team_home__in=teams) | Q(match__team_guest__in=teams),
                 time_date__range=[prev_match_date, next_match_date],
-                cancelled_at__isnull=True,
+                is_cancelled=False,
             )
             .exists()
         )
@@ -82,7 +82,7 @@ class ReservationList(ListView):
             .filter(
                 time_date__range=[prev_match_date, next_match_date],
                 host_id=host_id,
-                cancelled_at__isnull=True,
+                is_cancelled=False,
             )
             .exists()
         )
@@ -140,7 +140,7 @@ class ReplaysList(ListView):
 @require_POST
 def delete_entry(request, pk):
     reserved_match = get_object_or_404(ReservationEntry, pk=pk)
-    user_teams = teams_can_reserve(request.user)
+    user_teams = get_managed_teams(request.user)
 
     if (reserved_match.match.team_home in user_teams) or (reserved_match.match.team_guest in user_teams):
         reserved_match.cancelled_at = timezone.now()
