@@ -22,9 +22,12 @@ from django.contrib.auth.decorators import login_required
 from django.urls import include, path, re_path
 from django.views.decorators.cache import never_cache
 
+from haxball_site.sites import new_admin_site
+
 urlpatterns = [
     path('grappelli/', include('grappelli.urls')),
     path('admin/', admin.site.urls),
+    path('unfold-admin/', new_admin_site.urls),
     re_path(r'^ckeditor/upload/', login_required(ckuploader_views.upload), name='ckeditor_upload'),
     re_path(r'^ckeditor/browse/', never_cache(login_required(ckuploader_views.browse)), name='ckeditor_browse'),
     path('chaining/', include('smart_selects.urls')),

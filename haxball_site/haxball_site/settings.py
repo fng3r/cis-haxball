@@ -42,8 +42,11 @@ INSTALLED_APPS = [
     'custom_notifications.apps.CustomNotificationsConfig',
     'django_filters',
     'smart_selects',
-    'grappelli',
     'colorfield',
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -83,6 +86,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'haxball_site.middleware.CurrentRequestMiddleware'
 ]
 
 ROOT_URLCONF = 'haxball_site.urls'
@@ -93,6 +97,11 @@ TEMPLATES = [
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
+            'loaders': [
+                'haxball_site.loaders.UnfoldAdminLoader',
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+            ],
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',

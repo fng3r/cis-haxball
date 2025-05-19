@@ -1,3 +1,5 @@
+from threading import local
+
 from core.models import IPAdress, UserActivity
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -68,4 +70,17 @@ class UserTrackingMiddleware:
                 ua.has_duplicates = True
                 ua.save(update_fields=['has_duplicates'])
 
+        return response
+    
+    
+_thread_data = local()
+
+
+class CurrentRequestMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        _thread_data.request = request
+        response = self.get_response(request)
         return response
