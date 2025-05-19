@@ -14,6 +14,8 @@ import os
 
 from decouple import config
 from django.contrib.messages import constants as messages
+from django.templatetags.static import static
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
@@ -534,5 +536,75 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+    },
+}
+
+UNFOLD = {
+    "SITE_TITLE": "CIS-HAXBALL",
+    "SITE_HEADER": "CIS-HAXBALL",
+    "SITE_SUBHEADER": "Admin dashboard",
+    "SITE_ICON": lambda request: static("img/logo_try.png"),
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "sizes": "32x32",
+            "type": "image/png",
+            "href": lambda request: static("img/logo_try.png"),
+        },
+    ],
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "SHOW_BACK_BUTTON": True,
+    "SIDEBAR": {
+        "show_search": False,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                'title': 'Core',
+                'items': [
+                    {
+                        'title': 'Социалочка',
+                        'icon': 'handshake',
+                        'link': reverse_lazy('admin:app_list', args=('core',)),
+                    },
+                    {
+                        'title': 'Опросы',
+                        'icon': 'poll',
+                        'link': reverse_lazy('admin:app_list', args=('polls',)),
+                    },
+                    {
+                        'title': 'Чемпионат',
+                        'icon': 'trophy',
+                        'link': reverse_lazy('admin:app_list', args=('tournament',)),
+                    },
+                    {
+                        'title': 'Бронь хоста',
+                        'icon': 'event',
+                        'link': reverse_lazy('admin:app_list', args=('reservation',)),
+                    },
+                ],
+            },
+            {
+                'title': 'Пользователи и группы',
+                'icon': 'people',
+                'items': [
+                    {
+                        'title': 'Online activity',
+                        'icon': 'fiber_manual_record',
+                        'link': reverse_lazy('admin:online_users_onlineuseractivity_changelist'),
+                    },
+                    {
+                        'title': 'Пользователи',
+                        'icon': 'person',
+                        'link': reverse_lazy('admin:auth_user_changelist'),
+                    },
+                    {
+                        'title': 'Группы',
+                        'icon': 'group',
+                        'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                ],
+            },
+        ],
     },
 }
