@@ -79,7 +79,7 @@ class Season(models.Model):
 
 class Team(models.Model):
     title = models.CharField('Название', max_length=128)
-    slug = models.SlugField('слаг', max_length=250)
+    slug = models.SlugField(max_length=250)
     date_found = models.DateField('Дата основания', default=timezone.now)
     short_title = models.CharField('Сокращение', help_text='До 5 символов', max_length=5)
     logo = models.ImageField('Логотип', upload_to='team_logos/', default='team_logos/default.png')
@@ -88,6 +88,22 @@ class Team(models.Model):
     color_table = ColorField(default='#FFFFFF', verbose_name='Цвет Таблички')
     owner = models.ForeignKey(
         User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='owner'
+    )
+    captain = models.OneToOneField(
+        'Player',
+        verbose_name='Капитан',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+'
+    )
+    captain_assistant = models.OneToOneField(
+        'Player',
+        verbose_name='Ассистент капитана',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+'
     )
     office_link = models.URLField('Офис', blank=True)
     rating = models.SmallIntegerField('Рейтинг команды', blank=True, null=True)
@@ -104,6 +120,19 @@ class Team(models.Model):
             .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
             .order_by('taken_at')
         )
+        
+    @receiver(post_save, sender='tournament.PlayerTransfer')
+    def clean_executives_if_needed(sender, instance, created, **kwargs):  # noqa: N805
+        transfer = instance
+        player = transfer.trans_player
+        team = transfer.from_team
+        if team is not None:
+            if player == team.captain:
+                team.captain = None
+                team.save(update_fields=['captain'])
+            if player == team.captain_assistant:
+                team.captain_assistant = None
+                team.save(update_fields=['captain_assistant'])
 
     def __str__(self):
         return f'{self.title}'
@@ -443,12 +472,6 @@ class Player(models.Model):
     player_nation = models.ForeignKey(
         Nation, verbose_name='Национальность', related_name='country_players', null=True, on_delete=models.SET_NULL
     )
-    JUST_PLAYER = 'PL'
-    CAPTAIN = 'C'
-    ASSISTENT = 'AC'
-    ROLES = [(JUST_PLAYER, 'Игрок'), (CAPTAIN, 'Капитан'), (ASSISTENT, 'Ассистент')]
-
-    role = models.CharField('Должность', max_length=2, choices=ROLES, default=JUST_PLAYER)
 
     @receiver(post_save, sender=User)
     def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
@@ -1110,6 +1133,8 @@ class PlayerTransfer(models.Model):
             self.trans_player.save()
 
         super(PlayerTransfer, self).save(*args, **kwargs)
+        
+    
 
     def __str__(self):
         return f'Переход {self.trans_player} в команду {self.to_team} (из {self.from_team})'
@@ -1162,7 +1187,7 @@ class Postponement(models.Model):
         return self.match.league
 
     def __str__(self):
-        return 'Переноса матча {} - {}, {} тур ({} - {})'.format(
+        return 'Перенос матча {} - {}, {} тур ({} - {})'.format(
             self.match.team_home,
             self.match.team_guest,
             self.match.numb_tour.number,

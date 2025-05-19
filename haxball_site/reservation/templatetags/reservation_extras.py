@@ -4,27 +4,26 @@ from django import template
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.utils import timezone
-from tournament.models import Match, Team
+from tournament.models import Match, Player, Team
 
 from reservation.models import ReservationEntry, ReservationHost
 
 register = template.Library()
 
 
-def get_managed_teams(user):
+def get_managed_teams(user: User):
     try:
-        player = user.user_player
+        player: Player = user.user_player
     except:
         return []
     teams = []
-    if player.role == 'C' or player.role == 'AC':
-        teams.append(player.team)
+    current_team = player.team
+    if current_team is not None and (player == current_team.captain or player == current_team.captain_assistant):
+        teams.append(current_team)
 
-    owned_teams = Team.objects.filter(owner=user)
-    active_teams = Team.objects.filter(leagues__championship__is_active=True)
-    for i in owned_teams:
-        if i in active_teams:
-            teams.append(i)
+    owned_teams = Team.objects.filter(owner=user, leagues__championship__is_active=True)
+    for team in owned_teams:
+        teams.append(team)
 
     return teams
 

@@ -1,6 +1,9 @@
+from typing import Any
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
+from django.db.models.fields.related import ForeignKey
+from django.http import HttpRequest
 from django.urls import resolve
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
@@ -85,14 +88,14 @@ class PlayerAdmin(admin.ModelAdmin):
         'nickname',
         'team',
         'player_nation',
-        'role',
     )
     raw_id_fields = ('name',)
-    list_filter = ('role', 'team', 'name')
+    list_filter = ('team', 'name', 'player_nation')
     search_fields = (
         'nickname',
         'name__username',
     )
+    exclude = ('position',)
 
 
 @admin.register(PlayerTransfer)
@@ -140,6 +143,16 @@ class TeamAdmin(admin.ModelAdmin):
     )
     search_fields = ('title',)
     inlines = [PlayerInline]
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        team = None
+        if 'object_id' in resolved.kwargs:
+            team = Team.objects.filter(pk=resolved.kwargs['object_id']).first()
+        if team and (db_field.name == 'captain' or db_field.name == 'captain_assistant'):
+            kwargs['queryset'] = team.players_in_team.all()
+            
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
 
 class TeamPenaltyPointsAdmin(admin.StackedInline):

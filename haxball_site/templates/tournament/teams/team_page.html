@@ -228,86 +228,90 @@
 
                         </td>
                       </tr>
-                      {% for cap in team|get_captain %}
-                        <tr>
-                          <td>
-                            <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span>
-                          </td>
-                          <td>
-                            {% if cap.name %}
-                              <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
-                                 href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
-                            {% else %}
-                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
-                            {% endif %}
-                          </td>
-                          <td class="tw:text-center">
-                            {% if cap.name.user_profile.vk %}
-                              <a href="https://vk.com/{{ cap.name.user_profile.vk }}" target="_blank">
-                                <img src="{% static "img/ico/vk_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.vk }}">
-                              </a>
-                            {% endif %}
-                            {% if cap.name.user_profile.discord %}
-                              <img src='{% static "img/ico/discord_1.png" %}'
-                                   onclick="myFunction(this)"
-                                   height="30"
-                                   width="30"
-                                   title="{{ cap.name.user_profile.discord }}"
-                                   style="cursor: pointer">
-                            {% endif %}
-                            {% if cap.name.user_profile.telegram %}
-                              <a href="https://t.me/{{ cap.name.user_profile.telegram }}" target="_blank">
-                                <img src="{% static "img/ico/tg_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.telegram }}">
-                              </a>
-                            {% endif %}
-                            {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
-                              <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
-                            {% endif %}
 
-                          </td>
-                        </tr>
-                      {% endfor %}
+                      {% with cap=team.captain cap_profile=team.captain.name.user_profile %}
+                        {% if cap %}
+                          <tr>
+                            <td>
+                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span>
+                            </td>
+                            <td>
+                              {% if cap.name %}
+                                <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold" href="{{ cap_profile.get_absolute_url }}">{{ cap }}</a>
+                              {% else %}
+                                <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
+                              {% endif %}
+                            </td>
+                            <td class="tw:text-center">
+                              {% if cap_profile.vk %}
+                                <a href="https://vk.com/{{ cap_profile.vk }}" target="_blank">
+                                  <img src="{% static "img/ico/vk_1.png" %}" height="30" width="30" title="{{ cap_profile.vk }}">
+                                </a>
+                              {% endif %}
+                              {% if cap_profile.discord %}
+                                <img src='{% static "img/ico/discord_1.png" %}'
+                                     onclick="myFunction(this)"
+                                     height="30"
+                                     width="30"
+                                     title="{{ cap_profile.discord }}"
+                                     style="cursor: pointer">
+                              {% endif %}
+                              {% if cap_profile.telegram %}
+                                <a href="https://t.me/{{ cap_profile.telegram }}" target="_blank">
+                                  <img src="{% static "img/ico/tg_1.png" %}" height="30" width="30" title="{{ cap_profile.telegram }}">
+                                </a>
+                              {% endif %}
+                              {% if not cap_profile.vk and not cap_profile.discord and not cap_profile.telegram %}
+                                <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
+                              {% endif %}
 
-                      {% for cap in team|get_team_assistent %}
-                        <tr>
-                          <td>
-                            <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Ассистент</span>
-                          </td>
-                          <td>
-                            {% if cap.name %}
-                              <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
-                                 href="{{ cap.name.user_profile.get_absolute_url }}">{{ cap }}</a>
-                            {% else %}
-                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
+                            </td>
+                          </tr>
+                        {% endif %}
+                      {% endwith %}
 
-                            {% endif %}
-                          </td>
-                          <td class="tw:text-center">
-                            {% if cap.name.user_profile.vk %}
-                              <a href="https://vk.com/{{ team.owner.user_profile.vk }}" target="_blank">
-                                <img src="{% static "img/ico/vk_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.vk }}">
-                              </a>
-                            {% endif %}
-                            {% if cap.name.user_profile.discord %}
-                              <img src='{% static "img/ico/discord_1.png" %}'
-                                   onclick="myFunction(this)"
-                                   height="30"
-                                   width="30"
-                                   title="{{ cap.name.user_profile.discord }}"
-                                   style="cursor: pointer">
-                            {% endif %}
-                            {% if cap.name.user_profile.telegram %}
-                              <a href="https://t.me/{{ cap.name.user_profile.telegram }}" target="_blank">
-                                <img src="{% static "img/ico/tg_1.png" %}" height="30" width="30" title="{{ cap.name.user_profile.telegram }}">
-                              </a>
-                            {% endif %}
-                            {% if not cap.name.user_profile.vk and not cap.name.user_profile.discord and not cap.name.user_profile.telegram %}
-                              <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
-                            {% endif %}
+                      {% with assistant=team.captain_assistant assistant_profile=team.captain_assistant.name.user_profile %}
+                        {% if assistant %}
+                          <tr>
+                            <td>
+                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Ассистент</span>
+                            </td>
+                            <td>
+                              {% if assistant.name %}
+                                <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
+                                   href="{{ assistant_profile.get_absolute_url }}">{{ assistant }}</a>
+                              {% else %}
+                                <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ assistant }}</span>
 
-                          </td>
-                        </tr>
-                      {% endfor %}
+                              {% endif %}
+                            </td>
+                            <td class="tw:text-center">
+                              {% if assistant_profile.vk %}
+                                <a href="https://vk.com/{{ team.owner.user_profile.vk }}" target="_blank">
+                                  <img src="{% static "img/ico/vk_1.png" %}" height="30" width="30" title="{{ assistant_profile.vk }}">
+                                </a>
+                              {% endif %}
+                              {% if assistant_profile.discord %}
+                                <img src='{% static "img/ico/discord_1.png" %}'
+                                     onclick="myFunction(this)"
+                                     height="30"
+                                     width="30"
+                                     title="{{ assistant_profile.discord }}"
+                                     style="cursor: pointer">
+                              {% endif %}
+                              {% if assistant_profile.telegram %}
+                                <a href="https://t.me/{{ assistant_profile.telegram }}" target="_blank">
+                                  <img src="{% static "img/ico/tg_1.png" %}" height="30" width="30" title="{{ assistant_profile.telegram }}">
+                                </a>
+                              {% endif %}
+                              {% if not assistant_profile.vk and not assistant_profile.discord and not assistant_profile.telegram %}
+                                <i class="fa fa-minus tw:text-error tw:text-center" aria-hidden="true"></i>
+                              {% endif %}
+
+                            </td>
+                          </tr>
+                        {% endif %}
+                      {% endwith %}
                     </tbody>
                   </table>
                 </div>

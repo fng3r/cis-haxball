@@ -213,13 +213,11 @@ def is_executive(user: User, league: League):
     except:
         return False
 
-    has_team_in_league = Player.objects.filter(id=player.id, team__leagues=league).exists()
-    if has_team_in_league and player.role in (Player.CAPTAIN, Player.ASSISTENT):
-        return True
-
-    is_owner = Team.objects.filter(owner=user, leagues=league).exists()
-
-    return is_owner  # noqa: RET504
+    return (
+        Team.objects
+        .filter(Q(owner=user) | Q(captain=player) | Q(captain_assistant=player), leagues=league)
+        .exists()
+    )
 
 
 @register.filter
