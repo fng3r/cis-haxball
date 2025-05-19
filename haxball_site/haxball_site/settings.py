@@ -570,7 +570,7 @@ UNFOLD = {
                     {
                         'title': 'Опросы',
                         'icon': 'poll',
-                        'link': reverse_lazy('admin:app_list', args=('polls',)),
+                        'link': reverse_lazy('admin:polls_question_changelist'),
                     },
                     {
                         'title': 'Чемпионат',
