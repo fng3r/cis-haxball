@@ -1,9 +1,21 @@
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib import admin
-from django.contrib.admin import StackedInline
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
+
+from unfold import admin as unfold_admin
+from unfold.contrib.filters.admin import (
+    FieldTextFilter,
+    SingleNumericFilter,
+    RelatedDropdownFilter,
+    ChoicesCheckboxFilter
+)
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from online_users.models import OnlineUserActivity
 
 from .models import (
     Category,
@@ -21,6 +33,34 @@ from .models import (
 )
 
 # Register your models here.
+admin.site.unregister(User)
+admin.site.unregister(Group)
+
+@admin.register(User)
+class UserAdmin(BaseUserAdmin, unfold_admin.ModelAdmin):
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
+    
+    list_display = ('username', 'email', 'is_active', 'is_staff', 'is_superuser')
+    list_filter_sheet = True
+
+
+@admin.register(Group)
+class GroupAdmin(BaseGroupAdmin, unfold_admin.ModelAdmin):
+    pass
+
+    
+admin.site.unregister(OnlineUserActivity)
+
+@admin.register(OnlineUserActivity)
+class OnlineUserActivityAdmin(unfold_admin.ModelAdmin):
+    list_display = ('user', 'last_activity')
+    list_filter = ('last_activity',)
+    list_filter_sheet = False
+    search_fields = ('user__username',)
+    search_help_text = 'Поиск по пользователям'
+    ordering = ('-last_activity',)
 
 
 class PostAdminForm(forms.ModelForm):
@@ -31,9 +71,8 @@ class PostAdminForm(forms.ModelForm):
         fields = '__all__'
 
 
-class CommentHistoryItemInline(StackedInline):
+class CommentHistoryItemInline(unfold_admin.StackedInline):
     model = CommentHistoryItem
-    extra = 0
     verbose_name_plural = 'История изменения комментария'
 
     def has_add_permission(self, request, obj):
@@ -47,7 +86,7 @@ class CommentHistoryItemInline(StackedInline):
 
 
 @admin.register(CommentHistoryItem)
-class CommentHistoryItemAdmin(admin.ModelAdmin):
+class CommentHistoryItemAdmin(unfold_admin.ModelAdmin):
     list_display = (
         'id',
         'created',
@@ -56,7 +95,10 @@ class CommentHistoryItemAdmin(admin.ModelAdmin):
         'get_author',
         'body',
     )
-    list_filter = ('comment__author',)
+    list_filter = (('comment__author', RelatedDropdownFilter),)
+    list_filter_submit = True
+    search_fields = ('body',)
+    search_help_text = 'Поиск по тексту комментария'
 
     def get_author(self, model):
         return model.comment.author
@@ -85,7 +127,7 @@ class NewCommentAdminForm(forms.ModelForm):
 
 
 @admin.register(NewComment)
-class NewCommentAdmin(admin.ModelAdmin):
+class NewCommentAdmin(unfold_admin.ModelAdmin):
     list_display = (
         'id',
         'author',
@@ -97,25 +139,31 @@ class NewCommentAdmin(admin.ModelAdmin):
         'object_id',
         'content_object',
     )
-    list_filter = ('created', 'author')
-    search_fields = ('body',)
+    list_filter = ('created', ('author', RelatedDropdownFilter))
+    list_filter_submit = True
+    list_fullwidth = True
+    search_fields = ('author__username', 'body',)
+    search_help_text = 'Поиск по автору/тексту комментария'
     inlines = [CommentHistoryItemInline]
     form = NewCommentAdminForm
 
 
 @admin.register(LikeDislike)
-class LikeDisLikeAdmin(admin.ModelAdmin):
+class LikeDisLikeAdmin(unfold_admin.ModelAdmin):
     list_display = ('id', 'vote', 'user', 'content_type', 'object_id', 'content_object')
-    list_filter = ('user',)
+    list_filter = ('vote', ('user', RelatedDropdownFilter),)
+    list_filter_submit = True
+    list_filter_sheet = False
     list_display_links = ('id',)
-    list_editable = ('vote',)
 
 
 @admin.register(Post)
-class PostAdmin(admin.ModelAdmin):
+class PostAdmin(unfold_admin.ModelAdmin):
     list_display = ('id', 'title', 'author', 'views', 'category', 'created', 'updated', 'important')
-    list_filter = ('created', 'author')
+    list_filter = ('created', ('author', RelatedDropdownFilter), 'important')
+    list_filter_submit = True
     search_fields = ('title', 'body')
+    search_help_text = 'Поиск по автору/заголовку поста'
     prepopulated_fields = {'slug': ('title',)}
     raw_id_fields = ('author',)
     form = PostAdminForm
@@ -123,43 +171,59 @@ class PostAdmin(admin.ModelAdmin):
 
 
 @admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(unfold_admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'can_comment', 'can_vote', 'views', 'karma', 'background')
-    list_filter = ('id', 'name', 'can_comment', 'can_vote')
-    list_display_links = ('name',)
+    list_filter = (
+        ('id', SingleNumericFilter),
+        ('name', RelatedDropdownFilter),
+        'can_comment',
+        'can_vote'
+    )
+    list_filter_submit = True
     search_fields = ('name__username',)
+    search_help_text = 'Поиск по имени пользователя'
     list_editable = ('can_comment', 'can_vote')
 
 
 @admin.register(Themes)
-class ThemesAdmin(admin.ModelAdmin):
+class ThemesAdmin(unfold_admin.ModelAdmin):
     list_display = ('title',)
 
 
 @admin.register(UserIcon)
-class UserIconAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description',)
+class UserIconAdmin(unfold_admin.ModelAdmin):
+    list_display = ('title', 'description', 'priority')
+    list_filter = (('user', RelatedDropdownFilter),)
+    list_filter_submit = True
+    list_filter_sheet = False
+    show_facets = False
     filter_horizontal = ('user',)
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(unfold_admin.ModelAdmin):
     list_display = ('title', 'slug', 'description', 'is_official', 'theme')
+    list_filter = ('is_official', 'theme')
+    list_filter_sheet = False
     prepopulated_fields = {'slug': ('title',)}
 
 
 @admin.register(IPAdress)
-class IPAdressAdmin(admin.ModelAdmin):
+class IPAdressAdmin(unfold_admin.ModelAdmin):
     list_display = ('ip', 'name', 'created', 'update', 'suspicious')
-    list_filter = ('ip', 'name', 'suspicious')
+    list_filter = (('name', RelatedDropdownFilter), 'suspicious', 'created', 'update')
+    list_filter_submit = True
     search_fields = ('ip', 'name__username')
+    search_help_text = 'Поиск по имени пользователя/ip-адресу'
 
 
 @admin.register(UserActivity)
-class UserActivityAdmin(admin.ModelAdmin):
+class UserActivityAdmin(unfold_admin.ModelAdmin):
     list_display = ('user', 'ip', 'id_token', 'user_agent', 'first_seen', 'last_seen', 'has_duplicates')
-    list_filter = ('user', 'id_token', 'user_agent', 'has_duplicates')
+    list_filter = (('user', RelatedDropdownFilter), ('user_agent', FieldTextFilter), 'has_duplicates')
+    list_filter_submit = True
     search_fields = ('user__username', 'ip', 'id_token')
+    search_help_text = 'Поиск по имени пользователя/ip/id token'
 
     def has_add_permission(self, request):
         return False
@@ -172,11 +236,13 @@ class UserActivityAdmin(admin.ModelAdmin):
 
 
 @admin.register(Subscription)
-class SubscriptionAdmin(admin.ModelAdmin):
+class SubscriptionAdmin(unfold_admin.ModelAdmin):
     list_display = ('user', 'starts_at', 'expires_at', 'tier', 'is_active', 'disabled')
-    list_filter = ('user', 'tier', 'disabled')
+    list_filter = (('user', RelatedDropdownFilter), ('tier', ChoicesCheckboxFilter), 'disabled')
+    list_filter_submit = True
     raw_id_fields = ('user',)
     search_fields = ('user__username',)
+    search_help_text = 'Поиск по имени пользователя'
 
     def is_active(self, model):
         return model.is_active()
@@ -186,7 +252,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 
 @admin.register(UserNicknameHistoryItem)
-class UserNicknameHistoryItemAdmin(admin.ModelAdmin):
+class UserNicknameHistoryItemAdmin(unfold_admin.ModelAdmin):
     list_display = ('user', 'nickname', 'edited')
     raw_id_fields = ('user',)
     search_fields = ('user__username', 'nickname')

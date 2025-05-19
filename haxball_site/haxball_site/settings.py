@@ -36,6 +36,7 @@ ALLOWED_HOSTS = config('APP_ALLOWED_HOSTS', cast=str.split)
 
 INSTALLED_APPS = [
     'template_partials',
+    'online_users',
     'core.apps.CoreConfig',
     'tournament.apps.TournamentConfig',
     'polls.apps.PollsConfig',
@@ -57,7 +58,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.humanize',
-    'online_users',
     'allauth',
     'allauth.account',
     'ckeditor',
@@ -557,7 +557,7 @@ UNFOLD = {
     "SHOW_BACK_BUTTON": True,
     "SIDEBAR": {
         "show_search": False,
-        "show_all_applications": True,
+        "show_all_applications": False,
         "navigation": [
             {
                 'title': 'Core',
