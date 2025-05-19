@@ -1,12 +1,15 @@
 from django.contrib import admin
+from unfold import admin as unfold_admin
+from unfold.contrib.filters.admin import (
+    MultipleRelatedDropdownFilter,
+    RelatedDropdownFilter,
+)
 
-from .models import Replay, ReservationEntry, ReservationHost
-
-admin.site.register(Replay)
+from .models import ReservationEntry, ReservationHost
 
 
 @admin.register(ReservationHost)
-class ReservationHostAdmin(admin.ModelAdmin):
+class ReservationHostAdmin(unfold_admin.ModelAdmin):
     list_display = ('name', 'is_active')
     
     
@@ -29,10 +32,17 @@ class IsActiveReservationFilter(admin.SimpleListFilter):
 
 
 @admin.register(ReservationEntry)
-class ReservationEntryAdmin(admin.ModelAdmin):
-    list_display = ('author', 'match', 'time_date', 'host', 'created', 'is_active', 'cancelled_at', 'cancelled_by')
+class ReservationEntryAdmin(unfold_admin.ModelAdmin):
+    list_display = ('match', 'time_date', 'host', 'author', 'created', 'is_active', 'cancelled_by', 'cancelled_at')
     raw_id_fields = ('match',)
-    list_filter = ('host', 'author', 'time_date', IsActiveReservationFilter)
+    list_filter = (
+        ('host', MultipleRelatedDropdownFilter),
+        ('author', RelatedDropdownFilter),
+        'time_date',
+        IsActiveReservationFilter
+    )
+    list_filter_submit = True
+    list_filter_sheet = False
     
     def is_active(self, model):
         return not model.is_cancelled
