@@ -1,16 +1,21 @@
-from typing import Any
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
-from django.db.models.fields.related import ForeignKey
-from django.http import HttpRequest
 from django.urls import resolve
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicChildModelFilter,
     PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
-    StackedPolymorphicInline,
+    StackedPolymorphicInline
+)
+
+from unfold import admin as unfold_admin
+from unfold.contrib.filters.admin import (
+    ChoicesCheckboxFilter,
+    MultipleChoicesDropdownFilter,
+    RelatedDropdownFilter,
+    SingleNumericFilter,
 )
 
 from .models import (
@@ -46,9 +51,11 @@ from .models import (
     TourNumber,
 )
 
+from haxball_site.sites import new_admin_site
+
 
 @admin.register(FreeAgent)
-class FreeAgentAdmin(admin.ModelAdmin):
+class FreeAgentAdmin(unfold_admin.ModelAdmin):
     list_display = ('id', 'player', 'position_main', 'description', 'is_active', 'created', 'deleted')
     list_filter = ('is_active',)
     search_fields = ('player__username',)
@@ -56,12 +63,12 @@ class FreeAgentAdmin(admin.ModelAdmin):
 
 
 @admin.register(AchievementCategory)
-class AchievementCategoryAdmin(admin.ModelAdmin):
+class AchievementCategoryAdmin(unfold_admin.ModelAdmin):
     list_display = ('id', 'title', 'description', 'order')
 
 
 @admin.register(Achievements)
-class AchievementsAdmin(admin.ModelAdmin):
+class AchievementsAdmin(unfold_admin.ModelAdmin):
     list_display = ('id', 'position_number', 'title', 'description', 'category', 'image', 'mini_image')
     list_filter = ('category',)
     filter_horizontal = ('player',)
@@ -72,8 +79,10 @@ class AchievementsAdmin(admin.ModelAdmin):
 
 
 @admin.register(TeamAchievement)
-class TeamAchievementAdmin(admin.ModelAdmin):
+class TeamAchievementAdmin(unfold_admin.ModelAdmin):
     list_display = ('id', 'season', 'title', 'description', 'players_raw_list', 'position_number', 'image')
+    list_filter = (('season', RelatedDropdownFilter),)
+    list_filter_submit = True
     filter_horizontal = ('team',)
     search_fields = (
         'title__icontains',
@@ -82,7 +91,7 @@ class TeamAchievementAdmin(admin.ModelAdmin):
 
 
 @admin.register(Player)
-class PlayerAdmin(admin.ModelAdmin):
+class PlayerAdmin(unfold_admin.ModelAdmin):
     list_display = (
         'name',
         'nickname',
@@ -90,7 +99,8 @@ class PlayerAdmin(admin.ModelAdmin):
         'player_nation',
     )
     raw_id_fields = ('name',)
-    list_filter = ('team', 'name', 'player_nation')
+    list_filter = (('team', RelatedDropdownFilter), ('name', RelatedDropdownFilter), ('player_nation', RelatedDropdownFilter))
+    list_filter_submit = True
     search_fields = (
         'nickname',
         'name__username',
@@ -99,13 +109,14 @@ class PlayerAdmin(admin.ModelAdmin):
 
 
 @admin.register(PlayerTransfer)
-class PlayerTransferAdmin(admin.ModelAdmin):
+class PlayerTransferAdmin(unfold_admin.ModelAdmin):
     list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join', 'is_technical')
     list_filter = (
-        'trans_player',
-        'from_team',
-        'to_team',
+        ('trans_player', RelatedDropdownFilter),
+        ('from_team', RelatedDropdownFilter),
+        ('to_team', RelatedDropdownFilter),
     )
+    list_filter_submit = True
     search_fields = (
         'trans_player__nickname',
         'from_team__title',
@@ -124,23 +135,31 @@ class PlayerTransferAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class PlayerInline(admin.StackedInline):
+class PlayerInline(unfold_admin.TabularInline):
     model = Player
-
+    exclude = ('position',)
+    tab = True
+    
     def has_add_permission(self, request, obj):
         return False
-
+    
+    def has_change_permission(self, request, obj=None):
+        return False
+    
     def has_delete_permission(self, request, obj=None):
         return False
 
 
 @admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):
+class TeamAdmin(unfold_admin.ModelAdmin):
     list_display = (
         'title',
         'short_title',
         'owner',
     )
+    
+    list_filter = (('owner', RelatedDropdownFilter),)
+    list_filter_submit = True
     search_fields = ('title',)
     inlines = [PlayerInline]
     
@@ -155,26 +174,28 @@ class TeamAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
 
-class TeamPenaltyPointsAdmin(admin.StackedInline):
+class TeamPenaltyPointsAdmin(unfold_admin.StackedInline):
     model = TeamPenaltyPoints
     extra = 1
 
 
 @admin.register(Season)
-class SeasonAdmin(admin.ModelAdmin):
+class SeasonAdmin(unfold_admin.ModelAdmin):
     list_display = ('number', 'title', 'short_title', 'is_active', 'created')
 
 
 @admin.register(Nation)
-class NationAdmin(admin.ModelAdmin):
+class NationAdmin(unfold_admin.ModelAdmin):
     list_display = ('country', 'flag')
     search_fields = ('country',)
 
 
 @admin.register(Disqualification)
-class DisqualificationAdmin(admin.ModelAdmin):
+class DisqualificationAdmin(unfold_admin.ModelAdmin):
     list_display = ('match', 'team', 'player', 'reason', 'get_tours', 'get_lifted_tours', 'created')
-    list_filter = ('match__league', 'team', 'player')
+    list_filter = (('match__league', RelatedDropdownFilter), ('team', RelatedDropdownFilter), ('player', RelatedDropdownFilter))
+    list_filter_submit = True
+    list_fullwidth = True
     search_fields = ('player__nickname',)
     filter_horizontal = ('tours', 'lifted_tours')
 
@@ -209,7 +230,7 @@ class AlwaysChangedModelForm(forms.ModelForm):
         return True
 
 
-class PostponementSlotsInline(admin.TabularInline):
+class PostponementSlotsInline(unfold_admin.TabularInline):
     model = PostponementSlots
     form = AlwaysChangedModelForm
     min_num = 1
@@ -220,7 +241,7 @@ class PostponementSlotsInline(admin.TabularInline):
 
 
 @admin.register(Postponement)
-class PostponementAdmin(admin.ModelAdmin):
+class PostponementAdmin(unfold_admin.ModelAdmin):
     list_display = (
         'match',
         'is_emergency',
@@ -235,7 +256,14 @@ class PostponementAdmin(admin.ModelAdmin):
     )
     filter_horizontal = ('teams',)
     raw_id_fields = ('match', 'taken_by', 'cancelled_by')
-    list_filter = ('match__league', 'is_emergency')
+    list_filter = (
+        ('match__league', RelatedDropdownFilter),
+        ('teams', RelatedDropdownFilter),
+        ('taken_by', RelatedDropdownFilter),
+        'is_emergency'
+    )
+    list_filter_submit = True
+    list_fullwidth = True
     search_fields = ('match__team_home__title', 'match__team_guest__title')
 
     def get_teams(self, model):
@@ -284,12 +312,13 @@ class TournamentStageInline(StackedPolymorphicInline):
         GroupStageInline,
         PlayOffStageInline,
     )
+    ordering_field = 'type'
     
     def has_delete_permission(self, request, obj=None):
         return False
 
 
-class GroupInline(admin.StackedInline):
+class GroupInline(unfold_admin.StackedInline):
     model = Group
     fields = ('stage', 'name', 'teams')
     filter_horizontal = ('teams',)
@@ -309,8 +338,9 @@ class GroupInline(admin.StackedInline):
 class TournamentStageAdmin(PolymorphicParentModelAdmin):
     base_model = TournamentStage
     child_models = [RegularStage, GroupStage, PlayOffStage]
-    list_filter = ('league', PolymorphicChildModelFilter,)
-    list_display = ('get_stage_name', 'order', 'league', 'postponable',)
+    list_filter = (('league', RelatedDropdownFilter), ('type', ChoicesCheckboxFilter),)
+    list_filter_submit = True
+    list_display = ('get_stage_name', 'league', 'order', 'postponable',)
     list_display_links = ('get_stage_name',)
     list_editable = ('postponable',)
 
@@ -320,13 +350,14 @@ class TournamentStageAdmin(PolymorphicParentModelAdmin):
 
 
 class TournamentStageChildBase(PolymorphicChildModelAdmin):
+    show_in_index = False
     exclude = ('type',)
     readonly_fields = ('league',)
     filter_horizontal = ('teams',)
     
     def get_readonly_fields(self, request, obj=None):
         if obj: # This is the case when object is already created
-            return ['league']
+            return ['type', 'league']
         
         return []
 
@@ -351,29 +382,45 @@ class GroupStageAdmin(TournamentStageChildBase):
     inlines = [GroupInline, TeamPenaltyPointsAdmin]
 
 
-class PlayoffBracketSlotStubInline(admin.StackedInline):
+class PlayoffBracketSlotStubInline(unfold_admin.StackedInline):
     model = PlayoffBracketSlotStub
     extra = 1
+    tab = True
+    
+    fields = (
+        ('tour', 'slot'),
+        ('top_team', 'top_team_placeholder'),
+        ('bottom_team', 'bottom_team_placeholder')
+    )
 
 
 @admin.register(PlayOffStage)
 class PlayOffStageAdmin(TournamentStageChildBase):
     inlines = [PlayoffBracketSlotStubInline]
+    exclude = ('use_buchholz',)
 
 
 
 @admin.register(League)
-class LeagueAdmin(PolymorphicInlineSupportMixin, admin.ModelAdmin):
+class LeagueAdmin(PolymorphicInlineSupportMixin, unfold_admin.ModelAdmin):
     list_display = ('title', 'slug', 'priority', 'championship', 'created', 'logo')
-    list_filter = ('championship',)
+    list_filter = (('championship', RelatedDropdownFilter),)
+    list_filter_submit = True
     search_fields = ('title',)
     filter_horizontal = ('teams',)
     inlines = [PostponementSlotsInline, TournamentStageInline]
 
 
-class GoalInline(admin.StackedInline):
+class GoalInline(unfold_admin.StackedInline):
     model = Goal
-    extra = 3
+    extra = 1
+    tab = True
+    
+    fields = (
+        ('team', 'author', 'assistent',),
+        ('time_min', 'time_sec',),
+    )
+
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
@@ -387,9 +434,15 @@ class GoalInline(admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class SubstitutionInline(admin.StackedInline):
+class SubstitutionInline(unfold_admin.StackedInline):
     model = Substitution
-    extra = 3
+    extra = 1
+    tab = True
+    
+    fields = (
+        ('team', 'player_out', 'player_in'),
+        ('time_min', 'time_sec'),
+    )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
@@ -403,10 +456,18 @@ class SubstitutionInline(admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class DisqualificationInline(admin.StackedInline):
+class DisqualificationInline(unfold_admin.StackedInline):
     model = Disqualification
     extra = 1
+    tab = True
     filter_horizontal = ('tours',)
+    
+    fields = (
+        ('team', 'player'),
+        ('reason',),
+        ('tours',),
+        ('lifted_tours',)
+    )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'team':
@@ -419,9 +480,17 @@ class DisqualificationInline(admin.StackedInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class EventInline(admin.StackedInline):
+class EventInline(unfold_admin.StackedInline):
     model = OtherEvents
-    extra = 2
+    extra = 1
+    tab = True
+    
+    fields = (
+        ('team', 'author'),
+        ('time_min', 'time_sec'),
+        ('event',),
+        ('card_reason',)
+    )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
@@ -435,13 +504,14 @@ class EventInline(admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class MatchResultInline(admin.TabularInline):
+class MatchResultInline(unfold_admin.TabularInline):
     model = MatchResult
     readonly_fields = ['winner']
+    can_delete = False
 
 
 @admin.register(Match)
-class MatchAdmin(admin.ModelAdmin):
+class MatchAdmin(unfold_admin.ModelAdmin):
     list_display = (
         'league',
         'stage',
@@ -477,14 +547,25 @@ class MatchAdmin(admin.ModelAdmin):
         'team_guest_start',
     )
 
-    list_filter = ('numb_tour__number', 'league', 'stage', 'inspector', 'is_played')
+    list_filter = (
+        ('league', RelatedDropdownFilter),
+        ('stage', RelatedDropdownFilter),
+        ('numb_tour__number', SingleNumericFilter),
+        ('inspector', RelatedDropdownFilter),
+        'is_played'
+    )
+    list_filter_submit = True
+    list_fullwidth = True
+    
     fieldsets = (
         (
             'Основная инфа',
             {
                 'fields': (
-                    ('league', 'stage', 'numb_tour', 'group', 'bracket_slot'),
-                    ('match_date','is_played'),
+                    ('league', 'stage', 'numb_tour'),
+                    ('group', 'bracket_slot'),
+                    ('team_home', 'team_guest', ),
+                    ('score_home', 'score_guest'),
                 )
             },
         ),
@@ -492,8 +573,8 @@ class MatchAdmin(admin.ModelAdmin):
             None,
             {
                 'fields': (
-                    ('team_home', 'team_guest', ),
-                    ('score_home', 'score_guest'),
+                    ('is_played',),
+                    ('match_date',),
                     ('inspector', 'replay_link', 'replay_link_second')
                 )
             },
@@ -501,14 +582,14 @@ class MatchAdmin(admin.ModelAdmin):
         (
             'Составы',
             {
-                'classes': ('grp-collapse grp-closed',),
+                'classes': ('collapse',),
                 'fields': ('team_home_start', 'team_guest_start'),
             },
         ),
         (
-            'Комментарий:',
+            'Комментарий',
             {
-                'classes': ('grp-collapse grp-closed',),
+                'classes': ('collapse',),
                 'fields': ('comment',),
             }
         ),
@@ -531,28 +612,40 @@ class MatchAdmin(admin.ModelAdmin):
 
 
 @admin.register(Goal)
-class GoalAdmin(admin.ModelAdmin):
+class GoalAdmin(unfold_admin.ModelAdmin):
     list_display = ('match', 'author', 'assistent', 'id')
 
 
 @admin.register(Substitution)
-class SubstitutionAdmin(admin.ModelAdmin):
-    list_display = ('match', 'player_out', 'player_in')
+class SubstitutionAdmin(unfold_admin.ModelAdmin):
+    list_display = ('match', 'team', 'player_out', 'player_in')
 
 
 @admin.register(OtherEvents)
-class OtherEventsAdmin(admin.ModelAdmin):
+class OtherEventsAdmin(unfold_admin.ModelAdmin):
     list_display = (
         'event',
         'match',
         'author',
+        'team',
     )
+    list_filter = (
+        ('event', MultipleChoicesDropdownFilter),
+        ('author', RelatedDropdownFilter),
+        ('team', RelatedDropdownFilter)
+    )
+    list_filter_submit = True
 
 
 @admin.register(TourNumber)
-class TourAdmin(admin.ModelAdmin):
+class TourAdmin(unfold_admin.ModelAdmin):
     list_display = ('number', 'league', 'stage', 'bracket', 'date_from', 'date_to', 'is_actual')
-    list_filter = ('league', 'stage', 'number')
+    list_filter = (
+        ('league', RelatedDropdownFilter),
+        ('stage', RelatedDropdownFilter),
+        ('number', SingleNumericFilter),
+    )
+    list_filter_submit = True
 
     def is_actual(self, model):
         return model.is_actual
@@ -562,22 +655,26 @@ class TourAdmin(admin.ModelAdmin):
 
 
 @admin.register(SeasonTeamRating)
-class SeasonTeamRatingAdmin(admin.ModelAdmin):
+class SeasonTeamRatingAdmin(unfold_admin.ModelAdmin):
     list_display = ('season', 'team', 'points_for_matches', 'points_for_result', 'total_points')
-    list_filter = ('season', 'team')
+    list_filter = (('season', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
+    list_filter_submit = True
 
 
 @admin.register(RatingVersion)
-class RatingVersionAdmin(admin.ModelAdmin):
+class RatingVersionAdmin(unfold_admin.ModelAdmin):
     list_display = ('number', 'date', 'related_season')
 
 
 @admin.register(TeamRating)
-class TeamRatingAdmin(admin.ModelAdmin):
+class TeamRatingAdmin(unfold_admin.ModelAdmin):
     list_display = ('version', 'rank', 'team', 'total_points')
-    list_filter = ('version', 'team')
+    list_filter = (('version', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
+    list_filter_submit = True
 
 
 @admin.register(PlayerMatchStatistics)
-class PlayerMatchStatisticsAdmin(admin.ModelAdmin):
+class PlayerMatchStatisticsAdmin(unfold_admin.ModelAdmin):
     list_display = ('player', 'match', 'team', 'league')
+    list_filter = (('player', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
+    list_filter_submit = True
