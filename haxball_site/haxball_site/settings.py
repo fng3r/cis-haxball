@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'polls.apps.PollsConfig',
     'reservation.apps.ReservationConfig',
     'utils.apps.UtilsConfig',
+    'notifications',
     'custom_notifications.apps.CustomNotificationsConfig',
     'django_filters',
     'smart_selects',
@@ -71,7 +72,6 @@ INSTALLED_APPS = [
     'django_htmx',
     'widget_tweaks',
     'polymorphic',
-    'notifications',
     'django_vite',
 ]
 
@@ -582,17 +582,17 @@ UNFOLD = {
                         'icon': 'event',
                         'link': reverse_lazy('admin:app_list', args=('reservation',)),
                     },
+                    {
+                        'title': 'Уведомления',
+                        'icon': 'notifications',
+                        'link': reverse_lazy('admin:notifications_notification_changelist'),
+                    }
                 ],
             },
             {
                 'title': 'Пользователи и группы',
                 'icon': 'people',
                 'items': [
-                    {
-                        'title': 'Online activity',
-                        'icon': 'fiber_manual_record',
-                        'link': reverse_lazy('admin:online_users_onlineuseractivity_changelist'),
-                    },
                     {
                         'title': 'Пользователи',
                         'icon': 'person',
