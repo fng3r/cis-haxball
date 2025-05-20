@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 class PollsConfig(AppConfig):
     name = 'polls'
-    verbose_name = '3. Опросики'
+    verbose_name = '2. Опросы'
