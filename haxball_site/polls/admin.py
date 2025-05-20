@@ -1,17 +1,17 @@
 from django.contrib import admin
-from unfold import admin as unfold_admin
+from utils.admin import UnfoldModelAdmin, UnfoldStackedInline
 
-# Register your models here.
 from .models import Choice, Question
 
 
-class ChoiceInline(unfold_admin.StackedInline):
+class ChoiceInline(UnfoldStackedInline):
     model = Choice
+    extra = 1
     filter_horizontal = ('votes',)
 
 
 @admin.register(Question)
-class QuestionAdmin(unfold_admin.ModelAdmin):
+class QuestionAdmin(UnfoldModelAdmin):
     list_display = ('id', 'title', 'question_text', 'created', 'is_active', 'anonymously')
     list_display_links = ('title',)
     list_filter = ('is_active', 'anonymously')

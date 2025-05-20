@@ -1,3 +1,4 @@
+import json
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
@@ -10,13 +11,14 @@ from polymorphic.admin import (
     StackedPolymorphicInline
 )
 
-from unfold import admin as unfold_admin
 from unfold.contrib.filters.admin import (
     ChoicesCheckboxFilter,
     MultipleChoicesDropdownFilter,
     RelatedDropdownFilter,
     SingleNumericFilter,
 )
+
+from utils.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
 from .models import (
     AchievementCategory,
@@ -51,11 +53,9 @@ from .models import (
     TourNumber,
 )
 
-from haxball_site.sites import new_admin_site
-
 
 @admin.register(FreeAgent)
-class FreeAgentAdmin(unfold_admin.ModelAdmin):
+class FreeAgentAdmin(UnfoldModelAdmin):
     list_display = ('id', 'player', 'position_main', 'description', 'is_active', 'created', 'deleted')
     list_filter = ('is_active',)
     search_fields = ('player__username',)
@@ -63,12 +63,12 @@ class FreeAgentAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(AchievementCategory)
-class AchievementCategoryAdmin(unfold_admin.ModelAdmin):
+class AchievementCategoryAdmin(UnfoldModelAdmin):
     list_display = ('id', 'title', 'description', 'order')
 
 
 @admin.register(Achievements)
-class AchievementsAdmin(unfold_admin.ModelAdmin):
+class AchievementsAdmin(UnfoldModelAdmin):
     list_display = ('id', 'position_number', 'title', 'description', 'category', 'image', 'mini_image')
     list_filter = ('category',)
     filter_horizontal = ('player',)
@@ -79,7 +79,7 @@ class AchievementsAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(TeamAchievement)
-class TeamAchievementAdmin(unfold_admin.ModelAdmin):
+class TeamAchievementAdmin(UnfoldModelAdmin):
     list_display = ('id', 'season', 'title', 'description', 'players_raw_list', 'position_number', 'image')
     list_filter = (('season', RelatedDropdownFilter),)
     list_filter_submit = True
@@ -91,7 +91,7 @@ class TeamAchievementAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(Player)
-class PlayerAdmin(unfold_admin.ModelAdmin):
+class PlayerAdmin(UnfoldModelAdmin):
     list_display = (
         'name',
         'nickname',
@@ -109,7 +109,7 @@ class PlayerAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(PlayerTransfer)
-class PlayerTransferAdmin(unfold_admin.ModelAdmin):
+class PlayerTransferAdmin(UnfoldModelAdmin):
     list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join', 'is_technical')
     list_filter = (
         ('trans_player', RelatedDropdownFilter),
@@ -135,7 +135,7 @@ class PlayerTransferAdmin(unfold_admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class PlayerInline(unfold_admin.TabularInline):
+class PlayerInline(UnfoldTabularInline):
     model = Player
     exclude = ('position',)
     tab = True
@@ -151,7 +151,7 @@ class PlayerInline(unfold_admin.TabularInline):
 
 
 @admin.register(Team)
-class TeamAdmin(unfold_admin.ModelAdmin):
+class TeamAdmin(UnfoldModelAdmin):
     list_display = (
         'title',
         'short_title',
@@ -174,24 +174,24 @@ class TeamAdmin(unfold_admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
 
-class TeamPenaltyPointsAdmin(unfold_admin.StackedInline):
+class TeamPenaltyPointsAdmin(UnfoldStackedInline):
     model = TeamPenaltyPoints
     extra = 1
 
 
 @admin.register(Season)
-class SeasonAdmin(unfold_admin.ModelAdmin):
+class SeasonAdmin(UnfoldModelAdmin):
     list_display = ('number', 'title', 'short_title', 'is_active', 'created')
 
 
 @admin.register(Nation)
-class NationAdmin(unfold_admin.ModelAdmin):
+class NationAdmin(UnfoldModelAdmin):
     list_display = ('country', 'flag')
     search_fields = ('country',)
 
 
 @admin.register(Disqualification)
-class DisqualificationAdmin(unfold_admin.ModelAdmin):
+class DisqualificationAdmin(UnfoldModelAdmin):
     list_display = ('match', 'team', 'player', 'reason', 'get_tours', 'get_lifted_tours', 'created')
     list_filter = (('match__league', RelatedDropdownFilter), ('team', RelatedDropdownFilter), ('player', RelatedDropdownFilter))
     list_filter_submit = True
@@ -230,7 +230,7 @@ class AlwaysChangedModelForm(forms.ModelForm):
         return True
 
 
-class PostponementSlotsInline(unfold_admin.TabularInline):
+class PostponementSlotsInline(UnfoldTabularInline):
     model = PostponementSlots
     form = AlwaysChangedModelForm
     min_num = 1
@@ -241,7 +241,7 @@ class PostponementSlotsInline(unfold_admin.TabularInline):
 
 
 @admin.register(Postponement)
-class PostponementAdmin(unfold_admin.ModelAdmin):
+class PostponementAdmin(UnfoldModelAdmin):
     list_display = (
         'match',
         'is_emergency',
@@ -318,7 +318,7 @@ class TournamentStageInline(StackedPolymorphicInline):
         return False
 
 
-class GroupInline(unfold_admin.StackedInline):
+class GroupInline(UnfoldStackedInline):
     model = Group
     fields = ('stage', 'name', 'teams')
     filter_horizontal = ('teams',)
@@ -382,7 +382,7 @@ class GroupStageAdmin(TournamentStageChildBase):
     inlines = [GroupInline, TeamPenaltyPointsAdmin]
 
 
-class PlayoffBracketSlotStubInline(unfold_admin.StackedInline):
+class PlayoffBracketSlotStubInline(UnfoldStackedInline):
     model = PlayoffBracketSlotStub
     extra = 1
     tab = True
@@ -392,7 +392,7 @@ class PlayoffBracketSlotStubInline(unfold_admin.StackedInline):
         ('top_team', 'top_team_placeholder'),
         ('bottom_team', 'bottom_team_placeholder')
     )
-
+    
 
 @admin.register(PlayOffStage)
 class PlayOffStageAdmin(TournamentStageChildBase):
@@ -400,9 +400,8 @@ class PlayOffStageAdmin(TournamentStageChildBase):
     exclude = ('use_buchholz',)
 
 
-
 @admin.register(League)
-class LeagueAdmin(PolymorphicInlineSupportMixin, unfold_admin.ModelAdmin):
+class LeagueAdmin(PolymorphicInlineSupportMixin, UnfoldModelAdmin):
     list_display = ('title', 'slug', 'priority', 'championship', 'created', 'logo')
     list_filter = (('championship', RelatedDropdownFilter),)
     list_filter_submit = True
@@ -411,7 +410,7 @@ class LeagueAdmin(PolymorphicInlineSupportMixin, unfold_admin.ModelAdmin):
     inlines = [PostponementSlotsInline, TournamentStageInline]
 
 
-class GoalInline(unfold_admin.StackedInline):
+class GoalInline(UnfoldStackedInline):
     model = Goal
     extra = 1
     tab = True
@@ -434,7 +433,7 @@ class GoalInline(unfold_admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class SubstitutionInline(unfold_admin.StackedInline):
+class SubstitutionInline(UnfoldStackedInline):
     model = Substitution
     extra = 1
     tab = True
@@ -456,7 +455,7 @@ class SubstitutionInline(unfold_admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class DisqualificationInline(unfold_admin.StackedInline):
+class DisqualificationInline(UnfoldStackedInline):
     model = Disqualification
     extra = 1
     tab = True
@@ -480,7 +479,7 @@ class DisqualificationInline(unfold_admin.StackedInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class EventInline(unfold_admin.StackedInline):
+class EventInline(UnfoldStackedInline):
     model = OtherEvents
     extra = 1
     tab = True
@@ -504,14 +503,15 @@ class EventInline(unfold_admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class MatchResultInline(unfold_admin.TabularInline):
+class MatchResultInline(UnfoldTabularInline):
     model = MatchResult
     readonly_fields = ['winner']
     can_delete = False
 
 
+# <select name="stage" class="border border-base-200 bg-white font-medium min-w-20 placeholder-base-400 rounded-default shadow-xs text-font-default-light text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-primary-600 group-[.errors]:border-red-600 focus:group-[.errors]:outline-red-600 dark:bg-base-900 dark:border-base-700 dark:text-font-default-dark dark:group-[.errors]:border-red-500 dark:focus:group-[.errors]:outline-red-500 dark:scheme-dark group-[.primary]:border-transparent px-3 py-2 w-full pr-8 max-w-2xl appearance-none chained-fk" data-context="available-source" id="id_stage" data-chainfield="league" data-url="/chaining/filter/tournament/TournamentStage/league/tournament/Match/stage" data-auto_choose="false" data-empty_label="--------">
 @admin.register(Match)
-class MatchAdmin(unfold_admin.ModelAdmin):
+class MatchAdmin(UnfoldModelAdmin):
     list_display = (
         'league',
         'stage',
@@ -612,17 +612,17 @@ class MatchAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(Goal)
-class GoalAdmin(unfold_admin.ModelAdmin):
+class GoalAdmin(UnfoldModelAdmin):
     list_display = ('match', 'author', 'assistent', 'id')
 
 
 @admin.register(Substitution)
-class SubstitutionAdmin(unfold_admin.ModelAdmin):
+class SubstitutionAdmin(UnfoldModelAdmin):
     list_display = ('match', 'team', 'player_out', 'player_in')
 
 
 @admin.register(OtherEvents)
-class OtherEventsAdmin(unfold_admin.ModelAdmin):
+class OtherEventsAdmin(UnfoldModelAdmin):
     list_display = (
         'event',
         'match',
@@ -638,7 +638,7 @@ class OtherEventsAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(TourNumber)
-class TourAdmin(unfold_admin.ModelAdmin):
+class TourAdmin(UnfoldModelAdmin):
     list_display = ('number', 'league', 'stage', 'bracket', 'date_from', 'date_to', 'is_actual')
     list_filter = (
         ('league', RelatedDropdownFilter),
@@ -655,26 +655,26 @@ class TourAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(SeasonTeamRating)
-class SeasonTeamRatingAdmin(unfold_admin.ModelAdmin):
+class SeasonTeamRatingAdmin(UnfoldModelAdmin):
     list_display = ('season', 'team', 'points_for_matches', 'points_for_result', 'total_points')
     list_filter = (('season', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
     list_filter_submit = True
 
 
 @admin.register(RatingVersion)
-class RatingVersionAdmin(unfold_admin.ModelAdmin):
+class RatingVersionAdmin(UnfoldModelAdmin):
     list_display = ('number', 'date', 'related_season')
 
 
 @admin.register(TeamRating)
-class TeamRatingAdmin(unfold_admin.ModelAdmin):
+class TeamRatingAdmin(UnfoldModelAdmin):
     list_display = ('version', 'rank', 'team', 'total_points')
     list_filter = (('version', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
     list_filter_submit = True
 
 
 @admin.register(PlayerMatchStatistics)
-class PlayerMatchStatisticsAdmin(unfold_admin.ModelAdmin):
+class PlayerMatchStatisticsAdmin(UnfoldModelAdmin):
     list_display = ('player', 'match', 'team', 'league')
     list_filter = (('player', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
     list_filter_submit = True
