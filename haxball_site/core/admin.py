@@ -6,6 +6,7 @@ from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
+from allauth.account.models import EmailAddress
 
 from unfold import admin as unfold_admin
 from unfold.contrib.filters.admin import (
@@ -16,6 +17,8 @@ from unfold.contrib.filters.admin import (
 )
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from online_users.models import OnlineUserActivity
+
+from utils.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
 from .models import (
     Category,
@@ -37,7 +40,7 @@ admin.site.unregister(User)
 admin.site.unregister(Group)
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin, unfold_admin.ModelAdmin):
+class UserAdmin(BaseUserAdmin, UnfoldModelAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
@@ -47,14 +50,14 @@ class UserAdmin(BaseUserAdmin, unfold_admin.ModelAdmin):
 
 
 @admin.register(Group)
-class GroupAdmin(BaseGroupAdmin, unfold_admin.ModelAdmin):
+class GroupAdmin(BaseGroupAdmin, UnfoldModelAdmin):
     pass
 
     
 admin.site.unregister(OnlineUserActivity)
 
 @admin.register(OnlineUserActivity)
-class OnlineUserActivityAdmin(unfold_admin.ModelAdmin):
+class OnlineUserActivityAdmin(UnfoldModelAdmin):
     list_display = ('user', 'last_activity')
     list_filter = ('last_activity',)
     list_filter_sheet = False
@@ -71,8 +74,10 @@ class PostAdminForm(forms.ModelForm):
         fields = '__all__'
 
 
-class CommentHistoryItemInline(unfold_admin.StackedInline):
+class CommentHistoryItemInline(UnfoldStackedInline):
     model = CommentHistoryItem
+    tab = True
+    ordering = ('version',)
     verbose_name_plural = 'История изменения комментария'
 
     def has_add_permission(self, request, obj):
@@ -86,7 +91,7 @@ class CommentHistoryItemInline(unfold_admin.StackedInline):
 
 
 @admin.register(CommentHistoryItem)
-class CommentHistoryItemAdmin(unfold_admin.ModelAdmin):
+class CommentHistoryItemAdmin(UnfoldModelAdmin):
     list_display = (
         'id',
         'created',
@@ -127,7 +132,7 @@ class NewCommentAdminForm(forms.ModelForm):
 
 
 @admin.register(NewComment)
-class NewCommentAdmin(unfold_admin.ModelAdmin):
+class NewCommentAdmin(UnfoldModelAdmin):
     list_display = (
         'id',
         'author',
@@ -149,7 +154,7 @@ class NewCommentAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(LikeDislike)
-class LikeDisLikeAdmin(unfold_admin.ModelAdmin):
+class LikeDisLikeAdmin(UnfoldModelAdmin):
     list_display = ('id', 'vote', 'user', 'content_type', 'object_id', 'content_object')
     list_filter = ('vote', ('user', RelatedDropdownFilter),)
     list_filter_submit = True
@@ -158,7 +163,7 @@ class LikeDisLikeAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(Post)
-class PostAdmin(unfold_admin.ModelAdmin):
+class PostAdmin(UnfoldModelAdmin):
     list_display = ('id', 'title', 'author', 'views', 'category', 'created', 'updated', 'important')
     list_filter = ('created', ('author', RelatedDropdownFilter), 'important')
     list_filter_submit = True
@@ -171,7 +176,7 @@ class PostAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(Profile)
-class ProfileAdmin(unfold_admin.ModelAdmin):
+class ProfileAdmin(UnfoldModelAdmin):
     list_display = ('id', 'name', 'slug', 'can_comment', 'can_vote', 'views', 'karma', 'background')
     list_filter = (
         ('id', SingleNumericFilter),
@@ -186,12 +191,12 @@ class ProfileAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(Themes)
-class ThemesAdmin(unfold_admin.ModelAdmin):
+class ThemesAdmin(UnfoldModelAdmin):
     list_display = ('title',)
 
 
 @admin.register(UserIcon)
-class UserIconAdmin(unfold_admin.ModelAdmin):
+class UserIconAdmin(UnfoldModelAdmin):
     list_display = ('title', 'description', 'priority')
     list_filter = (('user', RelatedDropdownFilter),)
     list_filter_submit = True
@@ -201,7 +206,7 @@ class UserIconAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(Category)
-class CategoryAdmin(unfold_admin.ModelAdmin):
+class CategoryAdmin(UnfoldModelAdmin):
     list_display = ('title', 'slug', 'description', 'is_official', 'theme')
     list_filter = ('is_official', 'theme')
     list_filter_sheet = False
@@ -209,7 +214,7 @@ class CategoryAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(IPAdress)
-class IPAdressAdmin(unfold_admin.ModelAdmin):
+class IPAdressAdmin(UnfoldModelAdmin):
     list_display = ('ip', 'name', 'created', 'update', 'suspicious')
     list_filter = (('name', RelatedDropdownFilter), 'suspicious', 'created', 'update')
     list_filter_submit = True
@@ -218,7 +223,7 @@ class IPAdressAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(UserActivity)
-class UserActivityAdmin(unfold_admin.ModelAdmin):
+class UserActivityAdmin(UnfoldModelAdmin):
     list_display = ('user', 'ip', 'id_token', 'user_agent', 'first_seen', 'last_seen', 'has_duplicates')
     list_filter = (('user', RelatedDropdownFilter), ('user_agent', FieldTextFilter), 'has_duplicates')
     list_filter_submit = True
@@ -236,7 +241,7 @@ class UserActivityAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(Subscription)
-class SubscriptionAdmin(unfold_admin.ModelAdmin):
+class SubscriptionAdmin(UnfoldModelAdmin):
     list_display = ('user', 'starts_at', 'expires_at', 'tier', 'is_active', 'disabled')
     list_filter = (('user', RelatedDropdownFilter), ('tier', ChoicesCheckboxFilter), 'disabled')
     list_filter_submit = True
@@ -252,7 +257,7 @@ class SubscriptionAdmin(unfold_admin.ModelAdmin):
 
 
 @admin.register(UserNicknameHistoryItem)
-class UserNicknameHistoryItemAdmin(unfold_admin.ModelAdmin):
+class UserNicknameHistoryItemAdmin(UnfoldModelAdmin):
     list_display = ('user', 'nickname', 'edited')
     raw_id_fields = ('user',)
     search_fields = ('user__username', 'nickname')
