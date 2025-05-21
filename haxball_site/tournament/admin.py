@@ -20,6 +20,7 @@ from unfold.contrib.filters.admin import (
 from unfold.decorators import display
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
+from utils.templatetags.utils import media
 
 from .models import (
     AchievementCategory,
@@ -160,15 +161,32 @@ class PlayerInline(UnfoldTabularInline):
 @admin.register(Team)
 class TeamAdmin(UnfoldModelAdmin):
     list_display = (
-        'title',
-        'short_title',
+        'display_title',
         'owner',
+        'date_found',
     )
-    
     list_filter = (('owner', RelatedDropdownFilter),)
     list_filter_submit = True
-    search_fields = ('title',)
+    list_filter_sheet = False
+    show_facets = False
+    search_fields = ('title', 'short_title')
     inlines = [PlayerInline]
+    ordering = ['-date_found', '-id']
+    
+    @display(description='Команда', header=True)
+    def display_title(self, model):
+        return [
+            model.title,
+            model.short_title,
+            None,
+            {
+                'path': media(model.logo),
+                'squared': True,
+                'borderless': True,
+                'width': 32,
+                'height': 32,
+            }
+        ]
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
