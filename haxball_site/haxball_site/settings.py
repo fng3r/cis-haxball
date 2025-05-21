@@ -549,7 +549,7 @@ UNFOLD = {
             "rel": "icon",
             "sizes": "32x32",
             "type": "image/png",
-            "href": lambda request: static("img/logo_try.png"),
+            "href": lambda request: static("img/logo_mini.png"),
         },
     ],
     "SHOW_HISTORY": True,
