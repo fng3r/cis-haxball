@@ -9,6 +9,8 @@ from django.utils.html import escape, mark_safe
 
 from online_users.models import OnlineUserActivity
 from unfold.contrib.filters.admin import (
+    AutocompleteSelectFilter,
+    AutocompleteSelectMultipleFilter,
     FieldTextFilter,
     SingleNumericFilter,
     RelatedDropdownFilter,
@@ -166,7 +168,7 @@ class PostAdmin(UnfoldModelAdmin):
     search_fields = ('title', 'body')
     search_help_text = 'Поиск по автору/заголовку поста'
     prepopulated_fields = {'slug': ('title',)}
-    raw_id_fields = ('author',)
+    autocomplete_fields = ('author',)
     form = PostAdminForm
     list_editable = ('important',)
 
@@ -212,7 +214,7 @@ class CategoryAdmin(UnfoldModelAdmin):
 @admin.register(IPAdress)
 class IPAdressAdmin(UnfoldModelAdmin):
     list_display = ('ip', 'name', 'created', 'update', 'suspicious')
-    list_filter = (('name', RelatedDropdownFilter), 'suspicious', 'created', 'update')
+    list_filter = (('name', AutocompleteSelectFilter), 'suspicious', 'created', 'update')
     list_filter_submit = True
     search_fields = ('ip', 'name__username')
     search_help_text = 'Поиск по имени пользователя/ip-адресу'
@@ -221,7 +223,7 @@ class IPAdressAdmin(UnfoldModelAdmin):
 @admin.register(UserActivity)
 class UserActivityAdmin(UnfoldModelAdmin):
     list_display = ('user', 'ip', 'id_token', 'user_agent', 'first_seen', 'last_seen', 'has_duplicates')
-    list_filter = (('user', RelatedDropdownFilter), ('user_agent', FieldTextFilter), 'has_duplicates')
+    list_filter = (('user', AutocompleteSelectMultipleFilter), ('user_agent', FieldTextFilter), 'has_duplicates')
     list_filter_submit = True
     search_fields = ('user__username', 'ip', 'id_token')
     search_help_text = 'Поиск по имени пользователя/ip/id token'
@@ -241,7 +243,7 @@ class SubscriptionAdmin(UnfoldModelAdmin):
     list_display = ('user', 'starts_at', 'expires_at', 'tier', 'is_active', 'disabled')
     list_filter = (('user', RelatedDropdownFilter), ('tier', ChoicesCheckboxFilter), 'disabled')
     list_filter_submit = True
-    raw_id_fields = ('user',)
+    autocomplete_fields = ('user',)
     search_fields = ('user__username',)
     search_help_text = 'Поиск по имени пользователя'
 
@@ -253,5 +255,5 @@ class SubscriptionAdmin(UnfoldModelAdmin):
 @admin.register(UserNicknameHistoryItem)
 class UserNicknameHistoryItemAdmin(UnfoldModelAdmin):
     list_display = ('user', 'nickname', 'edited')
-    raw_id_fields = ('user',)
+    autocomplete_fields = ('user',)
     search_fields = ('user__username', 'nickname')

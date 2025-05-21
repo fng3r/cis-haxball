@@ -83,7 +83,7 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
     list_display = ('id', 'season', 'title', 'description', 'players_raw_list', 'position_number', 'image')
     list_filter = (('season', RelatedDropdownFilter),)
     list_filter_submit = True
-    filter_horizontal = ('team',)
+    autocomplete_fields = ('team',)
     search_fields = (
         'title__icontains',
         'description__icontains',
@@ -98,7 +98,7 @@ class PlayerAdmin(UnfoldModelAdmin):
         'team',
         'player_nation',
     )
-    raw_id_fields = ('name',)
+    autocomplete_fields = ('name',)
     list_filter = (('team', RelatedDropdownFilter), ('name', RelatedDropdownFilter), ('player_nation', RelatedDropdownFilter))
     list_filter_submit = True
     search_fields = (
@@ -106,6 +106,12 @@ class PlayerAdmin(UnfoldModelAdmin):
         'name__username',
     )
     exclude = ('position',)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj: # This is the case when object is already created
+            return ['name']
+        
+        return []
 
 
 @admin.register(PlayerTransfer)
@@ -255,7 +261,8 @@ class PostponementAdmin(UnfoldModelAdmin):
         'cancelled_by',
     )
     filter_horizontal = ('teams',)
-    raw_id_fields = ('match', 'taken_by', 'cancelled_by')
+    raw_id_fields = ('match',)
+    autocomplete_fields = ('taken_by', 'cancelled_by')
     list_filter = (
         ('match__league', RelatedDropdownFilter),
         ('teams', RelatedDropdownFilter),
