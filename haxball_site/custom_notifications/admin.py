@@ -19,3 +19,4 @@ class NotificationAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     list_filter_sheet = False
+    show_facets = False

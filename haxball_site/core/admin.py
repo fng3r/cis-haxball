@@ -196,7 +196,7 @@ class ThemesAdmin(UnfoldModelAdmin):
 @admin.register(UserIcon)
 class UserIconAdmin(UnfoldModelAdmin):
     list_display = ('title', 'description', 'priority')
-    list_filter = (('user', RelatedDropdownFilter),)
+    list_filter = (('user', AutocompleteSelectFilter),)
     list_filter_submit = True
     list_filter_sheet = False
     show_facets = False
@@ -244,6 +244,7 @@ class SubscriptionAdmin(UnfoldModelAdmin):
     list_filter = (('user', RelatedDropdownFilter), ('tier', ChoicesCheckboxFilter), 'disabled')
     list_filter_submit = True
     autocomplete_fields = ('user',)
+    radio_fields = {'tier': admin.HORIZONTAL}
     search_fields = ('user__username',)
     search_help_text = 'Поиск по имени пользователя'
 

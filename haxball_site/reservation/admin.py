@@ -45,6 +45,7 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     list_filter_sheet = False
+    show_facets = False
     
     @display(description='Активна', boolean=True)
     def is_active(self, model):

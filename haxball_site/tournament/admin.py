@@ -11,6 +11,7 @@ from polymorphic.admin import (
 )
 
 from unfold.contrib.filters.admin import (
+    AutocompleteSelectFilter,
     ChoicesCheckboxFilter,
     MultipleChoicesDropdownFilter,
     RelatedDropdownFilter,
@@ -203,6 +204,7 @@ class DisqualificationAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     list_fullwidth = True
     search_fields = ('player__nickname',)
+    raw_id_fields = ('match',)
     filter_horizontal = ('tours', 'lifted_tours')
 
     @display(description='Туры')
@@ -266,7 +268,7 @@ class PostponementAdmin(UnfoldModelAdmin):
     list_filter = (
         ('match__league', RelatedDropdownFilter),
         ('teams', RelatedDropdownFilter),
-        ('taken_by', RelatedDropdownFilter),
+        ('taken_by', AutocompleteSelectFilter),
         'is_emergency'
     )
     list_filter_submit = True
