@@ -6,9 +6,8 @@ from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
-from allauth.account.models import EmailAddress
 
-from unfold import admin as unfold_admin
+from online_users.models import OnlineUserActivity
 from unfold.contrib.filters.admin import (
     FieldTextFilter,
     SingleNumericFilter,
@@ -16,10 +15,8 @@ from unfold.contrib.filters.admin import (
     ChoicesCheckboxFilter
 )
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
-from online_users.models import OnlineUserActivity
 
-from utils.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
-
+from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline
 from .models import (
     Category,
     CommentHistoryItem,
@@ -35,7 +32,7 @@ from .models import (
     UserNicknameHistoryItem,
 )
 
-# Register your models here.
+
 admin.site.unregister(User)
 admin.site.unregister(Group)
 

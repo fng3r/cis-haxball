@@ -1,5 +1,6 @@
 from django.contrib import admin
-from utils.admin import UnfoldModelAdmin, UnfoldStackedInline
+
+from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline
 
 from .models import Choice, Question
 

@@ -3,7 +3,8 @@ from unfold.contrib.filters.admin import (
     MultipleRelatedDropdownFilter,
     RelatedDropdownFilter,
 )
-from utils.admin import UnfoldModelAdmin
+
+from haxball_site.admin import UnfoldModelAdmin
 
 from .models import ReservationEntry, ReservationHost
 

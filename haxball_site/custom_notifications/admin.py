@@ -1,7 +1,8 @@
 from django.contrib import admin
 from notifications.models import Notification
 from unfold.contrib.filters.admin import RelatedDropdownFilter
-from utils.admin import UnfoldModelAdmin
+
+from haxball_site.admin import UnfoldModelAdmin
 
 # Register your models here.
 

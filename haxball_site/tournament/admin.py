@@ -5,7 +5,6 @@ from django.db.models import Q
 from django.urls import resolve
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
-    PolymorphicChildModelFilter,
     PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
     StackedPolymorphicInline
@@ -18,7 +17,7 @@ from unfold.contrib.filters.admin import (
     SingleNumericFilter,
 )
 
-from utils.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
+from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
 from .models import (
     AchievementCategory,
