@@ -542,7 +542,7 @@ LOGGING = {
 UNFOLD = {
     "SITE_TITLE": "CIS-HAXBALL",
     "SITE_HEADER": "CIS-HAXBALL",
-    "SITE_SUBHEADER": "Admin dashboard",
+    "SITE_SUBHEADER": "Административная панель",
     "SITE_ICON": lambda request: static("img/logo_try.png"),
     "SITE_FAVICONS": [
         {
@@ -606,5 +606,20 @@ UNFOLD = {
                 ],
             },
         ],
+    },
+    "COLORS": {
+        "primary": {
+            "50": "238, 242, 255",
+            "100": "224, 231, 255",
+            "200": "199, 210, 254",
+            "300": "165, 180, 252",
+            "400": "129, 140, 248",
+            "500": "100, 120, 255", # used for most cases in dark theme
+            "600": "79, 70, 229", # used for most cases in light theme
+            "700": "67, 56, 202",
+            "800": "55, 48, 163",
+            "900": "49, 46, 129",
+            "950": "30, 27, 75",
+        },
     },
 }
