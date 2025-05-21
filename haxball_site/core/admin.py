@@ -14,6 +14,7 @@ from unfold.contrib.filters.admin import (
     RelatedDropdownFilter,
     ChoicesCheckboxFilter
 )
+from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline
@@ -102,16 +103,14 @@ class CommentHistoryItemAdmin(UnfoldModelAdmin):
     search_fields = ('body',)
     search_help_text = 'Поиск по тексту комментария'
 
+    @display(description='Автор')
     def get_author(self, model):
         return model.comment.author
 
-    get_author.short_description = 'Автор'
-
+    @display(description='Комментарий')
     def link_to_comment(self, model):
         link = reverse('admin:core_newcomment_change', args=[model.comment.id])
         return mark_safe(f'<a href="{link}">{escape(model.comment.__str__())}</a>')
-
-    link_to_comment.short_description = 'Базовый комментарий'
 
     def has_add_permission(self, request):
         return False
@@ -246,11 +245,9 @@ class SubscriptionAdmin(UnfoldModelAdmin):
     search_fields = ('user__username',)
     search_help_text = 'Поиск по имени пользователя'
 
+    @display(description='Активна', boolean=True)
     def is_active(self, model):
         return model.is_active()
-
-    is_active.boolean = True
-    is_active.short_description = 'Активна'
 
 
 @admin.register(UserNicknameHistoryItem)

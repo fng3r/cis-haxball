@@ -3,6 +3,7 @@ from unfold.contrib.filters.admin import (
     MultipleRelatedDropdownFilter,
     RelatedDropdownFilter,
 )
+from unfold.decorators import display
 
 from haxball_site.admin import UnfoldModelAdmin
 
@@ -45,11 +46,10 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     list_filter_sheet = False
     
+    @display(description='Активна', boolean=True)
     def is_active(self, model):
         return not model.is_cancelled
-    is_active.boolean = True
-    is_active.short_description = 'Активна'
-
+    
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'host':
             kwargs['queryset'] = ReservationHost.objects.filter(is_active=True)

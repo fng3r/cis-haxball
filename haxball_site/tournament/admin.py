@@ -1,8 +1,8 @@
-import json
 from django import forms
 from django.contrib import admin
 from django.db.models import Q
 from django.urls import resolve
+from django.utils.safestring import mark_safe
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicInlineSupportMixin,
@@ -16,6 +16,7 @@ from unfold.contrib.filters.admin import (
     RelatedDropdownFilter,
     SingleNumericFilter,
 )
+from unfold.decorators import display
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
@@ -198,13 +199,13 @@ class DisqualificationAdmin(UnfoldModelAdmin):
     search_fields = ('player__nickname',)
     filter_horizontal = ('tours', 'lifted_tours')
 
+    @display(description='Туры')
     def get_tours(self, model):
-        return ', '.join(map(lambda t: str(t), model.tours.all()))
-    get_tours.short_description = 'Туры'
+        return mark_safe('<br>'.join(map(lambda t: str(t), model.tours.all())))
 
+    @display(description='Отмененные туры')
     def get_lifted_tours(self, model):
-        return ', '.join(map(lambda t: str(t), model.lifted_tours.all()))
-    get_lifted_tours.short_description = 'Отмененные туры'
+        return mark_safe('<br>'.join(map(lambda t: str(t), model.lifted_tours.all())))
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
@@ -265,16 +266,13 @@ class PostponementAdmin(UnfoldModelAdmin):
     list_fullwidth = True
     search_fields = ('match__team_home__title', 'match__team_guest__title')
 
+    @display(description='На кого взят перенос')
     def get_teams(self, model):
-        return ', '.join(map(lambda t: str(t), model.teams.all()))
+        return mark_safe('<br>'.join(map(lambda t: str(t), model.teams.all())))
 
-    get_teams.short_description = 'На кого взят перенос'
-
+    @display(description='Отменен', boolean=True)
     def is_cancelled(self, model):
         return model.is_cancelled
-
-    is_cancelled.short_description = 'Отменен'
-    is_cancelled.boolean = True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'match':
@@ -343,9 +341,9 @@ class TournamentStageAdmin(PolymorphicParentModelAdmin):
     list_display_links = ('get_stage_name',)
     list_editable = ('postponable',)
 
+    @display(description='Этап')
     def get_stage_name(self, model):
         return model.stage_name
-    get_stage_name.short_description = 'Этап'
 
 
 class TournamentStageChildBase(PolymorphicChildModelAdmin):
@@ -529,6 +527,7 @@ class MatchAdmin(UnfoldModelAdmin):
     )
     list_editable = ('bracket_slot', 'is_played')
 
+    @display(description='Тур', ordering='numb_tour__number')
     def get_tour(self, model):
         tour = model.numb_tour
         bracket_postfix = (
@@ -537,8 +536,6 @@ class MatchAdmin(UnfoldModelAdmin):
             else ''
         )
         return f'{model.numb_tour.number} тур{bracket_postfix}'
-    get_tour.short_description = 'Тур'
-    get_tour.admin_order_field = 'numb_tour__number'
 
     search_fields = ('team_home__title', 'team_guest__title')
     filter_horizontal = (
@@ -646,11 +643,9 @@ class TourAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
 
+    @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
         return model.is_actual
-
-    is_actual.short_description = 'Актуальный'
-    is_actual.boolean = True
 
 
 @admin.register(SeasonTeamRating)
