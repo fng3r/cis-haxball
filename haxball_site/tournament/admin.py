@@ -377,6 +377,8 @@ class TournamentStageInline(StackedPolymorphicInline):
 
 class GroupInline(UnfoldStackedInline):
     model = Group
+    tab = True
+    extra = 1
     fields = ('stage', 'name', 'teams')
     filter_horizontal = ('teams',)
 
