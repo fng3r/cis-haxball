@@ -13,6 +13,7 @@ from .models import ReservationEntry, ReservationHost
 @admin.register(ReservationHost)
 class ReservationHostAdmin(UnfoldModelAdmin):
     list_display = ('name', 'is_active')
+    list_editable = ('is_active',)
     
     
 class IsActiveReservationFilter(admin.SimpleListFilter):
