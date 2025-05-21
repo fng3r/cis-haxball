@@ -524,8 +524,8 @@ class DisqualificationInline(UnfoldStackedInline):
         ('team', 'player'),
         ('reason',),
         ('tours',),
-        ('lifted_tours',)
     )
+    exclude = ('lifted_tours',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'team':
