@@ -498,7 +498,7 @@ class TourNumber(models.Model):
     name = models.CharField('Название тура/раунда (опционально)', max_length=30, null=True, blank=True)
     date_from = models.DateField('Дата начала тура', default=date.today, blank=True, null=True)
     date_to = models.DateField('Дата окончания тура', default=date.today, blank=True, null=True)
-    league = models.ForeignKey(League, verbose_name='В какой лиге', related_name='tours', on_delete=models.CASCADE)
+    league = models.ForeignKey(League, verbose_name='Турнир', related_name='tours', on_delete=models.CASCADE)
     stage = ChainedForeignKey(
         TournamentStage,
         chained_field='league',
@@ -543,7 +543,7 @@ class TourNumber(models.Model):
 class Match(models.Model):
     league = models.ForeignKey(
         League,
-        verbose_name='В лиге',
+        verbose_name='Турнир',
         related_name='matches_in_league',
         related_query_name='matches_in_league',
         on_delete=models.CASCADE,
@@ -577,7 +577,12 @@ class Match(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
-    bracket_slot = models.PositiveSmallIntegerField('Номер слота в раунде ПО', default=0, null=False)
+    bracket_slot = models.PositiveSmallIntegerField(
+        'Слот сетки',
+        default=0,
+        null=False,
+        help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы'
+    )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
@@ -899,7 +904,7 @@ class PlayerMatchStatistics(models.Model):
         null=False, blank=False,
         on_delete=models.CASCADE
     )
-    league = models.ForeignKey(League, verbose_name='Лига', null=False, blank=False, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, verbose_name='Турнир', null=False, blank=False, on_delete=models.CASCADE)
     
     
     @receiver(m2m_changed, sender=Match.team_home_start.through)

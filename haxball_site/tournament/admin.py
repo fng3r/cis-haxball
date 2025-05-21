@@ -538,13 +538,13 @@ class MatchResultInline(UnfoldTabularInline):
 class MatchAdmin(UnfoldModelAdmin):
     list_display = (
         'league',
-        'stage',
-        'get_tour',
+        'display_stage',
+        'display_tour',
         'group',
         'bracket_slot',
-        'team_home',
+        'display_team_home',
         'score_home',
-        'team_guest',
+        'display_team_guest',
         'score_guest',
         'is_played',
         'result',
@@ -553,9 +553,13 @@ class MatchAdmin(UnfoldModelAdmin):
         'id',
     )
     list_editable = ('bracket_slot', 'is_played')
+    
+    @display(description='Этап', ordering='stage__order')
+    def display_stage(self, model):
+        return model.stage.stage_name
 
     @display(description='Тур', ordering='numb_tour__number')
-    def get_tour(self, model):
+    def display_tour(self, model):
         tour = model.numb_tour
         bracket_postfix = (
             f', {tour.get_bracket_display()}'
@@ -563,6 +567,36 @@ class MatchAdmin(UnfoldModelAdmin):
             else ''
         )
         return f'{model.numb_tour.number} тур{bracket_postfix}'
+    
+    @display(description='Хозяева', header=True)
+    def display_team_home(self, model):
+        return [
+            model.team_home,
+            None,
+            None,
+            {
+                'path': media(model.team_home.logo),
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            }
+        ]
+        
+    @display(description='Гости', header=True)
+    def display_team_guest(self, model):
+        return [
+            model.team_guest,
+            None,
+            None,
+            {
+                'path': media(model.team_guest.logo),
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            }
+        ]
 
     search_fields = ('team_home__title', 'team_guest__title')
     filter_horizontal = (
