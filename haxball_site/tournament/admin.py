@@ -71,25 +71,58 @@ class AchievementCategoryAdmin(UnfoldModelAdmin):
 
 @admin.register(Achievements)
 class AchievementsAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'position_number', 'title', 'description', 'category', 'image', 'mini_image')
-    list_filter = ('category',)
+    list_display = ('id', 'position_number', 'display_medal', 'category',)
+    list_filter = ('category', ('player', AutocompleteSelectFilter))
+    list_filter_submit = True
+    list_filter_sheet = False
     filter_horizontal = ('player',)
     search_fields = (
         'title__icontains',
         'description__icontains',
     )
+    
+    @display(description='Медаль', header=True)
+    def display_medal(self, model):
+        return [
+            model.title,
+            model.description,
+            None,
+            {
+                'path': model.image.url,
+                'squared': False,
+                'borderless': True,
+                'width': 48,
+                'height': 48,
+            }
+        ]
 
 
 @admin.register(TeamAchievement)
 class TeamAchievementAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'season', 'title', 'description', 'players_raw_list', 'position_number', 'image')
-    list_filter = (('season', RelatedDropdownFilter),)
+    list_display = ('id', 'season', 'position_number', 'display_medal', 'players_raw_list',)
+    list_filter = (('season', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
     list_filter_submit = True
     autocomplete_fields = ('team',)
     search_fields = (
         'title__icontains',
         'description__icontains',
     )
+    ordering = ('-season__number', 'position_number')
+    
+    @display(description='Медаль', header=True)
+    def display_medal(self, model):
+        return [
+            model.title,
+            model.description,
+            None,
+            {
+                'path': model.image.url,
+                'squared': False,
+                'borderless': True,
+                'width': 48,
+                'height': 48,
+            }
+        ]
 
 
 @admin.register(Player)
