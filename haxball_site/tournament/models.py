@@ -841,7 +841,8 @@ class Goal(models.Model):
         super(Goal, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return f'на {self.time_min:02d}:{self.time_sec:02d} от {self.author}({self.assistent}) в {self.match}'
+        assistant =  f' ({self.assistent})' if self.assistent else ''
+        return f'⚽ {self.time_min:02d}:{self.time_sec:02d} {self.team} - {self.author}{assistant}'
 
     class Meta:
         verbose_name = 'Гол'
@@ -880,7 +881,7 @@ class Substitution(models.Model):
     time_sec = models.SmallIntegerField('Секунда')
 
     def __str__(self):
-        return f'в {self.time_min:02d}:{self.time_sec:02d} {self.player_out} на {self.player_in}'
+        return f'🔁 {self.time_min:02d}:{self.time_sec:02d} {self.team} ({self.player_out} -> {self.player_in})'
 
     class Meta:
         verbose_name = 'Замена'
@@ -1092,7 +1093,17 @@ class OtherEvents(models.Model):
         super(OtherEvents, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.time_min:02d}:{self.time_sec:02d} {self.event} в {self.match}'
+        match self.event:
+            case OtherEvents.CLEAN_SHEET:
+                emoji = '🧤'
+            case OtherEvents.YELLOW_CARD:
+                emoji = '🟨'
+            case OtherEvents.RED_CARD:
+                emoji = '🟥'
+            case _:
+                emoji = self.event
+                
+        return f'{emoji} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
 
     class Meta:
         verbose_name = 'Событие'
