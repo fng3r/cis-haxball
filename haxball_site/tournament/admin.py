@@ -343,7 +343,7 @@ class PostponementAdmin(UnfoldModelAdmin):
     list_display = (
         'match',
         'is_emergency',
-        'get_teams',
+        'display_teams',
         'starts_at',
         'ends_at',
         'taken_at',
@@ -364,9 +364,17 @@ class PostponementAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     list_fullwidth = True
     search_fields = ('match__team_home__title', 'match__team_guest__title')
+    
+    fields = (
+        ('is_emergency',),
+        ('teams',),
+        ('starts_at', 'ends_at'),
+        ('taken_at', 'taken_by'),
+        ('cancelled_at', 'cancelled_by')
+    )
 
     @display(description='На кого взят перенос')
-    def get_teams(self, model):
+    def display_teams(self, model):
         return mark_safe('<br>'.join(map(lambda t: str(t), model.teams.all())))
 
     @display(description='Отменен', boolean=True)
@@ -518,7 +526,6 @@ class GoalInline(UnfoldStackedInline):
         ('time_min', 'time_sec',),
     )
 
-
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
         not_found = False
@@ -607,7 +614,28 @@ class MatchResultInline(UnfoldTabularInline):
     can_delete = False
 
 
-# <select name="stage" class="border border-base-200 bg-white font-medium min-w-20 placeholder-base-400 rounded-default shadow-xs text-font-default-light text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-primary-600 group-[.errors]:border-red-600 focus:group-[.errors]:outline-red-600 dark:bg-base-900 dark:border-base-700 dark:text-font-default-dark dark:group-[.errors]:border-red-500 dark:focus:group-[.errors]:outline-red-500 dark:scheme-dark group-[.primary]:border-transparent px-3 py-2 w-full pr-8 max-w-2xl appearance-none chained-fk" data-context="available-source" id="id_stage" data-chainfield="league" data-url="/chaining/filter/tournament/TournamentStage/league/tournament/Match/stage" data-auto_choose="false" data-empty_label="--------">
+class PosponementInline(UnfoldStackedInline):
+    model = Postponement
+    extra = 0
+    tab = True
+    
+    fields = (
+        ('is_emergency',),
+        ('teams',),
+        ('starts_at', 'ends_at'),
+        ('taken_at', 'taken_by'),
+        ('cancelled_at', 'cancelled_by')
+    )
+    filter_horizontal = ('teams',)
+    
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        match = self.parent_model.objects.filter(id=resolved.kwargs['object_id']).first()
+        
+        if db_field.name == 'teams' and match is not None:
+            kwargs['queryset'] = Team.objects.filter(Q(home_matches=match) | Q(guest_matches=match)).distinct()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
 @admin.register(Match)
 class MatchAdmin(UnfoldModelAdmin):
     list_display = (
@@ -725,7 +753,13 @@ class MatchAdmin(UnfoldModelAdmin):
             }
         ),
     )
-    inlines = [MatchResultInline, GoalInline, SubstitutionInline, EventInline, DisqualificationInline]
+    inlines = [
+        MatchResultInline,
+        GoalInline,
+        SubstitutionInline,
+        EventInline,
+        DisqualificationInline
+    ]
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         # Берём из пути id матча

@@ -65,6 +65,12 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
     list_filter_sheet = False
     show_facets = False
     
+    fields = (
+        ('match', 'author'),
+        ('time_date', 'host',),
+        ('cancelled_at', 'cancelled_by'),
+    )
+    
     actions_detail = ['cancel_reservation']
     
     @display(description='Хост', label=True)
