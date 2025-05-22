@@ -12,8 +12,12 @@ from .models import ReservationEntry, ReservationHost
 
 @admin.register(ReservationHost)
 class ReservationHostAdmin(UnfoldModelAdmin):
-    list_display = ('name', 'is_active')
+    list_display = ('name', 'display_codename', 'is_active')
     list_editable = ('is_active',)
+    
+    @display(description='Кодовое название', label=True)
+    def display_codename(self, model):
+        return model.codename
     
     
 class IsActiveReservationFilter(admin.SimpleListFilter):
@@ -36,7 +40,7 @@ class IsActiveReservationFilter(admin.SimpleListFilter):
 
 @admin.register(ReservationEntry)
 class ReservationEntryAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'time_date', 'host', 'author', 'created', 'is_active', 'cancelled_by', 'cancelled_at')
+    list_display = ('match', 'time_date', 'display_host', 'author', 'created', 'is_active', 'cancelled_by', 'cancelled_at')
     raw_id_fields = ('match',)
     list_filter = (
         ('host', MultipleRelatedDropdownFilter),
@@ -47,6 +51,10 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     list_filter_sheet = False
     show_facets = False
+    
+    @display(description='Хост', label=True)
+    def display_host(self, model):
+        return model.host.codename
     
     @display(description='Активна', boolean=True)
     def is_active(self, model):

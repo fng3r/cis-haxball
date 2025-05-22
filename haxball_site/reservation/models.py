@@ -6,6 +6,7 @@ from tournament.models import Match
 # Create your models here.
 class ReservationHost(models.Model):
     name = models.CharField('Название хоста', max_length=256)
+    codename = models.CharField('Кодовое название', max_length=16)
     link = models.URLField('Адрес')
     is_active = models.BooleanField('Активный')
 
