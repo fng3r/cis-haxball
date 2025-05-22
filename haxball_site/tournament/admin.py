@@ -123,6 +123,30 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
                 'height': 48,
             }
         ]
+        
+        
+class AchievementsInline(UnfoldTabularInline):
+    model = Achievements.player.through
+    extra = 0
+    tab = True
+    
+    verbose_name = 'Медаль'
+    verbose_name_plural = 'Медали'
+    
+    def has_change_permission(self, request, obj=None):
+        return False
+    
+    
+class TeamAchievementsInline(UnfoldTabularInline):
+    model = TeamAchievement.team.through
+    extra = 0
+    tab = True
+    
+    verbose_name = 'Медаль'
+    verbose_name_plural = 'Медали'
+    
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Player)
@@ -141,6 +165,7 @@ class PlayerAdmin(UnfoldModelAdmin):
         'name__username',
     )
     exclude = ('position',)
+    inlines = [AchievementsInline]
     
     def get_readonly_fields(self, request, obj=None):
         if obj: # This is the case when object is already created
@@ -203,7 +228,7 @@ class TeamAdmin(UnfoldModelAdmin):
     list_filter_sheet = False
     show_facets = False
     search_fields = ('title', 'short_title')
-    inlines = [PlayerInline]
+    inlines = [PlayerInline, TeamAchievementsInline]
     ordering = ['-date_found', '-id']
     
     @display(description='Команда', header=True)
