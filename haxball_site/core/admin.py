@@ -200,7 +200,7 @@ class UserIconAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     list_filter_sheet = False
     show_facets = False
-    filter_horizontal = ('user',)
+    autocomplete_fields = ('user',)
     search_fields = ('title', 'description')
     
     @display(description='Иконка', header=True)
