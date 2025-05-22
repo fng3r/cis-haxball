@@ -65,10 +65,14 @@ class LikeDislike(models.Model):
 
     def get_query_set(self):
         return LikeDislikeQuerySet(self.model)
+    
+    def __str__(self):
+        vote = 'Лайк' if self.vote == LikeDislike.LIKE else 'Дизлайк'
+        return f'{vote} от {self.user.username}'
 
     class Meta:
-        verbose_name = 'Лайк/дизлайк голос'
-        verbose_name_plural = 'Лайк/дизлайк голоса'
+        verbose_name = 'Лайк/дизлайк'
+        verbose_name_plural = 'Лайки/дизлайки'
 
 
 # Огромный раздел форума в котором категории создаются админами

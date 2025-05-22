@@ -186,11 +186,16 @@ class NewCommentAdmin(UnfoldModelAdmin):
 
 @admin.register(LikeDislike)
 class LikeDisLikeAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'vote', 'user', 'content_type', 'object_id', 'content_object')
+    list_display = ('id', 'display_vote', 'user', 'content_type', 'object_id', 'content_object')
     list_filter = ('vote', ('user', RelatedDropdownFilter),)
     list_filter_submit = True
     list_filter_sheet = False
     list_display_links = ('id',)
+    show_facets = False
+    
+    @display(description='Голос', label={LikeDislike.LIKE: 'success', LikeDislike.DISLIKE: 'danger'})
+    def display_vote(self, model):
+        return model.vote, model.get_vote_display()
 
 
 @admin.register(Post)
