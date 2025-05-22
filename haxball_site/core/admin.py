@@ -1,12 +1,20 @@
+from typing import Any
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.models import User, Group
+from django.contrib.sites.admin import SiteAdmin as BaseSiteAdmin
+from django.contrib.sites.models import Site
+from django.db.models import FileField
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
 
+from allauth.account.admin import EmailAddressAdmin as BaseEmailAddressAdmin
+from allauth.account.models import EmailAddress
+from django_summernote.admin import AttachmentAdmin as BaseAttachmentAdmin
+from django_summernote.models import Attachment
 from online_users.models import OnlineUserActivity
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
@@ -18,6 +26,7 @@ from unfold.contrib.filters.admin import (
 )
 from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from unfold.widgets import UnfoldAdminFileFieldWidget
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline
 from .models import (
@@ -36,6 +45,42 @@ from .models import (
 )
 
 
+admin.site.unregister(EmailAddress)
+
+@admin.register(EmailAddress)
+class EmailAddressAdmin(BaseEmailAddressAdmin, UnfoldModelAdmin):
+    list_filter_sheet = False
+
+
+admin.site.unregister(Site)
+
+@admin.register(Site)
+class SiteAdmin(BaseSiteAdmin, UnfoldModelAdmin):
+    pass
+
+
+admin.site.unregister(Attachment)
+
+@admin.register(Attachment)
+class AttachmentAdmin(BaseAttachmentAdmin, UnfoldModelAdmin):
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, change, **kwargs)
+        form.base_fields['file'].widget = UnfoldAdminFileFieldWidget()
+        return form
+
+    
+admin.site.unregister(OnlineUserActivity)
+
+@admin.register(OnlineUserActivity)
+class OnlineUserActivityAdmin(UnfoldModelAdmin):
+    list_display = ('user', 'last_activity')
+    list_filter = ('last_activity',)
+    list_filter_sheet = False
+    search_fields = ('user__username',)
+    search_help_text = 'Поиск по пользователям'
+    ordering = ('-last_activity',)
+    
+    
 admin.site.unregister(User)
 admin.site.unregister(Group)
 
@@ -52,18 +97,6 @@ class UserAdmin(BaseUserAdmin, UnfoldModelAdmin):
 @admin.register(Group)
 class GroupAdmin(BaseGroupAdmin, UnfoldModelAdmin):
     pass
-
-    
-admin.site.unregister(OnlineUserActivity)
-
-@admin.register(OnlineUserActivity)
-class OnlineUserActivityAdmin(UnfoldModelAdmin):
-    list_display = ('user', 'last_activity')
-    list_filter = ('last_activity',)
-    list_filter_sheet = False
-    search_fields = ('user__username',)
-    search_help_text = 'Поиск по пользователям'
-    ordering = ('-last_activity',)
 
 
 class PostAdminForm(forms.ModelForm):

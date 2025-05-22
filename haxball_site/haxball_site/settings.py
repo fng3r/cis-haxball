@@ -37,13 +37,7 @@ ALLOWED_HOSTS = config('APP_ALLOWED_HOSTS', cast=str.split)
 INSTALLED_APPS = [
     'template_partials',
     'online_users',
-    'core.apps.CoreConfig',
-    'tournament.apps.TournamentConfig',
-    'polls.apps.PollsConfig',
-    'reservation.apps.ReservationConfig',
-    'utils.apps.UtilsConfig',
     'notifications',
-    'custom_notifications.apps.CustomNotificationsConfig',
     'django_filters',
     'smart_selects',
     'colorfield',
@@ -61,6 +55,14 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'allauth',
     'allauth.account',
+    
+    'core.apps.CoreConfig',
+    'tournament.apps.TournamentConfig',
+    'polls.apps.PollsConfig',
+    'reservation.apps.ReservationConfig',
+    'utils.apps.UtilsConfig',
+    'custom_notifications.apps.CustomNotificationsConfig',
+    
     'ckeditor',
     'django_summernote',
     'froala_editor',
@@ -534,25 +536,25 @@ LOGGING = {
 }
 
 UNFOLD = {
-    "SITE_TITLE": "CIS-HAXBALL",
-    "SITE_HEADER": "CIS-HAXBALL",
-    "SITE_SUBHEADER": "Административная панель",
-    "SITE_ICON": lambda request: static("img/logo_try.png"),
-    "SITE_FAVICONS": [
+    'SITE_TITLE': 'CIS-HAXBALL',
+    'SITE_HEADER': 'CIS-HAXBALL',
+    'SITE_SUBHEADER': 'Административная панель',
+    'SITE_ICON': lambda request: static('img/logo_try.png'),
+    'SITE_FAVICONS': [
         {
-            "rel": "icon",
-            "sizes": "32x32",
-            "type": "image/png",
-            "href": lambda request: static("img/logo_mini.png"),
+            'rel': 'icon',
+            'sizes': "32x32",
+            'type': 'image/png',
+            'href': lambda request: static('img/logo_mini.png'),
         },
     ],
-    "SHOW_HISTORY": True,
-    "SHOW_VIEW_ON_SITE": True,
-    "SHOW_BACK_BUTTON": True,
-    "SIDEBAR": {
-        "show_search": False,
-        "show_all_applications": False,
-        "navigation": [
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': True,
+    'SHOW_BACK_BUTTON': True,
+    'SIDEBAR': {
+        'show_search': False,
+        'show_all_applications': False,
+        'navigation': [
             {
                 'title': 'Core',
                 'items': [
@@ -601,19 +603,19 @@ UNFOLD = {
             },
         ],
     },
-    "COLORS": {
-        "primary": {
-            "50": "238, 242, 255",
-            "100": "224, 231, 255",
-            "200": "199, 210, 254",
-            "300": "165, 180, 252",
-            "400": "129, 140, 248",
-            "500": "100, 120, 255", # used for most cases in dark theme
-            "600": "79, 70, 229", # used for most cases in light theme
-            "700": "67, 56, 202",
-            "800": "55, 48, 163",
-            "900": "49, 46, 129",
-            "950": "30, 27, 75",
+    'COLORS': {
+        'primary': {
+            '50': '238, 242, 255',
+            '100': '224, 231, 255',
+            '200': '199, 210, 254',
+            '300': '165, 180, 252',
+            '400': '129, 140, 248',
+            '500': '100, 120, 255', # used for most cases in dark theme
+            '600': '79, 70, 229', # used for most cases in light theme
+            '700': '67, 56, 202',
+            '800': '55, 48, 163',
+            '900': '49, 46, 129',
+            '950': '30, 27, 75',
         },
     },
 }
