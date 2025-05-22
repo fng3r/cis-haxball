@@ -1,9 +1,13 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.utils import timezone
 from unfold.contrib.filters.admin import (
     MultipleRelatedDropdownFilter,
     RelatedDropdownFilter,
 )
-from unfold.decorators import display
+from unfold.decorators import action, display
+from unfold.enums import ActionVariant
 
 from haxball_site.admin import UnfoldModelAdmin
 
@@ -40,7 +44,16 @@ class IsActiveReservationFilter(admin.SimpleListFilter):
 
 @admin.register(ReservationEntry)
 class ReservationEntryAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'time_date', 'display_host', 'author', 'created', 'is_active', 'cancelled_by', 'cancelled_at')
+    list_display = (
+        'match',
+        'time_date',
+        'display_host',
+        'author',
+        'created',
+        'is_active',
+        'cancelled_by',
+        'cancelled_at'
+    )
     raw_id_fields = ('match',)
     list_filter = (
         ('host', MultipleRelatedDropdownFilter),
@@ -52,6 +65,8 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
     list_filter_sheet = False
     show_facets = False
     
+    actions_detail = ['cancel_reservation']
+    
     @display(description='Хост', label=True)
     def display_host(self, model):
         return model.host.codename
@@ -59,6 +74,22 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
     @display(description='Активна', boolean=True)
     def is_active(self, model):
         return not model.is_cancelled
+    
+    @action(description=("Отменить бронь"), variant=ActionVariant.DANGER, icon='cancel')
+    def cancel_reservation(self, request, object_id):
+        reservation = ReservationEntry.objects.get(pk=object_id)
+        if (reservation.is_cancelled):
+            messages.warning(request, 'Выбранная бронь уже была отменена ранее')
+            return redirect(reverse_lazy("admin:reservation_reservationentry_change", args=[object_id]))
+
+        reservation.cancelled_at = timezone.now()
+        reservation.cancelled_by = request.user
+        reservation.save(update_fields=['cancelled_at', 'cancelled_by'])
+        
+        messages.success(
+            request, "Бронь успешно отменена"
+        )
+        return redirect(reverse_lazy("admin:reservation_reservationentry_change", args=[object_id]))
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'host':
