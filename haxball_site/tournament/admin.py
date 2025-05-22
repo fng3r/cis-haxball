@@ -745,11 +745,13 @@ class MatchAdmin(UnfoldModelAdmin):
 @admin.register(Goal)
 class GoalAdmin(UnfoldModelAdmin):
     list_display = ('match', 'author', 'assistent', 'id')
+    raw_id_fields = ('match',)
 
 
 @admin.register(Substitution)
 class SubstitutionAdmin(UnfoldModelAdmin):
     list_display = ('match', 'team', 'player_out', 'player_in')
+    raw_id_fields = ('match',)
 
 
 @admin.register(OtherEvents)
@@ -766,6 +768,7 @@ class OtherEventsAdmin(UnfoldModelAdmin):
         ('team', RelatedDropdownFilter)
     )
     list_filter_submit = True
+    raw_id_fields = ('match',)
 
 
 @admin.register(TourNumber)
