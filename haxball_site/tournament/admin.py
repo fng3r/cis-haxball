@@ -20,7 +20,6 @@ from unfold.contrib.filters.admin import (
 from unfold.decorators import display
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
-from utils.templatetags.utils import media
 
 from .models import (
     AchievementCategory,
@@ -238,7 +237,7 @@ class TeamAdmin(UnfoldModelAdmin):
             model.short_title,
             None,
             {
-                'path': media(model.logo),
+                'path': model.logo.url,
                 'squared': True,
                 'borderless': True,
                 'width': 32,
@@ -269,8 +268,23 @@ class SeasonAdmin(UnfoldModelAdmin):
 
 @admin.register(Nation)
 class NationAdmin(UnfoldModelAdmin):
-    list_display = ('country', 'flag')
+    list_display = ('display_country',)
     search_fields = ('country',)
+    
+    @display(description='Страна', header=True)
+    def display_country(self, model):
+        return [
+            model.country,
+            None,
+            None,
+            {
+                'path': model.flag.url,
+                'squared': False,
+                'borderless': True,
+                'width': 32,
+                'height': 32,
+            }
+        ]
 
 
 @admin.register(Disqualification)
@@ -635,7 +649,7 @@ class MatchAdmin(UnfoldModelAdmin):
             None,
             None,
             {
-                'path': media(model.team_home.logo),
+                'path': model.team_home.logo.url,
                 'squared': True,
                 'borderless': True,
                 'width': 24,
@@ -650,7 +664,7 @@ class MatchAdmin(UnfoldModelAdmin):
             None,
             None,
             {
-                'path': media(model.team_guest.logo),
+                'path': model.team_guest.logo.url,
                 'squared': True,
                 'borderless': True,
                 'width': 24,
