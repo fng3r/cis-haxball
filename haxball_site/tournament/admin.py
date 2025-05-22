@@ -271,7 +271,7 @@ class NationAdmin(UnfoldModelAdmin):
     list_display = ('display_country',)
     search_fields = ('country',)
     
-    @display(description='Страна', header=True)
+    @display(description='Страна', header=True, ordering='country')
     def display_country(self, model):
         return [
             model.country,

@@ -198,6 +198,7 @@ class Nation(models.Model):
         return self.country
 
     class Meta:
+        ordering = ('country',)
         verbose_name = 'Страна'
         verbose_name_plural = 'Страны'
 
