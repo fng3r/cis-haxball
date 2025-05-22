@@ -195,12 +195,28 @@ class ThemesAdmin(UnfoldModelAdmin):
 
 @admin.register(UserIcon)
 class UserIconAdmin(UnfoldModelAdmin):
-    list_display = ('title', 'description', 'priority')
+    list_display = ('display_icon', 'priority')
     list_filter = (('user', AutocompleteSelectFilter),)
     list_filter_submit = True
     list_filter_sheet = False
     show_facets = False
     filter_horizontal = ('user',)
+    search_fields = ('title', 'description')
+    
+    @display(description='Иконка', header=True)
+    def display_icon(self, model):
+        return [
+            model.title,
+            model.description,
+            None,
+            {
+                'path': model.image.url,
+                'squared': False,
+                'borderless': True,
+                'width': 32,
+                'height': 32,
+            }
+        ]
 
 
 @admin.register(Category)
