@@ -74,9 +74,15 @@
 
   function updateRelatedObjectLinks(triggeringLink) {
     const $this = $(triggeringLink);
-    const siblings = $this.nextAll(
+    let siblings = $this.nextAll(
       ".view-related, .change-related, .delete-related"
     );
+    if (!siblings.length) {
+        // in some cases triggering element is wrapped in additional div
+        siblings = $this.parent().nextAll(
+            ".view-related, .change-related, .delete-related"
+        );
+    }
     if (!siblings.length) {
       return;
     }
