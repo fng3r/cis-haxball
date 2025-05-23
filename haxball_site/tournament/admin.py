@@ -18,6 +18,7 @@ from unfold.contrib.filters.admin import (
     SingleNumericFilter,
 )
 from unfold.decorators import display
+from unfold.sections import TableSection
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
@@ -803,6 +804,45 @@ class OtherEventsAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     raw_id_fields = ('match',)
+    
+    
+class MatchInline(UnfoldStackedInline):
+    model = Match
+    extra = 0
+    tab = True
+    
+    fields = (
+        ('league', 'stage'),
+        ('team_home', 'team_guest'),
+        ('group', 'bracket_slot'),
+    )
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        resolved = resolve(request.path)
+        tour = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
+        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == 'league':
+            formfield.initial = tour.league
+        if db_field.name == 'stage':
+            formfield.initial = tour.stage
+            
+        return formfield
+    
+    
+class MatchesTableSection(TableSection):
+    related_name = 'tour_matches'
+    fields = [
+        'team_home',
+        'team_guest',
+        'display_result'
+    ]
+    
+    @display(description='Результат')
+    def display_result(self, model):
+        if model.is_played:
+            return model.result
+        
+        return '-'
 
 
 @admin.register(TourNumber)
@@ -814,6 +854,7 @@ class TourAdmin(UnfoldModelAdmin):
         ('number', SingleNumericFilter),
     )
     list_filter_submit = True
+    list_sections = [MatchesTableSection]
 
     @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
