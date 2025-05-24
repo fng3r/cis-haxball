@@ -9,7 +9,8 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
     StackedPolymorphicInline
 )
-
+from smart_selects.db_fields import ChainedForeignKey
+from unfold import admin as unfold_admin
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     ChoicesCheckboxFilter,
@@ -20,7 +21,7 @@ from unfold.contrib.filters.admin import (
 from unfold.decorators import display
 from unfold.sections import TableSection
 
-from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
+from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline, UnfoldChainedSelect
 
 from .models import (
     AchievementCategory,
@@ -839,7 +840,7 @@ class OtherEventsAdmin(UnfoldModelAdmin):
     raw_id_fields = ('match',)
     
     
-class MatchInline(UnfoldStackedInline):
+class MatchInline(unfold_admin.StackedInline):
     model = Match
     extra = 0
     tab = True
@@ -851,15 +852,43 @@ class MatchInline(UnfoldStackedInline):
     )
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        resolved = resolve(request.path)
-        tour = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
-        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
-        if db_field.name == 'league':
-            formfield.initial = tour.league
-        if db_field.name == 'stage':
-            formfield.initial = tour.stage
+        # override chained selects behavior for fields which should be prefilled with inferred data
+        if db_field.name == 'league' or db_field.name == 'stage':
+            resolved = resolve(request.path)
+            tour = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
             
-        return formfield
+            if db_field.name == 'league':
+                kwargs['queryset'] = League.objects.filter(id__in=[tour.league.id])
+                formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+                formfield.initial = tour.league
+            if db_field.name == 'stage':
+                kwargs['queryset'] = TournamentStage.objects.filter(id__in=[tour.stage.id])
+                formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+                formfield.initial = tour.stage
+                
+            return formfield
+        
+        if isinstance(db_field, ChainedForeignKey):
+            widget = UnfoldChainedSelect(
+                to_app_name=db_field.to_app_name,
+                to_model_name=db_field.to_model_name,
+                chained_field=db_field.chained_field,
+                chained_model_field=db_field.chained_model_field,
+                foreign_key_app_name=db_field.model._meta.app_label,
+                foreign_key_model_name=db_field.model._meta.object_name,
+                foreign_key_field_name=db_field.name,
+                show_all=db_field.show_all,
+                auto_choose=db_field.auto_choose,
+                sort = db_field.sort,
+                view_name=db_field.view_name
+            )
+            kwargs['widget'] = widget
+            
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     
     
 class MatchesTableSection(TableSection):
@@ -887,6 +916,8 @@ class TourAdmin(UnfoldModelAdmin):
         ('number', SingleNumericFilter),
     )
     list_filter_submit = True
+    
+    inlines = [MatchInline]
 
     @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
