@@ -391,18 +391,18 @@ class PostponementAdmin(UnfoldModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class TournamentStageInline(StackedPolymorphicInline):
-    class RegularStageInline(StackedPolymorphicInline.Child):
+class TournamentStageInline(StackedPolymorphicInline, UnfoldStackedInline):
+    class RegularStageInline(StackedPolymorphicInline.Child, UnfoldStackedInline):
         model = RegularStage
         exclude = ('type', 'postponable',)
         filter_horizontal = ('teams',)
 
-    class GroupStageInline(StackedPolymorphicInline.Child):
+    class GroupStageInline(StackedPolymorphicInline.Child, UnfoldStackedInline):
         model = GroupStage
         exclude = ('type', 'postponable',)
         filter_horizontal = ('teams',)
 
-    class PlayOffStageInline(StackedPolymorphicInline.Child):
+    class PlayOffStageInline(StackedPolymorphicInline.Child, UnfoldStackedInline):
         model = PlayOffStage
         exclude = ('type', 'postponable', 'use_buchholz')
         filter_horizontal = ('teams',)
@@ -476,7 +476,7 @@ class TourInline(UnfoldStackedInline):
 
 
 @admin.register(TournamentStage)
-class TournamentStageAdmin(PolymorphicParentModelAdmin):
+class TournamentStageAdmin(PolymorphicParentModelAdmin, UnfoldModelAdmin):
     base_model = TournamentStage
     child_models = [RegularStage, GroupStage, PlayOffStage]
     list_filter = (('league', RelatedDropdownFilter), ('type', ChoicesCheckboxFilter),)
@@ -490,7 +490,7 @@ class TournamentStageAdmin(PolymorphicParentModelAdmin):
         return model.stage_name
 
 
-class TournamentStageChildBase(PolymorphicChildModelAdmin):
+class TournamentStageChildBase(PolymorphicChildModelAdmin, UnfoldModelAdmin):
     show_in_index = False
     exclude = ('type',)
     readonly_fields = ('league',)
