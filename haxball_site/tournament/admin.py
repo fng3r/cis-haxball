@@ -255,11 +255,6 @@ class TeamAdmin(UnfoldModelAdmin):
             kwargs['queryset'] = team.players_in_team.all()
             
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-    
-
-class TeamPenaltyPointsAdmin(UnfoldStackedInline):
-    model = TeamPenaltyPoints
-    extra = 1
 
 
 @admin.register(Season)
@@ -439,6 +434,44 @@ class GroupInline(UnfoldStackedInline):
         if db_field.name == 'teams' and stage is not None:
             kwargs['queryset'] = stage.teams if stage.teams.exists() else stage.league.teams
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    
+class TeamPenaltyPointsInline(UnfoldStackedInline):
+    model = TeamPenaltyPoints
+    extra = 1
+    tab = True
+    fields = (
+        ('team', 'penalty_points'),
+    )
+    
+    
+class TourInline(UnfoldStackedInline):
+    model = TourNumber
+    extra = 1
+    tab = True
+    
+    fields = (
+        ('number', 'name'),
+        ('date_from', 'date_to'),
+        ('bracket', 'league')
+    )
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        resolved = resolve(request.path)
+        stage = None
+        if 'object_id' in resolved.kwargs:
+            stage = TournamentStage.objects.filter(pk=resolved.kwargs['object_id']).first()
+            
+        if db_field.name == 'league' and stage is not None:
+            kwargs['queryset'] = League.objects.filter(id__in=[stage.league.id])
+            formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+            formfield.initial = stage.league
+            return formfield
+            
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(TournamentStage)
@@ -481,12 +514,12 @@ class TournamentStageChildBase(PolymorphicChildModelAdmin):
 
 @admin.register(RegularStage)
 class RegularStageAdmin(TournamentStageChildBase):
-   inlines = [TeamPenaltyPointsAdmin]
+   inlines = [TourInline, TeamPenaltyPointsInline]
 
 
 @admin.register(GroupStage)
 class GroupStageAdmin(TournamentStageChildBase):
-    inlines = [GroupInline, TeamPenaltyPointsAdmin]
+    inlines = [GroupInline, TourInline, TeamPenaltyPointsInline]
 
 
 class PlayoffBracketSlotStubInline(UnfoldStackedInline):
@@ -503,7 +536,7 @@ class PlayoffBracketSlotStubInline(UnfoldStackedInline):
 
 @admin.register(PlayOffStage)
 class PlayOffStageAdmin(TournamentStageChildBase):
-    inlines = [PlayoffBracketSlotStubInline]
+    inlines = [TourInline, PlayoffBracketSlotStubInline]
     exclude = ('use_buchholz',)
 
 
@@ -529,13 +562,11 @@ class GoalInline(UnfoldStackedInline):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
-        not_found = False
-        try:
+        match = None
+        if 'object_id' in resolved.kwargs:
             match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
-        except:
-            not_found = True
-        if db_field.name == 'team' and not not_found:
-            kwargs['queryset'] = Team.objects.filter(Q(home_matches=match) | Q(guest_matches=match)).distinct()
+        if db_field.name == 'team' and match is not None:
+            kwargs['queryset'] = Team.objects.filter(id__in=[match.team_home.id, match.team_guest.id])
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -631,7 +662,9 @@ class PosponementInline(UnfoldStackedInline):
     
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
-        match = self.parent_model.objects.filter(id=resolved.kwargs['object_id']).first()
+        match = None
+        if 'object_id' in resolved.kwargs:
+            match = self.parent_model.objects.filter(id=resolved.kwargs['object_id']).first()
         
         if db_field.name == 'teams' and match is not None:
             kwargs['queryset'] = Team.objects.filter(Q(home_matches=match) | Q(guest_matches=match)).distinct()
@@ -854,7 +887,6 @@ class TourAdmin(UnfoldModelAdmin):
         ('number', SingleNumericFilter),
     )
     list_filter_submit = True
-    list_sections = [MatchesTableSection]
 
     @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
