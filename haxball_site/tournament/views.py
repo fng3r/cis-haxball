@@ -631,8 +631,11 @@ class PostponementsList(ListView):
         postponements_count = match.postponements.filter(is_cancelled=False).count()
         if postponements_count >= 2:
             messages.error(request, 'Матч не может быть перенесен более 2 раз')
-
-            return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
+            return self.redirect_to_postponements_page(tournament)
+        
+        if postponements_count > 0 and type == 'common':
+            messages.error(request, 'На уже перенесенный матч может быть взят только экcтренный перенос')
+            return self.redirect_to_postponements_page(tournament)
 
         if team == 'mutual':
             teams = [match.team_home, match.team_guest]
@@ -652,7 +655,7 @@ class PostponementsList(ListView):
                       соответствующей услугой, после чего свяжитесь с организаторами для оформления переноса.'
                 )
 
-                return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
+                return self.redirect_to_postponements_page(tournament)
 
         taken_by = request.user
         match_expiration_date = match.numb_tour.date_to
@@ -667,8 +670,10 @@ class PostponementsList(ListView):
         )
         postponement.teams.set(teams)
 
+        return self.redirect_to_postponements_page(tournament)
+    
+    def redirect_to_postponements_page(self, tournament):
         return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
-
 
 class PostponementsEvents(ListView):
     def get(self, request, **kwargs):
