@@ -23,7 +23,6 @@ from django.urls import include, path, re_path
 from django.views.decorators.cache import never_cache
 
 urlpatterns = [
-    path('grappelli/', include('grappelli.urls')),
     path('admin/', admin.site.urls),
     re_path(r'^ckeditor/upload/', login_required(ckuploader_views.upload), name='ckeditor_upload'),
     re_path(r'^ckeditor/browse/', never_cache(login_required(ckuploader_views.browse)), name='ckeditor_browse'),

@@ -14,6 +14,8 @@ import os
 
 from decouple import config
 from django.contrib.messages import constants as messages
+from django.templatetags.static import static
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
@@ -34,16 +36,15 @@ ALLOWED_HOSTS = config('APP_ALLOWED_HOSTS', cast=str.split)
 
 INSTALLED_APPS = [
     'template_partials',
-    'core.apps.CoreConfig',
-    'tournament.apps.TournamentConfig',
-    'polls.apps.PollsConfig',
-    'reservation.apps.ReservationConfig',
-    'utils.apps.UtilsConfig',
-    'custom_notifications.apps.CustomNotificationsConfig',
+    'online_users',
+    'notifications',
     'django_filters',
     'smart_selects',
-    'grappelli',
     'colorfield',
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,9 +53,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.humanize',
-    'online_users',
     'allauth',
     'allauth.account',
+    
+    'core.apps.CoreConfig',
+    'tournament.apps.TournamentConfig',
+    'polls.apps.PollsConfig',
+    'reservation.apps.ReservationConfig',
+    'utils.apps.UtilsConfig',
+    'custom_notifications.apps.CustomNotificationsConfig',
+    
     'ckeditor',
     'django_summernote',
     'froala_editor',
@@ -66,7 +74,6 @@ INSTALLED_APPS = [
     'django_htmx',
     'widget_tweaks',
     'polymorphic',
-    'notifications',
     'django_vite',
 ]
 
@@ -524,6 +531,91 @@ LOGGING = {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True,
+        },
+    },
+}
+
+UNFOLD = {
+    'SITE_TITLE': 'CIS-HAXBALL',
+    'SITE_HEADER': 'CIS-HAXBALL',
+    'SITE_SUBHEADER': 'Административная панель',
+    'SITE_ICON': lambda request: static('img/logo_try.png'),
+    'SITE_FAVICONS': [
+        {
+            'rel': 'icon',
+            'sizes': "32x32",
+            'type': 'image/png',
+            'href': lambda request: static('img/logo_mini.png'),
+        },
+    ],
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': True,
+    'SHOW_BACK_BUTTON': True,
+    'SIDEBAR': {
+        'show_search': False,
+        'show_all_applications': False,
+        'navigation': [
+            {
+                'title': 'Core',
+                'items': [
+                    {
+                        'title': 'Социалочка',
+                        'icon': 'handshake',
+                        'link': reverse_lazy('admin:app_list', args=('core',)),
+                    },
+                    {
+                        'title': 'Опросы',
+                        'icon': 'poll',
+                        'link': reverse_lazy('admin:polls_question_changelist'),
+                    },
+                    {
+                        'title': 'Чемпионат',
+                        'icon': 'trophy',
+                        'link': reverse_lazy('admin:app_list', args=('tournament',)),
+                    },
+                    {
+                        'title': 'Бронь хоста',
+                        'icon': 'event',
+                        'link': reverse_lazy('admin:app_list', args=('reservation',)),
+                    },
+                    {
+                        'title': 'Уведомления',
+                        'icon': 'notifications',
+                        'link': reverse_lazy('admin:notifications_notification_changelist'),
+                    }
+                ],
+            },
+            {
+                'title': 'Пользователи и группы',
+                'icon': 'people',
+                'items': [
+                    {
+                        'title': 'Пользователи',
+                        'icon': 'person',
+                        'link': reverse_lazy('admin:auth_user_changelist'),
+                    },
+                    {
+                        'title': 'Группы',
+                        'icon': 'group',
+                        'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                ],
+            },
+        ],
+    },
+    'COLORS': {
+        'primary': {
+            '50': '238, 242, 255',
+            '100': '224, 231, 255',
+            '200': '199, 210, 254',
+            '300': '165, 180, 252',
+            '400': '129, 140, 248',
+            '500': '100, 120, 255', # used for most cases in dark theme
+            '600': '79, 70, 229', # used for most cases in light theme
+            '700': '67, 56, 202',
+            '800': '55, 48, 163',
+            '900': '49, 46, 129',
+            '950': '30, 27, 75',
         },
     },
 }

@@ -65,10 +65,14 @@ class LikeDislike(models.Model):
 
     def get_query_set(self):
         return LikeDislikeQuerySet(self.model)
+    
+    def __str__(self):
+        vote = 'Лайк' if self.vote == LikeDislike.LIKE else 'Дизлайк'
+        return f'{vote} от {self.user.username}'
 
     class Meta:
-        verbose_name = 'Лайк/дизлайк голос'
-        verbose_name_plural = 'Лайк/дизлайк голоса'
+        verbose_name = 'Лайк/дизлайк'
+        verbose_name_plural = 'Лайки/дизлайки'
 
 
 # Огромный раздел форума в котором категории создаются админами
@@ -256,8 +260,8 @@ class IPAdress(models.Model):
         User, verbose_name='Пользователь', related_name='user_ips', on_delete=models.SET_NULL, null=True
     )
     ip = models.GenericIPAddressField()
-    created = models.DateTimeField('Первый заход', auto_now_add=True)
-    update = models.DateTimeField('Последний заход', default=timezone.now)
+    created = models.DateTimeField('Первый вход', auto_now_add=True)
+    update = models.DateTimeField('Последний вход', default=timezone.now)
     suspicious = models.BooleanField('Подозрительный', default=False)
 
     def __str__(self):
@@ -273,8 +277,8 @@ class UserActivity(models.Model):
     ip = models.GenericIPAddressField('IP-адрес')
     user_agent = models.CharField(max_length=200, verbose_name='User-Agent')
     id_token = models.CharField(max_length=32, verbose_name='IdToken')
-    first_seen = models.DateTimeField('Первый заход', auto_now_add=True)
-    last_seen = models.DateTimeField('Последний заход', auto_now_add=True)
+    first_seen = models.DateTimeField('Первый вход', auto_now_add=True)
+    last_seen = models.DateTimeField('Последний вход', auto_now_add=True)
     has_duplicates = models.BooleanField('Есть дубликаты', default=False)
 
     class Meta:
@@ -330,12 +334,10 @@ class Profile(models.Model):
 
 class UserIcon(models.Model):
     title = models.CharField('Название', max_length=256)
-    priority = models.SmallIntegerField(
-        default=1,
-    )
+    priority = models.SmallIntegerField(verbose_name='Приоритетность', default=1)
     description = models.CharField('Описание(при наведении)', max_length=100, blank=True)
     image = models.ImageField('Иконка', upload_to='user_icon/', blank=True, null=True)
-    user = models.ManyToManyField(Profile, related_name='user_icon', blank=True, null=True)
+    user = models.ManyToManyField(Profile, verbose_name='Пользователи', related_name='user_icon', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Иконка'

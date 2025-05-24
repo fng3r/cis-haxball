@@ -1,13 +1,36 @@
 .polymorphic-add-choice {
   position: relative;
   clear: left;
+
+  /* CHANGED ORIGINAL FILE */
+  /* ADDED */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  /* END OF CHANGE */
 }
+
+/* CHANGED ORIGINAL FILE */
+/* ADDED */
+polymorphic-add-choice a {
+  float: none;
+  max-width: fit-content;
+}
+
+.polymorphic-add-choice ul {
+  display: flex;
+  flex-direction: column;
+}
+/* END OF CHANGE */
 
 .polymorphic-add-choice a:focus {
   text-decoration: none;
 }
 
-.polymorphic-type-menu {
+/* CHANGED ORIGINAL FILE */
+/* REMOVED */
+/* .polymorphic-type-menu {
   position: absolute;
   top: 2.2em;
   left: 0.5em;
@@ -16,7 +39,8 @@
   padding: 2px;
   background-color: #fff;
   z-index: 1000;
-}
+} */
+/* END OF CHANGE */
 
 .polymorphic-type-menu ul {
   padding: 2px;
@@ -25,7 +49,7 @@
 
 .polymorphic-type-menu li {
   list-style: none inside none;
-  padding: 4px 8px;
+  padding: 4px;
 }
 
 .inline-related.empty-form {

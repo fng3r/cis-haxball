@@ -6,6 +6,7 @@ from tournament.models import Match
 # Create your models here.
 class ReservationHost(models.Model):
     name = models.CharField('Название хоста', max_length=256)
+    codename = models.CharField('Кодовое название', max_length=16)
     link = models.URLField('Адрес')
     is_active = models.BooleanField('Активный')
 
@@ -19,11 +20,11 @@ class ReservationHost(models.Model):
 
 
 class ReservationEntry(models.Model):
-    author = models.ForeignKey(
-        User, verbose_name='Автор заявки', on_delete=models.CASCADE, related_name='user_reservation_authors'
-    )
     match = models.ForeignKey(
         Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='match_reservations'
+    )
+    author = models.ForeignKey(
+        User, verbose_name='Автор заявки', on_delete=models.CASCADE, related_name='user_reservation_authors'
     )
     time_date = models.DateTimeField('Дата и время')
 
@@ -51,7 +52,10 @@ class ReservationEntry(models.Model):
     )
 
     def __str__(self):
-        return f'Бронь матча {self.match} на {self.time_date.astimezone()}'
+        return (
+            f'Бронь для матча {self.match.team_home.short_title} - {self.match.team_guest.short_title} \
+            на {self.time_date.strftime('%d.%m.%y %H:%M')}'
+        )
 
     class Meta:
         verbose_name = 'Бронь хоста'

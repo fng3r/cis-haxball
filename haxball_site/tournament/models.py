@@ -198,6 +198,7 @@ class Nation(models.Model):
         return self.country
 
     class Meta:
+        ordering = ('country',)
         verbose_name = 'Страна'
         verbose_name_plural = 'Страны'
 
@@ -498,7 +499,7 @@ class TourNumber(models.Model):
     name = models.CharField('Название тура/раунда (опционально)', max_length=30, null=True, blank=True)
     date_from = models.DateField('Дата начала тура', default=date.today, blank=True, null=True)
     date_to = models.DateField('Дата окончания тура', default=date.today, blank=True, null=True)
-    league = models.ForeignKey(League, verbose_name='В какой лиге', related_name='tours', on_delete=models.CASCADE)
+    league = models.ForeignKey(League, verbose_name='Турнир', related_name='tours', on_delete=models.CASCADE)
     stage = ChainedForeignKey(
         TournamentStage,
         chained_field='league',
@@ -543,7 +544,7 @@ class TourNumber(models.Model):
 class Match(models.Model):
     league = models.ForeignKey(
         League,
-        verbose_name='В лиге',
+        verbose_name='Турнир',
         related_name='matches_in_league',
         related_query_name='matches_in_league',
         on_delete=models.CASCADE,
@@ -577,7 +578,12 @@ class Match(models.Model):
         on_delete=models.CASCADE,
         null=True,
     )
-    bracket_slot = models.PositiveSmallIntegerField('Номер слота в раунде ПО', default=0, null=False)
+    bracket_slot = models.PositiveSmallIntegerField(
+        'Слот сетки',
+        default=0,
+        null=False,
+        help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы'
+    )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     replay_link = models.URLField('Ссылка на реплей', blank=True)
@@ -836,7 +842,8 @@ class Goal(models.Model):
         super(Goal, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return f'на {self.time_min:02d}:{self.time_sec:02d} от {self.author}({self.assistent}) в {self.match}'
+        assistant =  f' ({self.assistent})' if self.assistent else ''
+        return f'⚽ {self.time_min:02d}:{self.time_sec:02d} {self.team} - {self.author}{assistant}'
 
     class Meta:
         verbose_name = 'Гол'
@@ -875,7 +882,7 @@ class Substitution(models.Model):
     time_sec = models.SmallIntegerField('Секунда')
 
     def __str__(self):
-        return f'в {self.time_min:02d}:{self.time_sec:02d} {self.player_out} на {self.player_in}'
+        return f'🔁 {self.time_min:02d}:{self.time_sec:02d} {self.team} ({self.player_out} -> {self.player_in})'
 
     class Meta:
         verbose_name = 'Замена'
@@ -899,7 +906,7 @@ class PlayerMatchStatistics(models.Model):
         null=False, blank=False,
         on_delete=models.CASCADE
     )
-    league = models.ForeignKey(League, verbose_name='Лига', null=False, blank=False, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, verbose_name='Турнир', null=False, blank=False, on_delete=models.CASCADE)
     
     
     @receiver(m2m_changed, sender=Match.team_home_start.through)
@@ -1087,7 +1094,17 @@ class OtherEvents(models.Model):
         super(OtherEvents, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.time_min:02d}:{self.time_sec:02d} {self.event} в {self.match}'
+        match self.event:
+            case OtherEvents.CLEAN_SHEET:
+                emoji = '🧤'
+            case OtherEvents.YELLOW_CARD:
+                emoji = '🟨'
+            case OtherEvents.RED_CARD:
+                emoji = '🟥'
+            case _:
+                emoji = self.event
+                
+        return f'{emoji} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
 
     class Meta:
         verbose_name = 'Событие'
@@ -1242,8 +1259,7 @@ class AchievementCategory(models.Model):
 class Achievements(models.Model):
     title = models.CharField('Название', max_length=100)
     description = models.CharField('Описание', max_length=200)
-    image = models.ImageField('Изображение медальки в профиле', upload_to='medals/', null=True)
-    mini_image = models.ImageField('Изображение медальки в комменты', upload_to='medals/', null=True)
+    image = models.ImageField('Изображение медали', upload_to='medals/', null=True)
     player = models.ManyToManyField(Player, verbose_name='Игрок', related_name='achievements', blank=True, null=True)
     position_number = models.SmallIntegerField('Позиция', default=0)
     category = models.ForeignKey(
@@ -1259,14 +1275,14 @@ class Achievements(models.Model):
 
     class Meta:
         ordering = ['category__order', 'position_number']
-        verbose_name = 'Медалька'
-        verbose_name_plural = 'Медальки'
+        verbose_name = 'Медаль'
+        verbose_name_plural = 'Медали'
 
 
 class TeamAchievement(models.Model):
     title = models.CharField('Название', max_length=100)
     description = models.CharField('Описание', max_length=200)
-    image = models.ImageField('Изображение медальки в профиле команды', upload_to='medals/', null=True)
+    image = models.ImageField('Изображение медали', upload_to='medals/', null=True)
     team = models.ManyToManyField(Team, verbose_name='Команда', related_name='achievements', null=True)
     season = models.ForeignKey(Season, verbose_name='Сезон', on_delete=models.CASCADE, null=True)
     players_raw_list = models.CharField('Состав', max_length=150, default='', blank=True)
@@ -1277,8 +1293,8 @@ class TeamAchievement(models.Model):
 
     class Meta:
         ordering = ['season__number', 'position_number']
-        verbose_name = 'Медалька (командная)'
-        verbose_name_plural = 'Медальки (командные)'
+        verbose_name = 'Медаль (командная)'
+        verbose_name_plural = 'Медали (командные)'
 
 
 class TeamRatingLeagueWeight(models.Model):

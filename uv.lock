@@ -140,6 +140,7 @@ dependencies = [
     { name = "django-smart-selects" },
     { name = "django-summernote" },
     { name = "django-template-partials" },
+    { name = "django-unfold" },
     { name = "django-vite" },
     { name = "django-widget-tweaks" },
     { name = "google-api-python-client" },
@@ -219,6 +220,7 @@ requires-dist = [
     { name = "django-smart-selects", specifier = "==1.7.2" },
     { name = "django-summernote", specifier = "==0.8.20.0" },
     { name = "django-template-partials", specifier = "==24.4" },
+    { name = "django-unfold", specifier = "==0.58.0" },
     { name = "django-vite", specifier = ">=3.1.0" },
     { name = "django-widget-tweaks", specifier = "==1.5.0" },
     { name = "google-api-python-client", specifier = "==2.164.0" },
@@ -533,6 +535,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1c/ff/2a7ddae12ca8e5fea1a41af05924c04f1bb4aec7157b04a88b829dd93d4a/django_template_partials-24.4.tar.gz", hash = "sha256:25b67301470fc274ecc419e5e5fd4686a5020b1c038fd241a70eb087809034b6", size = 14538 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/31/72/d8eea70683b25230e0d2647b5cf6f2db4a7e7d35cb6170506d9618196374/django_template_partials-24.4-py2.py3-none-any.whl", hash = "sha256:ee59d3839385d7f648907c3fa8d5923fcd66cd8090f141fe2a1c338b917984e2", size = 8439 },
+]
+
+[[package]]
+name = "django-unfold"
+version = "0.58.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a9/ab/c6e7f199880932ba966c252b83e92c7dfee726012a7457e99d33bb854072/django_unfold-0.58.0.tar.gz", hash = "sha256:b81cc8e70725e1969bca2f438de216e27ff6f3db387661da871349a87af0d7d4", size = 1059759 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/f1/f13bbba62c0754a78ce9dcd291be035c34cb68d3365faf5a0e94a37e58bb/django_unfold-0.58.0-py3-none-any.whl", hash = "sha256:319ec7584ffdd4aa2ea0aec841c288e50934d4bd7e2329116fd290aff2803017", size = 1161557 },
 ]
 
 [[package]]
