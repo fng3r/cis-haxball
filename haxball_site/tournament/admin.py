@@ -1,7 +1,9 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Q
-from django.urls import resolve
+from django.shortcuts import redirect
+from django.urls import resolve, reverse_lazy
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
@@ -18,7 +20,8 @@ from unfold.contrib.filters.admin import (
     RelatedDropdownFilter,
     SingleNumericFilter,
 )
-from unfold.decorators import display
+from unfold.decorators import action, display
+from unfold.enums import ActionVariant
 from unfold.sections import TableSection
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline, UnfoldChainedSelect
@@ -345,7 +348,7 @@ class PostponementAdmin(UnfoldModelAdmin):
         'ends_at',
         'taken_at',
         'taken_by',
-        'is_cancelled',
+        'display_is_cancelled',
         'cancelled_at',
         'cancelled_by',
     )
@@ -369,14 +372,32 @@ class PostponementAdmin(UnfoldModelAdmin):
         ('taken_at', 'taken_by'),
         ('cancelled_at', 'cancelled_by')
     )
+    
+    actions_detail = ['cancel_postponement']
 
     @display(description='На кого взят перенос')
     def display_teams(self, model):
         return mark_safe('<br>'.join(map(lambda t: str(t), model.teams.all())))
 
     @display(description='Отменен', boolean=True)
-    def is_cancelled(self, model):
+    def display_is_cancelled(self, model):
         return model.is_cancelled
+    
+    @action(description=('Отменить перенос'), variant=ActionVariant.DANGER, icon='cancel')
+    def cancel_postponement(self, request, object_id):
+        postponement = Postponement.objects.get(pk=object_id)
+        if (postponement.is_cancelled):
+            messages.warning(request, 'Выбранный перенос уже был отменен ранее')
+            return redirect(reverse_lazy('admin:tournament_postponement_change', args=[object_id]))
+
+        postponement.cancelled_at = timezone.now()
+        postponement.cancelled_by = request.user
+        postponement.save(update_fields=['cancelled_at', 'cancelled_by'])
+        
+        messages.success(
+            request, "Перенос успешно отменен"
+        )
+        return redirect(reverse_lazy('admin:tournament_postponement_change', args=[object_id]))
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'match':

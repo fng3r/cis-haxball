@@ -626,6 +626,13 @@ class PostponementsList(ListView):
         match = Match.objects.get(pk=match_id)
         team = data['team']
         type = data['type']
+        tournament = data.get('tournament')
+        
+        postponements_count = match.postponements.filter(is_cancelled=False).count()
+        if postponements_count >= 2:
+            messages.error(request, 'Матч не может быть перенесен более 2 раз')
+
+            return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
 
         if team == 'mutual':
             teams = [match.team_home, match.team_guest]
@@ -634,7 +641,6 @@ class PostponementsList(ListView):
             teams = [Team.objects.get(pk=team_id)]
         is_emergency = type == 'emergency'
         slots = match.league.get_postponement_slots()
-        tournament = data.get('tournament')
         for team in teams:
             all_postponements = team.get_postponements(match.league)
             emergency_postponements = all_postponements.filter(is_emergency=True)
