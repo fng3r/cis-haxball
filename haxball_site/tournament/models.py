@@ -1177,6 +1177,16 @@ class Postponement(models.Model):
         null=True,
         on_delete=models.SET_NULL,
     )
+    is_cancelled = models.GeneratedField(
+        verbose_name = 'Отменен',
+        expression=models.Case(
+            models.When(cancelled_at__isnull=False, then=True),
+            default=False,
+            output_field=models.BooleanField(),
+        ),
+        db_persist=True,
+        output_field=models.BooleanField(),
+    )
     cancelled_at = models.DateTimeField('Дата отмены переноса', null=True, blank=True)
     cancelled_by = models.ForeignKey(
         User,
@@ -1194,10 +1204,6 @@ class Postponement(models.Model):
     @property
     def can_be_cancelled(self):
         return not self.is_cancelled and timezone.localdate() < self.starts_at
-
-    @property
-    def is_cancelled(self):
-        return self.cancelled_at is not None
 
     @property
     def league(self):
