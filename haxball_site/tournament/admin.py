@@ -366,6 +366,7 @@ class PostponementAdmin(UnfoldModelAdmin):
     search_fields = ('match__team_home__title', 'match__team_guest__title')
     
     fields = (
+        ('match',),
         ('is_emergency',),
         ('teams',),
         ('starts_at', 'ends_at'),
