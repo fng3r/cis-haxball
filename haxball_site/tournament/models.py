@@ -87,7 +87,7 @@ class Team(models.Model):
     color_2 = ColorField(default='#FFFFFF', verbose_name='Цвет 2')
     color_table = ColorField(default='#FFFFFF', verbose_name='Цвет Таблички')
     owner = models.ForeignKey(
-        User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='owner'
+        User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='owned_teams'
     )
     captain = models.OneToOneField(
         'Player',

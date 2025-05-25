@@ -1254,8 +1254,7 @@ def user_teams(user: User):
             'titles': f'{"/".join(player_titles)} команды {player.team}'
         })
         
-    owned_teams = Team.objects.filter(owner=user, leagues__championship__is_active=True)
-    for owned_team in owned_teams:
+    for owned_team in user.active_owned_teams:
         if owned_team != current_team:
             teams.append({'team': owned_team, 'titles': f'Владелец команды {owned_team}'})
     
