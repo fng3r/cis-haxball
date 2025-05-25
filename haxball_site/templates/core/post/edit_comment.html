@@ -19,7 +19,7 @@
           <img id="edit-comment-indicator" class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
 
           <button type="reset"
-                  class="tw:btn tw:btn-neutral tw:btn-soft tw:mr-2!"
+                  class="tw:btn tw:btn-soft tw:mr-2!"
                   @click="editingComment = false"
                   hx-get="{% url 'core:comment' comment.id %}">Отменить</button>
 
