@@ -767,7 +767,8 @@ class MatchAdmin(UnfoldModelAdmin):
         ('stage', RelatedDropdownFilter),
         ('numb_tour__number', SingleNumericFilter),
         ('inspector', RelatedDropdownFilter),
-        'is_played'
+        'is_played',
+        ('result__value', ChoicesCheckboxFilter)
     )
     list_filter_submit = True
     list_fullwidth = True
