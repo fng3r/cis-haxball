@@ -21,9 +21,33 @@
   <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
 {% endblock %}
 
+{% partialdef team_results %}
+  <div class="tw:flex tw:flex-col tw:items-center tw:gap-3">
+    <img src="{{ team.logo.url }}" alt="{{ team.title }}" width="60%" class="tw:aspect-square">
+
+    <div class="tw:flex tw:justify-center tw:gap-2">
+      {% for previous_match in latest_matches %}
+        <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
+             data-tip="{{ previous_match.numb_tour|tour_name }}&#xa;{{ previous_match.team_home.title }} {{ previous_match.score_home }} : {{ previous_match.score_guest }} {{ previous_match.team_guest.title }}">
+          <a href="{{ previous_match.get_absolute_url }}"
+             class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content {% if previous_match.is_draw %}tw:bg-gray-400{% elif previous_match.winner == team %}tw:bg-success{% else %}tw:bg-error{% endif %}">
+            {% if previous_match.is_draw %}
+              Н
+            {% elif previous_match.winner == team %}
+              В
+            {% else %}
+              П
+            {% endif %}
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endpartialdef %}
+
 {% block title %}Чемпионат | {{ match }} — CIS-HAXBALL{% endblock %}
 
-{% block profile_of_user %}
+{% block main_content %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
       <h5 class="tw:text-center">
@@ -60,28 +84,9 @@
     <div class="tw:card-body tw:px-0 tw:pt-4 tw:py-0 tw:text-center">
       <div class="tw:flex tw:mb-1">
         <div class="tw:w-5/12">
-
-          <div class="tw:flex tw:flex-col tw:items-center tw:gap-3">
-            <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="60%">
-
-            <div class="tw:flex tw:justify-center tw:gap-2">
-              {% for previous_match in latest_matches.team_home %}
-                <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
-                     data-tip="{{ previous_match.numb_tour|tour_name }}&#xa;{{ previous_match.team_home.title }} {{ previous_match.score_home }} : {{ previous_match.score_guest }} {{ previous_match.team_guest.title }}">
-                  <a href="{{ previous_match.get_absolute_url }}"
-                     class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content {% if previous_match.is_draw %}tw:bg-gray-400{% elif previous_match.winner == match.team_home %}tw:bg-success{% else %}tw:bg-error{% endif %}">
-                    {% if previous_match.is_draw %}
-                      Н
-                    {% elif previous_match.winner == match.team_home %}
-                      В
-                    {% else %}
-                      П
-                    {% endif %}
-                  </a>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
+          {% with team=match.team_home latest_matches=latest_matches.team_home %}
+            {% partial team_results %}
+          {% endwith %}
         </div>
 
         <div class="tw:w-2/12 tw:flex tw:justify-center tw:items-center">
@@ -103,27 +108,9 @@
         </div>
 
         <div class="tw:w-5/12">
-          <div class="tw:flex tw:flex-col tw:items-center tw:gap-3">
-            <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="60%">
-
-            <div class="tw:flex tw:justify-center tw:gap-2">
-              {% for previous_match in latest_matches.team_guest %}
-                <div class="tw:tooltip tw:tooltip-top tw:before:whitespace-pre!"
-                     data-tip="{{ previous_match.numb_tour|tour_name }}&#xa;{{ previous_match.team_home.title }} {{ previous_match.score_home }} : {{ previous_match.score_guest }} {{ previous_match.team_guest.title }}">
-                  <a href="{{ previous_match.get_absolute_url }}"
-                     class="tw:btn tw:btn-square tw:btn-sm tw:text-base-content {% if previous_match.is_draw %}tw:bg-gray-400{% elif previous_match.winner == match.team_guest %}tw:bg-success{% else %}tw:bg-error{% endif %}">
-                    {% if previous_match.is_draw %}
-                      Н
-                    {% elif previous_match.winner == match.team_guest %}
-                      В
-                    {% else %}
-                      П
-                    {% endif %}
-                  </a>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
+          {% with team=match.team_guest latest_matches=latest_matches.team_guest %}
+            {% partial team_results %}
+          {% endwith %}
         </div>
       </div>
 

@@ -1,0 +1,8 @@
+{% load tournament_extras %}
+
+{% for user_team in user|user_teams %}
+  {% if not forloop.first %}<span>/</span>{% endif %}
+  <div class="tw:tooltip" data-tip="{{ user_team.titles }}">
+    <img src="{{ user_team.team.logo.url }}" class="tw:size-5">
+  </div>
+{% endfor %}

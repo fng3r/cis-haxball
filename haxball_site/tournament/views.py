@@ -586,16 +586,34 @@ class PostponementFilter(FilterSet):
     class Meta:
         model = Postponement
         fields = ['tournament']
+        
+        
+def get_postponements_queryset():
+    return (
+        Postponement.objects.filter(match__league__championship__is_active=True)
+        .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
+        .prefetch_related(
+            'teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon',
+            'taken_by__user_player__team__owner', 'taken_by__user_player__team__captain', 'taken_by__user_player__team__captain_assistant',
+            'cancelled_by__user_player__team__owner', 'cancelled_by__user_player__team__captain', 'cancelled_by__user_player__team__captain_assistant',
+            Prefetch(
+                'taken_by__owned_teams',
+                queryset=Team.objects.filter(leagues__championship__is_active=True),
+                to_attr='active_owned_teams'
+            ),
+            Prefetch(
+                'cancelled_by__owned_teams',
+                queryset=Team.objects.filter(leagues__championship__is_active=True),
+                to_attr='active_owned_teams'
+            )
+        )
+        .order_by('-taken_at')
+    )
 
 
 class PostponementsList(ListView):
     default_tournament = League.objects.filter(championship__is_active=True).order_by('priority').first()
-    queryset = (
-        Postponement.objects.filter(match__league__championship__is_active=True)
-        .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
-        .prefetch_related('teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon')
-        .order_by('-taken_at')
-    )
+    queryset = get_postponements_queryset()
     template_name = 'tournament/postponements/postponements.html'
 
     def get(self, request, **kwargs):
@@ -679,13 +697,7 @@ class PostponementsEvents(ListView):
     def get(self, request, **kwargs):
         league_id = self.request.GET['tournament']
         league = League.objects.get(id=league_id)
-        all_postponements = (
-            Postponement.objects.filter(match__league__championship__is_active=True, match__league=league)
-            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
-            .prefetch_related('teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon')
-            .order_by('-taken_at')
-        )
-
+        all_postponements = get_postponements_queryset().filter(match__league=league)
         paginator = Paginator(all_postponements, 20)
         page = self.request.GET.get('page')
         postponements = paginator.get_page(page)

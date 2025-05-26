@@ -1,5 +1,6 @@
 {% load static %}
 {% load user_tags %}
+{% load tournament_extras %}
 {% load thumbnail %}
 
 <div class="tw:flex tw:p-4 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}" id="r{{ comment.id }}">
@@ -19,17 +20,19 @@
     <div class="tw:flex tw:justify-between">
       <div class="tw:inline-flex tw:items-center">
         <div class="tw:m-0 tw:flex tw:items-center">
-          {% for icon in comment.author.user_profile.user_icon.all %}
-            <div class="tw:mr-1 tw:align-middle">
+          <div class="tw:flex tw:gap-1 tw:items-center">
+            {% for icon in comment.author.user_profile.user_icon.all %}
               <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-            </div>
-          {% endfor %}
+            {% endfor %}
 
-          <a href="{{ comment.author.user_profile.get_absolute_url }}"
-             class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
-            {{ comment.author.username }}
-            {% if comment.author.user_profile.tag %}<span>[{{ comment.author.user_profile.tag }}]</span>{% endif %}
-          </a>
+            <a href="{{ comment.author.user_profile.get_absolute_url }}"
+               class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
+              {{ comment.author.username }}
+              {% if comment.author.user_profile.tag %}<span>[{{ comment.author.user_profile.tag }}]</span>{% endif %}
+            </a>
+
+            {% include 'core/comment/user-teams.html' with user=comment.author %}
+          </div>
 
           <span class="tw:ml-1 tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
             {{ comment.author.user_profile.karma }}
@@ -42,17 +45,21 @@
           </i>
 
           <div class="tw:m-0 tw:flex tw:ml-2 tw:font-semibold">
-            {% for icon in child_comment.parent.author.user_profile.user_icon.all %}
-              <div class="tw:mr-1 tw:align-middle">
-                <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-              </div>
-            {% endfor %}
+            <div class="tw:flex tw:gap-1 tw:items-center">
+              {% for icon in child_comment.parent.author.user_profile.user_icon.all %}
+                <div class="tw:mr-1 tw:align-middle">
+                  <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                </div>
+              {% endfor %}
 
-            <a href="{{ child_comment.parent.author.user_profile.get_absolute_url }}"
-               class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
-              {{ child_comment.parent.author.username }}
-              {% if child_comment.parent.author.user_profile.tag %}<span>[{{ child_comment.parent.author.user_profile.tag }}]</span>{% endif %}
-            </a>
+              <a href="{{ child_comment.parent.author.user_profile.get_absolute_url }}"
+                 class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
+                {{ child_comment.parent.author.username }}
+                {% if child_comment.parent.author.user_profile.tag %}<span>[{{ child_comment.parent.author.user_profile.tag }}]</span>{% endif %}
+              </a>
+
+              {% include 'core/comment/user-teams.html' with user=child_comment.parent.author %}
+            </div>
           </div>
         {% endif %}
 

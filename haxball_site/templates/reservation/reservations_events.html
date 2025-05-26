@@ -29,16 +29,19 @@
         <div class="comment-text tw:w-full">
           <div class="tw:flex tw:justify-between">
             <div class="tw:m-0 tw:flex">
-              {% for icon in reservation.author.user_profile.user_icon.all %}
-                <div class="tw:mr-1 tw:align-middle">
+              <div class="tw:flex tw:gap-1 tw:items-center">
+                {% for icon in reservation.author.user_profile.user_icon.all %}
                   <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                </div>
-              {% endfor %}
-              <a href="{{ reservation.author.user_profile.get_absolute_url }}"
-                 class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-                {{ reservation.author.username }}
-                {% if reservation.author.user_profile.tag %}<span>[{{ reservation.author.user_profile.tag }}]</span>{% endif %}
-              </a>
+                {% endfor %}
+
+                <a href="{{ reservation.author.user_profile.get_absolute_url }}"
+                   class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
+                  {{ reservation.author.username }}
+                  {% if reservation.author.user_profile.tag %}<span>[{{ reservation.author.user_profile.tag }}]</span>{% endif %}
+                </a>
+
+                {% include 'core/comment/user-teams.html' with user=reservation.author %}
+              </div>
             </div>
           </div>
 
@@ -101,16 +104,19 @@
           <div class="comment-text tw:w-full">
             <div class="tw:flex tw:justify-between">
               <div class="tw:m-0 tw:flex">
-                {% for icon in reservation.cancelled_by.user_profile.user_icon.all %}
-                  <div class="tw:mr-1 tw:align-middle">
+                <div class="tw:flex tw:gap-1 tw:items-center">
+                  {% for icon in reservation.cancelled_by.user_profile.user_icon.all %}
                     <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                  </div>
-                {% endfor %}
-                <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}"
-                   class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-                  {{ reservation.cancelled_by.username }}
-                  {% if reservation.cancelled_by.user_profile.tag %}<span>[{{ reservation.cancelled_by.user_profile.tag }}]</span>{% endif %}
-                </a>
+                  {% endfor %}
+
+                  <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}"
+                     class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
+                    {{ reservation.cancelled_by.username }}
+                    {% if reservation.cancelled_by.user_profile.tag %}<span>[{{ reservation.cancelled_by.user_profile.tag }}]</span>{% endif %}
+                  </a>
+
+                  {% include 'core/comment/user-teams.html' with user=reservation.cancelled_by %}
+                </div>
               </div>
             </div>
             <div class="tw:inline-flex tw:items-center">

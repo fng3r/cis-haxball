@@ -1225,3 +1225,41 @@ def stats_percentage(stat1, stat2):
         percentage2 = round(float(stat2) / sum * 100)
     
     return percentage1, percentage2
+
+
+@register.filter
+def user_teams(user: User):
+    teams = []
+    try:
+        player = user.user_player
+    except:
+        player = None
+        
+    current_team = None
+    if player and player.team:
+        player_titles = []
+        current_team = player.team
+        if user == current_team.owner:
+            player_titles.append('Владелец')
+        
+        if player == current_team.captain:
+            player_titles.append('Капитан')
+        elif player == current_team.captain_assistant:
+            player_titles.append('Ассистент капитана')
+        else:
+            player_titles.append('Игрок')
+            
+        teams.append({
+            'team': player.team,
+            'titles': f'{"/".join(player_titles)} команды {player.team}'
+        })
+        
+    if hasattr(user, 'active_owned_teams'):
+        active_owned_teams = user.active_owned_teams
+    else:
+        active_owned_teams = Team.objects.filter(owner=user, leagues__championship__is_active=True)
+    for owned_team in active_owned_teams:
+        if owned_team != current_team:
+            teams.append({'team': owned_team, 'titles': f'Владелец команды {owned_team}'})
+    
+    return teams

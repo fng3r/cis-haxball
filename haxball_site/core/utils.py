@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from django.db.models import Prefetch
+from tournament.models import Team
 
 from .models import LikeDislike, NewComment
 
@@ -33,10 +34,19 @@ def get_comments_for_object(model, obj_id):
         queryset=LikeDislike.objects.dislikes().prefetch_related('user__user_profile__user_icon'),
         to_attr='dislikes'
     )
+    prefetch_owned_teams = Prefetch(
+        'author__owned_teams',
+        queryset=Team.objects.filter(leagues__championship__is_active=True),
+        to_attr='active_owned_teams'
+    )
 
     return (
         prefetch_recursively(
             'author__user_profile__user_icon',
+            'author__user_player__team__owner',
+            'author__user_player__team__captain',
+            'author__user_player__team__captain_assistant',
+            prefetch_owned_teams,
             prefetch_likes,
             prefetch_dislikes,
         )

@@ -366,6 +366,7 @@ class PostponementAdmin(UnfoldModelAdmin):
     search_fields = ('match__team_home__title', 'match__team_guest__title')
     
     fields = (
+        ('match',),
         ('is_emergency',),
         ('teams',),
         ('starts_at', 'ends_at'),
@@ -767,7 +768,8 @@ class MatchAdmin(UnfoldModelAdmin):
         ('stage', RelatedDropdownFilter),
         ('numb_tour__number', SingleNumericFilter),
         ('inspector', RelatedDropdownFilter),
-        'is_played'
+        'is_played',
+        ('result__value', ChoicesCheckboxFilter)
     )
     list_filter_submit = True
     list_fullwidth = True
