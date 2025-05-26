@@ -421,6 +421,16 @@ class PostponementAdmin(UnfoldModelAdmin):
         if db_field.name == 'teams':
             kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct()
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'match', 'match__team_home', 'match__team_guest', 'match__numb_tour',
+                'taken_by', 'cancelled_by',
+            )
+            .prefetch_related('teams')
+        )
 
 
 class TournamentStageInline(StackedPolymorphicInline, UnfoldStackedInline):
