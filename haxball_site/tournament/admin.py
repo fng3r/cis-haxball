@@ -9,7 +9,7 @@ from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
-    StackedPolymorphicInline
+    StackedPolymorphicInline,
 )
 from smart_selects.db_fields import ChainedForeignKey
 from unfold import admin as unfold_admin
@@ -24,7 +24,7 @@ from unfold.decorators import action, display
 from unfold.enums import ActionVariant
 from unfold.sections import TableSection
 
-from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline, UnfoldChainedSelect
+from haxball_site.admin import UnfoldChainedSelect, UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
 from .models import (
     AchievementCategory,
@@ -319,6 +319,13 @@ class DisqualificationAdmin(UnfoldModelAdmin):
             else:
                 TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour', 'team', 'player')
+            .prefetch_related('tours__league', 'tours__stage', 'lifted_tours__league', 'lifted_tours__stage')
+        )
 
 
 class AlwaysChangedModelForm(forms.ModelForm):
