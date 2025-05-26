@@ -832,13 +832,22 @@ class MatchAdmin(UnfoldModelAdmin):
 
         if db_field.name == 'team_home_start':
             # Игроки команды хозяев
-            t = Team.objects.filter(home_matches=resolved.kwargs.get('object_id')).first()
-            kwargs['queryset'] = Player.objects.filter(team=t)
+            team = Team.objects.filter(home_matches=resolved.kwargs.get('object_id')).first()
+            kwargs['queryset'] = Player.objects.filter(team=team)
         if db_field.name == 'team_guest_start':
             # Игроки команды гостей
-            t = Team.objects.filter(guest_matches=resolved.kwargs.get('object_id')).first()
-            kwargs['queryset'] = Player.objects.filter(team=t)
+            team = Team.objects.filter(guest_matches=resolved.kwargs.get('object_id')).first()
+            kwargs['queryset'] = Player.objects.filter(team=team)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'team_home', 'team_guest', 'numb_tour', 'league', 'league__championship',
+                'stage', 'group', 'result', 'inspector'
+            )
+        )
 
 
 @admin.register(Goal)
