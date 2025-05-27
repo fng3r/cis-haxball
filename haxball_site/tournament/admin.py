@@ -924,24 +924,53 @@ class GoalAdmin(UnfoldModelAdmin):
 @admin.register(Substitution)
 class SubstitutionAdmin(UnfoldModelAdmin):
     list_display = ('match', 'team', 'player_out', 'player_in')
+    ordering = ('-id',)
     raw_id_fields = ('match',)
+    list_filter = (
+        ('team', RelatedDropdownFilter),
+        ('player_out', RelatedDropdownFilter),
+        ('player_in', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    list_filter_sheet = False
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'team', 'player_out', 'player_in',
+                'match__team_home', 'match__team_guest', 'match__numb_tour'
+            )
+        )
 
 
 @admin.register(OtherEvents)
 class OtherEventsAdmin(UnfoldModelAdmin):
     list_display = (
+        'id',
         'event',
         'match',
         'author',
         'team',
     )
+    ordering = ('-id',)
+    raw_id_fields = ('match',)
     list_filter = (
         ('event', MultipleChoicesDropdownFilter),
+        ('team', RelatedDropdownFilter),
         ('author', RelatedDropdownFilter),
-        ('team', RelatedDropdownFilter)
     )
     list_filter_submit = True
-    raw_id_fields = ('match',)
+    list_filter_sheet = False
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'team', 'author',
+                'match__team_home', 'match__team_guest', 'match__numb_tour'
+            )
+        )
     
     
 class MatchInline(unfold_admin.StackedInline):
