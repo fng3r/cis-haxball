@@ -970,10 +970,18 @@ class TourAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     
     inlines = [MatchInline]
+    list_sections = [MatchesTableSection]
 
     @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
         return model.is_actual
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related('league__championship', 'stage__league')
+            .prefetch_related('tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result')
+        )
 
 
 @admin.register(SeasonTeamRating)
