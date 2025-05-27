@@ -101,3 +101,8 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
         if db_field.name == 'host':
             kwargs['queryset'] = ReservationHost.objects.filter(is_active=True)
         return super(ReservationEntryAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'host', 'author', 'cancelled_by', 'match__numb_tour', 'match__team_home', 'match__team_guest'
+        )
