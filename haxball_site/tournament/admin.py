@@ -904,8 +904,21 @@ class MatchAdmin(UnfoldModelAdmin):
 
 @admin.register(Goal)
 class GoalAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'author', 'assistent', 'id')
+    list_display = ('match', 'author', 'assistent',)
+    ordering = ('-id',)
     raw_id_fields = ('match',)
+    list_filter = (('author', RelatedDropdownFilter), ('assistent', RelatedDropdownFilter))
+    list_filter_submit = True
+    list_filter_sheet = False
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'author', 'assistent',
+                'match__team_home', 'match__team_guest', 'match__numb_tour'
+            )
+        )
 
 
 @admin.register(Substitution)
