@@ -183,7 +183,7 @@ class PlayerAdmin(UnfoldModelAdmin):
 
 @admin.register(PlayerTransfer)
 class PlayerTransferAdmin(UnfoldModelAdmin):
-    list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join', 'is_technical')
+    list_display = ('trans_player', 'display_from_team', 'display_to_team', 'date_join', 'season_join', 'is_technical')
     list_filter = (
         ('trans_player', RelatedDropdownFilter),
         ('from_team', RelatedDropdownFilter),
@@ -201,11 +201,50 @@ class PlayerTransferAdmin(UnfoldModelAdmin):
         '-date_join',
         '-id',
     )
+    
+    @display(description='Из команды', header=True)
+    def display_from_team(self, model):
+        if not model.from_team:
+            return ['Свободный агент']
+        
+        return [
+            model.from_team,
+            None,
+            None,
+            {
+                'path': model.from_team.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            }
+        ]
+        
+    @display(description='В команду', header=True)
+    def display_to_team(self, model):
+        if not model.to_team:
+            return ['Свободный агент']
+        
+        return [
+            model.to_team,
+            None,
+            None,
+            {
+                'path': model.to_team.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            }
+        ]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'from_team' or db_field.name == 'to_team':
             kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('trans_player', 'from_team', 'to_team', 'season_join')
 
 
 class PlayerInline(UnfoldTabularInline):
