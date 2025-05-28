@@ -1054,11 +1054,6 @@ def team_squad_in_season(season_achievements):
 
 
 @register.filter
-def get(d: dict, key):
-    return d[key]
-
-
-@register.filter
 def event_time(event: OtherEvents):
     return datetime.time(minute=event.time_min, second=event.time_sec).strftime('%M:%S')
 

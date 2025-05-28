@@ -2,7 +2,7 @@
 
 {% load static %}
 {% load cache %}
-{% load tournament_extras %}
+{% load tournament_extras user_tags %}
 
 {% block styles %}
   <link rel="stylesheet" type="text/css" href="{% static 'tournament/teams/team_page.css' %}">
@@ -71,14 +71,27 @@
                      checked />
               <div class="tw:tab-content tw:pt-2">
                 <div id="current-players-panel" role="tabpanel" aria-labelledby="current-players-tab">
-                  {% with team_squad=team|current_squad_stats %}
-                    {% with players_count=team_squad|length %}
-                      {% if players_count > 0 %}
-                        <span class="tw:ml-2 tw:font-semibold">Лимит игроков: {{ players_count }}/{{ team.roster_slots }}</span>
-                      {% endif %}
+                  {% with team_squad=team|current_squad_stats is_current=True %}
+                    <div x-data="{show_rating: false }">
+                      {% with players_count=team_squad|length %}
+                        {% if players_count > 0 %}
+                          <div class="tw:flex tw:justify-between tw:items-center">
+                            <div class="tw:ml-2 tw:font-semibold">Лимит игроков: {{ players_count }}/{{ team.roster_slots }}</div>
 
-                      {% include 'tournament/teams/partials/team_squad_stats.html' %}
-                    {% endwith %}
+                            {% if user|can_view_player_rating %}
+                              <fieldset class="tw:fieldset tw:px-4">
+                                <label class="tw:label tw:text-base-content tw:text-sm tw:has-checked:bg-transparent! tw:has-checked:shadow-none!">
+                                  <input type="checkbox" class="tw:toggle" x-model="show_rating" />
+                                  Показывать рейтинг игроков
+                                </label>
+                              </fieldset>
+                            {% endif %}
+                          </div>
+                        {% endif %}
+
+                        {% include 'tournament/teams/partials/team_squad_stats.html' %}
+                      {% endwith %}
+                    </div>
                   {% endwith %}
                 </div>
               </div>

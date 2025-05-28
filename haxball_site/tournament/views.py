@@ -6,7 +6,7 @@ from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, Subquery, Window
+from django.db.models import Count, Exists, F, Max, OuterRef, Prefetch, Q, Subquery, Window
 from django.db.models.functions import Coalesce, Rank
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -29,6 +29,8 @@ from .models import (
     Nation,
     OtherEvents,
     Player,
+    PlayerRating,
+    PlayerRatingVersion,
     PlayerTransfer,
     Postponement,
     Season,
@@ -314,7 +316,6 @@ class EditTeamView(DetailView, View):
         return redirect(team.get_absolute_url())
         
 
-
 class TeamDetail(DetailView):
     model = Team
     context_object_name = 'team'
@@ -325,6 +326,17 @@ class TeamDetail(DetailView):
         team = context['team']
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
+        
+        latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
+        rating = (
+            PlayerRating.objects
+            .filter(player__in=team.players_in_team.all(), version__number=latest_rating_version)
+            .select_related('player')
+        )
+        current_squad_rating = {}
+        for rating_entry in rating:
+            current_squad_rating[rating_entry.player] = rating_entry
+        context['current_squad_rating'] = current_squad_rating
         
         return context
 
