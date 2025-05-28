@@ -1104,6 +1104,7 @@ class PlayerRatingAdmin(UnfoldModelAdmin):
     list_filter = (
         ('version', RelatedDropdownFilter),
         ('player', RelatedDropdownFilter),
+        ('player__team', RelatedDropdownFilter),
         ('grade', ChoicesCheckboxFilter)
     )
     list_filter_submit = True
