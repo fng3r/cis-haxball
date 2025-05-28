@@ -175,9 +175,6 @@ class League(models.Model):
     def get_absolute_url(self):
         return reverse('tournament:league', args=[self.slug])
 
-    def has_stages(self):
-        return self.stages.count() > 0
-
     def is_multistage_league(self):
         return self.stages.count() > 1
 
@@ -1129,7 +1126,7 @@ class PlayerTransfer(models.Model):
         blank=True,
         null=True,
     )
-    date_join = models.DateField(default=None)
+    date_join = models.DateField(verbose_name='Дата трансфера', default=None)
     season_join = models.ForeignKey(
         Season, on_delete=models.CASCADE, verbose_name='В каком сезоне', related_name='transfers'
     )

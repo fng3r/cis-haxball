@@ -1,5 +1,3 @@
-from typing import Any
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -7,28 +5,29 @@ from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.admin import SiteAdmin as BaseSiteAdmin
 from django.contrib.sites.models import Site
-from django.db.models import FileField
 from django.urls import reverse
 from django.utils.html import escape, mark_safe
 
 from allauth.account.admin import EmailAddressAdmin as BaseEmailAddressAdmin
 from allauth.account.models import EmailAddress
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django_summernote.admin import AttachmentAdmin as BaseAttachmentAdmin
 from django_summernote.models import Attachment
 from online_users.models import OnlineUserActivity
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     AutocompleteSelectMultipleFilter,
+    ChoicesCheckboxFilter,
     FieldTextFilter,
     SingleNumericFilter,
     RelatedDropdownFilter,
-    ChoicesCheckboxFilter
 )
 from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from unfold.widgets import UnfoldAdminFileFieldWidget
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline
+
 from .models import (
     Category,
     CommentHistoryItem,
@@ -43,7 +42,6 @@ from .models import (
     UserIcon,
     UserNicknameHistoryItem,
 )
-
 
 admin.site.unregister(EmailAddress)
 
@@ -147,11 +145,15 @@ class CommentHistoryItemAdmin(UnfoldModelAdmin):
         link = reverse('admin:core_newcomment_change', args=[model.comment.id])
         return mark_safe(f'<a href="{link}">{escape(model.comment.__str__())}</a>')
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('comment__author')
+        
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
         return False
+    
 
 
 class NewCommentAdminForm(forms.ModelForm):
@@ -182,6 +184,12 @@ class NewCommentAdmin(UnfoldModelAdmin):
     search_help_text = 'Поиск по автору/тексту комментария'
     inlines = [CommentHistoryItemInline]
     form = NewCommentAdminForm
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related('author', 'parent', 'parent__author', 'content_type')
+        )
 
 
 @admin.register(LikeDislike)

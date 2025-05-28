@@ -9,7 +9,7 @@ from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
-    StackedPolymorphicInline
+    StackedPolymorphicInline,
 )
 from smart_selects.db_fields import ChainedForeignKey
 from unfold import admin as unfold_admin
@@ -24,7 +24,7 @@ from unfold.decorators import action, display
 from unfold.enums import ActionVariant
 from unfold.sections import TableSection
 
-from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline, UnfoldChainedSelect
+from haxball_site.admin import UnfoldChainedSelect, UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
 from .models import (
     AchievementCategory,
@@ -176,11 +176,14 @@ class PlayerAdmin(UnfoldModelAdmin):
             return ['name']
         
         return []
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('name', 'team', 'player_nation')
 
 
 @admin.register(PlayerTransfer)
 class PlayerTransferAdmin(UnfoldModelAdmin):
-    list_display = ('trans_player', 'from_team', 'to_team', 'date_join', 'season_join', 'is_technical')
+    list_display = ('trans_player', 'display_from_team', 'display_to_team', 'date_join', 'season_join', 'is_technical')
     list_filter = (
         ('trans_player', RelatedDropdownFilter),
         ('from_team', RelatedDropdownFilter),
@@ -198,11 +201,50 @@ class PlayerTransferAdmin(UnfoldModelAdmin):
         '-date_join',
         '-id',
     )
+    
+    @display(description='Из команды', header=True)
+    def display_from_team(self, model):
+        if not model.from_team:
+            return ['Свободный агент']
+        
+        return [
+            model.from_team,
+            None,
+            None,
+            {
+                'path': model.from_team.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            }
+        ]
+        
+    @display(description='В команду', header=True)
+    def display_to_team(self, model):
+        if not model.to_team:
+            return ['Свободный агент']
+        
+        return [
+            model.to_team,
+            None,
+            None,
+            {
+                'path': model.to_team.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            }
+        ]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'from_team' or db_field.name == 'to_team':
             kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('trans_player', 'from_team', 'to_team', 'season_join')
 
 
 class PlayerInline(UnfoldTabularInline):
@@ -319,6 +361,13 @@ class DisqualificationAdmin(UnfoldModelAdmin):
             else:
                 TourNumber.objects.filter(league__championship__is_active=True).order_by('number')
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour', 'team', 'player')
+            .prefetch_related('tours__league', 'tours__stage', 'lifted_tours__league', 'lifted_tours__stage')
+        )
 
 
 class AlwaysChangedModelForm(forms.ModelForm):
@@ -411,6 +460,16 @@ class PostponementAdmin(UnfoldModelAdmin):
         if db_field.name == 'teams':
             kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct()
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'match', 'match__team_home', 'match__team_guest', 'match__numb_tour',
+                'taken_by', 'cancelled_by',
+            )
+            .prefetch_related('teams')
+        )
 
 
 class TournamentStageInline(StackedPolymorphicInline, UnfoldStackedInline):
@@ -825,42 +884,93 @@ class MatchAdmin(UnfoldModelAdmin):
 
         if db_field.name == 'team_home_start':
             # Игроки команды хозяев
-            t = Team.objects.filter(home_matches=resolved.kwargs.get('object_id')).first()
-            kwargs['queryset'] = Player.objects.filter(team=t)
+            team = Team.objects.filter(home_matches=resolved.kwargs.get('object_id')).first()
+            kwargs['queryset'] = Player.objects.filter(team=team)
         if db_field.name == 'team_guest_start':
             # Игроки команды гостей
-            t = Team.objects.filter(guest_matches=resolved.kwargs.get('object_id')).first()
-            kwargs['queryset'] = Player.objects.filter(team=t)
+            team = Team.objects.filter(guest_matches=resolved.kwargs.get('object_id')).first()
+            kwargs['queryset'] = Player.objects.filter(team=team)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'team_home', 'team_guest', 'numb_tour', 'league', 'league__championship',
+                'stage', 'group', 'result', 'inspector'
+            )
+        )
 
 
 @admin.register(Goal)
 class GoalAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'author', 'assistent', 'id')
+    list_display = ('match', 'author', 'assistent',)
+    ordering = ('-id',)
     raw_id_fields = ('match',)
+    list_filter = (('author', RelatedDropdownFilter), ('assistent', RelatedDropdownFilter))
+    list_filter_submit = True
+    list_filter_sheet = False
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'author', 'assistent',
+                'match__team_home', 'match__team_guest', 'match__numb_tour'
+            )
+        )
 
 
 @admin.register(Substitution)
 class SubstitutionAdmin(UnfoldModelAdmin):
     list_display = ('match', 'team', 'player_out', 'player_in')
+    ordering = ('-id',)
     raw_id_fields = ('match',)
+    list_filter = (
+        ('team', RelatedDropdownFilter),
+        ('player_out', RelatedDropdownFilter),
+        ('player_in', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    list_filter_sheet = False
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'team', 'player_out', 'player_in',
+                'match__team_home', 'match__team_guest', 'match__numb_tour'
+            )
+        )
 
 
 @admin.register(OtherEvents)
 class OtherEventsAdmin(UnfoldModelAdmin):
     list_display = (
+        'id',
         'event',
         'match',
         'author',
         'team',
     )
+    ordering = ('-id',)
+    raw_id_fields = ('match',)
     list_filter = (
         ('event', MultipleChoicesDropdownFilter),
+        ('team', RelatedDropdownFilter),
         ('author', RelatedDropdownFilter),
-        ('team', RelatedDropdownFilter)
     )
     list_filter_submit = True
-    raw_id_fields = ('match',)
+    list_filter_sheet = False
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related(
+                'team', 'author',
+                'match__team_home', 'match__team_guest', 'match__numb_tour'
+            )
+        )
     
     
 class MatchInline(unfold_admin.StackedInline):
@@ -941,10 +1051,18 @@ class TourAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     
     inlines = [MatchInline]
+    list_sections = [MatchesTableSection]
 
     @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
         return model.is_actual
+    
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .select_related('league__championship', 'stage__league')
+            .prefetch_related('tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result')
+        )
 
 
 @admin.register(SeasonTeamRating)
