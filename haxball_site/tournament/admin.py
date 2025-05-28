@@ -41,12 +41,14 @@ from .models import (
     OtherEvents,
     Player,
     PlayerMatchStatistics,
+    PlayerRating,
+    PlayerRatingVersion,
     PlayerTransfer,
     PlayoffBracketSlotStub,
     PlayOffStage,
     Postponement,
     PostponementSlots,
-    RatingVersion,
+    TeamRatingVersion,
     RegularStage,
     Season,
     SeasonTeamRating,
@@ -1072,8 +1074,8 @@ class SeasonTeamRatingAdmin(UnfoldModelAdmin):
     list_filter_submit = True
 
 
-@admin.register(RatingVersion)
-class RatingVersionAdmin(UnfoldModelAdmin):
+@admin.register(TeamRatingVersion)
+class TeamRatingVersionAdmin(UnfoldModelAdmin):
     list_display = ('number', 'date', 'related_season')
 
 
@@ -1089,3 +1091,20 @@ class PlayerMatchStatisticsAdmin(UnfoldModelAdmin):
     list_display = ('player', 'match', 'team', 'league')
     list_filter = (('player', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
     list_filter_submit = True
+
+
+@admin.register(PlayerRatingVersion)
+class PlayerRatingVersionAdmin(UnfoldModelAdmin):
+    list_display = ('number', 'date')
+
+
+@admin.register(PlayerRating)
+class PlayerRatingAdmin(UnfoldModelAdmin):
+    list_display = ('player', 'rating_points', 'grade', 'version')
+    list_filter = (
+        ('version', RelatedDropdownFilter),
+        ('player', RelatedDropdownFilter),
+        ('grade', ChoicesCheckboxFilter)
+    )
+    list_filter_submit = True
+    list_filter_sheet = False

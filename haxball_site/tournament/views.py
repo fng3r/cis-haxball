@@ -31,12 +31,12 @@ from .models import (
     Player,
     PlayerTransfer,
     Postponement,
-    RatingVersion,
     Season,
     SeasonTeamRating,
     Substitution,
     Team,
     TeamRating,
+    TeamRatingVersion,
 )
 from .services.hall_of_fame import HallOfFameService
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
@@ -870,7 +870,7 @@ def teams_hall_of_fame(request):
 
 class TeamRatingFilter(FilterSet):
     version = ModelChoiceFilter(
-        queryset=RatingVersion.objects.select_related('related_season').all(), label='Версия', empty_label=None
+        queryset=TeamRatingVersion.objects.select_related('related_season').all(), label='Версия', empty_label=None
     )
 
     class Meta:
@@ -881,14 +881,14 @@ class TeamRatingFilter(FilterSet):
 class TeamRatingView(ListView):
     queryset = TeamRating.objects.select_related('team').all()
     template_name = 'tournament/team_rating.html'
-    latest_rating_version = RatingVersion.objects.order_by('-number').first()
+    latest_rating_version = TeamRatingVersion.objects.order_by('-number').first()
 
     def get(self, request,  **kwargs):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = TeamRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
         source_season = (
-            RatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
+            TeamRatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
         )
         previous_seasons = Season.objects.filter(
             number__gt=5, number__lt=source_season.number, title__contains='ЧР'
