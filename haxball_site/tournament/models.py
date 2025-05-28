@@ -1126,7 +1126,7 @@ class PlayerTransfer(models.Model):
         blank=True,
         null=True,
     )
-    date_join = models.DateField(default=None)
+    date_join = models.DateField(verbose_name='Дата трансфера', default=None)
     season_join = models.ForeignKey(
         Season, on_delete=models.CASCADE, verbose_name='В каком сезоне', related_name='transfers'
     )
