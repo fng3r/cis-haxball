@@ -106,6 +106,7 @@ class Team(models.Model):
         related_name='+'
     )
     office_link = models.URLField('Офис', blank=True)
+    roster_slots = models.PositiveSmallIntegerField('Количество слотов', null=False, default=9)
     rating = models.SmallIntegerField('Рейтинг команды', blank=True, null=True)
 
     def get_absolute_url(self):

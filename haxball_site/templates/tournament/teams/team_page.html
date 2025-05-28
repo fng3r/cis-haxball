@@ -72,7 +72,13 @@
               <div class="tw:tab-content tw:pt-2">
                 <div id="current-players-panel" role="tabpanel" aria-labelledby="current-players-tab">
                   {% with team_squad=team|current_squad_stats %}
-                    {% include 'tournament/teams/partials/team_squad_stats.html' %}
+                    {% with players_count=team_squad|length %}
+                      {% if players_count > 0 %}
+                        <span class="tw:ml-2 tw:font-semibold">Лимит игроков: {{ players_count }}/{{ team.roster_slots }}</span>
+                      {% endif %}
+
+                      {% include 'tournament/teams/partials/team_squad_stats.html' %}
+                    {% endwith %}
                   {% endwith %}
                 </div>
               </div>
