@@ -522,10 +522,9 @@ class TourNumber(models.Model):
 
     def __str__(self):
         bracket_postfix = ''
-        if (self.stage and
-                self.stage.is_playoff and
-                self.stage.playoff_type == PlayOffStage.PlayOffType.DE and
-                self.bracket is not None):
+        if (type(self.stage) is PlayOffStage and
+            self.stage.playoff_type == PlayOffStage.PlayOffType.DE and
+            self.bracket is not None):
             bracket_postfix = f', {self.get_bracket_display()}'
 
         if self.league.is_multistage_league():
