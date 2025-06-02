@@ -319,3 +319,8 @@ def show_last_transfers():
     )
 
     return {'transfers': last_transfers}
+
+
+@register.filter
+def can_view_player_rating(user: User):
+    return user.has_perm('tournament.view_playerrating')

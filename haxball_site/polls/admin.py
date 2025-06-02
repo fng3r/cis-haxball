@@ -8,7 +8,7 @@ from .models import Choice, Question
 class ChoiceInline(UnfoldStackedInline):
     model = Choice
     extra = 1
-    filter_horizontal = ('votes',)
+    autocomplete_fields = ('votes',)
 
 
 @admin.register(Question)

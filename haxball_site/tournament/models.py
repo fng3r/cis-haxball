@@ -522,10 +522,9 @@ class TourNumber(models.Model):
 
     def __str__(self):
         bracket_postfix = ''
-        if (self.stage and
-                self.stage.is_playoff and
-                self.stage.playoff_type == PlayOffStage.PlayOffType.DE and
-                self.bracket is not None):
+        if (type(self.stage) is PlayOffStage and
+            self.stage.playoff_type == PlayOffStage.PlayOffType.DE and
+            self.bracket is not None):
             bracket_postfix = f', {self.get_bracket_display()}'
 
         if self.league.is_multistage_league():
@@ -1301,18 +1300,6 @@ class TeamAchievement(models.Model):
         verbose_name_plural = 'Медали (командные)'
 
 
-class TeamRatingLeagueWeight(models.Model):
-    league = models.OneToOneField(League, verbose_name='Турнир', on_delete=models.CASCADE)
-    weight = models.FloatField(verbose_name='Вес турнира')
-
-    def __str__(self):
-        return f'{self.league} ({self.weight})'
-
-    class Meta:
-        verbose_name = 'Коэффицент лиги в рейтинге'
-        verbose_name_plural = 'Коэффиценты лиг в рейтинге'
-
-
 class SeasonTeamRating(models.Model):
     season = models.ForeignKey(Season, verbose_name='Сезон', on_delete=models.CASCADE)
     team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.CASCADE)
@@ -1327,27 +1314,64 @@ class SeasonTeamRating(models.Model):
         verbose_name_plural = 'Сезонный рейтинг команд'
 
 
-class RatingVersion(models.Model):
+class TeamRatingVersion(models.Model):
     number = models.PositiveSmallIntegerField(verbose_name='Версия', primary_key=True)
     date = models.DateField(verbose_name='Дата')
     related_season = models.OneToOneField(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
 
     def __str__(self):
-        return 'Рейтинг на {} ({})'.format(self.date.strftime('%d.%m.%y'), self.related_season.short_title)
+        return f'Рейтинг на {self.date.strftime('%d.%m.%y')} ({self.related_season.short_title})'
 
     class Meta:
         ordering = ['-number']
-        verbose_name = 'Версия рейтинга'
-        verbose_name_plural = 'Версии рейтинга'
+        verbose_name = 'Версия рейтинга команд'
+        verbose_name_plural = 'Версии рейтинга команд'
 
 
 class TeamRating(models.Model):
-    version = models.ForeignKey(RatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
+    version = models.ForeignKey(TeamRatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
     team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.CASCADE)
     rank = models.PositiveSmallIntegerField(verbose_name='Место в рейтинге')
     total_points = models.FloatField(verbose_name='Общее количество очков')
 
     class Meta:
         ordering = ['-version__number', 'rank']
-        verbose_name = 'Командный рейтинг'
-        verbose_name_plural = 'Командный рейтинг'
+        verbose_name = 'Рейтинг команды'
+        verbose_name_plural = 'Рейтинг команд'
+
+
+class PlayerRatingVersion(models.Model):
+    number = models.PositiveSmallIntegerField(verbose_name='Версия', primary_key=True)
+    date = models.DateField(verbose_name='Дата')
+
+    def __str__(self):
+        return f'Рейтинг на {self.date.strftime('%d.%m.%y')}'
+
+    class Meta:
+        ordering = ['-number']
+        verbose_name = 'Версия рейтинга игроков'
+        verbose_name_plural = 'Версии рейтинга игроков'
+        
+        
+class PlayerRating(models.Model):
+    class Grade(models.TextChoices):
+        S      = 'S', 'S'
+        A      = 'A', 'A'
+        B_PLUS = 'B+', 'B+'
+        B      = 'B', 'B'
+        C      = 'C', 'C'
+        D      = 'D', 'D'
+        E      = 'E', 'E'
+        
+    version = models.ForeignKey(PlayerRatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE)
+    rating_points = models.PositiveSmallIntegerField()
+    grade = models.CharField(verbose_name='Грейд', max_length=2, choices=Grade.choices)
+    
+    def __str__(self):
+        return f'{self.player.nickname} ({self.grade}: {self.rating_points})'
+    
+    class Meta:
+        ordering = ['-version__number', '-rating_points']
+        verbose_name = 'Рейтинг игрока'
+        verbose_name_plural = 'Рейтинг игроков'

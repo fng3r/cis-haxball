@@ -12,3 +12,13 @@ def media(path):
 def batch(iterable, batch_size):
     lst = list(iterable)
     return [lst[i:i + batch_size] for i in range(0, len(lst), batch_size)]
+
+
+@register.filter
+def get(d: dict, key):
+    return d[key]
+
+
+@register.filter
+def get_or_default(d: dict, key, default=None):
+    return d.get(key, default)

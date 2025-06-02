@@ -6,7 +6,7 @@ from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, Subquery, Window
+from django.db.models import Count, Exists, F, Max, OuterRef, Prefetch, Q, Subquery, Window
 from django.db.models.functions import Coalesce, Rank
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -29,14 +29,16 @@ from .models import (
     Nation,
     OtherEvents,
     Player,
+    PlayerRating,
+    PlayerRatingVersion,
     PlayerTransfer,
     Postponement,
-    RatingVersion,
     Season,
     SeasonTeamRating,
     Substitution,
     Team,
     TeamRating,
+    TeamRatingVersion,
 )
 from .services.hall_of_fame import HallOfFameService
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
@@ -314,7 +316,6 @@ class EditTeamView(DetailView, View):
         return redirect(team.get_absolute_url())
         
 
-
 class TeamDetail(DetailView):
     model = Team
     context_object_name = 'team'
@@ -325,6 +326,17 @@ class TeamDetail(DetailView):
         team = context['team']
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
+        
+        latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
+        rating = (
+            PlayerRating.objects
+            .filter(player__in=team.players_in_team.all(), version__number=latest_rating_version)
+            .select_related('player')
+        )
+        current_squad_rating = {}
+        for rating_entry in rating:
+            current_squad_rating[rating_entry.player] = rating_entry
+        context['current_squad_rating'] = current_squad_rating
         
         return context
 
@@ -870,7 +882,7 @@ def teams_hall_of_fame(request):
 
 class TeamRatingFilter(FilterSet):
     version = ModelChoiceFilter(
-        queryset=RatingVersion.objects.select_related('related_season').all(), label='Версия', empty_label=None
+        queryset=TeamRatingVersion.objects.select_related('related_season').all(), label='Версия', empty_label=None
     )
 
     class Meta:
@@ -881,14 +893,14 @@ class TeamRatingFilter(FilterSet):
 class TeamRatingView(ListView):
     queryset = TeamRating.objects.select_related('team').all()
     template_name = 'tournament/team_rating.html'
-    latest_rating_version = RatingVersion.objects.order_by('-number').first()
+    latest_rating_version = TeamRatingVersion.objects.order_by('-number').first()
 
     def get(self, request,  **kwargs):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = TeamRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
         source_season = (
-            RatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
+            TeamRatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
         )
         previous_seasons = Season.objects.filter(
             number__gt=5, number__lt=source_season.number, title__contains='ЧР'
