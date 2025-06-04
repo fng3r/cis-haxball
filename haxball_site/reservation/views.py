@@ -111,7 +111,7 @@ class ReservationList(ListView):
             messages.error(
                 request,
                 'Одна из команд уже имеет активную бронь в промежуток '
-                + f'с {prev_match_date.strftime('%H:%M')} по {next_match_date.strftime('%H:%M')}',
+                + f'с {prev_match_date.strftime("%H:%M")} по {next_match_date.strftime("%H:%M")}',
             )
         else:
             ReservationEntry.objects.create(

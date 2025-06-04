@@ -53,7 +53,7 @@ class ReservationEntry(models.Model):
     def __str__(self):
         return (
             f'Бронь для матча {self.match.team_home.short_title} - {self.match.team_guest.short_title}'
-            + f'на {self.time_date.strftime('%d.%m.%y %H:%M')}'
+            + f'на {self.time_date.strftime("%d.%m.%y %H:%M")}'
         )
 
     class Meta:

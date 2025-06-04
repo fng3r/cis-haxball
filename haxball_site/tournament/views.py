@@ -749,7 +749,7 @@ def cancel_postponement(request, pk):
     else:
         messages.error(request, 'Ошибка доступа')
 
-    return redirect(reverse('tournament:postponements') + f'?tournament={data.get('tournament')}')
+    return redirect(reverse('tournament:postponements') + f'?tournament={data.get("tournament")}')
 
 
 class HallOfFamePlayerFilter(FilterSet):

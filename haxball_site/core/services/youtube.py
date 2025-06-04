@@ -18,7 +18,7 @@ def cache_with_timeout(timeout_seconds):
     def decorator(func):
         @wraps(func)
         def wrapper(*args):
-            cache_key = f"{func.__name__}__{'_'.join([str(arg) for arg in args[1:]])}"
+            cache_key = f'{func.__name__}__{"_".join([str(arg) for arg in args[1:]])}'
             result = cache.get(cache_key)
 
             if result:
@@ -83,7 +83,7 @@ class YoutubeService:
                         'title': video_data['snippet']['title'],
                         'thumbnail_url': thumbnail,
                         'channelTitle': video_data['snippet']['channelTitle'],
-                        'url': f"https://www.youtube.com/watch?v={video_data['id']}",
+                        'url': f'https://www.youtube.com/watch?v={video_data["id"]}',
                         'actual_start_time': datetime.fromisoformat(start_time.replace('Z', '+00:00')),
                     }
                     if is_live:
@@ -156,14 +156,14 @@ class YoutubeService:
                                 'title': snippet['title'],
                                 'thumbnail_url': thumbnail_url,
                                 'channel_title': snippet['channelTitle'],
-                                'url': f"https://www.youtube.com/watch?v={video_data['id']}",
+                                'url': f'https://www.youtube.com/watch?v={video_data["id"]}',
                                 'published_at': published_at,
                                 'duration': duration,
                                 'view_count': video_data.get('statistics', {}).get('viewCount'),
                             }
                         )
                     except Exception as e:
-                        logger.error(f"Error processing video {video_data.get('id')}: {str(e)}")
+                        logger.error(f'Error processing video {video_data.get("id")}: {str(e)}')
                         continue
 
             return results
