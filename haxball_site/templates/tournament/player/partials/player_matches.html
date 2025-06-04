@@ -42,16 +42,14 @@
                           {% if stage.is_double_elimination %}
                             <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
                                  title="{{ match.numb_tour.get_bracket_display }}"
-                                 width="28"
-                                 class="tw:mr-1">
+                                 class="tw:mr-1 tw:size-6.5 tw:aspect-square">
                           {% endif %}
-                          <span>
-                            {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
-                              {% with tours_count=tours_by_bracket|length %}
-                                <span class="tw:font-semibold">{{ match.numb_tour|round_name:tours_count }}</span>
-                              {% endwith %}
+
+                          {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
+                            {% with tours_count=tours_by_bracket|length %}
+                              <span class="tw:font-semibold">{{ match.numb_tour|round_name:tours_count }}</span>
                             {% endwith %}
-                          </span>
+                          {% endwith %}
                         {% else %}
                           <span class="tw:font-semibold">{{ match.numb_tour|tour_name }}</span>
                         {% endif %}
@@ -66,11 +64,9 @@
                     </td>
                     <td class="tw:text-center" style="width: 10%;">
                       {% if not match.is_played %}
-                        <a href="{{ match.get_absolute_url }}"><span class="tw:link tw:link-hover tw:link-primary tw:text-base tw:font-semibold">vs</span>
-                        </a>
+                        <a href="{{ match.get_absolute_url }}"><span class="tw:link tw:link-hover tw:link-primary tw:text-base tw:font-semibold">vs</span></a>
                       {% else %}
-                        <a href="{{ match.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:text-base tw:font-semibold">{{ match.score_home }}
-                          : {{ match.score_guest }}</a>
+                        <a href="{{ match.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:text-base tw:font-semibold">{{ match.score_home }} : {{ match.score_guest }}</a>
                       {% endif %}
                     </td>
                     <td style="width: 35%;">

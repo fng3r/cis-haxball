@@ -20,9 +20,10 @@ def get_reservatons_queryset():
         .filter(match__league__championship__is_active=True)
         .select_related(
             'match__team_home', 'match__team_guest', 'match__numb_tour',
-            'match__league', 'match__stage', 'match__numb_tour__stage', 'host',
+            'match__league', 'host',
         )
         .prefetch_related(
+            'match__stage', 'match__numb_tour__stage',
             'author__user_profile__user_icon', 'cancelled_by__user_profile__user_icon',
             'author__user_player__team__owner', 'author__user_player__team__captain', 'author__user_player__team__captain_assistant',
             'cancelled_by__user_player__team__owner', 'cancelled_by__user_player__team__captain', 'cancelled_by__user_player__team__captain_assistant',
@@ -47,8 +48,8 @@ class ReservationList(ListView):
         reservations = (
             ReservationEntry.objects
             .filter(match__is_played=False, is_cancelled=False)
-            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour',
-                            'match__stage', 'match__numb_tour__stage', 'host')
+            .select_related('match__team_home', 'match__team_guest', 'match__numb_tour', 'host')
+            .prefetch_related('match__stage', 'match__numb_tour__stage')
             .order_by('time_date')
         )
         active_hosts = ReservationHost.objects.filter(is_active=True)

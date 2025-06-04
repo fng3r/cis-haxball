@@ -456,21 +456,21 @@ def tour_name(tour: TourNumber):
 
 
 @register.filter
-def round_name(tour, all_tours):
+def round_name(tour, tours_total):
     if tour.name:
         return tour.name
 
     # since match for third place played in extra tour, ignore that tour
-    if isinstance(tour.stage, PlayOffStage) and tour.stage.has_match_for_third_place:
-        all_tours -= 1
+    if tour.stage.is_playoff and tour.stage.has_match_for_third_place:
+        tours_total -= 1
 
-    if tour.number == all_tours:
+    if tour.number == tours_total:
         return 'Финал'
-    if tour.number == all_tours - 1:
+    if tour.number == tours_total - 1:
         return '1/2 Финала'
-    if tour.number == all_tours - 2:
+    if tour.number == tours_total - 2:
         return '1/4 Финала'
-    if tour.number == all_tours - 3:
+    if tour.number == tours_total - 3:
         return '1/8 Финала'
 
     return f'{tour.number} Раунд'
@@ -745,7 +745,8 @@ def team_seasons(team):
                             Prefetch(
                                 'matches',
                                 queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                                .select_related('team_home', 'team_guest', 'numb_tour__league', 'numb_tour__stage')
+                                .select_related('team_home', 'team_guest', 'numb_tour__league')
+                                .prefetch_related('numb_tour__stage')
                                 .order_by('numb_tour'),
                                 to_attr='team_matches',
                             ),
@@ -789,7 +790,8 @@ def player_seasons(player):
                                     Exists(PlayerMatchStatistics.objects.filter(player=player, match=OuterRef('id'))),
                                     is_played=True
                                 )
-                                .select_related('team_home', 'team_guest', 'numb_tour__league', 'numb_tour__stage')
+                                .select_related('team_home', 'team_guest', 'numb_tour__league')
+                                .prefetch_related('numb_tour__stage')
                                 .annotate(player_team_id=Subquery(
                                     PlayerMatchStatistics.objects.filter(
                                         player=player,
