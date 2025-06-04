@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django.urls import resolve, reverse_lazy
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicInlineSupportMixin,
@@ -48,7 +49,6 @@ from .models import (
     PlayOffStage,
     Postponement,
     PostponementSlots,
-    TeamRatingVersion,
     RegularStage,
     Season,
     SeasonTeamRating,
@@ -57,6 +57,7 @@ from .models import (
     TeamAchievement,
     TeamPenaltyPoints,
     TeamRating,
+    TeamRatingVersion,
     TournamentStage,
     TourNumber,
 )

@@ -1,13 +1,14 @@
 import logging
 
-from core.services.youtube import YoutubeService
 from django.utils import timezone
+
 from notifications.models import Notification
 from online_users.models import OnlineUserActivity
+
+from core.services.youtube import YoutubeService
+from haxball_site import settings
 from reservation.models import ReservationEntry
 from tournament.models import Match
-
-from haxball_site import settings
 
 logger = logging.getLogger('haxball_site')
 

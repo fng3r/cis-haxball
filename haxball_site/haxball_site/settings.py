@@ -12,10 +12,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
-from decouple import config
 from django.contrib.messages import constants as messages
 from django.templatetags.static import static
 from django.urls import reverse_lazy
+
+from decouple import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 

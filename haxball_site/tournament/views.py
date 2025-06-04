@@ -1,8 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from core.forms import NewCommentForm
-from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -15,7 +13,11 @@ from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
+
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
+
+from core.forms import NewCommentForm
+from core.utils import get_comments_for_object, get_paginated_comments
 
 from .charts import StatCharts
 from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm

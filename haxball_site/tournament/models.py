@@ -1,7 +1,5 @@
 from datetime import date
 
-from colorfield.fields import ColorField
-from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -10,9 +8,13 @@ from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
+
+from colorfield.fields import ColorField
 from model_utils import FieldTracker
 from polymorphic.models import PolymorphicModel
 from smart_selects.db_fields import ChainedForeignKey
+
+from core.models import NewComment
 
 
 class TeamIsNotMatchParticipantError(Exception):
@@ -122,8 +124,9 @@ class Team(models.Model):
             .order_by('taken_at')
         )
         
+    @staticmethod
     @receiver(post_save, sender='tournament.PlayerTransfer')
-    def clean_executives_if_needed(sender, instance, created, **kwargs):  # noqa: N805
+    def clean_executives_if_needed(sender, instance, created, **kwargs):
         transfer = instance
         player = transfer.trans_player
         team = transfer.from_team
@@ -225,7 +228,7 @@ class TournamentStage(PolymorphicModel):
     
     @property
     def is_regular(self):
-        return self.type == self.StageType.REGULAR
+        return self.is_playoff and self.has_match_for_third_place
 
     @property
     def is_group_stage(self):
@@ -472,8 +475,9 @@ class Player(models.Model):
         Nation, verbose_name='Национальность', related_name='country_players', null=True, on_delete=models.SET_NULL
     )
 
+    @staticmethod
     @receiver(post_save, sender=User)
-    def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
+    def create_comment_history_item(sender, instance, created, **kwargs):
         if not created:
             player = Player.objects.filter(name=instance).first()
             if not player:
@@ -762,8 +766,9 @@ class MatchResult(models.Model):
             self.winner = None
         super(MatchResult, self).save(*args, **kwargs)
 
+    @staticmethod
     @receiver(post_save, sender=Match)
-    def create_or_update_result(sender, instance, created, **kwargs):  # noqa: N805
+    def create_or_update_result(sender, instance, created, **kwargs):
         if not instance.is_played:
             return
 
@@ -904,20 +909,22 @@ class PlayerMatchStatistics(models.Model):
         on_delete=models.CASCADE
     )
     league = models.ForeignKey(League, verbose_name='Турнир', null=False, blank=False, on_delete=models.CASCADE)
-    
-    
+
+    @staticmethod   
     @receiver(m2m_changed, sender=Match.team_home_start.through)
-    def match_team_home_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+    def match_team_home_start_changed(sender, instance, action, **kwargs):
         if action in ('post_add', 'post_remove'):
             PlayerMatchStatistics.update_match_participants(instance)
-        
+
+    @staticmethod       
     @receiver(m2m_changed, sender=Match.team_guest_start.through)
-    def match_team_guest_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+    def match_team_guest_start_changed(sender, instance, action, **kwargs):
         if action in ('post_add', 'post_remove'):
             PlayerMatchStatistics.update_match_participants(instance)
-        
+
+    @staticmethod        
     @receiver([post_save, post_delete], sender=Substitution)
-    def match_substitutions_changed(sender, instance, **kwargs):  # noqa: N805
+    def match_substitutions_changed(sender, instance, **kwargs):
         PlayerMatchStatistics.update_match_participants(instance.match)
 
     @staticmethod

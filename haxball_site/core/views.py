@@ -14,8 +14,10 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import DetailView, ListView, View
+
 from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
+
 from tournament.models import Achievements, Team
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm

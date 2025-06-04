@@ -1,5 +1,6 @@
-from colorfield.widgets import ColorWidget
 from django import forms
+
+from colorfield.widgets import ColorWidget
 
 from .models import FreeAgent, Player, Season, Team
 

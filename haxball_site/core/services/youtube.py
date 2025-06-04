@@ -1,10 +1,11 @@
+import isodate
 import logging
 from datetime import datetime
 from functools import wraps
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 
-import isodate
 from django.core.cache import cache
+
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 

@@ -6,11 +6,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Page
 from django.db.models import Count, Q
 from django.utils import timezone
-from online_users.models import OnlineUserActivity
-from tournament.models import League, Player, PlayerTransfer, Team
 
-from core.services.youtube import YoutubeService
+from online_users.models import OnlineUserActivity
+
 from haxball_site import settings
+from tournament.models import League, PlayerTransfer, Team
 
 from ..models import NewComment, Post, Subscription
 

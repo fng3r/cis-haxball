@@ -1,8 +1,9 @@
 import csv
 
-from core.models import UserNicknameHistoryItem
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
+from core.models import UserNicknameHistoryItem
 
 from ...models import Player, PlayerRating, PlayerRatingVersion
 

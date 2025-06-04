@@ -1,9 +1,8 @@
-import re
 
-from core.models import NewComment, Profile
-from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from core.models import NewComment, Profile
 from tournament.models import Disqualification, Match
 
 from .notifications import (

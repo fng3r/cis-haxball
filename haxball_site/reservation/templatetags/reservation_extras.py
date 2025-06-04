@@ -4,9 +4,9 @@ from django import template
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.utils import timezone
-from tournament.models import Match, Player, Team
 
 from reservation.models import ReservationEntry, ReservationHost
+from tournament.models import Match, Player, Team
 
 register = template.Library()
 

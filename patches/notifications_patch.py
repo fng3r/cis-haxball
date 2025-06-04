@@ -4,7 +4,6 @@ This is a patch for django-notifications-hq to fix compatibility issues with new
 
 import os
 import sys
-from pathlib import Path
 
 # Get the path to the notifications package
 notifications_path = None

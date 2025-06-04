@@ -1,8 +1,8 @@
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group, User
 from django.contrib.sites.admin import SiteAdmin as BaseSiteAdmin
 from django.contrib.sites.models import Site
 from django.urls import reverse
@@ -19,8 +19,8 @@ from unfold.contrib.filters.admin import (
     AutocompleteSelectMultipleFilter,
     ChoicesCheckboxFilter,
     FieldTextFilter,
-    SingleNumericFilter,
     RelatedDropdownFilter,
+    SingleNumericFilter,
 )
 from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm

@@ -1,13 +1,14 @@
 import logging
 import re
 
-from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+
 from notifications.signals import notify
+
+from core.models import NewComment
 from tournament.models import Disqualification, Match, Team
 
-# Get a logger for this module
 logger = logging.getLogger('haxball_site')
 
 
@@ -205,8 +206,7 @@ def _parse_mentions(comment: NewComment):
     
     if not mentioned_user_ids:
         return []
-        
-    # Convert to integers and get unique user IDs
+    
     mentioned_user_ids = set(int(user_id) for user_id in mentioned_user_ids)
 
     return User.objects.filter(id__in=mentioned_user_ids).exclude(id=comment.author.id)

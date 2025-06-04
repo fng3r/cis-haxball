@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from django.db.models import Prefetch
+
 from tournament.models import Team
 
 from .models import LikeDislike, NewComment

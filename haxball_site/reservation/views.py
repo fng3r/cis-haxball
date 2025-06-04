@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
+
 from tournament.models import Match, Team
 
 from .models import Replay, ReservationEntry, ReservationHost
