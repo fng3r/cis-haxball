@@ -88,7 +88,7 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = ["I", "N", "SIM", "RET", "E501", "UP007", "UP032"]
-ignore = ["E722", "SIM108"]
+ignore = ["E722", "SIM108", "RET504"]
 
 [tool.ruff.lint.isort]
 section-order = [
