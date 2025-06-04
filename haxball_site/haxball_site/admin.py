@@ -6,19 +6,17 @@ from unfold.widgets import SELECT_CLASSES
 
 class UnfoldChainedSelect(ChainedSelect):
     template_name = 'unfold/widgets/select.html'
-    
+
     def __init__(self, *args, **kwargs):
         if 'attrs' not in kwargs:
             kwargs['attrs'] = {}
 
         attrs = kwargs['attrs']
-        attrs['class'] = ' '.join(
-            [*SELECT_CLASSES, attrs.get('class', '') if attrs else '']
-        )
-        
-        super().__init__( *args, **kwargs)
-        
-        
+        attrs['class'] = ' '.join([*SELECT_CLASSES, attrs.get('class', '') if attrs else ''])
+
+        super().__init__(*args, **kwargs)
+
+
 class ChainedForeignKeySupportMixin:
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if isinstance(db_field, ChainedForeignKey):
@@ -32,17 +30,17 @@ class ChainedForeignKeySupportMixin:
                 foreign_key_field_name=db_field.name,
                 show_all=db_field.show_all,
                 auto_choose=db_field.auto_choose,
-                sort = db_field.sort,
-                view_name=db_field.view_name
+                sort=db_field.sort,
+                view_name=db_field.view_name,
             )
             kwargs['widget'] = widget
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-        
-        
+
+
 class UnfoldModelAdmin(ChainedForeignKeySupportMixin, unfold_admin.ModelAdmin):
     pass
-    
+
 
 class UnfoldStackedInline(ChainedForeignKeySupportMixin, unfold_admin.StackedInline):
     pass

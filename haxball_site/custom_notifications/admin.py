@@ -9,6 +9,7 @@ from haxball_site.admin import UnfoldModelAdmin
 
 admin.site.unregister(Notification)
 
+
 @admin.register(Notification)
 class NotificationAdmin(UnfoldModelAdmin):
     list_display = ('recipient', 'actor', 'level', 'target', 'timestamp', 'unread')

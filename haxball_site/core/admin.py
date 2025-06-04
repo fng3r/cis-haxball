@@ -45,12 +45,14 @@ from .models import (
 
 admin.site.unregister(EmailAddress)
 
+
 @admin.register(EmailAddress)
 class EmailAddressAdmin(BaseEmailAddressAdmin, UnfoldModelAdmin):
     list_filter_sheet = False
 
 
 admin.site.unregister(Site)
+
 
 @admin.register(Site)
 class SiteAdmin(BaseSiteAdmin, UnfoldModelAdmin):
@@ -59,6 +61,7 @@ class SiteAdmin(BaseSiteAdmin, UnfoldModelAdmin):
 
 admin.site.unregister(Attachment)
 
+
 @admin.register(Attachment)
 class AttachmentAdmin(BaseAttachmentAdmin, UnfoldModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -66,8 +69,9 @@ class AttachmentAdmin(BaseAttachmentAdmin, UnfoldModelAdmin):
         form.base_fields['file'].widget = UnfoldAdminFileFieldWidget()
         return form
 
-    
+
 admin.site.unregister(OnlineUserActivity)
+
 
 @admin.register(OnlineUserActivity)
 class OnlineUserActivityAdmin(UnfoldModelAdmin):
@@ -77,17 +81,18 @@ class OnlineUserActivityAdmin(UnfoldModelAdmin):
     search_fields = ('user__username',)
     search_help_text = 'Поиск по пользователям'
     ordering = ('-last_activity',)
-    
-    
+
+
 admin.site.unregister(User)
 admin.site.unregister(Group)
+
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin, UnfoldModelAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
-    
+
     list_display = ('username', 'email', 'is_active', 'is_staff', 'is_superuser')
     list_filter_sheet = True
 
@@ -147,13 +152,12 @@ class CommentHistoryItemAdmin(UnfoldModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('comment__author')
-        
+
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
         return False
-    
 
 
 class NewCommentAdminForm(forms.ModelForm):
@@ -180,27 +184,30 @@ class NewCommentAdmin(UnfoldModelAdmin):
     list_filter = ('created', ('author', RelatedDropdownFilter))
     list_filter_submit = True
     list_fullwidth = True
-    search_fields = ('author__username', 'body',)
+    search_fields = (
+        'author__username',
+        'body',
+    )
     search_help_text = 'Поиск по автору/тексту комментария'
     inlines = [CommentHistoryItemInline]
     form = NewCommentAdminForm
-    
+
     def get_queryset(self, request):
-        return (
-            super().get_queryset(request)
-            .select_related('author', 'parent', 'parent__author', 'content_type')
-        )
+        return super().get_queryset(request).select_related('author', 'parent', 'parent__author', 'content_type')
 
 
 @admin.register(LikeDislike)
 class LikeDisLikeAdmin(UnfoldModelAdmin):
     list_display = ('id', 'display_vote', 'user', 'content_type', 'object_id', 'content_object')
-    list_filter = ('vote', ('user', RelatedDropdownFilter),)
+    list_filter = (
+        'vote',
+        ('user', RelatedDropdownFilter),
+    )
     list_filter_submit = True
     list_filter_sheet = False
     list_display_links = ('id',)
     show_facets = False
-    
+
     @display(description='Голос', label={LikeDislike.LIKE: 'success', LikeDislike.DISLIKE: 'danger'})
     def display_vote(self, model):
         return model.vote, model.get_vote_display()
@@ -222,12 +229,7 @@ class PostAdmin(UnfoldModelAdmin):
 @admin.register(Profile)
 class ProfileAdmin(UnfoldModelAdmin):
     list_display = ('id', 'name', 'slug', 'can_comment', 'can_vote', 'views', 'karma', 'background')
-    list_filter = (
-        ('id', SingleNumericFilter),
-        ('name', RelatedDropdownFilter),
-        'can_comment',
-        'can_vote'
-    )
+    list_filter = (('id', SingleNumericFilter), ('name', RelatedDropdownFilter), 'can_comment', 'can_vote')
     list_filter_submit = True
     search_fields = ('name__username',)
     search_help_text = 'Поиск по имени пользователя'
@@ -248,7 +250,7 @@ class UserIconAdmin(UnfoldModelAdmin):
     show_facets = False
     autocomplete_fields = ('user',)
     search_fields = ('title', 'description')
-    
+
     @display(description='Иконка', header=True)
     def display_icon(self, model):
         return [
@@ -261,7 +263,7 @@ class UserIconAdmin(UnfoldModelAdmin):
                 'borderless': True,
                 'width': 32,
                 'height': 32,
-            }
+            },
         ]
 
 

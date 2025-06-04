@@ -13,14 +13,12 @@ class Command(BaseCommand):
         parser.add_argument('-s', '--stage', type=str)
         parser.add_argument('-r', dest='has_return_matches', action='store_true')
 
-
     def handle(self, *args, **options):
         tournament_title = options['tournament']
         stage_type = options['stage']
         league = League.objects.get(title=tournament_title, championship__is_active=True)
         stage = league.stages.filter(type=stage_type).first()
         self.generate_results(stage)
-
 
     def generate_results(self, stage):
         for tour in stage.tours.all():

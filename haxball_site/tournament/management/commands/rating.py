@@ -7,7 +7,7 @@ from ...models import Season, SeasonTeamRating, TeamRating, TeamRatingVersion
 
 class Command(BaseCommand):
     help = 'Calculate team rating'
-    
+
     def add_arguments(self, parser):
         parser.add_argument('source_season', type=int)
 
@@ -52,9 +52,7 @@ class Command(BaseCommand):
             ordered_rating = [(k, v) for k, v in sorted(overall_rating.items(), key=lambda item: item[1], reverse=True)]
 
             rating_version = TeamRatingVersion(
-                number=version,
-                date=timezone.localdate(),
-                related_season=Season.objects.get(number=1)
+                number=version, date=timezone.localdate(), related_season=Season.objects.get(number=1)
             )
             rating_version.save()
             for rank, entry in enumerate(ordered_rating, 1):
@@ -106,7 +104,7 @@ class Command(BaseCommand):
                 return 0.75
             case 'Первая лига' | 'Кубок Первой лиги' | 'Кубок лиги':
                 return 0.5
-            case t if t.startswith('Первая лига'):    
+            case t if t.startswith('Первая лига'):
                 return 0.5
             case 'Вторая лига' | 'Кубок Второй лиги':
                 return 0.25

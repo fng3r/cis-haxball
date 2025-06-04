@@ -39,10 +39,11 @@ def reservation_form(user):
     today = timezone.localdate()
     tomorrow = today + timedelta(days=1)
     matches_to_choose = (
-        Match.objects
-        .annotate(reservations_count=Count('match_reservations', filter=Q(match_reservations__is_cancelled=False)))
+        Match.objects.annotate(
+            reservations_count=Count('match_reservations', filter=Q(match_reservations__is_cancelled=False))
+        )
         .filter(
-            (Q(team_home__in=teams) | Q(team_guest__in=teams)),
+            Q(team_home__in=teams) | Q(team_guest__in=teams),
             reservations_count=0,
             is_played=False,
             league__championship__is_active=True,
@@ -77,11 +78,13 @@ def can_cancel_reservation(user: User, reservation: ReservationEntry):
         return False
     teams = get_managed_teams(user)
     delt_time = reservation.time_date - timezone.now()
-    
+
+    # fmt: off
     return (
         (reservation.match.team_home in teams or reservation.match.team_guest in teams)
         and delt_time > timedelta(minutes=30)
     )
+    # fmt: on
 
 
 @register.filter
