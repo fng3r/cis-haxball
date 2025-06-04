@@ -18,5 +18,12 @@
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "prettier.printWidth": 120
+    },
+
+    "[python]": {
+        "editor.codeActionsOnSave": {
+          "source.fixAll": "explicit",
+          "source.organizeImports": "explicit"
+        },
     }
 }
