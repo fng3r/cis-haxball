@@ -1,0 +1,31 @@
+{
+    "tailwindCSS.experimental.configFile": "tailwind/main.css",
+
+    "djlint.formatLanguages": [
+        "django-html"
+    ],
+
+    "[django-html]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "monosans.djlint",
+        "editor.indentSize": 2,
+        "editor.tabSize": 2,
+        "editor.detectIndentation": false,
+        "djlint.enableLinting": false
+    },
+
+    "[css]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "prettier.printWidth": 120
+    },
+
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+          "source.fixAll": "explicit",
+          "source.organizeImports": "explicit"
+        },
+    }
+}

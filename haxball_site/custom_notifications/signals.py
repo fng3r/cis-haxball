@@ -1,9 +1,7 @@
-import re
-
-from core.models import NewComment, Profile
-from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from core.models import NewComment, Profile
 from tournament.models import Disqualification, Match
 
 from .notifications import (
@@ -23,13 +21,17 @@ def comment_created(sender, instance: NewComment, created, **kwargs):
     """
     if not created:
         return
-    
+
     if instance.parent and instance.parent.author != instance.author:
         notify_comment_reply(instance)
-        
-    if isinstance(instance.content_object, Profile) and instance.content_object.name != instance.author and instance.parent is None:
+
+    if (
+        isinstance(instance.content_object, Profile)
+        and instance.content_object.name != instance.author
+        and instance.parent is None
+    ):
         notify_profile_comment(instance)
-        
+
     notify_user_mention(instance)
 
 
@@ -51,5 +53,5 @@ def disqualification_created(sender, instance: Disqualification, created, **kwar
     """
     if not created:
         return
-    
+
     notify_disqualification(instance)

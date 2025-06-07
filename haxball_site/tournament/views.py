@@ -1,8 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from core.forms import NewCommentForm
-from core.utils import get_comments_for_object, get_paginated_comments
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -15,7 +13,11 @@ from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
+
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
+
+from core.forms import NewCommentForm
+from core.utils import get_comments_for_object, get_paginated_comments
 
 from .charts import StatCharts
 from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm
@@ -77,15 +79,15 @@ class CardFilter(FilterSet):
         field_name='event',
         label='Тип',
         empty_label='Все',
-        choices = (
+        choices=(
             (OtherEvents.YELLOW_CARD, 'ЖК'),
             (OtherEvents.RED_CARD, 'КК'),
-        )
+        ),
     )
     inspector = ModelChoiceFilter(
         field_name='match__inspector',
         label='Инспектор',
-        queryset=User.objects.filter(Exists(Match.objects.filter(inspector=OuterRef('pk'))))
+        queryset=User.objects.filter(Exists(Match.objects.filter(inspector=OuterRef('pk')))),
     )
 
     class Meta:
@@ -97,8 +99,12 @@ class CardsList(ListView):
     queryset = (
         OtherEvents.objects.cards()
         .select_related(
-            'team', 'author__name__user_profile', 'match__inspector__user_profile',
-            'match__team_home', 'match__team_guest', 'match__league__championship',
+            'team',
+            'author__name__user_profile',
+            'match__inspector__user_profile',
+            'match__team_home',
+            'match__team_guest',
+            'match__league__championship',
         )
         .order_by('-match__league__championship__number', '-match__match_date')
     )
@@ -113,11 +119,7 @@ class CardsList(ListView):
         cards = paginator.get_page(page)
 
         if request.htmx:
-            return render(
-                request,
-                'tournament/card/partials/cards_list.html',
-                {'cards': cards}
-            )
+            return render(request, 'tournament/card/partials/cards_list.html', {'cards': cards})
 
         return render(request, self.template_name, {'cards': cards, 'filter': filter})
 
@@ -135,7 +137,7 @@ class DisqualificationFilter(FilterSet):
         label='Инспектор',
         queryset=User.objects.filter(
             Exists(Match.objects.filter(inspector=OuterRef('pk'), league__championship__number__gt=14))
-        )
+        ),
     )
 
     class Meta:
@@ -146,8 +148,12 @@ class DisqualificationFilter(FilterSet):
 class DisqualificationsList(ListView):
     queryset = (
         Disqualification.objects.select_related(
-            'team', 'player__name__user_profile', 'match__inspector__user_profile',
-            'match__team_home', 'match__team_guest', 'match__league__championship',
+            'team',
+            'player__name__user_profile',
+            'match__inspector__user_profile',
+            'match__team_home',
+            'match__team_guest',
+            'match__league__championship',
         )
         .prefetch_related('tours__league', 'lifted_tours__league')
         .filter(match__league__championship__number__gt=14)
@@ -166,7 +172,7 @@ class DisqualificationsList(ListView):
             return render(
                 request,
                 'tournament/disqualification/partials/disqualifications_list.html',
-                {'disqualifications': disqualifications}
+                {'disqualifications': disqualifications},
             )
 
         return render(request, self.template_name, {'disqualifications': disqualifications, 'filter': filter})
@@ -212,7 +218,7 @@ class TransfersList(ListView):
             return render(
                 request,
                 'tournament/transfers/partials/transfers_list.html',
-                {'transfers': transfers}
+                {'transfers': transfers},
             )
 
         return render(request, self.template_name, {'transfers': transfers, 'filter': filter})
@@ -290,7 +296,7 @@ def update_free_agent_entry(request, pk):
 class EditTeamView(DetailView, View):
     model = Team
     context_object_name = 'team'
-    
+
     def get_template_names(self):
         if self.request.htmx:
             return 'tournament/teams/partials/edit_team_form.html'
@@ -314,30 +320,29 @@ class EditTeamView(DetailView, View):
             return HttpResponse('Ошибка доступа')
 
         return redirect(team.get_absolute_url())
-        
+
 
 class TeamDetail(DetailView):
     model = Team
     context_object_name = 'team'
     template_name = 'tournament/teams/team_page.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         team = context['team']
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
-        
+
         latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
-        rating = (
-            PlayerRating.objects
-            .filter(player__in=team.players_in_team.all(), version__number=latest_rating_version)
-            .select_related('player')
+        rating = PlayerRating.objects.select_related('player').filter(
+            player__in=team.players_in_team.all(),
+            version__number=latest_rating_version,
         )
         current_squad_rating = {}
         for rating_entry in rating:
             current_squad_rating[rating_entry.player] = rating_entry
         context['current_squad_rating'] = current_squad_rating
-        
+
         return context
 
     def get_queryset(self):
@@ -359,7 +364,6 @@ class TeamDetail(DetailView):
         return self.template_name
 
 
-
 class TeamList(ListView):
     queryset = Team.objects.all().order_by('-title')
     context_object_name = 'teams'
@@ -373,7 +377,9 @@ class LeagueDetail(DetailView):
 
     def get_queryset(self):
         return (
-            super().get_queryset().prefetch_related(
+            super()
+            .get_queryset()
+            .prefetch_related(
                 'stages',
                 'stages__tours__stubs',
                 'stages__tours__league',
@@ -432,7 +438,7 @@ class MatchDetail(DetailView):
         context['comments'] = comments
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
-        
+
         context['latest_matches'] = {
             'team_home': self.get_latest_matches(match, match.team_home),
             'team_guest': self.get_latest_matches(match, match.team_guest),
@@ -557,25 +563,26 @@ class MatchDetail(DetailView):
         context['score_guest_all'] = score_guest_all
         context['score_home_average'] = round(score_home_all / all_matches_between.count(), 2)
         context['score_guest_average'] = round(score_guest_all / all_matches_between.count(), 2)
-        
+
         return context
-    
+
     def get_latest_matches(self, match: Match, team: Team):
         match_date_condition = ~Q(pk__in=[])
         if match.is_played:
             match_date = match.match_date or match.numb_tour.date_to
-            match_date_condition = (
-                Q(match_date__lt=match_date) |
-                Q(match_date=match_date, stage__order__lte=match.stage.order, numb_tour__lt=match.numb_tour)
+            match_date_condition = Q(match_date__lt=match_date) | Q(
+                match_date=match_date,
+                stage__order__lte=match.stage.order,
+                numb_tour__lt=match.numb_tour,
             )
-            
+
         return reversed(
             Match.objects.filter(
                 Q(team_home=team) | Q(team_guest=team),
                 ~Q(id=match.id),
-                match_date_condition,  
+                match_date_condition,
                 league=match.league,
-                is_played=True
+                is_played=True,
             )
             .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
             .order_by('-match_date', '-numb_tour', '-id')[:5]
@@ -588,36 +595,41 @@ class PostponementFilter(FilterSet):
         label='Турнир',
         empty_label=None,
         queryset=(
-            League.objects
-            .annotate(stages_with_postponements=Count('stages', filter=Q(stages__postponable=True)))
+            League.objects.annotate(stages_with_postponements=Count('stages', filter=Q(stages__postponable=True)))
             .filter(championship__is_active=True, stages_with_postponements__gt=0)
             .select_related('postponement_slots')
-        )
+        ),
     )
 
     class Meta:
         model = Postponement
         fields = ['tournament']
-        
-        
+
+
 def get_postponements_queryset():
     return (
         Postponement.objects.filter(match__league__championship__is_active=True)
         .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
         .prefetch_related(
-            'teams', 'taken_by__user_profile__user_icon', 'cancelled_by__user_profile__user_icon',
-            'taken_by__user_player__team__owner', 'taken_by__user_player__team__captain', 'taken_by__user_player__team__captain_assistant',
-            'cancelled_by__user_player__team__owner', 'cancelled_by__user_player__team__captain', 'cancelled_by__user_player__team__captain_assistant',
+            'teams',
+            'taken_by__user_profile__user_icon',
+            'cancelled_by__user_profile__user_icon',
+            'taken_by__user_player__team__owner',
+            'taken_by__user_player__team__captain',
+            'taken_by__user_player__team__captain_assistant',
+            'cancelled_by__user_player__team__owner',
+            'cancelled_by__user_player__team__captain',
+            'cancelled_by__user_player__team__captain_assistant',
             Prefetch(
                 'taken_by__owned_teams',
                 queryset=Team.objects.filter(leagues__championship__is_active=True),
-                to_attr='active_owned_teams'
+                to_attr='active_owned_teams',
             ),
             Prefetch(
                 'cancelled_by__owned_teams',
                 queryset=Team.objects.filter(leagues__championship__is_active=True),
-                to_attr='active_owned_teams'
-            )
+                to_attr='active_owned_teams',
+            ),
         )
         .order_by('-taken_at')
     )
@@ -657,12 +669,12 @@ class PostponementsList(ListView):
         team = data['team']
         type = data['type']
         tournament = data.get('tournament')
-        
+
         postponements_count = match.postponements.filter(is_cancelled=False).count()
         if postponements_count >= 2:
             messages.error(request, 'Матч не может быть перенесен более 2 раз')
             return self.redirect_to_postponements_page(tournament)
-        
+
         if postponements_count > 0 and type == 'common':
             messages.error(request, 'На уже перенесенный матч может быть взят только экcтренный перенос')
             return self.redirect_to_postponements_page(tournament)
@@ -677,12 +689,13 @@ class PostponementsList(ListView):
         for team in teams:
             all_postponements = team.get_postponements(match.league)
             emergency_postponements = all_postponements.filter(is_emergency=True)
-            if (all_postponements.count() + 1 > slots.common_count + slots.emergency_count or 
-                    (is_emergency and emergency_postponements.count() + 1 > slots.emergency_count)):
+            if all_postponements.count() + 1 > slots.common_count + slots.emergency_count or (
+                is_emergency and emergency_postponements.count() + 1 > slots.emergency_count
+            ):
                 messages.error(
                     request,
                     f'Команда {team.title} исчерпала лимит переносов. Для покупки платного слота воспользуйтесь \
-                      соответствующей услугой, после чего свяжитесь с организаторами для оформления переноса.'
+                      соответствующей услугой, после чего свяжитесь с организаторами для оформления переноса.',
                 )
 
                 return self.redirect_to_postponements_page(tournament)
@@ -701,9 +714,10 @@ class PostponementsList(ListView):
         postponement.teams.set(teams)
 
         return self.redirect_to_postponements_page(tournament)
-    
+
     def redirect_to_postponements_page(self, tournament):
         return redirect(reverse('tournament:postponements') + f'?tournament={tournament}')
+
 
 class PostponementsEvents(ListView):
     def get(self, request, **kwargs):
@@ -735,7 +749,7 @@ def cancel_postponement(request, pk):
     else:
         messages.error(request, 'Ошибка доступа')
 
-    return redirect(reverse('tournament:postponements') + f'?tournament={data.get('tournament')}')
+    return redirect(reverse('tournament:postponements') + f'?tournament={data.get("tournament")}')
 
 
 class HallOfFamePlayerFilter(FilterSet):
@@ -743,56 +757,56 @@ class HallOfFamePlayerFilter(FilterSet):
     season = ModelChoiceFilter(queryset=Season.objects.filter(number__gt=5), label='Сезон', empty_label='Все')
     tournament = ChoiceFilter(
         choices=(
-            ('Высшая лига','Высшая лига'),
-            ('Единая лига','Единая лига'),
+            ('Высшая лига', 'Высшая лига'),
+            ('Единая лига', 'Единая лига'),
             ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
-            ('Первая лига','Первая лига'),
-            ('Вторая лига','Вторая лига'),
-            ('Кубок России','Кубок России'),
-            ('Лига Чемпионов','Лига Чемпионов'),
-            ('Кубок Высшей лиги','Кубок Высшей лиги'),
-            ('Кубок Первой лиги','Кубок Первой лиги'),
-            ('Кубок Второй лиги','Кубок Второй лиги'),
-            ('Кубок лиги','Кубок лиги'),
-            ('Итоговый турнир','Итоговый турнир'),
+            ('Первая лига', 'Первая лига'),
+            ('Вторая лига', 'Вторая лига'),
+            ('Кубок России', 'Кубок России'),
+            ('Лига Чемпионов', 'Лига Чемпионов'),
+            ('Кубок Высшей лиги', 'Кубок Высшей лиги'),
+            ('Кубок Первой лиги', 'Кубок Первой лиги'),
+            ('Кубок Второй лиги', 'Кубок Второй лиги'),
+            ('Кубок лиги', 'Кубок лиги'),
+            ('Итоговый турнир', 'Итоговый турнир'),
         ),
-        label = 'Турнир',
-        empty_label = 'Все'
+        label='Турнир',
+        empty_label='Все',
     )
-    
-    
+
+
 class HallOfFameTeamFilter(FilterSet):
     season = ModelChoiceFilter(queryset=Season.objects.filter(number__gt=5), label='Сезон', empty_label='Все')
     tournament = ChoiceFilter(
         choices=(
-            ('Высшая лига','Высшая лига'),
-            ('Единая лига','Единая лига'),
+            ('Высшая лига', 'Высшая лига'),
+            ('Единая лига', 'Единая лига'),
             ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
-            ('Первая лига','Первая лига'),
-            ('Вторая лига','Вторая лига'),
-            ('Кубок России','Кубок России'),
-            ('Лига Чемпионов','Лига Чемпионов'),
-            ('Кубок Высшей лиги','Кубок Высшей лиги'),
-            ('Кубок Первой лиги','Кубок Первой лиги'),
-            ('Кубок Второй лиги','Кубок Второй лиги'),
-            ('Кубок лиги','Кубок лиги'),
-            ('Итоговый турнир','Итоговый турнир'),
+            ('Первая лига', 'Первая лига'),
+            ('Вторая лига', 'Вторая лига'),
+            ('Кубок России', 'Кубок России'),
+            ('Лига Чемпионов', 'Лига Чемпионов'),
+            ('Кубок Высшей лиги', 'Кубок Высшей лиги'),
+            ('Кубок Первой лиги', 'Кубок Первой лиги'),
+            ('Кубок Второй лиги', 'Кубок Второй лиги'),
+            ('Кубок лиги', 'Кубок лиги'),
+            ('Итоговый турнир', 'Итоговый турнир'),
         ),
-        label = 'Турнир',
-        empty_label = 'Все'
+        label='Турнир',
+        empty_label='Все',
     )
 
 
 def hall_of_fame(request):
     nation_id = request.GET.get('nation', None)
     nation = Nation.objects.get(id=nation_id) if nation_id else None
-    
+
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
-    
+
     tournament_name = request.GET.get('tournament', '')
     tournaments = League.objects.filter(title__iregex=tournament_name)
-    
+
     service = HallOfFameService()
     players = service.get_players_tops(seasons, tournaments, nation)
     teams = service.get_teams_tops(seasons, tournaments)
@@ -805,49 +819,49 @@ def hall_of_fame(request):
             'players_filter': HallOfFamePlayerFilter(request.GET, queryset=Player.objects.none()),
             'teams_tops': teams,
             'teams_filter': HallOfFameTeamFilter(request.GET, queryset=Team.objects.none()),
-        }
+        },
     )
-    
-    
+
+
 def players_hall_of_fame(request):
     nation_id = request.GET.get('nation', None)
     nation = Nation.objects.get(id=nation_id) if nation_id else None
-    
+
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
-    
+
     tournament_name = request.GET.get('tournament', '')
     tournaments = League.objects.filter(title__iregex=tournament_name)
-    
+
     service = HallOfFameService()
     players = service.get_players_tops(seasons, tournaments, nation)
-    
+
     return render(
         request,
         'tournament/hall_of_fame/partials/players_hall_of_fame.html',
         {
             'players_tops': players,
             'players_filter': HallOfFamePlayerFilter(request.GET, queryset=Player.objects.none()),
-        }
+        },
     )
-    
-    
+
+
 def players_top_by_stat(request):
     nation_id = request.GET.get('nation', None)
     nation = Nation.objects.get(id=nation_id) if nation_id else None
-    
+
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
-    
+
     tournament_name = request.GET.get('tournament', '')
     tournaments = League.objects.filter(title__iregex=tournament_name)
-    
+
     stat = request.GET.get('stat')
     page = request.GET.get('page')
-    
+
     service = HallOfFameService()
     players = service.get_players_top_by_stat(seasons, tournaments, nation, stat, page)
-    
+
     return render(
         request,
         'tournament/hall_of_fame/partials/players_top.html#players_top_list',
@@ -855,29 +869,28 @@ def players_top_by_stat(request):
             'players': players,
             'stat': stat,
             'players_filter': HallOfFamePlayerFilter(request.GET, queryset=Player.objects.none()),
-        }
+        },
     )
-    
-    
+
+
 def teams_hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
-    
+
     tournament_name = request.GET.get('tournament', '')
     tournaments = League.objects.filter(title__iregex=tournament_name)
-    
+
     service = HallOfFameService()
     teams = service.get_teams_tops(seasons, tournaments)
-    
+
     return render(
         request,
         'tournament/hall_of_fame/partials/teams_hall_of_fame.html',
         {
             'teams_tops': teams,
             'teams_filter': HallOfFameTeamFilter(request.GET, queryset=Team.objects.none()),
-        }
+        },
     )
-
 
 
 class TeamRatingFilter(FilterSet):
@@ -895,7 +908,7 @@ class TeamRatingView(ListView):
     template_name = 'tournament/team_rating.html'
     latest_rating_version = TeamRatingVersion.objects.order_by('-number').first()
 
-    def get(self, request,  **kwargs):
+    def get(self, request, **kwargs):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = TeamRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
@@ -933,14 +946,14 @@ class TeamRatingView(ListView):
     @staticmethod
     def get_seasons_weights(source_season, earliest_season=None):
         weights = [1, 1, 1, 0.9, 0.8, 0.7]
-        season_weights = {}            
+        season_weights = {}
         earliest_season = earliest_season or source_season
         seasons = (
             Season.objects.select_related('bound_season')
             .filter(number__gte=earliest_season.number, number__lte=source_season.number)
             .order_by('-number')
         )
-        season_count = 0    
+        season_count = 0
         for season in seasons:
             if season.title.startswith('ЧР'):
                 season_weights[season] = weights[season_count]
@@ -1234,7 +1247,7 @@ def player_detailed_statistics(request, pk):
     most_cs_in_season = (
         Season.objects.annotate(cs=Subquery(cs_subquery)).filter(cs__isnull=False).order_by('-cs').first()
     )
-    
+
     other_stats = {
         'first_match': first_match,
         'fastest_goal': fastest_goal,
@@ -1247,7 +1260,7 @@ def player_detailed_statistics(request, pk):
         'most_goals_assists_in_season': most_goals_assists_in_season,
         'most_cs_in_season': most_cs_in_season,
     }
-    
+
     ranks = get_player_ranks(player)
 
     context = {
@@ -1265,41 +1278,31 @@ def player_detailed_statistics(request, pk):
 
 
 def get_player_ranks(player):
-    matches_top = (
-        Player.objects
-        .annotate(count=Count('played_matches'), rank=Window(expression=Rank(), order_by=('-count',)))
-        .filter(count__gt=0)
-    )
+    matches_top = Player.objects.annotate(
+        count=Count('played_matches'), rank=Window(expression=Rank(), order_by=('-count',))
+    ).filter(count__gt=0)
     matches_rank = next(filter(lambda p: p.id == player.id, matches_top), None)
     matches_top_count = matches_top.count()
 
-    goals_top = (
-        Player.objects
-        .annotate(count=Count('goals'), rank=Window(expression=Rank(), order_by=('-count',)))
-        .filter(count__gt=0)
-    )
+    goals_top = Player.objects.annotate(
+        count=Count('goals'), rank=Window(expression=Rank(), order_by=('-count',))
+    ).filter(count__gt=0)
     goals_rank = next(filter(lambda p: p.id == player.id, goals_top), None)
     goals_top_count = goals_top.count()
-    
-    assists_top = (
-        Player.objects
-        .annotate(count=Count('assists'), rank=Window(expression=Rank(), order_by=('-count',)))
-        .filter(count__gt=0)
-    )
+
+    assists_top = Player.objects.annotate(
+        count=Count('assists'), rank=Window(expression=Rank(), order_by=('-count',))
+    ).filter(count__gt=0)
     assists_rank = next(filter(lambda p: p.id == player.id, assists_top), None)
     assists_top_count = assists_top.count()
-    
-    cs_top = (
-        Player.objects
-        .annotate(
-            count=Count('event', filter=Q(event__event=OtherEvents.CLEAN_SHEET)),
-            rank=Window(expression=Rank(), order_by=('-count',))
-        )
-        .filter(count__gt=0)
-    )
+
+    cs_top = Player.objects.annotate(
+        count=Count('event', filter=Q(event__event=OtherEvents.CLEAN_SHEET)),
+        rank=Window(expression=Rank(), order_by=('-count',)),
+    ).filter(count__gt=0)
     cs_rank = next(filter(lambda p: p.id == player.id, cs_top), None)
     cs_top_count = cs_top.count()
-    
+
     return {
         'matches': {'rank': matches_rank.rank if matches_rank else None, 'total': matches_top_count},
         'goals': {'rank': goals_rank.rank if goals_rank else None, 'total': goals_top_count},
@@ -1599,11 +1602,10 @@ def team_statistics(request, pk):
     # to eliminate duplicates while calculating total matches count per player
     all_team_players = set((player_matches['player'] for player_matches in all_team_matches))
     dup_matches_subqery = (
-        Match.objects
-        .filter(
+        Match.objects.filter(
             Q(team_home_start=OuterRef('id')) | Q(team_guest_start=OuterRef('id')),
             match_substitutions__player_in=OuterRef('id'),
-            is_played=True
+            is_played=True,
         )
         .order_by()
         .values('match_substitutions__player_in')
@@ -1683,7 +1685,7 @@ def team_squad_statistics(request, pk):
     season_number = request.GET.get('season', None)
     season = Season.objects.get(number=season_number) if season_number else None
     stats = get_team_squad_stats(team, season=season)
-    
+
     return render(request, 'tournament/teams/partials/team_squad_stats.html', {'team': team, 'team_squad': stats})
 
 
@@ -1705,14 +1707,14 @@ def team_statistics_charts(request, pk):
 
     return render(request, 'tournament/partials/team_stats_charts.html', context)
 
-    
+
 class ComparePlayersView(View):
     def get_template_names(self) -> list[str]:
         if self.request.htmx:
             return ['tournament/compare_players.html#players-comparison']
-        
+
         return ['tournament/compare_players.html']
-    
+
     def get(self, request):
         form = ComparePlayersForm(request.GET)
         if not form.is_valid():
@@ -1727,44 +1729,40 @@ class ComparePlayersView(View):
                     'player2': {'player': player2},
                 },
             )
-        
+
         player1 = form.cleaned_data['player1']
         player2 = form.cleaned_data['player2']
         season = form.cleaned_data['season']
         tournament = form.cleaned_data['tournament']
         matches_selection = form.cleaned_data['matches_selection']
-        
+
         player1_matches, player2_matches = self.get_selected_matches(
             player1, player2, season, tournament, matches_selection
         )
         player1_stats = self.get_player_stats(player1, player1_matches)
         player2_stats = self.get_player_stats(player2, player2_matches)
-    
+
         return render(
             request,
-            self.get_template_names(), 
+            self.get_template_names(),
             {
                 'compare_form': form,
                 'player1': {'player': player1, 'stats': player1_stats},
                 'player2': {'player': player2, 'stats': player2_stats},
-            }
+            },
         )
-        
+
     def get_selected_matches(self, player1, player2, season, tournament, matches_selection):
         season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
         tournament_condition = Q(league__title__iregex=tournament)
-        
-        player1_matches = (
-            player1.played_matches
-            .filter(season_condition, tournament_condition, match__is_played=True)
-            .select_related('team', 'match')
-        )
-        player2_matches = (
-            player2.played_matches
-            .filter(season_condition, tournament_condition, match__is_played=True)
-            .select_related('team', 'match')
-        )
-        
+
+        player1_matches = player1.played_matches.filter(
+            season_condition, tournament_condition, match__is_played=True
+        ).select_related('team', 'match')
+        player2_matches = player2.played_matches.filter(
+            season_condition, tournament_condition, match__is_played=True
+        ).select_related('team', 'match')
+
         selected_matches = None
         if matches_selection == ComparePlayersForm.MatchesSelection.SAME_TEAM:
             player1_matches_in_team = set((x.match.id, x.team.id) for x in player1_matches)
@@ -1772,16 +1770,18 @@ class ComparePlayersView(View):
             selected_matches = [x[0] for x in player1_matches_in_team.intersection(player2_matches_in_team)]
         elif matches_selection == ComparePlayersForm.MatchesSelection.HEAD_TO_HEAD:
             selected_matches = [
-                pm1.match.id for pm1 in player1_matches for pm2 in player2_matches
+                pm1.match.id
+                for pm1 in player1_matches
+                for pm2 in player2_matches
                 if pm1.match == pm2.match and pm1.team != pm2.team
             ]
-            
+
         if selected_matches is not None:
             return selected_matches, selected_matches
-        
+
         return (
             player1_matches.values_list('match__id', flat=True),
-            player2_matches.values_list('match__id', flat=True)
+            player2_matches.values_list('match__id', flat=True),
         )
 
     def get_player_stats(self, player: Player, selected_matches) -> dict:
@@ -1796,7 +1796,7 @@ class ComparePlayersView(View):
         goals_assists_per_match = round(float(goals_assists) / matches, 2) if matches else 0
         cs = player.event.cs().filter(match__in=selected_matches).count()
         cs_per_match = round(float(cs) / matches, 2) if matches else 0
-        
+
         return {
             'matches': matches,
             'wins': wins,
@@ -1811,16 +1811,16 @@ class ComparePlayersView(View):
             'cs_per_match': cs_per_match,
             'yellow_cards': player.event.yellow_cards().filter(match__in=selected_matches).count(),
             'red_cards': player.event.red_cards().filter(match__in=selected_matches).count(),
-    }
+        }
 
 
 class CompareTeamsView(View):
     def get_template_names(self) -> list[str]:
         if self.request.htmx:
             return ['tournament/compare_teams.html#teams-comparison']
-        
+
         return ['tournament/compare_teams.html']
-    
+
     def get(self, request):
         form = CompareTeamsForm(request.GET)
         if not form.is_valid():
@@ -1835,60 +1835,51 @@ class CompareTeamsView(View):
                     'team2': {'team': team2},
                 },
             )
-        
+
         team1 = form.cleaned_data['team1']
         team2 = form.cleaned_data['team2']
         season = form.cleaned_data['season']
         tournament = form.cleaned_data['tournament']
         matches_selection = form.cleaned_data['matches_selection']
-        
-        team1_matches, team2_matches = self.get_selected_matches(
-            team1, team2, season, tournament, matches_selection
-        )
+
+        team1_matches, team2_matches = self.get_selected_matches(team1, team2, season, tournament, matches_selection)
         team1_stats = self.get_team_stats(team1, team1_matches)
         team2_stats = self.get_team_stats(team2, team2_matches)
-        
+
         team1_player_stats = self.get_player_stats(team1, team1_matches)
         team2_player_stats = self.get_player_stats(team2, team2_matches)
-    
+
         return render(
             request,
-            self.get_template_names(), 
+            self.get_template_names(),
             {
                 'compare_form': form,
                 'team1': {'team': team1, 'stats': team1_stats, 'player_stats': team1_player_stats},
                 'team2': {'team': team2, 'stats': team2_stats, 'player_stats': team2_player_stats},
-            }
+            },
         )
-        
+
     def get_selected_matches(self, team1, team2, season, tournament, matches_selection):
         season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
         tournament_condition = Q(league__title__iregex=tournament)
-        
-        team1_matches = (
-            Match.objects
-            .filter(season_condition, tournament_condition, Q(team_home=team1) | Q(team_guest=team1), is_played=True)
-            .distinct()
-        )
-        team2_matches = (
-            Match.objects
-            .filter(season_condition, tournament_condition, Q(team_home=team2) | Q(team_guest=team2), is_played=True)
-            .distinct()
-        )
-        
+
+        team1_matches = Match.objects.filter(
+            season_condition, tournament_condition, Q(team_home=team1) | Q(team_guest=team1), is_played=True
+        ).distinct()
+        team2_matches = Match.objects.filter(
+            season_condition, tournament_condition, Q(team_home=team2) | Q(team_guest=team2), is_played=True
+        ).distinct()
+
         selected_matches = None
         if matches_selection == ComparePlayersForm.MatchesSelection.HEAD_TO_HEAD:
             team1_matches_set = set(x.id for x in team1_matches)
             team2_matches_set = set(x.id for x in team2_matches)
             selected_matches = team1_matches_set.intersection(team2_matches_set)
-            
+
         if selected_matches is not None:
             return selected_matches, selected_matches
-        
-        return (
-            team1_matches.values_list('id', flat=True),
-            team2_matches.values_list('id', flat=True)
-        )
+
+        return (team1_matches.values_list('id', flat=True), team2_matches.values_list('id', flat=True))
 
     def get_team_stats(self, team: Team, selected_matches) -> dict:
         matches = len(selected_matches)
@@ -1897,16 +1888,14 @@ class CompareTeamsView(View):
         goals = team.goals.filter(match__in=selected_matches).count()
         goals_per_match = round(float(goals) / matches, 2) if matches else 0
         conceded_goals = Goal.objects.filter(
-            Q(match__team_home=team) | Q(match__team_guest=team),
-            ~Q(team=team),
-            match__in=selected_matches
+            Q(match__team_home=team) | Q(match__team_guest=team), ~Q(team=team), match__in=selected_matches
         ).count()
         conceded_goals_per_match = round(float(conceded_goals) / matches, 2) if matches else 0
         assists = team.goals.filter(assistent__isnull=False, match__in=selected_matches).count()
         assists_per_match = round(float(assists) / matches, 2) if matches else 0
         cs = team.team_events.cs().filter(match__in=selected_matches).count()
         cs_per_match = round(float(cs) / matches, 2) if matches else 0
-        
+
         return {
             'matches': matches,
             'wins': wins,
@@ -1922,28 +1911,38 @@ class CompareTeamsView(View):
             'yellow_cards': team.team_events.yellow_cards().filter(match__in=selected_matches).count(),
             'red_cards': team.team_events.red_cards().filter(match__in=selected_matches).count(),
         }
-        
+
     def get_player_stats(self, team: Team, selected_matches) -> dict:
         top_matches = (
-            team.played_matches.filter(match__in=selected_matches).values(pl=F('player__nickname')).annotate(count=Count('player')).order_by('-count').first()
+            team.played_matches.filter(match__in=selected_matches)
+            .values(pl=F('player__nickname'))
+            .annotate(count=Count('player'))
+            .order_by('-count')
+            .first()
         )
         top_wins = (
-            team.played_matches
-            .filter(match__in=selected_matches, match__result__winner=team)
+            team.played_matches.filter(match__in=selected_matches, match__result__winner=team)
             .values(pl=F('player__nickname'))
             .annotate(count=Count('player'))
             .order_by('-count')
             .first()
         )
         top_goals = (
-            team.goals.filter(match__in=selected_matches).values(pl=F('author__nickname')).annotate(count=Count('author')).order_by('-count').first()
+            team.goals.filter(match__in=selected_matches)
+            .values(pl=F('author__nickname'))
+            .annotate(count=Count('author'))
+            .order_by('-count')
+            .first()
         )
         top_assists = (
-            team.goals.filter(match__in=selected_matches).values(pl=F('assistent__nickname')).annotate(count=Count('assistent')).order_by('-count').first()
+            team.goals.filter(match__in=selected_matches)
+            .values(pl=F('assistent__nickname'))
+            .annotate(count=Count('assistent'))
+            .order_by('-count')
+            .first()
         )
         top_goals_assists = (
-            Player.objects
-            .annotate(
+            Player.objects.annotate(
                 goals_count=Coalesce(self.get_player_goals_subquery(selected_matches, team), 0),
                 assists_count=Coalesce(self.get_player_assists_subquery(selected_matches, team), 0),
                 count=F('goals_count') + F('assists_count'),
@@ -1961,7 +1960,7 @@ class CompareTeamsView(View):
             .order_by('-count')
             .first()
         )
-        
+
         return {
             'matches': top_matches or {'pl': '–', 'count': 0},
             'wins': top_wins or {'pl': '–', 'count': 0},
@@ -1970,23 +1969,29 @@ class CompareTeamsView(View):
             'goals_assists': top_goals_assists or {'pl': '–', 'count': 0},
             'cs': top_cs or {'pl': '–', 'count': 0},
         }
-        
+
     @staticmethod
     def get_player_goals_subquery(selected_matches, team):
         return Subquery(
-            Goal.objects
-            .filter(author=OuterRef('id'), match__in=selected_matches, team=team)
+            Goal.objects.filter(
+                author=OuterRef('id'),
+                match__in=selected_matches,
+                team=team,
+            )
             .order_by()
             .values('author')
             .annotate(c=Count('id', distinct=True))
             .values('c')
         )
-    
+
     @staticmethod
     def get_player_assists_subquery(selected_matches, team):
         return Subquery(
-            Goal.objects
-            .filter(assistent=OuterRef('id'), match__in=selected_matches, team=team)
+            Goal.objects.filter(
+                assistent=OuterRef('id'),
+                match__in=selected_matches,
+                team=team,
+            )
             .order_by()
             .values('assistent')
             .annotate(c=Count('id', distinct=True))

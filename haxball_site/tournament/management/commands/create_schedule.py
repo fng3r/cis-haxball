@@ -63,7 +63,6 @@ class Command(BaseCommand):
 
         print('Генерация расписания завершена')
 
-
     def generate_schedule(self, league, teams, has_return_matches, stage=None, group=None):
         # add dummy team when number of teams is odd
         if len(teams) % 2 == 1:
@@ -89,15 +88,21 @@ class Command(BaseCommand):
             tour_number = i
             tour_start_date, tour_end_date = self.tour_dates[i]
             tour = TourNumber.objects.create(
-                number=tour_number, league=league, stage=stage,
-                date_from=tour_start_date, date_to=tour_end_date,
+                number=tour_number,
+                league=league,
+                stage=stage,
+                date_from=tour_start_date,
+                date_to=tour_end_date,
             )
             if has_return_matches:
                 reversed_tour_number = n + i - 1
                 tour_start_date, tour_end_date = self.tour_dates[reversed_tour_number]
                 reversed_tour = TourNumber.objects.create(
-                    number=reversed_tour_number, league=league, stage=stage,
-                    date_from=tour_start_date, date_to=tour_end_date,
+                    number=reversed_tour_number,
+                    league=league,
+                    stage=stage,
+                    date_from=tour_start_date,
+                    date_to=tour_end_date,
                 )
 
             for j in range(half):
@@ -112,13 +117,16 @@ class Command(BaseCommand):
                     (team_home, team_guest) = (team_guest, team_home)
 
                 Match.objects.create(
-                    team_home=team_home, team_guest=team_guest, numb_tour=tour,
-                    league=league, stage=stage, group=group
+                    team_home=team_home, team_guest=team_guest, numb_tour=tour, league=league, stage=stage, group=group
                 )
                 if has_return_matches:
                     Match.objects.create(
-                        team_guest=team_home, team_home=team_guest, numb_tour=reversed_tour,
-                        league=league, stage=stage, group=group
+                        team_guest=team_home,
+                        team_home=team_guest,
+                        numb_tour=reversed_tour,
+                        league=league,
+                        stage=stage,
+                        group=group,
                     )
 
             # rotate teams n // 2 times, first team is always fixed

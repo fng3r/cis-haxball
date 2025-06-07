@@ -12,10 +12,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
-from decouple import config
 from django.contrib.messages import constants as messages
 from django.templatetags.static import static
 from django.urls import reverse_lazy
+
+from decouple import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 
@@ -55,14 +56,12 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'allauth',
     'allauth.account',
-    
     'core.apps.CoreConfig',
     'tournament.apps.TournamentConfig',
     'polls.apps.PollsConfig',
     'reservation.apps.ReservationConfig',
     'utils.apps.UtilsConfig',
     'custom_notifications.apps.CustomNotificationsConfig',
-    
     'ckeditor',
     'django_summernote',
     'froala_editor',
@@ -118,7 +117,7 @@ TEMPLATES = [
 ]
 
 # Notification settings
-DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True }
+DJANGO_NOTIFICATIONS_CONFIG = {'USE_JSONFIELD': True}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
@@ -218,7 +217,7 @@ if DEBUG:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 else:
     MEDIA_ROOT = '/home/site/media'
-    
+
 DJANGO_VITE = {
     'default': {
         'dev_mode': DEBUG,
@@ -334,8 +333,16 @@ CKEDITOR_CONFIGS = {
             {
                 'name': 'insert',
                 'items': [
-                    'EmojiPanel', 'Image', 'Youtube', 'Html5video', 'Table',
-                    'HorizontalRule', 'SpecialChar', 'PageBreak', 'Iframe', 'Spoiler',
+                    'EmojiPanel',
+                    'Image',
+                    'Youtube',
+                    'Html5video',
+                    'Table',
+                    'HorizontalRule',
+                    'SpecialChar',
+                    'PageBreak',
+                    'Iframe',
+                    'Spoiler',
                 ],
             },
             '/',
@@ -369,7 +376,6 @@ CKEDITOR_CONFIGS = {
             ]
         ),
     },
-    
     'comment': {
         'skin': 'moono-lisa',
         'removePlugins': 'stylesheetparser',
@@ -397,32 +403,32 @@ CKEDITOR_CONFIGS = {
                 'Redo',
             ]
         ],
-        'extraPlugins': ','.join([
-            'uploadimage',
-            'div',
-            'autolink',
-            'embedsemantic',
-            'autogrow',
-            'widget',
-            'lineutils',
-            'clipboard',
-            'dialog',
-            'dialogui',
-            'elementspath',
-            'youtube',
-            'html5video',
-            'emoji',
-            'autocomplete',
-            'textwatcher',
-            'textmatch',
-            'editorplaceholder',
-            'image2',
-            'mentions',
-        ]),
-        
+        'extraPlugins': ','.join(
+            [
+                'uploadimage',
+                'div',
+                'autolink',
+                'embedsemantic',
+                'autogrow',
+                'widget',
+                'lineutils',
+                'clipboard',
+                'dialog',
+                'dialogui',
+                'elementspath',
+                'youtube',
+                'html5video',
+                'emoji',
+                'autocomplete',
+                'textwatcher',
+                'textmatch',
+                'editorplaceholder',
+                'image2',
+                'mentions',
+            ]
+        ),
         'editorplaceholder': 'Введите текст комментария...',
         'editorplaceholder_delay': 200,
-        
         'mentions': [
             {
                 'feed': '/api/users/search?query={encodedQuery}',
@@ -430,15 +436,13 @@ CKEDITOR_CONFIGS = {
                 'minChars': 1,
                 'followingSpace': True,
                 'pattern': r'@[_a-zA-Z0-9а-яА-ЯёЁ]{1,}$',
-                'itemTemplate': 
-                    '''<li data-id="{id}" class="tw:flex tw:items-center tw:gap-x-2">
+                'itemTemplate': """<li data-id="{id}" class="tw:flex tw:items-center tw:gap-x-2">
                           <img src="{avatar}" class="tw:avatar tw:size-6 tw:rounded-full">
                           <span class="tw:text-black/80 tw:truncate">{username}</span>
-                       </li>''',
+                       </li>""",
                 'outputTemplate': '<a href="{link}" data-mentioned-user-id="{id}" class="tw:mention">@{username}</a>',
-                
             },
-        ]
+        ],
     },
 }
 
@@ -451,11 +455,11 @@ INTERNAL_IPS = config('INTERNAL_IPS', cast=str.split)
 # https://docs.djangoproject.com/en/4.2/ref/settings/#message-tags
 # Customize tags with bootstrap alert classes
 MESSAGE_TAGS = {
-    messages.DEBUG: "alert-secondary",
-    messages.INFO: "alert-primary",
-    messages.SUCCESS: "alert-success",
-    messages.WARNING: "alert-warning",
-    messages.ERROR: "alert-danger",
+    messages.DEBUG: 'alert-secondary',
+    messages.INFO: 'alert-primary',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
 }
 
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
@@ -543,7 +547,7 @@ UNFOLD = {
     'SITE_FAVICONS': [
         {
             'rel': 'icon',
-            'sizes': "32x32",
+            'sizes': '32x32',
             'type': 'image/png',
             'href': lambda request: static('img/logo_mini.png'),
         },
@@ -582,7 +586,7 @@ UNFOLD = {
                         'title': 'Уведомления',
                         'icon': 'notifications',
                         'link': reverse_lazy('admin:notifications_notification_changelist'),
-                    }
+                    },
                 ],
             },
             {
@@ -610,8 +614,8 @@ UNFOLD = {
             '200': '199, 210, 254',
             '300': '165, 180, 252',
             '400': '129, 140, 248',
-            '500': '100, 120, 255', # used for most cases in dark theme
-            '600': '79, 70, 229', # used for most cases in light theme
+            '500': '100, 120, 255',  # used for most cases in dark theme
+            '600': '79, 70, 229',  # used for most cases in light theme
             '700': '67, 56, 202',
             '800': '55, 48, 163',
             '900': '49, 46, 129',

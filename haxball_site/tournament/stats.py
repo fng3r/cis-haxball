@@ -11,9 +11,10 @@ class PlayerStatsSource:
     def get_matches_by_season(self):
         player = self.player
         return (
-            Match.objects
-            .filter(Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
-                    is_played=True)
+            Match.objects.filter(
+                Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
+                is_played=True,
+            )
             .values(season_title=F('league__championship__short_title'))
             .annotate(
                 matches=Count('pk', distinct=True),
@@ -21,18 +22,16 @@ class PlayerStatsSource:
                     When(team_home_start=player, then=F('team_home')),
                     When(team_guest_start=player, then=F('team_guest')),
                     When(match_substitutions__player_in=player, then=F('match_substitutions__team')),
-                    default=None
-                )
+                    default=None,
+                ),
             )
             .filter(matches__gt=0)
             .annotate(
                 wins=Count('pk', distinct=True, filter=Q(result__winner=F('team'))),
                 draws=Count('pk', distinct=True, filter=Q(result__value=MatchResult.DRAW)),
                 losses=Count(
-                    'pk',
-                    distinct=True,
-                    filter=~Q(result__value=MatchResult.DRAW) & ~Q(result__winner=F('team'))
-                )
+                    'pk', distinct=True, filter=~Q(result__value=MatchResult.DRAW) & ~Q(result__winner=F('team'))
+                ),
             )
             .order_by('league__championship__number')
         )
@@ -40,15 +39,16 @@ class PlayerStatsSource:
     def get_matches_by_team(self):
         player = self.player
         return (
-            Match.objects
-            .filter(Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
-                    is_played=True)
+            Match.objects.filter(
+                Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
+                is_played=True,
+            )
             .annotate(
                 team=Case(
                     When(team_home_start=player, then=F('team_home__title')),
                     When(team_guest_start=player, then=F('team_guest__title')),
                     When(match_substitutions__player_in=player, then=F('match_substitutions__team__title')),
-                    default=Value('Unknown')
+                    default=Value('Unknown'),
                 )
             )
             .values('team')
@@ -60,31 +60,32 @@ class PlayerStatsSource:
     def get_matches_by_tournament(self):
         player = self.player
         return (
-            Match.objects
-            .filter(Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
-                    is_played=True)
+            Match.objects.filter(
+                Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
+                is_played=True,
+            )
             .annotate(
                 tournament=Case(
                     When(
                         Q(league__title__istartswith='Высшая') | Q(league__title__istartswith='Единая'),
-                        then=Value('Высшая лига')
+                        then=Value('Высшая лига'),
                     ),
                     When(league__title__istartswith='Первая', then=Value('Первая лига')),
                     When(league__title__istartswith='Вторая', then=Value('Вторая лига')),
                     When(
-                        Q(league__title__istartswith='Кубок Высшей') |
-                        Q(league__title__istartswith='Кубок Первой') |
-                        Q(league__title__istartswith='Кубок Второй') |
-                        Q(league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги')
+                        Q(league__title__istartswith='Кубок Высшей')
+                        | Q(league__title__istartswith='Кубок Первой')
+                        | Q(league__title__istartswith='Кубок Второй')
+                        | Q(league__title__istartswith='Кубок лиги'),
+                        then=Value('Кубок лиги'),
                     ),
                     When(league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
                     When(league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown')
+                    default=Value('Unknown'),
                 )
             )
             .values('tournament')
-            .annotate(matches=Count('pk', distinct=True), )
+            .annotate(matches=Count('pk', distinct=True))
             .filter(matches__gt=0)
             .order_by('-matches')
         )
@@ -92,11 +93,10 @@ class PlayerStatsSource:
     def get_goals_by_season(self):
         player = self.player
         matches_subquery = (
-            Match.objects
-            .filter(
+            Match.objects.filter(
                 Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
                 league__championship=OuterRef('id'),
-                is_played=True
+                is_played=True,
             )
             .order_by()
             .values('league__championship')
@@ -119,8 +119,7 @@ class PlayerStatsSource:
         )
 
         return (
-            Season.objects
-            .values(season_title=F('short_title'))
+            Season.objects.values(season_title=F('short_title'))
             .annotate(
                 matches=Coalesce(Subquery(matches_subquery), 0),
                 goals=Coalesce(Subquery(goals_subquery), 0),
@@ -156,20 +155,20 @@ class PlayerStatsSource:
                 tournament=Case(
                     When(
                         Q(match__league__title__istartswith='Высшая') | Q(match__league__title__istartswith='Единая'),
-                        then=Value('Высшая лига')
+                        then=Value('Высшая лига'),
                     ),
                     When(match__league__title__istartswith='Первая', then=Value('Первая лига')),
                     When(match__league__title__istartswith='Вторая', then=Value('Вторая лига')),
                     When(
-                        Q(match__league__title__istartswith='Кубок Высшей') |
-                        Q(match__league__title__istartswith='Кубок Первой') |
-                        Q(match__league__title__istartswith='Кубок Второй') |
-                        Q(match__league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги')
+                        Q(match__league__title__istartswith='Кубок Высшей')
+                        | Q(match__league__title__istartswith='Кубок Первой')
+                        | Q(match__league__title__istartswith='Кубок Второй')
+                        | Q(match__league__title__istartswith='Кубок лиги'),
+                        then=Value('Кубок лиги'),
                     ),
                     When(match__league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
                     When(match__league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown')
+                    default=Value('Unknown'),
                 )
             )
             .values('tournament')
@@ -184,11 +183,10 @@ class PlayerStatsSource:
     def get_cs_by_season(self):
         player = self.player
         matches_subquery = (
-            Match.objects
-            .filter(
+            Match.objects.filter(
                 Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
                 league__championship=OuterRef('id'),
-                is_played=True
+                is_played=True,
             )
             .order_by()
             .values('league__championship')
@@ -196,7 +194,8 @@ class PlayerStatsSource:
             .values('c')
         )
         cs_subquery = (
-            OtherEvents.objects.cs().filter(match__league__championship=OuterRef('id'), author=player)
+            OtherEvents.objects.cs()
+            .filter(match__league__championship=OuterRef('id'), author=player)
             .order_by()
             .values('match__league__championship')
             .annotate(c=Count('*'))
@@ -204,8 +203,7 @@ class PlayerStatsSource:
         )
 
         return (
-            Season.objects
-            .values(season_title=F('short_title'))
+            Season.objects.values(season_title=F('short_title'))
             .annotate(
                 matches=Coalesce(Subquery(matches_subquery), 0),
                 cs=Coalesce(Subquery(cs_subquery), 0),
@@ -217,7 +215,8 @@ class PlayerStatsSource:
 
     def get_cs_by_team(self):
         return (
-            OtherEvents.objects.cs().filter(author=self.player)
+            OtherEvents.objects.cs()
+            .filter(author=self.player)
             .values(team_title=F('team__title'))
             .annotate(cs=Count('*'))
             .order_by('-cs')
@@ -225,7 +224,8 @@ class PlayerStatsSource:
 
     def get_cs_by_tournament(self):
         return (
-            OtherEvents.objects.cs().filter(author=self.player)
+            OtherEvents.objects.cs()
+            .filter(author=self.player)
             .annotate_with_tournament()
             .values('tournament')
             .annotate(cs=Count('*'))
@@ -235,11 +235,10 @@ class PlayerStatsSource:
     def get_cards_by_season(self):
         player = self.player
         matches_subquery = (
-            Match.objects
-            .filter(
+            Match.objects.filter(
                 Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
                 league__championship=OuterRef('id'),
-                is_played=True
+                is_played=True,
             )
             .order_by()
             .values('league__championship')
@@ -262,8 +261,7 @@ class PlayerStatsSource:
         )
 
         return (
-            Season.objects
-            .values(season_title=F('short_title'))
+            Season.objects.values(season_title=F('short_title'))
             .annotate(
                 matches=Coalesce(Subquery(matches_subquery), 0),
                 yellow_cards=Coalesce(Subquery(yellow_cards_subquery), 0),
@@ -312,16 +310,15 @@ class TeamStatsSource:
     def get_matches_by_season(self):
         team = self.team
         return (
-            Match.objects
-            .filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
+            Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
             .values(season_title=F('league__championship__short_title'))
             .annotate(
                 matches=Count('pk', distinct=True),
                 team=Case(
                     When(team_home=team, then=F('team_home')),
                     When(team_guest=team, then=F('team_guest')),
-                    default=None
-                )
+                    default=None,
+                ),
             )
             .filter(matches__gt=0)
             .annotate(
@@ -330,8 +327,8 @@ class TeamStatsSource:
                 losses=Count(
                     'pk',
                     distinct=True,
-                    filter=~Q(result__value=MatchResult.DRAW) & ~Q(result__winner=F('team'))
-                )
+                    filter=~Q(result__value=MatchResult.DRAW) & ~Q(result__winner=F('team')),
+                ),
             )
             .order_by('league__championship__number')
         )
@@ -339,11 +336,10 @@ class TeamStatsSource:
     def get_matches_in_league_by_season(self):
         team = self.team
         return (
-            Match.objects
-            .filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
+            Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
             .filter(
-                Q(league__title__in=['Высшая лига', 'Единая лига', 'Первая лига', 'Вторая лига']) |
-                Q(league__title__istartswith='Первая лига')
+                Q(league__title__in=['Высшая лига', 'Единая лига', 'Первая лига', 'Вторая лига'])
+                | Q(league__title__istartswith='Первая лига')
             )
             .values(season_title=F('league__championship__short_title'))
             .annotate(
@@ -351,17 +347,15 @@ class TeamStatsSource:
                 team=Case(
                     When(team_home=team, then=F('team_home')),
                     When(team_guest=team, then=F('team_guest')),
-                    default=None
-                )
+                    default=None,
+                ),
             )
             .filter(matches__gt=0)
             .annotate(
                 wins=Count('pk', distinct=True, filter=Q(result__winner=F('team'))),
                 draws=Count('pk', distinct=True, filter=Q(result__value=MatchResult.DRAW)),
                 losses=Count(
-                    'pk',
-                    distinct=True,
-                    filter=~Q(result__value=MatchResult.DRAW) & ~Q(result__winner=F('team'))
+                    'pk', distinct=True, filter=~Q(result__value=MatchResult.DRAW) & ~Q(result__winner=F('team'))
                 ),
                 points=F('wins') * 3 + F('draws'),
                 points_per_match=Cast(F('points'), FloatField()) / F('matches'),
@@ -372,26 +366,25 @@ class TeamStatsSource:
     def get_matches_by_tournament(self):
         team = self.team
         return (
-            Match.objects
-            .filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
+            Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
             .annotate(
                 tournament=Case(
                     When(
                         Q(league__title__istartswith='Высшая') | Q(league__title__istartswith='Единая'),
-                        then=Value('Высшая лига')
+                        then=Value('Высшая лига'),
                     ),
                     When(league__title__istartswith='Первая', then=Value('Первая лига')),
                     When(league__title__istartswith='Вторая', then=Value('Вторая лига')),
                     When(
-                        Q(league__title__istartswith='Кубок Высшей') |
-                        Q(league__title__istartswith='Кубок Первой') |
-                        Q(league__title__istartswith='Кубок Второй') |
-                        Q(league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги')
+                        Q(league__title__istartswith='Кубок Высшей')
+                        | Q(league__title__istartswith='Кубок Первой')
+                        | Q(league__title__istartswith='Кубок Второй')
+                        | Q(league__title__istartswith='Кубок лиги'),
+                        then=Value('Кубок лиги'),
                     ),
                     When(league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
                     When(league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown')
+                    default=Value('Unknown'),
                 )
             )
             .values('tournament')
@@ -401,18 +394,14 @@ class TeamStatsSource:
         )
 
     def get_top_players_by_matches(self, top_n=10):
-        return (
-            self._get_players_with_matches()
-            .filter(matches__gt=0)
-            .order_by('-matches')
-            [:top_n]
-        )
+        return self._get_players_with_matches().filter(matches__gt=0).order_by('-matches')[:top_n]
 
     def get_goals_by_season(self):
         team = self.team
         matches_subquery = (
-            Match.objects
-            .filter(Q(team_home=team) | Q(team_guest=team), league__championship=OuterRef('id'), is_played=True)
+            Match.objects.filter(
+                Q(team_home=team) | Q(team_guest=team), league__championship=OuterRef('id'), is_played=True
+            )
             .order_by()
             .values('league__championship')
             .annotate(c=Count('id', distinct=True))
@@ -437,8 +426,11 @@ class TeamStatsSource:
             .values('c')
         )
         assists_subquery = (
-            Goal.objects
-            .filter(match__league__championship=OuterRef('id'), team=team, assistent__isnull=False)
+            Goal.objects.filter(
+                match__league__championship=OuterRef('id'),
+                team=team,
+                assistent__isnull=False,
+            )
             .order_by()
             .values('match__league__championship')
             .annotate(c=Count('*'))
@@ -446,8 +438,7 @@ class TeamStatsSource:
         )
 
         return (
-            Season.objects
-            .values(season_title=F('short_title'))
+            Season.objects.values(season_title=F('short_title'))
             .annotate(
                 matches=Coalesce(Subquery(matches_subquery), 0),
                 goals=Coalesce(Subquery(goals_subquery), 0),
@@ -474,20 +465,20 @@ class TeamStatsSource:
                 tournament=Case(
                     When(
                         Q(match__league__title__istartswith='Высшая') | Q(match__league__title__istartswith='Единая'),
-                        then=Value('Высшая лига')
+                        then=Value('Высшая лига'),
                     ),
                     When(match__league__title__istartswith='Первая', then=Value('Первая лига')),
                     When(match__league__title__istartswith='Вторая', then=Value('Вторая лига')),
                     When(
-                        Q(match__league__title__istartswith='Кубок Высшей') |
-                        Q(match__league__title__istartswith='Кубок Первой') |
-                        Q(match__league__title__istartswith='Кубок Второй') |
-                        Q(match__league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги')
+                        Q(match__league__title__istartswith='Кубок Высшей')
+                        | Q(match__league__title__istartswith='Кубок Первой')
+                        | Q(match__league__title__istartswith='Кубок Второй')
+                        | Q(match__league__title__istartswith='Кубок лиги'),
+                        then=Value('Кубок лиги'),
                     ),
                     When(match__league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
                     When(match__league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown')
+                    default=Value('Unknown'),
                 )
             )
             .values('tournament')
@@ -505,16 +496,14 @@ class TeamStatsSource:
             .values(player=F('author__nickname'))
             .annotate(goals=Count('*'))
             .filter(goals__gt=0)
-            .order_by('-goals')
-            [:top_n]
+            .order_by('-goals')[:top_n]
         )
 
     def get_top_players_by_goals_per_match(self, top_n=10):
         team = self.team
 
         goals_subquery = (
-            Goal.objects
-            .filter(author=OuterRef('id'), team=team)
+            Goal.objects.filter(author=OuterRef('id'), team=team)
             .order_by()
             .values('author')
             .annotate(c=Count('id', distinct=True))
@@ -524,49 +513,46 @@ class TeamStatsSource:
         return (
             self._get_players_with_matches()
             .annotate(
-                goals = Coalesce(Subquery(goals_subquery), 0),
+                goals=Coalesce(Subquery(goals_subquery), 0),
             )
             .filter(matches__gte=10, goals__gt=0)
-            .annotate(
-                goals_per_match=Cast(F('goals'), FloatField()) / F('matches')
-            )
-            .order_by('-goals_per_match')
-            [:top_n]
+            .annotate(goals_per_match=Cast(F('goals'), FloatField()) / F('matches'))
+            .order_by('-goals_per_match')[:top_n]
         )
 
     def _get_players_with_matches(self):
         team = self.team
         home_matches_subquery = (
-            Match.objects
-            .filter(team_home=team, team_home_start=OuterRef('id'), is_played=True)
+            Match.objects.filter(team_home=team, team_home_start=OuterRef('id'), is_played=True)
             .order_by()
             .values('team_home_start')
             .annotate(c=Count('id', distinct=True))
             .values('c')
         )
         guest_matches_subquery = (
-            Match.objects
-            .filter(team_guest=team, team_guest_start=OuterRef('id'), is_played=True)
+            Match.objects.filter(team_guest=team, team_guest_start=OuterRef('id'), is_played=True)
             .order_by()
             .values('team_guest_start')
             .annotate(c=Count('id', distinct=True))
             .values('c')
         )
         sub_matches_subquery = (
-            Match.objects
-            .filter(match_substitutions__team=team, match_substitutions__player_in=OuterRef('id'), is_played=True)
+            Match.objects.filter(
+                match_substitutions__team=team,
+                match_substitutions__player_in=OuterRef('id'),
+                is_played=True,
+            )
             .order_by()
             .values('match_substitutions__player_in')
             .annotate(c=Count('id', distinct=True))
             .values('c')
         )
         dup_matches_subquery = (
-            Match.objects
-            .filter(
-                (Q(team_home=team) & Q(team_home_start=OuterRef('id'))) |
-                (Q(team_guest=team) & Q(team_guest_start=OuterRef('id'))),
+            Match.objects.filter(
+                (Q(team_home=team) & Q(team_home_start=OuterRef('id')))
+                | (Q(team_guest=team) & Q(team_guest_start=OuterRef('id'))),
                 match_substitutions__player_in=OuterRef('id'),
-                is_played=True
+                is_played=True,
             )
             .order_by()
             .values('match_substitutions__player_in')
@@ -575,8 +561,7 @@ class TeamStatsSource:
         )
 
         return (
-            Player.objects
-            .filter(Exists(Match.objects.filter(team_home=team, team_home_start=OuterRef('id'))))
+            Player.objects.filter(Exists(Match.objects.filter(team_home=team, team_home_start=OuterRef('id'))))
             .values(player=F('nickname'))
             .annotate(
                 home_matches_c=Coalesce(Subquery(home_matches_subquery), 0),
@@ -593,15 +578,13 @@ class TeamStatsSource:
             .values(player=F('assistent__nickname'))
             .annotate(assists=Count('*'))
             .filter(assists__gt=0)
-            .order_by('-assists')
-            [:top_n]
+            .order_by('-assists')[:top_n]
         )
 
     def get_top_players_by_assists_per_match(self, top_n=10):
         team = self.team
         assists_subquery = (
-            Goal.objects
-            .filter(assistent=OuterRef('id'), team=team)
+            Goal.objects.filter(assistent=OuterRef('id'), team=team)
             .order_by()
             .values('assistent')
             .annotate(c=Count('id', distinct=True))
@@ -614,21 +597,17 @@ class TeamStatsSource:
                 assists=Coalesce(Subquery(assists_subquery), 0),
             )
             .filter(matches__gte=10, assists__gt=0)
-            .annotate(
-                assists_per_match=Cast(F('assists'), FloatField()) / F('matches')
-            )
-            .order_by('-assists_per_match')
-            [:top_n]
+            .annotate(assists_per_match=Cast(F('assists'), FloatField()) / F('matches'))
+            .order_by('-assists_per_match')[:top_n]
         )
 
     def get_cs_by_season(self):
         team = self.team
         matches_subquery = (
-            Match.objects
-            .filter(
+            Match.objects.filter(
                 Q(team_home=team) | Q(team_guest=team),
                 league__championship=OuterRef('id'),
-                is_played=True
+                is_played=True,
             )
             .order_by()
             .values('league__championship')
@@ -636,7 +615,8 @@ class TeamStatsSource:
             .values('c')
         )
         cs_subquery = (
-            OtherEvents.objects.cs().filter(match__league__championship=OuterRef('id'), team=team)
+            OtherEvents.objects.cs()
+            .filter(match__league__championship=OuterRef('id'), team=team)
             .order_by()
             .values('match__league__championship')
             .annotate(c=Count('*'))
@@ -644,8 +624,7 @@ class TeamStatsSource:
         )
 
         return (
-            Season.objects
-            .values(season_title=F('short_title'))
+            Season.objects.values(season_title=F('short_title'))
             .annotate(
                 matches=Coalesce(Subquery(matches_subquery), 0),
                 cs=Coalesce(Subquery(cs_subquery), 0),
@@ -657,7 +636,8 @@ class TeamStatsSource:
 
     def get_cs_by_tournament(self):
         return (
-            OtherEvents.objects.cs().filter(team=self.team)
+            OtherEvents.objects.cs()
+            .filter(team=self.team)
             .annotate_with_tournament()
             .values('tournament')
             .annotate(cs=Count('*'))
@@ -670,8 +650,7 @@ class TeamStatsSource:
             .values(player=F('author__nickname'))
             .annotate(cs=Count('*'))
             .filter(cs__gt=0)
-            .order_by('-cs')
-            [:top_n]
+            .order_by('-cs')[:top_n]
         )
 
     def get_top_players_by_cs_per_match(self, top_n=5):
@@ -691,21 +670,15 @@ class TeamStatsSource:
                 cs=Coalesce(Subquery(cs_subquery), 0),
             )
             .filter(matches__gte=10, cs__gt=0)
-            .annotate(
-                cs_per_match=Cast(F('cs'), FloatField()) / F('matches')
-            )
-            .order_by('-cs_per_match')
-            [:top_n]
+            .annotate(cs_per_match=Cast(F('cs'), FloatField()) / F('matches'))
+            .order_by('-cs_per_match')[:top_n]
         )
 
     def get_cards_by_season(self):
         team = self.team
         matches_subquery = (
-            Match.objects
-            .filter(
-                Q(team_home=team) | Q(team_guest=team),
-                league__championship=OuterRef('id'),
-                is_played=True
+            Match.objects.filter(
+                Q(team_home=team) | Q(team_guest=team), league__championship=OuterRef('id'), is_played=True
             )
             .order_by()
             .values('league__championship')
@@ -728,8 +701,7 @@ class TeamStatsSource:
         )
 
         return (
-            Season.objects
-            .values(season_title=F('short_title'))
+            Season.objects.values(season_title=F('short_title'))
             .annotate(
                 matches=Coalesce(Subquery(matches_subquery), 0),
                 yellow_cards=Coalesce(Subquery(yellow_cards_subquery), 0),
@@ -763,6 +735,5 @@ class TeamStatsSource:
             .values(player=F('author__nickname'))
             .annotate(cards=Count('*'))
             .filter(cards__gt=0)
-            .order_by('-cards')
-            [:top_n]
+            .order_by('-cards')[:top_n]
         )

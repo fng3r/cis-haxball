@@ -1,6 +1,5 @@
 import collections
 
-from autoslug import AutoSlugField
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -10,6 +9,8 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
+
+from autoslug import AutoSlugField
 from model_utils import FieldTracker
 
 
@@ -65,7 +66,7 @@ class LikeDislike(models.Model):
 
     def get_query_set(self):
         return LikeDislikeQuerySet(self.model)
-    
+
     def __str__(self):
         vote = 'Лайк' if self.vote == LikeDislike.LIKE else 'Дизлайк'
         return f'{vote} от {self.user.username}'
@@ -190,6 +191,7 @@ class CommentHistoryItem(models.Model):
             '-created',
         )
 
+    @staticmethod
     @receiver(post_save, sender=NewComment)
     def create_comment_history_item(sender, instance, created, **kwargs):
         if not created and instance.tracker.has_changed('body'):
@@ -312,11 +314,13 @@ class Profile(models.Model):
     invisibility_enabled = models.BooleanField('Режим невидимки', default=False)
     invisibility_activated_at = models.DateTimeField('Время активации режима невидимки', null=True, blank=True)
 
+    @staticmethod
     @receiver(post_save, sender=User)
     def create_user_profile(sender, instance, created, **kwargs):
         if created:
             Profile.objects.create(name=instance)
 
+    @staticmethod
     @receiver(post_save, sender=User)
     def save_user_profile(sender, instance, **kwargs):
         instance.user_profile.save()
@@ -353,6 +357,7 @@ class UserNicknameHistoryItem(models.Model):
         verbose_name = 'История никнеймов'
         verbose_name_plural = 'История никнеймов'
 
+    @staticmethod
     @receiver(pre_save, sender=User)
     def create_history_item(sender, instance, **kwargs):
         previous_instance = User.objects.filter(pk=instance.pk).first()

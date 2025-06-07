@@ -14,8 +14,10 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import DetailView, ListView, View
+
 from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
+
 from tournament.models import Achievements, Team
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
@@ -239,9 +241,7 @@ class ProfileDetail(View):
             response = render(request, 'core/profile/profile_detail.html#profile-container', context)
             commentable_changed = request.GET.get('commentableChanged', False)
             if commentable_changed:
-                response = trigger_client_event(
-                    response, 'commentableChanged', {'commentable': profile.commentable}
-                )
+                response = trigger_client_event(response, 'commentableChanged', {'commentable': profile.commentable})
 
             return response
 
@@ -326,7 +326,7 @@ class EditCommentView(View):
             {
                 'comment_form': form,
                 'comment': comment,
-            }
+            },
         )
 
     def post(self, request, pk):
@@ -336,14 +336,7 @@ class EditCommentView(View):
             comment.body = form.cleaned_data['edit_body']
             comment.save()
 
-        return render(
-            request,
-            'core/comment/comment-item.html',
-            {
-                'comment': comment,
-                'object': comment.content_object
-            }
-        )
+        return render(request, 'core/comment/comment-item.html', {'comment': comment, 'object': comment.content_object})
 
 
 def get_comment(request, pk):
@@ -354,8 +347,7 @@ def get_comment(request, pk):
         'votes', queryset=LikeDislike.objects.dislikes().prefetch_related('user__user_profile'), to_attr='dislikes'
     )
     comment = (
-        NewComment.objects
-        .select_related('author__user_profile')
+        NewComment.objects.select_related('author__user_profile')
         .prefetch_related(
             'author__user_profile__user_icon',
             prefetch_likes,
@@ -364,14 +356,7 @@ def get_comment(request, pk):
         .get(pk=pk)
     )
 
-    return render(
-        request,
-        'core/comment/comment-item.html',
-        {
-            'comment': comment,
-            'object': comment.content_object
-        }
-    )
+    return render(request, 'core/comment/comment-item.html', {'comment': comment, 'object': comment.content_object})
 
 
 # Удаление комментария
@@ -404,11 +389,11 @@ class EditProfile(DetailView, View):
     model = Profile
     context_object_name = 'profile'
     template_name = 'core/profile/partials/edit_profile_form.html'
-    
+
     def get_template_names(self):
         if self.request.htmx:
             return 'core/profile/partials/edit_profile_form.html'
-        
+
         return 'core/profile/edit_profile.html'
 
     def post(self, request, pk, slug):
@@ -495,8 +480,7 @@ class UserCommentsView(View):
     def get(self, request, user_id):
         page = request.GET.get('page')
         user_comments = (
-            NewComment.objects
-            .select_related('author__user_profile', 'content_type')
+            NewComment.objects.select_related('author__user_profile', 'content_type')
             .prefetch_related(
                 'author__user_profile__user_icon',
                 'votes',
@@ -505,13 +489,13 @@ class UserCommentsView(View):
             .order_by('-created')
         )
         comments = get_paginated_comments(user_comments, page)
-        
+
         context = {
             'comments': comments,
             'page': comments,
             'user_id': user_id,
         }
-        
+
         return render(request, 'core/profile/user_comments.html', context)
 
 
@@ -519,13 +503,13 @@ class ToggleInvisibilityMode(View):
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
     def post(self, request):
         is_enabled = strtobool(request.POST.get('is_enabled'))
-        
+
         profile = request.user.user_profile
         profile.invisibility_enabled = is_enabled
         if profile.invisibility_enabled:
             profile.invisibility_activated_at = timezone.now()
         profile.save(update_fields=['invisibility_enabled', 'invisibility_activated_at'])
-        
+
         return JsonResponse({'is_invisibility_enabled': is_enabled})
 
 
@@ -534,30 +518,34 @@ class UserSearchView(View):
     View for searching users to support the mentions plugin.
     Returns a JSON response with user data in the format expected by the CKEditor mentions plugin.
     """
+
     @method_decorator(cache_page(120))
     def get(self, request):
         query = request.GET.get('query', '')
         if not query:
             return JsonResponse([], safe=False)
-            
-        users = User.objects.annotate(
-            clean_username=Func(F('username'), Value('\\s+'), Value(''), Value('g'), function='regexp_replace')
-        ).filter(
-            Q(username__icontains=query) |
-            Q(clean_username__icontains=query)
-        ).exclude(is_active=False)[:15]
-        
+
+        users = (
+            User.objects.annotate(
+                clean_username=Func(F('username'), Value('\\s+'), Value(''), Value('g'), function='regexp_replace')
+            )
+            .filter(Q(username__icontains=query) | Q(clean_username__icontains=query))
+            .exclude(is_active=False)[:15]
+        )
+
         # Format the response for the mentions plugin
         items = []
         for user in users:
             try:
-                items.append({
-                    'id': user.id,
-                    'username': user.username,
-                    'link': f'/profile/{user.user_profile.id}/{user.user_profile.slug}/',
-                    'avatar': user.user_profile.avatar.url
-                })
+                items.append(
+                    {
+                        'id': user.id,
+                        'username': user.username,
+                        'link': f'/profile/{user.user_profile.id}/{user.user_profile.slug}/',
+                        'avatar': user.user_profile.avatar.url,
+                    }
+                )
             except:
                 logger.warning(f'Error getting user profile for {user.username}')
-            
+
         return JsonResponse(items, safe=False)
