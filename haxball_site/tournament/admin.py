@@ -868,7 +868,6 @@ class MatchAdmin(UnfoldModelAdmin):
                 'fields': (
                     ('is_played',),
                     ('match_date', 'inspector'),
-                    ('replay_link', 'replay_link_second'),
                     ('replays',),
                 )
             },
