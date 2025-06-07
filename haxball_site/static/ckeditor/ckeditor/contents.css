@@ -1,8 +1,10 @@
 /*
-Copyright (c) 2003-2019, CKSource - Frederico Knabben. All rights reserved.
+Copyright (c) 2003-2023, CKSource Holding sp. z o.o. All rights reserved.
 For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
 */
 
+/* EDITED FROM ORIGINAL */
+/* Add custon font for displaying country flags */
 @font-face {
   font-family: "Noto Color Emoji Limited";
   unicode-range: U+1F1E6-1F1FF;
