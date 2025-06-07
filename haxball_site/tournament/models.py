@@ -552,8 +552,6 @@ class Match(models.Model):
     )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
-    replay_link = models.URLField('Ссылка на реплей', blank=True)
-    replay_link_second = models.URLField('Ссылка на реплей(2-й, если два)', blank=True, null=True)
     replays = ArrayField(models.URLField(), verbose_name='Ссылки на реплеи', default=list, blank=True)
     inspector = models.ForeignKey(
         User,
