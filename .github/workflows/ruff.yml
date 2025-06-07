@@ -1,5 +1,11 @@
 name: Ruff
-on: [ push, pull_request ]
+on:
+  push:
+    branches:
+      - rc
+  pull_request:
+    branches: 
+      - rc
 jobs:
   lint:
     runs-on: ubuntu-latest
