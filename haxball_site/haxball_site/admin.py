@@ -1,6 +1,9 @@
+from django.contrib.postgres.fields import ArrayField
+
 from smart_selects.db_fields import ChainedForeignKey
 from smart_selects.widgets import ChainedSelect
 from unfold import admin as unfold_admin
+from unfold.contrib.forms.widgets import ArrayWidget
 from unfold.widgets import SELECT_CLASSES
 
 
@@ -39,7 +42,11 @@ class ChainedForeignKeySupportMixin:
 
 
 class UnfoldModelAdmin(ChainedForeignKeySupportMixin, unfold_admin.ModelAdmin):
-    pass
+    formfield_overrides = {
+        ArrayField: {
+            'widget': ArrayWidget,
+        }
+    }
 
 
 class UnfoldStackedInline(ChainedForeignKeySupportMixin, unfold_admin.StackedInline):
