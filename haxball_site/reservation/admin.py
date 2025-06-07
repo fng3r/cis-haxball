@@ -1,4 +1,4 @@
-from django.contrib import admin, messages, staticfiles
+from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
