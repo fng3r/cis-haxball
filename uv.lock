@@ -127,8 +127,6 @@ dependencies = [
     { name = "django-debug-toolbar" },
     { name = "django-extensions" },
     { name = "django-filter" },
-    { name = "django-froala-editor" },
-    { name = "django-grappelli" },
     { name = "django-htmx" },
     { name = "django-js-asset" },
     { name = "django-markdownx" },
@@ -207,8 +205,6 @@ requires-dist = [
     { name = "django-debug-toolbar", specifier = "==4.4.6" },
     { name = "django-extensions", specifier = "==3.2.3" },
     { name = "django-filter", specifier = "==24.2" },
-    { name = "django-froala-editor", specifier = "==3.2.0" },
-    { name = "django-grappelli", specifier = "==4.0.1" },
     { name = "django-htmx", specifier = "==1.19.0" },
     { name = "django-js-asset", specifier = "==2.2.0" },
     { name = "django-markdownx", specifier = "==3.0.1" },
@@ -390,21 +386,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0a/74/b207c01184ac56a1f3b082ad235ab29b6d2f623c9cd84ae2846657f83389/django-filter-24.2.tar.gz", hash = "sha256:48e5fc1da3ccd6ca0d5f9bb550973518ce977a4edde9d2a8a154a7f4f0b9f96e", size = 142937 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7b/7d/ee51b0fd69425035a2efc101b2252cd08eab525c12db92fbea298823cc9f/django_filter-24.2-py3-none-any.whl", hash = "sha256:df2ee9857e18d38bed203c8745f62a803fa0f31688c9fe6f8e868120b1848e48", size = 94530 },
-]
-
-[[package]]
-name = "django-froala-editor"
-version = "3.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ea/92/b2fee9f158692f2f5dfe406bb540e7f72473ff1640154057aecae1c55493/django-froala-editor-3.2.0.tar.gz", hash = "sha256:b21d16033f6851dadf2ea9975d047bc32358fc28065ce081822b1c8c0541904c", size = 908351 }
-
-[[package]]
-name = "django-grappelli"
-version = "4.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b1/b5/f3f48797ac4829d0cbf648f33dcffeb2801742b3464225e685d4f9537261/django-grappelli-4.0.1.tar.gz", hash = "sha256:5095c8b6cef3f471a7876e30e8ac5b8cfbee30f999a4fba9e5ee26bf6addc5e4", size = 11062540 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/30/ca6b76f0583a0d1c957ad049d5669d0fc43d7c62d727ab1e23bad2b9b8f5/django_grappelli-4.0.1-py2.py3-none-any.whl", hash = "sha256:35cdf82d509ac4c3a19ca7252a78be8b3b60686d4f2976c488c6d5f1dd3bdc85", size = 1823475 },
 ]
 
 [[package]]
