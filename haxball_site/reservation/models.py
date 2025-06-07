@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+
 from tournament.models import Match
 
 
@@ -20,9 +21,7 @@ class ReservationHost(models.Model):
 
 
 class ReservationEntry(models.Model):
-    match = models.ForeignKey(
-        Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='match_reservations'
-    )
+    match = models.ForeignKey(Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='match_reservations')
     author = models.ForeignKey(
         User, verbose_name='Автор заявки', on_delete=models.CASCADE, related_name='user_reservation_authors'
     )
@@ -30,18 +29,18 @@ class ReservationEntry(models.Model):
 
     host = models.ForeignKey(ReservationHost, verbose_name='Хост', on_delete=models.SET_NULL, null=True)
     created = models.DateTimeField('Когда создана', auto_now_add=True)
-    
+
     cancelled_at = models.DateTimeField('Когда отменена', null=True, blank=True)
     cancelled_by = models.ForeignKey(
         User,
-        verbose_name='Кем отменена', 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        verbose_name='Кем отменена',
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        related_name='cancelled_reservations'
+        related_name='cancelled_reservations',
     )
     is_cancelled = models.GeneratedField(
-        verbose_name = 'Отменена',
+        verbose_name='Отменена',
         expression=models.Case(
             models.When(cancelled_at__isnull=False, then=True),
             default=False,
@@ -53,8 +52,8 @@ class ReservationEntry(models.Model):
 
     def __str__(self):
         return (
-            f'Бронь для матча {self.match.team_home.short_title} - {self.match.team_guest.short_title} \
-            на {self.time_date.strftime('%d.%m.%y %H:%M')}'
+            f'Бронь для матча {self.match.team_home.short_title} - {self.match.team_guest.short_title}'
+            + f'на {self.time_date.strftime("%d.%m.%y %H:%M")}'
         )
 
     class Meta:

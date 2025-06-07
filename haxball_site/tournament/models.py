@@ -1,18 +1,21 @@
 from datetime import date
 
-from colorfield.fields import ColorField
-from core.models import NewComment
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Case, Q, Value, When
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
+
+from colorfield.fields import ColorField
 from model_utils import FieldTracker
 from polymorphic.models import PolymorphicModel
 from smart_selects.db_fields import ChainedForeignKey
+
+from core.models import NewComment
 
 
 class TeamIsNotMatchParticipantError(Exception):
@@ -42,7 +45,7 @@ class FreeAgent(models.Model):
         (GK_FWD, 'Нападающий/Вратарь'),
         (ANY, 'Любая'),
     )
-    
+
     player = models.OneToOneField(User, verbose_name='Игрок', on_delete=models.CASCADE, related_name='user_free_agent')
     description = models.TextField('Комментарий к заявке', max_length=200, blank=True)
     position_main = models.CharField(max_length=40, choices=POSITION, default=ANY)
@@ -90,20 +93,10 @@ class Team(models.Model):
         User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='owned_teams'
     )
     captain = models.OneToOneField(
-        'Player',
-        verbose_name='Капитан',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='+'
+        'Player', verbose_name='Капитан', on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
     )
     captain_assistant = models.OneToOneField(
-        'Player',
-        verbose_name='Ассистент капитана',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='+'
+        'Player', verbose_name='Ассистент капитана', on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
     )
     office_link = models.URLField('Офис', blank=True)
     roster_slots = models.PositiveSmallIntegerField('Количество слотов', null=False, default=9)
@@ -121,9 +114,10 @@ class Team(models.Model):
             .select_related('match__team_home', 'match__team_guest', 'match__numb_tour')
             .order_by('taken_at')
         )
-        
+
+    @staticmethod
     @receiver(post_save, sender='tournament.PlayerTransfer')
-    def clean_executives_if_needed(sender, instance, created, **kwargs):  # noqa: N805
+    def clean_executives_if_needed(sender, instance, created, **kwargs):
         transfer = instance
         player = transfer.trans_player
         team = transfer.from_team
@@ -153,8 +147,7 @@ class League(models.Model):
     )
     title = models.CharField('Название турнира', max_length=128)
     logo = models.ImageField('Логотип турнира', upload_to='tournament_logos/', null=True, blank=True)
-    priority = models.SmallIntegerField(
-        'Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
+    priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
     slug = models.SlugField(max_length=250)
     created = models.DateTimeField('Создана', auto_now_add=True)
     teams = models.ManyToManyField(
@@ -214,7 +207,7 @@ class TournamentStage(PolymorphicModel):
     order = models.PositiveSmallIntegerField('Порядковый номер этапа')
     postponable = models.BooleanField('Можно ли переносить матчи этапа', default=False, blank=True)
     use_buchholz = models.BooleanField('Использовать коэффициент Бухгольца при равенстве очков', default=False)
-    
+
     @property
     def stage_name(self):
         return self.name or self.get_type_display()
@@ -222,7 +215,7 @@ class TournamentStage(PolymorphicModel):
     @property
     def is_playoff(self):
         return self.type == self.StageType.PLAYOFF
-    
+
     @property
     def is_regular(self):
         return self.is_playoff and self.has_match_for_third_place
@@ -234,7 +227,7 @@ class TournamentStage(PolymorphicModel):
     def save(self, *args, **kwargs):
         if not self.pk and not self.type:
             self.type = self._type
-            
+
         if not self.pk:
             self.postponable = self._postponable
 
@@ -255,18 +248,18 @@ class RegularStage(TournamentStage):
 
     awarded_count = models.PositiveSmallIntegerField(
         'Кол-во команд, награждаемых медалями',
-        choices=[(i,i) for i in range(0, 4)],
+        choices=[(i, i) for i in range(0, 4)],
         default=3,
     )
     promoted_count = models.PositiveSmallIntegerField(
         'Кол-во команд, поднимающихся в лигу выше',
-        choices=[(i,i) for i in range(0, 17)],
+        choices=[(i, i) for i in range(0, 17)],
         default=4,
         null=False,
     )
     relegated_count = models.PositiveSmallIntegerField(
         'Кол-во команд, вылетающих в лигу ниже',
-        choices=[(i,i) for i in range(0, 17)],
+        choices=[(i, i) for i in range(0, 17)],
         default=2,
     )
 
@@ -280,12 +273,12 @@ class GroupStage(TournamentStage):
 
     promoted_count = models.PositiveSmallIntegerField(
         'Кол-во команд, проходящих в следующий этап',
-        choices=[(i,i) for i in range(1, 11)],
+        choices=[(i, i) for i in range(1, 11)],
         default=2,
     )
     promoted_extra_count = models.PositiveSmallIntegerField(
         'Кол-во команд, дополнительно проходящих в следующий этап',
-        choices=[(i,i) for i in range(0, 11)],
+        choices=[(i, i) for i in range(0, 11)],
         default=0,
     )
 
@@ -295,10 +288,7 @@ class GroupStage(TournamentStage):
 
 class Group(models.Model):
     stage = models.ForeignKey(
-        GroupStage,
-        verbose_name='Групповой этап',
-        related_name='groups',
-        on_delete=models.CASCADE
+        GroupStage, verbose_name='Групповой этап', related_name='groups', on_delete=models.CASCADE
     )
     teams = models.ManyToManyField(Team, verbose_name='Команды', related_name='groups', blank=True)
 
@@ -328,12 +318,7 @@ class PlayOffStage(TournamentStage):
         GOALS = 'GOALS', 'По сумме голов'
         MATCHES = 'MATCHES', 'По сумме выигранных матчей'
 
-    playoff_type = models.CharField(
-        'Формат',
-        choices=PlayOffType.choices,
-        default=PlayOffType.SE,
-        max_length=10
-    )
+    playoff_type = models.CharField('Формат', choices=PlayOffType.choices, default=PlayOffType.SE, max_length=10)
     has_match_for_third_place = models.BooleanField('Есть матч за 3-е место', default=False)
     show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
     winner_determinator = models.CharField(
@@ -342,10 +327,10 @@ class PlayOffStage(TournamentStage):
         default=WinnerDeterminator.GOALS,
         max_length=15,
     )
-    
+
     def is_single_elimination(self):
         return self.playoff_type == PlayOffStage.PlayOffType.SE
-    
+
     def is_double_elimination(self):
         return self.playoff_type == PlayOffStage.PlayOffType.DE
 
@@ -355,11 +340,7 @@ class PlayOffStage(TournamentStage):
 
 class PlayoffBracketSlotStub(models.Model):
     playoff_stage = models.ForeignKey(
-        PlayOffStage,
-        verbose_name='Стадия ПО',
-        null=False,
-        blank=False,
-        on_delete=models.CASCADE
+        PlayOffStage, verbose_name='Стадия ПО', null=False, blank=False, on_delete=models.CASCADE
     )
     tour = ChainedForeignKey(
         'TourNumber',
@@ -369,7 +350,7 @@ class PlayoffBracketSlotStub(models.Model):
         related_name='stubs',
         null=False,
         blank=False,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     slot = models.PositiveSmallIntegerField('Номер слота в раунде')
     top_team = ChainedForeignKey(
@@ -383,10 +364,7 @@ class PlayoffBracketSlotStub(models.Model):
         on_delete=models.SET_NULL,
     )
     top_team_placeholder = models.CharField(
-        'Плейсхолдер для команды в верхней строчке слота',
-        max_length=20,
-        null=True,
-        blank=True
+        'Плейсхолдер для команды в верхней строчке слота', max_length=20, null=True, blank=True
     )
     bottom_team = ChainedForeignKey(
         Team,
@@ -399,10 +377,7 @@ class PlayoffBracketSlotStub(models.Model):
         on_delete=models.SET_NULL,
     )
     bottom_team_placeholder = models.CharField(
-        'Плейсхолдер для команды в нижней строчке слота',
-        max_length=20,
-        null=True,
-        blank=True
+        'Плейсхолдер для команды в нижней строчке слота', max_length=20, null=True, blank=True
     )
 
     def __str__(self):
@@ -413,14 +388,11 @@ class PlayoffBracketSlotStub(models.Model):
         ordering = ('tour', 'slot')
         verbose_name = 'Заглушка для слота сетки плей-офф'
         verbose_name_plural = 'Заглушки для слотов сетки плей-офф'
-        
-        
+
+
 class TeamPenaltyPoints(models.Model):
     stage = models.ForeignKey(
-        TournamentStage,
-        verbose_name='Этап турнира',
-        related_name='penalties',
-        on_delete=models.CASCADE
+        TournamentStage, verbose_name='Этап турнира', related_name='penalties', on_delete=models.CASCADE
     )
     team = ChainedForeignKey(
         Team,
@@ -441,7 +413,6 @@ class TeamPenaltyPoints(models.Model):
 
     def __str__(self):
         return f'{self.team} (- {self.penalty_points} очк.)'
-
 
 
 class Player(models.Model):
@@ -472,8 +443,9 @@ class Player(models.Model):
         Nation, verbose_name='Национальность', related_name='country_players', null=True, on_delete=models.SET_NULL
     )
 
+    @staticmethod
     @receiver(post_save, sender=User)
-    def create_comment_history_item(sender, instance, created, **kwargs):  # noqa: N805
+    def create_comment_history_item(sender, instance, created, **kwargs):
         if not created:
             player = Player.objects.filter(name=instance).first()
             if not player:
@@ -502,18 +474,13 @@ class TourNumber(models.Model):
         TournamentStage,
         chained_field='league',
         chained_model_field='league',
-        related_name = 'tours',
+        related_name='tours',
         verbose_name='Этап',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
-    bracket = models.PositiveSmallIntegerField(
-        'Сетка',
-        choices=PlayOffStage.Bracket.choices,
-        null=True,
-        blank=True
-    )
+    bracket = models.PositiveSmallIntegerField('Сетка', choices=PlayOffStage.Bracket.choices, null=True, blank=True)
 
     @property
     def is_actual(self):
@@ -522,9 +489,11 @@ class TourNumber(models.Model):
 
     def __str__(self):
         bracket_postfix = ''
-        if (type(self.stage) is PlayOffStage and
-            self.stage.playoff_type == PlayOffStage.PlayOffType.DE and
-            self.bracket is not None):
+        if (
+            type(self.stage) is PlayOffStage
+            and self.stage.playoff_type == PlayOffStage.PlayOffType.DE
+            and self.bracket is not None
+        ):
             bracket_postfix = f', {self.get_bracket_display()}'
 
         if self.league.is_multistage_league():
@@ -550,7 +519,7 @@ class Match(models.Model):
         TournamentStage,
         chained_field='league',
         chained_model_field='league',
-        verbose_name = 'Этап',
+        verbose_name='Этап',
         related_name='matches',
         on_delete=models.CASCADE,
         null=True,
@@ -579,12 +548,11 @@ class Match(models.Model):
         'Слот сетки',
         default=0,
         null=False,
-        help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы'
+        help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы',
     )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
-    replay_link = models.URLField('Ссылка на реплей', blank=True)
-    replay_link_second = models.URLField('Ссылка на реплей(2-й, если два)', blank=True, null=True)
+    replays = ArrayField(models.URLField(), verbose_name='Ссылки на реплеи', default=list, blank=True)
     inspector = models.ForeignKey(
         User,
         verbose_name='Проверил',
@@ -620,7 +588,7 @@ class Match(models.Model):
     team_guest_start = models.ManyToManyField(
         Player, related_name='guest_matches', verbose_name='Состав гостей', blank=True
     )
-    match_participants = models.ManyToManyField(Player, verbose_name='Участники матча', through="PlayerMatchStatistics")
+    match_participants = models.ManyToManyField(Player, verbose_name='Участники матча', through='PlayerMatchStatistics')
 
     is_played = models.BooleanField('Сыгран', default=False)
 
@@ -628,21 +596,19 @@ class Match(models.Model):
 
     comments = GenericRelation(NewComment, related_query_name='match_comments')
     commentable = models.BooleanField('Комментируемый матч', default=True)
-    
+
     tracker = FieldTracker()
 
     def cards(self):
-        return (
-            self.match_event
-            .filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD))
-            .order_by('team')
+        return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by(
+            'team'
         )
 
     @property
     def can_be_postponed(self):
         if self.is_played:
             return False
-        
+
         if self.stage and not self.stage.postponable:
             return False
 
@@ -747,8 +713,9 @@ class MatchResult(models.Model):
         + 'итогового счета. Использовать только в том случае, если нужно '
         + 'вручную разметить результат (ТП/обоюдное ТП)',
     )
-    winner = models.ForeignKey(Team, verbose_name='Победитель', related_name='won_matches',
-                               on_delete=models.CASCADE, null=True, blank=True)
+    winner = models.ForeignKey(
+        Team, verbose_name='Победитель', related_name='won_matches', on_delete=models.CASCADE, null=True, blank=True
+    )
 
     def save(self, *args, **kwargs):
         if not self.set_manually:  # determine result automatically if it is not specified explicitly
@@ -762,8 +729,9 @@ class MatchResult(models.Model):
             self.winner = None
         super(MatchResult, self).save(*args, **kwargs)
 
+    @staticmethod
     @receiver(post_save, sender=Match)
-    def create_or_update_result(sender, instance, created, **kwargs):  # noqa: N805
+    def create_or_update_result(sender, instance, created, **kwargs):
         if not instance.is_played:
             return
 
@@ -839,7 +807,7 @@ class Goal(models.Model):
         super(Goal, self).delete(*args, **kwargs)
 
     def __str__(self):
-        assistant =  f' ({self.assistent})' if self.assistent else ''
+        assistant = f' ({self.assistent})' if self.assistent else ''
         return f'⚽ {self.time_min:02d}:{self.time_sec:02d} {self.team} - {self.author}{assistant}'
 
     class Meta:
@@ -884,40 +852,33 @@ class Substitution(models.Model):
     class Meta:
         verbose_name = 'Замена'
         verbose_name_plural = 'Замены'
-        
-        
+
+
 class PlayerMatchStatistics(models.Model):
     match = models.ForeignKey(Match, verbose_name='Матч', null=False, blank=False, on_delete=models.CASCADE)
     player = models.ForeignKey(
-        Player,
-        verbose_name='Игрок',
-        related_name='played_matches',
-        null=False,
-        blank=False,
-        on_delete=models.CASCADE
+        Player, verbose_name='Игрок', related_name='played_matches', null=False, blank=False, on_delete=models.CASCADE
     )
     team = models.ForeignKey(
-        Team,
-        verbose_name='Команда',
-        related_name='played_matches',
-        null=False, blank=False,
-        on_delete=models.CASCADE
+        Team, verbose_name='Команда', related_name='played_matches', null=False, blank=False, on_delete=models.CASCADE
     )
     league = models.ForeignKey(League, verbose_name='Турнир', null=False, blank=False, on_delete=models.CASCADE)
-    
-    
+
+    @staticmethod
     @receiver(m2m_changed, sender=Match.team_home_start.through)
-    def match_team_home_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+    def match_team_home_start_changed(sender, instance, action, **kwargs):
         if action in ('post_add', 'post_remove'):
             PlayerMatchStatistics.update_match_participants(instance)
-        
+
+    @staticmethod
     @receiver(m2m_changed, sender=Match.team_guest_start.through)
-    def match_team_guest_start_changed(sender, instance, action, **kwargs):  # noqa: N805
+    def match_team_guest_start_changed(sender, instance, action, **kwargs):
         if action in ('post_add', 'post_remove'):
             PlayerMatchStatistics.update_match_participants(instance)
-        
+
+    @staticmethod
     @receiver([post_save, post_delete], sender=Substitution)
-    def match_substitutions_changed(sender, instance, **kwargs):  # noqa: N805
+    def match_substitutions_changed(sender, instance, **kwargs):
         PlayerMatchStatistics.update_match_participants(instance.match)
 
     @staticmethod
@@ -925,20 +886,18 @@ class PlayerMatchStatistics(models.Model):
         match.match_participants.clear()
         for player in match.team_home_start.all():
             match.match_participants.add(
-                player,
-                through_defaults={'match': match, 'team': match.team_home, 'league': match.league}
+                player, through_defaults={'match': match, 'team': match.team_home, 'league': match.league}
             )
         for player in match.team_guest_start.all():
             match.match_participants.add(
-                player,
-                through_defaults={'match': match, 'team': match.team_guest, 'league': match.league}
+                player, through_defaults={'match': match, 'team': match.team_guest, 'league': match.league}
             )
         for substitution in match.match_substitutions.all():
             match.match_participants.add(
                 substitution.player_in,
-                through_defaults={'match': match, 'team': substitution.team, 'league': match.league}
+                through_defaults={'match': match, 'team': substitution.team, 'league': match.league},
             )
-    
+
     class Meta:
         verbose_name = 'Статистика игрока в матче'
         verbose_name_plural = 'Статистика игроков в матчах'
@@ -1010,20 +969,20 @@ class OtherEventsQuerySet(models.QuerySet):
             tournament=Case(
                 When(
                     Q(match__league__title__istartswith='Высшая') | Q(match__league__title__istartswith='Единая'),
-                    then=Value('Высшая лига')
+                    then=Value('Высшая лига'),
                 ),
                 When(match__league__title__istartswith='Первая', then=Value('Первая лига')),
                 When(match__league__title__istartswith='Вторая', then=Value('Вторая лига')),
                 When(
-                    Q(match__league__title__istartswith='Кубок Высшей') |
-                    Q(match__league__title__istartswith='Кубок Первой') |
-                    Q(match__league__title__istartswith='Кубок Второй') |
-                    Q(match__league__title__istartswith='Кубок лиги'),
-                    then=Value('Кубок лиги')
+                    Q(match__league__title__istartswith='Кубок Высшей')
+                    | Q(match__league__title__istartswith='Кубок Первой')
+                    | Q(match__league__title__istartswith='Кубок Второй')
+                    | Q(match__league__title__istartswith='Кубок лиги'),
+                    then=Value('Кубок лиги'),
                 ),
                 When(match__league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
                 When(match__league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                default=Value('Unknown')
+                default=Value('Unknown'),
             )
         )
 
@@ -1100,7 +1059,7 @@ class OtherEvents(models.Model):
                 emoji = '🟥'
             case _:
                 emoji = self.event
-                
+
         return f'{emoji} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
 
     class Meta:
@@ -1147,8 +1106,6 @@ class PlayerTransfer(models.Model):
             self.trans_player.save()
 
         super(PlayerTransfer, self).save(*args, **kwargs)
-        
-    
 
     def __str__(self):
         return f'Переход {self.trans_player} в команду {self.to_team} (из {self.from_team})'
@@ -1175,7 +1132,7 @@ class Postponement(models.Model):
         on_delete=models.SET_NULL,
     )
     is_cancelled = models.GeneratedField(
-        verbose_name = 'Отменен',
+        verbose_name='Отменен',
         expression=models.Case(
             models.When(cancelled_at__isnull=False, then=True),
             default=False,
@@ -1320,7 +1277,7 @@ class TeamRatingVersion(models.Model):
     related_season = models.OneToOneField(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Рейтинг на {self.date.strftime('%d.%m.%y')} ({self.related_season.short_title})'
+        return f'Рейтинг на {self.date.strftime("%d.%m.%y")} ({self.related_season.short_title})'
 
     class Meta:
         ordering = ['-number']
@@ -1345,32 +1302,32 @@ class PlayerRatingVersion(models.Model):
     date = models.DateField(verbose_name='Дата')
 
     def __str__(self):
-        return f'Рейтинг на {self.date.strftime('%d.%m.%y')}'
+        return f'Рейтинг на {self.date.strftime("%d.%m.%y")}'
 
     class Meta:
         ordering = ['-number']
         verbose_name = 'Версия рейтинга игроков'
         verbose_name_plural = 'Версии рейтинга игроков'
-        
-        
+
+
 class PlayerRating(models.Model):
     class Grade(models.TextChoices):
-        S      = 'S', 'S'
-        A      = 'A', 'A'
+        S = 'S', 'S'
+        A = 'A', 'A'
         B_PLUS = 'B+', 'B+'
-        B      = 'B', 'B'
-        C      = 'C', 'C'
-        D      = 'D', 'D'
-        E      = 'E', 'E'
-        
+        B = 'B', 'B'
+        C = 'C', 'C'
+        D = 'D', 'D'
+        E = 'E', 'E'
+
     version = models.ForeignKey(PlayerRatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
     player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE)
     rating_points = models.PositiveSmallIntegerField()
     grade = models.CharField(verbose_name='Грейд', max_length=2, choices=Grade.choices)
-    
+
     def __str__(self):
         return f'{self.player.nickname} ({self.grade}: {self.rating_points})'
-    
+
     class Meta:
         ordering = ['-version__number', '-rating_points']
         verbose_name = 'Рейтинг игрока'

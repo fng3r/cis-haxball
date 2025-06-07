@@ -1,9 +1,7 @@
-from threading import local
-
-from core.models import IPAdress, UserActivity
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
+from core.models import IPAdress, UserActivity
 from haxball_site import settings
 
 ID_TOKEN_COOKIE_NAME = 'idtoken'

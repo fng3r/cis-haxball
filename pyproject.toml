@@ -80,7 +80,7 @@ dependencies = [
 dev-dependencies = [
     "djhtml==3.0.6",
     "pre-commit==3.8.0",
-    "ruff==0.6.3",
+    "ruff==0.11.12",
 ]
 
 [tool.ruff]
@@ -88,7 +88,22 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = ["I", "N", "SIM", "RET", "E501", "UP007", "UP032"]
-ignore = ["E722", "SIM108"]
+ignore = ["E722", "SIM108", "RET504"]
+
+[tool.ruff.lint.isort]
+extra-standard-library = ["isodate"]
+known-first-party = ["core", "tournament", "polls", "reservation"]
+section-order = [
+  "future",
+  "standard-library",
+  "django",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
+
+[tool.ruff.lint.isort.sections]
+"django" = ["django"]
 
 [tool.ruff.format]
 quote-style = "single"

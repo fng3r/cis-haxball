@@ -6,11 +6,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Page
 from django.db.models import Count, Q
 from django.utils import timezone
-from online_users.models import OnlineUserActivity
-from tournament.models import League, Player, PlayerTransfer, Team
 
-from core.services.youtube import YoutubeService
+from online_users.models import OnlineUserActivity
+
 from haxball_site import settings
+from tournament.models import League, PlayerTransfer, Team
 
 from ..models import NewComment, Post, Subscription
 
@@ -150,10 +150,13 @@ def show_top_comments(count=5):
     top_comments_today = comments.filter(created__year=year, created__month=month, created__day=day).order_by(
         '-likes_count'
     )[:count]
-    
+
     week_start = my_date - timezone.timedelta(days=day_of_week - 1, hours=my_date.hour, minutes=my_date.minute)
     week_end = my_date + timezone.timedelta(days=7 - day_of_week, hours=23 - my_date.hour, minutes=60 - my_date.minute)
-    top_comments_by_week = comments.filter(created__gt=week_start, created__lt=week_end).order_by('-likes_count')[:count]
+    top_comments_by_week = comments.filter(
+        created__gt=week_start,
+        created__lt=week_end,
+    ).order_by('-likes_count')[:count]
     top_comments_by_month = comments.filter(created__year=year, created__month=month).order_by('-likes_count')[:count]
     top_comments_by_year = comments.filter(created__year=year).order_by('-likes_count')[:count]
 
@@ -213,11 +216,7 @@ def is_executive(user: User, league: League):
     except:
         return False
 
-    return (
-        Team.objects
-        .filter(Q(owner=user) | Q(captain=player) | Q(captain_assistant=player), leagues=league)
-        .exists()
-    )
+    return Team.objects.filter(Q(owner=user) | Q(captain=player) | Q(captain_assistant=player), leagues=league).exists()
 
 
 @register.filter

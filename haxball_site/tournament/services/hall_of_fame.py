@@ -25,20 +25,19 @@ class PlayerStatChoices(str, Enum):
 class HallOfFameService:
     def get_teams_tops(self, seasons=None, tournaments=None):
         """Get top team statistics across various categories.
-        
+
         Args:
             seasons: QuerySet of Season objects to filter by
             tournaments: QuerySet of League objects to filter by
-            
+
         Returns:
             Dictionary containing top teams for each statistical category
         """
         top_goalscorers = (
-            Team.objects
-            .annotate(
+            Team.objects.annotate(
                 count=Count(
                     'goals__match__league',
-                    filter=Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons)
+                    filter=Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -46,12 +45,12 @@ class HallOfFameService:
         )
 
         top_assistants = (
-            Team.objects
-            .annotate(
+            Team.objects.annotate(
                 count=Count(
                     'goals__match__league',
-                    filter=Q(goals__assistent__isnull=False) & Q(goals__match__league__in=tournaments) &
-                           Q(goals__match__league__championship__in=seasons)
+                    filter=Q(goals__assistent__isnull=False)
+                    & Q(goals__match__league__in=tournaments)
+                    & Q(goals__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -59,13 +58,12 @@ class HallOfFameService:
         )
 
         top_cs = (
-            Team.objects
-            .filter(team_events__event=OtherEvents.CLEAN_SHEET)
+            Team.objects.filter(team_events__event=OtherEvents.CLEAN_SHEET)
             .annotate(
                 count=Count(
                     'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments) &
-                           Q(team_events__match__league__championship__in=seasons)
+                    filter=Q(team_events__match__league__in=tournaments)
+                    & Q(team_events__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -73,13 +71,12 @@ class HallOfFameService:
         )
 
         top_ogs = (
-            Team.objects
-            .filter(team_events__event=OtherEvents.OWN_GOAL)
+            Team.objects.filter(team_events__event=OtherEvents.OWN_GOAL)
             .annotate(
                 count=Count(
                     'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments) &
-                           Q(team_events__match__league__championship__in=seasons)
+                    filter=Q(team_events__match__league__in=tournaments)
+                    & Q(team_events__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -87,13 +84,12 @@ class HallOfFameService:
         )
 
         top_yellow_cards = (
-            Team.objects
-            .filter(team_events__event=OtherEvents.YELLOW_CARD)
+            Team.objects.filter(team_events__event=OtherEvents.YELLOW_CARD)
             .annotate(
                 count=Count(
                     'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments) &
-                           Q(team_events__match__league__championship__in=seasons)
+                    filter=Q(team_events__match__league__in=tournaments)
+                    & Q(team_events__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -101,13 +97,12 @@ class HallOfFameService:
         )
 
         top_red_cards = (
-            Team.objects
-            .filter(team_events__event=OtherEvents.RED_CARD)
+            Team.objects.filter(team_events__event=OtherEvents.RED_CARD)
             .annotate(
                 count=Count(
                     'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments) &
-                           Q(team_events__match__league__championship__in=seasons)
+                    filter=Q(team_events__match__league__in=tournaments)
+                    & Q(team_events__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -115,12 +110,11 @@ class HallOfFameService:
         )
 
         top_subs = (
-            Team.objects
-            .annotate(
+            Team.objects.annotate(
                 count=Count(
                     'substitutions',
-                    filter=Q(substitutions__match__league__in=tournaments) &
-                           Q(substitutions__match__league__championship__in=seasons)
+                    filter=Q(substitutions__match__league__in=tournaments)
+                    & Q(substitutions__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -128,39 +122,39 @@ class HallOfFameService:
         )
 
         home_matches_subquery = (
-            Match.objects
-            .filter(
-                team_home=OuterRef('id'), is_played=True,
-                league__in=tournaments, league__championship__in=seasons
+            Match.objects.filter(
+                team_home=OuterRef('id'), is_played=True, league__in=tournaments, league__championship__in=seasons
             )
-            .order_by().values('team_home')
-            .annotate(c=Count('*')).values('c')
+            .order_by()
+            .values('team_home')
+            .annotate(c=Count('*'))
+            .values('c')
         )
         guest_matches_subquery = (
-            Match.objects
-            .filter(
-                team_guest=OuterRef('id'), is_played=True,
-                league__in=tournaments, league__championship__in=seasons
+            Match.objects.filter(
+                team_guest=OuterRef('id'), is_played=True, league__in=tournaments, league__championship__in=seasons
             )
-            .order_by().values('team_guest')
-            .annotate(c=Count('*')).values('c')
+            .order_by()
+            .values('team_guest')
+            .annotate(c=Count('*'))
+            .values('c')
         )
 
         matches = (
-            Team.objects
-            .annotate(
+            Team.objects.annotate(
                 home_matches_count=Coalesce(Subquery(home_matches_subquery), 0),
                 guest_matches_count=Coalesce(Subquery(guest_matches_subquery), 0),
-                matches_count=F('home_matches_count') + F('guest_matches_count')
+                matches_count=F('home_matches_count') + F('guest_matches_count'),
             )
             .filter(matches_count__gt=0)
             .annotate(
                 wins_count=Count(
                     'won_matches',
-                    filter=Q(won_matches__match__league__in=tournaments) &
-                           Q(won_matches__match__league__championship__in=seasons)
+                    filter=Q(won_matches__match__league__in=tournaments)
+                    & Q(won_matches__match__league__championship__in=seasons),
                 ),
-                winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100)
+                winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100,
+            )
             .order_by()
         )
 
@@ -181,16 +175,15 @@ class HallOfFameService:
             'subs': top_subs,
         }
 
-    
     def get_players_tops(self, seasons=None, tournaments=None, nation=None, count=50):
         """Get top player statistics across various categories.
-        
+
         Args:
             seasons: QuerySet of Season objects to filter by
             tournaments: QuerySet of League objects to filter by
             nation: Nation object to filter players by
             count: Number of top players to return per category
-            
+
         Returns:
             Dictionary containing top players for each statistical category
         """
@@ -211,12 +204,12 @@ class HallOfFameService:
             'subs_in': Paginator(self._get_top_subs_in(players, seasons, tournaments), count).get_page(1),
             'subs_out': Paginator(self._get_top_subs_out(players, seasons, tournaments), count).get_page(1),
         }
-        
+
     def get_players_top_by_stat(self, seasons, tournaments, nation, stat, page, count=50):
         players = Player.objects.select_related('team', 'name__user_profile')
         if nation:
             players = players.filter(player_nation=nation)
-            
+
         match stat:
             case PlayerStatChoices.GOALS:
                 result = self._get_top_goalscorers(players, seasons, tournaments)
@@ -240,21 +233,20 @@ class HallOfFameService:
                 result = self._get_top_subs_in(players, seasons, tournaments)
             case PlayerStatChoices.SUBS_OUT:
                 result = self._get_top_subs_out(players, seasons, tournaments)
-                
+
         return Paginator(result, count).get_page(page)
 
     def _get_top_goalscorers(self, players, seasons, tournaments):
         return (
-            players
-            .annotate(
+            players.annotate(
                 count=Count(
                     'goals__match__league',
-                    filter=Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons)
+                    filter=Q(goals__match__league__in=tournaments) & Q(goals__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -262,16 +254,16 @@ class HallOfFameService:
 
     def _get_top_assistants(self, players, seasons, tournaments):
         return (
-            players
-            .annotate(
+            players.annotate(
                 count=Count(
                     'assists__match__league',
-                    filter=Q(assists__match__league__in=tournaments) & Q(assists__match__league__championship__in=seasons)
+                    filter=Q(assists__match__league__in=tournaments)
+                    & Q(assists__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -279,17 +271,16 @@ class HallOfFameService:
 
     def _get_top_clean_sheets(self, players, seasons, tournaments):
         return (
-            players
-            .filter(event__event=OtherEvents.CLEAN_SHEET)
+            players.filter(event__event=OtherEvents.CLEAN_SHEET)
             .annotate(
                 count=Count(
                     'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -297,17 +288,16 @@ class HallOfFameService:
 
     def _get_top_own_goals(self, players, seasons, tournaments):
         return (
-            players
-            .filter(event__event=OtherEvents.OWN_GOAL)
+            players.filter(event__event=OtherEvents.OWN_GOAL)
             .annotate(
                 count=Count(
                     'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -315,17 +305,16 @@ class HallOfFameService:
 
     def _get_top_yellow_cards(self, players, seasons, tournaments):
         return (
-            players
-            .filter(event__event=OtherEvents.YELLOW_CARD)
+            players.filter(event__event=OtherEvents.YELLOW_CARD)
             .annotate(
                 count=Count(
                     'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -333,17 +322,16 @@ class HallOfFameService:
 
     def _get_top_red_cards(self, players, seasons, tournaments):
         return (
-            players
-            .filter(event__event=OtherEvents.RED_CARD)
+            players.filter(event__event=OtherEvents.RED_CARD)
             .annotate(
                 count=Count(
                     'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons)
+                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -351,17 +339,16 @@ class HallOfFameService:
 
     def _get_top_subs_in(self, players, seasons, tournaments):
         return (
-            players
-            .annotate(
+            players.annotate(
                 count=Count(
                     'join_game__player_in',
-                    filter=Q(join_game__match__league__in=tournaments) &
-                           Q(join_game__match__league__championship__in=seasons)
+                    filter=Q(join_game__match__league__in=tournaments)
+                    & Q(join_game__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -369,16 +356,16 @@ class HallOfFameService:
 
     def _get_top_subs_out(self, players, seasons, tournaments):
         return (
-            players
-            .annotate(
+            players.annotate(
                 count=Count(
                     'replaced__player_out',
-                    filter=Q(replaced__match__league__in=tournaments) & Q(replaced__match__league__championship__in=seasons)
+                    filter=Q(replaced__match__league__in=tournaments)
+                    & Q(replaced__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -386,19 +373,15 @@ class HallOfFameService:
 
     def _get_top_matches(self, players, seasons, tournaments):
         return (
-            players
-            .annotate(
+            players.annotate(
                 count=Count(
                     'played_matches',
-                    filter=Q(
-                        played_matches__league__in=tournaments,
-                        played_matches__league__championship__in=seasons
-                    )
+                    filter=Q(played_matches__league__in=tournaments, played_matches__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -406,20 +389,19 @@ class HallOfFameService:
 
     def _get_top_wins(self, players, seasons, tournaments):
         return (
-            players
-            .annotate(
+            players.annotate(
                 count=Count(
                     'played_matches',
                     filter=Q(
                         played_matches__match__result__winner=F('played_matches__team'),
                         played_matches__league__in=tournaments,
-                        played_matches__league__championship__in=seasons
-                    )
+                        played_matches__league__championship__in=seasons,
+                    ),
                 ),
                 rank=Window(
                     expression=RowNumber(),
-                    order_by=('-count',)
-                )
+                    order_by=('-count',),
+                ),
             )
             .filter(count__gt=0)
             .order_by('-count')
@@ -427,31 +409,24 @@ class HallOfFameService:
 
     def _get_top_winrates(self, players, seasons, tournaments):
         return (
-            players
-            .annotate(
+            players.annotate(
                 matches_count=Count(
                     'played_matches',
-                    filter=Q(
-                        played_matches__league__in=tournaments,
-                        played_matches__league__championship__in=seasons
-                    )
+                    filter=Q(played_matches__league__in=tournaments, played_matches__league__championship__in=seasons),
                 ),
                 wins_count=Count(
                     'played_matches',
                     filter=Q(
                         played_matches__match__result__winner=F('played_matches__team'),
                         played_matches__league__in=tournaments,
-                        played_matches__league__championship__in=seasons
-                    )
-                )
+                        played_matches__league__championship__in=seasons,
+                    ),
+                ),
             )
             .filter(matches_count__gt=25)
             .annotate(
                 winrate=Cast(F('wins_count'), FloatField()) / F('matches_count') * 100,
-                rank=Window(
-                    expression=RowNumber(),
-                    order_by=('-winrate',)
-                )
+                rank=Window(expression=RowNumber(), order_by=('-winrate',)),
             )
             .filter(winrate__gt=0)
             .order_by('-winrate')
