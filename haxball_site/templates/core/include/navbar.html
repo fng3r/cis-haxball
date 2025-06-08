@@ -686,13 +686,13 @@
             class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-45 tw:p-2 tw:shadow-2xl">
           {% for theme in themes %}
             <li>
-              <div class="tw:flex tw:items-center tw:justify-between tw:gap-1">
+              <div class="tw:relative tw:flex tw:items-center tw:justify-between tw:gap-1">
                 <input type="radio"
                        name="theme-dropdown"
                        aria-label="{{ theme.label }}"
                        value="{{ theme.value }}"
                        class="theme-controller tw:flex-grow tw:btn tw:btn-ghost tw:btn-sm tw:justify-start tw:peer" />
-                <i class="fa fa-check tw:size-4! tw:opacity-0 tw:peer-checked:opacity-100" aria-hidden="true"></i>
+                <i class="fa fa-check tw:absolute tw:right-2 tw:size-4! tw:opacity-0 tw:peer-checked:opacity-100" aria-hidden="true"></i>
               </div>
             </li>
           {% endfor %}
