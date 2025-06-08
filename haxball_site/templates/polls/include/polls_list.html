@@ -31,11 +31,10 @@
                 <input class="tw:radio tw:radio-sm"
                        type="radio"
                        name='{{ poll.id }}'
-                       id="c"
-                       {{ choice.id }}
+                       id="choice-{{ choice.id }}"
                        value="{{ choice.id }}"
-                       {% if forloop.counter == 1 %}checked{% endif %}>
-                <label class="tw:label" for=c{{ choice.id }}>
+                       {% if forloop.first %}checked{% endif %}>
+                <label class="tw:label tw:text-base-content" for=choice-{{ choice.id }}>
                   {{ choice.choice_text }}
                 </label>
               </div>
