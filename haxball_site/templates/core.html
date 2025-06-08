@@ -16,9 +16,9 @@
 {% block content %}
   <div class="tw:mx-auto tw:max-w-[1600px] tw:py-2 tw:flex tw:flex-wrap">
     <aside class="tw:w-1/2 tw:order-2 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:xl:order-1 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
-      {% include 'core/include/sidebar_for_media.html' %}
-
       {% polls_list 2 user %}
+
+      {% include 'core/include/sidebar_for_media.html' %}
 
       {% include 'core/include/sidebar_for_lives.html' %}
 
