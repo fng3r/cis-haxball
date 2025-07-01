@@ -392,7 +392,12 @@ class PlayoffBracketSlotStub(models.Model):
 
 class TeamPenaltyPoints(models.Model):
     stage = models.ForeignKey(
-        TournamentStage, verbose_name='Этап турнира', related_name='penalties', on_delete=models.CASCADE
+        TournamentStage,
+        verbose_name='Этап турнира',
+        related_name='penalties',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
     )
     team = ChainedForeignKey(
         Team,
@@ -400,8 +405,8 @@ class TeamPenaltyPoints(models.Model):
         chained_field='stage',
         chained_model_field='stages',
         related_name='penalties',
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         on_delete=models.CASCADE,
     )
     penalty_points = models.PositiveSmallIntegerField('Штрафные очки')
@@ -1274,7 +1279,7 @@ class SeasonTeamRating(models.Model):
 class TeamRatingVersion(models.Model):
     number = models.PositiveSmallIntegerField(verbose_name='Версия', primary_key=True)
     date = models.DateField(verbose_name='Дата')
-    related_season = models.OneToOneField(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
+    related_season = models.ForeignKey(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
 
     def __str__(self):
         return f'Рейтинг на {self.date.strftime("%d.%m.%y")} ({self.related_season.short_title})'
