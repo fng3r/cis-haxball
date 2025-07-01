@@ -1279,7 +1279,7 @@ class SeasonTeamRating(models.Model):
 class TeamRatingVersion(models.Model):
     number = models.PositiveSmallIntegerField(verbose_name='Версия', primary_key=True)
     date = models.DateField(verbose_name='Дата')
-    related_season = models.OneToOneField(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
+    related_season = models.ForeignKey(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
 
     def __str__(self):
         return f'Рейтинг на {self.date.strftime("%d.%m.%y")} ({self.related_season.short_title})'
