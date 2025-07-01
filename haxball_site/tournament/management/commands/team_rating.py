@@ -10,34 +10,32 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('source_season', type=int)
+        parser.add_argument('mode', type=str, choices=['points', 'rating', 'all'], default='all')
 
     def handle(self, *args, **options):
         source_season_number = options['source_season']
+        mode = options['mode']
         source_season = Season.objects.get(number=source_season_number)
         season = source_season
 
-        # while season.number < 17:
-        #     season_points = self.get_season_points(season)
-        #     for team in season_points:
-        #         SeasonTeamRating(season=season, team=team, points_for_matches=season_points[team]).save()
+        if mode in ['points', 'all']:
+            season_points = self.get_season_points(season)
+            for team in season_points:
+                SeasonTeamRating(season=season, team=team, points_for_matches=season_points[team]).save()
+            print(f'Season points calculation for season "{source_season.title}" is completed')
 
-        #     next_season = Season.objects.filter(number=season.number + 1).first()
-        #     if not next_season:
-        #         break
-        #     season = next_season
-
-        last_version = TeamRatingVersion.objects.order_by('-number').first()
-        version = last_version + 1 if last_version else 1
-        while source_season_number < 17:
+        if mode in ['rating', 'all']:
+            last_version = TeamRatingVersion.objects.order_by('-number').first()
+            version = last_version.number + 1 if last_version else 1
             season_count = 0
-            source_season = Season.objects.get(number=source_season_number)
             if not source_season.title.startswith('ЧР'):
                 source_season_number += 1
-                continue
+                print(f'Rating calculation for season "{source_season.title}" is skipped')
+                return
 
             season = source_season
             overall_rating = {}
-            while season_count < 2 and season.number > 5:
+            while season_count < 6 and season.number > 5:
                 self.calculate_rating_points(overall_rating, season, season_count)
 
                 previous_season = (
@@ -52,14 +50,12 @@ class Command(BaseCommand):
             ordered_rating = [(k, v) for k, v in sorted(overall_rating.items(), key=lambda item: item[1], reverse=True)]
 
             rating_version = TeamRatingVersion(
-                number=version, date=timezone.localdate(), related_season=Season.objects.get(number=1)
+                number=version, date=timezone.localdate(), related_season=Season.objects.get(number=season.number)
             )
             rating_version.save()
             for rank, entry in enumerate(ordered_rating, 1):
                 TeamRating(version=rating_version, rank=rank, team=entry[0], total_points=entry[1]).save()
-
-            source_season_number += 1
-            version += 1
+            print(f'Rating calculation for season "{source_season.title}" is completed')
 
     def calculate_rating_points(self, overall_rating, season, season_count):
         season_weights = [1, 1, 1, 0.9, 0.8, 0.7]

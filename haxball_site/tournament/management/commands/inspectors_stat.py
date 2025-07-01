@@ -21,30 +21,39 @@ class Command(BaseCommand):
             all_matches = Match.objects.filter(is_played=True)
         else:
             try:
-                ses = Season.objects.get(number=options['champ_number'])
+                season = Season.objects.get(number=options['champ_number'])
             except:
                 raise CommandError('Выбран несуществующий сезон')
 
-            print('Выборка по сезону {}'.format(options['champ_number']))
-            all_matches = Match.objects.filter(league__championship=ses, is_played=True)
+            print(f'Выборка по сезону {season.short_title}')
+            all_matches = Match.objects.filter(league__championship=season, is_played=True)
         inspectors = {}
-        all_goals = 0
         all_events = 0
         for m in all_matches:
-            all_goals += m.match_goal.count()
-            all_events += m.match_substitutions.count() + m.match_event.count()
+            all_events += (
+                m.match_goal.count()
+                + m.match_substitutions.count()
+                + m.match_event.count()
+                + m.disqualifications.count()
+            )
             if m.inspector in inspectors:
                 inspectors[m.inspector].append(m)
             else:
                 inspectors[m.inspector] = []
                 inspectors[m.inspector].append(m)
 
-        print('Инспектор  М  Г другое sum')
+        print(f'{"Инспектор":>9} {"Матчи":>5} {"Процент матчей":>14} {"Действия":>8} {"Процент действий":>16}')
         for inspector in inspectors:
-            goals_added = 0
-            other_event_added = 0
+            events_added = 0
+            matches = len(inspectors[inspector])
             for m in inspectors[inspector]:
-                goals_added += m.match_goal.count()
-                other_event_added += m.match_substitutions.count() + m.match_event.count()
-            percent = round(100 * ((goals_added + other_event_added) / (all_goals + all_events)), 1)
-            print(inspector, len(inspectors[inspector]), goals_added + other_event_added, percent)
+                events_added += (
+                    m.match_goal.count()
+                    + m.match_substitutions.count()
+                    + m.match_event.count()
+                    + m.disqualifications.count()
+                )
+            matches_percent = round(100 * (matches / len(all_matches)), 1)
+            events_percent = round(100 * (events_added / all_events), 1)
+            inspector_username = inspector.username if inspector else '-'
+            print(f'{inspector_username:<9} {matches:<5} {matches_percent:<14} {events_added:<8} {events_percent:<16}')
