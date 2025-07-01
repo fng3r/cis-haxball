@@ -487,7 +487,7 @@ class PostponementAdmin(UnfoldModelAdmin):
         )
 
 
-class TournamentStageInline(StackedPolymorphicInline, UnfoldStackedInline):
+class TournamentStageInline(StackedPolymorphicInline):
     class RegularStageInline(StackedPolymorphicInline.Child, UnfoldStackedInline):
         model = RegularStage
         exclude = ('type', 'postponable')

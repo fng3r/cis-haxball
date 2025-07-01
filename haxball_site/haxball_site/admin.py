@@ -50,8 +50,8 @@ class UnfoldModelAdmin(ChainedForeignKeySupportMixin, unfold_admin.ModelAdmin):
 
 
 class UnfoldStackedInline(ChainedForeignKeySupportMixin, unfold_admin.StackedInline):
-    pass
+    collapsible = True
 
 
 class UnfoldTabularInline(ChainedForeignKeySupportMixin, unfold_admin.TabularInline):
-    pass
+    collapsible = True

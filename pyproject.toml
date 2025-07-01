@@ -71,7 +71,7 @@ dependencies = [
     "isodate==0.7.2",
     "django-notifications-hq==1.8.3",
     "django-vite==3.1.0",
-    "django-unfold==0.59.0",
+    "django-unfold==0.61.0",
 ]
 
 [tool.uv]
