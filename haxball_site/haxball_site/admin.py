@@ -54,4 +54,4 @@ class UnfoldStackedInline(ChainedForeignKeySupportMixin, unfold_admin.StackedInl
 
 
 class UnfoldTabularInline(ChainedForeignKeySupportMixin, unfold_admin.TabularInline):
-    collapsible = True
+    pass

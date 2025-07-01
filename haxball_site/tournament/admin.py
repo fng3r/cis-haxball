@@ -537,6 +537,7 @@ class TeamPenaltyPointsInline(UnfoldStackedInline):
     model = TeamPenaltyPoints
     extra = 1
     tab = True
+    collapsible = False
     fields = (('team', 'penalty_points'),)
 
 
@@ -744,7 +745,7 @@ class MatchResultInline(UnfoldTabularInline):
     can_delete = False
 
 
-class PosponementInline(UnfoldStackedInline):
+class PostponementInline(UnfoldStackedInline):
     model = Postponement
     extra = 0
     tab = True
@@ -757,6 +758,9 @@ class PosponementInline(UnfoldStackedInline):
         ('cancelled_at', 'cancelled_by'),
     )
     filter_horizontal = ('teams',)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(is_cancelled=False)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         resolved = resolve(request.path_info)
@@ -893,6 +897,7 @@ class MatchAdmin(UnfoldModelAdmin):
         SubstitutionInline,
         EventInline,
         DisqualificationInline,
+        PostponementInline,
     ]
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
