@@ -39,8 +39,18 @@
               </div>
             </form>
 
-            <div id="player-rating-table" class="tw:max-h-[960px] tw:overflow-y-auto tw:mb-1">
-              {% include 'tournament/partials/player_rating_table.html' %}
+            <div x-data="{ search: '' }">
+              <div class="tw:ml-1 tw:my-2 tw:flex">
+                <input type="search"
+                       x-model="search"
+                       placeholder="Поиск игрока..."
+                       class="tw:input tw:input-bordered tw:w-full tw:max-w-xs tw:text-base-content"
+                       autocomplete="off">
+              </div>
+
+              <div id="player-rating-table" class="tw:max-h-[960px] tw:overflow-y-auto tw:mb-1">
+                {% include 'tournament/partials/player_rating_table.html' %}
+              </div>
             </div>
           </div>
         </div>
