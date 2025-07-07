@@ -1,0 +1,30 @@
+{# Reusable player rating badge. Expects 'grade' and 'rating_points' in context. #}
+<span class="tw:badge tw:font-semibold tw:text-gray-700
+  {# djlint:off #}
+             {% if size == 'sm' %}tw:badge-sm{% else %}tw:badge-lg{% endif %}
+             {% if grade == 'S' %}
+               tw:bg-[#b6d4fe]
+             {% elif grade == 'A' %}
+               tw:bg-[#bbf7d0]
+             {% elif grade == 'B+' %}
+               tw:bg-[#fefcbf]
+             {% elif grade == 'B' %}
+               tw:bg-[#fef3c7]
+             {% elif grade == 'C' %}
+               tw:bg-[#fce7f3]
+             {% elif grade == 'D' %}
+               tw:bg-[#ffe4e6]
+             {% elif grade == 'E' %}
+               tw:bg-[#f3f4f6]
+             {% else %}
+               tw:bg-gray-200
+             {% endif %}
+            "
+  {# djlint:on #}
+>
+  {% if grade %}
+    {{ grade }}: {{ rating_points }}
+  {% else %}
+    N/A
+  {% endif %}
+</span>
