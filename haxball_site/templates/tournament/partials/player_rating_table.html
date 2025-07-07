@@ -64,11 +64,11 @@
               {% if prev is not None %}
                 {% with diff=rating_entry.rating_points|sub:prev %}
                   {% if diff > 0 %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-200 tw:text-gray-700 tw:font-semibold">+{{ diff }}</span>
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">+{{ diff }}</span>
                   {% elif diff < 0 %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-200 tw:text-gray-700 tw:font-semibold">{{ diff }}</span>
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ diff }}</span>
                   {% else %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-200 tw:text-gray-700 tw:font-semibold">—</span>
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
                   {% endif %}
                 {% endwith %}
               {% else %}
