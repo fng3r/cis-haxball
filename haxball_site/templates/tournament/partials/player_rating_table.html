@@ -10,7 +10,7 @@
       <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200"></th>
       <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Игрок</th>
       <th scope="col" class="tw:bg-base-300 tw:text-center! tw:border-r tw:border-neutral-200">Рейтинг</th>
-      <th scope="col" class="tw:bg-base-300 tw:text-center!">Изм. рейтинга</th>
+      {% if previous_ratings %}<th scope="col" class="tw:bg-base-300 tw:text-center!">Изм. рейтинга</th>{% endif %}
     </tr>
   </thead>
 
@@ -58,23 +58,25 @@
           </div>
         </td>
 
-        <td>
-          {% with prev=previous_ratings|get_or_default:rating_entry.player.id %}
-            {% if prev is not None %}
-              {% with diff=rating_entry.rating_points|sub:prev %}
-                {% if diff > 0 %}
-                  <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-200 tw:text-gray-700 tw:font-semibold">+{{ diff }}</span>
-                {% elif diff < 0 %}
-                  <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-200 tw:text-gray-700 tw:font-semibold">{{ diff }}</span>
-                {% else %}
-                  <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-200 tw:text-gray-700 tw:font-semibold">—</span>
-                {% endif %}
-              {% endwith %}
-            {% else %}
-              <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-200 tw:text-gray-700 tw:font-semibold">—</span>
-            {% endif %}
-          {% endwith %}
-        </td>
+        {% if previous_ratings %}
+          <td>
+            {% with prev=previous_ratings|get_or_default:rating_entry.player.id %}
+              {% if prev is not None %}
+                {% with diff=rating_entry.rating_points|sub:prev %}
+                  {% if diff > 0 %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-200 tw:text-gray-700 tw:font-semibold">+{{ diff }}</span>
+                  {% elif diff < 0 %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-200 tw:text-gray-700 tw:font-semibold">{{ diff }}</span>
+                  {% else %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-200 tw:text-gray-700 tw:font-semibold">—</span>
+                  {% endif %}
+                {% endwith %}
+              {% else %}
+                <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-200 tw:text-gray-700 tw:font-semibold">—</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+        {% endif %}
       </tr>
     {% endfor %}
   </tbody>
