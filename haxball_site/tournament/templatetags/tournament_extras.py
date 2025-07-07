@@ -1207,6 +1207,11 @@ def sorted_by_league(dictionary: defaultdict):
     return sorted(dictionary.items(), key=lambda item: item[0].id)
 
 
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+
 @register.simple_tag
 def stats_percentage(stat1, stat2):
     sum = stat1 + stat2
@@ -1258,3 +1263,12 @@ def user_teams(user: User):
             teams.append({'team': owned_team, 'titles': f'Владелец команды {owned_team}'})
 
     return teams
+
+
+@register.filter
+def grade_class(grade):
+    """Convert grade to CSS class name for styling"""
+    grade_lower = grade.lower()
+    if grade_lower == 'b+':
+        return 'b-plus'
+    return grade_lower

@@ -983,6 +983,41 @@ class TeamRatingView(ListView):
         return weighted_seasons_rating
 
 
+class PlayerRatingFilter(FilterSet):
+    version = ModelChoiceFilter(
+        queryset=PlayerRatingVersion.objects.all().order_by('-number'),
+        label='Версия рейтинга',
+        empty_label=None,
+    )
+
+    class Meta:
+        model = PlayerRating
+        fields = ['version']
+
+
+class PlayerRatingView(ListView):
+    queryset = PlayerRating.objects.select_related('player__name__user_profile', 'version').all()
+    template_name = 'tournament/player_rating.html'
+    latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
+
+    def get(self, request, **kwargs):
+        params = request.GET or {'version': self.latest_rating_version.number}
+        filter = PlayerRatingFilter(params, queryset=self.queryset)
+        selected_version = int(params['version'])
+        # Get previous version ratings
+        previous_ratings_qs = PlayerRating.objects.filter(version__number=selected_version - 1)
+        previous_ratings = {r.player_id: r.rating_points for r in previous_ratings_qs}
+        context = {
+            'filter': filter,
+            'previous_ratings': previous_ratings,
+        }
+
+        if request.htmx:
+            return render(request, 'tournament/partials/player_rating_table.html', context)
+
+        return render(request, self.template_name, context)
+
+
 def player_detailed_statistics(request, pk):
     user = User.objects.filter(id=pk).select_related('user_player').first()
     try:

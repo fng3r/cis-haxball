@@ -1,0 +1,138 @@
+{% load static %}
+{% load mathfilters %}
+{% load thumbnail %}
+{% load tournament_extras %}
+{% load utils %}
+
+<style>
+  .rating-badge {
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.85rem;
+    border: 1px solid #e5e7eb;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .grade-s {
+    background-color: #b6d4fe;
+    color: #0a2540;
+  }
+
+  .grade-a {
+    background-color: #bbf7d0;
+    color: #065f46;
+  }
+
+  .grade-b-plus {
+    background-color: #fefcbf;
+    color: #92400e;
+  }
+
+  .grade-b {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  .grade-c {
+    background-color: #fce7f3;
+    color: #a21caf;
+  }
+
+  .grade-d {
+    background-color: #ffe4e6;
+    color: #991b1b;
+  }
+
+  .grade-e {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+</style>
+
+<div x-data="{ search: '' }">
+  <div class="tw:ml-1 tw:my-2 tw:flex">
+    <input type="text"
+           x-model="search"
+           placeholder="Поиск игрока..."
+           class="tw:input tw:input-bordered tw:w-full tw:max-w-xs tw:text-base-content"
+           autocomplete="off">
+  </div>
+
+  <table class="tw:table tw:table-auto tw:table-pin-rows">
+    <thead class="tw:py-2">
+      <tr class="tw:bg-base-300">
+        <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200"></th>
+        <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Игрок</th>
+        <th scope="col" class="tw:bg-base-300 tw:text-center! tw:border-r tw:border-neutral-200">Рейтинг</th>
+        <th scope="col" class="tw:bg-base-300 tw:text-center!">Изм. рейтинга</th>
+      </tr>
+    </thead>
+
+    <tbody class="tw:text-center">
+      {% for rating_entry in filter.qs %}
+        <tr class="rating-row tw:row-hover tw:border-b tw:border-neutral-200"
+            x-show="search === '' || '{{ rating_entry.player.nickname|escapejs }}'.toLowerCase().includes(search.toLowerCase())">
+          <td class="tw:px-2 tw:border-r tw:border-neutral-200">
+            <div class="tw:flex tw:justify-center tw:text-lg tw:font-semibold">{{ forloop.counter }}</div>
+          </td>
+
+          <td class="tw:pr-1 tw:border-r tw:border-neutral-200" style="min-width: 300px;">
+            <div class="tw:flex tw:items-center tw:gap-x-2 tw:pt-1">
+              <div class="tw:avatar">
+                <div class="tw:w-10 tw:h-10 tw:rounded-full">
+                  {% if rating_entry.player.name and rating_entry.player.name.user_profile.avatar %}
+                    {% thumbnail rating_entry.player.name.user_profile.avatar "40x40" crop="center" as avatar %}
+                      <img src="{{ avatar.url }}" alt="{{ rating_entry.player.nickname }}" class="tw:rounded-full">
+                    {% endthumbnail %}
+                  {% else %}
+                    <img src="{% static 'img/no_avatar.png' %}" alt="{{ rating_entry.player.nickname }}" class="tw:rounded-full">
+                  {% endif %}
+                </div>
+              </div>
+              <div class="tw:flex tw:flex-col tw:items-start">
+                <h6 class="tw:mb-1! tw:text-lg">
+                  {% if rating_entry.player.name %}
+                    <a href="{{ rating_entry.player.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ rating_entry.player.nickname }}</a>
+                  {% else %}
+                    <span class="tw:text-base-content">{{ rating_entry.player.nickname }}</span>
+                  {% endif %}
+                </h6>
+                {% if rating_entry.player.team %}
+                  <a href="{{ rating_entry.player.team.get_absolute_url }}" class="tw:text-sm tw:text-base-content/70 tw:link tw:link-hover">{{ rating_entry.player.team.title }}</a>
+                {% else %}
+                  <span class="tw:text-sm tw:text-base-content/70">Без команды</span>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+
+          <td class="tw:border-r tw:border-neutral-200">
+            <div class="tw:flex tw:justify-center">
+              <span class="rating-badge tw:w-15 grade-{{ rating_entry.grade|grade_class }}">{{ rating_entry.grade }}: {{ rating_entry.rating_points }}</span>
+            </div>
+          </td>
+
+          <td>
+            {% with prev=previous_ratings|get_or_default:rating_entry.player.id %}
+              {% if prev is not None %}
+                {% with diff=rating_entry.rating_points|sub:prev %}
+                  {% if diff > 0 %}
+                    <span class="rating-badge tw:w-12 tw:bg-green-200 tw:text-green-900">+{{ diff }}</span>
+                  {% elif diff < 0 %}
+                    <span class="rating-badge tw:w-12 tw:bg-red-200 tw:text-red-900">{{ diff }}</span>
+                  {% else %}
+                    <span class="rating-badge tw:w-12 tw:bg-gray-200 tw:text-gray-700">—</span>
+                  {% endif %}
+                {% endwith %}
+              {% else %}
+                <span class="rating-badge tw:w-12 tw:bg-gray-200 tw:text-gray-700">—</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

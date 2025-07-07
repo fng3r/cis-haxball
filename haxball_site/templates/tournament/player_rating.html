@@ -1,0 +1,83 @@
+{% extends "core.html" %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Чемпионат | Рейтинг игроков — CIS-HAXBALL{% endblock %}
+
+{% block profile_of_user %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+
+    <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
+      <h2 class="tw:card-title">
+        <i class="fa fa-star tw:text-warning tw:mt-1" aria-hidden="true"></i>
+        Рейтинг игроков
+      </h2>
+    </div>
+
+    <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:bg-base-100 tw:rounded-b-lg" role="tablist">
+      <input type="radio" name="rating-tabs" class="tw:tab tw:pl-3! tw:font-semibold" role="tab" aria-label="Рейтинг" checked />
+      <div class="tw:tab-content">
+        <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
+          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2">
+            <form id="filter-form"
+                  class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
+                  hx-get="{% url 'tournament:players_rating' %}"
+                  hx-trigger="submit"
+                  hx-target="#player-rating-table"
+                  hx-swap="innerHTML show:top"
+                  hx-disabled-elt="find button">
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.version.label }}</label>
+                {% render_field filter.form.version|add_class:'tw:select' %}
+              </div>
+
+              <div class="tw:flex tw:mt-auto">
+                <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+                <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+              </div>
+            </form>
+
+            <div id="player-rating-table" class="tw:max-h-[960px] tw:overflow-y-auto tw:mb-1">
+              {% include 'tournament/partials/player_rating_table.html' %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="radio" name="rating-tabs" class="tw:tab tw:font-semibold" role="tab" aria-label="Справка" />
+      <div class="tw:tab-content tw:pt-2">
+        <div id="ref-info-tab-content" role="tabpanel" aria-labelledby="ref-info-tab">
+          <div class="tw:mx-3 tw:mt-1 tw:prose tw:max-w-none">
+            <p>Рейтинг игроков рассчитывается на основе их выступлений в матчах и распределяется по следующим грейдам:</p>
+            <ul>
+              <li>
+                <strong>S</strong> - Высший уровень мастерства
+              </li>
+              <li>
+                <strong>A</strong> - Отличный уровень
+              </li>
+              <li>
+                <strong>B+</strong> - Хороший уровень выше среднего
+              </li>
+              <li>
+                <strong>B</strong> - Хороший уровень
+              </li>
+              <li>
+                <strong>C</strong> - Средний уровень
+              </li>
+              <li>
+                <strong>D</strong> - Уровень ниже среднего
+              </li>
+              <li>
+                <strong>E</strong> - Начинающий уровень
+              </li>
+            </ul>
+            <p>Рейтинг обновляется регулярно на основе последних выступлений игроков в турнирах.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
