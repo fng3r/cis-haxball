@@ -1,9 +1,11 @@
+import statistics
 from collections import defaultdict
 from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.db import models
 from django.db.models import Count, Exists, F, Max, OuterRef, Prefetch, Q, Subquery, Window
 from django.db.models.functions import Coalesce, Rank
 from django.http import HttpResponse
@@ -41,6 +43,7 @@ from .models import (
     Team,
     TeamRating,
     TeamRatingVersion,
+    TourNumber,
 )
 from .services.hall_of_fame import HallOfFameService
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
@@ -983,6 +986,140 @@ class TeamRatingView(ListView):
         return weighted_seasons_rating
 
 
+class TeamPlayersRatingView(View):
+    class SeasonPhase(models.TextChoices):
+        START = 'start'
+        FIRST_HALF_END = 'first-half-end'
+        SECOND_HALF_START = 'second-half-start'
+        END = 'end'
+
+    def get(self, request):
+        season_id = request.GET.get('season')
+        phase = request.GET.get('phase', self.SeasonPhase.START)
+
+        if season_id:
+            season = get_object_or_404(Season, id=season_id)
+        else:
+            season = Season.objects.filter(number__gte=16).order_by('-number').first()
+
+        phase_date = self.get_phase_date(season, phase)
+        rating_version = PlayerRatingVersion.objects.filter(date__lte=phase_date).order_by('-number').first()
+        if not rating_version:
+            rating_version = PlayerRatingVersion.objects.order_by('-number').first()
+
+        team_players_rating = []
+
+        teams_in_season = Team.objects.filter(leagues__championship=season).distinct()
+        for team in teams_in_season:
+            team_players = []
+            incoming_transfers = PlayerTransfer.objects.filter(
+                season_join=season, to_team=team, is_technical=False
+            ).select_related('trans_player__name__user_profile')
+
+            for transfer in incoming_transfers:
+                player = transfer.trans_player
+                latest_transfer = (
+                    PlayerTransfer.objects.filter(
+                        trans_player=player, season_join=season, date_join__lte=phase_date, is_technical=False
+                    )
+                    .order_by('-date_join', '-id')
+                    .first()
+                )
+
+                if latest_transfer and latest_transfer.to_team == team:
+                    team_players.append(player)
+
+            team_player_ratings = (
+                PlayerRating.objects.filter(version=rating_version, player__in=team_players)
+                .select_related('player__name__user_profile')
+                .order_by('-rating_points')
+            )
+
+            if not team_player_ratings.exists():
+                continue
+
+            all_player_ratings = {pr.player: pr for pr in team_player_ratings}
+            for player in team_players:
+                if player not in all_player_ratings:
+                    all_player_ratings[player] = None
+
+            all_ratings = [pr.rating_points for pr in team_player_ratings]
+            top4_ratings = all_ratings[:4] if len(all_ratings) >= 4 else []
+            top5_ratings = all_ratings[:5] if len(all_ratings) >= 5 else []
+
+            all_avg = statistics.mean(all_ratings) if all_ratings else None
+            top4_avg = statistics.mean(top4_ratings) if top4_ratings else None
+            top5_avg = statistics.mean(top5_ratings) if top5_ratings else None
+
+            team_players_rating.append(
+                {
+                    'team': team,
+                    'top4_avg': top4_avg,
+                    'top5_avg': top5_avg,
+                    'all_avg': all_avg,
+                    'players': all_player_ratings,
+                }
+            )
+
+        team_players_rating.sort(
+            key=lambda x: (x['top4_avg'] or 0, x['top5_avg'] or 0, x['all_avg'] or 0), reverse=True
+        )
+
+        context = {
+            'team_players_rating': team_players_rating,
+            'season': season,
+            'rating_version': rating_version,
+            'phase': phase,
+            'phase_date': phase_date,
+        }
+
+        return render(request, 'tournament/rating/partials/team_players_rating_table.html', context)
+
+    def get_phase_date(self, season, phase):
+        """Determine the date for the selected phase of the season."""
+        if phase == self.SeasonPhase.START:
+            earliest_tour = TourNumber.objects.filter(league__championship=season).order_by('date_from').first()
+
+            if earliest_tour:
+                return earliest_tour.date_from - timedelta(days=1)
+
+        if phase == self.SeasonPhase.END:
+            latest_tour = TourNumber.objects.filter(league__championship=season).order_by('-date_to').first()
+
+            if latest_tour:
+                return latest_tour.date_to
+
+        # These phases are only applicable for primary seasons (ЧР)
+        if phase in [self.SeasonPhase.FIRST_HALF_END, self.SeasonPhase.SECOND_HALF_START] and season.title.startswith(
+            'ЧР'
+        ):
+            league = League.objects.filter(championship=season, title__contains='лига').first()
+            if not league:
+                return datetime.now().date()
+
+            tours = list(TourNumber.objects.filter(league=league).order_by('date_from'))
+
+            if not tours:
+                return datetime.now().date()
+
+            total_tours = len(tours)
+            half_point = total_tours // 2
+
+            if phase == self.SeasonPhase.FIRST_HALF_END:
+                first_half_tours = tours[:half_point]
+                if first_half_tours:
+                    return first_half_tours[-1].date_to
+                return tours[0].date_to
+
+            if phase == self.SeasonPhase.SECOND_HALF_START:
+                second_half_tours = tours[half_point:]
+                if second_half_tours:
+                    return second_half_tours[0].date_from
+                return tours[-1].date_from
+
+        return datetime.now().date()
+
+
 class PlayerRatingFilter(FilterSet):
     version = ModelChoiceFilter(
         queryset=PlayerRatingVersion.objects.all().order_by('-number'),
@@ -1004,12 +1141,24 @@ class PlayerRatingView(ListView):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = PlayerRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
-        # Get previous version ratings
         previous_ratings_qs = PlayerRating.objects.filter(version__number=selected_version - 1)
         previous_ratings = {r.player_id: r.rating_points for r in previous_ratings_qs}
+
+        # Get seasons for team rating tab
+        seasons = Season.objects.filter(number__gte=16).order_by('-number')
+        selected_season = seasons.first()
+        selected_phase = 'start'  # Default phase
+
+        # Prepare seasons data for Alpine.js
+        seasons_data = [{'id': season.id, 'title': season.title} for season in seasons]
+
         context = {
             'filter': filter,
             'previous_ratings': previous_ratings,
+            'seasons': seasons,
+            'seasons_data': seasons_data,
+            'selected_season': selected_season,
+            'selected_phase': selected_phase,
         }
 
         if request.htmx:

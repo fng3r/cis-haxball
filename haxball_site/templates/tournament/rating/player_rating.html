@@ -16,7 +16,7 @@
     </div>
 
     <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:bg-base-100 tw:rounded-b-lg" role="tablist">
-      <input type="radio" name="rating-tabs" class="tw:tab tw:pl-3! tw:font-semibold" role="tab" aria-label="Рейтинг" checked />
+      <input type="radio" name="rating-tabs" class="tw:tab tw:pl-3! tw:font-semibold" role="tab" aria-label="Игроки" checked />
       <div class="tw:tab-content">
         <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
           <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2">
@@ -51,6 +51,55 @@
               <div id="player-rating-table" class="tw:max-h-[900px] tw:overflow-y-auto tw:mb-1">
                 {% include 'tournament/rating/partials/player_rating_table.html' %}
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="radio" name="rating-tabs" class="tw:tab tw:font-semibold" role="tab" aria-label="Команды" />
+      <div class="tw:tab-content">
+        <div id="teams-rating-tab-content" role="tabpanel" aria-labelledby="teams-rating-tab">
+          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2">
+            <form id="teams-filter-form"
+                  class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
+                  hx-get="{% url 'tournament:teams_rating' %}"
+                  hx-trigger="submit"
+                  hx-target="#teams-rating-table"
+                  hx-swap="innerHTML show:top"
+                  hx-disabled-elt="find button"
+                  x-data="{ selectedSeason: '', isPrimarySeason(season) { return season.startsWith('ЧР'); } }">
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold">Сезон</label>
+                <select name="season"
+                        class="tw:select tw:select-bordered"
+                        @change="selectedSeason = $el.options[$el.selectedIndex].dataset.seasonTitle">
+                  {% for season in seasons %}
+                    <option value="{{ season.id }}" {% if forloop.first %}selected{% endif %} data-season-title="{{ season.title }}">
+                      {{ season.title }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold">Фаза сезона</label>
+                <select name="phase" class="tw:select tw:select-bordered">
+                  <option value="start" selected>Начало сезона</option>
+                  <option value="first-half-end" x-show="isPrimarySeason(selectedSeason)">Конец первого круга</option>
+                  <option value="second-half-start" x-show="isPrimarySeason(selectedSeason)">Начало второго круга</option>
+                  <option value="end">Конец сезона</option>
+                </select>
+              </div>
+
+              <div class="tw:flex tw:mt-auto">
+                <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+                <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+              </div>
+            </form>
+
+            <div id="teams-rating-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:mb-1">
+              {% include 'tournament/rating/partials/team_players_rating_table.html' %}
             </div>
           </div>
         </div>
