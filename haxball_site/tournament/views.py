@@ -905,7 +905,7 @@ class TeamRatingFilter(FilterSet):
 
 class TeamRatingView(ListView):
     queryset = TeamRating.objects.select_related('team').all()
-    template_name = 'tournament/team_rating.html'
+    template_name = 'tournament/rating/team_rating.html'
     latest_rating_version = TeamRatingVersion.objects.order_by('-number').first()
 
     def get(self, request, **kwargs):
@@ -939,7 +939,7 @@ class TeamRatingView(ListView):
         }
 
         if request.htmx:
-            return render(request, 'tournament/partials/team_rating_table.html', context)
+            return render(request, 'tournament/rating/partials/team_rating_table.html', context)
 
         return render(request, self.template_name, context)
 
@@ -997,7 +997,7 @@ class PlayerRatingFilter(FilterSet):
 
 class PlayerRatingView(ListView):
     queryset = PlayerRating.objects.select_related('player__name__user_profile', 'version').all()
-    template_name = 'tournament/player_rating.html'
+    template_name = 'tournament/rating/player_rating.html'
     latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
 
     def get(self, request, **kwargs):
@@ -1013,7 +1013,7 @@ class PlayerRatingView(ListView):
         }
 
         if request.htmx:
-            return render(request, 'tournament/partials/player_rating_table.html', context)
+            return render(request, 'tournament/rating/partials/player_rating_table.html', context)
 
         return render(request, self.template_name, context)
 

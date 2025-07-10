@@ -53,7 +53,7 @@
             {% if is_current %}
               {% with player_rating=current_squad_rating|get_or_default:player %}
                 <span x-show="show_rating">
-                  {% include 'tournament/partials/player_rating_badge.html' with grade=player_rating.grade rating_points=player_rating.rating_points size='sm' %}
+                  {% include 'tournament/rating/partials/player_rating_badge.html' with grade=player_rating.grade rating_points=player_rating.rating_points size='sm' %}
                 </span>
               {% endwith %}
             {% endif %}
