@@ -1011,32 +1011,34 @@ class TeamPlayersRatingView(View):
 
         teams_in_season = Team.objects.filter(leagues__championship=season).distinct()
         for team in teams_in_season:
-            team_players = []
-            incoming_transfers = PlayerTransfer.objects.filter(
-                season_join=season, to_team=team, is_technical=False
-            ).select_related('trans_player__name__user_profile')
-
-            for transfer in incoming_transfers:
-                player = transfer.trans_player
-                latest_transfer = (
-                    PlayerTransfer.objects.filter(
-                        trans_player=player, season_join=season, date_join__lte=phase_date, is_technical=False
+            team_players = (
+                Player.objects.filter(
+                    Exists(
+                        PlayerTransfer.objects.filter(
+                            trans_player=OuterRef('id'), season_join=season, is_technical=False, to_team=team
+                        )
                     )
-                    .order_by('-date_join', '-id')
-                    .first()
                 )
-
-                if latest_transfer and latest_transfer.to_team == team:
-                    team_players.append(player)
+                .annotate(
+                    latest_transfer_team=Subquery(
+                        PlayerTransfer.objects.filter(
+                            trans_player=OuterRef('id'),
+                            season_join=season,
+                            date_join__lte=phase_date,
+                            is_technical=False,
+                        )
+                        .order_by('-date_join', '-id')
+                        .values('to_team')[:1]
+                    )
+                )
+                .filter(latest_transfer_team=team)
+            )
 
             team_player_ratings = (
                 PlayerRating.objects.filter(version=rating_version, player__in=team_players)
                 .select_related('player__name__user_profile')
                 .order_by('-rating_points')
             )
-
-            if not team_player_ratings.exists():
-                continue
 
             all_player_ratings = {pr.player: pr for pr in team_player_ratings}
             for player in team_players:
@@ -1144,21 +1146,14 @@ class PlayerRatingView(ListView):
         previous_ratings_qs = PlayerRating.objects.filter(version__number=selected_version - 1)
         previous_ratings = {r.player_id: r.rating_points for r in previous_ratings_qs}
 
-        # Get seasons for team rating tab
         seasons = Season.objects.filter(number__gte=16).order_by('-number')
         selected_season = seasons.first()
-        selected_phase = 'start'  # Default phase
-
-        # Prepare seasons data for Alpine.js
-        seasons_data = [{'id': season.id, 'title': season.title} for season in seasons]
 
         context = {
             'filter': filter,
             'previous_ratings': previous_ratings,
             'seasons': seasons,
-            'seasons_data': seasons_data,
             'selected_season': selected_season,
-            'selected_phase': selected_phase,
         }
 
         if request.htmx:
