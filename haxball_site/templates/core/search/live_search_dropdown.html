@@ -1,0 +1,57 @@
+{% load static %}
+
+{% partialdef search_result_items %}
+  {% if items %}
+    <div class="category-container tw:border-b tw:border-base-300">
+      <div class="category-header tw:px-3 tw:py-2 tw:font-semibold tw:text-sm tw:text-base-content/60 tw:pointer-events-none">
+        {{ items_type }} ({{ items.count }})
+      </div>
+      {% for item in items|slice:":5" %}
+        <a href="{{ item.get_absolute_url }}" class="tw:block tw:px-3 tw:py-2 tw:transition-colors">
+          {% if items_type == 'Пользователи' %}
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <img src="{{ item.avatar.url }}" alt="{{ item.name.username }}" class="tw:w-6 tw:h-6 tw:rounded-full">
+              <span class="tw:font-medium">{{ item.name.username }}</span>
+            </div>
+          {% elif items_type == 'Команды' %}
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <img src="{{ item.logo.url }}" alt="{{ item.title }}" class="tw:w-6 tw:h-6 tw:rounded">
+              <span class="tw:font-medium">{{ item.title }}</span>
+            </div>
+          {% elif items_type == 'Посты' %}
+            <div class="tw:flex tw:flex-col">
+              <span class="tw:font-medium tw:text-sm">{{ item.title }}</span>
+              <span class="tw:text-xs tw:opacity-70">{{ item.created|date:"d.m.Y" }}</span>
+            </div>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endpartialdef %}
+
+<div class="tw:absolute tw:top-full tw:left-0 tw:right-0 tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-lg tw:shadow-lg tw:z-50 tw:max-h-120 tw:overflow-y-auto">
+  {% if query %}
+    {% if profiles or teams or posts %}
+      {% with items=profiles items_type='Пользователи' %}
+        {% partial search_result_items %}
+      {% endwith %}
+
+      {% with items=teams items_type='Команды' %}
+        {% partial search_result_items %}
+      {% endwith %}
+
+      {% with items=posts items_type='Посты' %}
+        {% partial search_result_items %}
+      {% endwith %}
+
+      <!-- View All Results Link - Only show when some results are hidden -->
+      {% if profiles.count > 5 or teams.count > 5 or posts.count > 5 %}
+        <a href="{% url 'core:filter' %}?q={{ query }}"
+           class="tw:block tw:p-2 tw:text-center tw:text-sm tw:text-primary tw:font-medium tw:transition-colors">Показать все результаты</a>
+      {% endif %}
+    {% else %}
+      <div class="tw:px-3 tw:py-4 tw:text-center tw:text-base-content/60">Ничего не найдено</div>
+    {% endif %}
+  {% endif %}
+</div>

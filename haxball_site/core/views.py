@@ -465,13 +465,26 @@ class VotesView(View):
 
 
 def search_result(request):
-    a = request.GET.get('q')
-    profile_list = Profile.objects.filter(name__username__icontains=a)
-    team_list = Team.objects.filter(title__icontains=a)
-    post_list = Post.objects.filter(title__icontains=a)
+    query = request.GET.get('q')
+    if not query:
+        profile_list = Profile.objects.none()
+        team_list = Team.objects.none()
+        post_list = Post.objects.none()
+    else:
+        profile_list = Profile.objects.filter(name__username__icontains=query)
+        team_list = Team.objects.filter(title__icontains=query)
+        post_list = Post.objects.filter(title__icontains=query)
+
+    if request.htmx:
+        return render(
+            request,
+            'core/search/live_search_dropdown.html',
+            {'profiles': profile_list, 'teams': team_list, 'posts': post_list, 'query': query},
+        )
+
     return render(
         request,
-        'core/search_result/search_result.html',
+        'core/search/search_result.html',
         {'profiles': profile_list, 'teams': team_list, 'posts': post_list},
     )
 
