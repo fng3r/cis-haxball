@@ -2,12 +2,12 @@
 
 {% partialdef search_result_items %}
   {% if items %}
-    <div class="category-container tw:border-b tw:border-base-300">
+    <div class="category-container tw:border-b tw:border-base-300 tw:p-1">
       <div class="category-header tw:px-3 tw:py-2 tw:font-semibold tw:text-sm tw:text-base-content/60 tw:pointer-events-none">
         {{ items_type }} ({{ items.count }})
       </div>
       {% for item in items|slice:":5" %}
-        <a href="{{ item.get_absolute_url }}" class="tw:block tw:px-3 tw:py-2 tw:transition-colors">
+        <a href="{{ item.get_absolute_url }}" class="tw:block tw:px-3 tw:py-2 tw:rounded tw:transition-colors">
           {% if items_type == 'Пользователи' %}
             <div class="tw:flex tw:items-center tw:gap-2">
               <img src="{{ item.avatar.url }}" alt="{{ item.name.username }}" class="tw:w-6 tw:h-6 tw:rounded-full">
