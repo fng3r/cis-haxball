@@ -1133,7 +1133,7 @@ class PlayerRatingFilter(FilterSet):
 
 
 class PlayerRatingView(ListView):
-    queryset = PlayerRating.objects.select_related('player__name__user_profile', 'version').all()
+    queryset = PlayerRating.objects.select_related('player__name__user_profile', 'player__team', 'version').all()
     template_name = 'tournament/rating/player_rating.html'
     latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
 
