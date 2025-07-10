@@ -17,7 +17,7 @@ function handleSearchKeydown(event) {
     return;
   }
 
-  switch (event.key) {
+  switch (event.code) {
     case 'ArrowDown':
       event.preventDefault();
       currentSearchIndex = (currentSearchIndex + 1) % searchResults.length;
@@ -111,7 +111,7 @@ document.addEventListener('htmx:afterRequest', function(event) {
 
 // Global keyboard shortcut to focus search input
 document.addEventListener('keydown', function(event) {
-  if ((event.ctrlKey || event.metaKey) && event.key === 'i') {
+  if ((event.ctrlKey || event.metaKey) && event.code === 'KeyI') {
     event.preventDefault();
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
