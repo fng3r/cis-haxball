@@ -30,6 +30,16 @@ class Command(BaseCommand):
             type=str,
             help='List of usernames to include in the prediction tournament',
         )
+        parser.add_argument(
+            '--real-teams',
+            action='store_true',
+            help='Use real random teams instead of test teams',
+        )
+        parser.add_argument(
+            '--real-users',
+            action='store_true',
+            help='Use real random users instead of test users',
+        )
 
     def handle(self, *args, **options):
         if options['clean'] or options['clean_only']:
@@ -37,7 +47,11 @@ class Command(BaseCommand):
         if options['clean_only']:
             return
         with transaction.atomic():
-            self.create_test_environment(users=options.get('users', []))
+            self.create_test_environment(
+                users=options.get('users', []),
+                real_teams=options.get('real_teams', False),
+                real_users=options.get('real_users', False),
+            )
         self.stdout.write(self.style.SUCCESS('Test prediction environment created successfully!'))
 
     def clean_test_data(self):
@@ -62,7 +76,7 @@ class Command(BaseCommand):
         # Do NOT delete users or teams
         self.stdout.write(self.style.SUCCESS('Test data cleaned'))
 
-    def create_test_environment(self, users=None):
+    def create_test_environment(self, users=None, real_teams=False, real_users=False):
         """Create complete test environment"""
         if users is None:
             users = []
@@ -84,19 +98,20 @@ class Command(BaseCommand):
             league=tournament, defaults={'order': 1, 'awarded_count': 3, 'promoted_count': 2, 'relegated_count': 2}
         )
 
-        # Use or create test teams
-        teams = []
-        for i in range(1, 11):
-            team, _ = Team.objects.get_or_create(
-                title=f'Test Team {i}',
-                defaults={
-                    'slug': f'test-team-{i}',
-                    'short_title': f'TT{i}',
-                    'date_found': timezone.now().date(),
-                },
-            )
-            teams.append(team)
-        # Add teams to tournament and stage
+        if real_teams:
+            teams = list(Team.objects.exclude(title__startswith='Test Team').order_by('?')[:10])
+        else:
+            teams = []
+            for i in range(1, 11):
+                team, _ = Team.objects.get_or_create(
+                    title=f'Test Team {i}',
+                    defaults={
+                        'slug': f'test-team-{i}',
+                        'short_title': f'TT{i}',
+                        'date_found': timezone.now().date(),
+                    },
+                )
+                teams.append(team)
         tournament.teams.set(teams)
         stage.teams.set(teams)
 
@@ -223,12 +238,20 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING('Admin user not found.'))
         # Add test users to reach at least 15 total users
         excluded_usernames = [u.username for u in test_users]
-        for i in range(1, 16 - len(test_users) + 1):
-            username = f'predictions-test-user-{i}'
-            if username not in excluded_usernames:
-                user, _ = User.objects.get_or_create(username=username, defaults={'is_active': True})
-                test_users.append(user)
-                self.stdout.write(f'Added test user: {user.username}')
+        if real_users:
+            additional_users = list(
+                User.objects.exclude(username__in=excluded_usernames).order_by('?')[: 15 - len(test_users)]
+            )
+            test_users.extend(additional_users)
+            if additional_users:
+                self.stdout.write(f'Added real users: {", ".join([u.username for u in additional_users])}')
+        else:
+            for i in range(1, 16 - len(test_users) + 1):
+                username = f'predictions-test-user-{i}'
+                if username not in excluded_usernames:
+                    user, _ = User.objects.get_or_create(username=username, defaults={'is_active': True})
+                    test_users.append(user)
+                    self.stdout.write(f'Added test user: {user.username}')
         if not test_users:
             self.stdout.write(self.style.ERROR('No users found to create predictions for.'))
             return
