@@ -7,7 +7,7 @@
     <span>Прогнозы других пользователей видны только после старта соответствующего тура</span>
   </div>
 
-  <div class="tw:flex tw:flex-col tw:gap-4">
+  <div class="tw:flex tw:flex-col tw:gap-6">
     <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
           hx-get="{% url 'predictions:view_predictions_tab' %}"
           hx-target="#view-predictions-content"
@@ -26,8 +26,8 @@
     </form>
 
     {% if selected_tournament and selected_user %}
-      <div class="tw:mt-4">
-        <h5 class="tw:text-md tw:font-semibold tw:mb-2">
+      <div>
+        <h5 class="tw:text-md tw:font-semibold">
           Прогнозы пользователя {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}:
         </h5>
 
@@ -44,7 +44,7 @@
                       <div class="tw:mt-2 tw:space-y-1">
                         {% for prediction in submission.predictions.all %}
                           {% with match=prediction.match %}
-                            <div class="tw:flex tw:flex-col tw:bg-base-100 tw:p-2 tw:rounded tw:text-xs">
+                            <div class="tw:flex tw:flex-col tw:bg-base-100 tw:p-2 tw:rounded tw:text-sm">
                               <div class="tw:flex tw:items-center tw:gap-2">
                                 <div class="tw:flex tw:items-center tw:gap-1">
                                   {% if match.team_home.logo %}
@@ -94,7 +94,7 @@
                   <div class="tw:card tw:bg-base-200 tw:shadow-sm tw:opacity-50">
                     <div class="tw:card-body tw:p-4">
                       <h6 class="tw:card-title tw:text-sm">Тур {{ forloop.counter }}</h6>
-                      <p class="tw:text-xs tw:text-base-content/70">Тур еще открыт для прогнозов</p>
+                      <p class="tw:text-sm tw:text-base-content/70">Тур еще открыт для прогнозов</p>
                     </div>
                   </div>
                 {% endif %}

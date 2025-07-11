@@ -3,7 +3,7 @@
 {% load predictions_extras %}
 
 <div class="tw:flex tw:flex-col tw:gap-4">
-  <div class="tw:flex tw:flex-col tw:gap-2">
+  <div class="tw:flex tw:flex-col tw:gap-6">
     <form class="tw:flex tw:items-center tw:gap-4"
           hx-get="{% url 'predictions:make_predictions_tab' %}"
           hx-target="#make-predictions-content"
@@ -17,8 +17,8 @@
     </form>
 
     {% if selected_tournament %}
-      <div class="tw:mt-4">
-        <h5 class="tw:text-md tw:font-semibold tw:mb-2">{{ selected_tournament.league.title }}</h5>
+      <div>
+        <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
 
         <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
           {% for tour in selected_tournament.league.tours.all %}

@@ -31,7 +31,7 @@
     <div class="tw:mt-2 tw:space-y-1">
       {% for match in tour.tour_matches.all %}
         {% with prediction=submission.predictions.all|filter_prediction_for_match:match %}
-          <div class="tw:flex tw:items-center tw:gap-2 tw:text-xs tw:bg-base-100 tw:p-2 tw:rounded">
+          <div class="tw:flex tw:items-center tw:gap-2 tw:text-sm tw:bg-base-100 tw:p-2 tw:rounded">
             <div class="tw:flex tw:items-center tw:gap-1">
               {% if match.team_home.logo %}
                 <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
