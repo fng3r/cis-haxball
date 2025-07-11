@@ -60,7 +60,6 @@ def predictions_main(request):
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
 
     active_tournaments = PredictionTournament.objects.filter(is_active=True)
-    open_tours = get_open_tours()
 
     # Render the make_predictions_tab content for initial load
     make_predictions_tab_html = make_predictions_tab(
@@ -73,7 +72,6 @@ def predictions_main(request):
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
         'active_tournaments': active_tournaments,
-        'open_tours': open_tours,
         'make_predictions_tab_html': make_predictions_tab_html,
     }
     return render(request, 'predictions/main.html', context)
@@ -161,12 +159,15 @@ def view_predictions_tab(request):
             except PredictionSubmission.DoesNotExist:
                 predictions_data[tour.id] = None
 
+    open_tours = get_open_tours()
+
     context = {
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
         'predictions_data': predictions_data,
+        'open_tours': open_tours,
     }
 
     return render(request, 'predictions/view_predictions_tab.html', context)

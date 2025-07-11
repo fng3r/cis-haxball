@@ -25,7 +25,7 @@
                name="predictions-tabs"
                class="tw:tab"
                role="tab"
-               aria-label="Посмотреть прогнозы"
+               aria-label="Все прогнозы"
                hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
                hx-target="#view-predictions-content"
                hx-trigger="click once" />

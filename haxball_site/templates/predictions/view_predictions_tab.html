@@ -8,8 +8,6 @@
   </div>
 
   <div class="tw:flex tw:flex-col tw:gap-4">
-    <h4 class="tw:text-lg tw:font-semibold">Выберите турнир и пользователя:</h4>
-
     <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
           hx-get="{% url 'predictions:view_predictions_tab' %}"
           hx-target="#view-predictions-content"
@@ -39,11 +37,9 @@
               {% if submission %}
                 <div class="tw:card tw:bg-base-200 tw:shadow-sm">
                   <div class="tw:card-body tw:p-4">
-                    <h6 class="tw:card-title tw:text-sm">
-                      Тур {{ submission.tour.number }}:
-                      <span class="tw:font-normal">{{ submission.tour.date_from|date:"d.m.y" }} – {{ submission.tour.date_to|date:"d.m.y" }}</span>
+                    <h6 class="tw:card-title">
+                      <span class="tw:font-semibold tw:text-lg">Тур {{ submission.tour.number }} ({{ submission.tour.date_from|date:"d.m.y" }} – {{ submission.tour.date_to|date:"d.m.y" }})</span>
                     </h6>
-                    <p class="tw:text-xs tw:text-base-content/70">Прогнозов: {{ submission.predictions.count }}</p>
                     {% if submission.predictions.count > 0 %}
                       <div class="tw:mt-2 tw:space-y-1">
                         {% for prediction in submission.predictions.all %}
@@ -54,7 +50,7 @@
                                   {% if match.team_home.logo %}
                                     <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
                                   {% endif %}
-                                  <span class="tw:font-semibold">{{ match.team_home.title }}</span>
+                                  <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_guest %}tw:text-base-content/80{% endif %}">{{ match.team_home.title }}</span>
                                 </div>
                                 {% if match.is_played %}
                                   <span class="tw:px-1 tw:font-bold">{{ match.score_home }}:{{ match.score_guest }}</span>
@@ -62,7 +58,7 @@
                                   <span class="tw:px-1">vs</span>
                                 {% endif %}
                                 <div class="tw:flex tw:items-center tw:gap-1">
-                                  <span class="tw:font-semibold">{{ match.team_guest.title }}</span>
+                                  <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_home %}tw:text-base-content/80{% endif %}">{{ match.team_guest.title }}</span>
                                   {% if match.team_guest.logo %}
                                     <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
                                   {% endif %}
@@ -94,18 +90,14 @@
                   </div>
                 </div>
               {% else %}
-                <div class="tw:card tw:bg-base-200 tw:shadow-sm tw:opacity-50">
-                  <div class="tw:card-body tw:p-4">
-                    <h6 class="tw:card-title tw:text-sm">Тур {{ forloop.counter }}</h6>
-                    <p class="tw:text-xs tw:text-base-content/70">
-                      {% if tour_id in open_tours %}
-                        Тур еще открыт для прогнозов
-                      {% else %}
-                        Прогнозы не сделаны
-                      {% endif %}
-                    </p>
+                {% if tour_id in open_tours %}
+                  <div class="tw:card tw:bg-base-200 tw:shadow-sm tw:opacity-50">
+                    <div class="tw:card-body tw:p-4">
+                      <h6 class="tw:card-title tw:text-sm">Тур {{ forloop.counter }}</h6>
+                      <p class="tw:text-xs tw:text-base-content/70">Тур еще открыт для прогнозов</p>
+                    </div>
                   </div>
-                </div>
+                {% endif %}
               {% endif %}
             {% endfor %}
           </div>
@@ -116,13 +108,8 @@
           </div>
         {% endif %}
       </div>
-    {% elif selected_tournament or selected_user %}
-      <div class="tw:alert tw:alert-info">
-        <i class="fa fa-info-circle tw:mr-2"></i>
-        <span>Выберите и турнир, и пользователя для просмотра прогнозов.</span>
-      </div>
     {% else %}
-      <div class="tw:alert tw:alert-info">
+      <div class="tw:alert tw:alert-warning">
         <i class="fa fa-info-circle tw:mr-2"></i>
         <span>Выберите турнир и пользователя, чтобы увидеть их прогнозы.</span>
       </div>

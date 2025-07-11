@@ -23,7 +23,7 @@
         {% elif tour|is_not_open_yet %}
           <span class="tw:badge tw:badge-info tw:badge-sm">Откроется {{ tour|get_tour_opening_date|date:"d.m" }}</span>
         {% else %}
-          <span class="tw:badge tw:badge-neutral tw:badge-sm">Тур закрыт</span>
+          <span class="tw:badge tw:badge-neutral tw:badge-sm">Прием прогнозов закрыт</span>
         {% endif %}
       </div>
     </div>
