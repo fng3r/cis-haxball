@@ -25,7 +25,7 @@
                   hx-get="{% url 'tournament:players_rating' %}"
                   hx-trigger="submit"
                   hx-target="#player-rating-table"
-                  hx-swap="innerHTML show:top"
+                  hx-swap="innerHTML scroll:top"
                   hx-disabled-elt="find button">
 
               <div class="tw:flex tw:flex-col tw:justify-center">
@@ -65,9 +65,9 @@
                   hx-get="{% url 'tournament:teams_rating' %}"
                   hx-trigger="submit"
                   hx-target="#teams-rating-table"
-                  hx-swap="innerHTML show:top"
+                  hx-swap="innerHTML scroll:top"
                   hx-disabled-elt="find button"
-                  x-data="{ selectedSeason: '{{ selected_season. }}', isPrimarySeason(season) { return season.startsWith('ЧР'); } }">
+                  x-data="{ selectedSeason: '{{ selected_season.title }}', activeSeason: '{{ active_season.title }}', isPrimarySeason(season) { return season.startsWith('ЧР'); } }">
 
               <div class="tw:flex tw:flex-col tw:justify-center">
                 <label class="tw:label tw:text-base-content tw:font-bold">Сезон</label>
@@ -85,7 +85,8 @@
               <div class="tw:flex tw:flex-col tw:justify-center">
                 <label class="tw:label tw:text-base-content tw:font-bold">Фаза сезона</label>
                 <select name="phase" class="tw:select tw:select-bordered">
-                  <option value="start" selected>Начало сезона</option>
+                  <option value="now" x-show="selectedSeason === activeSeason" :selected="selectedSeason === activeSeason">Текущий период</option>
+                  <option value="start" :selected="selectedSeason !== activeSeason">Начало сезона</option>
                   <option value="first-half-end" x-show="isPrimarySeason(selectedSeason)">Конец первого круга</option>
                   <option value="second-half-start" x-show="isPrimarySeason(selectedSeason)">Начало второго круга</option>
                   <option value="end">Конец сезона</option>

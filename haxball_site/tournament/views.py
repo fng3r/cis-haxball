@@ -988,6 +988,7 @@ class TeamRatingView(ListView):
 
 class TeamPlayersRatingView(View):
     class SeasonPhase(models.TextChoices):
+        NOW = 'now'
         START = 'start'
         FIRST_HALF_END = 'first-half-end'
         SECOND_HALF_START = 'second-half-start'
@@ -1002,8 +1003,9 @@ class TeamPlayersRatingView(View):
         else:
             season = Season.objects.filter(number__gte=16).order_by('-number').first()
 
-        phase_date = self.get_phase_date(season, phase)
-        rating_version = PlayerRatingVersion.objects.filter(date__lte=phase_date).order_by('-number').first()
+        selected_phase_date = self.get_phase_date(season, phase)
+        start_phase_date = self.get_phase_date(season, self.SeasonPhase.START)
+        rating_version = PlayerRatingVersion.objects.filter(date__lte=start_phase_date).order_by('-number').first()
         if not rating_version:
             rating_version = PlayerRatingVersion.objects.order_by('-number').first()
 
@@ -1024,7 +1026,7 @@ class TeamPlayersRatingView(View):
                         PlayerTransfer.objects.filter(
                             trans_player=OuterRef('id'),
                             season_join=season,
-                            date_join__lte=phase_date,
+                            date_join__lte=selected_phase_date,
                             is_technical=False,
                         )
                         .order_by('-date_join', '-id')
@@ -1068,17 +1070,20 @@ class TeamPlayersRatingView(View):
         )
 
         context = {
-            'team_players_rating': team_players_rating,
             'season': season,
             'rating_version': rating_version,
+            'team_players_rating': team_players_rating,
+            'phase_date': selected_phase_date,
             'phase': phase,
-            'phase_date': phase_date,
         }
 
         return render(request, 'tournament/rating/partials/team_players_rating_table.html', context)
 
     def get_phase_date(self, season, phase):
         """Determine the date for the selected phase of the season."""
+        if phase == self.SeasonPhase.NOW:
+            return timezone.now().date()
+
         if phase == self.SeasonPhase.START:
             earliest_tour = TourNumber.objects.filter(league__championship=season).order_by('date_from').first()
 
@@ -1097,12 +1102,12 @@ class TeamPlayersRatingView(View):
         ):
             league = League.objects.filter(championship=season, title__contains='лига').first()
             if not league:
-                return datetime.now().date()
+                return timezone.now().date()
 
             tours = list(TourNumber.objects.filter(league=league).order_by('date_from'))
 
             if not tours:
-                return datetime.now().date()
+                return timezone.now().date()
 
             total_tours = len(tours)
             half_point = total_tours // 2
@@ -1119,7 +1124,7 @@ class TeamPlayersRatingView(View):
                     return second_half_tours[0].date_from
                 return tours[-1].date_from
 
-        return datetime.now().date()
+        return timezone.now().date()
 
 
 class PlayerRatingFilter(FilterSet):
@@ -1148,12 +1153,14 @@ class PlayerRatingView(ListView):
 
         seasons = Season.objects.filter(number__gte=16).order_by('-number')
         selected_season = seasons.first()
+        active_season = Season.objects.filter(is_active=True).order_by('-number').first()
 
         context = {
             'filter': filter,
             'previous_ratings': previous_ratings,
             'seasons': seasons,
             'selected_season': selected_season,
+            'active_season': active_season,
         }
 
         if request.htmx:
