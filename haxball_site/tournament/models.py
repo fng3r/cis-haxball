@@ -71,6 +71,10 @@ class Season(models.Model):
         'self', verbose_name='Связанный сезон', null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    @property
+    def is_primary(self):
+        return self.title.startswith('ЧР')
+
     def __str__(self):
         return self.title
 

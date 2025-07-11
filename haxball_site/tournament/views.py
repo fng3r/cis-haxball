@@ -958,7 +958,7 @@ class TeamRatingView(ListView):
         )
         season_count = 0
         for season in seasons:
-            if season.title.startswith('ЧР'):
+            if season.is_primary:
                 season_weights[season] = weights[season_count]
                 if season.bound_season:
                     season_weights[season.bound_season] = weights[season_count]
@@ -997,6 +997,7 @@ class TeamPlayersRatingView(View):
     def get(self, request):
         season_id = request.GET.get('season')
         phase = request.GET.get('phase', self.SeasonPhase.START)
+        league = request.GET.get('league')
 
         if season_id:
             season = get_object_or_404(Season, id=season_id)
@@ -1012,6 +1013,9 @@ class TeamPlayersRatingView(View):
         team_players_rating = []
 
         teams_in_season = Team.objects.filter(leagues__championship=season).distinct()
+        if league and season.is_primary:
+            teams_in_season = teams_in_season.filter(leagues__title=league, leagues__championship=season)
+
         for team in teams_in_season:
             team_players = (
                 Player.objects.filter(
@@ -1097,9 +1101,7 @@ class TeamPlayersRatingView(View):
                 return latest_tour.date_to
 
         # These phases are only applicable for primary seasons (ЧР)
-        if phase in [self.SeasonPhase.FIRST_HALF_END, self.SeasonPhase.SECOND_HALF_START] and season.title.startswith(
-            'ЧР'
-        ):
+        if phase in [self.SeasonPhase.FIRST_HALF_END, self.SeasonPhase.SECOND_HALF_START] and season.is_primary:
             league = League.objects.filter(championship=season, title__contains='лига').first()
             if not league:
                 return timezone.now().date()
@@ -1161,6 +1163,7 @@ class PlayerRatingView(ListView):
             'seasons': seasons,
             'selected_season': selected_season,
             'active_season': active_season,
+            'seasons_data': [{'id': s.id, 'title': s.title, 'is_primary': s.is_primary} for s in seasons],
         }
 
         if request.htmx:

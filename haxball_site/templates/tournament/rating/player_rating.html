@@ -93,6 +93,16 @@
                 </select>
               </div>
 
+              <div class="tw:flex tw:flex-col tw:justify-center" x-show="isPrimarySeason(selectedSeason)">
+                <label class="tw:label tw:text-base-content tw:font-bold">Лига</label>
+                <select name="league" class="tw:select tw:select-bordered" :disabled="!isPrimarySeason(selectedSeason)">
+                  <option value="">Все</option>
+                  <option value="Высшая лига">Высшая лига</option>
+                  <option value="Первая лига">Первая лига</option>
+                  <option value="Вторая лига">Вторая лига</option>
+                </select>
+              </div>
+
               <div class="tw:flex tw:mt-auto">
                 <button class="tw:btn tw:btn-primary">Применить фильтр</button>
                 <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
