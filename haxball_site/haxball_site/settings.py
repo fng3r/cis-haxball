@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'reservation.apps.ReservationConfig',
     'utils.apps.UtilsConfig',
     'custom_notifications.apps.CustomNotificationsConfig',
+    'predictions.apps.PredictionsConfig',
     'ckeditor',
     'django_summernote',
     'ckeditor_uploader',

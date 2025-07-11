@@ -1,0 +1,66 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load predictions_extras %}
+
+<div class="tw:card tw:bg-base-200 tw:shadow-sm" id="tour-card-{{ tour.id }}">
+  <div class="tw:card-body tw:p-4">
+    <div class="tw:flex tw:items-center tw:justify-between">
+      <div class="tw:card-title">
+        <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+      </div>
+      <div>
+        {% if tour|is_open_for_predictions %}
+          <a class="tw:btn tw:btn-primary tw:btn-sm"
+             hx-get="{% url 'predictions:edit_predictions' tour.id %}"
+             hx-target="#tour-card-{{ tour.id }}"
+             hx-push-url="false">
+            {% if submission and submission.predictions.count > 0 %}
+              Изменить
+            {% else %}
+              Сделать прогноз
+            {% endif %}
+          </a>
+        {% elif tour|is_not_open_yet %}
+          <span class="tw:badge tw:badge-info tw:badge-sm">Откроется {{ tour|get_tour_opening_date|date:"d.m" }}</span>
+        {% else %}
+          <span class="tw:badge tw:badge-neutral tw:badge-sm">Тур закрыт</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tw:mt-2 tw:space-y-1">
+      {% for match in tour.tour_matches.all %}
+        {% with prediction=submission.predictions.all|filter_prediction_for_match:match %}
+          <div class="tw:flex tw:items-center tw:gap-2 tw:text-xs tw:bg-base-100 tw:p-2 tw:rounded">
+            <div class="tw:flex tw:items-center tw:gap-1">
+              {% if match.team_home.logo %}
+                <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
+              {% endif %}
+              <span class="tw:font-semibold">{{ match.team_home.title }}</span>
+            </div>
+            <span class="tw:px-1">vs</span>
+            <div class="tw:flex tw:items-center tw:gap-1">
+              <span class="tw:font-semibold">{{ match.team_guest.title }}</span>
+              {% if match.team_guest.logo %}
+                <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
+              {% endif %}
+            </div>
+            {% if prediction %}
+              <span class="tw:ml-2 tw:font-bold">
+                {% if prediction.predicted_result == 'HW' %}
+                  П1
+                {% elif prediction.predicted_result == 'D' %}
+                  X
+                {% elif prediction.predicted_result == 'AW' %}
+                  П2
+                {% endif %}
+              </span>
+            {% else %}
+              <span class="tw:ml-2 tw:text-warning tw:font-bold">—</span>
+            {% endif %}
+          </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+</div>

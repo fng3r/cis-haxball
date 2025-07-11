@@ -1,0 +1,92 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load predictions_extras %}
+
+<div class="tw:flex tw:flex-col tw:gap-4">
+  <div class="tw:flex tw:flex-col tw:gap-2">
+    <form class="tw:flex tw:items-center tw:gap-4"
+          hx-get="{% url 'predictions:standings_tab' %}"
+          hx-target="#standings-content"
+          hx-trigger="change"
+          hx-push-url="false">
+
+      <div class="tw:flex tw:flex-col">
+        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
+        {% render_field tournament_form.tournament|add_class:'tw:select tw:select-bordered' %}
+      </div>
+    </form>
+
+    {% if selected_tournament %}
+      <div class="tw:mt-4">
+        <h5 class="tw:text-md tw:font-semibold tw:mb-2">{{ selected_tournament.league.title }}</h5>
+
+        {% if standings %}
+          <div class="tw:overflow-x-auto">
+            <table class="tw:table tw:table-zebra tw:w-full">
+              <thead>
+                <tr>
+                  <th class="tw:text-center">Место</th>
+                  <th>Пользователь</th>
+                  {% for tour in selected_tournament.league.tours.all %}
+                    <th class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</th>
+                  {% endfor %}
+                  <th class="tw:text-center tw:font-bold">Всего</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for standing in standings %}
+                  <tr>
+                    <td class="tw:text-center tw:font-bold">
+                      {% if standing.place == 1 %}
+                        <span class="tw:text-yellow-500">🥇</span>
+                      {% elif standing.place == 2 %}
+                        <span class="tw:text-gray-400">🥈</span>
+                      {% elif standing.place == 3 %}
+                        <span class="tw:text-amber-600">🥉</span>
+                      {% else %}
+                        {{ standing.place }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="tw:flex tw:items-center tw:gap-2">
+                        {% if standing.user.user_profile.avatar %}
+                          <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-cover tw:bg-center"
+                               style="background-image: url({{ standing.user.user_profile.avatar.url }})"></div>
+                        {% else %}
+                          <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-base-300 tw:flex tw:items-center tw:justify-center">
+                            <i class="fa fa-user tw:text-xs"></i>
+                          </div>
+                        {% endif %}
+                        <span class="tw:font-medium">{{ standing.user.username }}</span>
+                      </div>
+                    </td>
+                    {% for tour in selected_tournament.league.tours.all %}
+                      <td class="tw:text-center">
+                        {% if tour_points|get_item:standing.user.id|get_item:tour.id %}
+                          <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id }}</span>
+                        {% else %}
+                          <span class="tw:text-base-content/50">-</span>
+                        {% endif %}
+                      </td>
+                    {% endfor %}
+                    <td class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="tw:alert tw:alert-warning">
+            <i class="fa fa-exclamation-triangle tw:mr-2"></i>
+            <span>Нет данных о прогнозах в выбранном турнире.</span>
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="tw:alert tw:alert-info">
+        <i class="fa fa-info-circle tw:mr-2"></i>
+        <span>Выберите турнир, чтобы увидеть турнирную таблицу.</span>
+      </div>
+    {% endif %}
+  </div>
+</div>

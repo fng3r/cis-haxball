@@ -32,6 +32,7 @@ urlpatterns = [
     path('championship/', include('tournament.urls', namespace='tournament')),
     path('host_reservation/', include('reservation.urls', namespace='reservation')),
     path('polls/', include('polls.urls', namespace='polls')),
+    path('predictions/', include('predictions.urls', namespace='predictions')),
     path('accounts/', include('allauth.urls')),
     path('summernote/', include('django_summernote.urls')),
     path('__debug__/', include('debug_toolbar.urls')),

@@ -1,0 +1,33 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load predictions_extras %}
+
+<div class="tw:flex tw:flex-col tw:gap-4">
+  <div class="tw:flex tw:flex-col tw:gap-2">
+    <form class="tw:flex tw:items-center tw:gap-4"
+          hx-get="{% url 'predictions:make_predictions_tab' %}"
+          hx-target="#make-predictions-content"
+          hx-trigger="change"
+          hx-push-url="false">
+
+      <div class="tw:flex tw:flex-col">
+        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
+        {% render_field tournament_form.tournament|add_class:'tw:select tw:select-bordered' %}
+      </div>
+    </form>
+
+    {% if selected_tournament %}
+      <div class="tw:mt-4">
+        <h5 class="tw:text-md tw:font-semibold tw:mb-2">{{ selected_tournament.league.title }}</h5>
+
+        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
+          {% for tour in selected_tournament.league.tours.all %}
+            {% with submission=user_predictions|get_item:tour.id %}
+              {% include "predictions/tour_card.html" with tour=tour submission=submission %}
+            {% endwith %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
