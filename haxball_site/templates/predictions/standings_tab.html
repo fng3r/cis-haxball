@@ -61,7 +61,7 @@
                   </td>
                   {% for tour in selected_tournament.league.tours.all %}
                     <td class="tw:text-center">
-                      {% if tour_points|get_item:standing.user.id|get_item:tour.id %}
+                      {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
                         <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id }}</span>
                       {% else %}
                         <span class="tw:text-base-content/50">-</span>

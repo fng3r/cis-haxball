@@ -44,7 +44,7 @@ def get_user_tour_points(user, tour, tournament):
         submission = PredictionSubmission.objects.get(user=user, tour=tour, tournament=tournament)
         return sum(prediction.points_earned for prediction in submission.predictions.all())
     except PredictionSubmission.DoesNotExist:
-        return 0
+        return None
 
 
 def get_user_tournament_total_points(user, tournament):
