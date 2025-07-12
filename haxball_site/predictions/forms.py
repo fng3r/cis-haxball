@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from tournament.models import TourNumber
 
 from .models import Prediction, PredictionSubmission, PredictionTournament
+from .utils import get_open_tours
 
 
 class PredictionForm(forms.ModelForm):
@@ -53,7 +54,5 @@ class PredictionSubmissionForm(forms.ModelForm):
             self.fields['tournament'].queryset = PredictionTournament.objects.filter(is_active=True)
 
             # Filter tours to only those that are open for predictions
-            from .utils import get_open_tours
-
             open_tours = get_open_tours()
             self.fields['tour'].queryset = TourNumber.objects.filter(id__in=open_tours)

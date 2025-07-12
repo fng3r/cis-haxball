@@ -2,11 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
 
 from tournament.models import TourNumber
 
@@ -16,17 +13,12 @@ from .utils import (
     get_open_tours,
     get_tournament_standings,
     get_user_tour_points,
-    is_tour_closed_for_predictions,
     is_tour_open_for_predictions,
 )
 
 
 def get_default_tournament():
-    """Get default tournament for predictions (first active tournament in current season)"""
-    try:
-        return PredictionTournament.objects.filter(is_active=True, league__championship__is_active=True).first()
-    except:
-        return None
+    return PredictionTournament.objects.filter(is_active=True, league__championship__is_active=True).first()
 
 
 def get_users_with_predictions(tournament=None):
@@ -94,13 +86,10 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
     if selected_tournament:
         tours = TourNumber.objects.filter(league=selected_tournament.league)
         for tour in tours:
-            try:
-                submission = PredictionSubmission.objects.get(
-                    user=request.user, tour=tour, tournament=selected_tournament
-                )
-                user_predictions[tour.id] = submission
-            except PredictionSubmission.DoesNotExist:
-                user_predictions[tour.id] = None
+            submission = PredictionSubmission.objects.filter(
+                user=request.user, tour=tour, tournament=selected_tournament
+            ).first()
+            user_predictions[tour.id] = submission
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
@@ -147,17 +136,14 @@ def view_predictions_tab(request):
         tours = TourNumber.objects.filter(league=selected_tournament.league)
 
         for tour in tours:
-            try:
-                submission = PredictionSubmission.objects.get(
-                    user=selected_user, tour=tour, tournament=selected_tournament
-                )
-                # Only show predictions if tour is closed
-                if is_tour_closed_for_predictions(tour):
-                    predictions_data[tour.id] = submission
-                else:
-                    predictions_data[tour.id] = None  # Tour not closed yet
-            except PredictionSubmission.DoesNotExist:
-                predictions_data[tour.id] = None
+            submission = PredictionSubmission.objects.filter(
+                user=selected_user, tour=tour, tournament=selected_tournament
+            ).first()
+            # Only show predictions if tour is closed
+            if submission and not is_tour_open_for_predictions(tour):
+                predictions_data[tour.id] = submission
+            else:
+                predictions_data[tour.id] = None  # Tour not closed yet or no submission
 
     open_tours = get_open_tours()
 
@@ -223,11 +209,11 @@ def tour_card(request, tour_id):
     tour = get_object_or_404(TourNumber, id=tour_id)
 
     submission = None
-    try:
-        prediction_tournament = PredictionTournament.objects.get(league=tour.league)
-        submission = PredictionSubmission.objects.get(user=request.user, tour=tour, tournament=prediction_tournament)
-    except (PredictionTournament.DoesNotExist, PredictionSubmission.DoesNotExist):
-        submission = None
+    prediction_tournament = PredictionTournament.objects.filter(league=tour.league).first()
+    if prediction_tournament:
+        submission = PredictionSubmission.objects.filter(
+            user=request.user, tour=tour, tournament=prediction_tournament
+        ).first()
 
     context = {
         'tour': tour,
@@ -250,9 +236,8 @@ def edit_predictions(request, tour_id):
         return redirect('predictions:main')
 
     # Get or create prediction tournament
-    try:
-        prediction_tournament = PredictionTournament.objects.get(league=tour.league)
-    except PredictionTournament.DoesNotExist:
+    prediction_tournament = PredictionTournament.objects.filter(league=tour.league).first()
+    if not prediction_tournament:
         messages.error(request, 'Этот турнир не доступен для прогнозов.')
         if request.htmx:
             # Return tour card content for HTMX requests
@@ -308,53 +293,3 @@ def edit_predictions(request, tour_id):
     }
 
     return render(request, 'predictions/edit_predictions.html', context)
-
-
-@login_required
-@require_POST
-@csrf_exempt
-def save_prediction_ajax(request):
-    """AJAX endpoint for saving individual predictions"""
-    match_id = request.POST.get('match_id')
-    prediction_value = request.POST.get('prediction_value')
-    tour_id = request.POST.get('tour_id')
-
-    if not all([match_id, prediction_value, tour_id]):
-        return JsonResponse({'success': False, 'error': 'Missing required parameters'})
-
-    try:
-        from tournament.models import Match
-
-        match = Match.objects.get(id=match_id)
-        tour = TourNumber.objects.get(id=tour_id)
-
-        # Check if tour is open for predictions
-        if not is_tour_open_for_predictions(tour):
-            return JsonResponse({'success': False, 'error': 'Tour is closed for predictions'})
-
-        # Get or create prediction tournament
-        try:
-            prediction_tournament = PredictionTournament.objects.get(league=tour.league)
-        except PredictionTournament.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Tournament not available for predictions'})
-
-        # Get or create submission
-        submission, created = PredictionSubmission.objects.get_or_create(
-            user=request.user, tour=tour, tournament=prediction_tournament
-        )
-
-        # Get or create prediction
-        prediction, pred_created = Prediction.objects.get_or_create(
-            submission=submission, match=match, defaults={'predicted_result': prediction_value}
-        )
-
-        if not pred_created:
-            prediction.predicted_result = prediction_value
-            prediction.save()
-
-        return JsonResponse({'success': True})
-
-    except (Match.DoesNotExist, TourNumber.DoesNotExist):
-        return JsonResponse({'success': False, 'error': 'Match or tour not found'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})

@@ -1,8 +1,11 @@
 from datetime import time
 
+from django.contrib.auth.models import User
 from django.utils import timezone
 
 from tournament.models import TourNumber
+
+from .models import PredictionSubmission
 
 
 def get_open_tours():
@@ -31,26 +34,16 @@ def is_tour_open_for_predictions(tour):
     return open_date <= today and now <= close_datetime
 
 
-def is_tour_closed_for_predictions(tour):
-    """Check if a tour is closed for predictions"""
-    return not is_tour_open_for_predictions(tour)
-
-
 def get_user_tour_points(user, tour, tournament):
     """Get total points for a user in a specific tour"""
-    from .models import PredictionSubmission
-
-    try:
-        submission = PredictionSubmission.objects.get(user=user, tour=tour, tournament=tournament)
+    submission = PredictionSubmission.objects.filter(user=user, tour=tour, tournament=tournament).first()
+    if submission:
         return sum(prediction.points_earned for prediction in submission.predictions.all())
-    except PredictionSubmission.DoesNotExist:
-        return None
+    return None
 
 
 def get_user_tournament_total_points(user, tournament):
     """Get total points for a user in a tournament"""
-    from .models import PredictionSubmission
-
     submissions = PredictionSubmission.objects.filter(user=user, tournament=tournament)
 
     total_points = 0
@@ -62,8 +55,6 @@ def get_user_tournament_total_points(user, tournament):
 
 def get_tournament_standings(tournament):
     """Get tournament standings sorted by total points"""
-    from django.contrib.auth.models import User
-
     # Get all users who have made predictions in this tournament
     users_with_predictions = User.objects.filter(prediction_submissions__tournament=tournament).distinct()
 

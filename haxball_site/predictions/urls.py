@@ -11,5 +11,4 @@ urlpatterns = [
     path('standings/', views.standings_tab, name='standings_tab'),
     path('edit/<int:tour_id>/', views.edit_predictions, name='edit_predictions'),
     path('tour-card/<int:tour_id>/', views.tour_card, name='tour_card'),
-    path('save-prediction-ajax/', views.save_prediction_ajax, name='save_prediction_ajax'),
 ]
