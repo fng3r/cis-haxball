@@ -43,6 +43,10 @@ class PredictionSubmission(models.Model):
     def __str__(self):
         return f'Прогнозы {self.user.username} для {self.tour}'
 
+    def get_total_points(self):
+        """Get total points for this submission"""
+        return sum(prediction.get_earned_points() for prediction in self.predictions.all())
+
 
 class Prediction(models.Model):
     """Individual prediction for a match"""

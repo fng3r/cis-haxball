@@ -41,7 +41,7 @@ def get_user_tour_points(user, tour, tournament):
         .first()
     )
     if submission:
-        return sum(prediction.get_earned_points() for prediction in submission.predictions.all())
+        return submission.get_total_points()
     return None
 
 
@@ -53,7 +53,7 @@ def get_user_tournament_total_points(user, tournament):
 
     total_points = 0
     for submission in submissions:
-        total_points += sum(prediction.get_earned_points() for prediction in submission.predictions.all())
+        total_points += submission.get_total_points()
 
     return total_points
 
@@ -79,7 +79,7 @@ def get_tournament_standings(tournament):
         user_submissions = submissions_by_user.get(user.id, [])
         total_points = 0
         for submission in user_submissions:
-            total_points += sum(prediction.get_earned_points() for prediction in submission.predictions.all())
+            total_points += submission.get_total_points()
 
         standings.append({'user': user, 'total_points': total_points})
 

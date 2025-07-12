@@ -246,9 +246,7 @@ def standings_tab(request):
             for tour in tours:
                 submission = submissions_lookup.get((user.id, tour.id))
                 if submission:
-                    tour_points[user.id][tour.id] = sum(
-                        pred.get_earned_points() for pred in submission.predictions.all()
-                    )
+                    tour_points[user.id][tour.id] = submission.get_total_points()
                 else:
                     tour_points[user.id][tour.id] = None
 
