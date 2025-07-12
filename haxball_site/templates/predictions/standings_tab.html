@@ -16,7 +16,7 @@
   </form>
 
   {% if selected_tournament %}
-    <div>
+    <div class="tw:[#standings-content:has(.htmx-request)_&]:opacity-50 tw:[#standings-content:has(.htmx-request)_&]:transition-opacity">
       <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
 
       {% if standings %}

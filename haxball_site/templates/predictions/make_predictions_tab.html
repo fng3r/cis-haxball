@@ -24,7 +24,8 @@
       </form>
 
       {% if selected_tournament %}
-        <div x-data="{ showAllTours: false }">
+        <div x-data="{ showAllTours: false }"
+             class="tw:[#make-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#make-predictions-content:has(.htmx-request)_&]:transition-opacity">
           <div class="tw:flex tw:items-center tw:justify-between tw:mb-4">
             <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
 

@@ -21,7 +21,7 @@
     </form>
 
     {% if selected_tournament and selected_user %}
-      <div>
+      <div class="tw:[#view-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#view-predictions-content:has(.htmx-request)_&]:transition-opacity">
         <h5 class="tw:text-md tw:font-semibold">
           Прогнозы пользователя {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}:
         </h5>
