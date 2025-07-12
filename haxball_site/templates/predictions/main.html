@@ -28,7 +28,7 @@
                aria-label="Все прогнозы"
                hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
                hx-target="#view-predictions-content"
-               hx-trigger="click once" />
+               hx-trigger="load" />
         <div class="tw:tab-content tw:p-2" role="tabpanel">
           <div id="view-predictions-content">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
@@ -44,7 +44,7 @@
                aria-label="Турнирная таблица"
                hx-get="{% url 'predictions:standings_tab' %}?tournament={{ selected_tournament.pk }}"
                hx-target="#standings-content"
-               hx-trigger="click once" />
+               hx-trigger="load" />
         <div class="tw:tab-content tw:p-2" role="tabpanel">
           <div id="standings-content">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
