@@ -12,20 +12,25 @@ from .models import Prediction, PredictionSubmission, PredictionTournament
 from .utils import (
     get_open_tours,
     get_tournament_standings,
-    get_user_tour_points,
     is_tour_open_for_predictions,
 )
 
 
 def get_default_tournament():
-    return PredictionTournament.objects.filter(is_active=True, league__championship__is_active=True).first()
+    return (
+        PredictionTournament.objects.filter(is_active=True, league__championship__is_active=True)
+        .select_related('league')
+        .first()
+    )
 
 
 def get_users_with_predictions(tournament=None):
     """Get users who have made at least one prediction"""
     if tournament:
-        return User.objects.filter(prediction_submissions__tournament=tournament).distinct()
-    return User.objects.filter(prediction_submissions__isnull=False).distinct()
+        return (
+            User.objects.filter(prediction_submissions__tournament=tournament).select_related('user_profile').distinct()
+        )
+    return User.objects.filter(prediction_submissions__isnull=False).select_related('user_profile').distinct()
 
 
 @login_required
@@ -35,17 +40,14 @@ def predictions_main(request):
     selected_tournament = None
     selected_user = None
 
-    # Determine selected tournament
     if request.GET.get('tournament'):
         selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
     elif default_tournament:
         selected_tournament = default_tournament
 
-    # Determine selected user
     if request.GET.get('user'):
         selected_user = User.objects.filter(pk=request.GET.get('user')).first()
 
-    # Prepare forms with initial values
     tournament_form = TournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
@@ -53,7 +55,6 @@ def predictions_main(request):
 
     active_tournaments = PredictionTournament.objects.filter(is_active=True)
 
-    # Render the make_predictions_tab content for initial load
     make_predictions_tab_html = make_predictions_tab(
         request, initial_context=True, selected_tournament=selected_tournament
     )
@@ -78,18 +79,43 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
             selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
         elif default_tournament:
             selected_tournament = default_tournament
+
+    if selected_tournament:
+        selected_tournament = (
+            PredictionTournament.objects.filter(pk=selected_tournament.pk)
+            .select_related('league')
+            .prefetch_related(
+                'league__tours__tour_matches__team_home',
+                'league__tours__tour_matches__team_guest',
+                'league__tours__tour_matches__result',
+            )
+            .first()
+        )
+
     tournament_form = TournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
 
     user_predictions = {}
     if selected_tournament:
-        tours = TourNumber.objects.filter(league=selected_tournament.league)
+        tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
+            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
+        )
+
+        submissions = PredictionSubmission.objects.filter(
+            user=request.user, tournament=selected_tournament
+        ).prefetch_related('predictions__match')
+
+        submissions_lookup = {sub.tour_id: sub for sub in submissions}
+
         for tour in tours:
-            submission = PredictionSubmission.objects.filter(
-                user=request.user, tour=tour, tournament=selected_tournament
-            ).first()
-            user_predictions[tour.id] = submission
+            submission = submissions_lookup.get(tour.id)
+            if submission:
+                match_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
+                user_predictions[tour.id] = {'submission': submission, 'match_predictions': match_predictions}
+            else:
+                user_predictions[tour.id] = {'submission': None, 'match_predictions': {}}
+
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
@@ -103,47 +129,59 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
 @login_required
 def view_predictions_tab(request):
     """Tab for viewing other users' predictions"""
-    # Get default tournament
     default_tournament = get_default_tournament()
 
-    # Determine selected tournament
     selected_tournament = None
     if request.GET.get('tournament'):
         selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
     elif default_tournament:
         selected_tournament = default_tournament
 
-    # Determine selected user
+    if selected_tournament:
+        selected_tournament = (
+            PredictionTournament.objects.filter(pk=selected_tournament.pk)
+            .prefetch_related(
+                'league__tours__tour_matches__team_home',
+                'league__tours__tour_matches__team_guest',
+                'league__tours__tour_matches__result',
+            )
+            .first()
+        )
+
     selected_user = None
     if request.GET.get('user'):
         selected_user = User.objects.filter(pk=request.GET.get('user')).first()
     elif get_users_with_predictions(selected_tournament):
         selected_user = get_users_with_predictions(selected_tournament).first()
 
-    # Prepare forms with initial values
     tournament_form = TournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
 
-    # Update user form queryset to only include users with predictions
     if get_users_with_predictions(selected_tournament):
         user_form.fields['user'].queryset = get_users_with_predictions(selected_tournament)
 
-    # Get predictions data
     predictions_data = {}
     if selected_tournament and selected_user:
-        tours = TourNumber.objects.filter(league=selected_tournament.league)
+        tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
+            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
+        )
+
+        submissions = PredictionSubmission.objects.filter(
+            user=selected_user, tournament=selected_tournament
+        ).prefetch_related(
+            'predictions__match__result__winner', 'predictions__match__team_home', 'predictions__match__team_guest'
+        )
+
+        submissions_lookup = {sub.tour_id: sub for sub in submissions}
 
         for tour in tours:
-            submission = PredictionSubmission.objects.filter(
-                user=selected_user, tour=tour, tournament=selected_tournament
-            ).first()
-            # Only show predictions if tour is closed
+            submission = submissions_lookup.get(tour.id)
             if submission and not is_tour_open_for_predictions(tour):
                 predictions_data[tour.id] = submission
             else:
-                predictions_data[tour.id] = None  # Tour not closed yet or no submission
+                predictions_data[tour.id] = None
 
     open_tours = get_open_tours()
 
@@ -162,36 +200,55 @@ def view_predictions_tab(request):
 @login_required
 def standings_tab(request):
     """Tab for tournament standings"""
-    # Get default tournament
     default_tournament = get_default_tournament()
 
-    # Determine selected tournament
     selected_tournament = None
     if request.GET.get('tournament'):
         selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
     elif default_tournament:
         selected_tournament = default_tournament
 
-    # Prepare forms with initial values
+    if selected_tournament:
+        selected_tournament = (
+            PredictionTournament.objects.filter(pk=selected_tournament.pk)
+            .prefetch_related(
+                'league__tours__tour_matches__team_home',
+                'league__tours__tour_matches__team_guest',
+                'league__tours__tour_matches__result',
+            )
+            .first()
+        )
+
     tournament_form = TournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
 
-    # Get standings data
     standings = []
     tour_points = {}
 
     if selected_tournament:
         standings = get_tournament_standings(selected_tournament)
 
-        # Get points for each tour for each user
         tours = TourNumber.objects.filter(league=selected_tournament.league)
+
+        all_submissions = PredictionSubmission.objects.filter(tournament=selected_tournament).prefetch_related(
+            'predictions'
+        )
+
+        submissions_lookup = {}
+        for submission in all_submissions:
+            key = (submission.user_id, submission.tour_id)
+            submissions_lookup[key] = submission
 
         for standing in standings:
             user = standing['user']
             tour_points[user.id] = {}
             for tour in tours:
-                tour_points[user.id][tour.id] = get_user_tour_points(user, tour, selected_tournament)
+                submission = submissions_lookup.get((user.id, tour.id))
+                if submission:
+                    tour_points[user.id][tour.id] = sum(pred.points_earned for pred in submission.predictions.all())
+                else:
+                    tour_points[user.id][tour.id] = None
 
     context = {
         'tournament_form': tournament_form,
@@ -206,18 +263,31 @@ def standings_tab(request):
 @login_required
 def tour_card(request, tour_id):
     """Render a single tour card"""
-    tour = get_object_or_404(TourNumber, id=tour_id)
+    tour = get_object_or_404(
+        TourNumber.objects.select_related('league').prefetch_related(
+            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
+        ),
+        id=tour_id,
+    )
 
     submission = None
+    match_predictions = {}
     prediction_tournament = PredictionTournament.objects.filter(league=tour.league).first()
     if prediction_tournament:
-        submission = PredictionSubmission.objects.filter(
-            user=request.user, tour=tour, tournament=prediction_tournament
-        ).first()
+        submission = (
+            PredictionSubmission.objects.filter(user=request.user, tour=tour, tournament=prediction_tournament)
+            .prefetch_related(
+                'predictions__match__result', 'predictions__match__team_home', 'predictions__match__team_guest'
+            )
+            .first()
+        )
+        if submission:
+            match_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
 
     context = {
         'tour': tour,
         'submission': submission,
+        'match_predictions': match_predictions,
     }
     return render(request, 'predictions/tour_card.html', context)
 
@@ -225,50 +295,45 @@ def tour_card(request, tour_id):
 @login_required
 def edit_predictions(request, tour_id):
     """Edit predictions for a specific tour"""
-    tour = get_object_or_404(TourNumber, id=tour_id)
+    tour = get_object_or_404(
+        TourNumber.objects.select_related('league').prefetch_related(
+            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
+        ),
+        id=tour_id,
+    )
 
-    # Check if tour is open for predictions
     if not is_tour_open_for_predictions(tour):
         messages.error(request, 'Прогнозы для этого тура закрыты.')
         if request.htmx:
-            # Return tour card content for HTMX requests
             return tour_card(request, tour_id)
         return redirect('predictions:main')
 
-    # Get or create prediction tournament
     prediction_tournament = PredictionTournament.objects.filter(league=tour.league).first()
     if not prediction_tournament:
         messages.error(request, 'Этот турнир не доступен для прогнозов.')
         if request.htmx:
-            # Return tour card content for HTMX requests
             return tour_card(request, tour_id)
         return redirect('predictions:main')
 
-    # Get or create submission
     submission, created = PredictionSubmission.objects.get_or_create(
         user=request.user, tour=tour, tournament=prediction_tournament
     )
 
-    # Get matches for this tour
     matches = tour.tour_matches.all().order_by('id')
 
-    # Get existing predictions
     existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
 
     if request.method == 'POST':
         with transaction.atomic():
-            # Process each match prediction
             for match in matches:
                 prediction_value = request.POST.get(f'prediction_{match.id}')
 
-                # Check if prediction exists for this match
                 existing_prediction = existing_predictions.get(match.id)
 
                 if not prediction_value:
                     if existing_prediction:
                         existing_prediction.delete()
                 else:
-                    # Get or create prediction
                     prediction, created = Prediction.objects.get_or_create(
                         submission=submission, match=match, defaults={'predicted_result': prediction_value}
                     )
@@ -276,13 +341,9 @@ def edit_predictions(request, tour_id):
                         prediction.predicted_result = prediction_value
                         prediction.save()
 
-            messages.success(request, 'Прогнозы успешно сохранены!')
-
-            # For HTMX requests, return the updated tour card
             if request.htmx:
                 return tour_card(request, tour_id)
 
-            # For regular requests, redirect to main
             return redirect('predictions:main')
 
     context = {

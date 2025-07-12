@@ -12,7 +12,6 @@ def get_open_tours():
     """Get tours that are currently open for predictions"""
     open_tours = []
     for tour in TourNumber.objects.filter(league__prediction_tournament__is_active=True).select_related('league'):
-        # Check if tour is open for predictions
         if is_tour_open_for_predictions(tour):
             open_tours.append(tour.id)
 
@@ -44,7 +43,7 @@ def get_user_tour_points(user, tour, tournament):
 
 def get_user_tournament_total_points(user, tournament):
     """Get total points for a user in a tournament"""
-    submissions = PredictionSubmission.objects.filter(user=user, tournament=tournament)
+    submissions = PredictionSubmission.objects.filter(user=user, tournament=tournament).prefetch_related('predictions')
 
     total_points = 0
     for submission in submissions:
@@ -55,18 +54,29 @@ def get_user_tournament_total_points(user, tournament):
 
 def get_tournament_standings(tournament):
     """Get tournament standings sorted by total points"""
-    # Get all users who have made predictions in this tournament
-    users_with_predictions = User.objects.filter(prediction_submissions__tournament=tournament).distinct()
+    users_with_predictions = (
+        User.objects.filter(prediction_submissions__tournament=tournament).select_related('user_profile').distinct()
+    )
+
+    all_submissions = PredictionSubmission.objects.filter(tournament=tournament).prefetch_related('predictions')
+
+    submissions_by_user = {}
+    for submission in all_submissions:
+        if submission.user_id not in submissions_by_user:
+            submissions_by_user[submission.user_id] = []
+        submissions_by_user[submission.user_id].append(submission)
 
     standings = []
     for user in users_with_predictions:
-        total_points = get_user_tournament_total_points(user, tournament)
+        user_submissions = submissions_by_user.get(user.id, [])
+        total_points = 0
+        for submission in user_submissions:
+            total_points += sum(prediction.points_earned for prediction in submission.predictions.all())
+
         standings.append({'user': user, 'total_points': total_points})
 
-    # Sort by total points (descending)
     standings.sort(key=lambda x: x['total_points'], reverse=True)
 
-    # Add place
     for i, standing in enumerate(standings):
         standing['place'] = i + 1
 

@@ -25,10 +25,7 @@ def is_open_for_predictions(tour):
 @register.filter
 def is_not_open_yet(tour):
     """Template filter to check if a tour hasn't opened for predictions yet (future)"""
-    now = timezone.now()
-    today = now.date()
-
-    # Tour opens 3 days before start date
+    today = timezone.now().date()
     open_date = get_tour_opening_date(tour)
 
     return today < open_date
@@ -38,12 +35,3 @@ def is_not_open_yet(tour):
 def get_tour_opening_date(tour):
     """Template filter to get the date when a tour opens for predictions"""
     return tour.date_from - timedelta(days=3)
-
-
-@register.filter
-def filter_prediction_for_match(predictions, match):
-    """Get prediction for a specific match from a queryset of predictions"""
-    try:
-        return predictions.get(match=match)
-    except:
-        return None
