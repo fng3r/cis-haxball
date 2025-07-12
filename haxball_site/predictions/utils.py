@@ -35,19 +35,25 @@ def is_tour_open_for_predictions(tour):
 
 def get_user_tour_points(user, tour, tournament):
     """Get total points for a user in a specific tour"""
-    submission = PredictionSubmission.objects.filter(user=user, tour=tour, tournament=tournament).first()
+    submission = (
+        PredictionSubmission.objects.filter(user=user, tour=tour, tournament=tournament)
+        .prefetch_related('predictions__match__result')
+        .first()
+    )
     if submission:
-        return sum(prediction.points_earned for prediction in submission.predictions.all())
+        return sum(prediction.get_earned_points() for prediction in submission.predictions.all())
     return None
 
 
 def get_user_tournament_total_points(user, tournament):
     """Get total points for a user in a tournament"""
-    submissions = PredictionSubmission.objects.filter(user=user, tournament=tournament).prefetch_related('predictions')
+    submissions = PredictionSubmission.objects.filter(user=user, tournament=tournament).prefetch_related(
+        'predictions__match__result'
+    )
 
     total_points = 0
     for submission in submissions:
-        total_points += sum(prediction.points_earned for prediction in submission.predictions.all())
+        total_points += sum(prediction.get_earned_points() for prediction in submission.predictions.all())
 
     return total_points
 
@@ -58,7 +64,9 @@ def get_tournament_standings(tournament):
         User.objects.filter(prediction_submissions__tournament=tournament).select_related('user_profile').distinct()
     )
 
-    all_submissions = PredictionSubmission.objects.filter(tournament=tournament).prefetch_related('predictions')
+    all_submissions = PredictionSubmission.objects.filter(tournament=tournament).prefetch_related(
+        'predictions__match__result'
+    )
 
     submissions_by_user = {}
     for submission in all_submissions:
@@ -71,7 +79,7 @@ def get_tournament_standings(tournament):
         user_submissions = submissions_by_user.get(user.id, [])
         total_points = 0
         for submission in user_submissions:
-            total_points += sum(prediction.points_earned for prediction in submission.predictions.all())
+            total_points += sum(prediction.get_earned_points() for prediction in submission.predictions.all())
 
         standings.append({'user': user, 'total_points': total_points})
 

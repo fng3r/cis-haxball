@@ -8,8 +8,8 @@ from .models import Prediction, PredictionSubmission, PredictionTournament
 class PredictionInline(TabularInline):
     model = Prediction
     extra = 0
-    readonly_fields = ['match', 'points_earned']
-    fields = ['match', 'predicted_result', 'points_earned']
+    readonly_fields = ['match']
+    fields = ['match', 'predicted_result']
 
 
 @admin.register(PredictionTournament)
@@ -31,8 +31,7 @@ class PredictionSubmissionAdmin(ModelAdmin):
 
 @admin.register(Prediction)
 class PredictionAdmin(ModelAdmin):
-    list_display = ['submission', 'match', 'predicted_result', 'points_earned']
-    list_filter = ['predicted_result', 'points_earned', 'match__league']
+    list_display = ['submission', 'match', 'predicted_result']
+    list_filter = ['predicted_result', 'match__league']
     search_fields = ['submission__user__username', 'match__team_home__title', 'match__team_guest__title']
     ordering = ['-submission__created']
-    readonly_fields = ['points_earned']

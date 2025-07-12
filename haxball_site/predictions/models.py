@@ -48,18 +48,15 @@ class Prediction(models.Model):
     """Individual prediction for a match"""
 
     class Result(models.TextChoices):
-        HOME_WIN = 'HW', 'Победа хозяев'
-        DRAW = 'D', 'Ничья'
-        AWAY_WIN = 'AW', 'Победа гостей'
+        HOME_WIN = 'HW', 'П1'
+        DRAW = 'D', 'X'
+        AWAY_WIN = 'AW', 'П2'
 
     submission = models.ForeignKey(
         PredictionSubmission, verbose_name='Отправка', on_delete=models.CASCADE, related_name='predictions'
     )
     match = models.ForeignKey(Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='predictions')
     predicted_result = models.CharField('Предсказанный результат', max_length=2, choices=Result.choices)
-    points_earned = models.PositiveSmallIntegerField(
-        'Заработанные очки', default=0, help_text='Очки за этот прогноз (вычисляется автоматически)'
-    )
 
     class Meta:
         verbose_name = 'Прогноз'
@@ -69,7 +66,7 @@ class Prediction(models.Model):
     def __str__(self):
         return f'{self.submission.user.username}: {self.match} - {self.get_predicted_result_display()}'
 
-    def calculate_points(self):
+    def get_earned_points(self):
         """Calculate points based on match result and prediction"""
         if not self.match.is_played:
             return 0
@@ -88,7 +85,3 @@ class Prediction(models.Model):
         if self.predicted_result == actual_result_for_prediction:
             return 1
         return 0
-
-    def save(self, *args, **kwargs):
-        self.points_earned = self.calculate_points()
-        super().save(*args, **kwargs)
