@@ -2,11 +2,6 @@
 {% load widget_tweaks %}
 
 <div class="tw:flex tw:flex-col tw:gap-4">
-  <div class="tw:alert tw:alert-info">
-    <i class="fa fa-info-circle tw:mr-2"></i>
-    <span>Прогнозы других пользователей видны только после старта соответствующего тура</span>
-  </div>
-
   <div class="tw:flex tw:flex-col tw:gap-6">
     <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
           hx-get="{% url 'predictions:view_predictions_tab' %}"
