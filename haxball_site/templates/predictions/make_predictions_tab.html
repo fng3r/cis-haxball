@@ -29,10 +29,12 @@
           <div class="tw:flex tw:items-center tw:justify-between tw:mb-4">
             <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
 
-            <label class="tw:label">
-              <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm">
-              Все туры
-            </label>
+            {% if selected_tournament.league.tours.count > 0 %}
+              <label class="tw:label">
+                <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm">
+                Все туры
+              </label>
+            {% endif %}
           </div>
 
           <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
@@ -43,11 +45,16 @@
                 {% endwith %}
               </div>
             {% empty %}
-              <div class="tw:col-span-full tw:text-center tw:py-8 tw:text-base-content/70">
-                <p>В этом турнире пока нет туров.</p>
+              <div class="tw:col-span-full tw:text-center tw:py-8 tw:text-base tw:text-base-content/70">
+                <p>Расписание данного турнира еще не опубликовано</p>
               </div>
             {% endfor %}
           </div>
+        </div>
+      {% else %}
+        <div class="tw:alert tw:alert-info">
+          <i class="fa fa-info-circle tw:mr-2"></i>
+          <span>Выберите турнир, чтобы сделать прогнозы</span>
         </div>
       {% endif %}
     </div>

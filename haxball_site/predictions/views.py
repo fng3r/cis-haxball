@@ -44,9 +44,6 @@ def predictions_main(request):
     elif default_tournament:
         selected_tournament = default_tournament
 
-    if request.GET.get('user'):
-        selected_user = User.objects.filter(pk=request.GET.get('user')).first()
-
     tournament_form = TournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
@@ -62,7 +59,6 @@ def predictions_main(request):
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
-        'selected_user': selected_user,
         'active_tournaments': active_tournaments,
         'make_predictions_tab_html': make_predictions_tab_html,
     }
@@ -149,11 +145,14 @@ def view_predictions_tab(request):
             .first()
         )
 
+    user_id = request.GET.get('user')
     selected_user = None
-    if request.GET.get('user'):
-        selected_user = User.objects.filter(pk=request.GET.get('user')).first()
+    if user_id:
+        selected_user = User.objects.filter(pk=user_id).first()
     elif get_users_with_predictions(selected_tournament):
         selected_user = get_users_with_predictions(selected_tournament).first()
+    if not selected_user:
+        selected_user = User.objects.first()
 
     tournament_form = TournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}

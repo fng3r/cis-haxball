@@ -22,9 +22,7 @@
 
     {% if selected_tournament and selected_user %}
       <div class="tw:[#view-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#view-predictions-content:has(.htmx-request)_&]:transition-opacity">
-        <h5 class="tw:text-md tw:font-semibold">
-          Прогнозы пользователя {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}:
-        </h5>
+        <h5 class="tw:text-md tw:font-semibold">Прогнозы {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}</h5>
 
         {% if predictions_data %}
           <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
@@ -89,14 +87,13 @@
             {% endfor %}
           </div>
         {% else %}
-          <div class="tw:alert tw:alert-warning">
-            <i class="fa fa-exclamation-triangle tw:mr-2"></i>
-            <span>Нет данных о прогнозах для выбранных параметров.</span>
+          <div class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
+            <p>Пользователь еще не сделал ни одного прогноза в данном турнире</p>
           </div>
         {% endif %}
       </div>
     {% else %}
-      <div class="tw:alert tw:alert-warning">
+      <div class="tw:alert tw:alert-info">
         <i class="fa fa-info-circle tw:mr-2"></i>
         <span>Выберите турнир и пользователя, чтобы увидеть их прогнозы.</span>
       </div>
