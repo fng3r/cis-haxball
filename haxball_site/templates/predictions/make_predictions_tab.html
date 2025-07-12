@@ -3,31 +3,39 @@
 {% load predictions_extras %}
 
 <div class="tw:flex tw:flex-col tw:gap-4">
-  <div class="tw:flex tw:flex-col tw:gap-6">
-    <form class="tw:flex tw:items-center tw:gap-4"
-          hx-get="{% url 'predictions:make_predictions_tab' %}"
-          hx-target="#make-predictions-content"
-          hx-trigger="change"
-          hx-push-url="false">
+  {% if not user.is_authenticated %}
+    <div class="tw:alert tw:alert-warning">
+      <i class="fa fa-info-circle tw:mr-2"></i>
+      <span>Для доступа к прогнозам необходимо <a href="{% url 'account_login' %}" class="tw:link tw:text-warning-content tw:font-semibold">войти в систему</a></span>
+    </div>
+  {% else %}
 
-      <div class="tw:flex tw:flex-col">
-        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
-        {% render_field tournament_form.tournament|add_class:'tw:select tw:select-bordered' %}
-      </div>
-    </form>
+    <div class="tw:flex tw:flex-col tw:gap-6">
+      <form class="tw:flex tw:items-center tw:gap-4"
+            hx-get="{% url 'predictions:make_predictions_tab' %}"
+            hx-target="#make-predictions-content"
+            hx-trigger="change"
+            hx-push-url="false">
 
-    {% if selected_tournament %}
-      <div>
-        <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
-
-        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
-          {% for tour in selected_tournament.league.tours.all %}
-            {% with prediction_data=user_predictions|get_item:tour.id %}
-              {% include "predictions/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions %}
-            {% endwith %}
-          {% endfor %}
+        <div class="tw:flex tw:flex-col">
+          <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
+          {% render_field tournament_form.tournament|add_class:'tw:select tw:select-bordered' %}
         </div>
-      </div>
-    {% endif %}
-  </div>
+      </form>
+
+      {% if selected_tournament %}
+        <div>
+          <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
+
+          <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
+            {% for tour in selected_tournament.league.tours.all %}
+              {% with prediction_data=user_predictions|get_item:tour.id %}
+                {% include "predictions/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions %}
+              {% endwith %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
 </div>

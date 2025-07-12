@@ -33,7 +33,6 @@ def get_users_with_predictions(tournament=None):
     return User.objects.filter(prediction_submissions__isnull=False).select_related('user_profile').distinct()
 
 
-@login_required
 def predictions_main(request):
     """Main predictions page with three tabs"""
     default_tournament = get_default_tournament()
@@ -70,9 +69,11 @@ def predictions_main(request):
     return render(request, 'predictions/main.html', context)
 
 
-@login_required
 def make_predictions_tab(request, initial_context=False, selected_tournament=None):
     """Tab for making predictions"""
+    if not request.user.is_authenticated:
+        return render_to_string('predictions/make_predictions_tab.html', {'user': request.user}, request=request)
+
     default_tournament = get_default_tournament()
     if not selected_tournament:
         if request.GET.get('tournament'):
@@ -120,13 +121,13 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'user_predictions': user_predictions,
+        'user': request.user,
     }
     if initial_context:
         return render_to_string('predictions/make_predictions_tab.html', context, request=request)
     return render(request, 'predictions/make_predictions_tab.html', context)
 
 
-@login_required
 def view_predictions_tab(request):
     """Tab for viewing other users' predictions"""
     default_tournament = get_default_tournament()
@@ -197,7 +198,6 @@ def view_predictions_tab(request):
     return render(request, 'predictions/view_predictions_tab.html', context)
 
 
-@login_required
 def standings_tab(request):
     """Tab for tournament standings"""
     default_tournament = get_default_tournament()
@@ -260,7 +260,6 @@ def standings_tab(request):
     return render(request, 'predictions/standings_tab.html', context)
 
 
-@login_required
 def tour_card(request, tour_id):
     """Render a single tour card"""
     tour = get_object_or_404(
