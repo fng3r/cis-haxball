@@ -16,19 +16,28 @@
     <div class="tw:card-body tw:p-1">
       <!-- Tabs -->
       <div class="tw:tabs tw:tabs-border" role="tablist">
-        <input type="radio" name="predictions-tabs" class="tw:tab" role="tab" aria-label="Мои прогнозы" checked />
+        <label class="tw:tab" role="tab">
+          <input type="radio" name="predictions-tabs" checked />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-user"></i>
+            Мои прогнозы
+          </span>
+        </label>
         <div class="tw:tab-content tw:p-2" role="tabpanel">
           <div id="make-predictions-content">{{ make_predictions_tab_html|safe }}</div>
         </div>
 
-        <input type="radio"
-               name="predictions-tabs"
-               class="tw:tab"
-               role="tab"
-               aria-label="Все прогнозы"
-               hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
-               hx-target="#view-predictions-content"
-               hx-trigger="load" />
+        <label class="tw:tab" role="tab">
+          <input type="radio"
+                 name="predictions-tabs"
+                 hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#view-predictions-content"
+                 hx-trigger="load" />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-th-list"></i>
+            Все прогнозы
+          </span>
+        </label>
         <div class="tw:tab-content tw:p-2" role="tabpanel">
           <div id="view-predictions-content">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
@@ -37,14 +46,17 @@
           </div>
         </div>
 
-        <input type="radio"
-               name="predictions-tabs"
-               class="tw:tab"
-               role="tab"
-               aria-label="Турнирная таблица"
-               hx-get="{% url 'predictions:standings_tab' %}?tournament={{ selected_tournament.pk }}"
-               hx-target="#standings-content"
-               hx-trigger="load" />
+        <label class="tw:tab" role="tab">
+          <input type="radio"
+                 name="predictions-tabs"
+                 hx-get="{% url 'predictions:standings_tab' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#standings-content"
+                 hx-trigger="load" />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-trophy"></i>
+            Турнирная таблица
+          </span>
+        </label>
         <div class="tw:tab-content tw:p-2" role="tabpanel">
           <div id="standings-content">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
@@ -53,7 +65,13 @@
           </div>
         </div>
 
-        <input type="radio" name="predictions-tabs" class="tw:tab" role="tab" aria-label="Правила" />
+        <label class="tw:tab" role="tab">
+          <input type="radio" name="predictions-tabs" />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-book"></i>
+            Правила
+          </span>
+        </label>
         <div class="tw:tab-content tw:p-2" role="tabpanel">
           <div id="rules-content">
             <div class="tw:p-3 tw:prose tw:max-w-none">
