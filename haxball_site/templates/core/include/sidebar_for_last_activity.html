@@ -47,7 +47,7 @@
           <span class="tw:truncate tw:text-base tw:font-medium group-hover:tw:underline" title="{{ comment.content_object }}">{{ comment.content_object }}</span>
           <span class="tw:text-xs tw:opacity-80 tw:truncate">
             {% blocktranslate with date=comment.created|naturalday:'j b.'|capfirst time=comment.created|time author=comment.author %}
-              {{ date }} в {{ time }} от {{ author }}
+              <i class="fa fa-clock-o"></i> {{ date }} в {{ time }} <i class="fa fa-user tw:ml-1"></i> {{ author }}
             {% endblocktranslate %}
           </span>
         </div>
