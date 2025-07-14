@@ -1,44 +1,44 @@
 {% load static %}
 {% load cache %}
 
-{% comment %} {% cache 60 top_comments_cache %} {% endcomment %}
-<div id="top-comments-carousel" class="carousel slide" data-ride="carousel">
-  <div class="carousel-inner">
-    {% for period in comments_by_period %}
-      <div class="carousel-item {% if forloop.first %}active{% endif %}">
-        <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
-          <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
-            <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="prev">
-              <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
-            </a>
-            <span class="tw:mb-0 tw:inline tw:text-2xl!">
-              <i class="fa fa-thumbs-o-up tw:text-success tw:mr-1" aria-hidden="true"></i>{{ period.title }}
-            </span>
-            <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="next">
-              <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
-            </a>
+{% cache 60 top_comments_cache %}
+  <div id="top-comments-carousel" class="carousel slide" data-ride="carousel">
+    <div class="carousel-inner">
+      {% for period in comments_by_period %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+          <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
+            <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
+              <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="prev">
+                <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
+              </a>
+              <span class="tw:mb-0 tw:inline tw:text-2xl!">
+                <i class="fa fa-thumbs-o-up tw:text-success tw:mr-1" aria-hidden="true"></i>{{ period.title }}
+              </span>
+              <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="next">
+                <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
+              </a>
+            </div>
+            {% if period.comments %}
+              <div class="tw:w-full tw:space-y-2 tw:px-1.5 tw:py-2">
+                {% for comment in period.comments %}
+                  <a href="{{ comment.get_absolute_url }}"
+                     title="от {{ comment.author }} в {{ comment.content_object }}"
+                     class="tw:rounded-lg tw:hover:bg-base-300 tw:transition tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:group">
+                    <div class="tw:flex tw:items-center tw:gap-2 tw:min-w-0 tw:flex-grow">
+                      <span class="tw:badge tw:badge-success tw:font-bold tw:flex-shrink-0">{{ comment.likes_count }}</span>
+                      <span class="tw:truncate tw:text-base tw:font-medium">{{ comment.body|striptags|safe|default:"*Медиа-контент*" }}</span>
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="tw:w-full tw:p-4 tw:text-center">
+                <span class="tw:text-sm tw:opacity-60">Нет комментариев</span>
+              </div>
+            {% endif %}
           </div>
-          {% if period.comments %}
-            <div class="tw:w-full tw:space-y-2 tw:px-1.5 tw:py-2">
-              {% for comment in period.comments %}
-                <a href="{{ comment.get_absolute_url }}"
-                   title="от {{ comment.author }} в {{ comment.content_object }}"
-                   class="tw:rounded-lg tw:hover:bg-base-300 tw:transition tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:group">
-                  <div class="tw:flex tw:items-center tw:gap-2 tw:min-w-0 tw:flex-grow">
-                    <span class="tw:badge tw:badge-success tw:font-bold tw:flex-shrink-0">{{ comment.likes_count }}</span>
-                    <span class="tw:truncate tw:text-base tw:font-medium">{{ comment.body|striptags|safe|default:"*Медиа-контент*" }}</span>
-                  </div>
-                </a>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="tw:w-full tw:p-4 tw:text-center">
-              <span class="tw:text-sm tw:opacity-60">Нет комментариев</span>
-            </div>
-          {% endif %}
         </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+    </div>
   </div>
-</div>
-{% comment %} {% endcache %} {% endcomment %}
+{% endcache %}
