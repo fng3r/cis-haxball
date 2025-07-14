@@ -14,7 +14,7 @@
   <div class="tw:w-full tw:space-y-2 tw:px-1.5 tw:py-2">
     {% for comment in last_comments %}
       <a href="{{ comment.get_absolute_url }}"
-         class="tw:rounded-lg tw:hover:bg-base-300 tw:border tw:border-neutral-300 tw:shadow-md tw:hover:shadow-md tw:transition tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:group">
+         class="tw:rounded-lg tw:bg-base-200 tw:hover:bg-base-300 tw:border tw:border-neutral-300 tw:shadow-md tw:hover:shadow-md tw:transition tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:group">
         <span class="tw:mt-1 tw:rounded tw:badge tw:badge-md tw:size-8
           {# djlint:off #}
                      {% if comment.content_type.model == 'post' %}
