@@ -2,23 +2,19 @@
 {% load cache %}
 
 {% comment %} {% cache 60 top_comments_cache %} {% endcomment %}
-<div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+<div id="top-comments-carousel" class="carousel slide" data-ride="carousel">
   <div class="carousel-inner">
     {% for period in comments_by_period %}
       <div class="carousel-item {% if forloop.first %}active{% endif %}">
         <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
           <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
-            <a class="tw:inline tw:text-primary-content"
-               href="#carouselExampleControls"
-               role="button"
-               data-slide="prev"
-               style="height: 100%">
+            <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="prev">
               <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
             </a>
             <span class="tw:mb-0 tw:inline tw:text-2xl!">
               <i class="fa fa-thumbs-o-up tw:text-success tw:mr-1" aria-hidden="true"></i>{{ period.title }}
             </span>
-            <a class="tw:inline tw:text-primary-content" href="#carouselExampleControls" role="button" data-slide="next">
+            <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="next">
               <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
             </a>
           </div>
