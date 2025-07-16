@@ -1,0 +1,45 @@
+{% load widget_tweaks %}
+{% load fantasy_league_extras %}
+
+<div class="tw:space-y-4">
+  <!-- Tournament Filter -->
+  <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
+    <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
+          hx-get="{% url 'fantasy_league:make_squad_tab' %}"
+          hx-target="#make-squad-content"
+          hx-trigger="change"
+          hx-push-url="false">
+      <div class="tw:flex tw:flex-col tw:gap-1">
+        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
+        {{ tournament_form.tournament|add_class:"tw:select tw:select-bordered" }}
+      </div>
+    </form>
+  </div>
+
+  {% if not user.is_authenticated %}
+    <div class="tw:alert tw:alert-info">
+      <i class="fa fa-info-circle"></i>
+      <span>Войдите в систему, чтобы участвовать в фэнтези лиге</span>
+    </div>
+  {% elif not selected_tournament %}
+    <div class="tw:alert tw:alert-warning">
+      <i class="fa fa-exclamation-triangle"></i>
+      <span>Выберите турнир для участия в фэнтези лиге</span>
+    </div>
+  {% else %}
+    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
+      {% for tour in selected_tournament.league.tours.all %}
+        {% with squad_data=user_squads|get_item:tour.id %}
+          {% include 'fantasy_league/partials/tour_card.html' with tour=tour tournament=selected_tournament submission=squad_data.submission is_open=tour|is_tour_open_for_fantasy preloaded_data=preloaded_data %}
+        {% endwith %}
+      {% empty %}
+        <div class="tw:col-span-full">
+          <div class="tw:alert tw:alert-info">
+            <i class="fa fa-info-circle"></i>
+            <span>В этом турнире пока нет туров</span>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

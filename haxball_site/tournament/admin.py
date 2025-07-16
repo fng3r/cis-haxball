@@ -1014,8 +1014,10 @@ class MatchInline(unfold_admin.StackedInline):
         # override chained selects behavior for fields which should be prefilled with inferred data
         if db_field.name == 'league' or db_field.name == 'stage':
             resolved = resolve(request.path)
-            tour = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
+            if 'object_id' not in resolved.kwargs:
+                return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+            tour = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
             if db_field.name == 'league':
                 kwargs['queryset'] = League.objects.filter(id__in=[tour.league.id])
                 formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)

@@ -1,0 +1,118 @@
+{% extends "core.html" %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Фэнтези Лига — CIS-HAXBALL{% endblock %}
+
+{% block main_content %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
+      <div class="tw:card-title tw:py-1">
+        <h3 class="tw:text-center">Фэнтези Лига</h3>
+      </div>
+    </div>
+
+    <div class="tw:card-body tw:p-1">
+      <!-- Tabs -->
+      <div class="tw:tabs tw:tabs-border" role="tablist">
+        <label class="tw:tab" role="tab">
+          <input type="radio" name="fantasy-tabs" checked />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-users"></i>
+            Мой состав
+          </span>
+        </label>
+        <div class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="make-squad-content">{{ make_squad_tab_html|safe }}</div>
+        </div>
+
+        <label class="tw:tab" role="tab">
+          <input type="radio"
+                 name="fantasy-tabs"
+                 hx-get="{% url 'fantasy_league:view_squads_tab' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#view-squads-content"
+                 hx-trigger="load" />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-th-list"></i>
+            Все составы
+          </span>
+        </label>
+        <div class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="view-squads-content">
+            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+            </div>
+          </div>
+        </div>
+
+        <label class="tw:tab" role="tab">
+          <input type="radio"
+                 name="fantasy-tabs"
+                 hx-get="{% url 'fantasy_league:standings_tab' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#standings-content"
+                 hx-trigger="load" />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-trophy"></i>
+            Турнирная таблица
+          </span>
+        </label>
+        <div class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="standings-content">
+            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+            </div>
+          </div>
+        </div>
+
+        <label class="tw:tab" role="tab">
+          <input type="radio"
+                 name="fantasy-tabs"
+                 hx-get="{% url 'fantasy_league:statistics_tab' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#statistics-content"
+                 hx-trigger="load" />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-bar-chart"></i>
+            Статистика игроков
+          </span>
+        </label>
+        <div class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="statistics-content">
+            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+            </div>
+          </div>
+        </div>
+
+        <label class="tw:tab" role="tab">
+          <input type="radio" name="fantasy-tabs" />
+          <span class="tw:flex tw:items-center tw:gap-2">
+            <i class="fa fa-book"></i>
+            Правила
+          </span>
+        </label>
+        <div class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="rules-content">
+            <div class="tw:p-3 tw:prose tw:max-w-none">
+              <span>
+                <strong>Как это работает:</strong>
+                <br>
+                • Возможность выбрать состав открывается за 3 дня до начала тура
+                <br>
+                • Вы можете изменять состав сколько угодно раз до 18:00 дня начала тура
+                <br>
+                • Основной состав приносит полные очки, запасной - 50% очков
+                <br>
+                • <strong>Очки за голы:</strong> ST - 3, DM - 5, GK - 8
+                <br>
+                • <strong>Очки за передачи:</strong> ST - 2, DM - 3, GK - 5
+                <br>
+                • <strong>Очки за сухие матчи:</strong> GK - 4, DM - 2
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

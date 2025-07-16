@@ -421,6 +421,11 @@ class TeamPenaltyPoints(models.Model):
 
 
 class Player(models.Model):
+    class Position(models.TextChoices):
+        ST = 'ST', 'Нападающий'
+        DM = 'DM', 'Опорник'
+        GK = 'GK', 'Вратарь'
+
     name = models.OneToOneField(
         User, verbose_name='Пользователь', null=True, blank=True, on_delete=models.SET_NULL, related_name='user_player'
     )
@@ -430,15 +435,7 @@ class Player(models.Model):
         max_length=150,
     )
 
-    FORWARD = 'FW'
-    DEF_MIDDLE = 'DM'
-    GOALKEEPER = 'GK'
-    POSITIONS = (
-        (FORWARD, 'Нападающий'),
-        (DEF_MIDDLE, 'Опорник'),
-        (GOALKEEPER, 'Вратарь'),
-    )
-    position = models.CharField('Позиция', max_length=2, choices=POSITIONS, null=True, blank=True)
+    position = models.CharField('Позиция', max_length=2, choices=Position.choices, null=True, blank=True)
 
     team = models.ForeignKey(
         Team, verbose_name='Команда', related_name='players_in_team', blank=True, null=True, on_delete=models.SET_NULL

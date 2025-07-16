@@ -1,0 +1,68 @@
+{% load widget_tweaks %}
+
+<div class="tw:space-y-4">
+  <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
+    <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
+          hx-get="{% url 'fantasy_league:statistics_tab' %}"
+          hx-target="#statistics-content"
+          hx-trigger="change"
+          hx-push-url="false">
+      <div class="tw:flex tw:flex-col tw:gap-1">
+        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
+        {{ tournament_form.tournament|add_class:"tw:select tw:select-bordered" }}
+      </div>
+    </form>
+  </div>
+
+  {% if not selected_tournament %}
+    <div class="tw:alert tw:alert-warning">
+      <i class="fa fa-exclamation-triangle"></i>
+      <span>Выберите турнир для просмотра статистики игроков</span>
+    </div>
+  {% else %}
+    <div class="tw:[#statistics-content:has(.htmx-request)_&]:opacity-50 tw:[#statistics-content:has(.htmx-request)_&]:transition-opacity">
+      <h5 class="tw:text-md tw:font-semibold">Статистика игроков</h5>
+
+      {% if player_stats %}
+        <div class="tw:overflow-x-auto">
+          <table class="tw:table tw:table-zebra tw:w-full">
+            <thead>
+              <tr>
+                <th>Игрок</th>
+                <th class="tw:text-center">Позиция</th>
+                <th class="tw:text-center">Всего выбрано</th>
+                <th class="tw:text-center">Основной состав</th>
+                <th class="tw:text-center">Запасной состав</th>
+                <th class="tw:text-center">Всего очков</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for stat in player_stats %}
+                <tr>
+                  <td>
+                    <div class="tw:flex tw:items-center tw:gap-2">
+                      <span class="tw:font-medium">{{ stat.player.nickname }}</span>
+                      {% if stat.player.team %}<span class="tw:badge tw:badge-outline tw:badge-xs">{{ stat.player.team.short_title }}</span>{% endif %}
+                    </div>
+                  </td>
+                  <td class="tw:text-center">
+                    <span class="tw:badge tw:badge-primary tw:badge-sm">{{ stat.player.get_position_display }}</span>
+                  </td>
+                  <td class="tw:text-center tw:font-bold">{{ stat.total_picked }}</td>
+                  <td class="tw:text-center">{{ stat.primary_picked }}</td>
+                  <td class="tw:text-center">{{ stat.secondary_picked }}</td>
+                  <td class="tw:text-center tw:font-bold tw:text-primary">{{ stat.total_points|floatformat:1 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="tw:alert tw:alert-info">
+          <i class="fa fa-info-circle"></i>
+          <span>Пока нет данных для отображения статистики игроков</span>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

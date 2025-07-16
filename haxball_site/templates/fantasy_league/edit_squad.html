@@ -1,0 +1,107 @@
+{% load widget_tweaks %}
+
+<div class="tw:card tw:bg-base-200 tw:shadow-sm">
+  <div class="tw:card-body tw:p-4">
+    <h5 class="tw:card-title">
+      <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+    </h5>
+    <form class="tw:space-y-6"
+          hx-post="{% url 'fantasy_league:edit_squad' tour.id %}"
+          hx-target="#edit-squad-container"
+          hx-swap="innerHTML">
+      {% csrf_token %}
+
+      <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-6">
+        <div class="tw:space-y-4">
+          <div class="tw:font-medium tw:text-primary">Основной состав (1x очки)</div>
+          <div class="tw:space-y-3">
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.primary_gk.label }}</label>
+              {{ form.primary_gk|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.primary_dm.label }}</label>
+              {{ form.primary_dm|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.primary_st1.label }}</label>
+              {{ form.primary_st1|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.primary_st2.label }}</label>
+              {{ form.primary_st2|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+          </div>
+        </div>
+
+        <div class="tw:space-y-4">
+          <div class="tw:font-medium tw:text-secondary">Запасной состав (0.5x очки)</div>
+          <div class="tw:space-y-3">
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.secondary_gk.label }}</label>
+              {{ form.secondary_gk|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.secondary_dm.label }}</label>
+              {{ form.secondary_dm|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.secondary_st1.label }}</label>
+              {{ form.secondary_st1|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold">{{ form.secondary_st2.label }}</label>
+              {{ form.secondary_st2|add_class:"tw:select tw:select-bordered tw:w-full" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="tw:alert tw:alert-error">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span>{{ form.non_field_errors.0 }}</span>
+        </div>
+      {% endif %}
+
+      <div class="tw:alert tw:alert-info">
+        <i class="fa fa-info-circle"></i>
+        <div>
+          <strong>Система очков:</strong>
+          <ul class="tw:mt-2 tw:space-y-1">
+            <li>
+              • <strong>Голы:</strong> ST - 3, DM - 5, GK - 8
+            </li>
+            <li>
+              • <strong>Передачи:</strong> ST - 2, DM - 3, GK - 5
+            </li>
+            <li>
+              • <strong>Сухие матчи:</strong> GK - 4, DM - 2
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tw:flex tw:justify-between tw:items-center">
+        <button type="button"
+                class="tw:btn tw:btn-outline"
+                hx-get="{% url 'fantasy_league:tour_detail' tour.id %}"
+                hx-target="#tour-{{ tour.id }}-content"
+                hx-swap="innerHTML">
+          <i class="fa fa-arrow-left"></i>
+          Назад
+        </button>
+        <button type="submit" class="tw:btn tw:btn-primary">
+          <i class="fa fa-save"></i>
+          Сохранить состав
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
