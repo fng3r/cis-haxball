@@ -327,14 +327,14 @@ def edit_squad(request, tour_id):
         return redirect('fantasy_league:main')
 
     if request.method == 'POST':
-        submission = SquadSubmission.objects.get_or_create(
+        submission, _ = SquadSubmission.objects.get_or_create(
             user=request.user,
             tour=tour,
             tournament__league=tour.league,
             defaults={'tournament': tour.league.fantasy_tournament},
         )
 
-        form = SquadSubmissionForm(request.POST)
+        form = SquadSubmissionForm(request.POST, tournament=tour.league)
         if form.is_valid():
             with transaction.atomic():
                 submission.primary_squad.clear()
@@ -366,10 +366,12 @@ def edit_squad(request, tour_id):
 
                 return render(
                     request,
-                    'fantasy_league/partials/squad_saved.html',
+                    'fantasy_league/partials/tour_card.html',
                     {
                         'submission': submission,
                         'tour': tour,
+                        'is_open': is_tour_open_for_fantasy(tour),
+                        'preloaded_data': preload_fantasy_data(submission.tournament),
                     },
                 )
     else:
@@ -408,7 +410,7 @@ def edit_squad(request, tour_id):
             if len(st_players) >= 2:
                 initial_data['secondary_st2'] = st_players[1].player
 
-        form = SquadSubmissionForm(initial=initial_data)
+        form = SquadSubmissionForm(initial=initial_data, tournament=tour.league)
 
     context = {
         'form': form,

@@ -20,7 +20,7 @@ class UserFilterForm(forms.Form):
     """Form for filtering users"""
 
     user = forms.ModelChoiceField(
-        queryset=None,  # Will be set dynamically
+        queryset=None,
         empty_label=None,
         required=False,
         label='Пользователь',
@@ -32,70 +32,80 @@ class SquadSubmissionForm(forms.Form):
 
     # Primary squad fields
     primary_gk = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='GK'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
         label='Вратарь (основной)',
         required=True,
     )
     primary_dm = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='DM'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.DM]),
         label='Опорник (основной)',
         required=True,
     )
     primary_st1 = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='ST'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
         label='Нападающий 1 (основной)',
         required=True,
     )
     primary_st2 = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='ST'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
         label='Нападающий 2 (основной)',
         required=True,
     )
 
     # Secondary squad fields
     secondary_gk = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='GK'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
         label='Вратарь (запасной)',
         required=True,
     )
     secondary_dm = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='DM'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.DM]),
         label='Опорник (запасной)',
         required=True,
     )
     secondary_st1 = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='ST'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
         label='Нападающий 1 (запасной)',
         required=True,
     )
     secondary_st2 = forms.ModelChoiceField(
-        queryset=Player.objects.filter(position='ST'),
+        queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
         label='Нападающий 2 (запасной)',
         required=True,
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, tournament, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Update querysets to include players with multiple positions
-        # For GK position, include players with GK position
-        self.fields['primary_gk'].queryset = Player.objects.filter(position='GK')
-        self.fields['secondary_gk'].queryset = Player.objects.filter(position='GK')
-
-        # For DM position, include players with DM position
-        self.fields['primary_dm'].queryset = Player.objects.filter(position='DM')
-        self.fields['secondary_dm'].queryset = Player.objects.filter(position='DM')
-
-        # For ST position, include players with ST position
-        self.fields['primary_st1'].queryset = Player.objects.filter(position='ST')
-        self.fields['primary_st2'].queryset = Player.objects.filter(position='ST')
-        self.fields['secondary_st1'].queryset = Player.objects.filter(position='ST')
-        self.fields['secondary_st2'].queryset = Player.objects.filter(position='ST')
+        tournament = tournament
+        team_filter = {'team__in': tournament.teams.all()}
+        self.fields['primary_gk'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.GK], **team_filter
+        )
+        self.fields['secondary_gk'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.GK], **team_filter
+        )
+        self.fields['primary_dm'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.DM], **team_filter
+        )
+        self.fields['secondary_dm'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.DM], **team_filter
+        )
+        self.fields['primary_st1'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.ST], **team_filter
+        )
+        self.fields['primary_st2'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.ST], **team_filter
+        )
+        self.fields['secondary_st1'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.ST], **team_filter
+        )
+        self.fields['secondary_st2'].queryset = Player.objects.filter(
+            positions__contains=[Player.Position.ST], **team_filter
+        )
 
     def clean(self):
         cleaned_data = super().clean()
 
-        # Check for duplicate players in primary squad
         primary_players = [
             cleaned_data.get('primary_gk'),
             cleaned_data.get('primary_dm'),
@@ -106,7 +116,6 @@ class SquadSubmissionForm(forms.Form):
         if len(set(primary_players)) != 4:
             raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
 
-        # Check for duplicate players in secondary squad
         secondary_players = [
             cleaned_data.get('secondary_gk'),
             cleaned_data.get('secondary_dm'),
@@ -120,7 +129,7 @@ class SquadSubmissionForm(forms.Form):
         # Check for duplicate players between primary and secondary squads
         all_players = primary_players + secondary_players
         if len(set(all_players)) != 8:
-            raise forms.ValidationError('Не может быть дублирующихся игроков между основным и запасным составами')
+            raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
 
         return cleaned_data
 

@@ -7,7 +7,7 @@
     </h5>
     <form class="tw:space-y-6"
           hx-post="{% url 'fantasy_league:edit_squad' tour.id %}"
-          hx-target="#edit-squad-container"
+          hx-target="#tour-{{ tour.id }}-content"
           hx-swap="innerHTML">
       {% csrf_token %}
 

@@ -27,7 +27,7 @@
       <span>Выберите турнир для участия в фэнтези лиге</span>
     </div>
   {% else %}
-    <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
+    <div class="tw:flex tw:flex-col tw:gap-4 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
       {% for tour in selected_tournament.league.tours.all %}
         {% with squad_data=user_squads|get_item:tour.id %}
           {% include 'fantasy_league/partials/tour_card.html' with tour=tour tournament=selected_tournament submission=squad_data.submission is_open=tour|is_tour_open_for_fantasy preloaded_data=preloaded_data %}

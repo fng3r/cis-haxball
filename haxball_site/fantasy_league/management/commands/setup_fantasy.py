@@ -69,25 +69,17 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Fantasy league environment created successfully for {league.title}!'))
 
     def find_league(self, league_identifier):
-        """Find league by slug or title"""
+        """Find league by slug"""
         try:
-            # Try by slug first
             return League.objects.get(slug=league_identifier)
         except League.DoesNotExist:
-            try:
-                # Try by title
-                return League.objects.get(title=league_identifier)
-            except League.DoesNotExist:
-                return None
+            return None
 
     def clean_fantasy_data(self, league):
         """Clean existing fantasy data for the league"""
         self.stdout.write(f'Cleaning existing fantasy data for {league.title}...')
 
-        # Delete fantasy submissions for this league
         SquadSubmission.objects.filter(tournament__league=league).delete()
-
-        # Delete fantasy tournament
         FantasyTournament.objects.filter(league=league).delete()
 
         # Note: We don't delete SquadPlayer instances as they might be used by other leagues
@@ -101,7 +93,6 @@ class Command(BaseCommand):
             users = []
         self.stdout.write(f'Creating fantasy environment for {league.title}...')
 
-        # Create fantasy tournament
         fantasy_tournament, created = FantasyTournament.objects.get_or_create(
             league=league, defaults={'is_active': True}
         )
@@ -123,17 +114,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'No tours found for league {league.title}'))
             return
 
-        # Get available players
         available_players = Player.objects.filter(team__in=league.teams.all()).distinct()
 
         if not available_players.exists():
             self.stdout.write(self.style.ERROR(f'No players found for teams in league {league.title}'))
             return
 
-        # Select users for fantasy submissions
         test_users = []
 
-        # Add specified users first
         if users:
             for username in users:
                 try:
@@ -175,7 +163,6 @@ class Command(BaseCommand):
 
         self.stdout.write(f'Using {len(test_users)} users for fantasy: {", ".join([u.username for u in test_users])}')
 
-        # Create SquadPlayer instances for all available players in all positions
         squad_players = {}
         positions = [SquadPlayer.Position.GK, SquadPlayer.Position.DM, SquadPlayer.Position.ST]
 
@@ -184,11 +171,9 @@ class Command(BaseCommand):
                 squad_player, created = SquadPlayer.objects.get_or_create(player=player, position=position)
                 squad_players[(player.id, position)] = squad_player
 
-        # Create fantasy submissions for users
         submissions_created = 0
         for user in test_users:
             for tour in tours:
-                # Create submission for each tour
                 submission, created = SquadSubmission.objects.get_or_create(
                     user=user,
                     tour=tour,
@@ -197,13 +182,8 @@ class Command(BaseCommand):
 
                 if created:
                     submissions_created += 1
-
-                    # Generate random primary squad (1 GK, 1 DM, 2 ST)
-                    primary_squad = self.generate_random_squad(available_players, squad_players)
+                    primary_squad, secondary_squad = self.generate_random_squads(available_players, squad_players)
                     submission.primary_squad.set(primary_squad)
-
-                    # Generate random secondary squad (1 GK, 1 DM, 2 ST)
-                    secondary_squad = self.generate_random_squad(available_players, squad_players)
                     submission.secondary_squad.set(secondary_squad)
 
         self.stdout.write(f'Created {submissions_created} fantasy submissions')
@@ -211,7 +191,6 @@ class Command(BaseCommand):
             f'Created SquadPlayer instances for {len(available_players)} players in {len(positions)} positions'
         )
 
-        # Show current status
         today = timezone.now().date()
         open_tours = [t for t in tours if timedelta(days=0) <= t.date_from - today <= timedelta(days=3)]
         closed_tours = [t for t in tours if t.date_from < today]
@@ -220,42 +199,63 @@ class Command(BaseCommand):
         self.stdout.write(f'Closed tours: {len(closed_tours)}')
         self.stdout.write(f'Users with fantasy submissions: {", ".join([u.username for u in test_users])}')
 
-    def generate_random_squad(self, available_players, squad_players):
-        """Generate a random squad with 1 GK, 1 DM, 2 ST"""
-        squad = []
+    def generate_random_squads(self, available_players, squad_players):
+        """Generate two squads (primary and secondary), each with 4 unique players, no overlap."""
+        used_players = set()
 
-        # Get players by position
-        gk_players = [p for p in available_players if p.position == 'GK']
-        dm_players = [p for p in available_players if p.position == 'DM']
-        st_players = [p for p in available_players if p.position == 'ST']
+        def pick_player(players_pool):
+            candidates = [p for p in players_pool if p.id not in used_players]
+            if not candidates:
+                return None
+            player = random.choice(candidates)
+            used_players.add(player.id)
+            return player
 
-        # If no players with specific positions, use any players
-        if not gk_players:
-            gk_players = list(available_players)
-        if not dm_players:
-            dm_players = list(available_players)
-        if not st_players:
-            st_players = list(available_players)
+        gk_players = [p for p in available_players if SquadPlayer.Position.GK in p.positions]
+        dm_players = [p for p in available_players if SquadPlayer.Position.DM in p.positions]
+        st_players = [p for p in available_players if SquadPlayer.Position.ST in p.positions]
 
-        # Select random players for each position
-        if gk_players:
-            gk_player = random.choice(gk_players)
-            squad.append(squad_players[(gk_player.id, SquadPlayer.Position.GK)])
+        primary = []
+        gk = pick_player(gk_players) or pick_player(available_players)
+        if gk:
+            primary.append((gk, SquadPlayer.Position.GK))
+        dm = pick_player(dm_players) or pick_player(available_players)
+        if dm:
+            primary.append((dm, SquadPlayer.Position.DM))
+        st1 = pick_player(st_players) or pick_player(available_players)
+        if st1:
+            primary.append((st1, SquadPlayer.Position.ST))
+        st2 = pick_player(st_players) or pick_player(available_players)
+        if st2:
+            primary.append((st2, SquadPlayer.Position.ST))
 
-        if dm_players:
-            dm_player = random.choice(dm_players)
-            squad.append(squad_players[(dm_player.id, SquadPlayer.Position.DM)])
+        secondary = []
+        gk = pick_player(gk_players) or pick_player(available_players)
+        if gk:
+            secondary.append((gk, SquadPlayer.Position.GK))
+        dm = pick_player(dm_players) or pick_player(available_players)
+        if dm:
+            secondary.append((dm, SquadPlayer.Position.DM))
+        st1 = pick_player(st_players) or pick_player(available_players)
+        if st1:
+            secondary.append((st1, SquadPlayer.Position.ST))
+        st2 = pick_player(st_players) or pick_player(available_players)
+        if st2:
+            secondary.append((st2, SquadPlayer.Position.ST))
 
-        # Select 2 ST players
-        if len(st_players) >= 2:
-            st_players_selected = random.sample(st_players, 2)
-        elif len(st_players) == 1:
-            st_players_selected = [st_players[0], st_players[0]]  # Same player twice
-        else:
-            # If no ST players, use any available players
-            st_players_selected = random.sample(list(available_players), min(2, len(available_players)))
+        # Ensure no duplicates within or between squads
+        all_players = [p[0].id for p in primary + secondary]
+        if len(set(all_players)) < 8:
+            for p in available_players:
+                if p.id not in used_players and len(primary) < 4:
+                    primary.append((p, SquadPlayer.Position.ST))
+                    used_players.add(p.id)
+                if p.id not in used_players and len(secondary) < 4:
+                    secondary.append((p, SquadPlayer.Position.ST))
+                    used_players.add(p.id)
+                if len(primary) == 4 and len(secondary) == 4:
+                    break
 
-        for st_player in st_players_selected:
-            squad.append(squad_players[(st_player.id, SquadPlayer.Position.ST)])
-
-        return squad
+        primary_squad = [squad_players[(p.id, pos)] for p, pos in primary if (p.id, pos) in squad_players]
+        secondary_squad = [squad_players[(p.id, pos)] for p, pos in secondary if (p.id, pos) in squad_players]
+        return primary_squad, secondary_squad
