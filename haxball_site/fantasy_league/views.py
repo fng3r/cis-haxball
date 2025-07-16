@@ -75,9 +75,6 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
         elif default_tournament:
             selected_tournament = default_tournament
 
-    print(selected_tournament)
-    print(default_tournament)
-
     if selected_tournament:
         selected_tournament = (
             FantasyTournament.objects.filter(pk=selected_tournament.pk)

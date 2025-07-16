@@ -94,7 +94,7 @@ class SquadSubmission(models.Model):
         tour_matches = preloaded_data.get('tour_matches')
         match_participants = preloaded_data.get('match_participants')
         match_goals = preloaded_data.get('match_goals')
-        match_substitutions = preloaded_data.get('match_substitutions')
+        match_cs = preloaded_data.get('match_cs')
 
         total_points = 0
         player_id = squad_player.player.id
@@ -104,18 +104,17 @@ class SquadSubmission(models.Model):
         for match in tour_matches:
             if player_id in match_participants.get(match.id):
                 match_points = self._calculate_match_points_from_data(
-                    match, squad_player, match_goals.get(match.id), match_substitutions.get(match.id)
+                    match, squad_player, match_goals.get(match.id, []), match_cs.get(match.id, [])
                 )
                 total_points += match_points
 
         return total_points
 
-    def _calculate_match_points_from_data(self, match, squad_player, match_goals, match_substitutions):
+    def _calculate_match_points_from_data(self, match, squad_player, match_goals, match_cs):
         """Calculate points for a specific match using preloaded data"""
         points = 0
         player = squad_player.player
         position = squad_player.position
-
         # Goals (3 points for ST, 5 points for DM, 8 points for GK)
         goals = sum(1 for goal in match_goals if goal.author_id == player.id)
         if position == SquadPlayer.Position.ST:
@@ -124,7 +123,6 @@ class SquadSubmission(models.Model):
             points += goals * 5
         elif position == SquadPlayer.Position.GK:
             points += goals * 8
-
         # Assists (2 points for ST, 3 points for DM, 5 points for GK)
         assists = sum(1 for goal in match_goals if goal.assistent_id == player.id)
         if position == SquadPlayer.Position.ST:
@@ -134,29 +132,6 @@ class SquadSubmission(models.Model):
         elif position == SquadPlayer.Position.GK:
             points += assists * 5
 
-        # Clean sheets (only for GK and DM)
-        if position in [SquadPlayer.Position.GK, SquadPlayer.Position.DM]:
-            # Check if player's team kept a clean sheet
-            player_team = None
-
-            # Check if player was in starting lineup
-            if match.team_home_id and any(p.id == player.id for p in match.team_home_start.all()):
-                player_team = match.team_home
-            elif match.team_guest_id and any(p.id == player.id for p in match.team_guest_start.all()):
-                player_team = match.team_guest
-            else:
-                # Check substitutions
-                for sub in match_substitutions:
-                    if sub.player_in_id == player.id:
-                        player_team = sub.team
-                        break
-
-            if (
-                player_team == match.team_home
-                and match.score_guest == 0
-                or player_team == match.team_guest
-                and match.score_home == 0
-            ):
-                points += 4 if position == SquadPlayer.Position.GK else 2
-
+        cs_events = [e for e in match_cs if e.author_id == player.id]
+        points += 15 * len(cs_events)
         return points

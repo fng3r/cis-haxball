@@ -41,6 +41,12 @@ def is_tour_not_open_yet(tour):
 
 
 @register.filter
+def is_tour_closed(tour):
+    """Check if a tour is closed"""
+    return not is_tour_open_for_fantasy(tour) and not is_tour_not_open_yet(tour)
+
+
+@register.filter
 def get_tour_opening_date(tour):
     """Get the opening date of a tour"""
     return utils.get_tour_opening_date(tour)
@@ -52,3 +58,32 @@ def get_total_points_with_data(submission, preloaded_data):
     if submission and preloaded_data:
         return submission.get_total_points(preloaded_data)
     return 0
+
+
+@register.simple_tag(takes_context=True)
+def squad_player_stats(context, squad_player):
+    """Return stats string for a SquadPlayer: 'xG yA zCS', omitting zero stats."""
+    preloaded_data = context.get('preloaded_data')
+    submission = context.get('submission')
+    if not preloaded_data or not submission:
+        return ''
+
+    tour_matches = [m for m in preloaded_data['tour_matches'] if m.numb_tour_id == submission.tour_id]
+    player = squad_player.player
+    goals = 0
+    assists = 0
+    cs = 0
+    for match in tour_matches:
+        match_goals = preloaded_data['match_goals'].get(match.id, [])
+        goals += sum(1 for g in match_goals if g.author_id == player.id)
+        assists += sum(1 for g in match_goals if g.assistent_id == player.id)
+        match_cs = preloaded_data.get('match_cs', {}).get(match.id, [])
+        cs += sum(1 for e in match_cs if e.author_id == player.id)
+    parts = []
+    if goals:
+        parts.append(f'{goals}G')
+    if assists:
+        parts.append(f'{assists}A')
+    if cs:
+        parts.append(f'{cs}CS')
+    return ' '.join(parts)

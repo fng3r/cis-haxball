@@ -3,7 +3,7 @@ from datetime import time
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from tournament.models import Goal, Match, Substitution, TourNumber
+from tournament.models import Goal, Match, OtherEvents, TourNumber
 
 from .models import SquadSubmission
 
@@ -241,16 +241,16 @@ def preload_fantasy_data(tournament):
             match_goals[goal.match_id] = []
         match_goals[goal.match_id].append(goal)
 
-    match_substitutions = {}
-    substitutions = Substitution.objects.filter(match__in=matches).select_related('team')
-    for sub in substitutions:
-        if sub.match_id not in match_substitutions:
-            match_substitutions[sub.match_id] = []
-        match_substitutions[sub.match_id].append(sub)
+    events = OtherEvents.objects.filter(match__in=matches, event=OtherEvents.CLEAN_SHEET).select_related('author')
+    match_cs = {}
+    for event in events:
+        if event.match_id not in match_cs:
+            match_cs[event.match_id] = []
+        match_cs[event.match_id].append(event)
 
     return {
         'tour_matches': list(matches),
         'match_participants': match_participants,
         'match_goals': match_goals,
-        'match_substitutions': match_substitutions,
+        'match_cs': match_cs,
     }
