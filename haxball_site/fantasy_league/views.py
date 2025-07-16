@@ -172,13 +172,10 @@ def view_squads_tab(request):
 
     squads_data = {}
     if selected_tournament and selected_user:
-        # Preload fantasy data for efficient points calculation
         preloaded_data = preload_fantasy_data(selected_tournament)
 
-        # Get all tours for this league in one query
         tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
 
-        # Get all user submissions for this tournament in one query with all related data
         submissions = (
             SquadSubmission.objects.filter(user=selected_user, tournament=selected_tournament)
             .prefetch_related('primary_squad__player', 'secondary_squad__player', 'tour')
@@ -329,23 +326,20 @@ def edit_squad(request, tour_id):
         messages.error(request, 'Тур уже закрыт для отправки составов')
         return redirect('fantasy_league:main')
 
-    # Get or create submission with all related data
-    submission, created = SquadSubmission.objects.get_or_create(
-        user=request.user,
-        tour=tour,
-        tournament__league=tour.league,
-        defaults={'tournament': tour.league.fantasy_tournament},
-    )
-
     if request.method == 'POST':
+        submission = SquadSubmission.objects.get_or_create(
+            user=request.user,
+            tour=tour,
+            tournament__league=tour.league,
+            defaults={'tournament': tour.league.fantasy_tournament},
+        )
+
         form = SquadSubmissionForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
-                # Clear existing squads
                 submission.primary_squad.clear()
                 submission.secondary_squad.clear()
 
-                # Create SquadPlayer instances and add to primary squad
                 primary_players_data = [
                     (form.cleaned_data['primary_gk'], SquadPlayer.Position.GK),
                     (form.cleaned_data['primary_dm'], SquadPlayer.Position.DM),
@@ -354,10 +348,9 @@ def edit_squad(request, tour_id):
                 ]
 
                 for player, position in primary_players_data:
-                    squad_player, created = SquadPlayer.objects.get_or_create(player=player, position=position)
+                    squad_player, _ = SquadPlayer.objects.get_or_create(player=player, position=position)
                     submission.primary_squad.add(squad_player)
 
-                # Create SquadPlayer instances and add to secondary squad
                 secondary_players_data = [
                     (form.cleaned_data['secondary_gk'], SquadPlayer.Position.GK),
                     (form.cleaned_data['secondary_dm'], SquadPlayer.Position.DM),
@@ -366,28 +359,27 @@ def edit_squad(request, tour_id):
                 ]
 
                 for player, position in secondary_players_data:
-                    squad_player, created = SquadPlayer.objects.get_or_create(player=player, position=position)
+                    squad_player, _ = SquadPlayer.objects.get_or_create(player=player, position=position)
                     submission.secondary_squad.add(squad_player)
 
-                messages.success(request, 'Состав успешно сохранен')
-                if request.htmx:
-                    return render(
-                        request,
-                        'fantasy_league/partials/squad_saved.html',
-                        {
-                            'submission': submission,
-                            'tour': tour,
-                        },
-                    )
-                return redirect('fantasy_league:main')
+                submission.save()
+
+                return render(
+                    request,
+                    'fantasy_league/partials/squad_saved.html',
+                    {
+                        'submission': submission,
+                        'tour': tour,
+                    },
+                )
     else:
-        # Pre-populate form with existing data
+        submission = SquadSubmission.objects.filter(
+            user=request.user, tour=tour, tournament__league=tour.league
+        ).first()
         initial_data = {}
 
-        # Get primary squad players with all related data
-        primary_squad_players = list(submission.primary_squad.all().select_related('player'))
+        primary_squad_players = list(submission.primary_squad.all().select_related('player')) if submission else []
         if len(primary_squad_players) >= 4:
-            # Find players by position
             gk_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.GK]
             dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
             st_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.ST]
@@ -401,10 +393,8 @@ def edit_squad(request, tour_id):
             if len(st_players) >= 2:
                 initial_data['primary_st2'] = st_players[1].player
 
-        # Get secondary squad players with all related data
-        secondary_squad_players = list(submission.secondary_squad.all().select_related('player'))
+        secondary_squad_players = list(submission.secondary_squad.all().select_related('player')) if submission else []
         if len(secondary_squad_players) >= 4:
-            # Find players by position
             gk_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.GK]
             dm_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.DM]
             st_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.ST]
