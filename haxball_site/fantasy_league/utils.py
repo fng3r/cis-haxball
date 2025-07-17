@@ -1,34 +1,12 @@
 from datetime import time
 
 from django.contrib.auth.models import User
+from django.db import models
 from django.utils import timezone
 
-from tournament.models import Goal, Match, OtherEvents, TourNumber
+from tournament.models import Goal, Match, OtherEvents, Player
 
 from .models import SquadSubmission
-
-
-def get_open_tours():
-    """Get tours that are currently open for fantasy league submissions"""
-    now = timezone.now()
-    today = now.date()
-
-    # Calculate the date range for open tours
-    # Tours open 3 days before start date and close at 18:00 on start date
-    open_date = today - timezone.timedelta(days=3)
-    close_date = today + timezone.timedelta(days=1)  # Include today
-
-    # Get all tours that could be open in one query with all related data
-    potential_open_tours = TourNumber.objects.filter(
-        league__fantasy_tournament__is_active=True, date_from__gte=open_date, date_from__lte=close_date
-    ).select_related('league', 'league__fantasy_tournament')
-
-    open_tours = []
-    for tour in potential_open_tours:
-        if is_tour_open_for_fantasy(tour):
-            open_tours.append(tour.id)
-
-    return open_tours
 
 
 def is_tour_open_for_fantasy(tour):
@@ -93,22 +71,18 @@ def get_user_tournament_total_points(user, tournament):
 
 def get_tournament_standings(tournament):
     """Get tournament standings sorted by total points"""
-    # Preload all fantasy data to avoid N+1 queries
     preloaded_data = preload_fantasy_data(tournament)
 
-    # Get all users with submissions for this tournament in one query with all related data
     users_with_submissions = (
         User.objects.filter(fantasy_squad_submissions__tournament=tournament).select_related('user_profile').distinct()
     )
 
-    # Get all submissions for this tournament in one query with all related data
     all_submissions = (
         SquadSubmission.objects.filter(tournament=tournament)
         .prefetch_related('primary_squad__player', 'secondary_squad__player', 'user')
         .select_related('user', 'user__user_profile')
     )
 
-    # Group submissions by user for efficient access
     submissions_by_user = {}
     for submission in all_submissions:
         if submission.user_id not in submissions_by_user:
@@ -134,17 +108,11 @@ def get_tournament_standings(tournament):
 
 def get_player_fantasy_stats(tournament=None):
     """Get fantasy statistics for all players"""
-    from django.db import models
-
-    from tournament.models import Player
-
-    # Preload all fantasy data to avoid N+1 queries
     if tournament:
         preloaded_data = preload_fantasy_data(tournament)
     else:
         preloaded_data = None
 
-    # Get all players who have been picked in fantasy with all related data
     players_queryset = Player.objects.filter(fantasy_squad_players__isnull=False).select_related('team').distinct()
 
     if tournament:
@@ -153,7 +121,6 @@ def get_player_fantasy_stats(tournament=None):
             | models.Q(fantasy_squad_players__secondary_squad_submissions__tournament=tournament)
         )
 
-    # Get all relevant submissions in one query
     submissions_filter = {}
     if tournament:
         submissions_filter['tournament'] = tournament
@@ -162,19 +129,16 @@ def get_player_fantasy_stats(tournament=None):
         'primary_squad__player', 'secondary_squad__player', 'tour'
     )
 
-    # Create lookup dictionaries for efficient access
     primary_submissions_by_player = {}
     secondary_submissions_by_player = {}
 
     for submission in all_submissions:
-        # Group primary squad submissions by player
         for squad_player in submission.primary_squad.all():
             player_id = squad_player.player.id
             if player_id not in primary_submissions_by_player:
                 primary_submissions_by_player[player_id] = []
             primary_submissions_by_player[player_id].append((submission, squad_player))
 
-        # Group secondary squad submissions by player
         for squad_player in submission.secondary_squad.all():
             player_id = squad_player.player.id
             if player_id not in secondary_submissions_by_player:
@@ -184,7 +148,6 @@ def get_player_fantasy_stats(tournament=None):
     stats = []
 
     for player in players_queryset:
-        # Get counts from lookup dictionaries
         primary_submissions = primary_submissions_by_player.get(player.id, [])
         secondary_submissions = secondary_submissions_by_player.get(player.id, [])
 
@@ -192,15 +155,12 @@ def get_player_fantasy_stats(tournament=None):
         secondary_count = len(secondary_submissions)
         total_picked = primary_count + secondary_count
 
-        # Calculate total points granted
         total_points = 0
 
-        # Points from primary squad submissions
         for submission, squad_player in primary_submissions:
             points = submission._calculate_player_points(squad_player, preloaded_data)
             total_points += points
 
-        # Points from secondary squad submissions (0.5x)
         for submission, squad_player in secondary_submissions:
             points = submission._calculate_player_points(squad_player, preloaded_data) * 0.5
             total_points += points
@@ -215,7 +175,6 @@ def get_player_fantasy_stats(tournament=None):
             }
         )
 
-    # Sort by total points descending
     stats.sort(key=lambda x: x['total_points'], reverse=True)
 
     return stats

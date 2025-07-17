@@ -10,7 +10,6 @@ from tournament.models import TourNumber
 from .forms import SquadSubmissionForm, TournamentFilterForm, UserFilterForm
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
 from .utils import (
-    get_open_tours,
     get_player_fantasy_stats,
     get_tournament_standings,
     is_tour_open_for_fantasy,
@@ -117,14 +116,11 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
             else:
                 user_squads[tour.id] = {'submission': None, 'primary_players': [], 'secondary_players': []}
 
-    open_tours = get_open_tours()
-
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'user_squads': user_squads,
         'user': request.user,
-        'open_tours': open_tours,
         'preloaded_data': preloaded_data if selected_tournament else None,
     }
     if initial_context:
@@ -187,15 +183,12 @@ def view_squads_tab(request):
             else:
                 squads_data[tour.id] = None
 
-    open_tours = get_open_tours()
-
     context = {
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
         'squads_data': squads_data,
-        'open_tours': open_tours,
         'preloaded_data': preloaded_data if selected_tournament and selected_user else None,
     }
 
@@ -222,10 +215,8 @@ def standings_tab(request):
     if selected_tournament:
         standings = get_tournament_standings(selected_tournament)
 
-        # Get all tours for this league
         tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
 
-        # Get all submissions for this tournament with preloaded data
         preloaded_data = preload_fantasy_data(selected_tournament)
         all_submissions = (
             SquadSubmission.objects.filter(tournament=selected_tournament)
@@ -233,13 +224,11 @@ def standings_tab(request):
             .select_related('user', 'tour')
         )
 
-        # Create lookup dictionary for efficient access
         submissions_lookup = {}
         for submission in all_submissions:
             key = (submission.user_id, submission.tour_id)
             submissions_lookup[key] = submission
 
-        # Calculate tour points for each user
         for standing in standings:
             user = standing['user']
             tour_points[user.id] = {}
