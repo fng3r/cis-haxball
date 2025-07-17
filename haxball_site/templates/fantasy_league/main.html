@@ -14,7 +14,6 @@
     </div>
 
     <div class="tw:card-body tw:p-1">
-      <!-- Tabs -->
       <div class="tw:tabs tw:tabs-border" role="tablist">
         <label class="tw:tab" role="tab">
           <input type="radio" name="fantasy-tabs" checked />
@@ -23,9 +22,7 @@
             Мой состав
           </span>
         </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="make-squad-content">{{ make_squad_tab_html|safe }}</div>
-        </div>
+        <div id="make-squad-content" class="tw:tab-content tw:p-2" role="tabpanel">{{ make_squad_tab_html|safe }}</div>
 
         <label class="tw:tab" role="tab">
           <input type="radio"
@@ -38,11 +35,9 @@
             Все составы
           </span>
         </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="view-squads-content">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
+        <div id="view-squads-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+            <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
           </div>
         </div>
 
@@ -57,11 +52,9 @@
             Турнирная таблица
           </span>
         </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="standings-content">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
+        <div id="standings-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+            <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
           </div>
         </div>
 
@@ -76,11 +69,9 @@
             Статистика игроков
           </span>
         </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="statistics-content">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
+        <div id="statistics-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+            <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
           </div>
         </div>
 
@@ -91,27 +82,8 @@
             Правила
           </span>
         </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="rules-content">
-            <div class="tw:p-3 tw:prose tw:max-w-none">
-              <span>
-                <strong>Как это работает:</strong>
-                <br>
-                • Возможность выбрать состав открывается за 3 дня до начала тура
-                <br>
-                • Вы можете изменять состав сколько угодно раз до 18:00 дня начала тура
-                <br>
-                • Основной состав приносит полные очки, запасной - 50% очков
-                <br>
-                • <strong>Очки за голы:</strong> ST - 3, DM - 5, GK - 8
-                <br>
-                • <strong>Очки за передачи:</strong> ST - 2, DM - 3, GK - 5
-                <br>
-                • <strong>Очки за сухие таймы:</strong> 15 очков за каждый сухой тайм
-              </span>
-            </div>
-          </div>
-        </div>
+
+        <div id="rules-content" class="tw:tab-content tw:p-2" role="tabpanel">{% include 'fantasy_league/partials/rules.html' %}</div>
       </div>
     </div>
   </div>

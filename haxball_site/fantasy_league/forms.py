@@ -1,6 +1,6 @@
 from django import forms
 
-from tournament.models import Player
+from tournament.models import League, Player, PlayerRating, PlayerRatingVersion
 
 from .models import FantasyTournament
 
@@ -74,9 +74,35 @@ class SquadSubmissionForm(forms.Form):
         required=True,
     )
 
-    def __init__(self, *args, tournament, **kwargs):
+    RP_COSTS = {
+        PlayerRating.Grade.S: 3,
+        PlayerRating.Grade.A: 2.5,
+        PlayerRating.Grade.B_PLUS: 2,
+        PlayerRating.Grade.B: 1.5,
+        PlayerRating.Grade.C: 1,
+        PlayerRating.Grade.D: 0.5,
+        PlayerRating.Grade.E: 0.5,
+        None: 0.5,  # No rating
+    }
+
+    RP_LIMITS = {
+        'Высшая лига': 9.5,
+        'Первая лига': 8,
+        'Вторая лига': 5,
+    }
+
+    def get_league_rp_limit(self, league):
+        return self.RP_LIMITS.get(league.title, 9.5)
+
+    def __init__(self, *args, tournament: League, **kwargs):
         super().__init__(*args, **kwargs)
-        tournament = tournament
+        self.tournament = tournament
+        latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
+        league_player_ids = list(Player.objects.filter(team__in=tournament.teams.all()).values_list('id', flat=True))
+        ratings = PlayerRating.objects.filter(player_id__in=league_player_ids, version=latest_rating_version)
+        player_grade_map = {r.player_id: r.grade for r in ratings}
+        self.player_rp_costs = {pid: self.RP_COSTS.get(player_grade_map.get(pid)) for pid in league_player_ids}
+
         team_filter = {'team__in': tournament.teams.all()}
         self.fields['primary_gk'].queryset = Player.objects.filter(
             positions__contains=[Player.Position.GK], **team_filter
@@ -103,6 +129,22 @@ class SquadSubmissionForm(forms.Form):
             positions__contains=[Player.Position.ST], **team_filter
         )
 
+        def label_with_rp(player):
+            rp = self.player_rp_costs.get(player.id, 0.5)
+            return f'{player.nickname} ({rp} RP)'
+
+        for fname in [
+            'primary_gk',
+            'primary_dm',
+            'primary_st1',
+            'primary_st2',
+            'secondary_gk',
+            'secondary_dm',
+            'secondary_st1',
+            'secondary_st2',
+        ]:
+            self.fields[fname].label_from_instance = label_with_rp
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -126,10 +168,28 @@ class SquadSubmissionForm(forms.Form):
         if len(set(secondary_players)) != 4:
             raise forms.ValidationError('В запасном составе не может быть дублирующихся игроков')
 
-        # Check for duplicate players between primary and secondary squads
         all_players = primary_players + secondary_players
         if len(set(all_players)) != 8:
             raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
+
+        # RP limit checks
+        latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
+        rp_limit = self.get_league_rp_limit(self.tournament)
+        player_ids = [p.id for p in all_players if p]
+        ratings = PlayerRating.objects.filter(player_id__in=player_ids, version=latest_rating_version)
+        player_grade_map = {r.player_id: r.grade for r in ratings}
+
+        def get_rp(player):
+            grade = player_grade_map.get(player.id, None)
+            return self.RP_COSTS.get(grade)
+
+        primary_rp = sum(get_rp(p) for p in primary_players if p)
+        if primary_rp > rp_limit:
+            raise forms.ValidationError(f'Превышен лимит RP для основного состава: {primary_rp} > {rp_limit}')
+
+        secondary_rp = sum(get_rp(p) for p in secondary_players if p)
+        if secondary_rp > rp_limit:
+            raise forms.ValidationError(f'Превышен лимит RP для запасного состава: {secondary_rp} > {rp_limit}')
 
         return cleaned_data
 
