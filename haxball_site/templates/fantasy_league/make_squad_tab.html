@@ -1,8 +1,7 @@
 {% load widget_tweaks %}
 {% load fantasy_league_extras %}
 
-<div class="tw:space-y-4">
-  <!-- Tournament Filter -->
+<div class="tw:flex tw:flex-col tw:gap-4">
   <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
     <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
           hx-get="{% url 'fantasy_league:make_squad_tab' %}"
@@ -27,19 +26,33 @@
       <span>Выберите турнир для участия в фэнтези лиге</span>
     </div>
   {% else %}
-    <div class="tw:flex tw:flex-col tw:gap-4 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
-      {% for tour in selected_tournament.league.tours.all %}
-        {% with squad_data=user_squads|get_item:tour.id %}
-          {% include 'fantasy_league/partials/tour_card.html' with tour=tour tournament=selected_tournament submission=squad_data.submission is_open=tour|is_tour_open_for_fantasy preloaded_data=preloaded_data %}
-        {% endwith %}
-      {% empty %}
-        <div class="tw:col-span-full">
-          <div class="tw:alert tw:alert-info">
-            <i class="fa fa-info-circle"></i>
-            <span>В этом турнире пока нет туров</span>
+    <div x-data="{ showAllTours: false }"
+         class="tw:flex tw:flex-col tw:gap-4 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
+      <div class="tw:flex tw:items-center tw:justify-between">
+        <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
+        {% if selected_tournament.league.tours.count > 0 %}
+          <label class="tw:label tw:text-base-content/60">
+            <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm tw:peer">
+            <span class="tw:peer-checked:text-base-content/80">Все туры</span>
+          </label>
+        {% endif %}
+      </div>
+      <div class="tw:flex tw:flex-col tw:gap-4">
+        {% for tour in selected_tournament.league.tours.all %}
+          <div x-show="showAllTours || {% if tour|is_tour_open_for_fantasy or tour|is_tour_not_open_yet %}true{% else %}false{% endif %}">
+            {% with squad_data=user_squads|get_item:tour.id %}
+              {% include 'fantasy_league/partials/tour_card.html' with tour=tour tournament=selected_tournament submission=squad_data.submission is_open=tour|is_tour_open_for_fantasy preloaded_data=preloaded_data %}
+            {% endwith %}
           </div>
-        </div>
-      {% endfor %}
+        {% empty %}
+          <div class="tw:col-span-full">
+            <div class="tw:alert tw:alert-info">
+              <i class="fa fa-info-circle"></i>
+              <span>В этом турнире пока нет туров</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     </div>
   {% endif %}
 </div>
