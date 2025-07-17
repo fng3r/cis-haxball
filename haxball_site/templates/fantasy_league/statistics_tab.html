@@ -1,3 +1,4 @@
+{% load mathfilters %}
 {% load widget_tweaks %}
 
 <div class="tw:space-y-4">
@@ -25,15 +26,48 @@
 
       {% if player_stats %}
         <div class="tw:overflow-x-auto">
-          <table class="tw:table tw:table-zebra tw:w-full">
+          <table class="tw:mt-2 tw:table tw:table-zebra tw:w-full">
             <thead>
               <tr>
                 <th>Игрок</th>
-                <th class="tw:text-center">Позиция</th>
-                <th class="tw:text-center">Всего выбрано</th>
-                <th class="tw:text-center">Основной состав</th>
-                <th class="tw:text-center">Запасной состав</th>
-                <th class="tw:text-center">Всего очков</th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">Индекс популярности - насколько часто игрок появляется в составах участников</div>
+                    ИП
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">Общее количество пиков игрока</div>
+                    В
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">Количество пиков игрока в основной состав</div>
+                    ВО
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">Количество пиков игрока в запасной состав</div>
+                    ВЗ
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">
+                      Среднее количество очков, которое приносит один выбор игрока (общее количество очков / количество пиков)
+                    </div>
+                    О/В
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-left">
+                    <div class="tw:tooltip-content">Общее количество очков, которое заработали участники при выборе игрока</div>
+                    О
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -45,12 +79,11 @@
                       {% if stat.player.team %}<span class="tw:badge tw:badge-outline tw:badge-xs">{{ stat.player.team.short_title }}</span>{% endif %}
                     </div>
                   </td>
-                  <td class="tw:text-center">
-                    <span class="tw:badge tw:badge-primary tw:badge-sm">{{ stat.player.get_position_display }}</span>
-                  </td>
+                  <td class="tw:text-center">{{ stat.popularity|mul:100|floatformat:0 }}%</td>
                   <td class="tw:text-center tw:font-bold">{{ stat.total_picked }}</td>
                   <td class="tw:text-center">{{ stat.primary_picked }}</td>
                   <td class="tw:text-center">{{ stat.secondary_picked }}</td>
+                  <td class="tw:text-center">{{ stat.points_per_pick|floatformat:1 }}</td>
                   <td class="tw:text-center tw:font-bold tw:text-primary">{{ stat.total_points|floatformat:1 }}</td>
                 </tr>
               {% endfor %}

@@ -129,6 +129,8 @@ def get_player_fantasy_stats(tournament=None):
         'primary_squad__player', 'secondary_squad__player', 'tour'
     )
 
+    total_submissions = all_submissions.count()
+
     primary_submissions_by_player = {}
     secondary_submissions_by_player = {}
 
@@ -165,6 +167,9 @@ def get_player_fantasy_stats(tournament=None):
             points = submission._calculate_player_points(squad_player, preloaded_data) * 0.5
             total_points += points
 
+        popularity = (total_picked / total_submissions) if total_submissions > 0 else 0.0
+        points_per_pick = (total_points / total_picked) if total_picked > 0 else 0.0
+
         stats.append(
             {
                 'player': player,
@@ -172,6 +177,8 @@ def get_player_fantasy_stats(tournament=None):
                 'primary_picked': primary_count,
                 'secondary_picked': secondary_count,
                 'total_points': total_points,
+                'popularity': popularity,
+                'points_per_pick': points_per_pick,
             }
         )
 
