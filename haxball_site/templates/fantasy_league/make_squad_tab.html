@@ -27,9 +27,9 @@
     </div>
   {% else %}
     <div x-data="{ showAllTours: false }"
-         class="tw:flex tw:flex-col tw:gap-4 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
+         class="tw:flex tw:flex-col tw:gap-2 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
       <div class="tw:flex tw:items-center tw:justify-between">
-        <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
+        <div class="tw:text-xl tw:font-semibold">{{ selected_tournament.league.title }}</div>
         {% if selected_tournament.league.tours.count > 0 %}
           <label class="tw:label tw:text-base-content/60">
             <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm tw:peer">

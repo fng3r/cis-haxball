@@ -20,9 +20,9 @@
                 hx-target="#tour-{{ tour.id }}-content"
                 hx-swap="innerHTML show:top">
           {% if submission %}
-            Изменить
+            <i class="fa fa-pencil"></i> Изменить состав
           {% else %}
-            Выбрать состав
+            <i class="fa fa-plus"></i> Выбрать состав
           {% endif %}
         </button>
       {% else %}

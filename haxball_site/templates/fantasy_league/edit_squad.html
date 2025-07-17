@@ -70,25 +70,7 @@
         </div>
       {% endif %}
 
-      <div class="tw:alert tw:alert-info">
-        <i class="fa fa-info-circle"></i>
-        <div>
-          <strong>Система очков:</strong>
-          <ul class="tw:mt-2 tw:space-y-1">
-            <li>
-              • <strong>Голы:</strong> ST - 3, DM - 5, GK - 8
-            </li>
-            <li>
-              • <strong>Передачи:</strong> ST - 2, DM - 3, GK - 5
-            </li>
-            <li>
-              • <strong>Сухие матчи:</strong> GK - 4, DM - 2
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="tw:flex tw:justify-between tw:items-center">
+      <div class="tw:flex tw:justify-end tw:items-center tw:gap-2">
         <button type="button"
                 class="tw:btn tw:btn-outline"
                 hx-get="{% url 'fantasy_league:tour_detail' tour.id %}"
