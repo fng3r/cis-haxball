@@ -53,7 +53,7 @@ class HomeView(View):
             'user_posts': user_posts,
         }
 
-        return render(request, 'core/home.html', context)
+        return render(request, 'core/home/home.html', context)
 
     queryset = (
         Post.objects.select_related('category', 'author__user_profile')
@@ -64,9 +64,6 @@ class HomeView(View):
             '-publish',
         )
     )
-    context_object_name = 'posts'
-    paginate_by = 7
-    template_name = 'core/home.html'
 
 
 class AllPostView(ListView):
