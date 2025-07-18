@@ -29,7 +29,32 @@ logger = logging.getLogger('haxball_site')
 
 
 # Вьюха для списка постов
-class HomeView(ListView):
+class HomeView(View):
+    def get(self, request):
+        posts = (
+            Post.objects.select_related('category', 'author__user_profile')
+            .prefetch_related('comments', 'votes')
+            .filter(category__is_official=True)
+            .order_by(
+                '-important',
+                '-publish',
+            )
+        )[:5]
+        user_posts = (
+            Post.objects.select_related('category', 'author__user_profile')
+            .prefetch_related('comments', 'votes')
+            .filter(category__theme__title__in=['Общение', 'Про хаксбол'])
+            .order_by(
+                '-publish',
+            )
+        )[:5]
+        context = {
+            'posts': posts,
+            'user_posts': user_posts,
+        }
+
+        return render(request, 'core/home.html', context)
+
     queryset = (
         Post.objects.select_related('category', 'author__user_profile')
         .prefetch_related('comments', 'votes')
@@ -44,12 +69,28 @@ class HomeView(ListView):
     template_name = 'core/home.html'
 
 
-# Смотреть все новости
 class AllPostView(ListView):
     queryset = Post.objects.filter(category__is_official=True).order_by('-publish')
     context_object_name = 'posts'
     paginate_by = 7
     template_name = 'core/post/all_posts_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Все посты'
+        return context
+
+
+class AllUsersPostsView(ListView):
+    queryset = Post.objects.filter(category__theme__title__in=['Общение', 'Про хаксбол']).order_by('-publish')
+    context_object_name = 'posts'
+    paginate_by = 7
+    template_name = 'core/post/all_posts_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Все пользовательские посты'
+        return context
 
 
 # Вьюха для трансляций
