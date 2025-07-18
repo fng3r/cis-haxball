@@ -1,3 +1,4 @@
+{% load cache %}
 {% load static %}
 {% load widget_tweaks %}
 {% load tournament_extras %}
@@ -7,8 +8,8 @@
         class="tw:flex tw:flex-wrap tw:items-center tw:mt-1 tw:gap-2"
         hx-get="{% url 'tournament:teams_hall_of_fame' %}"
         hx-trigger="submit"
-        hx-target="#teams"
-        hx-swap="outerHTML"
+        hx-target="#teams-content"
+        hx-swap="innerHTML"
         hx-disabled-elt="find button">
     <div class="tw:flex tw:flex-wrap tw:items-center">
       <label class="tw:label tw:text-base-content tw:font-bold">{{ teams_filter.form.season.label }}</label>
@@ -26,53 +27,64 @@
     </div>
   </form>
 
-  <div class="tw:flex tw:flex-col tw:gap-y-2">
-    <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
-      {% with title='Голы' icon_url='img/ico/ball_2.png' teams=teams_tops.goals %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-
-      {% with title='Передачи' icon_url='img/ico/boot_ass_2.png' teams=teams_tops.assists %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-
-      {% with title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' teams=teams_tops.clean_sheets %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-    </div>
-
-    <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
-      {% with title='Матчи' icon_url='img/ico/matches_icon.png' teams=teams_tops.matches %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-
-      {% with title='Победы' icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 teams=teams_tops.wins %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-
-      {% with title='Процент побед' icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 teams=teams_tops.winrates %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-    </div>
-
-    <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
-      {% with title='Замены' icon_url='img/ico/statistic/sub.png' teams=teams_tops.subs %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-
-      {% with title='Желтые карточки' icon_url='img/ico/yellow_card.png' teams=teams_tops.yellow_cards %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-
-      {% with title='Красные карточки' icon_url='img/ico/red_card.png' teams=teams_tops.red_cards %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
-    </div>
-
-    <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
-      {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' teams=teams_tops.ogs %}
-        {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
-      {% endwith %}
+  <div id="teams-content" hx-get="{% url 'tournament:teams_hall_of_fame' %}" hx-trigger="load" hx-swap="innerHTML">
+    <div class="tw:min-h-96 tw:flex tw:flex-col tw:items-center tw:justify-center tw:border-0 tw:bg-transparent">
+      <img src="{% static 'img/svg-loaders/audio.svg' %}" class="tw:w-24 tw:h-24 tw:mb-3">
+      <div class="tw:text-center tw:text-3xl tw:font-semibold">Загружаем статистику...</div>
     </div>
   </div>
 </div>
+
+{% partialdef teams-content %}
+  {% cache 3600 teams_hall_of_fame teams_filter.form.season.value teams_filter.form.tournament.value %}
+    <div class="tw:flex tw:flex-col tw:gap-y-2">
+      <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
+        {% with title='Голы' icon_url='img/ico/ball_2.png' teams=teams_tops.goals %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title='Передачи' icon_url='img/ico/boot_ass_2.png' teams=teams_tops.assists %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' teams=teams_tops.clean_sheets %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+      </div>
+
+      <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
+        {% with title='Матчи' icon_url='img/ico/matches_icon.png' teams=teams_tops.matches %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title='Победы' icon_url='img/ico/statistic/win.png' icon_width=22 icon_height=22 teams=teams_tops.wins %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title='Процент побед' icon_url='img/ico/statistic/winrate.png' icon_width=38 icon_height=22 teams=teams_tops.winrates %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+      </div>
+
+      <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
+        {% with title='Замены' icon_url='img/ico/statistic/sub.png' teams=teams_tops.subs %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title='Желтые карточки' icon_url='img/ico/yellow_card.png' teams=teams_tops.yellow_cards %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+
+        {% with title='Красные карточки' icon_url='img/ico/red_card.png' teams=teams_tops.red_cards %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+      </div>
+
+      <div class="tw:grid tw:grid-cols-3 tw:mx-0 tw:gap-x-2">
+        {% with title='Автоголы' icon_url='img/ico/ball_2_og.png' teams=teams_tops.ogs %}
+          {% include 'tournament/hall_of_fame/partials/teams_top.html' %}
+        {% endwith %}
+      </div>
+    </div>
+  {% endcache %}
+{% endpartialdef %}
