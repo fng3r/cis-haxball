@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin_list/', views.AdminListView.as_view(), name='admins'),
     #  Все посты
     path('posts/', views.AllPostView.as_view(), name='all_posts'),
+    path('users_posts/', views.AllUsersPostsView.as_view(), name='all_users_posts'),
     #  Путь к трансляциям
     path('lives/', views.LivesView.as_view(), name='lives'),
     #  Путь на форум

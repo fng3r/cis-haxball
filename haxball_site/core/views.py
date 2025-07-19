@@ -28,31 +28,59 @@ from .utils import get_comments_for_object, get_paginated_comments, strtobool
 logger = logging.getLogger('haxball_site')
 
 
-# Вьюха для списка постов
-class HomeView(ListView):
-    queryset = (
-        Post.objects.select_related('category', 'author__user_profile')
-        .prefetch_related('comments', 'votes')
-        .filter(category__is_official=True)
-        .order_by(
-            '-important',
-            '-publish',
-        )
-    )
-    context_object_name = 'posts'
-    paginate_by = 7
-    template_name = 'core/home.html'
+class HomeView(View):
+    def get(self, request):
+        selects = ['category', 'author__user_profile']
+        prefetches = ['comments', 'votes']
+        posts = (
+            Post.objects.official()
+            .select_related(*selects)
+            .prefetch_related(*prefetches)
+            .order_by(
+                '-important',
+                '-publish',
+            )
+        )[:5]
+        user_posts = (
+            Post.objects.users_posts()
+            .select_related(*selects)
+            .prefetch_related(*prefetches)
+            .order_by(
+                '-publish',
+            )
+        )[:5]
+        context = {
+            'posts': posts,
+            'user_posts': user_posts,
+        }
+
+        return render(request, 'core/home/home.html', context)
 
 
-# Смотреть все новости
 class AllPostView(ListView):
-    queryset = Post.objects.filter(category__is_official=True).order_by('-publish')
+    queryset = Post.objects.official().order_by('-publish')
     context_object_name = 'posts'
     paginate_by = 7
     template_name = 'core/post/all_posts_list.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Все посты'
+        return context
 
-# Вьюха для трансляций
+
+class AllUsersPostsView(ListView):
+    queryset = Post.objects.users_posts().order_by('-publish')
+    context_object_name = 'posts'
+    paginate_by = 7
+    template_name = 'core/post/all_posts_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Все пользовательские посты'
+        return context
+
+
 class LivesView(ListView):
     try:
         category = Category.objects.get(slug='live')
@@ -60,7 +88,7 @@ class LivesView(ListView):
         category = None
     queryset = Post.objects.filter(category=category)
     context_object_name = 'posts'
-    paginate_by = 6
+    paginate_by = 7
     template_name = 'core/lives/lives_list.html'
 
 
@@ -68,14 +96,12 @@ def anime_view(request):
     return render(request, 'core/anime/marat_anime.html')
 
 
-# Главная форума тута
 class ForumView(ListView):
     queryset = Themes.objects.all()
     context_object_name = 'themes'
     template_name = 'core/forum/forum_main.html'
 
 
-# Вьюха для списка постов в категории форума
 class CategoryListView(DetailView):
     model = Category
     template_name = 'core/forum/post_list_in_category.html'
@@ -93,10 +119,8 @@ class CategoryListView(DetailView):
         try:
             posts = paginat.page(page)
         except PageNotAnInteger:
-            # If page is not an integer deliver the first page
             posts = paginat.page(1)
         except EmptyPage:
-            # If page is out of range deliver last page of results
             posts = paginat.page(paginat.num_pages)
 
         context['posts'] = posts
@@ -105,7 +129,6 @@ class CategoryListView(DetailView):
         return context
 
 
-# post-create view
 def post_new(request, slug):
     category = Category.objects.get(slug=slug)
     if request.method == 'POST':
@@ -123,7 +146,6 @@ def post_new(request, slug):
     return render(request, 'core/forum/add_post.html', {'form': form, 'category': category})
 
 
-# post-edit view
 def post_edit(request, slug, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.method == 'POST':
@@ -140,7 +162,6 @@ def post_edit(request, slug, pk):
     return render(request, 'core/forum/add_post.html', {'form': form})
 
 
-# Вьюха для фасткапов
 class FastcupView(ListView):
     try:
         category = Category.objects.get(slug='fastcups')
@@ -148,30 +169,27 @@ class FastcupView(ListView):
         category = None
     queryset = Post.objects.filter(category=category).order_by('-created')
     context_object_name = 'posts'
-    paginate_by = 6
+    paginate_by = 7
     template_name = 'core/fastcups/fastcups_list.html'
 
 
-# Список админов
 class AdminListView(ListView):
-    us = User.objects.filter(is_staff=True).order_by('id')
-    a = []
-    for i in us:
-        s = 0
+    def get_queryset(self):
+        users = User.objects.filter(is_staff=True).order_by('id')
+        admins = []
+        for user in users:
+            priority = sum(icon.priority for icon in user.user_profile.user_icon.all())
+            if priority > 0:
+                admins.append([user, priority])
 
-        for icon in i.user_profile.user_icon.all():
-            s += icon.priority
-        if s > 0:
-            a.append([i, s, i.id])
+        admins = sorted(admins, key=lambda x: x[1], reverse=True)
 
-    c = sorted(a, key=lambda x: x[1], reverse=True)
+        return [adm[0] for adm in admins]
 
-    queryset = [i[0] for i in c]
     context_object_name = 'users'
     template_name = 'core/admins/admin_list.html'
 
 
-# Вьюха для турниров
 class TournamentsView(ListView):
     try:
         category = Category.objects.get(slug='tournaments')
@@ -179,7 +197,7 @@ class TournamentsView(ListView):
         category = None
     queryset = Post.objects.filter(category=category)
     context_object_name = 'posts'
-    paginate_by = 6
+    paginate_by = 7
     template_name = 'core/tournaments/tournaments_list.html'
 
 
@@ -205,7 +223,6 @@ class PostDetailView(DetailView):
         return context
 
 
-# Вьюха для профиля пользователя MultipleObjectMixin
 class ProfileDetail(View):
     template_name = 'core/profile/profile_detail.html'
 
@@ -359,7 +376,6 @@ def get_comment(request, pk):
     return render(request, 'core/comment/comment-item.html', {'comment': comment, 'object': comment.content_object})
 
 
-# Удаление комментария
 def delete_comment(request, pk):
     comment = get_object_or_404(NewComment, pk=pk)
     obj = comment.content_object
@@ -422,7 +438,6 @@ class VotesView(View):
     def post(self, request, id):
         obj = self.model.objects.get(id=id)
         author_profile = obj.author.user_profile
-        # GenericForeignKey не поддерживает метод get_or_create
         try:
             likedislike = LikeDislike.objects.get(
                 content_type=ContentType.objects.get_for_model(obj), object_id=obj.id, user=request.user
