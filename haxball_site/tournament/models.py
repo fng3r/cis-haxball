@@ -819,6 +819,10 @@ class Goal(models.Model):
         verbose_name = 'Гол'
         verbose_name_plural = 'Голы'
         ordering = ['time_min', 'time_sec']
+        indexes = [
+            models.Index(fields=['author', 'match']),
+            models.Index(fields=['assistent', 'match']),
+        ]
 
 
 class Substitution(models.Model):
