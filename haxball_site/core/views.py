@@ -88,7 +88,7 @@ class LivesView(ListView):
         category = None
     queryset = Post.objects.filter(category=category)
     context_object_name = 'posts'
-    paginate_by = 6
+    paginate_by = 7
     template_name = 'core/lives/lives_list.html'
 
 
@@ -169,24 +169,23 @@ class FastcupView(ListView):
         category = None
     queryset = Post.objects.filter(category=category).order_by('-created')
     context_object_name = 'posts'
-    paginate_by = 6
+    paginate_by = 7
     template_name = 'core/fastcups/fastcups_list.html'
 
 
 class AdminListView(ListView):
-    us = User.objects.filter(is_staff=True).order_by('id')
-    a = []
-    for i in us:
-        s = 0
+    def get_queryset(self):
+        users = User.objects.filter(is_staff=True).order_by('id')
+        admins = []
+        for user in users:
+            priority = sum(icon.priority for icon in user.user_profile.user_icon.all())
+            if priority > 0:
+                admins.append([user, priority])
 
-        for icon in i.user_profile.user_icon.all():
-            s += icon.priority
-        if s > 0:
-            a.append([i, s, i.id])
+        admins = sorted(admins, key=lambda x: x[1], reverse=True)
 
-    c = sorted(a, key=lambda x: x[1], reverse=True)
+        return [adm[0] for adm in admins]
 
-    queryset = [i[0] for i in c]
     context_object_name = 'users'
     template_name = 'core/admins/admin_list.html'
 
@@ -198,7 +197,7 @@ class TournamentsView(ListView):
         category = None
     queryset = Post.objects.filter(category=category)
     context_object_name = 'posts'
-    paginate_by = 6
+    paginate_by = 7
     template_name = 'core/tournaments/tournaments_list.html'
 
 
