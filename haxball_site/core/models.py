@@ -1,4 +1,5 @@
 import collections
+from typing import Self
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -206,6 +207,14 @@ class CommentHistoryItem(models.Model):
         return f'Версия комментария #{self.version}'
 
 
+class PostQuerySet(models.QuerySet):
+    def official(self) -> Self:
+        return self.filter(category__is_official=True)
+
+    def users_posts(self) -> Self:
+        return self.filter(category__theme__title__in=['Общение', 'Про хаксбол'])
+
+
 # Модель для поста
 class Post(models.Model):
     title = models.CharField('Заголовок', max_length=256)
@@ -228,6 +237,8 @@ class Post(models.Model):
     views = models.PositiveIntegerField(default=0)
     commentable = models.BooleanField('Комментируемая запись', default=True)
     comments = GenericRelation(NewComment, related_query_name='post_comments')
+
+    objects = PostQuerySet.as_manager()
 
     def get_absolute_url(self):
         return reverse('core:post_detail', args=[self.id, self.slug])
