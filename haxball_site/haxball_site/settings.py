@@ -4,6 +4,7 @@ from django.contrib.messages import constants as messages
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 
+import sentry_sdk
 from decouple import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -569,3 +570,19 @@ UNFOLD = {
         },
     },
 }
+
+SENTRY_ENABLED = config('SENTRY_ENABLED', cast=bool, default=False)
+if SENTRY_ENABLED:
+    sentry_sdk.init(
+        dsn=config('SENTRY_DSN'),
+        environment=config('SENTRY_ENVIRONMENT'),
+        # Add data like request headers and IP for users;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        traces_sample_rate=1.0,
+        profile_session_sample_rate=1.0,
+        profile_lifecycle='trace',
+        _experiments={
+            'enable_logs': True,
+        },
+    )
