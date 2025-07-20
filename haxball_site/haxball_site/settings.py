@@ -572,6 +572,7 @@ UNFOLD = {
 }
 
 SENTRY_ENABLED = config('SENTRY_ENABLED', cast=bool, default=False)
+SENTRY_LOGS_ENABLED = config('SENTRY_LOGS_ENABLED', cast=bool, default=False)
 if SENTRY_ENABLED:
     sentry_sdk.init(
         dsn=config('SENTRY_DSN'),
@@ -583,6 +584,6 @@ if SENTRY_ENABLED:
         profile_session_sample_rate=1.0,
         profile_lifecycle='trace',
         _experiments={
-            'enable_logs': True,
+            'enable_logs': SENTRY_LOGS_ENABLED,
         },
     )
