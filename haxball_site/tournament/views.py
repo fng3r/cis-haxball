@@ -841,7 +841,7 @@ def players_hall_of_fame(request):
 
     return render(
         request,
-        'tournament/hall_of_fame/partials/players_hall_of_fame.html',
+        'tournament/hall_of_fame/partials/players_hall_of_fame.html#players-content',
         {
             'players_tops': players,
             'players_filter': HallOfFamePlayerFilter(request.GET, queryset=Player.objects.none()),
@@ -888,7 +888,7 @@ def teams_hall_of_fame(request):
 
     return render(
         request,
-        'tournament/hall_of_fame/partials/teams_hall_of_fame.html',
+        'tournament/hall_of_fame/partials/teams_hall_of_fame.html#teams-content',
         {
             'teams_tops': teams,
             'teams_filter': HallOfFameTeamFilter(request.GET, queryset=Team.objects.none()),

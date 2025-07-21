@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}Все новости — CIS-HAXBALL{% endblock %}
+{% block title %}{{ title }} — CIS-HAXBALL{% endblock %}
 
 {% block scripts %}
   <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
@@ -12,7 +12,7 @@
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
       <h3 class="tw:text-center tw:mb-0">
-        <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>Все посты
+        <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>{{ title }}
       </h3>
       <div class="tw:divider tw:my-0!"></div>
       {% for post in posts %}

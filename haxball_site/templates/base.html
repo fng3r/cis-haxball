@@ -8,6 +8,11 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
   <head>
+    <meta charset="UTF-8">
+    <title>
+      {% block title %}{% endblock %}
+    </title>
+
     <!-- Yandex.Metrika counter -->
     <script type="text/javascript">
       (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -29,17 +34,15 @@
     </noscript>
     <!-- /Yandex.Metrika counter -->
 
-    <meta charset="UTF-8">
-    <title>
-      {% block title %}{% endblock %}
-    </title>
-
     {% vite_hmr_client %}
     {% vite_asset 'main.js' %}
 
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn-uicons.flaticon.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css">
+
     <link rel="stylesheet" type="text/css" href="{% static "bootstrap/css/base.css" %}">
-    <link rel="stylesheet" href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
-    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css'>
     <link rel="shortcut icon" href="{% static "img/logo_try.png" %}" type="image/x-icon">
     <!-- Google Fonts-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,12 +73,11 @@
     {% block styles %}{% endblock %}
 
     <script type="text/javascript" src="{% static "jquery/jquery-3.5.1.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "summernote/summernote.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "htmx/htmx.min.js" %}"></script>
+    <script defer type="text/javascript" src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
+    <script defer type="text/javascript" src="{% static "htmx/htmx.min.js" %}"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"></script>
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+    <script defer src="https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"></script>
+    <script defer src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
     <script type="text/javascript" src="{% static "scripts/searchNavigation.js" %}"></script>
 
     {% block scripts %}{% endblock %}
