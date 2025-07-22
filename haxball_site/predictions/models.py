@@ -75,17 +75,19 @@ class Prediction(models.Model):
         if not self.match.is_played:
             return 0
 
-        actual_result = self.match.result.value
-        if actual_result in [MatchResult.HOME_WIN, MatchResult.HOME_DEF_WIN]:
-            actual_result_for_prediction = self.Result.HOME_WIN
-        elif actual_result in [MatchResult.AWAY_WIN, MatchResult.AWAY_DEF_WIN]:
-            actual_result_for_prediction = self.Result.AWAY_WIN
-        elif actual_result == MatchResult.DRAW:
-            actual_result_for_prediction = self.Result.DRAW
+        match_result = self.match.result.value
+        if match_result in [MatchResult.HOME_WIN, MatchResult.HOME_DEF_WIN]:
+            match_result_for_prediction = self.Result.HOME_WIN
+        elif match_result in [MatchResult.AWAY_WIN, MatchResult.AWAY_DEF_WIN]:
+            match_result_for_prediction = self.Result.AWAY_WIN
+        elif match_result == MatchResult.DRAW:
+            match_result_for_prediction = self.Result.DRAW
         else:
             return 0
 
         # Compare prediction with actual result
-        if self.predicted_result == actual_result_for_prediction:
+        if self.predicted_result == match_result_for_prediction:
+            if self.predicted_result == self.Result.DRAW:
+                return 3
             return 1
         return 0
