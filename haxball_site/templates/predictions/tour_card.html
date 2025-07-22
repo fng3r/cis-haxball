@@ -13,7 +13,7 @@
           <a class="tw:btn tw:btn-primary tw:btn-sm"
              hx-get="{% url 'predictions:edit_predictions' tour.id %}"
              hx-target="#tour-card-{{ tour.id }}"
-             hx-push-url="false">
+             hx-swap="innerHTML show:top">
             {% if submission and submission.predictions.count > 0 %}
               Изменить
             {% else %}
