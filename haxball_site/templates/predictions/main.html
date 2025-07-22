@@ -73,26 +73,7 @@
           </span>
         </label>
         <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="rules-content">
-            <div class="tw:p-3 tw:prose tw:max-w-none">
-              <span>
-                <strong>Как это работает:</strong>
-                <br>
-                <ul>
-                  <li>Прогнозы открываются за 3 дня до начала тура</li>
-                  <li>Прогнозы закрываются в 18:00 в день начала тура</li>
-                  <li>Вы можете изменять прогнозы сколько угодно раз до закрытия</li>
-                  <li>
-                    За правильный прогноз начисляются очки:
-                    <ul style="list-style-type: circle;">
-                      <li>1 очко за угаданную победу</li>
-                      <li>3 очка за угаданную ничью</li>
-                    </ul>
-                  </li>
-                </ul>
-              </span>
-            </div>
-          </div>
+          <div id="rules-content">{% include 'predictions/rules.html' %}</div>
         </div>
       </div>
     </div>

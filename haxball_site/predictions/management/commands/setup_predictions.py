@@ -269,12 +269,16 @@ class Command(BaseCommand):
                         user=user, tour=tour, tournament=prediction_tournament
                     )
                     tour_matches = [m for m in matches if m.numb_tour == tour]
+                    # Randomly select up to 2 matches to be special
+                    special_matches = set(random.sample([m.id for m in tour_matches], k=min(2, len(tour_matches))))
                     for match in tour_matches:
                         # Generate random prediction
                         prediction_value = random.choice(['HW', 'D', 'AW'])
-
+                        is_special = match.id in special_matches
                         prediction, created = Prediction.objects.get_or_create(
-                            submission=submission, match=match, defaults={'predicted_result': prediction_value}
+                            submission=submission,
+                            match=match,
+                            defaults={'predicted_result': prediction_value, 'is_special': is_special},
                         )
 
         self.stdout.write(f'Created test tournament: {tournament.title}')

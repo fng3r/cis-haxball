@@ -325,6 +325,7 @@ def edit_predictions(request, tour_id):
         with transaction.atomic():
             for match in matches:
                 prediction_value = request.POST.get(f'prediction_{match.id}')
+                is_special = bool(request.POST.get(f'special_{match.id}'))
 
                 existing_prediction = existing_predictions.get(match.id)
 
@@ -333,16 +334,19 @@ def edit_predictions(request, tour_id):
                         existing_prediction.delete()
                 else:
                     prediction, created = Prediction.objects.get_or_create(
-                        submission=submission, match=match, defaults={'predicted_result': prediction_value}
+                        submission=submission,
+                        match=match,
+                        defaults={'predicted_result': prediction_value, 'is_special': is_special},
                     )
                     if not created:
                         prediction.predicted_result = prediction_value
+                        prediction.is_special = is_special
                         prediction.save()
 
-            if request.htmx:
-                return tour_card(request, tour_id)
+        if request.htmx:
+            return tour_card(request, tour_id)
 
-            return redirect('predictions:main')
+        return redirect('predictions:main')
 
     context = {
         'tour': tour,

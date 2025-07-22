@@ -61,6 +61,7 @@ class Prediction(models.Model):
     )
     match = models.ForeignKey(Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='predictions')
     predicted_result = models.CharField('Предсказанный результат', max_length=2, choices=Result.choices)
+    is_special = models.BooleanField('Особый прогноз', default=False)
 
     class Meta:
         verbose_name = 'Прогноз'
@@ -85,9 +86,16 @@ class Prediction(models.Model):
         else:
             return 0
 
-        # Compare prediction with actual result
+        base_points = 0
         if self.predicted_result == match_result_for_prediction:
             if self.predicted_result == self.Result.DRAW:
-                return 3
-            return 1
-        return 0
+                base_points = 3
+            else:
+                base_points = 1
+        # Special prediction logic
+        if self.is_special:
+            if self.predicted_result == match_result_for_prediction:
+                base_points += 1
+            else:
+                base_points -= 1
+        return base_points
