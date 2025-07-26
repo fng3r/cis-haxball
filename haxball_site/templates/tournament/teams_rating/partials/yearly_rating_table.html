@@ -1,0 +1,68 @@
+{% load static %}
+{% load mathfilters %}
+{% load tournament_extras %}
+
+{% if teams_rating %}
+  <table class="tw:table tw:table-auto tw:table-pin-rows">
+    <thead class="tw:py-2">
+      <tr class="tw:bg-base-300">
+        <th scope="col" class="tw:w-10 tw:bg-base-300 tw:border-r tw:border-neutral-200">Место</th>
+        <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Команда</th>
+        {% for season in seasons %}
+          <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">
+            <div class="tw:flex tw:flex-col tw:justify-center tw:items-center">
+              <span class="tw:text-sm">{{ season.short_title }}</span>
+            </div>
+          </th>
+        {% endfor %}
+        <th scope="col" class="tw:bg-base-300 tw:text-center!">Итого</th>
+      </tr>
+    </thead>
+
+    <tbody class="tw:text-center">
+      {% for team, total_points in teams_rating %}
+        <tr class="rating-row tw:row-hover tw:border-b tw:border-neutral-200">
+          <td class="tw:border-r tw:border-neutral-200">
+            <div class="tw:flex tw:flex-wrap tw:gap-x-2 tw:text-lg">
+              <span>{{ forloop.counter }}</span>
+            </div>
+          </td>
+
+          <td class="tw:pr-1 tw:border-r tw:border-neutral-200" style="min-width: 200px;">
+            <div class="tw:flex tw:items-center tw:gap-x-1 tw:pt-1">
+              <img src="{{ team.logo.url }}" class="tw:mr-1" alt="{{ team.title }}" width="24">
+              <div class="">
+                <h6 class="tw:mb-1! tw:text-lg">
+                  <a href="{{ team.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ team.title }}</a>
+                </h6>
+              </div>
+            </div>
+          </td>
+
+          {% for season in seasons %}
+            <td class="tw:border-r tw:border-neutral-200">
+              <div>
+                {% get_season_rating team season seasons_rating as season_rating %}
+                {% if season_rating is not None %}
+                  <span>{{ season_rating|floatformat:2 }}</span>
+                {% else %}
+                  <span>—</span>
+                {% endif %}
+              </div>
+            </td>
+          {% endfor %}
+
+          <td>
+            <div>
+              <span class="tw:font-bold">{{ total_points|floatformat:2 }}</span>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="tw:h-50 tw:flex tw:justify-center tw:items-center tw:p-8 tw:text-center tw:text-xl tw:opacity-70">
+    Рейтинг станет доступен после завершения первого сезона в году
+  </div>
+{% endif %}

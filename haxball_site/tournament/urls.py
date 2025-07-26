@@ -13,7 +13,8 @@ from .views import (
     PostponementsList,
     TeamDetail,
     TeamList,
-    TeamRatingView,
+    TeamsRatingView,
+    TeamsYearlyRatingView,
     TransfersList,
     cancel_postponement,
     hall_of_fame,
@@ -32,7 +33,6 @@ from .views import (
 app_name = 'tournament'
 
 urlpatterns = [
-    # Зал славы
     path('compare_players', ComparePlayersView.as_view(), name='compare_players'),
     path('compare_teams', CompareTeamsView.as_view(), name='compare_teams'),
     path('hall_of_fame', hall_of_fame, name='hall_of_fame'),
@@ -42,7 +42,8 @@ urlpatterns = [
     path('postponements', PostponementsList.as_view(), name='postponements'),
     path('postponements/events', PostponementsEvents.as_view(), name='postponements_events'),
     path('postponements/<int:pk>/cancel', cancel_postponement, name='cancel_postponement'),
-    path('team_rating', TeamRatingView.as_view(), name='team_rating'),
+    path('teams_rating', TeamsRatingView.as_view(), name='teams_rating'),
+    path('teams_rating/yearly', TeamsYearlyRatingView.as_view(), name='teams_yearly_rating'),
     path('free_agents/', FreeAgentList.as_view(), name='free_agents'),
     path('free_agents/remove/<int:pk>', remove_free_agent_entry, name='remove_entry'),
     path('free_agents/update/<int:pk>', update_free_agent_entry, name='update_entry'),

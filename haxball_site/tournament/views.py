@@ -20,7 +20,7 @@ from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
 
 from .charts import StatCharts
-from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm
+from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm, TeamsYearlyRatingForm
 from .models import (
     Disqualification,
     FreeAgent,
@@ -41,6 +41,7 @@ from .models import (
     Team,
     TeamRating,
     TeamRatingVersion,
+    TourNumber,
 )
 from .services.hall_of_fame import HallOfFameService
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
@@ -893,7 +894,7 @@ def teams_hall_of_fame(request):
     )
 
 
-class TeamRatingFilter(FilterSet):
+class TeamsRatingFilter(FilterSet):
     version = ModelChoiceFilter(
         queryset=TeamRatingVersion.objects.select_related('related_season').all(), label='Версия', empty_label=None
     )
@@ -903,14 +904,14 @@ class TeamRatingFilter(FilterSet):
         fields = ['version']
 
 
-class TeamRatingView(ListView):
+class TeamsRatingView(ListView):
     queryset = TeamRating.objects.select_related('team').all()
-    template_name = 'tournament/team_rating.html'
-    latest_rating_version = TeamRatingVersion.objects.order_by('-number').first()
+    template_name = 'tournament/teams_rating/teams_rating.html'
 
     def get(self, request, **kwargs):
-        params = request.GET or {'version': self.latest_rating_version.number}
-        filter = TeamRatingFilter(params, queryset=self.queryset)
+        latest_rating_version = TeamRatingVersion.objects.order_by('-number').first()
+        params = request.GET or {'version': latest_rating_version.number}
+        filter = TeamsRatingFilter(params, queryset=self.queryset)
         selected_version = int(params['version'])
         source_season = (
             TeamRatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
@@ -939,7 +940,7 @@ class TeamRatingView(ListView):
         }
 
         if request.htmx:
-            return render(request, 'tournament/partials/team_rating_table.html', context)
+            return render(request, 'tournament/teams_rating/partials/rating_table.html', context)
 
         return render(request, self.template_name, context)
 
@@ -981,6 +982,62 @@ class TeamRatingView(ListView):
                 weighted_seasons_rating[season][team] = round(rating_entry.total_points() * season_weight, 2)
 
         return weighted_seasons_rating
+
+
+class TeamsYearlyRatingView(ListView):
+    template_name = 'tournament/teams_rating/yearly_rating_tab.html'
+
+    def get(self, request, **kwargs):
+        params = request.GET or {'year': timezone.now().year}
+        form = TeamsYearlyRatingForm(params)
+        form.full_clean()
+
+        selected_year = form.cleaned_data['year']
+        seasons = Season.objects.filter(number__gt=5).annotate(
+            start_date=Subquery(
+                TourNumber.objects.values('date_from')
+                .filter(league__championship=OuterRef('id'))
+                .order_by('date_from')[:1]
+            )
+        )
+        seasons_in_year = seasons.filter(~Q(title__startswith='ИТ'), start_date__year=selected_year).order_by('number')
+
+        teams_rating = {}
+        seasons_rating = self.get_seasons_rating(seasons_in_year)
+        for season in seasons_rating:
+            for team in seasons_rating[season]:
+                if team not in teams_rating:
+                    teams_rating[team] = 0
+                teams_rating[team] += seasons_rating[season][team]
+        teams_rating = sorted(teams_rating.items(), key=lambda x: x[1], reverse=True)
+
+        context = {
+            'form': form,
+            'selected_year': selected_year,
+            'seasons_rating': seasons_rating,
+            'seasons': seasons_rating.keys(),
+            'teams_rating': teams_rating,
+        }
+
+        return render(request, self.template_name, context)
+
+    @staticmethod
+    def get_seasons_rating(seasons):
+        result = {}
+        seasons_rating = (
+            SeasonTeamRating.objects.select_related('team', 'season')
+            .filter(season__in=seasons)
+            .order_by('season__number')
+        )
+        for rating_entry in seasons_rating:
+            season = rating_entry.season
+            team = rating_entry.team
+            if season not in result:
+                result[season] = {}
+            if team not in result[season]:
+                result[season][team] = round(rating_entry.total_points(), 2)
+
+        return result
 
 
 def player_detailed_statistics(request, pk):
