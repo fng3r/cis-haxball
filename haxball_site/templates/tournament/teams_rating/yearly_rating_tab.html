@@ -1,0 +1,28 @@
+{% load static %}
+
+<div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2">
+  <form id="filter-form"
+        class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
+        hx-get="{% url 'tournament:teams_yearly_rating' %}"
+        hx-trigger="submit"
+        hx-target="#yearly-rating-tab-content"
+        hx-swap="innerHTML scroll:top"
+        hx-disabled-elt="find button">
+
+    <div class="tw:flex tw:flex-col tw:justify-center tw:gap-1">
+      <label class="tw:label tw:text-base-content tw:font-bold">Год</label>
+      <select name="year" class="tw:select">
+        {% for year in form.year %}{{ year }}{% endfor %}
+      </select>
+    </div>
+
+    <div class="tw:flex tw:mt-auto">
+      <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+      <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+    </div>
+  </form>
+
+  <div id="yearly-rating-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:mb-1">
+    {% include 'tournament/teams_rating/partials/yearly_rating_table.html' %}
+  </div>
+</div>

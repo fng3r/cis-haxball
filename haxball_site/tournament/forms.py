@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 
 from colorfield.widgets import ColorWidget
 
@@ -104,4 +105,18 @@ class CompareTeamsForm(forms.Form):
             (MatchesSelection.HEAD_TO_HEAD, 'Только очные матчи'),
         ),
         required=False,
+    )
+
+
+def get_years_choices():
+    earliest_year = 2024
+    current_year = timezone.now().year
+
+    return [(year, str(year)) for year in range(earliest_year, current_year + 1)]
+
+
+class TeamsYearlyRatingForm(forms.Form):
+    year = forms.ChoiceField(
+        label='Год',
+        choices=get_years_choices,
     )

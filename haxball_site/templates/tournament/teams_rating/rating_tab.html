@@ -1,0 +1,50 @@
+{% load static %}
+{% load widget_tweaks %}
+
+<div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2" x-data="{ showSelectedSeasonTeamsOnly: false }">
+  <form id="filter-form"
+        class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
+        hx-get="{% url 'tournament:teams_rating' %}"
+        hx-trigger="submit"
+        hx-target="#team-rating-table"
+        hx-swap="innerHTML show:top"
+        hx-disabled-elt="find button">
+
+    <div class="tw:flex tw:flex-col tw:justify-center tw:gap-1">
+      <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.version.label }}</label>
+      {% render_field filter.form.version|add_class:'tw:select' %}
+    </div>
+
+    <div class="tw:flex tw:mt-auto">
+      <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+      <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+    </div>
+  </form>
+
+  <div class="tw:inline-flex tw:gap-2 tw:pl-1">
+    <label class="tw:toggle tw:text-base-content tw:inline-grid!">
+      <input id="show-selected-season-teams-only" type="checkbox" x-model="showSelectedSeasonTeamsOnly" />
+      <svg aria-label="disabled"
+           xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="4"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+      <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor">
+          <path d="M20 6 9 17l-5-5"></path>
+        </g>
+      </svg>
+    </label>
+    <span class="tw:text-base-content/80">Только команды, принимавшие участие в сезоне</span>
+  </div>
+
+  <div id="team-rating-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:mb-1">
+    {% include 'tournament/teams_rating/partials/rating_table.html' %}
+  </div>
+</div>
