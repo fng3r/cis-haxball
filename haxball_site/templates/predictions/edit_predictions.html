@@ -73,37 +73,33 @@
 
                   {% with existing_prediction=existing_predictions|get_item:match.id %}
                     <div class="tw:flex tw:gap-2" x-data="{ hasPrediction: {{ existing_prediction|yesno:'true,false' }} }">
-                      <label class="tw:flex tw:items-center tw:gap-1 tw:cursor-pointer">
+                      <div class="tw:join">
                         <input type="radio"
                                name="prediction_{{ match.id }}"
                                value="HW"
-                               class="tw:radio tw:radio-primary tw:radio-sm"
+                               aria-label="П1"
+                               class="tw:join-item tw:btn tw:btn-xs tw:w-8"
                                {% if existing_prediction.predicted_result == 'HW' %}checked{% endif %}
                                @change="hasPrediction = true">
-                        <span class="tw:font-semibold tw:text-sm">П1</span>
-                      </label>
 
-                      <label class="tw:flex tw:items-center tw:gap-1 tw:cursor-pointer">
                         <input type="radio"
                                name="prediction_{{ match.id }}"
                                value="D"
-                               class="tw:radio tw:radio-primary tw:radio-sm"
+                               aria-label="X"
+                               class="tw:join-item tw:btn tw:btn-xs tw:w-8"
                                {% if existing_prediction.predicted_result == 'D' %}checked{% endif %}
                                @change="hasPrediction = true">
-                        <span class="tw:font-semibold tw:text-sm">X</span>
-                      </label>
 
-                      <label class="tw:flex tw:items-center tw:gap-1 tw:cursor-pointer">
                         <input type="radio"
                                name="prediction_{{ match.id }}"
                                value="AW"
-                               class="tw:radio tw:radio-primary tw:radio-sm"
+                               aria-label="П2"
+                               class="tw:join-item tw:btn tw:btn-xs tw:w-8"
                                {% if existing_prediction.predicted_result == 'AW' %}checked{% endif %}
                                @change="hasPrediction = true">
-                        <span class="tw:font-semibold tw:text-sm">П2</span>
-                      </label>
+                      </div>
 
-                      <label class="tw:flex tw:items-center tw:gap-1 tw:ml-2 tw:cursor-pointer">
+                      <label class="tw:flex tw:items-center tw:gap-1 tw:ml-2 tw:cursor-pointer" x-show="hasPrediction">
                         <input type="checkbox"
                                name="special_{{ match.id }}"
                                class="tw:checkbox tw:checkbox-warning tw:checkbox-sm tw:rounded tw:peer"
@@ -119,7 +115,6 @@
                               title="Очистить прогноз">
                         <i class="fa fa-trash tw:text-xs"></i>
                       </button>
-
                     </div>
                   {% endwith %}
                 </div>

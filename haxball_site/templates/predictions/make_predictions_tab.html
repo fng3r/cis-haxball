@@ -30,9 +30,9 @@
             <div class="tw:text-xl tw:font-semibold">{{ selected_tournament.league.title }}</div>
 
             {% if selected_tournament.league.tours.count > 0 %}
-              <label class="tw:label">
-                <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm">
+              <label class="tw:label tw:text-base-content/80">
                 Все туры
+                <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm">
               </label>
             {% endif %}
           </div>
