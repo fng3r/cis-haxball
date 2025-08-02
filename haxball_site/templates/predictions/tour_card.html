@@ -63,7 +63,7 @@
                   {% endif %}
                 </span>
               {% endif %}
-            {% else %}
+            {% elif not tour|is_not_open_yet %}
               <span class="tw:ml-2 tw:text-warning tw:font-bold">—</span>
             {% endif %}
           </div>
