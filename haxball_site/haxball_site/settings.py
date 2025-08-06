@@ -580,7 +580,7 @@ OAUTH2_PROVIDER = {
     'OIDC_ENABLED': True,
     'SCOPES': {
         'openid': 'OpenID Connect scope',
-        'profile': 'User profile',
+        'profile': 'Read access to user profile',
     },
     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
     'REFRESH_TOKEN_EXPIRE_SECONDS': 3600 * 24 * 7,  # 1 week

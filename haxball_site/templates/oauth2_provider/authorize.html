@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:min-h-screen tw:bg-body">
+    <div class="tw:card tw:w-full tw:max-w-md tw:shadow-xl tw:bg-base-100">
+      <div class="tw:card-body">
+        {% if not error %}
+          <form id="authorizationForm" method="post">
+            <h2 class="tw:text-xl! tw:mb-4">{% trans "Authorize" %} <span class="tw:text-primary">{{ application.name }}</span> ?</h2>
+            {% csrf_token %}
+            {% for field in form %}
+              {% if field.is_hidden %}
+                {{ field }}
+              {% endif %}
+            {% endfor %}
+
+            <div class="tw:mb-4">
+              <span class="tw:font-medium">{% trans "Application requires the following permissions" %}:</span>
+              <ul class="tw:list-disc tw:list-inside tw:mt-2 tw:pl-2">
+                {% for scope in scopes_descriptions %}
+                  <li class="tw:text-sm tw:text-base-content">{{ scope }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+
+            {% if form.errors or form.non_field_errors %}
+              <div class="tw:alert tw:alert-error tw:mb-4">
+                {{ form.errors }}
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div class="tw:flex tw:justify-end tw:gap-2 tw:mt-6">
+              <input type="submit" class="tw:btn tw:btn-outline" value="{% trans 'Cancel' %}" />
+              <input type="submit" class="tw:btn tw:btn-primary" name="allow" value="{% trans 'Authorize' %}" />
+            </div>
+          </form>
+        {% else %}
+          <div class="tw:alert tw:alert-error">
+            <h2 class="tw:font-bold">Error: {{ error.error }}</h2>
+            <p>{{ error.description }}</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
