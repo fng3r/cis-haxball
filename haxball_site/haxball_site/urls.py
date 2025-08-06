@@ -33,6 +33,7 @@ urlpatterns = [
     path('host_reservation/', include('reservation.urls', namespace='reservation')),
     path('polls/', include('polls.urls', namespace='polls')),
     path('accounts/', include('allauth.urls')),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('summernote/', include('django_summernote.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
     path('notifications/', include('custom_notifications.urls', namespace='notifications')),
