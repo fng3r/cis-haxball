@@ -94,6 +94,7 @@ TEMPLATES = [
                 'haxball_site.context_processors.notifications_context',
                 'haxball_site.context_processors.youtube_context',
                 'haxball_site.context_processors.themes_context',
+                'haxball_site.context_processors.settings_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },
@@ -580,7 +581,7 @@ OAUTH2_PROVIDER = {
     'OIDC_ENABLED': True,
     'SCOPES': {
         'openid': 'OpenID Connect scope',
-        'profile': 'Read access to user profile',
+        'profile': 'Access to user profile info',
     },
     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
     'REFRESH_TOKEN_EXPIRE_SECONDS': 3600 * 24 * 7,  # 1 week

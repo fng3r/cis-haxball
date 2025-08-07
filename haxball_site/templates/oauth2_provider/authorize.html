@@ -19,7 +19,9 @@
               <span class="tw:font-medium">{% trans "Application requires the following permissions" %}:</span>
               <ul class="tw:list-disc tw:list-inside tw:mt-2 tw:pl-2">
                 {% for scope in scopes_descriptions %}
-                  <li class="tw:text-sm tw:text-base-content">{{ scope }}</li>
+                  {% if scope != project_settings.OAUTH2_PROVIDER.SCOPES.openid %}
+                    <li class="tw:text-sm tw:text-base-content">{{ scope }}</li>
+                  {% endif %}
                 {% endfor %}
               </ul>
             </div>
