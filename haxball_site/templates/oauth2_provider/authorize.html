@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load thumbnail %}
 
 {% block content %}
   <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:min-h-screen tw:bg-body">
@@ -7,13 +8,28 @@
       <div class="tw:card-body">
         {% if not error %}
           <form id="authorizationForm" method="post">
-            <h2 class="tw:text-xl! tw:mb-4">{% trans "Authorize" %} <span class="tw:text-primary">{{ application.name }}</span> ?</h2>
+            <div class="tw:inline-flex tw:flex-wrap tw:gap-2">
+              {% trans 'You are logged in as' %}
+              <div>
+                <div class="tw:avatar">
+                  <div class="tw:size-6 tw:rounded-full">
+                    <img src="{{ user.user_profile.avatar.url }}" alt="{{ user.username }}" />
+                  </div>
+                </div>
+                <span class="tw:font-semibold">{{ user.username }}</span>
+              </div>
+            </div>
+
+            <div class="tw:divider tw:my-1"></div>
+
+            <h2 class="tw:text-xl! tw:mb-4">{% trans "Authorize" %} <span class="tw:text-primary tw:mr-0.5">{{ application.name }}</span>?</h2>
             {% csrf_token %}
             {% for field in form %}
               {% if field.is_hidden %}
                 {{ field }}
               {% endif %}
             {% endfor %}
+
 
             <div class="tw:mb-4">
               <span class="tw:font-medium">{% trans "Application requires the following permissions" %}:</span>
@@ -34,7 +50,7 @@
             {% endif %}
 
             <div class="tw:flex tw:justify-end tw:gap-2 tw:mt-6">
-              <input type="submit" class="tw:btn tw:btn-outline" value="{% trans 'Cancel' %}" />
+              <input type="submit" class="tw:btn tw:btn-outline" value="{% trans 'Deny' %}" />
               <input type="submit" class="tw:btn tw:btn-primary" name="allow" value="{% trans 'Authorize' %}" />
             </div>
           </form>
