@@ -6,23 +6,26 @@
 
 <table class="tw:table tw:table-auto tw:table-pin-rows">
   <thead class="tw:py-2">
-    <tr class="tw:bg-base-300">
-      <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200"></th>
-      <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Игрок</th>
-      <th scope="col" class="tw:bg-base-300 tw:text-center! tw:border-r tw:border-neutral-200">Рейтинг</th>
-      {% if previous_ratings %}<th scope="col" class="tw:bg-base-300 tw:text-center!">Изм. рейтинга</th>{% endif %}
+    <tr class="tw:bg-base-300 tw:*:bg-base-300 tw:*:not-last:border-r tw:*:border-b tw:*:border-neutral-200">
+      <th scope="col" class=""></th>
+      <th scope="col" class="tw:text-left!">Игрок</th>
+      <th scope="col" class="tw:text-center!">Рейтинг</th>
+      {% if previous_ratings %}
+        <th scope="col" class="tw:text-center!">Изм. рейтинга</th>
+        <th scope="col" class="tw:text-center!">Изм. грейда</th>
+      {% endif %}
     </tr>
   </thead>
 
   <tbody class="tw:text-center">
     {% for rating_entry in filter.qs %}
-      <tr class="rating-row tw:row-hover tw:border-b tw:border-neutral-200"
+      <tr class="tw:row-hover tw:*:not-last:border-r tw:*:border-b tw:*:border-neutral-200"
           x-show="search === '' || '{{ rating_entry.player.nickname|escapejs }}'.toLowerCase().includes(search.toLowerCase())">
-        <td class="tw:px-2 tw:border-r tw:border-neutral-200">
+        <td class="tw:px-2">
           <div class="tw:flex tw:justify-center tw:text-lg tw:font-semibold">{{ forloop.counter }}</div>
         </td>
 
-        <td class="tw:pr-1 tw:border-r tw:border-neutral-200" style="min-width: 300px;">
+        <td class="tw:pr-1 tw:min-w-75">
           <div class="tw:flex tw:items-center tw:gap-x-2 tw:pt-1">
             <div class="tw:avatar">
               <div class="tw:w-10 tw:h-10 tw:rounded-full">
@@ -52,30 +55,48 @@
           </div>
         </td>
 
-        <td class="tw:border-r tw:border-neutral-200">
+        <td>
           <div class="tw:flex tw:justify-center">
             {% include 'tournament/rating/partials/player_rating_badge.html' with grade=rating_entry.grade rating_points=rating_entry.rating_points %}
           </div>
         </td>
 
         {% if previous_ratings %}
-          <td>
-            {% with prev=previous_ratings|get_or_default:rating_entry.player.id %}
-              {% if prev is not None %}
-                {% with diff=rating_entry.rating_points|sub:prev %}
-                  {% if diff > 0 %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">+{{ diff }}</span>
-                  {% elif diff < 0 %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ diff }}</span>
+          {% with prev=previous_ratings|get_or_default:rating_entry.player.id %}
+            {% if prev is not None %}
+              {% with points_diff=rating_entry.rating_points|sub:prev.points %}
+                <td>
+                  {% if points_diff > 0 %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">+{{ points_diff }}</span>
+                  {% elif points_diff < 0 %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ points_diff }}</span>
                   {% else %}
                     <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
                   {% endif %}
-                {% endwith %}
-              {% else %}
+                </td>
+
+                <td>
+                  {% if rating_entry.grade != prev.grade %}
+                    {% if points_diff > 0 %}
+                      <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">{{ prev.grade }} ➝ {{ rating_entry.grade }}</span>
+                    {% elif points_diff < 0 %}
+                      <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ prev.grade }} ➝ {{ rating_entry.grade }}</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
+                  {% endif %}
+                </td>
+              {% endwith %}
+            {% else %}
+              <td>
                 <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-orange-300 tw:text-gray-700 tw:font-semibold">NEW</span>
-              {% endif %}
-            {% endwith %}
-          </td>
+              </td>
+
+              <td>
+                <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-orange-300 tw:text-gray-700 tw:font-semibold">NEW</span>
+              </td>
+            {% endif %}
+          {% endwith %}
         {% endif %}
       </tr>
     {% endfor %}

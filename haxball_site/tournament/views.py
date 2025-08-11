@@ -1205,9 +1205,9 @@ class PlayersRatingView(ListView):
     def get(self, request, **kwargs):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = PlayerRatingFilter(params, queryset=self.queryset)
-        selected_version = filter.data.get('version')
+        selected_version = int(filter.data.get('version'))
         previous_ratings_qs = PlayerRating.objects.filter(version__number=selected_version - 1)
-        previous_ratings = {r.player_id: r.rating_points for r in previous_ratings_qs}
+        previous_ratings = {r.player_id: {'points': r.rating_points, 'grade': r.grade} for r in previous_ratings_qs}
 
         seasons = Season.objects.filter(number__gte=16).order_by('-number')
         selected_season = seasons.first()
