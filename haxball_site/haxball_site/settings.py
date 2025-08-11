@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.humanize',
+    'oauth2_provider',
     'allauth',
     'allauth.account',
     'core.apps.CoreConfig',
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     'reservation.apps.ReservationConfig',
     'utils.apps.UtilsConfig',
     'custom_notifications.apps.CustomNotificationsConfig',
+    'oauth.apps.OauthConfig',
     'ckeditor',
     'django_summernote',
     'ckeditor_uploader',
@@ -61,6 +63,7 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'oauth2_provider.middleware.OAuth2TokenMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
     'haxball_site.middleware.UserTrackingMiddleware',
@@ -91,6 +94,7 @@ TEMPLATES = [
                 'haxball_site.context_processors.notifications_context',
                 'haxball_site.context_processors.youtube_context',
                 'haxball_site.context_processors.themes_context',
+                'haxball_site.context_processors.settings_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },
@@ -215,6 +219,7 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 SITE_ID = 1
 
 URL_PREFIX = config('APP_URL_PREFIX', default='')
+BASE_URL = config('APP_BASE_URL')
 
 DELETE_COMMENT_TIME_LIMIT = config('APP_DELETE_COMMENT_TIME_LIMIT', default=60)
 EDIT_COMMENT_TIME_LIMIT = config('APP_EDIT_COMMENT_TIME_LIMIT', cast=int, default=180)
@@ -568,4 +573,19 @@ UNFOLD = {
             '950': '30, 27, 75',
         },
     },
+}
+
+# OAuth2 Settings for Django OAuth Toolkit
+OAUTH2_PROVIDER = {
+    'OAUTH2_VALIDATOR_CLASS': 'oauth.validator.CustomOIDCValidator',
+    'OIDC_ENABLED': True,
+    'SCOPES': {
+        'openid': 'OpenID Connect scope',
+        'profile': 'Access to user profile info',
+    },
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 3600 * 24 * 7,  # 1 week
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 600,
+    'ROTATE_REFRESH_TOKEN': True,
+    'PKCE_REQUIRED': False,
 }
