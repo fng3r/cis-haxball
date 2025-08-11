@@ -1335,13 +1335,14 @@ class PlayerRating(models.Model):
 
     version = models.ForeignKey(PlayerRatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
     player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE)
-    rating_points = models.PositiveSmallIntegerField()
+    raw_rating_points = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    rating_points = models.PositiveSmallIntegerField('Рейтинг')
     grade = models.CharField(verbose_name='Грейд', max_length=2, choices=Grade.choices)
 
     def __str__(self):
         return f'{self.player.nickname} ({self.grade}: {self.rating_points})'
 
     class Meta:
-        ordering = ['-version__number', '-rating_points']
+        ordering = ['-version__number', '-rating_points', '-raw_rating_points']
         verbose_name = 'Рейтинг игрока'
         verbose_name_plural = 'Рейтинг игроков'

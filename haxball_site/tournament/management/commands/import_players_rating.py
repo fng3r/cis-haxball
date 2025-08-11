@@ -30,15 +30,23 @@ class Command(BaseCommand):
         )
 
         if not created:
-            print(f'ERROR: Version {version} already exists')
+            self.stderr.write(f'ERROR: Version {version} already exists')
             return
 
         rows_count = 0
         with open(filename, 'r') as file:
             reader = csv.reader(file.readlines())
             for row in reader:
-                nickname, rating, grade = row
-                rating = int(rating)
+                nickname, raw_points, points, grade = row
+                if raw_points == '':
+                    raw_rating = None
+                else:
+                    try:
+                        raw_rating = float(raw_points.replace(',', '.'))
+                    except ValueError:
+                        self.stderr.write(f'ERROR: Invalid rating points {raw_points} for player {nickname}')
+                        raise
+                rating = int(points)
                 player = Player.objects.filter(nickname=nickname).first()
                 if not player:
                     user = UserNicknameHistoryItem.objects.filter(nickname=nickname).first()
@@ -46,14 +54,15 @@ class Command(BaseCommand):
                         player = user.user.user_player
 
                 if not player:
-                    print(f'WARN: Player {nickname} not found')
+                    self.stdout.write(f'WARN: Player {nickname} not found', self.style.WARNING)
                 else:
                     PlayerRating.objects.create(
                         version=rating_version,
                         player=player,
+                        raw_rating_points=raw_rating,
                         rating_points=rating,
                         grade=grade,
                     )
                     rows_count += 1
 
-        print(f'{rows_count} entries was imported from file {filename}')
+        self.stdout.write(f'{rows_count} entries was imported from file {filename}', self.style.SUCCESS)
