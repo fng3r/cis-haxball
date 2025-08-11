@@ -125,3 +125,7 @@ def themes_context(request):
         {'value': 'sunset', 'label': 'Sunset'},
     ]
     return {'themes': themes}
+
+
+def settings_context(request):
+    return {'project_settings': settings}
