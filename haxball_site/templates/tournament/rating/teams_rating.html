@@ -22,7 +22,7 @@
           <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2" x-data="{ showSelectedSeasonTeamsOnly: false }">
             <form id="filter-form"
                   class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
-                  hx-get="{% url 'tournament:team_rating' %}"
+                  hx-get="{% url 'tournament:teams_rating' %}"
                   hx-trigger="submit"
                   hx-target="#team-rating-table"
                   hx-swap="innerHTML show:top"
@@ -63,7 +63,7 @@
             </div>
 
             <div id="team-rating-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:mb-1">
-              {% include 'tournament/rating/partials/team_rating_table.html' %}
+              {% include 'tournament/rating/partials/teams_rating_table.html' %}
             </div>
           </div>
         </div>

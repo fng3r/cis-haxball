@@ -1197,15 +1197,15 @@ class PlayerRatingFilter(FilterSet):
         fields = ['version']
 
 
-class PlayerRatingView(ListView):
+class PlayersRatingView(ListView):
     queryset = PlayerRating.objects.select_related('player__name__user_profile', 'player__team', 'version').all()
-    template_name = 'tournament/rating/player_rating.html'
+    template_name = 'tournament/rating/players_rating.html'
     latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
 
     def get(self, request, **kwargs):
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = PlayerRatingFilter(params, queryset=self.queryset)
-        selected_version = int(params['version'])
+        selected_version = filter.data.get('version')
         previous_ratings_qs = PlayerRating.objects.filter(version__number=selected_version - 1)
         previous_ratings = {r.player_id: r.rating_points for r in previous_ratings_qs}
 
@@ -1223,7 +1223,7 @@ class PlayerRatingView(ListView):
         }
 
         if request.htmx:
-            return render(request, 'tournament/rating/partials/player_rating_table.html', context)
+            return render(request, 'tournament/rating/partials/players_rating_table.html', context)
 
         return render(request, self.template_name, context)
 
