@@ -154,6 +154,11 @@
               </div>
             </form>
 
+            <div class="tw:alert tw:alert-info tw:flex! tw:items-baseline tw:gap-2 tw:mx-1">
+              <i class="fa fa-info-circle" aria-hidden="true"></i>
+              К каждому сезону применяется последняя доступная версия рейтинга на момент старта сезона
+            </div>
+
             <div id="teams-rating-table"
                  class="tw:max-h-[850px] tw:overflow-y-auto tw:mb-1"
                  hx-get="{% url 'tournament:team_players_rating' %}?season={{ selected_season.id }}"
