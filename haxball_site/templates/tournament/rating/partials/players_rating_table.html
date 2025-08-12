@@ -21,7 +21,12 @@
     {% for item in rating_items %}
       {% with rating_entry=item.rating_entry prev=item.prev %}
         <tr class="tw:row-hover tw:*:not-last:border-r tw:*:border-b tw:*:border-neutral-200"
-            x-show="search === '' || '{{ rating_entry.player.nickname|escapejs }}'.toLowerCase().includes(search.toLowerCase())">
+            x-data="{ nickname: '{{ rating_entry.player.nickname|escapejs }}', gradeChanged: {{ prev.grade_changed|yesno:'true,false' }} }"
+            x-show="
+                    (search === '' || nickname.toLowerCase().includes(search.toLowerCase())) &&
+                    (!onlyNewPlayers || {{ item.is_new|yesno:'true,false' }}) &&
+                    (!selectedGrade || selectedGrade === '{{ rating_entry.grade }}') &&
+                    (gradeChangedFilter === null || gradeChangedFilter === gradeChanged)">
           <td class="tw:px-2">
             <div class="tw:flex tw:justify-center tw:text-lg tw:font-semibold">{{ forloop.counter }}</div>
           </td>
@@ -74,7 +79,7 @@
                 {% endif %}
               </td>
               <td>
-                {% if rating_entry.grade != prev.grade %}
+                {% if prev.grade_changed %}
                   {% if prev.points_diff > 0 %}
                     <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">{{ prev.grade }} ➝ {{ rating_entry.grade }}</span>
                   {% elif prev.points_diff < 0 %}

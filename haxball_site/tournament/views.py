@@ -1222,11 +1222,12 @@ class PlayersRatingView(ListView):
         rating_items = []
         for rating_entry in filter.qs:
             prev = previous_ratings.get(rating_entry.player_id)
-            item = {'rating_entry': rating_entry}
+            item = {'rating_entry': rating_entry, 'is_new': prev is None}
             if prev is not None:
                 item['prev'] = {
                     'points': prev['points'],
                     'grade': prev['grade'],
+                    'grade_changed': rating_entry.grade != prev['grade'],
                     'points_diff': rating_entry.rating_points - prev['points'],
                 }
             else:
