@@ -1051,9 +1051,6 @@ class TeamPlayersRatingView(View):
         END = 'end'
 
     def get(self, request):
-        if not request.user.is_authenticated or not request.user.has_perm('tournament.view_player_rating'):
-            return HttpResponse(status=404)
-
         season_id = request.GET.get('season')
         phase = request.GET.get('phase', self.SeasonPhase.START)
         league = request.GET.get('league')
@@ -1206,9 +1203,6 @@ class PlayersRatingView(ListView):
     latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
 
     def get(self, request, **kwargs):
-        if not request.user.is_authenticated or not request.user.has_perm('tournament.view_player_rating'):
-            return HttpResponse(status=404)
-
         params = request.GET or {'version': self.latest_rating_version.number}
         filter = PlayerRatingFilter(params, queryset=self.queryset)
         selected_version = int(filter.data.get('version'))
