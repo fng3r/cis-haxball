@@ -29,8 +29,18 @@
                   hx-disabled-elt="find button">
 
               <div class="tw:flex tw:flex-col tw:justify-center">
-                <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.version.label }}</label>
+                <label class="tw:label tw:text-base-content tw:font-bold" for="{{ filter.form.version.id_for_label }}">{{ filter.form.version.label }}</label>
                 {% render_field filter.form.version|add_class:'tw:select' %}
+              </div>
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold" for="sort">Сортировка</label>
+                <select name="sort" id="sort" class="tw:select">
+                  <option value="rating__desc" {% if sort == 'rating__desc' %}selected{% endif %}>Рейтинг (↓)</option>
+                  <option value="rating__asc" {% if sort == 'rating__asc' %}selected{% endif %}>Рейтинг (↑)</option>
+                  <option value="rating_diff__desc" {% if sort == 'rating_diff__desc' %}selected{% endif %}>Изм. рейтинга (↓)</option>
+                  <option value="rating_diff__asc" {% if sort == 'rating_diff__asc' %}selected{% endif %}>Изм. рейтинга (↑)</option>
+                </select>
               </div>
 
               <div class="tw:flex tw:mt-auto">

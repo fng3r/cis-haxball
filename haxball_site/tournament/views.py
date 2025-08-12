@@ -1219,13 +1219,42 @@ class PlayersRatingView(ListView):
         selected_season = seasons.first()
         active_season = Season.objects.filter(is_active=True).order_by('-number').first()
 
+        rating_items = []
+        for rating_entry in filter.qs:
+            prev = previous_ratings.get(rating_entry.player_id)
+            item = {'rating_entry': rating_entry}
+            if prev is not None:
+                item['prev'] = {
+                    'points': prev['points'],
+                    'grade': prev['grade'],
+                    'points_diff': rating_entry.rating_points - prev['points'],
+                }
+            else:
+                item['prev'] = None
+            rating_items.append(item)
+
+        sort = request.GET.get('sort', 'rating__desc')
+        sort_field, sort_order = sort.split('__')
+        reverse = sort_order == 'desc'
+        sort_order_sign = -1 if reverse else 1
+        if sort_field == 'rating_diff':
+            rating_items.sort(
+                # always place players with no previous rating at the end
+                key=lambda x: x['prev']['points_diff'] if x['prev'] is not None else (float('inf') * sort_order_sign),
+                reverse=reverse,
+            )
+        elif sort_field == 'rating':
+            rating_items.sort(key=lambda x: x['rating_entry'].rating_points, reverse=reverse)
+
         context = {
             'filter': filter,
-            'previous_ratings': previous_ratings,
+            'previous_rating_exists': len(previous_ratings) > 0,
             'seasons': seasons,
             'selected_season': selected_season,
             'active_season': active_season,
             'seasons_data': [{'id': s.id, 'title': s.title, 'is_primary': s.is_primary} for s in seasons],
+            'rating_items': rating_items,
+            'sort': sort,
         }
 
         if request.htmx:

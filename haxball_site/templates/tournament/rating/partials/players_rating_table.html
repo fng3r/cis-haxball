@@ -10,7 +10,7 @@
       <th scope="col" class=""></th>
       <th scope="col" class="tw:text-left!">Игрок</th>
       <th scope="col" class="tw:text-center!">Рейтинг</th>
-      {% if previous_ratings %}
+      {% if previous_rating_exists %}
         <th scope="col" class="tw:text-center!">Изм. рейтинга</th>
         <th scope="col" class="tw:text-center!">Изм. грейда</th>
       {% endif %}
@@ -18,87 +18,83 @@
   </thead>
 
   <tbody class="tw:text-center">
-    {% for rating_entry in filter.qs %}
-      <tr class="tw:row-hover tw:*:not-last:border-r tw:*:border-b tw:*:border-neutral-200"
-          x-show="search === '' || '{{ rating_entry.player.nickname|escapejs }}'.toLowerCase().includes(search.toLowerCase())">
-        <td class="tw:px-2">
-          <div class="tw:flex tw:justify-center tw:text-lg tw:font-semibold">{{ forloop.counter }}</div>
-        </td>
+    {% for item in rating_items %}
+      {% with rating_entry=item.rating_entry prev=item.prev %}
+        <tr class="tw:row-hover tw:*:not-last:border-r tw:*:border-b tw:*:border-neutral-200"
+            x-show="search === '' || '{{ rating_entry.player.nickname|escapejs }}'.toLowerCase().includes(search.toLowerCase())">
+          <td class="tw:px-2">
+            <div class="tw:flex tw:justify-center tw:text-lg tw:font-semibold">{{ forloop.counter }}</div>
+          </td>
 
-        <td class="tw:pr-1 tw:min-w-75">
-          <div class="tw:flex tw:items-center tw:gap-x-2 tw:pt-1">
-            <div class="tw:avatar">
-              <div class="tw:w-10 tw:h-10 tw:rounded-full">
-                {% if rating_entry.player.name and rating_entry.player.name.user_profile.avatar %}
-                  {% thumbnail rating_entry.player.name.user_profile.avatar "40x40" crop="center" as avatar %}
-                    <img src="{{ avatar.url }}" alt="{{ rating_entry.player.nickname }}" class="tw:rounded-full">
-                  {% endthumbnail %}
+          <td class="tw:pr-1 tw:min-w-75">
+            <div class="tw:flex tw:items-center tw:gap-x-2 tw:pt-1">
+              <div class="tw:avatar">
+                <div class="tw:w-10 tw:h-10 tw:rounded-full">
+                  {% if rating_entry.player.name and rating_entry.player.name.user_profile.avatar %}
+                    {% thumbnail rating_entry.player.name.user_profile.avatar "40x40" crop="center" as avatar %}
+                      <img src="{{ avatar.url }}" alt="{{ rating_entry.player.nickname }}" class="tw:rounded-full">
+                    {% endthumbnail %}
+                  {% else %}
+                    <img src="{% static 'img/no_avatar.png' %}" alt="{{ rating_entry.player.nickname }}" class="tw:rounded-full">
+                  {% endif %}
+                </div>
+              </div>
+              <div class="tw:flex tw:flex-col tw:items-start">
+                <h6 class="tw:mb-1! tw:text-lg">
+                  {% if rating_entry.player.name %}
+                    <a href="{{ rating_entry.player.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ rating_entry.player.nickname }}</a>
+                  {% else %}
+                    <span class="tw:text-base-content">{{ rating_entry.player.nickname }}</span>
+                  {% endif %}
+                </h6>
+                {% if rating_entry.player.team %}
+                  <a href="{{ rating_entry.player.team.get_absolute_url }}" class="tw:text-sm tw:text-base-content/70 tw:link tw:link-hover">{{ rating_entry.player.team.title }}</a>
                 {% else %}
-                  <img src="{% static 'img/no_avatar.png' %}" alt="{{ rating_entry.player.nickname }}" class="tw:rounded-full">
+                  <span class="tw:text-sm tw:text-base-content/70">Без команды</span>
                 {% endif %}
               </div>
             </div>
-            <div class="tw:flex tw:flex-col tw:items-start">
-              <h6 class="tw:mb-1! tw:text-lg">
-                {% if rating_entry.player.name %}
-                  <a href="{{ rating_entry.player.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ rating_entry.player.nickname }}</a>
-                {% else %}
-                  <span class="tw:text-base-content">{{ rating_entry.player.nickname }}</span>
-                {% endif %}
-              </h6>
-              {% if rating_entry.player.team %}
-                <a href="{{ rating_entry.player.team.get_absolute_url }}" class="tw:text-sm tw:text-base-content/70 tw:link tw:link-hover">{{ rating_entry.player.team.title }}</a>
-              {% else %}
-                <span class="tw:text-sm tw:text-base-content/70">Без команды</span>
-              {% endif %}
+          </td>
+
+          <td>
+            <div class="tw:flex tw:justify-center">
+              {% include 'tournament/rating/partials/player_rating_badge.html' with grade=rating_entry.grade rating_points=rating_entry.rating_points %}
             </div>
-          </div>
-        </td>
+          </td>
 
-        <td>
-          <div class="tw:flex tw:justify-center">
-            {% include 'tournament/rating/partials/player_rating_badge.html' with grade=rating_entry.grade rating_points=rating_entry.rating_points %}
-          </div>
-        </td>
-
-        {% if previous_ratings %}
-          {% with prev=previous_ratings|get_or_default:rating_entry.player.id %}
-            {% if prev is not None %}
-              {% with points_diff=rating_entry.rating_points|sub:prev.points %}
-                <td>
-                  {% if points_diff > 0 %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">+{{ points_diff }}</span>
-                  {% elif points_diff < 0 %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ points_diff }}</span>
-                  {% else %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
+          {% if previous_rating_exists %}
+            {% if prev %}
+              <td>
+                {% if prev.points_diff > 0 %}
+                  <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">+{{ prev.points_diff }}</span>
+                {% elif prev.points_diff < 0 %}
+                  <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ prev.points_diff }}</span>
+                {% else %}
+                  <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if rating_entry.grade != prev.grade %}
+                  {% if prev.points_diff > 0 %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">{{ prev.grade }} ➝ {{ rating_entry.grade }}</span>
+                  {% elif prev.points_diff < 0 %}
+                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ prev.grade }} ➝ {{ rating_entry.grade }}</span>
                   {% endif %}
-                </td>
-
-                <td>
-                  {% if rating_entry.grade != prev.grade %}
-                    {% if points_diff > 0 %}
-                      <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-green-300 tw:text-gray-700 tw:font-semibold">{{ prev.grade }} ➝ {{ rating_entry.grade }}</span>
-                    {% elif points_diff < 0 %}
-                      <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ prev.grade }} ➝ {{ rating_entry.grade }}</span>
-                    {% endif %}
-                  {% else %}
-                    <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
-                  {% endif %}
-                </td>
-              {% endwith %}
+                {% else %}
+                  <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
+                {% endif %}
+              </td>
             {% else %}
               <td>
                 <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-orange-300 tw:text-gray-700 tw:font-semibold">NEW</span>
               </td>
-
               <td>
                 <span class="tw:badge tw:badge-lg tw:min-w-12 tw:bg-orange-300 tw:text-gray-700 tw:font-semibold">NEW</span>
               </td>
             {% endif %}
-          {% endwith %}
-        {% endif %}
-      </tr>
+          {% endif%}
+        </tr>
+      {% endwith %}
     {% endfor %}
   </tbody>
 </table>
