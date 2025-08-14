@@ -5,7 +5,7 @@
       <div class="tw:badge tw:badge-xs tw:badge-warning">NEW</div>
     </div>
     <p class="tw:text-sm tw:mb-4">
-      <a class="tw:link">Опубликован</a> свежий рейтинг игроков. Ознакомьтесь с актуальной версией!
+      <a href="{% url 'core:post_detail' '1032' 'player-rating-2025-2' %}" class="tw:link">Опубликован</a> свежий рейтинг игроков. Ознакомьтесь с актуальной версией!
     </p>
     <a href="{% url 'tournament:players_rating' %}" class="tw:btn tw:btn-primary tw:btn-soft tw:btn-sm tw:w-full">
       Перейти к рейтингу
