@@ -1290,7 +1290,7 @@ class TeamRatingVersion(models.Model):
     related_season = models.ForeignKey(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Рейтинг на {self.date.strftime("%d.%m.%y")} ({self.related_season.short_title})'
+        return f'Рейтинг от {self.date.strftime("%d.%m.%y")} ({self.related_season.short_title})'
 
     class Meta:
         ordering = ['-number']
@@ -1315,7 +1315,7 @@ class PlayerRatingVersion(models.Model):
     date = models.DateField(verbose_name='Дата')
 
     def __str__(self):
-        return f'Рейтинг на {self.date.strftime("%d.%m.%y")}'
+        return f'Рейтинг от {self.date.strftime("%d.%m.%y")}'
 
     class Meta:
         ordering = ['-number']
