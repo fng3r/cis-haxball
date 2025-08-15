@@ -1,0 +1,158 @@
+{% extends "core.html" %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Чемпионат | Рейтинг команд — CIS-HAXBALL{% endblock %}
+
+{% block profile_of_user %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+
+    <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
+      <h2 class="tw:card-title">
+        <i class="fa fa-star tw:text-warning tw:mt-1" aria-hidden="true"></i>
+        Рейтинг команд
+      </h2>
+    </div>
+
+    <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:bg-base-100 tw:rounded-b-lg" role="tablist">
+      <input type="radio" name="rating-tabs" class="tw:tab tw:pl-3! tw:font-semibold" role="tab" aria-label="Рейтинг" checked />
+      <div class="tw:tab-content">
+        <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
+          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2" x-data="{ showSelectedSeasonTeamsOnly: false }">
+            <form id="filter-form"
+                  class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
+                  hx-get="{% url 'tournament:teams_rating' %}"
+                  hx-trigger="submit"
+                  hx-target="#team-rating-table"
+                  hx-swap="innerHTML show:top"
+                  hx-disabled-elt="find button">
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold">{{ filter.form.version.label }}</label>
+                {% render_field filter.form.version|add_class:'tw:select' %}
+              </div>
+
+              <div class="tw:flex tw:mt-auto">
+                <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+                <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+              </div>
+            </form>
+
+            <div class="tw:inline-flex tw:gap-2 tw:pl-1">
+              <label class="tw:toggle tw:text-base-content tw:inline-grid!">
+                <input id="show-selected-season-teams-only" type="checkbox" x-model="showSelectedSeasonTeamsOnly" />
+                <svg aria-label="disabled"
+                     xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="4"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+                <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor">
+                    <path d="M20 6 9 17l-5-5"></path>
+                  </g>
+                </svg>
+              </label>
+              <span class="tw:text-base-content/80">Только команды, принимавшие участие в сезоне</span>
+            </div>
+
+            <div id="team-rating-table" class="tw:max-h-[850px] tw:overflow-y-auto tw:mb-1">
+              {% include 'tournament/rating/partials/teams_rating_table.html' %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="radio" name="rating-tabs" class="tw:tab tw:font-semibold" role="tab" aria-label="Справка" />
+      <div class="tw:tab-content tw:pt-2">
+        <div id="ref-info-tab-content" role="tabpanel" aria-labelledby="ref-info-tab">
+          <div class="tw:mx-3 tw:mt-1 tw:prose tw:max-w-none">
+            <p>Рейтинг рассчитывается следующим образом:</p>
+            <ul>
+              <li>Итоговое место команды рейтинге формируется в зависимости от количества набранных очков;</li>
+              <li>
+                Промежуток времени, который учитывается при формирование рейтинга - 3 года (6 сезонов с последнего завершенного).
+                <br />
+                При этом учитываются только те сезоны, что проводились на сайте (т.е.начиная с 5-го сезона);
+              </li>
+              <li>
+                Общее количество очков, полученное командой за расчетный период, равняется взвешенной сумме очков за каждый из сезонов.
+                <br />
+                Веса распределяются следующим образом:
+                <ol>
+                  <li>
+                    Последний проведенный сезон S<sub>n</sub> - 1;
+                  </li>
+                  <li>
+                    S<sub>n-1</sub> - 1;
+                  </li>
+                  <li>
+                    S<sub>n-2</sub> - 1;
+                  </li>
+                  <li>
+                    S<sub>n-3</sub> - 0.9;
+                  </li>
+                  <li>
+                    S<sub>n-4</sub> - 0.8;
+                  </li>
+                  <li>
+                    S<sub>n-5</sub> - 0.7;
+                  </li>
+                </ol>
+                Прим. Лига Чемпионов не считается отдельным сезоном и учитывается с весом того сезона, вместе с которым она проводилась (ЛЧ#2 - ЧР#6, ЧР#7 - ЛЧ#3, ЧР#13 - ЛЧ#4 и т.д.);
+              </li>
+            </ul>
+
+            <p>
+              Количество очков, набранное командой в конкретном сезоне, является суммой очков, набранных в каждом из турниров данного сезона.
+              <br />
+              Сумма очков, добытых в каждом из турниров, складывается из двух компонентов: очки за результат в матче и очки за результат во всем турнире.
+            </p>
+            <p class="tw:pl-1">
+              <ul>
+                <li>
+                  За победу в матче начисляется 1 очко, за ничью - 0.5;
+                  <br />
+                </li>
+                <li>
+                  За достигнутый в турнире результат очки начисляются согласно следующим правилам:
+                  <ul>
+                    <li style="list-style-type: circle;">
+                      <span>Победитель ВЛ/ПЛ/2Л - 5 баллов, 2 место - 3б., 3 место - 2б.</span>
+                      <br />
+                      <span class="tw:pl-3">- Для 8-го и 9-го сезона победитель каждого из дивизионов ПЛ получает 3.5 б., 2 место - 1.5 б.</span>
+                      <br />
+                      <span class="tw:pl-3">- В 10-м сезоне баллы распределяются согласно итогам Суперфинала и плей-офф ПЛ</span>
+                    </li>
+                    <li style="list-style-type: circle;">
+                      Победитель КР/ЛЧ - 5 баллов, финалист - 3б., полуфиналист либо победитель матча за 3-е место - 1б.
+                    </li>
+                    <li style="list-style-type: circle;">Победитель КЛ/КВЛ/КПЛ/К2Л - 3 балла, финалист - 2б., полуфиналист - 1б.</li>
+                  </ul>
+                </li>
+              </ul>
+            </p>
+
+            <p>
+              Каждый турнир имеет коэффициент, на который умножается количество очков, полученное командой за выступление в данном первенстве. Далее представлены коэффициенты для каждого турнира:
+            </p>
+            <ul>
+              <li>Высшая (Единая) лига, Кубок Высшей лиги - 1;</li>
+              <li>Кубок России, Лига Чемпионов - 0.75;</li>
+              <li>Первая лига, Кубок Первой лиги - 0.5;</li>
+              <li>Вторая лига, Кубок Второй лиги - 0.25;</li>
+            </ul>
+
+            <p>Очередная версия рейтинга будет выходить каждые полгода по завершении соответствующего сезона.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

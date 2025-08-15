@@ -71,6 +71,10 @@ class Season(models.Model):
         'self', verbose_name='Связанный сезон', null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    @property
+    def is_primary(self):
+        return self.title.startswith('ЧР')
+
     def __str__(self):
         return self.title
 
@@ -1286,7 +1290,7 @@ class TeamRatingVersion(models.Model):
     related_season = models.ForeignKey(Season, verbose_name='Связанный сезон', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Рейтинг на {self.date.strftime("%d.%m.%y")} ({self.related_season.short_title})'
+        return f'Рейтинг от {self.date.strftime("%d.%m.%y")} ({self.related_season.short_title})'
 
     class Meta:
         ordering = ['-number']
@@ -1311,7 +1315,7 @@ class PlayerRatingVersion(models.Model):
     date = models.DateField(verbose_name='Дата')
 
     def __str__(self):
-        return f'Рейтинг на {self.date.strftime("%d.%m.%y")}'
+        return f'Рейтинг от {self.date.strftime("%d.%m.%y")}'
 
     class Meta:
         ordering = ['-number']
@@ -1331,13 +1335,14 @@ class PlayerRating(models.Model):
 
     version = models.ForeignKey(PlayerRatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
     player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE)
-    rating_points = models.PositiveSmallIntegerField()
+    raw_rating_points = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    rating_points = models.PositiveSmallIntegerField('Рейтинг')
     grade = models.CharField(verbose_name='Грейд', max_length=2, choices=Grade.choices)
 
     def __str__(self):
         return f'{self.player.nickname} ({self.grade}: {self.rating_points})'
 
     class Meta:
-        ordering = ['-version__number', '-rating_points']
+        ordering = ['-version__number', '-rating_points', '-raw_rating_points']
         verbose_name = 'Рейтинг игрока'
         verbose_name_plural = 'Рейтинг игроков'

@@ -29,7 +29,7 @@
         x-show="!showSelectedSeasonTeamsOnly || isSelectedSeasonTeam"
         class="rating-row tw:row-hover tw:border-b tw:border-neutral-200">
         <td class="tw:px-2 tw:border-r tw:border-neutral-200">
-          <div class="tw:flex tw:items-center tw:gap-x-2 tw:text-lg">
+          <div class="tw:flex tw:flex-wrap tw:gap-x-2 tw:text-lg">
             <span>{{ rating_entry.rank }}</span>
             {% if previous_rating %}
               {% with previous_rank=rating_entry.team|previous_rating_rank:previous_rating %}
