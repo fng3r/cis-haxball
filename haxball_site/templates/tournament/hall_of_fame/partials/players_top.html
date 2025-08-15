@@ -46,7 +46,7 @@
         </div>
       </div>
 
-      <div>
+      <div class="tw:mr-1">
         <span class="tw:font-semibold tw:text-base">
           {% if player.count %}
             {{ player.count }}
@@ -86,7 +86,7 @@
            src="{% static 'img/svg-loaders/bars.svg' %}">
     {% else %}
       <div class="tw:flex tw:justify-center tw:items-center tw:h-full">
-        <span class="tw:text-base-content tw:font-semibold tw:text-lg tw:text-center">Не найдено игроков, подходящих под фильтр</span>
+        <span class="tw:text-base-content/70 tw:font-semibold tw:text-lg tw:text-center tw:p-4">Не найдено игроков, подходящих под фильтр</span>
       </div>
     {% endif %}
   </div>

@@ -1,0 +1,14 @@
+<div class="tw:card tw:bg-base-100 tw:rounded-lg">
+  <div class="tw:p-4">
+    <div class="tw:flex tw:items-center tw:gap-1 tw:font-bold">
+      <h5 class="tw:text-lg tw:mb-1.5!">Рейтинг игроков</h5>
+      <div class="tw:badge tw:badge-xs tw:badge-warning">NEW</div>
+    </div>
+    <p class="tw:text-sm tw:mb-4">
+      <a href="{% url 'core:post_detail' '1032' 'player-rating-2025-2' %}" class="tw:link">Опубликован</a> свежий рейтинг игроков. Ознакомьтесь с актуальной версией!
+    </p>
+    <a href="{% url 'tournament:players_rating' %}" class="tw:btn tw:btn-primary tw:btn-soft tw:btn-sm tw:w-full">
+      Перейти к рейтингу
+    </a>
+  </div>
+</div>

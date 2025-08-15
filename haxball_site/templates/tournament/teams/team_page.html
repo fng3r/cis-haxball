@@ -78,14 +78,12 @@
                           <div class="tw:flex tw:justify-between tw:items-center">
                             <div class="tw:ml-2 tw:font-semibold">Лимит игроков: {{ players_count }}/{{ team.roster_slots }}</div>
 
-                            {% if user|can_view_player_rating %}
-                              <fieldset class="tw:fieldset tw:px-4">
-                                <label class="tw:label tw:text-base-content tw:text-sm tw:has-checked:bg-transparent! tw:has-checked:shadow-none!">
-                                  <input type="checkbox" class="tw:toggle" x-model="show_rating" />
-                                  Показывать рейтинг игроков
-                                </label>
-                              </fieldset>
-                            {% endif %}
+                            <fieldset class="tw:fieldset tw:px-4">
+                              <label class="tw:label tw:text-base-content tw:text-sm tw:has-checked:bg-transparent! tw:has-checked:shadow-none!">
+                                <input type="checkbox" class="tw:toggle" x-model="show_rating" />
+                                Показывать рейтинг игроков
+                              </label>
+                            </fieldset>
                           </div>
                         {% endif %}
 
