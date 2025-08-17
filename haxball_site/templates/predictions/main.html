@@ -9,72 +9,106 @@
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
       <div class="tw:card-title tw:py-1">
-        <h3 class="tw:text-center">Прогнозы на матчи</h3>
+        <h3 class="tw:text-center">Прогнозы</h3>
       </div>
     </div>
 
-    <div class="tw:card-body tw:p-1">
-      <!-- Tabs -->
-      <div class="tw:tabs tw:tabs-border" role="tablist">
-        <label class="tw:tab" role="tab">
+    <div class="tw:card-body tw:p-0">
+      {# Top-level Tabs #}
+      <div class="tw:tabs tw:tabs-box tw:bg-base-100 tw:shadow-none" role="tablist">
+        <label class="tw:tab tw:has-[input:checked]:bg-base-300 tw:flex-1"
+               id="predictions-contest-tab"
+               role="tab"
+               aria-label="Турнир прогнозистов"
+               aria-controls="predictions-contest-content">
           <input type="radio" name="predictions-tabs" checked />
-          <span class="tw:flex tw:items-center tw:gap-2">
-            <i class="fa fa-user"></i>
-            Мои прогнозы
-          </span>
+          <span class="tw:flex tw:items-center tw:gap-2">Турнир прогнозистов</span>
         </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="make-predictions-content">{{ make_predictions_tab_html|safe }}</div>
-        </div>
-
-        <label class="tw:tab" role="tab">
-          <input type="radio"
-                 name="predictions-tabs"
-                 hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
-                 hx-target="#view-predictions-content"
-                 hx-trigger="load" />
-          <span class="tw:flex tw:items-center tw:gap-2">
-            <i class="fa fa-th-list"></i>
-            Все прогнозы
-          </span>
-        </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="view-predictions-content">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+        <div id="predictions-contest-content"
+             class="tw:tab-content tw:px-1 tw:py-2"
+             role="tabpanel"
+             aria-labelledby="predictions-contest-tab">
+          {# Predictions contest tabs #}
+          <div class="tw:tabs tw:tabs-border" role="tablist">
+            <label class="tw:tab" role="tab">
+              <input type="radio" name="predictions-contest-tabs" checked />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-user"></i>
+                Мои прогнозы
+              </span>
+            </label>
+            {# djlint:off#}
+            <div id="make-predictions-content" class="tw:tab-content tw:p-2" role="tabpanel">
+              {{ make_predictions_tab_html|safe }}
             </div>
+            {# djlint:on #}
+
+            <label class="tw:tab" role="tab">
+              <input type="radio"
+                     name="predictions-contest-tabs"
+                     hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
+                     hx-target="#view-predictions-content"
+                     hx-trigger="load" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-th-list"></i>
+                Все прогнозы
+              </span>
+            </label>
+            <div id="view-predictions-content" class="tw:tab-content tw:p-2" role="tabpanel">
+              <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+                <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+              </div>
+            </div>
+
+            <label class="tw:tab" role="tab">
+              <input type="radio"
+                     name="predictions-contest-tabs"
+                     hx-get="{% url 'predictions:standings_tab' %}?tournament={{ selected_tournament.pk }}"
+                     hx-target="#standings-content"
+                     hx-trigger="load" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-trophy"></i>
+                Турнирная таблица
+              </span>
+            </label>
+            <div id="standings-content" class="tw:tab-content tw:p-2" role="tabpanel">
+              <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+                <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+              </div>
+            </div>
+
+            <label class="tw:tab" role="tab">
+              <input type="radio" name="predictions-contest-tabs" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-book"></i>
+                Правила
+              </span>
+            </label>
+            <div id="rules-content" class="tw:tab-content tw:p-2" role="tabpanel">{% include 'predictions/contest/rules.html' %}</div>
           </div>
         </div>
 
-        <label class="tw:tab" role="tab">
+        <label class="tw:tab tw:has-[input:checked]:bg-base-300 tw:flex-1"
+               id="longterm-predictions-tab"
+               role="tab"
+               aria-label="Прогнозы на сезон"
+               aria-controls="longterm-predictions-content">
           <input type="radio"
                  name="predictions-tabs"
-                 hx-get="{% url 'predictions:standings_tab' %}?tournament={{ selected_tournament.pk }}"
-                 hx-target="#standings-content"
+                 hx-get="{% url 'predictions:longterm' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#longterm-predictions-content"
                  hx-trigger="load" />
-          <span class="tw:flex tw:items-center tw:gap-2">
-            <i class="fa fa-trophy"></i>
-            Турнирная таблица
-          </span>
+          <span class="tw:flex tw:items-center tw:gap-2">Прогнозы на сезон</span>
         </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="standings-content">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
+        <div id="longterm-predictions-content"
+             class="tw:tab-content tw:px-1 tw:py-2"
+             role="tabpanel"
+             aria-labelledby="longterm-predictions-tab">
+          <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+            <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
           </div>
         </div>
 
-        <label class="tw:tab" role="tab">
-          <input type="radio" name="predictions-tabs" />
-          <span class="tw:flex tw:items-center tw:gap-2">
-            <i class="fa fa-book"></i>
-            Правила
-          </span>
-        </label>
-        <div class="tw:tab-content tw:p-2" role="tabpanel">
-          <div id="rules-content">{% include 'predictions/rules.html' %}</div>
-        </div>
       </div>
     </div>
   </div>

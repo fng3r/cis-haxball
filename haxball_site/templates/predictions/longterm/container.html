@@ -1,0 +1,63 @@
+{% load static %}
+{% load widget_tweaks %}
+
+<div class="tw:w-full">
+  <form class="tw:flex tw:items-center tw:gap-4 tw:mb-2 {% if tournament_form.tournament|length < 1 %}tw:hidden{% endif %}"
+        hx-get="{% url 'predictions:longterm' %}"
+        hx-target="#longterm-predictions-content"
+        hx-trigger="change">
+    <div class="tw:flex tw:flex-col tw:gap-1">
+      <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
+      {% render_field tournament_form.tournament|add_class:'tw:select' %}
+    </div>
+    {% comment %}
+      <div class="tw:flex tw:gap-2">
+        <label class="tw:label tw:text-base tw:text-base-content tw:font-bold">Выберите турнир:</label>
+        {% for option in tournament_form.tournament %}
+          <input class="tw:btn tw:btn-sm {% if option.data.selected %}tw:btn-primary{% endif %}" type="radio" name="tournament" value="{{ option.data.value }}" aria-label="{{ option.data.label }}" />
+        {% endfor %}
+      </div>
+    {% endcomment %}
+  </form>
+
+  <div class="tw:tabs tw:tabs-border" role="tablist">
+    <label class="tw:tab" role="tab">
+      <input type="radio"
+             name="longterm-tabs"
+             checked
+             hx-get="{% url 'predictions:longterm_my_tab' %}?tournament={{ selected_tournament.pk }}"
+             hx-target="#longterm-my-content"
+             hx-swap="innerHTML"
+             hx-trigger="load" />
+      <span class="tw:flex tw:items-center tw:gap-2">
+        <i class="fa fa-user"></i>
+        Мои прогнозы
+      </span>
+    </label>
+    <div id="longterm-my-content" class="tw:tab-content tw:p-2" role="tabpanel">
+      <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+        <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+      </div>
+    </div>
+
+    <label class="tw:tab" role="tab">
+      <input type="radio"
+             name="longterm-tabs"
+             hx-get="{% url 'predictions:longterm_results_tab' %}?tournament={{ selected_tournament.pk }}"
+             hx-target="#longterm-results-content"
+             hx-swap="innerHTML"
+             hx-trigger="load, prediction-saved from:#longterm-my-content" />
+      <span class="tw:flex tw:items-center tw:gap-2">
+        <i class="fa fa-list-ol"></i>
+        Результаты
+      </span>
+    </label>
+    <div id="longterm-results-content" class="tw:tab-content tw:p-2" role="tabpanel">
+      <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+        <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="longterm-modal-container"></div>
+</div>

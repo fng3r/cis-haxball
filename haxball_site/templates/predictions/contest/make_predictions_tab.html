@@ -41,7 +41,7 @@
             {% for tour in selected_tournament.league.tours.all %}
               <div x-show="showAllTours || {% if tour|is_open_for_predictions or tour|is_not_open_yet %}true{% else %}false{% endif %}">
                 {% with prediction_data=user_predictions|get_item:tour.id %}
-                  {% include "predictions/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions %}
+                  {% include "predictions/contest/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions %}
                 {% endwith %}
               </div>
             {% empty %}

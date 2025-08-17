@@ -1,0 +1,114 @@
+{% load static %}
+
+<div class="tw:space-y-4">
+  {% if not selected_tournament %}
+    <div class="tw:alert tw:alert-info">Нет выбранного турнира.</div>
+  {% else %}
+    <div class="tw:flex tw:items-center tw:justify-between">
+      <h4 class="tw:text-lg tw:font-semibold">Агрегация прогнозов: средняя позиция</h4>
+      <button class="tw:btn tw:btn-secondary tw:btn-sm" onclick="detailed_stats_modal.showModal()">Подробная статистика</button>
+    </div>
+
+    <div class="tw:flex">
+      <ul class="tw:list tw:w-120">
+        {% for row in results %}
+          <li class="tw:list-row tw:text-2xl">
+            <span class="tw:w-8 tw:text-center tw:opacity-70">{{ forloop.counter }}</span>
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <img src="{{ row.team.logo.url }}" alt="{{ row.team.short_title }}" class="tw:size-7 tw:rounded" />
+              <a href="{{ row.team.get_absolute_url }}" class="tw:link">{{ row.team.title }}</a>
+            </div>
+            <div class="tw:opacity-70 tw:ml-10">{{ row.avg_position|floatformat:2 }}</div>
+          </li>
+        {% empty %}
+          <li class="tw:text-center tw:py-6">Пока нет отправленных прогнозов.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <dialog id="detailed_stats_modal" class="tw:modal">
+      <div class="tw:modal-box tw:max-w-4xl">
+        <h3 class="tw:font-bold tw:text-lg tw:mb-4">Подробная статистика</h3>
+        <div class="tw:overflow-x-auto">
+          <table class="tw:table" x-data="{ expandedRow: null }">
+            <thead>
+              <tr>
+                <th class="tw:w-20 tw:text-right">#</th>
+                <th>Команда</th>
+                <th class="tw:text-right">Top-1 (%)</th>
+                <th class="tw:text-right">Top-2 (%)</th>
+                <th class="tw:text-right">Top-3 (%)</th>
+                <th class="tw:text-right">Средняя позиция</th>
+              </tr>
+            </thead>
+            {% for row in results %}
+              <tbody x-data="{rowIndex: {{ forloop.counter }}}">
+                <tr class="tw:hover:bg-base-200 tw:cursor-pointer" @click="expandedRow = (expandedRow === rowIndex ? null : rowIndex)">
+                  <td class="tw:text-center">
+                    <div class="tw:flex tw:items-center tw:gap-2 tw:justify-between">
+                      <i class="tw:font-thin! tw:text-sm!"
+                         :class="expandedRow === rowIndex ? 'fa fa-chevron-down' : 'fa fa-chevron-right'"
+                         aria-hidden="true"></i>
+                      <span>{{ forloop.counter }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="tw:flex tw:items-center tw:gap-2">
+                      <img src="{{ row.team.logo.url }}" alt="{{ row.team.short_title }}" class="tw:w-5 tw:h-5 tw:rounded" />
+                      <span class="tw:font-semibold">{{ row.team.title }}</span>
+                    </div>
+                  </td>
+                  {% if row.total > 0 %}
+                    {% widthratio row.histogram.0 row.total 100 as p1 %}
+                    {% with t2=row.histogram.0|add:row.histogram.1 %}
+                      {% widthratio t2 row.total 100 as p2 %}
+                    {% endwith %}
+                    {% with t3=row.histogram.0|add:row.histogram.1|add:row.histogram.2 %}
+                      {% widthratio t3 row.total 100 as p3 %}
+                    {% endwith %}
+                  {% else %}
+                    {% with p1=0 %}{% endwith %}
+                    {% with p2=0 %}{% endwith %}
+                    {% with p3=0 %}{% endwith %}
+                  {% endif %}
+                  <td class="tw:text-right">{{ p1|default:0|floatformat:1 }}</td>
+                  <td class="tw:text-right">{{ p2|default:0|floatformat:1 }}</td>
+                  <td class="tw:text-right">{{ p3|default:0|floatformat:1 }}</td>
+                  <td class="tw:text-right">{{ row.avg_position|floatformat:2 }}</td>
+                </tr>
+                <tr x-show="expandedRow === rowIndex">
+                  <td colspan="6">
+                    <div class="tw:bg-base-200 tw:rounded-box tw:p-3">
+                      <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-3">
+                        {% for count in row.histogram %}
+                          {% with place=forloop.counter %}
+                            <div>
+                              <div class="tw:flex tw:justify-between tw:text-xs tw:mb-1">
+                                <span>{{ place }} место</span>
+                                <span>{{ count }}</span>
+                              </div>
+                              {% if row.total > 0 %}
+                                {% widthratio count row.total 100 as percentage %}
+                              {% else %}
+                                {% with percentage=0 %}{% endwith %}
+                              {% endif %}
+                              <progress class="tw:progress tw:progress-primary tw:w-full" value="{{ percentage|default:0 }}" max="100"></progress>
+                            </div>
+                          {% endwith %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
+
+      <form method="dialog" class="tw:modal-backdrop">
+        <button>Закрыть</button>
+      </form>
+    </dialog>
+  {% endif %}
+</div>

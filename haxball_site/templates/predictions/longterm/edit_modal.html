@@ -1,0 +1,84 @@
+{% load static %}
+
+<dialog id="longterm_edit_modal" class="tw:modal">
+  <div class="tw:modal-box tw:max-w-2xl">
+    <h3 class="tw:font-bold tw:text-lg">Положение команд в итоговой таблице</h3>
+
+    <div class="tw:mt-4">
+      <ol id="sortable-teams" class="tw:space-y-1">
+        {% if items %}
+          {% for item in items %}
+            <li class="tw:card tw:bg-base-200 tw:p-2 tw:text-2xl tw:cursor-move" data-id="{{ item.team.id }}">
+              <div class="tw:flex tw:items-center tw:gap-3">
+                <span class="tw:w-6 tw:text-center tw:opacity-70" data-pos>{{ item.position }}</span>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                  <img src="{{ item.team.logo.url }}" alt="{{ item.team.short_title }}" class="tw:w-6 tw:h-6 tw:rounded" />
+                  <span class="tw:flex-1">{{ item.team.title }}</span>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        {% else %}
+          {% for team in league_teams %}
+            <li class="tw:card tw:bg-base-200 tw:p-2 tw:text-2xl tw:cursor-move" data-id="{{ team.id }}">
+              <div class="tw:flex tw:items-center tw:gap-3">
+                <span class="tw:w-6 tw:text-center tw:opacity-70" data-pos>{{ forloop.counter }}</span>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                  <img src="{{ team.logo.url }}" alt="{{ team.short_title }}" class="tw:w-6 tw:h-6 tw:rounded" />
+                  <span class="tw:flex-1">{{ team.title }}</span>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ol>
+    </div>
+
+    <div class="tw:modal-action">
+      <form method="dialog">
+        <button class="tw:btn">
+          <i class="fa fa-times"></i>
+          Отмена
+        </button>
+      </form>
+      <form id="longterm-save-form"
+            hx-post="{% url 'predictions:longterm_save' %}"
+            hx-target="#longterm-my-content"
+            hx-swap="innerHTML"
+            hx-disabled-elt="find button">
+        <input type="hidden" name="tournament_id" value="{{ selected_tournament.pk }}" />
+        <input type="hidden" name="order" id="order-input" />
+
+        <button type="submit" class="tw:btn tw:btn-primary" onclick="collectOrder()">
+          <i class="fa fa-save"></i>
+          Сохранить
+        </button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  if (!Sortable.get(document.getElementById('sortable-teams'))) {
+    const element = document.getElementById('sortable-teams');
+    const sortable = new Sortable(element, {
+      animation: 150,
+      chosenClass: 'tw:bg-base-300',
+      onChange: refreshPositions,
+    });
+  }
+
+  function refreshPositions() {
+    const element = document.getElementById('sortable-teams');
+    const lis = element.querySelectorAll(':scope > li');
+    lis.forEach((li, idx) => {
+      const badge = li.querySelector('[data-pos]');
+      if (badge) badge.textContent = String(idx + 1);
+    });
+  }
+
+  function collectOrder() {
+    const ids = Array.from(document.querySelectorAll('#sortable-teams [data-id]')).map(li => li.dataset.id);
+    document.getElementById('order-input').value = ids.join(',');
+  }
+</script>

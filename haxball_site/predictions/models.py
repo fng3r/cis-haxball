@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from tournament.models import League, Match, MatchResult, TourNumber
+from tournament.models import League, Match, MatchResult, Team, TourNumber
 
 
 class PredictionTournament(models.Model):
@@ -13,7 +13,7 @@ class PredictionTournament(models.Model):
     is_active = models.BooleanField('Активен для прогнозов', default=True)
 
     def __str__(self):
-        return f'Прогнозы: {self.league.title}'
+        return f'{self.league.title}'
 
     class Meta:
         verbose_name = 'Турнир для прогнозов'
@@ -99,3 +99,55 @@ class Prediction(models.Model):
             else:
                 base_points -= 1
         return base_points
+
+
+class LongTermPredictionSubmission(models.Model):
+    """User's long-term prediction for final standings in a tournament (league).
+
+    Stores one ordered list per (user, tournament).
+    """
+
+    user = models.ForeignKey(
+        User, verbose_name='Пользователь', on_delete=models.CASCADE, related_name='longterm_submissions'
+    )
+    tournament = models.ForeignKey(
+        PredictionTournament,
+        verbose_name='Турнир',
+        on_delete=models.CASCADE,
+        related_name='longterm_submissions',
+    )
+    created = models.DateTimeField('Создано', auto_now_add=True)
+    updated = models.DateTimeField('Обновлено', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Долгосрочный прогноз'
+        verbose_name_plural = 'Долгосрочные прогнозы'
+        unique_together = ['user', 'tournament']
+
+    def __str__(self):
+        return f'Прогноз {self.user.username} на турнир {self.tournament.league.title}'
+
+
+class LongTermPredictionItem(models.Model):
+    """Single item in a long-term prediction list: team with its predicted position."""
+
+    submission = models.ForeignKey(
+        LongTermPredictionSubmission,
+        verbose_name='Отправка итоговой таблицы',
+        on_delete=models.CASCADE,
+        related_name='items',
+    )
+    team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.CASCADE)
+    position = models.PositiveSmallIntegerField('Позиция')
+
+    class Meta:
+        verbose_name = 'Итоговая позиция команды'
+        verbose_name_plural = 'Итоговые позиции команд'
+        ordering = ['position']
+        unique_together = [
+            ('submission', 'team'),
+            ('submission', 'position'),
+        ]
+
+    def __str__(self):
+        return f'{self.position}. {self.team}'

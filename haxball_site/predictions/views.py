@@ -1,14 +1,25 @@
+from collections import defaultdict
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
+
+from django_htmx.http import trigger_client_event
 
 from tournament.models import TourNumber
 
 from .forms import TournamentFilterForm, UserFilterForm
-from .models import Prediction, PredictionSubmission, PredictionTournament
+from .models import (
+    LongTermPredictionItem,
+    LongTermPredictionSubmission,
+    Prediction,
+    PredictionSubmission,
+    PredictionTournament,
+)
 from .utils import (
     get_open_tours,
     get_tournament_standings,
@@ -68,7 +79,11 @@ def predictions_main(request):
 def make_predictions_tab(request, initial_context=False, selected_tournament=None):
     """Tab for making predictions"""
     if not request.user.is_authenticated:
-        return render_to_string('predictions/make_predictions_tab.html', {'user': request.user}, request=request)
+        return render_to_string(
+            'predictions/contest/make_predictions_tab.html',
+            {'user': request.user},
+            request=request,
+        )
 
     default_tournament = get_default_tournament()
     if not selected_tournament:
@@ -120,8 +135,8 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
         'user': request.user,
     }
     if initial_context:
-        return render_to_string('predictions/make_predictions_tab.html', context, request=request)
-    return render(request, 'predictions/make_predictions_tab.html', context)
+        return render_to_string('predictions/contest/make_predictions_tab.html', context, request=request)
+    return render(request, 'predictions/contest/make_predictions_tab.html', context)
 
 
 def view_predictions_tab(request):
@@ -194,7 +209,7 @@ def view_predictions_tab(request):
         'open_tours': open_tours,
     }
 
-    return render(request, 'predictions/view_predictions_tab.html', context)
+    return render(request, 'predictions/contest/view_predictions_tab.html', context)
 
 
 def standings_tab(request):
@@ -256,7 +271,7 @@ def standings_tab(request):
         'tour_points': tour_points,
     }
 
-    return render(request, 'predictions/standings_tab.html', context)
+    return render(request, 'predictions/contest/standings_tab.html', context)
 
 
 def tour_card(request, tour_id):
@@ -287,7 +302,7 @@ def tour_card(request, tour_id):
         'submission': submission,
         'match_predictions': match_predictions,
     }
-    return render(request, 'predictions/tour_card.html', context)
+    return render(request, 'predictions/contest/tour_card.html', context)
 
 
 @login_required
@@ -355,4 +370,141 @@ def edit_predictions(request, tour_id):
         'submission': submission,
     }
 
-    return render(request, 'predictions/edit_predictions.html', context)
+    return render(request, 'predictions/contest/edit_predictions.html', context)
+
+
+def longterm(request):
+    selected_tournament = _resolve_selected_tournament(request)
+    tournament_form = TournamentFilterForm(
+        initial={'tournament': selected_tournament.pk if selected_tournament else None}
+    )
+    context = {
+        'selected_tournament': selected_tournament,
+        'tournament_form': tournament_form,
+    }
+    return render(request, 'predictions/longterm/container.html', context)
+
+
+def longterm_my_tab(request):
+    if not request.user.is_authenticated:
+        return render(request, 'predictions/longterm/my_predictions_tab.html', {'user': request.user})
+
+    selected_tournament = _resolve_selected_tournament(request)
+    submission = None
+    items = []
+    league_teams = []
+    if selected_tournament:
+        league = selected_tournament.league
+        league_teams = list(league.teams.all().order_by('title'))
+        submission = (
+            LongTermPredictionSubmission.objects.filter(user=request.user, tournament=selected_tournament)
+            .prefetch_related('items__team')
+            .first()
+        )
+        if submission:
+            items = list(submission.items.all().order_by('position'))
+
+    context = {
+        'selected_tournament': selected_tournament,
+        'submission': submission,
+        'items': items,
+        'league_teams': league_teams,
+    }
+    return render(request, 'predictions/longterm/my_predictions_tab.html', context)
+
+
+def _resolve_selected_tournament(request):
+    selected_tournament = None
+    if not selected_tournament:
+        if request.GET.get('tournament'):
+            selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
+        else:
+            selected_tournament = get_default_tournament()
+
+    return selected_tournament
+
+
+def _aggregate_longterm_results(tournament: PredictionTournament):
+    # Returns list of dicts: {team, avg_position, counts: {position: count}}
+
+    league = tournament.league
+    teams = list(league.teams.all())
+    team_ids = [t.id for t in teams]
+    team_map = {t.id: t for t in teams}
+
+    submissions = (
+        LongTermPredictionSubmission.objects.filter(tournament=tournament).prefetch_related('items__team').all()
+    )
+
+    positions_counts = {tid: defaultdict(int) for tid in team_ids}
+    positions_sum = {tid: 0 for tid in team_ids}
+    submissions_count = 0
+
+    for sub in submissions:
+        for item in sub.items.all():
+            team_id = item.team_id
+            pos = item.position
+            positions_counts[team_id][pos] += 1
+            positions_sum[team_id] += pos
+        submissions_count += 1
+
+    results = []
+    for team_id in team_ids:
+        if submissions_count > 0:
+            avg = positions_sum[team_id] / submissions_count
+        else:
+            avg = None
+        # Convert counts to a dense array
+        histogram = [positions_counts[team_id].get(i, 0) for i in range(1, len(teams) + 1)]
+        total = sum(histogram)
+        results.append({'team': team_map[team_id], 'avg_position': avg, 'histogram': histogram, 'total': total})
+
+    results.sort(key=lambda r: r['avg_position'])
+    return results
+
+
+def longterm_results_tab(request):
+    selected_tournament = _resolve_selected_tournament(request)
+    results = []
+    if selected_tournament:
+        results = _aggregate_longterm_results(selected_tournament)
+
+    context = {
+        'selected_tournament': selected_tournament,
+        'results': results,
+    }
+    return render(request, 'predictions/longterm/results_tab.html', context)
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def longterm_save(request):
+    tournament_id = request.POST.get('tournament_id')
+    selected_tournament = PredictionTournament.objects.filter(pk=tournament_id).first()
+
+    order = request.POST.get('order')
+    if not order:
+        return longterm_my_tab(request)
+
+    team_ids = [int(x) for x in order.split(',') if x.strip()]
+    league_team_ids = set(selected_tournament.league.teams.values_list('id', flat=True))
+    if not set(team_ids).issubset(league_team_ids):
+        messages.error(request, 'Содержатся команды вне выбранного турнира.')
+        return longterm_my_tab(request)
+
+    submission, _ = LongTermPredictionSubmission.objects.get_or_create(
+        user=request.user, tournament=selected_tournament
+    )
+    submission.items.all().delete()
+    LongTermPredictionItem.objects.bulk_create(
+        [
+            LongTermPredictionItem(submission=submission, team_id=tid, position=idx + 1)
+            for idx, tid in enumerate(team_ids)
+        ]
+    )
+
+    response = longterm_my_tab(request)
+    response = trigger_client_event(response, 'prediction-saved', {'tournament_id': tournament_id})
+
+    return response
