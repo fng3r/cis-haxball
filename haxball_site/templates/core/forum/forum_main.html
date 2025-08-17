@@ -3,11 +3,11 @@
 {% load static %}
 {% load user_tags %}
 
-{% block title %}Форум{% endblock %}
-{% block postlist %}
+{% block title %}Форум — CIS-HAXBALL{% endblock %}
+{% block main_content %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:card-body tw:rounded-t-lg tw:gap-3 tw:py-4">
-      {% for theme in themes %}
+      {% for theme in forum_themes %}
         <div class="tw:flex tw:flex-col">
           <h3 class="tw:text-center">{{ theme.title }}</h3>
           <div class="tw:divider tw:my-0!"></div>
@@ -19,7 +19,7 @@
                   <h5 class="tw:text-lg">
                     <a href="{{ subtheme.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ subtheme.title }}</a>
                   </h5>
-                  <div class="tw:text-base tw:text-neutral-500 tw:font-semibold">{{ subtheme.description }}</div>
+                  <div class="tw:text-base tw:text-base-content/70 tw:font-semibold">{{ subtheme.description }}</div>
                 </div>
                 <div class="tw:inline-block tw:min-w-1/6">
                   <div class="tw:text-right tw:font-semibold">

@@ -11,6 +11,8 @@ from django.db.models.functions import Cast, Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
 
+from haxball_site import settings
+
 from ..models import (
     Disqualification,
     FreeAgent,
@@ -1273,6 +1275,9 @@ def stats_percentage(stat1, stat2):
 
 @register.filter
 def user_teams(user: User):
+    if not settings.SHOW_USER_TEAM_ICONS:
+        return []
+
     teams = []
     try:
         player = user.user_player
