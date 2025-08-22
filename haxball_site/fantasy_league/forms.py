@@ -30,7 +30,6 @@ class UserFilterForm(forms.Form):
 class SquadSubmissionForm(forms.Form):
     """Form for submitting a squad"""
 
-    # Primary squad fields
     primary_gk = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
         label='Вратарь (основной)',
@@ -52,7 +51,6 @@ class SquadSubmissionForm(forms.Form):
         required=True,
     )
 
-    # Secondary squad fields
     secondary_gk = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
         label='Вратарь (запасной)',
@@ -74,25 +72,63 @@ class SquadSubmissionForm(forms.Form):
         required=True,
     )
 
-    RP_COSTS = {
-        PlayerRating.Grade.S: 3,
-        PlayerRating.Grade.A: 2.5,
-        PlayerRating.Grade.B_PLUS: 2,
-        PlayerRating.Grade.B: 1.5,
-        PlayerRating.Grade.C: 1,
-        PlayerRating.Grade.D: 0.5,
-        PlayerRating.Grade.E: 0.5,
-        None: 0.5,  # No rating
+    # Price ranges in millions (M) for each grade
+    PRICE_RANGES = {
+        PlayerRating.Grade.S: (24, 27),
+        PlayerRating.Grade.A: (18, 23),
+        PlayerRating.Grade.B_PLUS: (13, 17),
+        PlayerRating.Grade.B: (9, 12),
+        PlayerRating.Grade.C: (6, 8),
+        PlayerRating.Grade.D: (3, 5),
+        PlayerRating.Grade.E: (1, 2),
+        None: (1, 2),  # No rating - same as E
     }
 
-    RP_LIMITS = {
-        'Высшая лига': 9.5,
-        'Первая лига': 8,
-        'Вторая лига': 5,
+    # Rating point ranges for each grade
+    RATING_RANGES = {
+        PlayerRating.Grade.S: (91, 100),
+        PlayerRating.Grade.A: (76, 90),
+        PlayerRating.Grade.B_PLUS: (61, 75),
+        PlayerRating.Grade.B: (61, 75),
+        PlayerRating.Grade.C: (31, 45),
+        PlayerRating.Grade.D: (16, 30),
+        PlayerRating.Grade.E: (0, 15),
+        None: (0, 15),  # No rating - same as E
     }
 
-    def get_league_rp_limit(self, league):
-        return self.RP_LIMITS.get(league.title, 9.5)
+    BUDGET_LIMITS = {
+        'Высшая лига': 70.0,
+        'Первая лига': 45.0,
+        'Вторая лига': 30.0,
+    }
+
+    def get_league_budget_limit(self, league):
+        return self.BUDGET_LIMITS.get(league.title)
+
+    def calculate_player_cost(self, player_rating):
+        """Calculate player cost in millions based on grade and rating points"""
+        if not player_rating:
+            grade = None
+            rating_points = 0
+        else:
+            grade = player_rating.grade
+            rating_points = player_rating.rating_points
+
+        price_range = self.PRICE_RANGES.get(grade, (1, 2))
+        rating_range = self.RATING_RANGES.get(grade, (0, 15))
+
+        min_price, max_price = price_range
+        min_rating, max_rating = rating_range
+
+        if max_rating == min_rating:
+            position_ratio = 0.0
+        else:
+            position_ratio = (rating_points - min_rating) / (max_rating - min_rating)
+
+        position_ratio = max(0.0, min(1.0, position_ratio))
+        cost = min_price + (max_price - min_price) * position_ratio
+
+        return round(cost, 1)
 
     def __init__(self, *args, tournament: League, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,8 +136,8 @@ class SquadSubmissionForm(forms.Form):
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
         league_player_ids = list(Player.objects.filter(team__in=tournament.teams.all()).values_list('id', flat=True))
         ratings = PlayerRating.objects.filter(player_id__in=league_player_ids, version=latest_rating_version)
-        player_grade_map = {r.player_id: r.grade for r in ratings}
-        self.player_rp_costs = {pid: self.RP_COSTS.get(player_grade_map.get(pid)) for pid in league_player_ids}
+        player_rating_map = {r.player_id: r for r in ratings}
+        self.player_costs = {pid: self.calculate_player_cost(player_rating_map.get(pid)) for pid in league_player_ids}
 
         team_filter = {'team__in': tournament.teams.all()}
         self.fields['primary_gk'].queryset = Player.objects.filter(
@@ -129,21 +165,13 @@ class SquadSubmissionForm(forms.Form):
             positions__contains=[Player.Position.ST], **team_filter
         )
 
-        def label_with_rp(player):
-            rp = self.player_rp_costs.get(player.id, 0.5)
-            return f'{player.nickname} ({rp} RP)'
+        # Apply label_from_instance to all player fields to show costs
+        for field_name in self.fields:
+            self.fields[field_name].label_from_instance = self.label_from_instance
 
-        for fname in [
-            'primary_gk',
-            'primary_dm',
-            'primary_st1',
-            'primary_st2',
-            'secondary_gk',
-            'secondary_dm',
-            'secondary_st1',
-            'secondary_st2',
-        ]:
-            self.fields[fname].label_from_instance = label_with_rp
+    def label_from_instance(self, obj):
+        cost = self.player_costs.get(obj.id, 1.0)
+        return f'{obj.nickname} ({cost} M)'
 
     def clean(self):
         cleaned_data = super().clean()
@@ -172,24 +200,24 @@ class SquadSubmissionForm(forms.Form):
         if len(set(all_players)) != 8:
             raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
 
-        # RP limit checks
+        # Budget limit checks
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
-        rp_limit = self.get_league_rp_limit(self.tournament)
+        budget_limit = self.get_league_budget_limit(self.tournament)
         player_ids = [p.id for p in all_players if p]
         ratings = PlayerRating.objects.filter(player_id__in=player_ids, version=latest_rating_version)
-        player_grade_map = {r.player_id: r.grade for r in ratings}
+        player_rating_map = {r.player_id: r for r in ratings}
 
-        def get_rp(player):
-            grade = player_grade_map.get(player.id, None)
-            return self.RP_COSTS.get(grade)
+        def get_cost(player):
+            player_rating = player_rating_map.get(player.id, None)
+            return self.calculate_player_cost(player_rating)
 
-        primary_rp = sum(get_rp(p) for p in primary_players if p)
-        if primary_rp > rp_limit:
-            raise forms.ValidationError(f'Превышен лимит RP для основного состава: {primary_rp} > {rp_limit}')
+        primary_cost = sum(get_cost(p) for p in primary_players if p)
+        if primary_cost > budget_limit:
+            raise forms.ValidationError(f'Превышен бюджет для основного состава: {primary_cost} > {budget_limit} M')
 
-        secondary_rp = sum(get_rp(p) for p in secondary_players if p)
-        if secondary_rp > rp_limit:
-            raise forms.ValidationError(f'Превышен лимит RP для запасного состава: {secondary_rp} > {rp_limit}')
+        secondary_cost = sum(get_cost(p) for p in secondary_players if p)
+        if secondary_cost > budget_limit:
+            raise forms.ValidationError(f'Превышен бюджет для запасного состава: {secondary_cost} > {budget_limit} M')
 
         return cleaned_data
 
