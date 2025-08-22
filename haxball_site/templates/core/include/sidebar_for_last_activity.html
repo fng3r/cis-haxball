@@ -4,27 +4,53 @@
 {% load i18n %}
 
 {% cache 60 last_activity_cache %}
-  <div class="tw:card tw:rounded-lg tw:rounded-b-none tw:border tw:border-gray-100">
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
     <div class="tw:card-title tw:justify-center tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
       <span class="tw:mb-0 tw:text-center">
-        <img src="{% static "img/ico/chat.png" %}" width="30" class="tw:align-top!" alt="New Comments">
+        <img src="{% static 'img/ico/chat.png' %}" width="30" class="tw:align-top!" alt="New Comments">
         Комментарии
       </span>
     </div>
-
-    <div class="tw:w-full">
+    <div class="tw:w-full tw:space-y-2 tw:px-1.5 tw:py-2">
       {% for comment in last_comments %}
         <a href="{{ comment.get_absolute_url }}"
-           class="tw:btn-link-block tw:h-auto! tw:justify-between tw:items-center tw:p-2 tw:py-1 tw:bg-card-button tw:text-card-button">
-          <div class="tw:flex tw:flex-col tw:w-full tw:overflow-hidden">
-            <span class="tw:text-base tw:text-left tw:truncate tw:mr-2">{{ comment.content_object }}</span>
-            <span class="tw:text-left tw:truncate tw:mr-2 tw:text-sm tw:opacity-80">
-              {% blocktranslate with date=comment.created|naturalday:"j b."|capfirst time=comment.created|time author=comment.author %}
-                {{ date }} в {{ time }} от {{ author }}
+           class="tw:rounded-lg tw:bg-base-200 tw:hover:bg-base-300 tw:border tw:border-neutral-300 tw:shadow-md tw:hover:shadow-md tw:transition tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:group">
+          <span class="tw:mt-1 tw:rounded tw:badge tw:badge-md tw:size-8
+            {# djlint:off #}
+                       {% if comment.content_type.model == 'post' %}
+                         tw:bg-blue-200 tw:text-blue-700
+                       {% elif comment.content_type.model == 'match' %}
+                         tw:bg-green-200 tw:text-green-700
+                       {% elif comment.content_type.model == 'league' %}
+                         tw:bg-yellow-200 tw:text-yellow-700
+                       {% elif comment.content_type.model == 'profile' %}
+                         tw:bg-purple-200 tw:text-purple-700
+                       {% else %}
+                         tw:bg-gray-200 tw:text-gray-700
+                       {% endif %}
+                      "
+            {# djlint:on #}
+          >
+            {% if comment.content_type.model == 'post' %}
+              <i class="fa fa-file-text-o"></i>
+            {% elif comment.content_type.model == 'match' %}
+              <i class="fa fa-futbol-o"></i>
+            {% elif comment.content_type.model == 'league' %}
+              <i class="fa fa-trophy"></i>
+            {% elif comment.content_type.model == 'profile' %}
+              <i class="fa fa-user"></i>
+            {% else %}
+              <i class="fa fa-comment"></i>
+            {% endif %}
+          </span>
+          <div class="tw:flex tw:flex-col tw:flex-grow tw:min-w-0">
+            <span class="tw:truncate tw:text-base tw:font-medium group-hover:tw:underline" title="{{ comment.content_object }}">{{ comment.content_object }}</span>
+            <span class="tw:text-xs tw:opacity-80 tw:truncate">
+              {% blocktranslate with date=comment.created|naturalday:'j b.'|capfirst time=comment.created|time author=comment.author %}
+                <i class="fa fa-clock-o"></i> {{ date }} в {{ time }} <i class="fa fa-user tw:ml-1"></i> {{ author }}
               {% endblocktranslate %}
             </span>
           </div>
-          <img src="{% static "img/ico/reply.png" %}" height="30" width="30" alt="Reply">
         </a>
       {% endfor %}
     </div>

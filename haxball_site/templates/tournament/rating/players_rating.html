@@ -1,0 +1,214 @@
+{% extends "core.html" %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Чемпионат | Рейтинг игроков — CIS-HAXBALL{% endblock %}
+
+{% block profile_of_user %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+
+    <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
+      <h2 class="tw:card-title">
+        <i class="fa fa-star tw:text-warning tw:mt-1" aria-hidden="true"></i>
+        Рейтинг игроков
+      </h2>
+    </div>
+
+    <div class="tw:tabs tw:tabs-lg tw:tabs-border tw:bg-base-100 tw:rounded-b-lg" role="tablist">
+      <input type="radio" name="rating-tabs" class="tw:tab tw:pl-3! tw:font-semibold" role="tab" aria-label="Игроки" checked />
+      <div class="tw:tab-content">
+        <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
+          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2" x-data="{ search: '', onlyNewPlayers: false, selectedGrade: '', gradeChangedFilter: null }">
+            <form id="filter-form"
+                  class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
+                  hx-get="{% url 'tournament:players_rating' %}"
+                  hx-trigger="submit"
+                  hx-target="#player-rating-table"
+                  hx-swap="innerHTML scroll:top"
+                  hx-disabled-elt="find button">
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold" for="{{ filter.form.version.id_for_label }}">{{ filter.form.version.label }}</label>
+                {% render_field filter.form.version|add_class:'tw:select' %}
+              </div>
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold" for="sort">Сортировка</label>
+                <select name="sort" id="sort" class="tw:select">
+                  <option value="rating__desc" {% if sort == 'rating__desc' %}selected{% endif %}>Рейтинг (↓)</option>
+                  <option value="rating__asc" {% if sort == 'rating__asc' %}selected{% endif %}>Рейтинг (↑)</option>
+                  <option value="rating_diff__desc" {% if sort == 'rating_diff__desc' %}selected{% endif %}>Изм. рейтинга (↓)</option>
+                  <option value="rating_diff__asc" {% if sort == 'rating_diff__asc' %}selected{% endif %}>Изм. рейтинга (↑)</option>
+                </select>
+              </div>
+
+              <div class="tw:flex tw:mt-auto">
+                <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+                <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+              </div>
+            </form>
+
+            <div class="tw:px-1" x-data="{showAdditionalFilters: false}">
+              <input type="checkbox" class="tw:peer tw:btn tw:btn-neutral tw:w-fit" :aria-label="`Доп. фильтры ${showAdditionalFilters ? '-' : '+'}`" x-model="showAdditionalFilters" />
+              <div class="tw:max-h-0 tw:peer-checked:max-h-96 tw:overflow-hidden tw:transition-all tw:duration-500 tw:ease-in-out">
+                <div class="tw:flex tw:flex-col tw:gap-4 tw:p-2">
+                  <div class="tw:flex tw:flex-col tw:justify-center tw:gap-1">
+                    <span class="tw:font-semibold">Уровень</span>
+                    <div class="tw:filter">
+                      <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="grade" aria-label="All" @click="selectedGrade = ''"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="S" @click="selectedGrade = 'S'"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="A" @click="selectedGrade = 'A'"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="B+" @click="selectedGrade = 'B+'"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="B" @click="selectedGrade = 'B'"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="C" @click="selectedGrade = 'C'"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="D" @click="selectedGrade = 'D'"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="E" @click="selectedGrade = 'E'"/>
+                    </div>
+                  </div>
+
+                  <div class="tw:flex tw:flex-col tw:justify-center tw:gap-1">
+                    <span class="tw:font-semibold">Изменился уровень</span>
+                    <div class="tw:filter">
+                      <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="grade_changed" aria-label="All" @click="gradeChangedFilter = null"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade_changed" aria-label="Да" @click="gradeChangedFilter = true"/>
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade_changed" aria-label="Нет" @click="gradeChangedFilter = false"/>
+                    </div>
+                  </div>
+
+                  <label class="tw:label tw:text-base-content tw:font-medium">
+                    <input id="show-selected-season-teams-only" class="tw:toggle" type="checkbox" x-model="onlyNewPlayers" />
+                    Только новые игроки в рейтинге
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="tw:my-2 tw:px-1 tw:flex">
+                <input type="search"
+                       x-model="search"
+                       placeholder="Поиск игрока..."
+                       class="tw:input tw:input-bordered tw:w-full tw:max-w-xs tw:text-base-content"
+                       autocomplete="off">
+              </div>
+
+              <div id="player-rating-table" class="tw:max-h-[900px] tw:overflow-y-auto tw:mb-1">
+                {% include 'tournament/rating/partials/players_rating_table.html' %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="radio" name="rating-tabs" class="tw:tab tw:font-semibold" role="tab" aria-label="Команды" />
+      <div class="tw:tab-content">
+        <div id="teams-rating-tab-content" role="tabpanel" aria-labelledby="teams-rating-tab">
+          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2">
+            <form id="teams-filter-form"
+                  class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
+                  hx-get="{% url 'tournament:team_players_rating' %}"
+                  hx-trigger="submit"
+                  hx-target="#teams-rating-table"
+                  hx-swap="innerHTML scroll:top"
+                  hx-disabled-elt="find button"
+                  x-data="{ selectedSeason: '{{ selected_season.title }}', activeSeason: '{{ active_season.title }}', isPrimarySeason(season) { return season.startsWith('ЧР'); } }">
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold">Сезон</label>
+                <select name="season"
+                        class="tw:select tw:select-bordered"
+                        @change="selectedSeason = $el.options[$el.selectedIndex].dataset.seasonTitle">
+                  {% for season in seasons %}
+                    <option value="{{ season.id }}" {% if forloop.first %}selected{% endif %} data-season-title="{{ season.title }}">
+                      {{ season.title }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="tw:flex tw:flex-col tw:justify-center">
+                <label class="tw:label tw:text-base-content tw:font-bold">Фаза сезона</label>
+                <select name="phase" class="tw:select tw:select-bordered">
+                  <option value="now" x-show="selectedSeason === activeSeason" :selected="selectedSeason === activeSeason">Текущий период</option>
+                  <option value="start" :selected="selectedSeason !== activeSeason">Начало сезона</option>
+                  <option value="first-half-end" x-show="isPrimarySeason(selectedSeason)">Конец первого круга</option>
+                  <option value="second-half-start" x-show="isPrimarySeason(selectedSeason)">Начало второго круга</option>
+                  <option value="end">Конец сезона</option>
+                </select>
+              </div>
+
+              <div class="tw:flex tw:flex-col tw:justify-center" x-show="isPrimarySeason(selectedSeason)">
+                <label class="tw:label tw:text-base-content tw:font-bold">Лига</label>
+                <select name="league" class="tw:select tw:select-bordered" :disabled="!isPrimarySeason(selectedSeason)">
+                  <option value="">Все</option>
+                  <option value="Высшая лига">Высшая лига</option>
+                  <option value="Первая лига">Первая лига</option>
+                  <option value="Вторая лига">Вторая лига</option>
+                </select>
+              </div>
+
+              <div class="tw:flex tw:mt-auto">
+                <button class="tw:btn tw:btn-primary">Применить фильтр</button>
+                <img class="htmx-indicator tw:ml-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
+              </div>
+            </form>
+
+            <div class="tw:alert tw:alert-info tw:flex! tw:items-baseline tw:gap-2 tw:mx-1">
+              <i class="fa fa-info-circle" aria-hidden="true"></i>
+              К каждому сезону применяется последняя доступная версия рейтинга на момент старта сезона
+            </div>
+
+            <div id="teams-rating-table"
+                 class="tw:max-h-[850px] tw:overflow-y-auto tw:mb-1"
+                 hx-get="{% url 'tournament:team_players_rating' %}?season={{ selected_season.id }}"
+                 hx-trigger="load"
+                 hx-target="#teams-rating-table">
+              <div class="tw:flex tw:flex-col tw:gap-4 tw:p-2">
+                {% for i in "123456789"|make_list %}
+                  <div class="tw:w-full tw:flex tw:items-center tw:gap-4">
+                    <div class="tw:skeleton tw:h-18 tw:w-18 tw:rounded-full"></div>
+                    <div class="tw:skeleton tw:h-18 tw:w-full tw:rounded-lg"></div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="radio" name="rating-tabs" class="tw:tab tw:font-semibold" role="tab" aria-label="Справка" />
+      <div class="tw:tab-content tw:pt-2">
+        <div id="ref-info-tab-content" role="tabpanel" aria-labelledby="ref-info-tab">
+          <div class="tw:mx-3 tw:mt-1 tw:prose tw:max-w-none">
+            <p>Группы значений рейтинга и их характеристика:</p>
+            <ul>
+              <li>
+                <strong>S (91+)</strong> - Топовый уровень
+              </li>
+              <li>
+                <strong>A (76-90)</strong> - Высокий уровень
+              </li>
+              <li>
+                <strong>B+ (61-75)</strong> - Выше среднего
+              </li>
+              <li>
+                <strong>B (46-60)</strong> - Средний уровень
+              </li>
+              <li>
+                <strong>C (31-45)</strong> - Ниже среднего
+              </li>
+              <li>
+                <strong>D (16-30)</strong> - Низкий уровень
+              </li>
+              <li>
+                <strong>E (0-15)</strong> - Очень низкий уровень
+              </li>
+            </ul>
+            <p>Рейтинг обновляется с периодичностью в полгода в промежуток между сезонами Чемпионата России.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

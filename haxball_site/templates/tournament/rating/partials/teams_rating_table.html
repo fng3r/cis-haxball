@@ -1,0 +1,89 @@
+{% load static %}
+{% load mathfilters %}
+{% load tournament_extras %}
+
+<table class="tw:table tw:table-auto tw:table-pin-rows">
+  <thead class="tw:py-2">
+    <tr class="tw:bg-base-300">
+      <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">Место</th>
+      <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Команда</th>
+      {% for season in seasons_rating %}
+
+        <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200">
+          <div class="tw:flex tw:flex-col tw:justify-center tw:items-center">
+            <span class="tw:text-sm">{{ season.short_title }}</span>
+            <span class="tw:text-xs">коэф. {{ season|get_season_weight:seasons_weights }}</span>
+          </div>
+        </th>
+      {% endfor %}
+      <th scope="col" class="tw:bg-base-300 tw:text-center!">Итого</th>
+    </tr>
+  </thead>
+
+  <tbody class="tw:text-center">
+    {% for rating_entry in filter.qs %}
+      <tr
+        {# djlint:off #}
+        x-data="{ isSelectedSeasonTeam: {% if rating_entry.team in selected_season_teams %}true{% else %}false{% endif %} }"
+        {# djlint:on #}
+        x-show="!showSelectedSeasonTeamsOnly || isSelectedSeasonTeam"
+        class="rating-row tw:row-hover tw:border-b tw:border-neutral-200">
+        <td class="tw:px-2 tw:border-r tw:border-neutral-200">
+          <div class="tw:flex tw:flex-wrap tw:gap-x-2 tw:text-lg">
+            <span>{{ rating_entry.rank }}</span>
+            {% if previous_rating %}
+              {% with previous_rank=rating_entry.team|previous_rating_rank:previous_rating %}
+                {% with rank_diff=previous_rank|sub:rating_entry.rank %}
+                  <div class="tw:flex tw:items-center tw:gap-x-2">
+                    {% if previous_rank %}
+                      {% if rank_diff > 0 %}
+                        <span class="tw:badge tw:badge-sm tw:bg-green-300 tw:text-gray-700 tw:font-semibold">+{{ rank_diff }}</span>
+                      {% elif rank_diff < 0 %}
+                        <span class="tw:badge tw:badge-sm tw:bg-red-300 tw:text-gray-700 tw:font-semibold">{{ rank_diff }}</span>
+                      {% else %}
+                        <span class="tw:badge tw:badge-sm tw:bg-gray-300 tw:text-gray-700 tw:font-semibold">—</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="tw:badge tw:badge-sm tw:bg-orange-300 tw:text-gray-700 tw:font-semibold">NEW</span>
+                    {% endif %}
+                  </div>
+                {% endwith %}
+              {% endwith %}
+            {% endif %}
+          </div>
+        </td>
+
+        <td class="tw:pr-1 tw:border-r tw:border-neutral-200" style="min-width: 200px;">
+          <div class="tw:flex tw:items-center tw:gap-x-1 tw:pt-1">
+            <img src="{{ rating_entry.team.logo.url }}" class="tw:mr-1" alt="{{ rating_entry.team.title }}" width="24">
+            <div class="">
+              <h6 class="tw:mb-1! tw:text-lg">
+                <a href="{{ rating_entry.team.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ rating_entry.team.title }}</a>
+              </h6>
+            </div>
+          </div>
+        </td>
+
+        {% for season in seasons_rating %}
+
+          <td class="tw:border-r tw:border-neutral-200">
+            <div>
+              {% get_season_rating rating_entry.team season seasons_rating as season_rating %}
+              {% if season_rating is not None %}
+                <span>{{ season_rating|floatformat:2 }}</span>
+              {% else %}
+                <span>—</span>
+              {% endif %}
+            </div>
+          </td>
+        {% endfor %}
+
+        <td>
+          <div>
+            <span style="font-weight: 700">{{ rating_entry.total_points|floatformat:2 }}</span>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

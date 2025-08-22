@@ -1,0 +1,68 @@
+{% load utils %}
+{% load tournament_extras %}
+
+{% if latest_matches %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:card-body tw:p-0">
+      <div id="latestMatchesControls" class="carousel slide" data-interval="7500" data-ride="carousel">
+        <div class="carousel-inner tw:rounded-lg">
+          {% for matches_batch in latest_matches|batch:4 %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+              <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-4 tw:gap-4 tw:text-sm tw:px-5 tw:py-3">
+                {% for match in matches_batch %}
+                  <div class="tw:glass tw:flex tw:flex-col tw:relative tw:px-2 tw:py-2 tw:bg-base-300/60 tw:hover:bg-base-300 tw:rounded-2xl">
+                    <h6 class="tw:flex tw:flex-col tw:items-center tw:mb-3! tw:text-base-content/80 tw:text-sm!">
+                      <span class="tw:text-center">
+                        {{ match.league.title }},
+                        {% if match.stage.is_playoff %}
+                          {{ match.numb_tour|round_name:match.stage.tours.count }}
+                        {% else %}
+                          {{ match.numb_tour|tour_name }}
+                        {% endif %}
+                      </span>
+                      <span>{{ match.match_date|date:"d.m" }}</span>
+                    </h6>
+
+                    <div class="tw:flex tw:justify-center tw:text-sm">
+                      <div class="tw:w-3/10 tw:flex tw:flex-col tw:gap-1 tw:self-end tw:items-center tw:justify-center tw:font-semibold">
+                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-10 tw:h-10">
+                        {{ match.team_home.short_title }}
+                      </div>
+                      <div class="tw:w-3/10 tw:grow tw:flex tw:justify-center tw:items-center tw:text-2xl tw:font-semibold">
+                        <a href="{% url 'tournament:match_detail' match.id %}">
+                          <span class="tw:absolute tw:inset-0"></span>
+                          {{ match.score_home }} : {{ match.score_guest }}
+                        </a>
+                      </div>
+                      <div class="tw:w-3/10 tw:flex tw:flex-col tw:gap-1 tw:self-start tw:items-center tw:justify-center tw:font-semibold">
+                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-10 tw:h-10">
+                        {{ match.team_guest.short_title }}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if latest_matches|length > 4 %}
+          <a class="carousel-control-prev tw:text-base-content! tw:w-5!"
+             href="#latestMatchesControls"
+             role="button"
+             data-slide="prev">
+            <i class="fa fa-chevron-left" aria-hidden="true"></i>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="carousel-control-next tw:text-base-content! tw:w-5!"
+             href="#latestMatchesControls"
+             role="button"
+             data-slide="next">
+            <i class="fa fa-chevron-right" aria-hidden="true"></i>
+            <span class="sr-only">Next</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}

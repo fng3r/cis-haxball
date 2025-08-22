@@ -20,6 +20,7 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.urls import include, path, re_path
 from django.views.decorators.cache import never_cache
+from django.views.defaults import page_not_found
 
 from ckeditor_uploader import views as ckuploader_views
 
@@ -38,6 +39,10 @@ urlpatterns = [
     path('summernote/', include('django_summernote.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
     path('notifications/', include('custom_notifications.urls', namespace='notifications')),
+    # remove applications and authorized_tokens urls since it should be managed via admin only
+    re_path(r'^o/applications/', page_not_found),
+    re_path(r'^o/authorized_tokens/', page_not_found),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 ]
 
 if settings.URL_PREFIX:

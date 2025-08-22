@@ -11,6 +11,8 @@ from django.db.models.functions import Cast, Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
 
+from haxball_site import settings
+
 from ..models import (
     Disqualification,
     FreeAgent,
@@ -549,38 +551,84 @@ def top_assistants_per_match(league: League):
     )
 
 
+def _get_player_goals_assists_data(league: League):
+    goals_data = (
+        Goal.objects.filter(match__league=league, author__isnull=False)
+        .values('author')
+        .annotate(goals_count=Count('id'))
+    )
+    goals_lookup = {data['author']: data['goals_count'] for data in goals_data}
+
+    assists_data = (
+        Goal.objects.filter(match__league=league, assistent__isnull=False)
+        .values('assistent')
+        .annotate(assists_count=Count('id'))
+    )
+    assists_lookup = {data['assistent']: data['assists_count'] for data in assists_data}
+
+    matches_data = (
+        PlayerMatchStatistics.objects.filter(league=league)
+        .values('player')
+        .annotate(matches_count=Count('id', distinct=True))
+    )
+    matches_lookup = {data['player']: data['matches_count'] for data in matches_data}
+
+    return goals_lookup, assists_lookup, matches_lookup
+
+
 @register.filter
 def top_goals_assists(league: League):
-    return (
+    goals_lookup, assists_lookup, matches_lookup = _get_player_goals_assists_data(league)
+
+    players = (
         Player.objects.select_related('team', 'name__user_profile')
-        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)))
-        .annotate(
-            goals_count=Coalesce(get_player_goals_subquery(league), 0),
-            assists_count=Coalesce(get_player_assists_subquery(league), 0),
-            matches_count=Coalesce(get_player_matches_subquery(league), 0),
-            count=F('goals_count') + F('assists_count'),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .filter(count__gt=0, matches_count__gt=0)
-        .order_by('-count')
+        .filter(id__in=matches_lookup.keys())
+        .annotate(last_team_logo=get_player_last_team_logo_subquery(league))
     )
+
+    result = []
+    for player in players:
+        goals_count = goals_lookup.get(player.id, 0)
+        assists_count = assists_lookup.get(player.id, 0)
+        matches_count = matches_lookup.get(player.id, 0)
+        total_count = goals_count + assists_count
+
+        if total_count > 0 and matches_count > 0:
+            player.goals_count = goals_count
+            player.assists_count = assists_count
+            player.matches_count = matches_count
+            player.count = total_count
+            result.append(player)
+
+    return sorted(result, key=lambda x: x.count, reverse=True)
 
 
 @register.filter
 def top_goals_assists_per_match(league: League):
-    return (
+    goals_lookup, assists_lookup, matches_lookup = _get_player_goals_assists_data(league)
+
+    players = (
         Player.objects.select_related('team', 'name__user_profile')
-        .filter(Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)))
-        .annotate(
-            goals_count=Coalesce(get_player_goals_subquery(league), 0),
-            assists_count=Coalesce(get_player_assists_subquery(league), 0),
-            matches_count=Coalesce(get_player_matches_subquery(league), 0),
-            count=Cast(F('goals_count') + F('assists_count'), FloatField()) / F('matches_count'),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .filter(count__gt=0, matches_count__gte=3)
-        .order_by('-count')
+        .filter(id__in=matches_lookup.keys())
+        .annotate(last_team_logo=get_player_last_team_logo_subquery(league))
     )
+
+    result = []
+    for player in players:
+        goals_count = goals_lookup.get(player.id, 0)
+        assists_count = assists_lookup.get(player.id, 0)
+        matches_count = matches_lookup.get(player.id, 0)
+
+        if matches_count >= 3:
+            total_count = goals_count + assists_count
+            if total_count > 0:
+                player.goals_count = goals_count
+                player.assists_count = assists_count
+                player.matches_count = matches_count
+                player.count = float(total_count) / matches_count
+                result.append(player)
+
+    return sorted(result, key=lambda x: x.count, reverse=True)
 
 
 @register.filter
@@ -1207,6 +1255,11 @@ def sorted_by_league(dictionary: defaultdict):
     return sorted(dictionary.items(), key=lambda item: item[0].id)
 
 
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+
 @register.simple_tag
 def stats_percentage(stat1, stat2):
     sum = stat1 + stat2
@@ -1222,6 +1275,9 @@ def stats_percentage(stat1, stat2):
 
 @register.filter
 def user_teams(user: User):
+    if not settings.SHOW_USER_TEAM_ICONS:
+        return []
+
     teams = []
     try:
         player = user.user_player
@@ -1258,3 +1314,12 @@ def user_teams(user: User):
             teams.append({'team': owned_team, 'titles': f'Владелец команды {owned_team}'})
 
     return teams
+
+
+@register.filter
+def grade_class(grade):
+    """Convert grade to CSS class name for styling"""
+    grade_lower = grade.lower()
+    if grade_lower == 'b+':
+        return 'b-plus'
+    return grade_lower

@@ -159,6 +159,7 @@ def show_top_comments(count=5):
     ).order_by('-likes_count')[:count]
     top_comments_by_month = comments.filter(created__year=year, created__month=month).order_by('-likes_count')[:count]
     top_comments_by_year = comments.filter(created__year=year).order_by('-likes_count')[:count]
+    top_comments_by_all_time = comments.order_by('-likes_count')[:count]
 
     return {
         'comments_by_period': [
@@ -166,6 +167,7 @@ def show_top_comments(count=5):
             {'title': 'Неделя', 'comments': top_comments_by_week},
             {'title': 'Месяц', 'comments': top_comments_by_month},
             {'title': 'Год', 'comments': top_comments_by_year},
+            {'title': 'Всё время', 'comments': top_comments_by_all_time},
         ],
     }
 
@@ -318,8 +320,3 @@ def show_last_transfers():
     )
 
     return {'transfers': last_transfers}
-
-
-@register.filter
-def can_view_player_rating(user: User):
-    return user.has_perm('tournament.view_playerrating')

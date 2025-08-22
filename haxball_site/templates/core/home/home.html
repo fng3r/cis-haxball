@@ -1,0 +1,20 @@
+{% extends "core.html" %}
+
+{% load static %}
+
+{% block scripts %}
+  {# Аякс-скрипт проставления лайков-дизлайков к постам #}
+  <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>
+{% endblock %}
+
+{% block main_content %}
+  <div class="tw:w-full tw:space-y-2">
+    {% include "core/home/latest_matches_carousel.html" with latest_matches=latest_matches %}
+
+    {% include "core/home/upcoming_matches_carousel.html" with upcoming_matches=upcoming_matches %}
+
+    {% include "core/home/latest_posts.html" with posts=posts %}
+
+    {% include "core/home/latest_users_posts.html" with user_posts=user_posts %}
+  </div>
+{% endblock %}
