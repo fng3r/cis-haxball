@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import IntegerField, OuterRef, Subquery
 
 from tournament.models import League, Player, PlayerRating, PlayerRatingVersion
 
@@ -140,38 +141,27 @@ class SquadSubmissionForm(forms.Form):
         self.player_costs = {pid: self.calculate_player_cost(player_rating_map.get(pid)) for pid in league_player_ids}
 
         team_filter = {'team__in': tournament.teams.all()}
-        self.fields['primary_gk'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.GK], **team_filter
-        )
-        self.fields['secondary_gk'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.GK], **team_filter
-        )
-        self.fields['primary_dm'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.DM], **team_filter
-        )
-        self.fields['secondary_dm'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.DM], **team_filter
-        )
-        self.fields['primary_st1'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.ST], **team_filter
-        )
-        self.fields['primary_st2'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.ST], **team_filter
-        )
-        self.fields['secondary_st1'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.ST], **team_filter
-        )
-        self.fields['secondary_st2'].queryset = Player.objects.filter(
-            positions__contains=[Player.Position.ST], **team_filter
+
+        latest_rating_subquery = PlayerRating.objects.filter(
+            player_id=OuterRef('pk'), version=latest_rating_version
+        ).values('rating_points')[:1]
+
+        annotated_players = (
+            Player.objects.filter(**team_filter)
+            .annotate(
+                latest_rating=Subquery(latest_rating_subquery, output_field=IntegerField()),
+            )
+            .order_by('-latest_rating')
         )
 
-        # Apply label_from_instance to all player fields to show costs
-        for field_name in self.fields:
-            self.fields[field_name].label_from_instance = self.label_from_instance
-
-    def label_from_instance(self, obj):
-        cost = self.player_costs.get(obj.id, 1.0)
-        return f'{obj.nickname} ({cost} M)'
+        self.fields['primary_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
+        self.fields['secondary_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
+        self.fields['primary_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
+        self.fields['secondary_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
+        self.fields['primary_st1'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
+        self.fields['primary_st2'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
+        self.fields['secondary_st1'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
+        self.fields['secondary_st2'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
 
     def clean(self):
         cleaned_data = super().clean()
@@ -213,11 +203,11 @@ class SquadSubmissionForm(forms.Form):
 
         primary_cost = sum(get_cost(p) for p in primary_players if p)
         if primary_cost > budget_limit:
-            raise forms.ValidationError(f'Превышен бюджет для основного состава: {primary_cost} > {budget_limit} M')
+            raise forms.ValidationError(f'Превышен бюджет для основного состава: {primary_cost}M > {budget_limit}M')
 
         secondary_cost = sum(get_cost(p) for p in secondary_players if p)
         if secondary_cost > budget_limit:
-            raise forms.ValidationError(f'Превышен бюджет для запасного состава: {secondary_cost} > {budget_limit} M')
+            raise forms.ValidationError(f'Превышен бюджет для запасного состава: {secondary_cost}M > {budget_limit}M')
 
         return cleaned_data
 

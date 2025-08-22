@@ -398,10 +398,14 @@ def edit_squad(request, tour_id):
 
         form = SquadSubmissionForm(initial=initial_data, tournament=tour.league)
 
+    budget_limit = SquadSubmissionForm(tournament=tour.league).get_league_budget_limit(tour.league)
+
     context = {
         'form': form,
         'tour': tour,
         'submission': submission,
+        'budget_limit': budget_limit,
     }
+    print('render edit squad')
 
     return render(request, 'fantasy_league/edit_squad.html', context)
