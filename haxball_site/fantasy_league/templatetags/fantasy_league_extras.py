@@ -87,3 +87,14 @@ def squad_player_stats(context, squad_player):
     if cs:
         parts.append(f'{cs}CS')
     return ' '.join(parts)
+
+
+@register.filter
+def get_player_by_id(players, player_id: int | str | None):
+    if not player_id:
+        return None
+
+    if isinstance(player_id, str):
+        player_id = int(player_id)
+
+    return next((player for player in players if player.id == player_id), None)

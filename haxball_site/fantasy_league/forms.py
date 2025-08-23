@@ -173,15 +173,18 @@ class SquadSubmissionForm(forms.Form):
             cleaned_data.get('primary_st2'),
         ]
 
-        if len(set(primary_players)) != 4:
-            raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
-
         secondary_players = [
             cleaned_data.get('secondary_gk'),
             cleaned_data.get('secondary_dm'),
             cleaned_data.get('secondary_st1'),
             cleaned_data.get('secondary_st2'),
         ]
+
+        if any(p is None for p in primary_players) or any(p is None for p in secondary_players):
+            raise forms.ValidationError('Составы должны быть полностью укомплектованы')
+
+        if len(set(primary_players)) != 4:
+            raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
 
         if len(set(secondary_players)) != 4:
             raise forms.ValidationError('В запасном составе не может быть дублирующихся игроков')

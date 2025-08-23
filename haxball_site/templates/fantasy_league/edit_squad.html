@@ -1,77 +1,144 @@
+{% load fantasy_league_extras %}
 {% load widget_tweaks %}
 {% load utils %}
 
-<div class="tw:card tw:bg-base-200 tw:shadow-sm">
-  <div class="tw:card-body tw:p-4">
+<div id="tour-{{ tour.id }}-content" class="tw:card tw:bg-base-200 tw:shadow-sm">
+  <div class="tw:card-body tw:p-4" x-data="{ parseCost(cost) { return parseFloat(cost.replace(',', '.')); } }">
     <h5 class="tw:card-title">
       <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
     </h5>
 
-    <form class="tw:space-y-6"
+    <form class="tw:space-y-4"
           hx-post="{% url 'fantasy_league:edit_squad' tour.id %}"
           hx-target="#tour-{{ tour.id }}-content"
-          hx-swap="innerHTML"
+          hx-swap="outerHTML"
       {# djlint:off #}
           x-data="{
-                  primaryLimit: parseFloat('{{ budget_limit }}'.replace(',', '.')),
-                  secondaryLimit: parseFloat('{{ budget_limit }}'.replace(',', '.')),
+                  primaryLimit: parseCost('{{ budget_limit }}'),
+                  secondaryLimit: parseCost('{{ budget_limit }}'),
                   primaryUsed: 0,
                   secondaryUsed: 0,
                   selected: {
-                  primary_gk: {
-                  id: {{ form.primary_gk.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.primary_gk.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.primary_gk.value %}{% for p in form.primary_gk.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  },
-                  primary_dm: {
-                  id: {{ form.primary_dm.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.primary_dm.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.primary_dm.value %}{% for p in form.primary_dm.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  },
-                  primary_st1: {
-                  id: {{ form.primary_st1.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.primary_st1.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.primary_st1.value %}{% for p in form.primary_st1.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  },
-                  primary_st2: {
-                  id: {{ form.primary_st2.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.primary_st2.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.primary_st2.value %}{% for p in form.primary_st2.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  },
-                  secondary_gk: {
-                  id: {{ form.secondary_gk.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.secondary_gk.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.secondary_gk.value %}{% for p in form.secondary_gk.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  },
-                  secondary_dm: {
-                  id: {{ form.secondary_dm.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.secondary_dm.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.secondary_dm.value %}{% for p in form.secondary_dm.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  },
-                  secondary_st1: {
-                  id: {{ form.secondary_st1.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.secondary_st1.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.secondary_st1.value %}{% for p in form.secondary_st1.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  },
-                  secondary_st2: {
-                  id: {{ form.secondary_st2.value|default:'null' }},
-                  cost: parseFloat('{{ form.player_costs|get:form.secondary_st2.value|default:'0' }}'.replace(',', '.')),
-                  label: '{% with sel=form.secondary_st2.value %}{% for p in form.secondary_st2.field.queryset %}{% if sel == p.pk %}{{ p.nickname|escapejs }} — {{ form.player_costs|get:p.pk }} M{% endif %}{% endfor %}{% endwith %}'
-                  }
+                  {% with player=form.primary_gk.field.queryset|get_player_by_id:form.primary_gk.value %}
+                    {% if player %}
+                      primary_gk: {
+                      id: {{ form.primary_gk.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      primary_gk: null,
+                    {% endif %}
+                  {% endwith %}
+
+                  {% with player=form.primary_dm.field.queryset|get_player_by_id:form.primary_dm.value %}
+                    {% if player %}
+                      primary_dm: {
+                      id: {{ form.primary_dm.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      primary_dm: null,
+                    {% endif %}
+                  {% endwith %}
+
+                  {% with player=form.primary_st1.field.queryset|get_player_by_id:form.primary_st1.value %}
+                    {% if player %}
+                      primary_st1: {
+                      id: {{ form.primary_st1.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      primary_st1: null,
+                    {% endif %}
+                  {% endwith %}
+
+                  {% with player=form.primary_st2.field.queryset|get_player_by_id:form.primary_st2.value %}
+                    {% if player %}
+                      primary_st2: {
+                      id: {{ form.primary_st2.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      primary_st2: null,
+                    {% endif %}
+                  {% endwith %}
+
+                  {% with player=form.secondary_gk.field.queryset|get_player_by_id:form.secondary_gk.value %}
+                    {% if player %}
+                      secondary_gk: {
+                      id: {{ form.secondary_gk.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      secondary_gk: null,
+                    {% endif %}
+                  {% endwith %}
+
+                  {% with player=form.secondary_dm.field.queryset|get_player_by_id:form.secondary_dm.value %}
+                    {% if player %}
+                      secondary_dm: {
+                      id: {{ form.secondary_dm.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      secondary_dm: null,
+                    {% endif %}
+                  {% endwith %}
+
+                  {% with player=form.secondary_st1.field.queryset|get_player_by_id:form.secondary_st1.value %}
+                    {% if player %}
+                      secondary_st1: {
+                      id: {{ form.secondary_st1.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      secondary_st1: null,
+                    {% endif %}
+                  {% endwith %}
+
+                  {% with player=form.secondary_st2.field.queryset|get_player_by_id:form.secondary_st2.value %}
+                    {% if player %}
+                      secondary_st2: {
+                      id: {{ form.secondary_st2.value|default:'null' }},
+                      nickname: '{{ player.nickname|escapejs }}',
+                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                      teamLogo: '{{ player.team.logo.url }}',
+                      },
+                    {% else %}
+                      secondary_st2: null,
+                    {% endif %}
+                  {% endwith %}
                   },
                   updateUsedBudget() {
-                  this.primaryUsed = this.selected.primary_gk.cost + this.selected.primary_dm.cost + this.selected.primary_st1.cost + this.selected.primary_st2.cost;
-                  this.secondaryUsed = this.selected.secondary_gk.cost + this.selected.secondary_dm.cost + this.selected.secondary_st1.cost + this.selected.secondary_st2.cost;
+                  const primaryPositions = ['primary_gk', 'primary_dm', 'primary_st1', 'primary_st2'];
+                  const secondaryPositions = ['secondary_gk', 'secondary_dm', 'secondary_st1', 'secondary_st2'];
+                  this.primaryUsed = primaryPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
+                  this.secondaryUsed = secondaryPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
                   },
-                  handlePick(field, id, cost, label) { this.selected[field] = { id, cost, label }; this.updateUsedBudget(); },
-                  swap(fieldA, fieldB) { const t = this.selected[fieldA]; this.selected[fieldA] = this.selected[fieldB]; this.selected[fieldB] = t; this.updateUsedBudget(); },
+                  handlePick(position, id, nickname, cost, teamLogo) { this.selected[position] = { id, nickname, cost, teamLogo }; this.updateUsedBudget(); },
+                  swap(positionA, positionB) { const t = this.selected[positionA]; this.selected[positionA] = this.selected[positionB]; this.selected[positionB] = t; this.updateUsedBudget(); },
                   fmt(v) { return v.toFixed(1); }
                   }"
       {# djlint:on #}
           x-init="updateUsedBudget()">
       {% csrf_token %}
 
-      <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-6">
+      <div class="tw:grid tw:grid-cols-[1fr_auto_1fr] tw:gap-x-4 tw:gap-y-2">
+        <!-- Headers row -->
         <div class="tw:space-y-4 tw:relative">
           <div class="tw:flex tw:justify-between tw:items-center">
             <div class="tw:font-medium tw:text-primary">Основной состав (1x очки)</div>
@@ -79,13 +146,9 @@
               <span x-text="`${fmt(primaryUsed)}/${primaryLimit} M`"></span>
             </div>
           </div>
-          <div class="tw:space-y-3">
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_gk' %}
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_dm' %}
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st1' %}
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st2' %}
-          </div>
         </div>
+
+        <div class="tw:block"></div>
 
         <div class="tw:space-y-4 tw:relative">
           <div class="tw:flex tw:justify-between tw:items-center">
@@ -94,13 +157,50 @@
               <span x-text="`${fmt(secondaryUsed)}/${secondaryLimit} M`"></span>
             </div>
           </div>
+        </div>
 
-          <div class="tw:space-y-3">
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_gk' %}
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_dm' %}
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_st1' %}
-            {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_st2' %}
+        <!-- GK row -->
+        <div class="tw:space-y-3 tw:contents">
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_gk' %}</div>
+          <div class="tw:flex tw:justify-center tw:self-end">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_gk','secondary_gk')">
+              <i class="fa fa-exchange"></i>
+            </button>
           </div>
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_gk' %}</div>
+        </div>
+
+        <!-- DM row -->
+        <div class="tw:space-y-3 tw:contents">
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_dm' %}</div>
+          <div class="tw:flex tw:justify-center tw:self-end">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_dm','secondary_dm')">
+              <i class="fa fa-exchange"></i>
+            </button>
+          </div>
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_dm' %}</div>
+        </div>
+
+        <!-- ST1 row -->
+        <div class="tw:space-y-3 tw:contents">
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st1' %}</div>
+          <div class="tw:flex tw:justify-center tw:self-end">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_st1','secondary_st1')">
+              <i class="fa fa-exchange"></i>
+            </button>
+          </div>
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_st1' %}</div>
+        </div>
+
+        <!-- ST2 row -->
+        <div class="tw:space-y-3 tw:contents">
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st2' %}</div>
+          <div class="tw:flex tw:justify-center tw:self-end">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_st2','secondary_st2')">
+              <i class="fa fa-exchange"></i>
+            </button>
+          </div>
+          <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_st2' %}</div>
         </div>
       </div>
 
@@ -116,11 +216,11 @@
                 class="tw:btn tw:btn-outline"
                 hx-get="{% url 'fantasy_league:tour_detail' tour.id %}"
                 hx-target="#tour-{{ tour.id }}-content"
-                hx-swap="innerHTML">
+                hx-swap="outerHTML">
           <i class="fa fa-arrow-left"></i>
           Назад
         </button>
-        <button type="submit" class="tw:btn tw:btn-primary">
+        <button type="submit" class="tw:btn tw:btn-primary" :disabled="Object.values(selected).some(p => !p)">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>

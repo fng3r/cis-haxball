@@ -18,7 +18,7 @@
         <button class="tw:btn tw:btn-primary tw:btn-sm"
                 hx-get="{% url 'fantasy_league:edit_squad' tour.id %}"
                 hx-target="#tour-{{ tour.id }}-content"
-                hx-swap="innerHTML show:top">
+                hx-swap="outerHTML show:top">
           {% if submission %}
             <i class="fa fa-pencil"></i> Изменить состав
           {% else %}
