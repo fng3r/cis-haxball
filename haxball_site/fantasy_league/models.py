@@ -57,14 +57,11 @@ class SquadSubmission(models.Model):
     created = models.DateTimeField('Создано', auto_now_add=True)
     updated = models.DateTimeField('Обновлено', auto_now=True)
 
-    # Primary squad (1x points) - 4 players: GK, DM, ST, ST
     primary_squad = models.ManyToManyField(
         SquadPlayer, verbose_name='Основной состав', related_name='primary_squad_submissions'
     )
-
-    # Secondary squad (0.5x points) - 4 players: GK, DM, ST, ST
     secondary_squad = models.ManyToManyField(
-        SquadPlayer, verbose_name='Запасной состав', related_name='secondary_squad_submissions'
+        SquadPlayer, verbose_name='Дубль', related_name='secondary_squad_submissions'
     )
 
     class Meta:

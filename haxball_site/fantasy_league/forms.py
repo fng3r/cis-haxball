@@ -54,22 +54,22 @@ class SquadSubmissionForm(forms.Form):
 
     secondary_gk = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
-        label='Вратарь (запасной)',
+        label='Вратарь (дубль)',
         required=True,
     )
     secondary_dm = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.DM]),
-        label='Опорник (запасной)',
+        label='Опорник (дубль)',
         required=True,
     )
     secondary_st1 = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
-        label='Нападающий 1 (запасной)',
+        label='Нападающий 1 (дубль)',
         required=True,
     )
     secondary_st2 = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
-        label='Нападающий 2 (запасной)',
+        label='Нападающий 2 (дубль)',
         required=True,
     )
 
@@ -187,7 +187,7 @@ class SquadSubmissionForm(forms.Form):
             raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
 
         if len(set(secondary_players)) != 4:
-            raise forms.ValidationError('В запасном составе не может быть дублирующихся игроков')
+            raise forms.ValidationError('В дубле не может быть дублирующихся игроков')
 
         all_players = primary_players + secondary_players
         if len(set(all_players)) != 8:
@@ -206,11 +206,11 @@ class SquadSubmissionForm(forms.Form):
 
         primary_cost = sum(get_cost(p) for p in primary_players if p)
         if primary_cost > budget_limit:
-            raise forms.ValidationError(f'Превышен бюджет для основного состава: {primary_cost}M > {budget_limit}M')
+            raise forms.ValidationError(f'Превышен бюджет для основного состава: {primary_cost:.1f}M > {budget_limit}M')
 
         secondary_cost = sum(get_cost(p) for p in secondary_players if p)
         if secondary_cost > budget_limit:
-            raise forms.ValidationError(f'Превышен бюджет для запасного состава: {secondary_cost}M > {budget_limit}M')
+            raise forms.ValidationError(f'Превышен бюджет для дубля: {secondary_cost:.1f}M > {budget_limit}M')
 
         return cleaned_data
 

@@ -152,7 +152,7 @@
 
         <div class="tw:space-y-4 tw:relative">
           <div class="tw:flex tw:justify-between tw:items-center">
-            <div class="tw:font-medium tw:text-secondary">Запасной состав (0.5x очки)</div>
+            <div class="tw:font-medium tw:text-secondary">Дубль (0.5x очки)</div>
             <div class="tw:badge" :class="secondaryUsed > secondaryLimit && 'tw:badge-error'">
               <span x-text="`${fmt(secondaryUsed)}/${secondaryLimit} M`"></span>
             </div>
@@ -163,7 +163,7 @@
         <div class="tw:space-y-3 tw:contents">
           <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_gk' %}</div>
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_gk','secondary_gk')">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_gk','secondary_gk')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
@@ -174,7 +174,7 @@
         <div class="tw:space-y-3 tw:contents">
           <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_dm' %}</div>
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_dm','secondary_dm')">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_dm','secondary_dm')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
@@ -185,7 +185,7 @@
         <div class="tw:space-y-3 tw:contents">
           <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st1' %}</div>
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_st1','secondary_st1')">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_st1','secondary_st1')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
@@ -196,7 +196,7 @@
         <div class="tw:space-y-3 tw:contents">
           <div>{% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st2' %}</div>
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять с запасным" @click="swap('primary_st2','secondary_st2')">
+            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_st2','secondary_st2')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
