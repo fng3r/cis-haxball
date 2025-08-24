@@ -412,6 +412,5 @@ def edit_squad(request, tour_id):
         'submission': submission,
         'budget_limit': budget_limit,
     }
-    print('render edit squad')
 
     return render(request, 'fantasy_league/edit_squad.html', context)

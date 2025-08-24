@@ -193,6 +193,11 @@ class SquadSubmissionForm(forms.Form):
         if len(set(all_players)) != 8:
             raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
 
+        # Team limitation checks - no more than 2 players from the same team
+
+        self.validate_team_limitations(primary_players)
+        self.validate_team_limitations(secondary_players)
+
         # Budget limit checks
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
         budget_limit = self.get_league_budget_limit(self.tournament)
