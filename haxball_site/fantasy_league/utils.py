@@ -160,11 +160,18 @@ def get_player_fantasy_stats(tournament=None):
         total_points = 0
 
         for submission, squad_player in primary_submissions:
-            points = submission._calculate_player_points(squad_player, preloaded_data)
+            points = submission._calculate_player_points(
+                squad_player, squad_player.player_id == submission.captain_player_id, preloaded_data
+            )
             total_points += points
 
         for submission, squad_player in secondary_submissions:
-            points = submission._calculate_player_points(squad_player, preloaded_data) * 0.5
+            points = (
+                submission._calculate_player_points(
+                    squad_player, squad_player.player_id == submission.captain_player_id, preloaded_data
+                )
+                * 0.5
+            )
             total_points += points
 
         popularity = (total_picked / total_submissions) if total_submissions > 0 else 0.0

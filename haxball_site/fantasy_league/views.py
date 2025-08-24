@@ -354,6 +354,12 @@ def edit_squad(request, tour_id):
                     squad_player, _ = SquadPlayer.objects.get_or_create(player=player, position=position)
                     submission.secondary_squad.add(squad_player)
 
+                captain_player_id = form.cleaned_data.get('captain_player_id')
+                if captain_player_id:
+                    from tournament.models import Player
+
+                    submission.captain_player = Player.objects.filter(pk=captain_player_id).first()
+
                 submission.save()
 
                 return render(
@@ -367,40 +373,43 @@ def edit_squad(request, tour_id):
                     },
                 )
     else:
+        initial_data = {}
         submission = SquadSubmission.objects.filter(
             user=request.user, tour=tour, tournament__league=tour.league
         ).first()
-        initial_data = {}
 
-        primary_squad_players = list(submission.primary_squad.all().select_related('player')) if submission else []
-        if len(primary_squad_players) >= 4:
-            gk_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.GK]
-            dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
-            st_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.ST]
+        if submission:
+            primary_squad_players = list(submission.primary_squad.all().select_related('player'))
+            if len(primary_squad_players) >= 4:
+                gk_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.GK]
+                dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
+                st_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.ST]
 
-            if gk_players:
-                initial_data['primary_gk'] = gk_players[0].player
-            if dm_players:
-                initial_data['primary_dm'] = dm_players[0].player
-            if len(st_players) >= 1:
-                initial_data['primary_st1'] = st_players[0].player
-            if len(st_players) >= 2:
-                initial_data['primary_st2'] = st_players[1].player
+                if gk_players:
+                    initial_data['primary_gk'] = gk_players[0].player
+                if dm_players:
+                    initial_data['primary_dm'] = dm_players[0].player
+                if len(st_players) >= 1:
+                    initial_data['primary_st1'] = st_players[0].player
+                if len(st_players) >= 2:
+                    initial_data['primary_st2'] = st_players[1].player
 
-        secondary_squad_players = list(submission.secondary_squad.all().select_related('player')) if submission else []
-        if len(secondary_squad_players) >= 4:
-            gk_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.GK]
-            dm_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.DM]
-            st_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.ST]
+            secondary_squad_players = list(submission.secondary_squad.all().select_related('player'))
+            if len(secondary_squad_players) >= 4:
+                gk_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.GK]
+                dm_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.DM]
+                st_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.ST]
 
-            if gk_players:
-                initial_data['secondary_gk'] = gk_players[0].player
-            if dm_players:
-                initial_data['secondary_dm'] = dm_players[0].player
-            if len(st_players) >= 1:
-                initial_data['secondary_st1'] = st_players[0].player
-            if len(st_players) >= 2:
-                initial_data['secondary_st2'] = st_players[1].player
+                if gk_players:
+                    initial_data['secondary_gk'] = gk_players[0].player
+                if dm_players:
+                    initial_data['secondary_dm'] = dm_players[0].player
+                if len(st_players) >= 1:
+                    initial_data['secondary_st1'] = st_players[0].player
+                if len(st_players) >= 2:
+                    initial_data['secondary_st2'] = st_players[1].player
+
+            initial_data['captain_player_id'] = submission.captain_player_id
 
         form = SquadSubmissionForm(initial=initial_data, tournament=tour.league)
 

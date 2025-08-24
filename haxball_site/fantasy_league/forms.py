@@ -73,6 +73,11 @@ class SquadSubmissionForm(forms.Form):
         required=True,
     )
 
+    captain_player_id = forms.IntegerField(
+        widget=forms.HiddenInput(),
+        required=False,
+    )
+
     # Price ranges in millions (M) for each grade
     PRICE_RANGES = {
         PlayerRating.Grade.S: (24, 27),
@@ -193,6 +198,12 @@ class SquadSubmissionForm(forms.Form):
         if len(set(all_players)) != 8:
             raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
 
+        captain_id = cleaned_data.get('captain_player_id')
+        if not captain_id:
+            raise forms.ValidationError('Нужно выбрать капитана')
+        if captain_id not in [p.id for p in all_players if p]:
+            raise forms.ValidationError('Капитан должен быть одним из выбранных игроков')
+
         # Team limitation checks - no more than 2 players from the same team
 
         self.validate_team_limitations(primary_players)
@@ -242,3 +253,15 @@ class SquadSubmissionForm(forms.Form):
             self.cleaned_data['secondary_st1'],
             self.cleaned_data['secondary_st2'],
         ]
+
+    def validate_team_limitations(self, players):
+        """Ensure no more than 2 players from the same team in provided list."""
+        from collections import Counter
+
+        team_counts = Counter()
+        for p in players:
+            if p and p.team:
+                team_counts[p.team] += 1
+        for team, count in team_counts.items():
+            if count > 2:
+                raise forms.ValidationError(f'Команда {team.title} имеет {count} игроков (максимум 2)')

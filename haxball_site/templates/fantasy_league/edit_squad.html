@@ -18,6 +18,7 @@
                   secondaryLimit: parseCost('{{ budget_limit }}'),
                   primaryUsed: 0,
                   secondaryUsed: 0,
+                  selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
                   selected: {
                   {% with player=form.primary_gk.field.queryset|get_player_by_id:form.primary_gk.value %}
                     {% if player %}
@@ -136,6 +137,7 @@
       {# djlint:on #}
           x-init="updateUsedBudget()">
       {% csrf_token %}
+      <input type="hidden" name="captain_player_id" :value="selectedCaptain || ''" />
 
       <div class="tw:grid tw:grid-cols-[1fr_auto_1fr] tw:gap-x-4 tw:gap-y-2">
         <!-- Headers row -->

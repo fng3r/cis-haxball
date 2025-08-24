@@ -64,6 +64,15 @@ class SquadSubmission(models.Model):
         SquadPlayer, verbose_name='Дубль', related_name='secondary_squad_submissions'
     )
 
+    captain_player = models.ForeignKey(
+        Player,
+        verbose_name='Капитан',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='fantasy_captaincies',
+    )
+
     class Meta:
         verbose_name = 'Отправка состава'
         verbose_name_plural = 'Отправки составов'
@@ -75,18 +84,28 @@ class SquadSubmission(models.Model):
     def get_total_points(self, preloaded_data):
         """Get total points for this submission"""
         primary_points = sum(
-            self._calculate_player_points(squad_player, preloaded_data) for squad_player in self.primary_squad.all()
+            self._calculate_player_points(
+                squad_player,
+                self.captain_player_id == squad_player.player_id,
+                preloaded_data,
+            )
+            for squad_player in self.primary_squad.all()
         )
         secondary_points = (
             sum(
-                self._calculate_player_points(squad_player, preloaded_data)
+                self._calculate_player_points(
+                    squad_player,
+                    self.captain_player_id == squad_player.player_id,
+                    preloaded_data,
+                )
                 for squad_player in self.secondary_squad.all()
             )
             * 0.5
         )
+
         return primary_points + secondary_points
 
-    def _calculate_player_points(self, squad_player, preloaded_data):
+    def _calculate_player_points(self, squad_player, is_captain, preloaded_data):
         """Calculate points for a specific squad player in this tour"""
         tour_matches = preloaded_data.get('tour_matches')
         match_participants = preloaded_data.get('match_participants')
@@ -104,6 +123,9 @@ class SquadSubmission(models.Model):
                     match, squad_player, match_goals.get(match.id, []), match_cs.get(match.id, [])
                 )
                 total_points += match_points
+
+        if is_captain:
+            total_points *= 2
 
         return total_points
 
