@@ -131,9 +131,10 @@ class SquadSubmissionForm(forms.Form):
 
         return round(cost, 1)
 
-    def __init__(self, *args, tournament: League, **kwargs):
+    def __init__(self, *args, tournament: League, previous_player_ids: list[int] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.tournament = tournament
+        self.previous_player_ids = previous_player_ids or []
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
         league_player_ids = list(Player.objects.filter(team__in=tournament.teams.all()).values_list('id', flat=True))
         ratings = PlayerRating.objects.filter(player_id__in=league_player_ids, version=latest_rating_version)
@@ -200,24 +201,9 @@ class SquadSubmissionForm(forms.Form):
         if captain_id not in [p.id for p in primary_players if p]:
             raise forms.ValidationError('Капитан должен быть игроком основного состава')
 
-        # Team limitation checks - no more than 2 players from the same team
-
         self.validate_team_limitations(all_players)
-
-        # Budget limit checks
-        latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
-        budget_limit = self.get_league_budget_limit(self.tournament)
-        player_ids = [p.id for p in all_players if p]
-        ratings = PlayerRating.objects.filter(player_id__in=player_ids, version=latest_rating_version)
-        player_rating_map = {r.player_id: r for r in ratings}
-
-        def get_cost(player):
-            player_rating = player_rating_map.get(player.id, None)
-            return self.calculate_player_cost(player_rating)
-
-        total_cost = sum(get_cost(p) for p in all_players if p)
-        if total_cost > budget_limit:
-            raise forms.ValidationError(f'Превышен общий бюджет команды: {total_cost:.1f}M > {budget_limit}M')
+        self.validate_transfers_limit(all_players)
+        self.validate_budget_limit(all_players)
 
         return cleaned_data
 
@@ -245,6 +231,13 @@ class SquadSubmissionForm(forms.Form):
         ]
         return [p for p in bench if p]
 
+    def validate_budget_limit(self, players):
+        """Ensure total cost of players does not exceed budget limit"""
+        total_cost = sum(self.player_costs[p.id] for p in players if p)
+        budget_limit = self.get_league_budget_limit(self.tournament)
+        if total_cost > budget_limit:
+            raise forms.ValidationError(f'Превышен общий бюджет команды: {total_cost:.1f}M > {budget_limit}M')
+
     def validate_team_limitations(self, players):
         """Ensure no more than 2 players from the same team in provided list."""
         from collections import Counter
@@ -256,3 +249,14 @@ class SquadSubmissionForm(forms.Form):
         for team, count in team_counts.items():
             if count > 2:
                 raise forms.ValidationError(f'Команда {team.title} имеет {count} игроков (максимум 2)')
+
+    def validate_transfers_limit(self, players):
+        """Ensure no more than 2 transfers in"""
+        if not self.previous_player_ids:
+            return
+
+        selected_ids = {p.id for p in players if p}
+        prev_ids = set(self.previous_player_ids)
+        transfers_in = len(selected_ids - prev_ids)
+        if transfers_in > 2:
+            raise forms.ValidationError(f'Превышен лимит трансферов: {transfers_in}/2')

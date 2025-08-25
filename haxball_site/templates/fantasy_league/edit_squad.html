@@ -17,6 +17,7 @@
                   totalLimit: parseCost('{{ budget_limit }}'),
                   totalUsed: 0,
                   selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
+                  previousPlayerIds: {{ previous_player_ids }},
                   selected: {
                   {% with player=form.primary_gk.field.queryset|get_player_by_id:form.primary_gk.value %}
                     {% if player %}
@@ -111,6 +112,11 @@
                   },
                   isMainSquadPlayer(position) { return ['primary_gk', 'primary_dm', 'primary_st1', 'primary_st2'].includes(position); },
                   benchPlayersCount() { return ['bench_gk', 'bench_dm', 'bench_st'].filter(pos => !!this.selected[pos]).length; },
+                  currentSelectedIds() { return Object.values(this.selected).filter(Boolean).map(p => p.id); },
+                  transfersCount() {
+                  const prev = new Set(this.previousPlayerIds || []);
+                  return this.currentSelectedIds().filter(id => !prev.has(id)).length;
+                  },
                   updateUsedBudget() {
                   const mainPositions = ['primary_gk', 'primary_dm', 'primary_st1', 'primary_st2'];
                   const benchPositions = ['bench_gk', 'bench_dm', 'bench_st'];
@@ -127,12 +133,12 @@
                   this.updateUsedBudget();
                   },
                   swap(positionA, positionB) {
-                  const oldAId = this.selected[positionA].id;
-                  const temp = this.selected[positionA];
-                  this.selected[positionA] = this.selected[positionB];
-                  this.selected[positionB] = temp;
-                  if (this.selectedCaptain === oldAId) {
-                  this.selectedCaptain = this.selected[positionA].id;
+                  const swappedOutPlayer = this.selected[positionA];
+                  const swappedInPlayer = this.selected[positionB];
+                  this.selected[positionA] = swappedInPlayer;
+                  this.selected[positionB] = swappedOutPlayer;
+                  if (this.selectedCaptain === swappedOutPlayer.id) {
+                  this.selectedCaptain = swappedInPlayer.id;
                   }
                   this.updateUsedBudget();
                   },
@@ -143,8 +149,15 @@
       {% csrf_token %}
       <input type="hidden" name="captain_player_id" :value="selectedCaptain || ''" />
 
-      <div class="tw:badge" :class="totalUsed > totalLimit ? 'tw:badge-error' : 'tw:badge-success'">
-        <span x-text="`Бюджет: ${fmt(totalUsed)}M/${totalLimit}M`"></span>
+      <div class="tw:flex tw:gap-2 tw:items-center">
+        <div class="tw:badge" :class="totalUsed > totalLimit ? 'tw:badge-error' : 'tw:badge-success'">
+          <span x-text="`Бюджет: ${fmt(totalUsed)}M/${totalLimit}M`"></span>
+        </div>
+        <div class="tw:badge"
+             x-show="previousPlayerIds.length > 0"
+             :class="transfersCount() > 2 ? 'tw:badge-error' : 'tw:badge-success'">
+          <span x-text="`Трансферы: ${transfersCount()}/2`"></span>
+        </div>
       </div>
 
       <div class="tw:grid tw:grid-cols-[1fr_auto_1fr] tw:gap-x-4 tw:gap-y-2">
@@ -166,7 +179,7 @@
             <button type="button"
                     class="tw:btn tw:btn-circle"
                     title="Поменять на запасного"
-                    x-show="selected['bench_gk']"
+                    x-show="selected['primary_gk'] && selected['bench_gk']"
                     @click="swap('primary_gk','bench_gk')">
               <i class="fa fa-exchange"></i>
             </button>
@@ -183,7 +196,7 @@
             <button type="button"
                     class="tw:btn tw:btn-circle"
                     title="Поменять на запасного"
-                    x-show="selected['bench_dm']"
+                    x-show="selected['primary_dm'] && selected['bench_dm']"
                     @click="swap('primary_dm','bench_dm')">
               <i class="fa fa-exchange"></i>
             </button>
@@ -200,7 +213,7 @@
             <button type="button"
                     class="tw:btn tw:btn-circle"
                     title="Поменять на запасного"
-                    x-show="selected['bench_st']"
+                    x-show="selected['primary_st1'] && selected['bench_st']"
                     @click="swap('primary_st1','bench_st')">
               <i class="fa fa-exchange"></i>
             </button>
@@ -217,7 +230,7 @@
             <button type="button"
                     class="tw:btn tw:btn-circle"
                     title="Поменять на запасного"
-                    x-show="selected['bench_st']"
+                    x-show="selected['primary_st2'] && selected['bench_st']"
                     @click="swap('primary_st2','bench_st')">
               <i class="fa fa-exchange"></i>
             </button>
@@ -244,7 +257,7 @@
         </button>
         <button type="submit"
                 class="tw:btn tw:btn-primary"
-                :disabled="['primary_gk','primary_dm','primary_st1','primary_st2'].some(k => !selected[k]) || ['bench_gk','bench_dm','bench_st'].filter(k => !!selected[k]).length !== 2">
+                :disabled="['primary_gk','primary_dm','primary_st1','primary_st2'].some(k => !selected[k]) || benchPlayersCount() > 2 || (previousPlayerIds && previousPlayerIds.length > 0 && transfersCount() > 2)">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>
