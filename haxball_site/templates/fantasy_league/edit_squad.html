@@ -14,8 +14,9 @@
           hx-swap="outerHTML"
       {# djlint:off #}
           x-data="{
-                  totalLimit: parseCost('{{ budget_limit }}'),
-                  totalUsed: 0,
+                  budgetLimit: parseCost('{{ budget_limit }}'),
+                  budgetUsed: 0,
+                  teamSize: 6,
                   selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
                   previousPlayerIds: {{ previous_player_ids }},
                   selected: {
@@ -122,7 +123,7 @@
                   const benchPositions = ['bench_gk', 'bench_dm', 'bench_st'];
                   const mainUsed = mainPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
                   const benchUsed = benchPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
-                  this.totalUsed = mainUsed + benchUsed;
+                  this.budgetUsed = mainUsed + benchUsed;
                   },
                   handlePick(position, id, nickname, cost, teamLogo) {
                   const previousPlayerId = this.selected[position]?.id;
@@ -150,8 +151,11 @@
       <input type="hidden" name="captain_player_id" :value="selectedCaptain || ''" />
 
       <div class="tw:flex tw:gap-2 tw:items-center">
-        <div class="tw:badge" :class="totalUsed > totalLimit ? 'tw:badge-error' : 'tw:badge-success'">
-          <span x-text="`Бюджет: ${fmt(totalUsed)}M/${totalLimit}M`"></span>
+        <div class="tw:badge" :class="currentSelectedIds().length === teamSize ? 'tw:badge-success' : 'tw:badge-error'">
+          <span x-text="`Команда: ${currentSelectedIds().length}/${teamSize}`"></span>
+        </div>
+        <div class="tw:badge" :class="budgetUsed > budgetLimit ? 'tw:badge-error' : 'tw:badge-success'">
+          <span x-text="`Бюджет: ${fmt(budgetUsed)}M/${budgetLimit}M`"></span>
         </div>
         <div class="tw:badge"
              x-show="previousPlayerIds.length > 0"
@@ -257,7 +261,7 @@
         </button>
         <button type="submit"
                 class="tw:btn tw:btn-primary"
-                :disabled="['primary_gk','primary_dm','primary_st1','primary_st2'].some(k => !selected[k]) || benchPlayersCount() > 2 || (previousPlayerIds && previousPlayerIds.length > 0 && transfersCount() > 2)">
+                :disabled="currentSelectedIds().length !== teamSize || budgetUsed > budgetLimit || benchPlayersCount() > 2 || (previousPlayerIds.length > 0 && transfersCount() > 2)">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>
