@@ -344,10 +344,10 @@ def edit_squad(request, tour_id):
                 submission.bench_players.clear()
 
                 primary_players_data = [
-                    (form.cleaned_data['primary_gk'], SquadPlayer.Position.GK),
-                    (form.cleaned_data['primary_dm'], SquadPlayer.Position.DM),
-                    (form.cleaned_data['primary_st1'], SquadPlayer.Position.ST),
-                    (form.cleaned_data['primary_st2'], SquadPlayer.Position.ST),
+                    (form.cleaned_data['main_squad_gk'], SquadPlayer.Position.GK),
+                    (form.cleaned_data['main_squad_dm'], SquadPlayer.Position.DM),
+                    (form.cleaned_data['main_squad_st1'], SquadPlayer.Position.ST),
+                    (form.cleaned_data['main_squad_st2'], SquadPlayer.Position.ST),
                 ]
 
                 for player, position in primary_players_data:
@@ -397,13 +397,13 @@ def edit_squad(request, tour_id):
                 st_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.ST]
 
                 if gk_players:
-                    initial_data['primary_gk'] = gk_players[0].player
+                    initial_data['main_squad_gk'] = gk_players[0].player
                 if dm_players:
-                    initial_data['primary_dm'] = dm_players[0].player
+                    initial_data['main_squad_dm'] = dm_players[0].player
                 if len(st_players) >= 1:
-                    initial_data['primary_st1'] = st_players[0].player
+                    initial_data['main_squad_st1'] = st_players[0].player
                 if len(st_players) >= 2:
-                    initial_data['primary_st2'] = st_players[1].player
+                    initial_data['main_squad_st2'] = st_players[1].player
 
             bench_squad_players = list(submission.bench_players.all().select_related('player'))
             initial_data['bench_gk'] = next(
@@ -425,13 +425,13 @@ def edit_squad(request, tour_id):
                 dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
                 st_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.ST]
                 if gk_players:
-                    initial_data['primary_gk'] = gk_players[0].player
+                    initial_data['main_squad_gk'] = gk_players[0].player
                 if dm_players:
-                    initial_data['primary_dm'] = dm_players[0].player
+                    initial_data['main_squad_dm'] = dm_players[0].player
                 if len(st_players) >= 1:
-                    initial_data['primary_st1'] = st_players[0].player
+                    initial_data['main_squad_st1'] = st_players[0].player
                 if len(st_players) >= 2:
-                    initial_data['primary_st2'] = st_players[1].player
+                    initial_data['main_squad_st2'] = st_players[1].player
 
             bench_squad_players = list(prev_submission.bench_players.all().select_related('player'))
             initial_data['bench_gk'] = next(

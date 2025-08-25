@@ -31,22 +31,22 @@ class UserFilterForm(forms.Form):
 class SquadSubmissionForm(forms.Form):
     """Form for submitting a squad (4 main + 2 bench)"""
 
-    primary_gk = forms.ModelChoiceField(
+    main_squad_gk = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
         label='Вратарь (основной)',
         required=True,
     )
-    primary_dm = forms.ModelChoiceField(
+    main_squad_dm = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.DM]),
         label='Опорник (основной)',
         required=True,
     )
-    primary_st1 = forms.ModelChoiceField(
+    main_squad_st1 = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
         label='Нападающий 1 (основной)',
         required=True,
     )
-    primary_st2 = forms.ModelChoiceField(
+    main_squad_st2 = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
         label='Нападающий 2 (основной)',
         required=True,
@@ -155,10 +155,10 @@ class SquadSubmissionForm(forms.Form):
             .order_by('-latest_rating')
         )
 
-        self.fields['primary_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
-        self.fields['primary_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
-        self.fields['primary_st1'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
-        self.fields['primary_st2'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
+        self.fields['main_squad_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
+        self.fields['main_squad_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
+        self.fields['main_squad_st1'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
+        self.fields['main_squad_st2'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
         self.fields['bench_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
         self.fields['bench_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
         self.fields['bench_st'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
@@ -167,10 +167,10 @@ class SquadSubmissionForm(forms.Form):
         cleaned_data = super().clean()
 
         primary_players = [
-            cleaned_data.get('primary_gk'),
-            cleaned_data.get('primary_dm'),
-            cleaned_data.get('primary_st1'),
-            cleaned_data.get('primary_st2'),
+            cleaned_data.get('main_squad_gk'),
+            cleaned_data.get('main_squad_dm'),
+            cleaned_data.get('main_squad_st1'),
+            cleaned_data.get('main_squad_st2'),
         ]
 
         bench_players = [
@@ -213,10 +213,10 @@ class SquadSubmissionForm(forms.Form):
             return []
 
         return [
-            self.cleaned_data['primary_gk'],
-            self.cleaned_data['primary_dm'],
-            self.cleaned_data['primary_st1'],
-            self.cleaned_data['primary_st2'],
+            self.cleaned_data['main_squad_gk'],
+            self.cleaned_data['main_squad_dm'],
+            self.cleaned_data['main_squad_st1'],
+            self.cleaned_data['main_squad_st2'],
         ]
 
     def get_bench_players(self):
