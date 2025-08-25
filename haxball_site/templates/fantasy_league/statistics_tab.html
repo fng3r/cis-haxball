@@ -50,8 +50,8 @@
                 </th>
                 <th class="tw:text-center">
                   <div class="tw:tooltip tw:tooltip-bottom">
-                    <div class="tw:tooltip-content">Количество пиков игрока в дубль</div>
-                    ВЗ
+                    <div class="tw:tooltip-content">Количество пиков игрока на скамейку</div>
+                    ВС
                   </div>
                 </th>
                 <th class="tw:text-center">
@@ -81,8 +81,8 @@
                   </td>
                   <td class="tw:text-center">{{ stat.popularity|mul:100|floatformat:0 }}%</td>
                   <td class="tw:text-center tw:font-bold">{{ stat.total_picked }}</td>
-                  <td class="tw:text-center">{{ stat.primary_picked }}</td>
-                  <td class="tw:text-center">{{ stat.secondary_picked }}</td>
+                  <td class="tw:text-center">{{ stat.main_picked }}</td>
+                  <td class="tw:text-center">{{ stat.bench_picked }}</td>
                   <td class="tw:text-center">{{ stat.points_per_pick|floatformat:1 }}</td>
                   <td class="tw:text-center tw:font-bold tw:text-primary">{{ stat.total_points|floatformat:1 }}</td>
                 </tr>

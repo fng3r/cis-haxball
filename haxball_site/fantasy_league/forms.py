@@ -29,7 +29,7 @@ class UserFilterForm(forms.Form):
 
 
 class SquadSubmissionForm(forms.Form):
-    """Form for submitting a squad"""
+    """Form for submitting a squad (4 main + 2 bench)"""
 
     primary_gk = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
@@ -52,25 +52,20 @@ class SquadSubmissionForm(forms.Form):
         required=True,
     )
 
-    secondary_gk = forms.ModelChoiceField(
+    bench_gk = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.GK]),
-        label='Вратарь (дубль)',
-        required=True,
+        label='Вратарь (скамейка)',
+        required=False,
     )
-    secondary_dm = forms.ModelChoiceField(
+    bench_dm = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.DM]),
-        label='Опорник (дубль)',
-        required=True,
+        label='Опорник (скамейка)',
+        required=False,
     )
-    secondary_st1 = forms.ModelChoiceField(
+    bench_st = forms.ModelChoiceField(
         queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
-        label='Нападающий 1 (дубль)',
-        required=True,
-    )
-    secondary_st2 = forms.ModelChoiceField(
-        queryset=Player.objects.filter(positions__contains=[Player.Position.ST]),
-        label='Нападающий 2 (дубль)',
-        required=True,
+        label='Нападающий (скамейка)',
+        required=False,
     )
 
     captain_player_id = forms.IntegerField(
@@ -103,9 +98,9 @@ class SquadSubmissionForm(forms.Form):
     }
 
     BUDGET_LIMITS = {
-        'Высшая лига': 70.0,
-        'Первая лига': 45.0,
-        'Вторая лига': 30.0,
+        'Высшая лига': 85.0,
+        'Первая лига': 55.0,
+        'Вторая лига': 40.0,
     }
 
     def get_league_budget_limit(self, league):
@@ -160,13 +155,12 @@ class SquadSubmissionForm(forms.Form):
         )
 
         self.fields['primary_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
-        self.fields['secondary_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
         self.fields['primary_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
-        self.fields['secondary_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
         self.fields['primary_st1'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
         self.fields['primary_st2'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
-        self.fields['secondary_st1'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
-        self.fields['secondary_st2'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
+        self.fields['bench_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
+        self.fields['bench_dm'].queryset = annotated_players.filter(positions__contains=[Player.Position.DM])
+        self.fields['bench_st'].queryset = annotated_players.filter(positions__contains=[Player.Position.ST])
 
     def clean(self):
         cleaned_data = super().clean()
@@ -178,24 +172,24 @@ class SquadSubmissionForm(forms.Form):
             cleaned_data.get('primary_st2'),
         ]
 
-        secondary_players = [
-            cleaned_data.get('secondary_gk'),
-            cleaned_data.get('secondary_dm'),
-            cleaned_data.get('secondary_st1'),
-            cleaned_data.get('secondary_st2'),
+        bench_players = [
+            cleaned_data.get('bench_gk'),
+            cleaned_data.get('bench_dm'),
+            cleaned_data.get('bench_st'),
         ]
 
-        if any(p is None for p in primary_players) or any(p is None for p in secondary_players):
-            raise forms.ValidationError('Составы должны быть полностью укомплектованы')
+        if any(p is None for p in primary_players):
+            raise forms.ValidationError('Основной состав должен быть полностью укомплектован')
+
+        filled_bench = [p for p in bench_players if p is not None]
+        if len(filled_bench) != 2:
+            raise forms.ValidationError('На скамейке должно быть ровно 2 игрока (из разных позиций)')
 
         if len(set(primary_players)) != 4:
             raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
 
-        if len(set(secondary_players)) != 4:
-            raise forms.ValidationError('В дубле не может быть дублирующихся игроков')
-
-        all_players = primary_players + secondary_players
-        if len(set(all_players)) != 8:
+        all_players = primary_players + filled_bench
+        if len(set(all_players)) != 6:
             raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
 
         captain_id = cleaned_data.get('captain_player_id')
@@ -203,11 +197,12 @@ class SquadSubmissionForm(forms.Form):
             raise forms.ValidationError('Нужно выбрать капитана')
         if captain_id not in [p.id for p in all_players if p]:
             raise forms.ValidationError('Капитан должен быть одним из выбранных игроков')
+        if captain_id not in [p.id for p in primary_players if p]:
+            raise forms.ValidationError('Капитан должен быть игроком основного состава')
 
         # Team limitation checks - no more than 2 players from the same team
 
-        self.validate_team_limitations(primary_players)
-        self.validate_team_limitations(secondary_players)
+        self.validate_team_limitations(all_players)
 
         # Budget limit checks
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
@@ -220,18 +215,14 @@ class SquadSubmissionForm(forms.Form):
             player_rating = player_rating_map.get(player.id, None)
             return self.calculate_player_cost(player_rating)
 
-        primary_cost = sum(get_cost(p) for p in primary_players if p)
-        if primary_cost > budget_limit:
-            raise forms.ValidationError(f'Превышен бюджет для основного состава: {primary_cost:.1f}M > {budget_limit}M')
-
-        secondary_cost = sum(get_cost(p) for p in secondary_players if p)
-        if secondary_cost > budget_limit:
-            raise forms.ValidationError(f'Превышен бюджет для дубля: {secondary_cost:.1f}M > {budget_limit}M')
+        total_cost = sum(get_cost(p) for p in all_players if p)
+        if total_cost > budget_limit:
+            raise forms.ValidationError(f'Превышен общий бюджет команды: {total_cost:.1f}M > {budget_limit}M')
 
         return cleaned_data
 
-    def get_primary_squad_players(self):
-        """Get list of primary squad players from cleaned data"""
+    def get_main_squad_players(self):
+        """Get list of main squad players from cleaned data"""
         if not self.is_valid():
             return []
 
@@ -242,17 +233,17 @@ class SquadSubmissionForm(forms.Form):
             self.cleaned_data['primary_st2'],
         ]
 
-    def get_secondary_squad_players(self):
-        """Get list of secondary squad players from cleaned data"""
+    def get_bench_players(self):
+        """Get list of bench players from cleaned data (2 items)"""
         if not self.is_valid():
             return []
 
-        return [
-            self.cleaned_data['secondary_gk'],
-            self.cleaned_data['secondary_dm'],
-            self.cleaned_data['secondary_st1'],
-            self.cleaned_data['secondary_st2'],
+        bench = [
+            self.cleaned_data.get('bench_gk'),
+            self.cleaned_data.get('bench_dm'),
+            self.cleaned_data.get('bench_st'),
         ]
+        return [p for p in bench if p]
 
     def validate_team_limitations(self, players):
         """Ensure no more than 2 players from the same team in provided list."""

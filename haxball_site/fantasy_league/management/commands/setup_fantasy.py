@@ -182,9 +182,18 @@ class Command(BaseCommand):
 
                 if created:
                     submissions_created += 1
-                    primary_squad, secondary_squad = self.generate_random_squads(available_players, squad_players)
-                    submission.primary_squad.set(primary_squad)
-                    submission.secondary_squad.set(secondary_squad)
+                    main_squad, bench_players = self.generate_random_team(available_players, squad_players)
+                    submission.main_squad.set(main_squad)
+                    submission.bench_players.set(bench_players)
+
+                if not submission.captain_player_id:
+                    if created:
+                        main_squad_players = list(main_squad)
+                    else:
+                        main_squad_players = list(submission.main_squad.all())
+                    random.shuffle(main_squad_players)
+                    submission.captain_player = main_squad_players[0].player
+                    submission.save()
 
         self.stdout.write(f'Created {submissions_created} fantasy submissions')
         self.stdout.write(
@@ -199,63 +208,118 @@ class Command(BaseCommand):
         self.stdout.write(f'Closed tours: {len(closed_tours)}')
         self.stdout.write(f'Users with fantasy submissions: {", ".join([u.username for u in test_users])}')
 
-    def generate_random_squads(self, available_players, squad_players):
-        """Generate two squads (primary and secondary), each with 4 unique players, no overlap."""
+    def generate_random_team(self, available_players, squad_players):
+        """Generate team: 4 main (GK, DM, ST, ST) + 2 bench (distinct positions)."""
         used_players = set()
+        team_counts: dict[int, int] = {}
 
-        def pick_player(players_pool):
-            candidates = [p for p in players_pool if p.id not in used_players]
+        def can_pick(player):
+            # Respect 2-per-team limit for players that have a team
+            if player.id in used_players:
+                return False
+
+            return team_counts.get(player.team_id, 0) < 2
+
+        def apply_pick(player):
+            if player is None:
+                return None
+            used_players.add(player.id)
+            if getattr(player, 'team_id', None):
+                team_counts[player.team_id] = team_counts.get(player.team_id, 0) + 1
+            return player
+
+        def pick_from_pool(players_pool):
+            candidates = [p for p in players_pool if can_pick(p)]
             if not candidates:
                 return None
-            player = random.choice(candidates)
-            used_players.add(player.id)
-            return player
+            return apply_pick(random.choice(candidates))
+
+        def pick_any():
+            candidates = [p for p in available_players if can_pick(p)]
+            if not candidates:
+                return None
+            return apply_pick(random.choice(candidates))
 
         gk_players = [p for p in available_players if SquadPlayer.Position.GK in p.positions]
         dm_players = [p for p in available_players if SquadPlayer.Position.DM in p.positions]
         st_players = [p for p in available_players if SquadPlayer.Position.ST in p.positions]
 
         primary = []
-        gk = pick_player(gk_players) or pick_player(available_players)
+        gk = pick_from_pool(gk_players) or pick_any()
         if gk:
             primary.append((gk, SquadPlayer.Position.GK))
-        dm = pick_player(dm_players) or pick_player(available_players)
+        dm = pick_from_pool(dm_players) or pick_any()
         if dm:
             primary.append((dm, SquadPlayer.Position.DM))
-        st1 = pick_player(st_players) or pick_player(available_players)
+        st1 = pick_from_pool(st_players) or pick_any()
         if st1:
             primary.append((st1, SquadPlayer.Position.ST))
-        st2 = pick_player(st_players) or pick_player(available_players)
+        st2 = pick_from_pool(st_players) or pick_any()
         if st2:
             primary.append((st2, SquadPlayer.Position.ST))
 
-        secondary = []
-        gk = pick_player(gk_players) or pick_player(available_players)
-        if gk:
-            secondary.append((gk, SquadPlayer.Position.GK))
-        dm = pick_player(dm_players) or pick_player(available_players)
-        if dm:
-            secondary.append((dm, SquadPlayer.Position.DM))
-        st1 = pick_player(st_players) or pick_player(available_players)
-        if st1:
-            secondary.append((st1, SquadPlayer.Position.ST))
-        st2 = pick_player(st_players) or pick_player(available_players)
-        if st2:
-            secondary.append((st2, SquadPlayer.Position.ST))
+        # Bench: choose exactly 2, at most one per position, skipping one random position
+        bench = []
+        bench_positions = [SquadPlayer.Position.GK, SquadPlayer.Position.DM, SquadPlayer.Position.ST]
+        random.shuffle(bench_positions)
+        bench_positions = bench_positions[:2]
+        for pos in bench_positions:
+            pool = (
+                gk_players
+                if pos == SquadPlayer.Position.GK
+                else dm_players
+                if pos == SquadPlayer.Position.DM
+                else st_players
+            )
+            b = pick_from_pool(pool) or pick_any()
+            if b:
+                bench.append((b, pos))
 
-        # Ensure no duplicates within or between squads
-        all_players = [p[0].id for p in primary + secondary]
-        if len(set(all_players)) < 8:
+        # Ensure no duplicates within the team and fill missing bench spots if any
+        all_players = [p[0].id for p in primary + bench]
+        if len(set(all_players)) < 6:
             for p in available_players:
-                if p.id not in used_players and len(primary) < 4:
-                    primary.append((p, SquadPlayer.Position.ST))
-                    used_players.add(p.id)
-                if p.id not in used_players and len(secondary) < 4:
-                    secondary.append((p, SquadPlayer.Position.ST))
-                    used_players.add(p.id)
-                if len(primary) == 4 and len(secondary) == 4:
+                if len(bench) >= 2:
                     break
+                if can_pick(p):
+                    # Prefer ST if possible; keep one-per-position bench constraint
+                    # Determine allowed bench positions left
+                    bench_pos_left = {SquadPlayer.Position.GK, SquadPlayer.Position.DM, SquadPlayer.Position.ST}
+                    for _, pos in bench:
+                        if pos in bench_pos_left:
+                            bench_pos_left.remove(pos)
+                    # Try to map player's positions to an allowed bench position
+                    desired_pos = None
+                    if getattr(p, 'positions', None):
+                        if SquadPlayer.Position.ST in p.positions and SquadPlayer.Position.ST in bench_pos_left:
+                            desired_pos = SquadPlayer.Position.ST
+                        elif SquadPlayer.Position.DM in p.positions and SquadPlayer.Position.DM in bench_pos_left:
+                            desired_pos = SquadPlayer.Position.DM
+                        elif SquadPlayer.Position.GK in p.positions and SquadPlayer.Position.GK in bench_pos_left:
+                            desired_pos = SquadPlayer.Position.GK
+                    if desired_pos is None and bench_pos_left:
+                        desired_pos = next(iter(bench_pos_left))
+                    if desired_pos is not None:
+                        apply_pick(p)
+                        bench.append((p, desired_pos))
+            # Final safety: relax team cap only to complete structure if severely constrained
+            if len(bench) < 2:
+                remaining = 2 - len(bench)
+                fallback_pool = [p for p in available_players if p.id not in used_players]
+                for p in fallback_pool[:remaining]:
+                    # choose any allowed position left
+                    bench_pos_left = {
+                        SquadPlayer.Position.GK,
+                        SquadPlayer.Position.DM,
+                        SquadPlayer.Position.ST,
+                    }
+                    for _, pos in bench:
+                        if pos in bench_pos_left:
+                            bench_pos_left.remove(pos)
+                    desired_pos = next(iter(bench_pos_left)) if bench_pos_left else SquadPlayer.Position.ST
+                    used_players.add(p.id)
+                    bench.append((p, desired_pos))
 
-        primary_squad = [squad_players[(p.id, pos)] for p, pos in primary if (p.id, pos) in squad_players]
-        secondary_squad = [squad_players[(p.id, pos)] for p, pos in secondary if (p.id, pos) in squad_players]
-        return primary_squad, secondary_squad
+        main_squad = [squad_players[(p.id, pos)] for p, pos in primary if (p.id, pos) in squad_players]
+        bench_players = [squad_players[(p.id, pos)] for p, pos in bench if (p.id, pos) in squad_players]
+        return main_squad, bench_players

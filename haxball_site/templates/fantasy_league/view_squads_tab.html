@@ -54,7 +54,7 @@
                         <div class="tw:space-y-2">
                           <div class="tw:font-medium tw:text-primary">Основной состав</div>
                           <div class="tw:space-y-1">
-                            {% for squad_player in submission.primary_squad.all|sort_squad_players %}
+                            {% for squad_player in submission.main_squad.all|sort_squad_players %}
                               <div class="tw:flex tw:justify-between tw:items-center tw:bg-base-100 tw:px-2 tw:py-1 tw:rounded tw:text-sm">
                                 <div>
                                   <span>{{ squad_player.player.nickname }}</span>
@@ -68,9 +68,9 @@
                         </div>
 
                         <div class="tw:space-y-2">
-                          <div class="tw:font-medium tw:text-secondary">Дубль</div>
+                          <div class="tw:font-medium tw:text-secondary">Скамейка</div>
                           <div class="tw:space-y-1">
-                            {% for squad_player in submission.secondary_squad.all|sort_squad_players %}
+                            {% for squad_player in submission.bench_players.all|sort_squad_players %}
                               <div class="tw:flex tw:justify-between tw:items-center tw:bg-base-100 tw:px-2 tw:py-1 tw:rounded tw:text-sm">
                                 <div>
                                   <span>{{ squad_player.player.nickname }}</span>

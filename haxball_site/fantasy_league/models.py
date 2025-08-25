@@ -57,11 +57,11 @@ class SquadSubmission(models.Model):
     created = models.DateTimeField('Создано', auto_now_add=True)
     updated = models.DateTimeField('Обновлено', auto_now=True)
 
-    primary_squad = models.ManyToManyField(
-        SquadPlayer, verbose_name='Основной состав', related_name='primary_squad_submissions'
+    main_squad = models.ManyToManyField(
+        SquadPlayer, verbose_name='Основной состав', related_name='main_squad_submissions'
     )
-    secondary_squad = models.ManyToManyField(
-        SquadPlayer, verbose_name='Дубль', related_name='secondary_squad_submissions'
+    bench_players = models.ManyToManyField(
+        SquadPlayer, verbose_name='Скамейка', related_name='bench_players_submissions'
     )
 
     captain_player = models.ForeignKey(
@@ -89,7 +89,7 @@ class SquadSubmission(models.Model):
                 self.captain_player_id == squad_player.player_id,
                 preloaded_data,
             )
-            for squad_player in self.primary_squad.all()
+            for squad_player in self.main_squad.all()
         )
         secondary_points = (
             sum(
@@ -98,7 +98,7 @@ class SquadSubmission(models.Model):
                     self.captain_player_id == squad_player.player_id,
                     preloaded_data,
                 )
-                for squad_player in self.secondary_squad.all()
+                for squad_player in self.bench_players.all()
             )
             * 0.5
         )

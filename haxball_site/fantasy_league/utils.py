@@ -42,7 +42,7 @@ def get_user_tour_points(user, tour, tournament):
 
     submission = (
         SquadSubmission.objects.filter(user=user, tour=tour, tournament=tournament)
-        .prefetch_related('primary_squad__player', 'secondary_squad__player')
+        .prefetch_related('main_squad__player', 'bench_players__player')
         .select_related('tour')
         .first()
     )
@@ -58,7 +58,7 @@ def get_user_tournament_total_points(user, tournament):
 
     submissions = (
         SquadSubmission.objects.filter(user=user, tournament=tournament)
-        .prefetch_related('primary_squad__player', 'secondary_squad__player')
+        .prefetch_related('main_squad__player', 'bench_players__player')
         .select_related('tour')
     )
 
@@ -79,7 +79,7 @@ def get_tournament_standings(tournament):
 
     all_submissions = (
         SquadSubmission.objects.filter(tournament=tournament)
-        .prefetch_related('primary_squad__player', 'secondary_squad__player', 'user')
+        .prefetch_related('main_squad__player', 'bench_players__player', 'user')
         .select_related('user', 'user__user_profile')
     )
 
@@ -117,8 +117,8 @@ def get_player_fantasy_stats(tournament=None):
 
     if tournament:
         players_queryset = players_queryset.filter(
-            models.Q(fantasy_squad_players__primary_squad_submissions__tournament=tournament)
-            | models.Q(fantasy_squad_players__secondary_squad_submissions__tournament=tournament)
+            models.Q(fantasy_squad_players__main_squad_submissions__tournament=tournament)
+            | models.Q(fantasy_squad_players__bench_players_submissions__tournament=tournament)
         )
 
     submissions_filter = {}
@@ -126,36 +126,36 @@ def get_player_fantasy_stats(tournament=None):
         submissions_filter['tournament'] = tournament
 
     all_submissions = SquadSubmission.objects.filter(**submissions_filter).prefetch_related(
-        'primary_squad__player', 'secondary_squad__player', 'tour'
+        'main_squad__player', 'bench_players__player', 'tour'
     )
 
     total_submissions = all_submissions.count()
 
     primary_submissions_by_player = {}
-    secondary_submissions_by_player = {}
+    bench_submissions_by_player = {}
 
     for submission in all_submissions:
-        for squad_player in submission.primary_squad.all():
+        for squad_player in submission.main_squad.all():
             player_id = squad_player.player.id
             if player_id not in primary_submissions_by_player:
                 primary_submissions_by_player[player_id] = []
             primary_submissions_by_player[player_id].append((submission, squad_player))
 
-        for squad_player in submission.secondary_squad.all():
+        for squad_player in submission.bench_players.all():
             player_id = squad_player.player.id
-            if player_id not in secondary_submissions_by_player:
-                secondary_submissions_by_player[player_id] = []
-            secondary_submissions_by_player[player_id].append((submission, squad_player))
+            if player_id not in bench_submissions_by_player:
+                bench_submissions_by_player[player_id] = []
+            bench_submissions_by_player[player_id].append((submission, squad_player))
 
     stats = []
 
     for player in players_queryset:
         primary_submissions = primary_submissions_by_player.get(player.id, [])
-        secondary_submissions = secondary_submissions_by_player.get(player.id, [])
+        secondary_submissions = bench_submissions_by_player.get(player.id, [])
 
         primary_count = len(primary_submissions)
-        secondary_count = len(secondary_submissions)
-        total_picked = primary_count + secondary_count
+        bench_count = len(secondary_submissions)
+        total_picked = primary_count + bench_count
 
         total_points = 0
 
@@ -181,8 +181,8 @@ def get_player_fantasy_stats(tournament=None):
             {
                 'player': player,
                 'total_picked': total_picked,
-                'primary_picked': primary_count,
-                'secondary_picked': secondary_count,
+                'main_picked': primary_count,
+                'bench_picked': bench_count,
                 'total_points': total_points,
                 'popularity': popularity,
                 'points_per_pick': points_per_pick,

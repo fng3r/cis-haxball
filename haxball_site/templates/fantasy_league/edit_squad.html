@@ -14,10 +14,8 @@
           hx-swap="outerHTML"
       {# djlint:off #}
           x-data="{
-                  primaryLimit: parseCost('{{ budget_limit }}'),
-                  secondaryLimit: parseCost('{{ budget_limit }}'),
-                  primaryUsed: 0,
-                  secondaryUsed: 0,
+                  totalLimit: parseCost('{{ budget_limit }}'),
+                  totalUsed: 0,
                   selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
                   selected: {
                   {% with player=form.primary_gk.field.queryset|get_player_by_id:form.primary_gk.value %}
@@ -72,66 +70,72 @@
                     {% endif %}
                   {% endwith %}
 
-                  {% with player=form.secondary_gk.field.queryset|get_player_by_id:form.secondary_gk.value %}
+                  {% with player=form.bench_gk.field.queryset|get_player_by_id:form.bench_gk.value %}
                     {% if player %}
-                      secondary_gk: {
-                      id: {{ form.secondary_gk.value|default:'null' }},
+                      bench_gk: {
+                      id: {{ form.bench_gk.value|default:'null' }},
                       nickname: '{{ player.nickname|escapejs }}',
                       cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
                       teamLogo: '{{ player.team.logo.url }}',
                       },
                     {% else %}
-                      secondary_gk: null,
+                      bench_gk: null,
                     {% endif %}
                   {% endwith %}
 
-                  {% with player=form.secondary_dm.field.queryset|get_player_by_id:form.secondary_dm.value %}
+                  {% with player=form.bench_dm.field.queryset|get_player_by_id:form.bench_dm.value %}
                     {% if player %}
-                      secondary_dm: {
-                      id: {{ form.secondary_dm.value|default:'null' }},
+                      bench_dm: {
+                      id: {{ form.bench_dm.value|default:'null' }},
                       nickname: '{{ player.nickname|escapejs }}',
                       cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
                       teamLogo: '{{ player.team.logo.url }}',
                       },
                     {% else %}
-                      secondary_dm: null,
+                      bench_dm: null,
                     {% endif %}
                   {% endwith %}
 
-                  {% with player=form.secondary_st1.field.queryset|get_player_by_id:form.secondary_st1.value %}
+                  {% with player=form.bench_st.field.queryset|get_player_by_id:form.bench_st.value %}
                     {% if player %}
-                      secondary_st1: {
-                      id: {{ form.secondary_st1.value|default:'null' }},
+                      bench_st: {
+                      id: {{ form.bench_st.value|default:'null' }},
                       nickname: '{{ player.nickname|escapejs }}',
                       cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
                       teamLogo: '{{ player.team.logo.url }}',
                       },
                     {% else %}
-                      secondary_st1: null,
-                    {% endif %}
-                  {% endwith %}
-
-                  {% with player=form.secondary_st2.field.queryset|get_player_by_id:form.secondary_st2.value %}
-                    {% if player %}
-                      secondary_st2: {
-                      id: {{ form.secondary_st2.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      secondary_st2: null,
+                      bench_st: null,
                     {% endif %}
                   {% endwith %}
                   },
+                  isMainSquadPlayer(position) { return ['primary_gk', 'primary_dm', 'primary_st1', 'primary_st2'].includes(position); },
+                  benchPlayersCount() { return ['bench_gk', 'bench_dm', 'bench_st'].filter(pos => !!this.selected[pos]).length; },
                   updateUsedBudget() {
-                  const primaryPositions = ['primary_gk', 'primary_dm', 'primary_st1', 'primary_st2'];
-                  const secondaryPositions = ['secondary_gk', 'secondary_dm', 'secondary_st1', 'secondary_st2'];
-                  this.primaryUsed = primaryPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
-                  this.secondaryUsed = secondaryPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
+                  const mainPositions = ['primary_gk', 'primary_dm', 'primary_st1', 'primary_st2'];
+                  const benchPositions = ['bench_gk', 'bench_dm', 'bench_st'];
+                  const mainUsed = mainPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
+                  const benchUsed = benchPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
+                  this.totalUsed = mainUsed + benchUsed;
                   },
-                  handlePick(position, id, nickname, cost, teamLogo) { this.selected[position] = { id, nickname, cost, teamLogo }; this.updateUsedBudget(); },
-                  swap(positionA, positionB) { const t = this.selected[positionA]; this.selected[positionA] = this.selected[positionB]; this.selected[positionB] = t; this.updateUsedBudget(); },
+                  handlePick(position, id, nickname, cost, teamLogo) {
+                  const previousPlayerId = this.selected[position]?.id;
+                  this.selected[position] = { id, nickname, cost, teamLogo };
+                  if (this.isMainSquadPlayer(position) && this.selectedCaptain === previousPlayerId) {
+                  this.selectedCaptain = id;
+                  }
+                  this.updateUsedBudget();
+                  },
+                  swap(positionA, positionB) {
+                  const oldAId = this.selected[positionA].id;
+                  const temp = this.selected[positionA];
+                  this.selected[positionA] = this.selected[positionB];
+                  this.selected[positionB] = temp;
+                  if (this.selectedCaptain === oldAId) {
+                  this.selectedCaptain = this.selected[positionA].id;
+                  }
+                  this.updateUsedBudget();
+                  },
                   fmt(v) { return v.toFixed(1); }
                   }"
       {# djlint:on #}
@@ -139,20 +143,19 @@
       {% csrf_token %}
       <input type="hidden" name="captain_player_id" :value="selectedCaptain || ''" />
 
+      <div class="tw:badge" :class="totalUsed > totalLimit ? 'tw:badge-error' : 'tw:badge-success'">
+        <span x-text="`Бюджет: ${fmt(totalUsed)}M/${totalLimit}M`"></span>
+      </div>
+
       <div class="tw:grid tw:grid-cols-[1fr_auto_1fr] tw:gap-x-4 tw:gap-y-2">
         <!-- Headers row -->
         <div class="tw:col-start-1 tw:flex tw:justify-between tw:items-center">
           <div class="tw:font-medium tw:text-primary">Основной состав (1x очки)</div>
-          <div class="tw:badge" :class="primaryUsed > primaryLimit && 'tw:badge-error'">
-            <span x-text="`${fmt(primaryUsed)}M/${primaryLimit}M`"></span>
-          </div>
         </div>
 
         <div class="tw:col-start-3 tw:flex tw:justify-between tw:items-center">
-          <div class="tw:font-medium tw:text-secondary">Дубль (0.5x очки)</div>
-          <div class="tw:badge" :class="secondaryUsed > secondaryLimit && 'tw:badge-error'">
-            <span x-text="`${fmt(secondaryUsed)}M/${secondaryLimit}M`"></span>
-          </div>
+          <div class="tw:font-medium tw:text-secondary">Скамейка (0.5x очки)</div>
+
         </div>
 
         <!-- GK row -->
@@ -160,12 +163,16 @@
           {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_gk' %}
 
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_gk','secondary_gk')">
+            <button type="button"
+                    class="tw:btn tw:btn-circle"
+                    title="Поменять на запасного"
+                    x-show="selected['bench_gk']"
+                    @click="swap('primary_gk','bench_gk')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
 
-          {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_gk' %}
+          {% include 'fantasy_league/partials/player_pick_item.html' with field='bench_gk' %}
         </div>
 
         <!-- DM row -->
@@ -173,12 +180,16 @@
           {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_dm' %}
 
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_dm','secondary_dm')">
+            <button type="button"
+                    class="tw:btn tw:btn-circle"
+                    title="Поменять на запасного"
+                    x-show="selected['bench_dm']"
+                    @click="swap('primary_dm','bench_dm')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
 
-          {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_dm' %}
+          {% include 'fantasy_league/partials/player_pick_item.html' with field='bench_dm' %}
         </div>
 
         <!-- ST1 row -->
@@ -186,12 +197,16 @@
           {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st1' %}
 
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_st1','secondary_st1')">
+            <button type="button"
+                    class="tw:btn tw:btn-circle"
+                    title="Поменять на запасного"
+                    x-show="selected['bench_st']"
+                    @click="swap('primary_st1','bench_st')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
 
-          {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_st1' %}
+          {% include 'fantasy_league/partials/player_pick_item.html' with field='bench_st' %}
         </div>
 
         <!-- ST2 row -->
@@ -199,12 +214,15 @@
           {% include 'fantasy_league/partials/player_pick_item.html' with field='primary_st2' %}
 
           <div class="tw:flex tw:justify-center tw:self-end">
-            <button type="button" class="tw:btn tw:btn-circle" title="Поменять местами" @click="swap('primary_st2','secondary_st2')">
+            <button type="button"
+                    class="tw:btn tw:btn-circle"
+                    title="Поменять на запасного"
+                    x-show="selected['bench_st']"
+                    @click="swap('primary_st2','bench_st')">
               <i class="fa fa-exchange"></i>
             </button>
           </div>
-
-          {% include 'fantasy_league/partials/player_pick_item.html' with field='secondary_st2' %}
+          <div></div>
         </div>
       </div>
 
@@ -224,7 +242,9 @@
           <i class="fa fa-arrow-left"></i>
           Назад
         </button>
-        <button type="submit" class="tw:btn tw:btn-primary" :disabled="Object.values(selected).some(p => !p)">
+        <button type="submit"
+                class="tw:btn tw:btn-primary"
+                :disabled="['primary_gk','primary_dm','primary_st1','primary_st2'].some(k => !selected[k]) || ['bench_gk','bench_dm','bench_st'].filter(k => !!selected[k]).length !== 2">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>

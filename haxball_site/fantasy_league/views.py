@@ -94,7 +94,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
 
         submissions = (
             SquadSubmission.objects.filter(user=request.user, tournament=selected_tournament)
-            .prefetch_related('primary_squad__player', 'secondary_squad__player', 'tour')
+            .prefetch_related('main_squad__player', 'bench_players__player', 'tour')
             .select_related('tour')
         )
 
@@ -106,8 +106,8 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
             submission = submissions_lookup.get(tour.id)
             if submission:
                 # Data is already prefetched, so this is efficient
-                primary_players = list(submission.primary_squad.all())
-                secondary_players = list(submission.secondary_squad.all())
+                primary_players = list(submission.main_squad.all())
+                secondary_players = list(submission.bench_players.all())
                 user_squads[tour.id] = {
                     'submission': submission,
                     'primary_players': primary_players,
@@ -171,7 +171,7 @@ def view_squads_tab(request):
 
         submissions = (
             SquadSubmission.objects.filter(user=selected_user, tournament=selected_tournament)
-            .prefetch_related('primary_squad__player', 'secondary_squad__player', 'tour')
+            .prefetch_related('main_squad__player', 'bench_players__player', 'tour')
             .select_related('tour')
         )
 
@@ -220,7 +220,7 @@ def standings_tab(request):
         preloaded_data = preload_fantasy_data(selected_tournament)
         all_submissions = (
             SquadSubmission.objects.filter(tournament=selected_tournament)
-            .prefetch_related('primary_squad__player', 'secondary_squad__player')
+            .prefetch_related('main_squad__player', 'bench_players__player')
             .select_related('user', 'tour')
         )
 
@@ -288,7 +288,7 @@ def tour_detail(request, tour_id):
 
     submission = (
         SquadSubmission.objects.filter(user=request.user, tournament=tournament, tour=tour)
-        .prefetch_related('primary_squad__player', 'secondary_squad__player')
+        .prefetch_related('main_squad__player', 'bench_players__player')
         .first()
     )
 
@@ -329,8 +329,8 @@ def edit_squad(request, tour_id):
                         tournament__league=tour.league,
                         defaults={'tournament': tour.league.fantasy_tournament},
                     )
-                submission.primary_squad.clear()
-                submission.secondary_squad.clear()
+                submission.main_squad.clear()
+                submission.bench_players.clear()
 
                 primary_players_data = [
                     (form.cleaned_data['primary_gk'], SquadPlayer.Position.GK),
@@ -341,18 +341,18 @@ def edit_squad(request, tour_id):
 
                 for player, position in primary_players_data:
                     squad_player, _ = SquadPlayer.objects.get_or_create(player=player, position=position)
-                    submission.primary_squad.add(squad_player)
+                    submission.main_squad.add(squad_player)
 
-                secondary_players_data = [
-                    (form.cleaned_data['secondary_gk'], SquadPlayer.Position.GK),
-                    (form.cleaned_data['secondary_dm'], SquadPlayer.Position.DM),
-                    (form.cleaned_data['secondary_st1'], SquadPlayer.Position.ST),
-                    (form.cleaned_data['secondary_st2'], SquadPlayer.Position.ST),
+                bench_players_data = [
+                    (form.cleaned_data.get('bench_gk'), SquadPlayer.Position.GK),
+                    (form.cleaned_data.get('bench_dm'), SquadPlayer.Position.DM),
+                    (form.cleaned_data.get('bench_st'), SquadPlayer.Position.ST),
                 ]
 
-                for player, position in secondary_players_data:
-                    squad_player, _ = SquadPlayer.objects.get_or_create(player=player, position=position)
-                    submission.secondary_squad.add(squad_player)
+                for player, position in bench_players_data:
+                    if player:
+                        squad_player, _ = SquadPlayer.objects.get_or_create(player=player, position=position)
+                        submission.bench_players.add(squad_player)
 
                 captain_player_id = form.cleaned_data.get('captain_player_id')
                 if captain_player_id:
@@ -379,7 +379,7 @@ def edit_squad(request, tour_id):
         ).first()
 
         if submission:
-            primary_squad_players = list(submission.primary_squad.all().select_related('player'))
+            primary_squad_players = list(submission.main_squad.all().select_related('player'))
             if len(primary_squad_players) >= 4:
                 gk_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.GK]
                 dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
@@ -394,22 +394,18 @@ def edit_squad(request, tour_id):
                 if len(st_players) >= 2:
                     initial_data['primary_st2'] = st_players[1].player
 
-            secondary_squad_players = list(submission.secondary_squad.all().select_related('player'))
-            if len(secondary_squad_players) >= 4:
-                gk_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.GK]
-                dm_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.DM]
-                st_players = [sp for sp in secondary_squad_players if sp.position == SquadPlayer.Position.ST]
+            bench_squad_players = list(submission.bench_players.all().select_related('player'))
+            initial_data['bench_gk'] = next(
+                (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.GK), None
+            )
+            initial_data['bench_dm'] = next(
+                (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.DM), None
+            )
+            initial_data['bench_st'] = next(
+                (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.ST), None
+            )
 
-                if gk_players:
-                    initial_data['secondary_gk'] = gk_players[0].player
-                if dm_players:
-                    initial_data['secondary_dm'] = dm_players[0].player
-                if len(st_players) >= 1:
-                    initial_data['secondary_st1'] = st_players[0].player
-                if len(st_players) >= 2:
-                    initial_data['secondary_st2'] = st_players[1].player
-
-            initial_data['captain_player_id'] = submission.captain_player_id
+            initial_data['captain_player_id'] = submission.captain_player.id if submission.captain_player else None
 
         form = SquadSubmissionForm(initial=initial_data, tournament=tour.league)
 

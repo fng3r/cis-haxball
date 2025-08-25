@@ -26,9 +26,9 @@ class SquadSubmissionAdmin(unfold_admin.ModelAdmin):
     list_filter = (('tournament', RelatedDropdownFilter), ('tour', RelatedDropdownFilter), 'created')
     search_fields = ('user__username',)
     readonly_fields = ('created', 'updated')
-    filter_horizontal = ('primary_squad', 'secondary_squad')
+    filter_horizontal = ('main_squad', 'bench_players')
 
     fieldsets = (
         ('Основная информация', {'fields': ('user', 'tour', 'tournament', 'created', 'updated')}),
-        ('Выбранные составы', {'fields': ('primary_squad', 'secondary_squad')}),
+        ('Выбранные составы', {'fields': ('main_squad', 'bench_players')}),
     )
