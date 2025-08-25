@@ -54,6 +54,7 @@
                     class="tw:btn tw:gap-2"
                     :class="selected[position]?.id == {{ player.pk }} && 'tw:btn-primary'"
                     x-data="{ id: {{ player.pk }}, nickname: '{{ player.nickname|escapejs }}', cost: parseCost('{{ form.player_costs|get:player.pk }}'), teamLogo: '{{ player.team.logo.url }}' }"
+                    :disabled="Object.entries(selected).some(([pos, player]) => pos !== position && player?.id === id)"
                     @click="handlePick(position, id, nickname, cost, teamLogo); isModalOpen=false; if (selectedCaptain === id) { selectedCaptain = id }">
               <img :src="teamLogo" alt="logo" class="tw:w-6 tw:h-6 tw:rounded-sm" />
               <span x-text="nickname"></span>
