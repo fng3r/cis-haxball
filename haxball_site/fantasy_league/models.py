@@ -164,15 +164,86 @@ class SquadSubmission(models.Model):
         else:
             playtime_points = 0
 
-        total_points = goals_points + assists_points + cs_points + playtime_points
+        conceded_goals_count = self._get_player_conceded_goals_count(player, match, match_goals, seconds_played)
+        if conceded_goals_count == 0:
+            conceded_points = 0
+        elif conceded_goals_count <= 2:
+            conceded_points = -2
+        elif conceded_goals_count <= 5:
+            conceded_points = -3
+        elif conceded_goals_count <= 10:
+            conceded_points = -5
+        elif conceded_goals_count <= 15:
+            conceded_points = -7
+        else:
+            conceded_points = -10
+
+        total_points = goals_points + assists_points + cs_points + playtime_points + conceded_points
 
         return {
             'goals': {'count': goals_count, 'points': goals_points},
             'assists': {'count': assists_count, 'points': assists_points},
             'cs': {'count': cs_count, 'points': cs_points},
             'playtime': {'seconds': seconds_played, 'points': playtime_points},
+            'conceded_goals': {'count': conceded_goals_count, 'points': conceded_points},
             'total': total_points,
         }
+
+    def _get_player_conceded_goals_count(self, player, match, match_goals, seconds_played):
+        """Get number of conceded goals for a player in a match"""
+        conceded_goals_count = 0
+        player_team = self._get_player_team_for_match(player, match)
+        if seconds_played > 0 and player_team is not None:
+            intervals = self._get_player_intervals(player, match)
+            if intervals:
+                opponent_team_id = match.team_guest_id if player_team.id == match.team_home_id else match.team_home_id
+                for goal in match_goals:
+                    if goal.team_id != opponent_team_id:
+                        continue
+                    goal_time = goal.time_min * 60 + goal.time_sec
+                    for start, end in intervals:
+                        if start <= goal_time <= end:
+                            conceded_goals_count += 1
+                            break
+        return conceded_goals_count
+
+    def _get_player_team_for_match(self, player, match):
+        """Infer player's team for the given match from starts/substitutions."""
+        for participant in match.match_participants.all():
+            if participant.id == player.id:
+                return participant.team
+        return None
+
+    def _get_player_intervals(self, player, match):
+        """Return list of (start_sec, end_sec) intervals when player was on pitch."""
+        full_match_seconds = 16 * 60
+        if player not in match.match_participants.all():
+            return []
+
+        events = []  # (sec, type)
+        started = player in match.team_home_start.all() or player in match.team_guest_start.all()
+        for subs in match.match_substitutions.all():
+            t = subs.time_min * 60 + subs.time_sec
+            if subs.player_in_id == player.id:
+                events.append((t, 'in'))
+            if subs.player_out_id == player.id:
+                events.append((t, 'out'))
+        events.sort(key=lambda x: x[0])
+
+        intervals = []
+        in_play = started
+        current_start = 0 if started else None
+        for t, kind in events:
+            if kind == 'out' and in_play:
+                intervals.append((current_start, t))
+                in_play = False
+                current_start = None
+            elif kind == 'in' and not in_play:
+                in_play = True
+                current_start = t
+        if in_play and current_start is not None:
+            intervals.append((current_start, full_match_seconds))
+        return intervals
 
     def _get_player_playtime(self, player, match):
         full_match_seconds = 16 * 60
@@ -203,6 +274,7 @@ class SquadSubmission(models.Model):
             'goals': {'count': 0, 'points': 0},
             'assists': {'count': 0, 'points': 0},
             'cs': {'count': 0, 'points': 0},
+            'conceded_goals': {'count': 0, 'points': 0},
             'playtime': {'seconds': 0, 'points': 0},
         }
 
@@ -239,6 +311,11 @@ class SquadSubmission(models.Model):
                     'points': match_points['assists']['points'],
                 },
                 {'name': 'Сухие таймы', 'value': match_points['cs']['count'], 'points': match_points['cs']['points']},
+                {
+                    'name': 'Пропущенные голы',
+                    'value': match_points['conceded_goals']['count'],
+                    'points': match_points['conceded_goals']['points'],
+                },
             ],
             'multipliers': {'captain': is_captain, 'bench': is_bench, 'multiplier': multiplier},
         }
