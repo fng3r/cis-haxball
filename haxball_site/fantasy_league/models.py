@@ -154,14 +154,40 @@ class SquadSubmission(models.Model):
         assists_points = assists_count * assist_pts
         cs_points = cs_count * cs_pts
 
-        total_points = goals_points + assists_points + cs_points
+        seconds_played = self._get_player_playtime(player, match)
+        if seconds_played >= 12 * 60:
+            playtime_points = 3
+        elif seconds_played >= 4 * 60:
+            playtime_points = 2
+        elif seconds_played > 0:
+            playtime_points = 1
+        else:
+            playtime_points = 0
+
+        total_points = goals_points + assists_points + cs_points + playtime_points
 
         return {
             'goals': {'count': goals_count, 'points': goals_points},
             'assists': {'count': assists_count, 'points': assists_points},
             'cs': {'count': cs_count, 'points': cs_points},
+            'playtime': {'seconds': seconds_played, 'points': playtime_points},
             'total': total_points,
         }
+
+    def _get_player_playtime(self, player, match):
+        full_match_seconds = 16 * 60
+        seconds_played = 0
+        if player in match.match_participants.all():
+            started = player in match.team_home_start.all() or player in match.team_guest_start.all()
+            if started:
+                seconds_played = full_match_seconds
+            for subs in match.match_substitutions.all():
+                if subs.player_in_id == player.id:
+                    seconds_played += full_match_seconds - (subs.time_min * 60 + subs.time_sec)
+                if subs.player_out_id == player.id:
+                    seconds_played -= full_match_seconds - (subs.time_min * 60 + subs.time_sec)
+
+        return seconds_played
 
     def get_player_points_breakdown(self, squad_player, role: Literal['main', 'bench'], preloaded_data):
         """Calculate per-player points for this submission's tour and return a breakdown"""
@@ -177,7 +203,10 @@ class SquadSubmission(models.Model):
             'goals': {'count': 0, 'points': 0},
             'assists': {'count': 0, 'points': 0},
             'cs': {'count': 0, 'points': 0},
+            'playtime': {'seconds': 0, 'points': 0},
         }
+
+        tour_matches = [match for match in tour_matches if match.numb_tour_id == self.tour_id]
         for match in tour_matches:
             if player.id in match_participants.get(match.id):
                 match_points = self._calculate_match_points_from_data(
@@ -196,9 +225,13 @@ class SquadSubmission(models.Model):
         base_total = match_points['total']
         total_points = base_total * multiplier
 
+        seconds_played = match_points['playtime']['seconds']
+        formatted_playtime = f'{seconds_played // 60}:{seconds_played % 60:02d}' if seconds_played > 0 else '—'
+
         return {
             'total': total_points,
             'items': [
+                {'name': 'Время на поле', 'value': formatted_playtime, 'points': match_points['playtime']['points']},
                 {'name': 'Голы', 'value': match_points['goals']['count'], 'points': match_points['goals']['points']},
                 {
                     'name': 'Передачи',

@@ -200,7 +200,7 @@ def preload_fantasy_data(tournament):
     matches = (
         Match.objects.filter(numb_tour__in=tours, is_played=True)
         .select_related('team_home', 'team_guest', 'numb_tour')
-        .prefetch_related('team_home_start', 'team_guest_start', 'match_participants')
+        .prefetch_related('team_home_start', 'team_guest_start', 'match_participants', 'match_substitutions')
     )
 
     match_participants = {}
