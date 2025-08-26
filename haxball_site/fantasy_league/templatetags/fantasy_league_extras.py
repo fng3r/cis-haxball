@@ -89,6 +89,18 @@ def squad_player_stats(context, squad_player):
     return ' '.join(parts)
 
 
+@register.simple_tag(takes_context=True)
+def player_points_breakdown(context, squad_player, role: str = 'main'):
+    """Return per-player points breakdown dict for the given `squad_player`.
+
+    role: 'main' or 'bench' to apply correct multipliers.
+    """
+    preloaded_data = context.get('preloaded_data')
+    submission = context.get('submission')
+
+    return submission.get_player_points_breakdown(squad_player, role, preloaded_data)
+
+
 @register.filter
 def get_player_by_id(players, player_id: int | str | None):
     if not player_id:

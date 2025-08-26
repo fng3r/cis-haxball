@@ -43,7 +43,7 @@
                     <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
                   </div>
                   {% if submission and not tour|is_tour_not_open_yet %}
-                    <span class="tw:badge tw:badge-primary">{{ submission|get_total_points_with_data:preloaded_data|floatformat:1 }} очков</span>
+                    <span class="tw:badge tw:badge-primary">{{ submission|get_total_points_with_data:preloaded_data|floatformat:1 }} FP</span>
                   {% endif %}
                 </div>
 
@@ -55,14 +55,7 @@
                           <div class="tw:font-medium tw:text-primary">Основной состав</div>
                           <div class="tw:space-y-1">
                             {% for squad_player in submission.main_squad.all|sort_squad_players %}
-                              <div class="tw:flex tw:justify-between tw:items-center tw:bg-base-100 tw:px-2 tw:py-1 tw:rounded tw:text-sm">
-                                <div>
-                                  <span>{{ squad_player.player.nickname }}</span>
-                                  {% squad_player_stats squad_player as stats %}
-                                  {% if stats %}<span class="tw:ml-1 tw:text-xs tw:text-base-content/60">{{ stats }}</span>{% endif %}
-                                </div>
-                                <span class="tw:badge tw:badge-outline tw:badge-xs">{{ squad_player.get_position_display }}</span>
-                              </div>
+                              {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='main' %}
                             {% endfor %}
                           </div>
                         </div>
@@ -71,14 +64,7 @@
                           <div class="tw:font-medium tw:text-secondary">Скамейка</div>
                           <div class="tw:space-y-1">
                             {% for squad_player in submission.bench_players.all|sort_squad_players %}
-                              <div class="tw:flex tw:justify-between tw:items-center tw:bg-base-100 tw:px-2 tw:py-1 tw:rounded tw:text-sm">
-                                <div>
-                                  <span>{{ squad_player.player.nickname }}</span>
-                                  {% squad_player_stats squad_player as stats %}
-                                  {% if stats %}<span class="tw:ml-1 tw:text-xs tw:text-base-content/60">{{ stats }}</span>{% endif %}
-                                </div>
-                                <span class="tw:badge tw:badge-outline tw:badge-xs">{{ squad_player.get_position_display }}</span>
-                              </div>
+                              {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='bench' %}
                             {% endfor %}
                           </div>
                         </div>

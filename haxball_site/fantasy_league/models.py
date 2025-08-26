@@ -1,3 +1,5 @@
+from typing import Literal
+
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -83,29 +85,26 @@ class SquadSubmission(models.Model):
 
     def get_total_points(self, preloaded_data):
         """Get total points for this submission"""
-        primary_points = sum(
+        main_squad_points = sum(
             self._calculate_player_points(
                 squad_player,
-                self.captain_player_id == squad_player.player_id,
+                False,
                 preloaded_data,
             )
             for squad_player in self.main_squad.all()
         )
-        secondary_points = (
-            sum(
-                self._calculate_player_points(
-                    squad_player,
-                    self.captain_player_id == squad_player.player_id,
-                    preloaded_data,
-                )
-                for squad_player in self.bench_players.all()
+        bench_points = sum(
+            self._calculate_player_points(
+                squad_player,
+                True,
+                preloaded_data,
             )
-            * 0.5
+            for squad_player in self.bench_players.all()
         )
 
-        return primary_points + secondary_points
+        return main_squad_points + bench_points
 
-    def _calculate_player_points(self, squad_player, is_captain, preloaded_data):
+    def _calculate_player_points(self, squad_player, is_bench_player, preloaded_data):
         """Calculate points for a specific squad player in this tour"""
         tour_matches = preloaded_data.get('tour_matches')
         match_participants = preloaded_data.get('match_participants')
@@ -122,35 +121,91 @@ class SquadSubmission(models.Model):
                 match_points = self._calculate_match_points_from_data(
                     match, squad_player, match_goals.get(match.id, []), match_cs.get(match.id, [])
                 )
-                total_points += match_points
+                total_points += match_points['total']
+                break
 
+        is_captain = self.captain_player_id == squad_player.player_id
         if is_captain:
             total_points *= 2
+        if is_bench_player:
+            total_points *= 0.5
 
         return total_points
 
     def _calculate_match_points_from_data(self, match, squad_player, match_goals, match_cs):
-        """Calculate points for a specific match using preloaded data"""
-        points = 0
+        """Calculate base (no multipliers) points breakdown for a specific match using preloaded data"""
         player = squad_player.player
         position = squad_player.position
-        # Goals (3 points for ST, 5 points for DM, 8 points for GK)
-        goals = sum(1 for goal in match_goals if goal.author_id == player.id)
-        if position == SquadPlayer.Position.ST:
-            points += goals * 3
-        elif position == SquadPlayer.Position.DM:
-            points += goals * 5
-        elif position == SquadPlayer.Position.GK:
-            points += goals * 8
-        # Assists (2 points for ST, 3 points for DM, 5 points for GK)
-        assists = sum(1 for goal in match_goals if goal.assistent_id == player.id)
-        if position == SquadPlayer.Position.ST:
-            points += assists * 2
-        elif position == SquadPlayer.Position.DM:
-            points += assists * 3
-        elif position == SquadPlayer.Position.GK:
-            points += assists * 5
 
-        cs_events = [e for e in match_cs if e.author_id == player.id]
-        points += 15 * len(cs_events)
-        return points
+        goals_count = sum(1 for goal in match_goals if goal.author_id == player.id)
+        assists_count = sum(1 for goal in match_goals if goal.assistent_id == player.id)
+        cs_count = sum(1 for e in match_cs if e.author_id == player.id)
+
+        if position == SquadPlayer.Position.ST:
+            goal_pts, assist_pts = 3, 2
+        elif position == SquadPlayer.Position.DM:
+            goal_pts, assist_pts = 5, 3
+        else:
+            goal_pts, assist_pts = 8, 5
+
+        cs_pts = 15
+
+        goals_points = goals_count * goal_pts
+        assists_points = assists_count * assist_pts
+        cs_points = cs_count * cs_pts
+
+        total_points = goals_points + assists_points + cs_points
+
+        return {
+            'goals': {'count': goals_count, 'points': goals_points},
+            'assists': {'count': assists_count, 'points': assists_points},
+            'cs': {'count': cs_count, 'points': cs_points},
+            'total': total_points,
+        }
+
+    def get_player_points_breakdown(self, squad_player, role: Literal['main', 'bench'], preloaded_data):
+        """Calculate per-player points for this submission's tour and return a breakdown"""
+        tour_matches = preloaded_data.get('tour_matches')
+        match_participants = preloaded_data.get('match_participants')
+        match_goals = preloaded_data.get('match_goals')
+        match_cs = preloaded_data.get('match_cs')
+
+        player = squad_player.player
+
+        match_points = {
+            'total': 0,
+            'goals': {'count': 0, 'points': 0},
+            'assists': {'count': 0, 'points': 0},
+            'cs': {'count': 0, 'points': 0},
+        }
+        for match in tour_matches:
+            if player.id in match_participants.get(match.id):
+                match_points = self._calculate_match_points_from_data(
+                    match, squad_player, match_goals.get(match.id, []), match_cs.get(match.id, [])
+                )
+                break
+
+        is_captain = self.captain_player_id == player.id
+        is_bench = role == 'bench'
+        multiplier = 1.0
+        if is_captain:
+            multiplier = 2.0
+        if is_bench:
+            multiplier = 0.5
+
+        base_total = match_points['total']
+        total_points = base_total * multiplier
+
+        return {
+            'total': total_points,
+            'items': [
+                {'name': 'Голы', 'value': match_points['goals']['count'], 'points': match_points['goals']['points']},
+                {
+                    'name': 'Передачи',
+                    'value': match_points['assists']['count'],
+                    'points': match_points['assists']['points'],
+                },
+                {'name': 'Сухие таймы', 'value': match_points['cs']['count'], 'points': match_points['cs']['points']},
+            ],
+            'multipliers': {'captain': is_captain, 'bench': is_bench, 'multiplier': multiplier},
+        }
