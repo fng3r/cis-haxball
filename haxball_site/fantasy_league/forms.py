@@ -75,14 +75,14 @@ class SquadSubmissionForm(forms.Form):
 
     # Price ranges in millions (M) for each grade
     PRICE_RANGES = {
-        PlayerRating.Grade.S: (24, 27),
-        PlayerRating.Grade.A: (18, 23),
+        PlayerRating.Grade.S: (28, 35),
+        PlayerRating.Grade.A: (18, 27),
         PlayerRating.Grade.B_PLUS: (13, 17),
         PlayerRating.Grade.B: (9, 12),
         PlayerRating.Grade.C: (6, 8),
         PlayerRating.Grade.D: (3, 5),
         PlayerRating.Grade.E: (1, 2),
-        None: (1, 2),  # No rating - same as E
+        None: (1, 2),
     }
 
     # Rating point ranges for each grade
@@ -98,9 +98,9 @@ class SquadSubmissionForm(forms.Form):
     }
 
     BUDGET_LIMITS = {
-        'Высшая лига': 85.0,
-        'Первая лига': 55.0,
-        'Вторая лига': 40.0,
+        'Высшая лига': 90.0,
+        'Первая лига': 50.0,
+        'Вторая лига': 35.0,
     }
 
     def get_league_budget_limit(self, league):
