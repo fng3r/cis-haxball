@@ -4,6 +4,7 @@ from django.db.models import IntegerField, OuterRef, Subquery
 from tournament.models import League, Player, PlayerRating, PlayerRatingVersion
 
 from .models import FantasyTournament
+from .utils import get_league_budget_limit, get_players_costs
 
 
 class TournamentFilterForm(forms.Form):
@@ -73,73 +74,12 @@ class SquadSubmissionForm(forms.Form):
         required=False,
     )
 
-    # Price ranges in millions (M) for each grade
-    PRICE_RANGES = {
-        PlayerRating.Grade.S: (28, 35),
-        PlayerRating.Grade.A: (18, 27),
-        PlayerRating.Grade.B_PLUS: (13, 17),
-        PlayerRating.Grade.B: (9, 12),
-        PlayerRating.Grade.C: (6, 8),
-        PlayerRating.Grade.D: (3, 5),
-        PlayerRating.Grade.E: (1, 2),
-        None: (1, 2),
-    }
-
-    # Rating point ranges for each grade
-    RATING_RANGES = {
-        PlayerRating.Grade.S: (91, 100),
-        PlayerRating.Grade.A: (76, 90),
-        PlayerRating.Grade.B_PLUS: (61, 75),
-        PlayerRating.Grade.B: (61, 75),
-        PlayerRating.Grade.C: (31, 45),
-        PlayerRating.Grade.D: (16, 30),
-        PlayerRating.Grade.E: (0, 15),
-        None: (0, 15),  # No rating - same as E
-    }
-
-    BUDGET_LIMITS = {
-        'Высшая лига': 90.0,
-        'Первая лига': 50.0,
-        'Вторая лига': 35.0,
-    }
-
-    def get_league_budget_limit(self, league):
-        return self.BUDGET_LIMITS.get(league.title)
-
-    def calculate_player_cost(self, player_rating):
-        """Calculate player cost in millions based on grade and rating points"""
-        if not player_rating:
-            grade = None
-            rating_points = 0
-        else:
-            grade = player_rating.grade
-            rating_points = player_rating.rating_points
-
-        price_range = self.PRICE_RANGES.get(grade, (1, 2))
-        rating_range = self.RATING_RANGES.get(grade, (0, 15))
-
-        min_price, max_price = price_range
-        min_rating, max_rating = rating_range
-
-        if max_rating == min_rating:
-            position_ratio = 0.0
-        else:
-            position_ratio = (rating_points - min_rating) / (max_rating - min_rating)
-
-        position_ratio = max(0.0, min(1.0, position_ratio))
-        cost = min_price + (max_price - min_price) * position_ratio
-
-        return round(cost, 1)
-
     def __init__(self, *args, tournament: League, previous_player_ids: list[int] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.tournament = tournament
         self.previous_player_ids = previous_player_ids or []
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
-        league_player_ids = list(Player.objects.filter(team__in=tournament.teams.all()).values_list('id', flat=True))
-        ratings = PlayerRating.objects.filter(player_id__in=league_player_ids, version=latest_rating_version)
-        player_rating_map = {r.player_id: r for r in ratings}
-        self.player_costs = {pid: self.calculate_player_cost(player_rating_map.get(pid)) for pid in league_player_ids}
+        self.player_costs = get_players_costs(self.tournament)
 
         team_filter = {'team__in': tournament.teams.all()}
 
@@ -234,7 +174,7 @@ class SquadSubmissionForm(forms.Form):
     def validate_budget_limit(self, players):
         """Ensure total cost of players does not exceed budget limit"""
         total_cost = sum(self.player_costs[p.id] for p in players if p)
-        budget_limit = self.get_league_budget_limit(self.tournament)
+        budget_limit = get_league_budget_limit(self.tournament)
         if total_cost > budget_limit:
             raise forms.ValidationError(f'Превышен общий бюджет команды: {total_cost:.1f}M > {budget_limit}M')
 

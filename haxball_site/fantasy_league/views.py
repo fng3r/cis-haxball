@@ -13,6 +13,7 @@ from .forms import SquadSubmissionForm, TournamentFilterForm, UserFilterForm
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
 from .utils import (
     get_blocking_tours,
+    get_league_budget_limit,
     get_player_fantasy_stats,
     get_tournament_standings,
     is_tour_open_for_fantasy,
@@ -475,7 +476,7 @@ def edit_squad(request, tour_id):
 
         form = SquadSubmissionForm(initial=initial_data, tournament=tour.league, previous_player_ids=prev_player_ids)
 
-    budget_limit = SquadSubmissionForm(tournament=tour.league).get_league_budget_limit(tour.league)
+    budget_limit = get_league_budget_limit(tour.league)
 
     context = {
         'form': form,
