@@ -200,7 +200,13 @@ def preload_fantasy_data(tournament):
     matches = (
         Match.objects.filter(numb_tour__in=tours, is_played=True)
         .select_related('team_home', 'team_guest', 'numb_tour')
-        .prefetch_related('team_home_start', 'team_guest_start', 'match_participants', 'match_substitutions')
+        .prefetch_related(
+            'team_home_start',
+            'team_guest_start',
+            'match_participants',
+            'match_substitutions',
+            'match_substitutions__team',
+        )
     )
 
     match_participants = {}
@@ -214,7 +220,9 @@ def preload_fantasy_data(tournament):
             match_goals[goal.match_id] = []
         match_goals[goal.match_id].append(goal)
 
-    events = OtherEvents.objects.filter(match__in=matches, event=OtherEvents.CLEAN_SHEET).select_related('author')
+    events = OtherEvents.objects.filter(match__in=matches, event=OtherEvents.CLEAN_SHEET).select_related(
+        'author', 'team'
+    )
     match_cs = {}
     for event in events:
         if event.match_id not in match_cs:

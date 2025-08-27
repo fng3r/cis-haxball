@@ -83,6 +83,51 @@ class SquadSubmission(models.Model):
     def __str__(self):
         return f'Состав {self.user.username} для {self.tour}'
 
+    POINTS_CONFIG = {
+        'goals': {
+            SquadPlayer.Position.ST: 3,
+            SquadPlayer.Position.DM: 4,
+            SquadPlayer.Position.GK: 6,
+        },
+        'assists': {
+            SquadPlayer.Position.ST: 2,
+            SquadPlayer.Position.DM: 3,
+            SquadPlayer.Position.GK: 4,
+        },
+        'clean_sheet': {
+            SquadPlayer.Position.ST: 2,
+            SquadPlayer.Position.DM: 6,
+            SquadPlayer.Position.GK: 15,
+        },
+        'conceded_goals': {
+            (1, 2): {
+                SquadPlayer.Position.ST: 0,
+                SquadPlayer.Position.DM: -1,
+                SquadPlayer.Position.GK: -1,
+            },
+            (3, 5): {
+                SquadPlayer.Position.ST: -1,
+                SquadPlayer.Position.DM: -2,
+                SquadPlayer.Position.GK: -2,
+            },
+            (6, 10): {
+                SquadPlayer.Position.ST: -2,
+                SquadPlayer.Position.DM: -4,
+                SquadPlayer.Position.GK: -5,
+            },
+            (11, 15): {
+                SquadPlayer.Position.ST: -3,
+                SquadPlayer.Position.DM: -6,
+                SquadPlayer.Position.GK: -8,
+            },
+            (16, float('inf')): {
+                SquadPlayer.Position.ST: -5,
+                SquadPlayer.Position.DM: -10,
+                SquadPlayer.Position.GK: -12,
+            },
+        },
+    }
+
     def get_total_points(self, preloaded_data):
         """Get total points for this submission"""
         main_squad_points = sum(
@@ -139,20 +184,15 @@ class SquadSubmission(models.Model):
 
         goals_count = sum(1 for goal in match_goals if goal.author_id == player.id)
         assists_count = sum(1 for goal in match_goals if goal.assistent_id == player.id)
-        cs_count = sum(1 for e in match_cs if e.author_id == player.id)
 
-        if position == SquadPlayer.Position.ST:
-            goal_pts, assist_pts = 3, 2
-        elif position == SquadPlayer.Position.DM:
-            goal_pts, assist_pts = 5, 3
-        else:
-            goal_pts, assist_pts = 8, 5
+        player_team = self._get_player_team_for_match(player, match)
+        cs_count = 0
+        if player_team is not None:
+            cs_count = sum(1 for cs in match_cs if cs.team_id == player_team.id)
 
-        cs_pts = 15
-
-        goals_points = goals_count * goal_pts
-        assists_points = assists_count * assist_pts
-        cs_points = cs_count * cs_pts
+        goals_points = goals_count * self.POINTS_CONFIG['goals'][position]
+        assists_points = assists_count * self.POINTS_CONFIG['assists'][position]
+        cs_points = cs_count * self.POINTS_CONFIG['clean_sheet'][position]
 
         seconds_played = self._get_player_playtime(player, match)
         if seconds_played >= 12 * 60:
@@ -165,18 +205,7 @@ class SquadSubmission(models.Model):
             playtime_points = 0
 
         conceded_goals_count = self._get_player_conceded_goals_count(player, match, match_goals, seconds_played)
-        if conceded_goals_count == 0:
-            conceded_points = 0
-        elif conceded_goals_count <= 2:
-            conceded_points = -2
-        elif conceded_goals_count <= 5:
-            conceded_points = -3
-        elif conceded_goals_count <= 10:
-            conceded_points = -5
-        elif conceded_goals_count <= 15:
-            conceded_points = -7
-        else:
-            conceded_points = -10
+        conceded_points = self._get_conceded_goals_penalty(position, conceded_goals_count)
 
         total_points = goals_points + assists_points + cs_points + playtime_points + conceded_points
 
@@ -259,6 +288,15 @@ class SquadSubmission(models.Model):
                     seconds_played -= full_match_seconds - (subs.time_min * 60 + subs.time_sec)
 
         return seconds_played
+
+    def _get_conceded_goals_penalty(self, position, goals_count):
+        penalty_ranges = self.POINTS_CONFIG['conceded_goals']
+
+        for (start, end), penalties in penalty_ranges.items():
+            if start <= goals_count <= end:
+                return penalties[position]
+
+        return 0
 
     def get_player_points_breakdown(self, squad_player, role: Literal['main', 'bench'], preloaded_data):
         """Calculate per-player points for this submission's tour and return a breakdown"""
