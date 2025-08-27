@@ -13,7 +13,7 @@
         {{ tournament_form.tournament|add_class:"tw:select tw:select-bordered" }}
       </div>
       <div class="tw:flex tw:flex-col tw:gap-1">
-        <label class="tw:label tw:text-base-content tw:font-bold">Игрок</label>
+        <label class="tw:label tw:text-base-content tw:font-bold">Пользователь</label>
         {{ user_form.user|add_class:"tw:select tw:select-bordered" }}
       </div>
     </form>
@@ -55,7 +55,7 @@
                           <div class="tw:font-medium tw:text-primary">Основной состав</div>
                           <div class="tw:space-y-1">
                             {% for squad_player in submission.main_squad.all|sort_squad_players %}
-                              {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='main' %}
+                              {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='main' tab='all' %}
                             {% endfor %}
                           </div>
                         </div>
@@ -64,7 +64,7 @@
                           <div class="tw:font-medium tw:text-secondary">Скамейка</div>
                           <div class="tw:space-y-1">
                             {% for squad_player in submission.bench_players.all|sort_squad_players %}
-                              {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='bench' %}
+                              {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='bench' tab='all' %}
                             {% endfor %}
                           </div>
                         </div>

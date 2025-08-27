@@ -1,7 +1,7 @@
 from django import forms
 from django.db.models import IntegerField, OuterRef, Subquery
 
-from tournament.models import League, Player, PlayerRating, PlayerRatingVersion
+from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
 
 from .models import FantasyTournament
 from .utils import get_league_budget_limit, get_players_costs
@@ -27,6 +27,22 @@ class UserFilterForm(forms.Form):
         required=False,
         label='Пользователь',
     )
+
+
+class TourFilterForm(forms.Form):
+    """Form for selecting a tour within a league"""
+
+    tour = forms.ModelChoiceField(
+        queryset=TourNumber.objects.none(),
+        empty_label=None,
+        required=False,
+        label='Тур',
+    )
+
+    def __init__(self, *args, league: League | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if league is not None:
+            self.fields['tour'].queryset = TourNumber.objects.filter(league=league).order_by('number')
 
 
 class SquadSubmissionForm(forms.Form):

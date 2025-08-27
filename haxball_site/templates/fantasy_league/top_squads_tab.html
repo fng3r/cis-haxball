@@ -1,0 +1,74 @@
+{% load widget_tweaks %}
+{% load fantasy_league_extras %}
+
+<div class="tw:space-y-4">
+  <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
+    <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
+          hx-get="{% url 'fantasy_league:top_squads_tab' %}"
+          hx-target="#top-squads-content"
+          hx-trigger="change"
+          hx-push-url="false">
+      <div class="tw:flex tw:flex-col tw:gap-1">
+        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
+        {{ tournament_form.tournament|add_class:"tw:select tw:select-bordered" }}
+      </div>
+      {% if selected_tournament %}
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <label class="tw:label tw:text-base-content tw:font-bold">Тур</label>
+          {{ tour_form.tour|add_class:"tw:select tw:select-bordered" }}
+        </div>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="tw:space-y-4 tw:[#top-squads-content:has(.htmx-request)_&]:opacity-50 tw:[#top-squads-content:has(.htmx-request)_&]:transition-opacity">
+    <h5 class="tw:text-md tw:font-semibold">Топ-3 состава в {{ selected_tour.number }} туре</h5>
+
+    {% if selected_tour|is_tour_closed %}
+      {% if top_submissions and top_submissions|length > 0 %}
+        {% for submission in top_submissions %}
+          <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+            <div class="tw:card-body tw:p-4">
+              <div class="tw:mt-2 tw:space-y-3">
+                <div class="tw:space-y-2">
+                  <div class="tw:flex tw:items-center tw:justify-between">
+                    <div class="tw:flex tw:items-center tw:gap-2 tw:text-lg tw:font-medium">
+                      {{ forloop.counter }}.
+                      <img src="{{ submission.user.user_profile.avatar.url }}"
+                           alt="{{ submission.user.username }}"
+                           class="tw:size-6 tw:rounded-full">
+                      {{ submission.user.username }}
+                    </div>
+                    <span class="tw:badge tw:badge-primary">{{ submission|get_total_points_with_data:preloaded_data|floatformat:1 }} FP</span>
+                  </div>
+                  <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:text-base">
+                    <div class="tw:space-y-2">
+                      <div class="tw:font-medium tw:text-primary">Основной состав</div>
+                      <div class="tw:space-y-1">
+                        {% for squad_player in submission.main_squad.all|sort_squad_players %}
+                          {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='main' submission=submission tour=selected_tour is_open=False tab='top' %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                    <div class="tw:space-y-2">
+                      <div class="tw:font-medium tw:text-secondary">Скамейка</div>
+                      <div class="tw:space-y-1">
+                        {% for squad_player in submission.bench_players.all|sort_squad_players %}
+                          {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='bench' submission=submission tour=selected_tour is_open=False tab='top' %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% else %}
+      <div class="tw:p-8 tw:text-base tw:text-base-content/70 tw:text-center">
+        <span>Топ будет доступен после начала тура</span>
+      </div>
+    {% endif %}
+  </div>
+</div>

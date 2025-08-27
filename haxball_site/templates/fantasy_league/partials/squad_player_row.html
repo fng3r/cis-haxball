@@ -33,7 +33,7 @@
       {% player_points_breakdown squad_player role as breakdown %}
       <button type="button"
               class="tw:badge tw:badge-primary tw:badge-sm tw:cursor-pointer"
-              onclick="document.getElementById('fl-points-{{ submission.id }}-{{ squad_player.player.id }}').showModal()">
+              onclick="document.getElementById('{{ tab }}-fl-points-{{ submission.id }}-{{ squad_player.player.id }}').showModal()">
         {{ breakdown.total|floatformat:1 }} FP
       </button>
     {% endif %}
@@ -42,7 +42,7 @@
 
 {% if not is_open and not tour|is_tour_not_open_yet %}
   {% player_points_breakdown squad_player role as breakdown %}
-  <dialog id="fl-points-{{ submission.id }}-{{ squad_player.player.id }}" class="tw:modal">
+  <dialog id="{{ tab }}-fl-points-{{ submission.id }}-{{ squad_player.player.id }}" class="tw:modal">
     <div class="tw:modal-box">
       <h3 class="tw:text-lg tw:font-bold">{{ squad_player.player.nickname }} — {{ breakdown.total|floatformat:1 }} FP</h3>
       {% if breakdown.multipliers.captain or breakdown.multipliers.bench %}
