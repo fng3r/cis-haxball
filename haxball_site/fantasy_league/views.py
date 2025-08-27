@@ -5,11 +5,14 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 
+from django_htmx.http import trigger_client_event
+
 from tournament.models import TourNumber
 
 from .forms import SquadSubmissionForm, TournamentFilterForm, UserFilterForm
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
 from .utils import (
+    get_blocking_tours,
     get_player_fantasy_stats,
     get_tournament_standings,
     is_tour_open_for_fantasy,
@@ -98,23 +101,32 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
             .select_related('tour')
         )
 
-        # Create lookup dictionary for efficient access
         submissions_lookup = {sub.tour_id: sub for sub in submissions}
 
-        # Build user_squads dictionary
         for tour in tours:
             submission = submissions_lookup.get(tour.id)
+
+            blocking_tours = get_blocking_tours(request.user, tour, selected_tournament)
+            can_submit = len(blocking_tours) == 0
+
             if submission:
-                # Data is already prefetched, so this is efficient
                 primary_players = list(submission.main_squad.all())
                 secondary_players = list(submission.bench_players.all())
                 user_squads[tour.id] = {
                     'submission': submission,
                     'primary_players': primary_players,
                     'secondary_players': secondary_players,
+                    'can_submit': can_submit,
+                    'blocking_tours': blocking_tours,
                 }
             else:
-                user_squads[tour.id] = {'submission': None, 'primary_players': [], 'secondary_players': []}
+                user_squads[tour.id] = {
+                    'submission': None,
+                    'primary_players': [],
+                    'secondary_players': [],
+                    'can_submit': can_submit,
+                    'blocking_tours': blocking_tours,
+                }
 
     context = {
         'tournament_form': tournament_form,
@@ -292,12 +304,17 @@ def tour_detail(request, tour_id):
         .first()
     )
 
+    blocking_tours = get_blocking_tours(request.user, tour, tournament)
+    can_submit = len(blocking_tours) == 0
+
     context = {
         'tour': tour,
         'tournament': tournament,
         'submission': submission,
         'is_open': is_tour_open_for_fantasy(tour),
         'preloaded_data': preloaded_data,
+        'can_submit': can_submit,
+        'blocking_tours': blocking_tours,
     }
 
     return render(request, 'fantasy_league/partials/tour_card.html', context)
@@ -373,16 +390,25 @@ def edit_squad(request, tour_id):
 
                 submission.save()
 
-                return render(
+                fantasy_tournament = tour.league.fantasy_tournament
+                blocking_tours = get_blocking_tours(request.user, tour, fantasy_tournament)
+                can_submit = len(blocking_tours) == 0
+
+                response = render(
                     request,
                     'fantasy_league/partials/tour_card.html',
                     {
-                        'submission': submission,
                         'tour': tour,
+                        'tournament': fantasy_tournament,
+                        'submission': submission,
                         'is_open': is_tour_open_for_fantasy(tour),
                         'preloaded_data': preload_fantasy_data(submission.tournament),
+                        'can_submit': can_submit,
+                        'blocking_tours': blocking_tours,
                     },
                 )
+                response = trigger_client_event(response, 'tour-submitted', {'tour_number': tour.number})
+                return response
     else:
         initial_data = {}
         submission = SquadSubmission.objects.filter(

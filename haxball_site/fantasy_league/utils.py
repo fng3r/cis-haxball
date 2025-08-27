@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
-from tournament.models import Goal, Match, OtherEvents, Player
+from tournament.models import Goal, Match, OtherEvents, Player, TourNumber
 
 from .models import SquadSubmission
 
@@ -235,3 +235,37 @@ def preload_fantasy_data(tournament):
         'match_goals': match_goals,
         'match_cs': match_cs,
     }
+
+
+def get_blocking_tours(user, tour, tournament):
+    """Get blocking tours for a user"""
+    blocking_tours = []
+    previous_tours = TourNumber.objects.filter(league=tour.league, number__lt=tour.number).order_by('number')
+    for previous_tour in previous_tours:
+        if is_tour_open_for_fantasy(previous_tour):
+            has_submission = SquadSubmission.objects.filter(
+                user=user, tour=previous_tour, tournament=tournament
+            ).exists()
+
+            if not has_submission:
+                blocking_tours.append(previous_tour)
+
+    return blocking_tours
+
+
+def get_reverse_blocking_tours(user, tour, tournament):
+    """
+    Get tours that are blocked by this tour (reverse blocking).
+    When a later tour is submitted, earlier tours become locked for modification.
+    """
+    reverse_blocking_tours = []
+    later_tours = TourNumber.objects.filter(league=tour.league, number__gt=tour.number).order_by('number')
+
+    for later_tour in later_tours:
+        if is_tour_open_for_fantasy(later_tour):
+            has_submission = SquadSubmission.objects.filter(user=user, tour=later_tour, tournament=tournament).exists()
+
+            if has_submission:
+                reverse_blocking_tours.append(later_tour)
+
+    return reverse_blocking_tours

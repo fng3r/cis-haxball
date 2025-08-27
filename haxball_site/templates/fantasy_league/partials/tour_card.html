@@ -1,13 +1,26 @@
 {% load tournament_extras %}
 {% load fantasy_league_extras %}
 
-<div id="tour-{{ tour.id }}-content" class="tw:card tw:bg-base-200 tw:shadow-sm">
+<div id="tour-{{ tour.id }}-content" class="tw:card tw:bg-base-200 tw:shadow-sm tw:relative"
+  {# djlint:off #}
+     {% if blocking_tours %}
+       hx-trigger="tour-submitted from:body"
+       hx-get="{% url 'fantasy_league:tour_detail' tour.id %}"
+       hx-target="#tour-{{ tour.id }}-content"
+       hx-swap="outerHTML"
+     {% endif %}
+>
+  {# djlint:on #}
   <div class="tw:card-body tw:p-4">
     <div class="tw:flex tw:items-center tw:justify-between">
       <div class="tw:card-title">
         <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
         {% if is_open %}
-          <span class="tw:badge tw:badge-success tw:badge-sm">Открыт</span>
+          {% if can_submit %}
+            <span class="tw:badge tw:badge-success tw:badge-sm">Открыт</span>
+          {% else %}
+            <span class="tw:badge tw:badge-warning tw:badge-sm">Заблокирован</span>
+          {% endif %}
         {% elif tour|is_tour_not_open_yet %}
           <span class="tw:badge tw:badge-info tw:badge-sm">Откроется {{ tour|get_tour_opening_date|date:"d.m" }}</span>
         {% else %}
@@ -15,16 +28,18 @@
         {% endif %}
       </div>
       {% if is_open %}
-        <button class="tw:btn tw:btn-primary tw:btn-sm"
-                hx-get="{% url 'fantasy_league:edit_squad' tour.id %}"
-                hx-target="#tour-{{ tour.id }}-content"
-                hx-swap="outerHTML show:top">
-          {% if submission %}
-            <i class="fa fa-pencil"></i> Изменить состав
-          {% else %}
-            <i class="fa fa-plus"></i> Выбрать состав
-          {% endif %}
-        </button>
+        {% if can_submit %}
+          <button class="tw:btn tw:btn-primary tw:btn-sm"
+                  hx-get="{% url 'fantasy_league:edit_squad' tour.id %}"
+                  hx-target="#tour-{{ tour.id }}-content"
+                  hx-swap="outerHTML show:top">
+            {% if submission %}
+              <i class="fa fa-pencil"></i> Изменить состав
+            {% else %}
+              <i class="fa fa-plus"></i> Выбрать состав
+            {% endif %}
+          </button>
+        {% endif %}
       {% else %}
         {% if submission and not tour|is_tour_not_open_yet %}
           <div class="tw:flex tw:justify-end tw:items-center">
@@ -60,7 +75,23 @@
       </div>
     {% else %}
       <div class="tw:p-8 tw:text-base tw:text-base-content/70 tw:text-center">
-        <span>Состав не выбран</span>
+        {% if is_open and not can_submit %}
+          <div class="tw:flex tw:flex-col tw:items-center tw:gap-2">
+            <i class="fa fa-lock tw:text-2xl tw:text-warning"></i>
+            <span class="tw:font-medium">Выбор состава заблокирован</span>
+            {% if blocking_tours %}
+              <div class="tw:text-sm tw:text-center">
+                Сначала отправьте состав для следующих туров:
+                {% for blocking_tour in blocking_tours %}
+                  {{ blocking_tour.number }}
+                  {% if not forloop.last %},{% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <span>Состав не выбран</span>
+        {% endif %}
       </div>
     {% endif %}
   </div>
