@@ -11,6 +11,7 @@ from tournament.models import TourNumber
 
 from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
+from .points_service import calculate_submission_total_points
 from .utils import (
     get_blocking_tours,
     get_league_budget_limit,
@@ -231,7 +232,7 @@ def top_squads_tab(request):
             )
             top_submissions = sorted(
                 submissions,
-                key=lambda s: s.get_total_points(preloaded_data),
+                key=lambda s: calculate_submission_total_points(s, preloaded_data),
                 reverse=True,
             )[:3]
 
@@ -277,7 +278,7 @@ def standings_tab(request):
             for tour in tours:
                 submission = submissions_lookup.get((user.id, tour.id))
                 if submission:
-                    tour_points[user.id][tour.id] = submission.get_total_points(preloaded_data)
+                    tour_points[user.id][tour.id] = calculate_submission_total_points(submission, preloaded_data)
                 else:
                     tour_points[user.id][tour.id] = None
 

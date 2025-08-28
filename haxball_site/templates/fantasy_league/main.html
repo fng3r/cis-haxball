@@ -101,9 +101,12 @@
             </div>
           </div>
 
-          {% comment %}
           <label class="tw:tab" role="tab">
-            <input type="radio" name="fantasy-tabs" hx-get="{% url 'fantasy_league:statistics_tab' %}?tournament={{ selected_tournament.pk }}" hx-target="#statistics-content" hx-trigger="load delay:2s" />
+            <input type="radio"
+                   name="fantasy-tabs"
+                   hx-get="{% url 'fantasy_league:statistics_tab' %}?tournament={{ selected_tournament.pk }}"
+                   hx-target="#statistics-content"
+                   hx-trigger="load delay:2s" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-bar-chart"></i>
               Статистика игроков
@@ -114,7 +117,6 @@
               <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
             </div>
           </div>
-          {% endcomment %}
         </div>
       {% endpartialdef %}
     </div>

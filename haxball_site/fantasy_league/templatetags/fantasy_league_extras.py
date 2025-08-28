@@ -1,6 +1,7 @@
 from django import template
 
 from .. import utils
+from ..points_service import calculate_player_breakdown, calculate_submission_total_points
 
 register = template.Library()
 
@@ -56,7 +57,7 @@ def get_tour_opening_date(tour):
 def get_total_points_with_data(submission, preloaded_data):
     """Get total points for a submission with preloaded data"""
     if submission and preloaded_data:
-        return submission.get_total_points(preloaded_data)
+        return calculate_submission_total_points(submission, preloaded_data)
     return 0
 
 
@@ -69,7 +70,7 @@ def player_points_breakdown(context, squad_player, role: str = 'main'):
     preloaded_data = context.get('preloaded_data')
     submission = context.get('submission')
 
-    return submission.get_player_points_breakdown(squad_player, role, preloaded_data)
+    return calculate_player_breakdown(submission, squad_player, role, preloaded_data)
 
 
 @register.filter

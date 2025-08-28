@@ -28,14 +28,14 @@
               {% for standing in standings %}
                 <tr>
                   <th class="tw:text-center tw:font-bold">
-                    {% if standing.place == 1 %}
+                    {% if forloop.counter == 1 %}
                       <span class="tw:text-yellow-500">🥇</span>
-                    {% elif standing.place == 2 %}
+                    {% elif forloop.counter == 2 %}
                       <span class="tw:text-gray-400">🥈</span>
-                    {% elif standing.place == 3 %}
+                    {% elif forloop.counter == 3 %}
                       <span class="tw:text-amber-600">🥉</span>
                     {% else %}
-                      {{ standing.place }}
+                      {{ forloop.counter }}
                     {% endif %}
                   </th>
                   <th>

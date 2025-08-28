@@ -1,12 +1,22 @@
 from datetime import time
 
 from django.contrib.auth.models import User
-from django.db import models
+from django.db.models import Count, Q
 from django.utils import timezone
 
-from tournament.models import Goal, Match, OtherEvents, Player, PlayerRating, PlayerRatingVersion, TourNumber
+from tournament.models import (
+    Goal,
+    Match,
+    OtherEvents,
+    Player,
+    PlayerMatchStatistics,
+    PlayerRating,
+    PlayerRatingVersion,
+    TourNumber,
+)
 
-from .models import SquadSubmission
+from .models import FantasyTournament, SquadSubmission
+from .points_service import calculate_submission_total_points, calculate_total_points
 
 
 def is_tour_open_for_fantasy(tour):
@@ -47,7 +57,7 @@ def get_user_tour_points(user, tour, tournament):
         .first()
     )
     if submission:
-        return submission.get_total_points(preloaded_data)
+        return calculate_submission_total_points(submission, preloaded_data)
     return None
 
 
@@ -64,7 +74,7 @@ def get_user_tournament_total_points(user, tournament):
 
     total_points = 0
     for submission in submissions:
-        total_points += submission.get_total_points(preloaded_data)
+        total_points += calculate_submission_total_points(submission, preloaded_data)
 
     return total_points
 
@@ -94,102 +104,79 @@ def get_tournament_standings(tournament):
         user_submissions = submissions_by_user.get(user.id, [])
         total_points = 0
         for submission in user_submissions:
-            total_points += submission.get_total_points(preloaded_data)
+            total_points += calculate_submission_total_points(submission, preloaded_data)
 
         standings.append({'user': user, 'total_points': total_points})
 
     standings.sort(key=lambda x: x['total_points'], reverse=True)
 
-    for i, standing in enumerate(standings):
-        standing['place'] = i + 1
-
     return standings
 
 
-def get_player_fantasy_stats(tournament=None):
+def get_player_fantasy_stats(tournament: FantasyTournament):
     """Get fantasy statistics for all players"""
-    if tournament:
-        preloaded_data = preload_fantasy_data(tournament)
-    else:
-        preloaded_data = None
+    preloaded_data = preload_fantasy_data(tournament)
 
-    players_queryset = Player.objects.filter(fantasy_squad_players__isnull=False).select_related('team').distinct()
+    players_ids = (
+        PlayerMatchStatistics.objects.filter(league=tournament.league_id).values_list('player', flat=True).distinct()
+    )
+    players = Player.objects.filter(id__in=players_ids)
 
-    if tournament:
-        players_queryset = players_queryset.filter(
-            models.Q(fantasy_squad_players__main_squad_submissions__tournament=tournament)
-            | models.Q(fantasy_squad_players__bench_players_submissions__tournament=tournament)
-        )
-
-    submissions_filter = {}
-    if tournament:
-        submissions_filter['tournament'] = tournament
-
-    all_submissions = SquadSubmission.objects.filter(**submissions_filter).prefetch_related(
+    all_submissions = SquadSubmission.objects.filter(tournament=tournament).prefetch_related(
         'main_squad__player', 'bench_players__player', 'tour'
     )
 
     total_submissions = all_submissions.count()
 
-    primary_submissions_by_player = {}
-    bench_submissions_by_player = {}
-
-    for submission in all_submissions:
-        for squad_player in submission.main_squad.all():
-            player_id = squad_player.player.id
-            if player_id not in primary_submissions_by_player:
-                primary_submissions_by_player[player_id] = []
-            primary_submissions_by_player[player_id].append((submission, squad_player))
-
-        for squad_player in submission.bench_players.all():
-            player_id = squad_player.player.id
-            if player_id not in bench_submissions_by_player:
-                bench_submissions_by_player[player_id] = []
-            bench_submissions_by_player[player_id].append((submission, squad_player))
+    matches_by_player = (
+        PlayerMatchStatistics.objects.filter(league=tournament.league_id)
+        .values('player')
+        .annotate(matches_count=Count('match'))
+    )
+    matches_by_player_map = {match['player']: match['matches_count'] for match in matches_by_player}
 
     stats = []
 
-    for player in players_queryset:
-        primary_submissions = primary_submissions_by_player.get(player.id, [])
-        secondary_submissions = bench_submissions_by_player.get(player.id, [])
+    matches = preloaded_data.get('tour_matches')
+    match_participants = preloaded_data.get('match_participants')
+    for player in players:
+        primary_position = player.positions[0] if player.positions else None
+        matches_played = matches_by_player_map.get(player.id, 0)
+        if not primary_position or matches_played == 0:
+            continue
 
-        primary_count = len(primary_submissions)
-        bench_count = len(secondary_submissions)
-        total_picked = primary_count + bench_count
+        total_fp = 0
+        for match in matches:
+            if player.id in match_participants.get(match.id, []):
+                match_goals = preloaded_data['match_goals'].get(match.id, [])
+                match_cs = preloaded_data['match_cs'].get(match.id, [])
 
-        total_points = 0
+                match_points = calculate_total_points(player, match, primary_position, match_goals, match_cs)
+                total_fp += match_points
 
-        for submission, squad_player in primary_submissions:
-            points = submission._calculate_player_points(
-                squad_player, squad_player.player_id == submission.captain_player_id, preloaded_data
+        total_picked = (
+            SquadSubmission.objects.filter(
+                Q(main_squad__player=player) | Q(bench_players__player=player), tournament=tournament
             )
-            total_points += points
+            .distinct()
+            .count()
+        )
 
-        for submission, squad_player in secondary_submissions:
-            points = (
-                submission._calculate_player_points(
-                    squad_player, squad_player.player_id == submission.captain_player_id, preloaded_data
-                )
-                * 0.5
-            )
-            total_points += points
-
-        popularity = (total_picked / total_submissions) if total_submissions > 0 else 0.0
-        points_per_pick = (total_points / total_picked) if total_picked > 0 else 0.0
+        pickrate = total_picked / total_submissions
+        fp_per_match = total_fp / matches_played
 
         stats.append(
             {
                 'player': player,
-                'total_picked': total_picked,
-                'main_picked': primary_count,
-                'bench_picked': bench_count,
-                'total_points': total_points,
-                'popularity': popularity,
-                'points_per_pick': points_per_pick,
+                'matches_played': matches_played,
+                'pickrate': pickrate,
+                'fp_per_match': fp_per_match,
+                'total_fp': total_fp,
+                'primary_position': primary_position,
             }
         )
 
-    stats.sort(key=lambda x: x['total_points'], reverse=True)
+    stats.sort(key=lambda x: x['total_fp'], reverse=True)
 
     return stats
 
@@ -197,14 +184,13 @@ def get_player_fantasy_stats(tournament=None):
 def preload_fantasy_data(tournament):
     tours = tournament.league.tours.all()
 
-    matches = (
+    matches = list(
         Match.objects.filter(numb_tour__in=tours, is_played=True)
         .select_related('team_home', 'team_guest', 'numb_tour')
         .prefetch_related(
             'team_home_start',
             'team_guest_start',
-            'match_participants',
-            'match_substitutions',
+            'match_participants__team',
             'match_substitutions__team',
         )
     )
@@ -230,7 +216,7 @@ def preload_fantasy_data(tournament):
         match_cs[event.match_id].append(event)
 
     return {
-        'tour_matches': list(matches),
+        'tour_matches': matches,
         'match_participants': match_participants,
         'match_goals': match_goals,
         'match_cs': match_cs,

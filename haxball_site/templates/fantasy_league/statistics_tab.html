@@ -1,5 +1,7 @@
 {% load mathfilters %}
 {% load widget_tweaks %}
+{% load thumbnail %}
+{% load static %}
 
 <div class="tw:space-y-4">
   {% if not selected_tournament %}
@@ -16,43 +18,30 @@
           <table class="tw:mt-2 tw:table tw:table-zebra tw:w-full">
             <thead>
               <tr>
+                <th class="tw:text-center tw:w-5">#</th>
                 <th>Игрок</th>
                 <th class="tw:text-center">
                   <div class="tw:tooltip tw:tooltip-bottom">
-                    <div class="tw:tooltip-content">Индекс популярности - насколько часто игрок появляется в составах участников</div>
-                    ИП
+                    <div class="tw:tooltip-content">Количество матчей, в которых участвовал игрок</div>
+                    Матчи
                   </div>
                 </th>
                 <th class="tw:text-center">
                   <div class="tw:tooltip tw:tooltip-bottom">
-                    <div class="tw:tooltip-content">Общее количество пиков игрока</div>
-                    В
+                    <div class="tw:tooltip-content">Процент составов, в которые был включен игрок</div>
+                    Пикрейт
                   </div>
                 </th>
                 <th class="tw:text-center">
                   <div class="tw:tooltip tw:tooltip-bottom">
-                    <div class="tw:tooltip-content">Количество пиков игрока в основной состав</div>
-                    ВО
-                  </div>
-                </th>
-                <th class="tw:text-center">
-                  <div class="tw:tooltip tw:tooltip-bottom">
-                    <div class="tw:tooltip-content">Количество пиков игрока на скамейку</div>
-                    ВС
-                  </div>
-                </th>
-                <th class="tw:text-center">
-                  <div class="tw:tooltip tw:tooltip-bottom">
-                    <div class="tw:tooltip-content">
-                      Среднее количество очков, которое приносит один выбор игрока (общее количество очков / количество пиков)
-                    </div>
-                    О/В
+                    <div class="tw:tooltip-content">Среднее количество FP за матч</div>
+                    FP/матч
                   </div>
                 </th>
                 <th class="tw:text-center">
                   <div class="tw:tooltip tw:tooltip-left">
-                    <div class="tw:tooltip-content">Общее количество очков, которое заработали участники при выборе игрока</div>
-                    О
+                    <div class="tw:tooltip-content">Общее количество FP, заработанных игроком в турнире</div>
+                    Всего FP
                   </div>
                 </th>
               </tr>
@@ -60,18 +49,24 @@
             <tbody>
               {% for stat in player_stats %}
                 <tr>
+                  <td class="tw:text-center">{{ forloop.counter }}</td>
                   <td>
-                    <div class="tw:flex tw:items-center tw:gap-2">
-                      <span class="tw:font-medium">{{ stat.player.nickname }}</span>
-                      {% if stat.player.team %}<span class="tw:badge tw:badge-outline tw:badge-xs">{{ stat.player.team.short_title }}</span>{% endif %}
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                      <div class="tw:avatar">
+                        <div class="tw:size-8 tw:rounded-full">
+                          {% thumbnail stat.player.name.user_profile.avatar "50x50" crop="center" as avatar %}
+                            <img src="{{ avatar.url }}" alt="{{ stat.player.nickname }}" class="tw:rounded-full">
+                          {% endthumbnail %}
+                        </div>
+                      </div>
+                      <a href="{% url 'core:profile_detail' stat.player.name.user_profile.id stat.player.name.user_profile.slug %}"
+                         class="tw:link tw:link-hover tw:text-lg tw:font-medium">{{ stat.player.nickname }}</a>
                     </div>
                   </td>
-                  <td class="tw:text-center">{{ stat.popularity|mul:100|floatformat:0 }}%</td>
-                  <td class="tw:text-center tw:font-bold">{{ stat.total_picked }}</td>
-                  <td class="tw:text-center">{{ stat.main_picked }}</td>
-                  <td class="tw:text-center">{{ stat.bench_picked }}</td>
-                  <td class="tw:text-center">{{ stat.points_per_pick|floatformat:1 }}</td>
-                  <td class="tw:text-center tw:font-bold tw:text-primary">{{ stat.total_points|floatformat:1 }}</td>
+                  <td class="tw:text-center tw:font-bold">{{ stat.matches_played }}</td>
+                  <td class="tw:text-center">{{ stat.pickrate|mul:100|floatformat:1 }}%</td>
+                  <td class="tw:text-center">{{ stat.fp_per_match|floatformat:1 }}</td>
+                  <td class="tw:text-center tw:font-bold tw:text-primary">{{ stat.total_fp|floatformat:1 }}</td>
                 </tr>
               {% endfor %}
             </tbody>
