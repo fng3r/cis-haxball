@@ -10,8 +10,20 @@
       <span>Выберите турнир для просмотра статистики игроков</span>
     </div>
   {% else %}
-    <div class="tw:[#statistics-content:has(.htmx-request)_&]:opacity-50 tw:[#statistics-content:has(.htmx-request)_&]:transition-opacity">
+    <div class="tw:[#statistics-content:has(.htmx-request)_&]:opacity-50 tw:[#statistics-content:has(.htmx-request)_&]:transition-opacity"
+         x-data="{ selectedPosition: null }">
       <h5 class="tw:text-md tw:font-semibold">Статистика игроков</h5>
+
+      <!-- Position Filter -->
+      <div class="tw:flex tw:flex-col tw:gap-2 tw:justify-center tw:mt-3">
+        <span class="tw:text-sm tw:font-medium tw:text-base-content/70">Позиция</span>
+        <form class="tw:filter">
+          <input class="tw:btn tw:btn-xs tw:btn-square" type="reset" value="×" @click="selectedPosition = null" />
+          <input class="tw:btn tw:btn-xs" type="radio" name="positions" aria-label="ГК" value="GK" x-model="selectedPosition" />
+          <input class="tw:btn tw:btn-xs" type="radio" name="positions" aria-label="ОП" value="DM" x-model="selectedPosition" />
+          <input class="tw:btn tw:btn-xs" type="radio" name="positions" aria-label="НАП" value="ST" x-model="selectedPosition" />
+        </form>
+      </div>
 
       {% if player_stats %}
         <div class="tw:overflow-x-auto">
@@ -48,19 +60,44 @@
             </thead>
             <tbody>
               {% for stat in player_stats %}
-                <tr>
+                <tr x-data="{ playerPosition: '{{ stat.position }}' }"
+                    x-show="!selectedPosition || selectedPosition === playerPosition"
+                    x-transition:enter="tw:transition tw:ease-in tw:duration-200"
+                    x-transition:enter-start="tw:opacity-0 tw:transform tw:translate-y-2"
+                    x-transition:enter-end="tw:opacity-100 tw:transform tw:translate-y-0"
+                    x-transition:leave="tw:transition tw:ease-out tw:duration-200"
+                    x-transition:leave-start="tw:opacity-100 tw:transform tw:translate-y-0"
+                    x-transition:leave-end="tw:opacity-0 tw:transform tw:translate-y-2">
                   <td class="tw:text-center">{{ forloop.counter }}</td>
                   <td>
                     <div class="tw:flex tw:items-center tw:gap-3">
                       <div class="tw:avatar">
                         <div class="tw:size-8 tw:rounded-full">
-                          {% thumbnail stat.player.name.user_profile.avatar "50x50" crop="center" as avatar %}
-                            <img src="{{ avatar.url }}" alt="{{ stat.player.nickname }}" class="tw:rounded-full">
-                          {% endthumbnail %}
+                          {% if stat.player.name and stat.player.name.user_profile.avatar %}
+                            {% thumbnail stat.player.name.user_profile.avatar "50x50" crop="center" as avatar %}
+                              <img src="{{ avatar.url }}" alt="{{ stat.player.nickname }}" class="tw:rounded-full">
+                            {% endthumbnail %}
+                          {% else %}
+                            <img src="{% static 'img/no_avatar.png' %}" alt="{{ stat.player.nickname }}" class="tw:rounded-full">
+                          {% endif %}
                         </div>
                       </div>
-                      <a href="{% url 'core:profile_detail' stat.player.name.user_profile.id stat.player.name.user_profile.slug %}"
-                         class="tw:link tw:link-hover tw:text-lg tw:font-medium">{{ stat.player.nickname }}</a>
+                      <div class="tw:flex tw:items-baseline tw:gap-2">
+                        <a href="{% url 'core:profile_detail' stat.player.name.user_profile.id stat.player.name.user_profile.slug %}"
+                           class="tw:link tw:link-hover tw:text-lg tw:font-medium">{{ stat.player.nickname }}</a>
+
+                        {% with position=stat.position %}
+                          <span class="tw:badge tw:badge-outline tw:badge-xs {% if position == 'GK' %}tw:badge-primary {% elif position == 'DM' %}tw:badge-secondary {% else %}tw:badge-accent{% endif %}">
+                            {% if position == 'GK' %}
+                              ГК
+                            {% elif position == 'DM' %}
+                              ОП
+                            {% elif position == 'ST' %}
+                              НАП
+                            {% endif %}
+                          </span>
+                        {% endwith %}
+                      </div>
                     </div>
                   </td>
                   <td class="tw:text-center tw:font-bold">{{ stat.matches_played }}</td>

@@ -168,6 +168,7 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
         stats.append(
             {
                 'player': player,
+                'position': primary_position,
                 'matches_played': matches_played,
                 'pickrate': pickrate,
                 'fp_per_match': fp_per_match,
