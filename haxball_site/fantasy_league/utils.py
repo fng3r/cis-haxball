@@ -274,9 +274,9 @@ def get_reverse_blocking_tours(user, tour, tournament):
 # ===== Budget and player cost helpers (shared between forms and setup scripts) =====
 
 PRICE_RANGES = {
-    PlayerRating.Grade.S: (28, 35),
-    PlayerRating.Grade.A: (18, 27),
-    PlayerRating.Grade.B_PLUS: (13, 17),
+    PlayerRating.Grade.S: (30, 40),
+    PlayerRating.Grade.A: (19, 29),
+    PlayerRating.Grade.B_PLUS: (13, 18),
     PlayerRating.Grade.B: (9, 12),
     PlayerRating.Grade.C: (6, 8),
     PlayerRating.Grade.D: (3, 5),
