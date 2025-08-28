@@ -82,7 +82,7 @@ def fantasy_main(request):
         'make_squad_tab_html': make_squad_tab_html,
     }
     if request.htmx:
-        return render(request, 'fantasy_league/main.html#fantasy_main_container', context)
+        return render(request, 'fantasy_league/main.html#tabs', context)
     return render(request, 'fantasy_league/main.html', context)
 
 

@@ -6,35 +6,40 @@
 {% block title %}Фэнтези Лига — CIS-HAXBALL{% endblock %}
 
 {% block main_content %}
-  {% partialdef fantasy_main_container inline=True %}
-    <div id="fantasy-main-container" class="tw:card tw:bg-base-100 tw:rounded-lg">
-      <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
-        <div class="tw:card-title tw:py-1">
-          <h3 class="tw:text-center">Фэнтези Лига</h3>
-        </div>
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
+      <div class="tw:card-title tw:py-1">
+        <h3 class="tw:text-center">Фэнтези Лига</h3>
+      </div>
+    </div>
+
+    <div class="tw:card-body tw:p-1">
+      <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
+        <form id="tournament_selector" class="tw:flex tw:flex-col tw:gap-2">
+          <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
+          <div class="tw:flex tw:flex-wrap tw:gap-2">
+            {% for tournament in tournament_form.tournament.field.queryset %}
+              <input type="radio"
+                     name="tournament"
+                     value="{{ tournament.pk }}"
+                     aria-label="{{ tournament.league.title }}"
+                     class="tw:btn tw:btn-sm"
+                     hx-get="{% url 'fantasy_league:main' %}?tournament={{ tournament.pk }}"
+                     hx-target="#fantasy-main-tabs"
+                     hx-swap="outerHTML"
+                     {% if selected_tournament and selected_tournament.pk == tournament.pk %}checked{% endif %}>
+            {% endfor %}
+          </div>
+        </form>
+
+        <button class="tw:btn tw:btn-outline tw:btn-sm tw:self-end" onclick="rules_modal.showModal()">
+          <i class="fa fa-book"></i> Правила
+        </button>
       </div>
 
-      <div class="tw:card-body tw:p-1">
-        <div class="tw:flex tw:items-center tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
-          <form id="tournament_selector" class="tw:flex tw:flex-col tw:gap-2 tw:w-full">
-            <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
-            <div class="tw:flex tw:flex-wrap tw:gap-2">
-              {% for tournament in tournament_form.tournament.field.queryset %}
-                <input type="radio"
-                       name="tournament"
-                       value="{{ tournament.pk }}"
-                       aria-label="{{ tournament.league.title }}"
-                       class="tw:btn tw:btn-sm"
-                       hx-get="{% url 'fantasy_league:main' %}?tournament={{ tournament.pk }}"
-                       hx-target="#fantasy-main-container"
-                       hx-swap="outerHTML"
-                       {% if selected_tournament and selected_tournament.pk == tournament.pk %}checked{% endif %}>
-              {% endfor %}
-            </div>
-          </form>
-        </div>
-
-        <div class="tw:tabs tw:tabs-border tw:[:has(#tournament\_selector_input.htmx-request)_&]:opacity-50 tw:[:has(#tournament\_selector_input.htmx-request)_&]:transition-opacity"
+      {% partialdef tabs inline=True %}
+        <div id="fantasy-main-tabs"
+             class="tw:tabs tw:tabs-border tw:[:has(#tournament\_selector_input.htmx-request)_&]:opacity-50 tw:[:has(#tournament\_selector_input.htmx-request)_&]:transition-opacity"
              role="tablist">
           <label class="tw:tab" role="tab">
             <input type="radio" name="fantasy-tabs" checked />
@@ -110,18 +115,18 @@
             </div>
           </div>
           {% endcomment %}
-
-          <label class="tw:tab" role="tab">
-            <input type="radio" name="fantasy-tabs" />
-            <span class="tw:flex tw:items-center tw:gap-2">
-              <i class="fa fa-book"></i>
-              Правила
-            </span>
-          </label>
-
-          <div id="rules-content" class="tw:tab-content tw:p-2" role="tabpanel">{% include 'fantasy_league/partials/rules.html' %}</div>
         </div>
-      </div>
+      {% endpartialdef %}
     </div>
-  {% endpartialdef %}
+  </div>
+
+  <dialog id="rules_modal" class="tw:modal">
+    <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
+      <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила Фэнтези Лиги</h3>
+      <div class="tw:overflow-y-auto">{% include 'fantasy_league/partials/rules.html' %}</div>
+    </div>
+    <form method="dialog" class="tw:modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
 {% endblock %}
