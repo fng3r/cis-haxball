@@ -97,7 +97,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
     if selected_tournament:
         preloaded_data = preload_fantasy_data(selected_tournament)
 
-        tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
+        tours = list(TourNumber.objects.filter(league=selected_tournament.league).order_by('number'))
 
         submissions = (
             SquadSubmission.objects.filter(user=request.user, tournament=selected_tournament)
@@ -132,9 +132,12 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
                     'blocking_tours': blocking_tours,
                 }
 
+        is_tournament_ended = all(tour.is_ended for tour in tours)
+
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
+        'is_tournament_ended': is_tournament_ended,
         'user_squads': user_squads,
         'user': request.user,
         'preloaded_data': preloaded_data if selected_tournament else None,

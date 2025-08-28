@@ -344,7 +344,7 @@ class SquadSubmission(models.Model):
                 {'name': 'Время на поле', 'value': formatted_playtime, 'points': match_points['playtime']['points']},
                 {'name': 'Голы', 'value': match_points['goals']['count'], 'points': match_points['goals']['points']},
                 {
-                    'name': 'Передачи',
+                    'name': 'Голевые передачи',
                     'value': match_points['assists']['count'],
                     'points': match_points['assists']['points'],
                 },

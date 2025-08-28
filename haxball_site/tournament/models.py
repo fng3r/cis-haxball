@@ -499,6 +499,14 @@ class TourNumber(models.Model):
         today = timezone.localdate()
         return today >= self.date_from and any(not match.is_played for match in self.tour_matches.all())
 
+    @property
+    def is_started(self):
+        return timezone.now().date() >= self.date_from
+
+    @property
+    def is_ended(self):
+        return timezone.now().date() > self.date_to
+
     def __str__(self):
         bracket_postfix = ''
         if (
