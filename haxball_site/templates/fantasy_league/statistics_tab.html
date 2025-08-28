@@ -2,19 +2,6 @@
 {% load widget_tweaks %}
 
 <div class="tw:space-y-4">
-  <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
-    <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
-          hx-get="{% url 'fantasy_league:statistics_tab' %}"
-          hx-target="#statistics-content"
-          hx-trigger="change"
-          hx-push-url="false">
-      <div class="tw:flex tw:flex-col tw:gap-1">
-        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
-        {{ tournament_form.tournament|add_class:"tw:select tw:select-bordered" }}
-      </div>
-    </form>
-  </div>
-
   {% if not selected_tournament %}
     <div class="tw:alert tw:alert-warning">
       <i class="fa fa-exclamation-triangle"></i>

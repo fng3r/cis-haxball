@@ -81,6 +81,8 @@ def fantasy_main(request):
         'active_tournaments': active_tournaments,
         'make_squad_tab_html': make_squad_tab_html,
     }
+    if request.htmx:
+        return render(request, 'fantasy_league/main.html#fantasy_main_container', context)
     return render(request, 'fantasy_league/main.html', context)
 
 
