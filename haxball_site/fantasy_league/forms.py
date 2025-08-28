@@ -11,7 +11,7 @@ class TournamentFilterForm(forms.Form):
     """Form for filtering tournaments"""
 
     tournament = forms.ModelChoiceField(
-        queryset=FantasyTournament.objects.filter(is_active=True),
+        queryset=FantasyTournament.objects.filter(is_active=True).order_by('league__priority'),
         empty_label=None,
         required=False,
         label='Турнир',
