@@ -21,7 +21,6 @@ from .models import (
     PredictionTournament,
 )
 from .utils import (
-    get_open_tours,
     get_tournament_standings,
     is_tour_open_for_predictions,
 )
@@ -198,15 +197,12 @@ def view_predictions_tab(request):
             else:
                 predictions_data[tour.id] = None
 
-    open_tours = get_open_tours()
-
     context = {
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
         'predictions_data': predictions_data,
-        'open_tours': open_tours,
     }
 
     return render(request, 'predictions/contest/view_predictions_tab.html', context)

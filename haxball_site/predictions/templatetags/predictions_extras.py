@@ -32,6 +32,12 @@ def is_not_open_yet(tour):
 
 
 @register.filter
+def is_closed_for_predictions(tour):
+    """Template filter to check if a tour is closed for predictions"""
+    return not is_open_for_predictions(tour) and not is_not_open_yet(tour)
+
+
+@register.filter
 def get_tour_opening_date(tour):
     """Template filter to get the date when a tour opens for predictions"""
     return tour.date_from - timedelta(days=3)

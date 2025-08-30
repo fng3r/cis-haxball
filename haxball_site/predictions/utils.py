@@ -3,19 +3,7 @@ from datetime import time
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from tournament.models import TourNumber
-
 from .models import PredictionSubmission
-
-
-def get_open_tours():
-    """Get tours that are currently open for predictions"""
-    open_tours = []
-    for tour in TourNumber.objects.filter(league__prediction_tournament__is_active=True).select_related('league'):
-        if is_tour_open_for_predictions(tour):
-            open_tours.append(tour.id)
-
-    return open_tours
 
 
 def is_tour_open_for_predictions(tour):
