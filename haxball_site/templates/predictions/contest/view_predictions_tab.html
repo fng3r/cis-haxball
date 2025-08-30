@@ -1,6 +1,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load predictions_extras %}
+{% load tournament_extras %}
 {% load utils %}
 
 <div class="tw:flex tw:flex-col tw:gap-4">
@@ -34,7 +35,7 @@
                   <div class="tw:card tw:bg-base-200 tw:shadow-sm">
                     <div class="tw:card-body tw:p-4">
                       <h6 class="tw:card-title tw:mb-0!">
-                        <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+                        <span class="tw:font-semibold tw:text-lg">{{ tour|tour_name }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
                       </h6>
                       {% if submission.predictions.count > 0 %}
                         <div class="tw:mt-2 tw:space-y-1">

@@ -5,144 +5,132 @@
 
 <div class="tw:card-body tw:p-4 tw:gap-4">
   <div class="tw:flex tw:items-center tw:justify-between">
-    <h6 class="tw:card-title tw:text-sm tw:mb-0!">
-      Прогнозы на {{ tour|tour_name }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})
+    <h6 class="tw:card-title tw:mb-0!">
+      <span class="tw:font-semibold tw:text-lg">{{ tour|tour_name }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
     </h6>
   </div>
 
-  <div class="tw:alert tw:alert-info">
-    <i class="fa fa-info-circle tw:mr-2"></i>
-    <span>
-      <strong>Инструкция:</strong>
-      <br>
-      • Выберите результат для каждого матча: П1 (победа хозяев), X (ничья), П2 (победа гостей)
-      <br>
-      • В каждом туре можно выбрать до 2 "особых" матчей (отмечаются звездочкой)
-      <br>
-      • Прогнозы можно изменять до старта соответствующего тура
-    </div>
+  <form method="post"
+        class="tw:space-y-4"
+        hx-post="{% url 'predictions:edit_predictions' tour.id %}"
+        hx-target="#tour-card-{{ tour.id }}"
+        hx-push-url="false">
 
-    <form method="post"
-          class="tw:space-y-4"
-          hx-post="{% url 'predictions:edit_predictions' tour.id %}"
-          hx-target="#tour-card-{{ tour.id }}"
-          hx-push-url="false">
+    {% csrf_token %}
 
-      {% csrf_token %}
-
-      {% if matches %}
-        <div class="tw:space-y-4"
-          {# djlint:off #}
-             x-data="{ specials: {} }"
-             x-init="
-                     {% for match in matches %}
-                       {% with existing_prediction=existing_predictions|get_item:match.id %}
-                         {% if existing_prediction and existing_prediction.is_special %}
-                           specials['{{ match.id }}'] = true;
-                         {% endif %}
-                       {% endwith %}
-                     {% endfor %}
-                    "
-          {# djlint:on #}
-        >
-          {% for match in matches %}
-            <div class="tw:card tw:bg-base-100 tw:shadow-sm">
-              <div class="tw:card-body tw:p-3">
-                <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
-                  <div class="tw:flex tw:items-center tw:gap-2">
-                    <div class="tw:flex tw:items-center tw:gap-1">
-                      {% if match.team_home.logo %}<img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5">{% endif %}
-                      <span class="tw:font-semibold tw:text-sm">{{ match.team_home.title }}</span>
-                    </div>
-                    <span class="tw:text-sm tw:font-bold">vs</span>
-                    <div class="tw:flex tw:items-center tw:gap-1">
-                      <span class="tw:font-semibold tw:text-sm">{{ match.team_guest.title }}</span>
-                      {% if match.team_guest.logo %}
-                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5">
-                      {% endif %}
-                    </div>
+    {% if matches %}
+      <div class="tw:space-y-4"
+        {# djlint:off #}
+           x-data="{ specials: {} }"
+           x-init="
+                   {% for match in matches %}
+                     {% with existing_prediction=existing_predictions|get_item:match.id %}
+                       {% if existing_prediction and existing_prediction.is_special %}
+                         specials['{{ match.id }}'] = true;
+                       {% endif %}
+                     {% endwith %}
+                   {% endfor %}
+                  "
+        {# djlint:on #}
+      >
+        {% for match in matches %}
+          <div class="tw:card tw:bg-base-100 tw:shadow-sm">
+            <div class="tw:card-body tw:p-3">
+              <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
+                <div class="tw:flex tw:items-center tw:gap-2">
+                  <div class="tw:flex tw:items-center tw:gap-1">
+                    {% if match.team_home.logo %}<img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5">{% endif %}
+                    <span class="tw:font-semibold tw:text-sm">{{ match.team_home.title }}</span>
                   </div>
-
-                  {% if match.is_played %}
-                    <div class="tw:badge tw:badge-success tw:badge-sm">Результат: {{ match.score_home }}:{{ match.score_guest }}</div>
-                  {% endif %}
+                  <span class="tw:text-sm tw:font-bold">vs</span>
+                  <div class="tw:flex tw:items-center tw:gap-1">
+                    <span class="tw:font-semibold tw:text-sm">{{ match.team_guest.title }}</span>
+                    {% if match.team_guest.logo %}
+                      <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5">
+                    {% endif %}
+                  </div>
                 </div>
 
-                <div class="tw:flex tw:items-center tw:gap-3">
-                  <label class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Ваш прогноз:</label>
+                {% if match.is_played %}
+                  <div class="tw:badge tw:badge-success tw:badge-sm">Результат: {{ match.score_home }}:{{ match.score_guest }}</div>
+                {% endif %}
+              </div>
 
-                  {% with existing_prediction=existing_predictions|get_item:match.id %}
-                    <div class="tw:flex tw:gap-2" x-data="{ hasPrediction: {{ existing_prediction|yesno:'true,false' }} }">
-                      <div class="tw:join">
-                        <input type="radio"
-                               name="prediction_{{ match.id }}"
-                               value="HW"
-                               aria-label="П1"
-                               class="tw:join-item tw:btn tw:btn-xs tw:w-8"
-                               {% if existing_prediction.predicted_result == 'HW' %}checked{% endif %}
-                               @change="hasPrediction = true">
+              <div class="tw:flex tw:items-center tw:gap-3">
+                <label class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Ваш прогноз:</label>
 
-                        <input type="radio"
-                               name="prediction_{{ match.id }}"
-                               value="D"
-                               aria-label="X"
-                               class="tw:join-item tw:btn tw:btn-xs tw:w-8"
-                               {% if existing_prediction.predicted_result == 'D' %}checked{% endif %}
-                               @change="hasPrediction = true">
+                {% with existing_prediction=existing_predictions|get_item:match.id %}
+                  <div class="tw:flex tw:gap-2" x-data="{ hasPrediction: {{ existing_prediction|yesno:'true,false' }} }">
+                    <div class="tw:join">
+                      <input type="radio"
+                             name="prediction_{{ match.id }}"
+                             value="HW"
+                             aria-label="П1"
+                             class="tw:join-item tw:btn tw:btn-xs tw:w-8"
+                             {% if existing_prediction.predicted_result == 'HW' %}checked{% endif %}
+                             @change="hasPrediction = true">
 
-                        <input type="radio"
-                               name="prediction_{{ match.id }}"
-                               value="AW"
-                               aria-label="П2"
-                               class="tw:join-item tw:btn tw:btn-xs tw:w-8"
-                               {% if existing_prediction.predicted_result == 'AW' %}checked{% endif %}
-                               @change="hasPrediction = true">
-                      </div>
+                      <input type="radio"
+                             name="prediction_{{ match.id }}"
+                             value="D"
+                             aria-label="X"
+                             class="tw:join-item tw:btn tw:btn-xs tw:w-8"
+                             {% if existing_prediction.predicted_result == 'D' %}checked{% endif %}
+                             @change="hasPrediction = true">
 
-                      <label class="tw:flex tw:items-center tw:gap-1 tw:ml-2 tw:cursor-pointer" x-show="hasPrediction">
-                        <input type="checkbox"
-                               name="special_{{ match.id }}"
-                               class="tw:checkbox tw:checkbox-warning tw:checkbox-sm tw:rounded tw:peer"
-                               x-model="specials['{{ match.id }}']"
-                               :disabled="!hasPrediction || (Object.values(specials).filter(Boolean).length >= 2 && !specials['{{ match.id }}'])">
-                        <i class="fa fa-star tw:text-xs tw:text-warning tw:peer-disabled:opacity-50"></i>
-                      </label>
-
-                      <button type="button"
-                              class="tw:ml-2 tw:btn tw:btn-error tw:btn-xs"
-                              x-show="hasPrediction"
-                              @click="const radios = $el.parentElement.querySelectorAll('input[type=radio]'); radios.forEach(r => r.checked = false); hasPrediction = false; specials['{{ match.id }}'] = false;"
-                              title="Очистить прогноз">
-                        <i class="fa fa-trash tw:text-xs"></i>
-                      </button>
+                      <input type="radio"
+                             name="prediction_{{ match.id }}"
+                             value="AW"
+                             aria-label="П2"
+                             class="tw:join-item tw:btn tw:btn-xs tw:w-8"
+                             {% if existing_prediction.predicted_result == 'AW' %}checked{% endif %}
+                             @change="hasPrediction = true">
                     </div>
-                  {% endwith %}
-                </div>
+
+                    <label class="tw:flex tw:items-center tw:gap-1 tw:ml-2 tw:cursor-pointer" x-show="hasPrediction">
+                      <input type="checkbox"
+                             name="special_{{ match.id }}"
+                             class="tw:checkbox tw:checkbox-warning tw:checkbox-sm tw:rounded tw:peer"
+                             x-model="specials['{{ match.id }}']"
+                             :disabled="!hasPrediction || (Object.values(specials).filter(Boolean).length >= 2 && !specials['{{ match.id }}'])">
+                      <i class="fa fa-star tw:text-xs tw:text-warning tw:peer-disabled:opacity-50"></i>
+                    </label>
+
+                    <button type="button"
+                            class="tw:ml-2 tw:btn tw:btn-error tw:btn-xs"
+                            x-show="hasPrediction"
+                            @click="const radios = $el.parentElement.querySelectorAll('input[type=radio]'); radios.forEach(r => r.checked = false); hasPrediction = false; specials['{{ match.id }}'] = false;"
+                            title="Очистить прогноз">
+                      <i class="fa fa-trash tw:text-xs"></i>
+                    </button>
+                  </div>
+                {% endwith %}
               </div>
             </div>
-          {% endfor %}
-        </div>
+          </div>
+        {% endfor %}
+      </div>
 
-        <div class="tw:flex tw:justify-end tw:gap-2 tw:mt-4">
-          <a href="#"
-             class="tw:btn tw:btn-outline tw:btn-sm"
-             hx-get="{% url 'predictions:tour_card' tour.id %}"
-             hx-target="#tour-card-{{ tour.id }}"
-             hx-push-url="false">
-            <i class="fa fa-times tw:mr-1"></i>
-            Отмена
-          </a>
+      <div class="tw:flex tw:justify-end tw:gap-2 tw:mt-4">
+        <a href="#"
+           class="tw:btn tw:btn-outline tw:btn-sm"
+           hx-get="{% url 'predictions:tour_card' tour.id %}"
+           hx-target="#tour-card-{{ tour.id }}"
+           hx-push-url="false">
+          <i class="fa fa-times tw:mr-1"></i>
+          Отмена
+        </a>
 
-          <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm">
-            <i class="fa fa-save tw:mr-1"></i>
-            Сохранить
-          </button>
-        </div>
-      {% else %}
-        <div class="tw:alert tw:alert-warning">
-          <i class="fa fa-exclamation-triangle tw:mr-2"></i>
-          <span>В этом туре нет матчей для прогнозов.</span>
-        </div>
-      {% endif %}
-    </form>
-  </div>
+        <button type="submit" class="tw:btn tw:btn-primary tw:btn-sm">
+          <i class="fa fa-save tw:mr-1"></i>
+          Сохранить
+        </button>
+      </div>
+    {% else %}
+      <div class="tw:alert tw:alert-warning">
+        <i class="fa fa-exclamation-triangle tw:mr-2"></i>
+        <span>В этом туре нет матчей для прогнозов.</span>
+      </div>
+    {% endif %}
+  </form>
+</div>
