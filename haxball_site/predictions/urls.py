@@ -6,6 +6,7 @@ app_name = 'predictions'
 
 urlpatterns = [
     path('', views.predictions_main, name='main'),
+    path('contest/', views.predictions_contest_tab, name='predictions_contest'),
     path('make-predictions/', views.make_predictions_tab, name='make_predictions_tab'),
     path('view-predictions/', views.view_predictions_tab, name='view_predictions_tab'),
     path('standings/', views.standings_tab, name='standings_tab'),

@@ -28,11 +28,39 @@ from .utils import (
 
 
 def get_default_tournament():
-    return (
-        PredictionTournament.objects.filter(is_active=True, league__championship__is_active=True)
-        .select_related('league')
-        .first()
+    return PredictionTournament.objects.filter(is_active=True).select_related('league').first()
+
+
+def resolve_selected_tournament(request, selected_tournament=None):
+    """Resolve selected tournament from GET or provided value and return (tournament, TournamentFilterForm).
+
+    Ensures the tournament is enriched with league and prefetches tours for later use.
+    """
+    default_tournament = get_default_tournament()
+    if not selected_tournament:
+        if request.GET.get('tournament'):
+            selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
+        elif default_tournament:
+            selected_tournament = default_tournament
+
+    if selected_tournament:
+        selected_tournament = (
+            PredictionTournament.objects.filter(pk=selected_tournament.pk)
+            .select_related('league')
+            .prefetch_related(
+                'league__tours',
+                'league__tours__tour_matches__team_home',
+                'league__tours__tour_matches__team_guest',
+                'league__tours__tour_matches__result',
+            )
+            .first()
+        )
+
+    tournament_form = TournamentFilterForm(
+        initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
+
+    return selected_tournament, tournament_form
 
 
 def get_users_with_predictions(tournament=None):
@@ -46,18 +74,9 @@ def get_users_with_predictions(tournament=None):
 
 def predictions_main(request):
     """Main predictions page with three tabs"""
-    default_tournament = get_default_tournament()
-    selected_tournament = None
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
     selected_user = None
 
-    if request.GET.get('tournament'):
-        selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
-    elif default_tournament:
-        selected_tournament = default_tournament
-
-    tournament_form = TournamentFilterForm(
-        initial={'tournament': selected_tournament.pk if selected_tournament else None}
-    )
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
 
     active_tournaments = PredictionTournament.objects.filter(is_active=True)
@@ -73,7 +92,26 @@ def predictions_main(request):
         'active_tournaments': active_tournaments,
         'make_predictions_tab_html': make_predictions_tab_html,
     }
+
     return render(request, 'predictions/main.html', context)
+
+
+def predictions_contest_tab(request):
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
+    make_predictions_tab_html = make_predictions_tab(
+        request, initial_context=True, selected_tournament=selected_tournament
+    )
+
+    context = {
+        'selected_tournament': selected_tournament,
+        'tournament_form': tournament_form,
+        'make_predictions_tab_html': make_predictions_tab_html,
+    }
+
+    if request.htmx:
+        return render(request, 'predictions/contest/container.html#predictions-contest-tabs', context)
+
+    return render(request, 'predictions/contest/container.html', context)
 
 
 def make_predictions_tab(request, initial_context=False, selected_tournament=None):
@@ -85,28 +123,7 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
             request=request,
         )
 
-    default_tournament = get_default_tournament()
-    if not selected_tournament:
-        if request.GET.get('tournament'):
-            selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
-        elif default_tournament:
-            selected_tournament = default_tournament
-
-    if selected_tournament:
-        selected_tournament = (
-            PredictionTournament.objects.filter(pk=selected_tournament.pk)
-            .select_related('league')
-            .prefetch_related(
-                'league__tours__tour_matches__team_home',
-                'league__tours__tour_matches__team_guest',
-                'league__tours__tour_matches__result',
-            )
-            .first()
-        )
-
-    tournament_form = TournamentFilterForm(
-        initial={'tournament': selected_tournament.pk if selected_tournament else None}
-    )
+    selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
 
     user_predictions = {}
     if selected_tournament:
@@ -141,24 +158,7 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
 
 def view_predictions_tab(request):
     """Tab for viewing other users' predictions"""
-    default_tournament = get_default_tournament()
-
-    selected_tournament = None
-    if request.GET.get('tournament'):
-        selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
-    elif default_tournament:
-        selected_tournament = default_tournament
-
-    if selected_tournament:
-        selected_tournament = (
-            PredictionTournament.objects.filter(pk=selected_tournament.pk)
-            .prefetch_related(
-                'league__tours__tour_matches__team_home',
-                'league__tours__tour_matches__team_guest',
-                'league__tours__tour_matches__result',
-            )
-            .first()
-        )
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
 
     user_id = request.GET.get('user')
     selected_user = None
@@ -214,28 +214,7 @@ def view_predictions_tab(request):
 
 def standings_tab(request):
     """Tab for tournament standings"""
-    default_tournament = get_default_tournament()
-
-    selected_tournament = None
-    if request.GET.get('tournament'):
-        selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
-    elif default_tournament:
-        selected_tournament = default_tournament
-
-    if selected_tournament:
-        selected_tournament = (
-            PredictionTournament.objects.filter(pk=selected_tournament.pk)
-            .prefetch_related(
-                'league__tours__tour_matches__team_home',
-                'league__tours__tour_matches__team_guest',
-                'league__tours__tour_matches__result',
-            )
-            .first()
-        )
-
-    tournament_form = TournamentFilterForm(
-        initial={'tournament': selected_tournament.pk if selected_tournament else None}
-    )
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
 
     standings = []
     tour_points = {}
@@ -374,14 +353,16 @@ def edit_predictions(request, tour_id):
 
 
 def longterm(request):
-    selected_tournament = _resolve_selected_tournament(request)
-    tournament_form = TournamentFilterForm(
-        initial={'tournament': selected_tournament.pk if selected_tournament else None}
-    )
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
     context = {
         'selected_tournament': selected_tournament,
         'tournament_form': tournament_form,
     }
+
+    only_tabs = request.GET.get('only_tabs', False)
+    if only_tabs:
+        return render(request, 'predictions/longterm/container.html#longterm-tabs', context)
+
     return render(request, 'predictions/longterm/container.html', context)
 
 
@@ -389,7 +370,7 @@ def longterm_my_tab(request):
     if not request.user.is_authenticated:
         return render(request, 'predictions/longterm/my_predictions_tab.html', {'user': request.user})
 
-    selected_tournament = _resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_tournament(request)
     submission = None
     items = []
     league_teams = []
@@ -411,17 +392,6 @@ def longterm_my_tab(request):
         'league_teams': league_teams,
     }
     return render(request, 'predictions/longterm/my_predictions_tab.html', context)
-
-
-def _resolve_selected_tournament(request):
-    selected_tournament = None
-    if not selected_tournament:
-        if request.GET.get('tournament'):
-            selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
-        else:
-            selected_tournament = get_default_tournament()
-
-    return selected_tournament
 
 
 def _aggregate_longterm_results(tournament: PredictionTournament):
@@ -464,7 +434,7 @@ def _aggregate_longterm_results(tournament: PredictionTournament):
 
 
 def longterm_results_tab(request):
-    selected_tournament = _resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_tournament(request)
     results = []
     if selected_tournament:
         results = _aggregate_longterm_results(selected_tournament)

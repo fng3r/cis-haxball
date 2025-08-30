@@ -8,7 +8,7 @@ class TournamentFilterForm(forms.Form):
     """Form for filtering by tournament"""
 
     tournament = forms.ModelChoiceField(
-        queryset=PredictionTournament.objects.filter(is_active=True, league__championship__is_active=True),
+        queryset=PredictionTournament.objects.filter(is_active=True),
         empty_label=None,
         label='Турнир',
         required=False,

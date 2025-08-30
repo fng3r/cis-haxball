@@ -11,19 +11,12 @@
   {% else %}
 
     <div class="tw:flex tw:flex-col tw:gap-6">
-      <form class="tw:flex tw:items-center tw:gap-4"
-            hx-get="{% url 'predictions:make_predictions_tab' %}"
-            hx-target="#make-predictions-content"
-            hx-trigger="change"
-            hx-push-url="false">
-
-        <div class="tw:flex tw:flex-col tw:gap-1">
-          <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
-          {% render_field tournament_form.tournament|add_class:'tw:select tw:select-bordered' %}
+      {% if not selected_tournament %}
+        <div class="tw:alert tw:alert-warning">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span>Выберите турнир для участия в прогнозах</span>
         </div>
-      </form>
-
-      {% if selected_tournament %}
+      {% else %}
         <div x-data="{ showAllTours: false }"
              class="tw:[#make-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#make-predictions-content:has(.htmx-request)_&]:transition-opacity">
           <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
@@ -50,11 +43,6 @@
               </div>
             {% endfor %}
           </div>
-        </div>
-      {% else %}
-        <div class="tw:alert tw:alert-info">
-          <i class="fa fa-info-circle tw:mr-2"></i>
-          <span>Выберите турнир, чтобы сделать прогнозы</span>
         </div>
       {% endif %}
     </div>

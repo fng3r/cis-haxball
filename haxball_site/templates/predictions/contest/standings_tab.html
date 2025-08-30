@@ -3,19 +3,12 @@
 {% load predictions_extras %}
 
 <div class="tw:flex tw:flex-col tw:gap-6">
-  <form class="tw:flex tw:items-center tw:gap-4"
-        hx-get="{% url 'predictions:standings_tab' %}"
-        hx-target="#standings-content"
-        hx-trigger="change"
-        hx-push-url="false">
-
-    <div class="tw:flex tw:flex-col tw:gap-1">
-      <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
-      {% render_field tournament_form.tournament|add_class:'tw:select tw:select-bordered' %}
+  {% if not selected_tournament %}
+    <div class="tw:alert tw:alert-warning">
+      <i class="fa fa-exclamation-triangle"></i>
+      <span>Выберите турнир для просмотра турнирной таблицы</span>
     </div>
-  </form>
-
-  {% if selected_tournament %}
+  {% else %}
     <div class="tw:[#standings-content:has(.htmx-request)_&]:opacity-50 tw:[#standings-content:has(.htmx-request)_&]:transition-opacity">
       <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
 
@@ -79,11 +72,6 @@
           <p>В данном турнире еще не было сделано ни одного прогноза</p>
         </div>
       {% endif %}
-    </div>
-  {% else %}
-    <div class="tw:alert tw:alert-info">
-      <i class="fa fa-info-circle tw:mr-2"></i>
-      <span>Выберите турнир, чтобы увидеть турнирную таблицу.</span>
     </div>
   {% endif %}
 </div>

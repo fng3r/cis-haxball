@@ -2,17 +2,12 @@
 {% load widget_tweaks %}
 
 <div class="tw:flex tw:flex-col tw:gap-4">
-  <div class="tw:flex tw:flex-col tw:gap-6">
+  <div class="tw:flex tw:flex-col tw:gap-4">
     <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
-          hx-get="{% url 'predictions:view_predictions_tab' %}"
+          hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
           hx-target="#view-predictions-content"
           hx-trigger="change"
           hx-push-url="false">
-
-      <div class="tw:flex tw:flex-col tw:gap-1">
-        <label class="tw:label tw:text-base-content tw:font-bold">Турнир</label>
-        {% render_field tournament_form.tournament|add_class:'tw:select tw:select-bordered' %}
-      </div>
 
       <div class="tw:flex tw:flex-col tw:gap-1">
         <label class="tw:label tw:text-base-content tw:font-bold">Пользователь</label>
@@ -20,7 +15,12 @@
       </div>
     </form>
 
-    {% if selected_tournament and selected_user %}
+    {% if not selected_user %}
+      <div class="tw:alert tw:alert-warning">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>Выберите пользователя для просмотра прогнозов</span>
+      </div>
+    {% else %}
       <div class="tw:[#view-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#view-predictions-content:has(.htmx-request)_&]:transition-opacity">
         <h5 class="tw:text-md tw:font-semibold">Прогнозы {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}</h5>
 
@@ -79,7 +79,7 @@
                 </div>
               {% else %}
                 {% if tour_id in open_tours %}
-                  <div class="tw:card tw:bg-base-200 tw:shadow-sm tw:opacity-50">
+                  <div class="tw:card tw:bg-base-200 tw:shadow-sm">
                     <div class="tw:card-body tw:p-4">
                       <h6 class="tw:card-title tw:text-sm">Тур {{ forloop.counter }}</h6>
                       <p class="tw:text-sm tw:text-base-content/70">Тур еще открыт для прогнозов</p>
@@ -94,11 +94,6 @@
             <p>Пользователь еще не сделал ни одного прогноза в данном турнире</p>
           </div>
         {% endif %}
-      </div>
-    {% else %}
-      <div class="tw:alert tw:alert-info">
-        <i class="fa fa-info-circle tw:mr-2"></i>
-        <span>Выберите турнир и пользователя, чтобы увидеть их прогнозы.</span>
       </div>
     {% endif %}
   </div>
