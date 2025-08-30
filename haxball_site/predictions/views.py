@@ -415,17 +415,16 @@ def _aggregate_longterm_results(tournament: PredictionTournament):
         submissions_count += 1
 
     results = []
-    for team_id in team_ids:
-        if submissions_count > 0:
+    if submissions_count > 0:
+        for team_id in team_ids:
             avg = positions_sum[team_id] / submissions_count
-        else:
-            avg = None
-        # Convert counts to a dense array
-        histogram = [positions_counts[team_id].get(i, 0) for i in range(1, len(teams) + 1)]
-        total = sum(histogram)
-        results.append({'team': team_map[team_id], 'avg_position': avg, 'histogram': histogram, 'total': total})
+            # Convert counts to a dense array
+            histogram = [positions_counts[team_id].get(i, 0) for i in range(1, len(teams) + 1)]
+            total = sum(histogram)
+            results.append({'team': team_map[team_id], 'avg_position': avg, 'histogram': histogram, 'total': total})
 
-    results.sort(key=lambda r: r['avg_position'])
+        results.sort(key=lambda r: r['avg_position'])
+
     return results
 
 
