@@ -61,23 +61,18 @@
                     <span class="tw:font-semibold">{{ row.team.title }}</span>
                   </div>
                 </td>
-                {% if row.total > 0 %}
-                  {% widthratio row.histogram.0 row.total 100 as p1 %}
-                  {% with t2=row.histogram.0|add:row.histogram.1 %}
-                    {% widthratio t2 row.total 100 as p2 %}
-                  {% endwith %}
-                  {% with t3=row.histogram.0|add:row.histogram.1|add:row.histogram.2 %}
-                    {% widthratio t3 row.total 100 as p3 %}
-                  {% endwith %}
-                {% else %}
-                  {% with p1=0 %}{% endwith %}
-                  {% with p2=0 %}{% endwith %}
-                  {% with p3=0 %}{% endwith %}
-                {% endif %}
-                <td class="tw:text-right">{{ p1|default:0|floatformat:1 }}</td>
-                <td class="tw:text-right">{{ p2|default:0|floatformat:1 }}</td>
-                <td class="tw:text-right">{{ p3|default:0|floatformat:1 }}</td>
-                <td class="tw:text-right">{{ row.avg_position|floatformat:2 }}</td>
+                {% with t1=row.histogram.0 t2=row.histogram.1 t3=row.histogram.2 %}
+                  {% if row.total > 0 %}
+                    {% widthratio t1 row.total 100 as p1 %}
+                    {% widthratio t1|add:t2 row.total 100 as p2 %}
+                    {% widthratio t1|add:t2|add:t3 row.total 100 as p3 %}
+                  {% endif %}
+
+                  <td class="tw:text-right">{{ p1|default:0|floatformat:1 }}</td>
+                  <td class="tw:text-right">{{ p2|default:0|floatformat:1 }}</td>
+                  <td class="tw:text-right">{{ p3|default:0|floatformat:1 }}</td>
+                  <td class="tw:text-right">{{ row.avg_position|floatformat:2 }}</td>
+                {% endwith %}
               </tr>
               <tr x-show="expandedRow === rowIndex">
                 <td colspan="6">
