@@ -18,6 +18,8 @@
                  aria-label="{{ tournament.league.title }}"
                  class="tw:btn tw:btn-sm"
                  {% if selected_tournament and selected_tournament.pk == tournament.pk %}checked{% endif %}>
+        {% empty %}
+          <span class="tw:text-base-content/70">Нет доступных турниров</span>
         {% endfor %}
       </div>
     </form>

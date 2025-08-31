@@ -5,100 +5,104 @@
 {% load utils %}
 
 <div class="tw:flex tw:flex-col tw:gap-4">
-  <div class="tw:flex tw:flex-col tw:gap-4">
-    <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
-          hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
-          hx-target="#view-predictions-content"
-          hx-trigger="change"
-          hx-push-url="false">
+  {% if not selected_tournament %}
+    <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</div>
+  {% else %}
+    <div class="tw:flex tw:flex-col tw:gap-4">
+      <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
+            hx-get="{% url 'predictions:view_predictions_tab' %}?tournament={{ selected_tournament.pk }}"
+            hx-target="#view-predictions-content"
+            hx-trigger="change"
+            hx-push-url="false">
 
-      <div class="tw:flex tw:flex-col tw:gap-1">
-        <label class="tw:label tw:text-base-content tw:font-bold">Пользователь</label>
-        {% render_field user_form.user|add_class:'tw:select tw:select-bordered' %}
-      </div>
-    </form>
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <label class="tw:label tw:text-base-content tw:font-bold">Пользователь</label>
+          {% render_field user_form.user|add_class:'tw:select tw:select-bordered' %}
+        </div>
+      </form>
 
-    {% if not selected_user %}
-      <div class="tw:alert tw:alert-warning">
-        <i class="fa fa-exclamation-triangle"></i>
-        <span>Выберите пользователя для просмотра прогнозов</span>
-      </div>
-    {% else %}
-      <div class="tw:[#view-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#view-predictions-content:has(.htmx-request)_&]:transition-opacity">
-        <h5 class="tw:text-md tw:font-semibold">Прогнозы {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}</h5>
+      {% if not selected_user %}
+        <div class="tw:alert tw:alert-warning">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span>Выберите пользователя для просмотра прогнозов</span>
+        </div>
+      {% else %}
+        <div class="tw:[#view-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#view-predictions-content:has(.htmx-request)_&]:transition-opacity">
+          <h5 class="tw:text-md tw:font-semibold">Прогнозы {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}</h5>
 
-        {% if predictions_data %}
-          <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
-            {% for tour in selected_tournament.league.tours.all %}
-              {% with is_open=tour|is_open_for_predictions is_closed=tour|is_closed_for_predictions submission=predictions_data|get_or_default:tour.id %}
-                {% if is_open or is_closed %}
-                  <div class="tw:card tw:bg-base-200 tw:shadow-sm">
-                    <div class="tw:card-body tw:p-4">
-                      <h6 class="tw:card-title tw:mb-0!">
-                        <span class="tw:font-semibold tw:text-lg">{{ tour|tour_name }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
-                      </h6>
-                      {% if submission.predictions.count > 0 %}
-                        <div class="tw:mt-2 tw:space-y-1">
-                          {% for prediction in submission.predictions.all %}
-                            {% with match=prediction.match %}
-                              <div class="tw:flex tw:flex-col tw:bg-base-100 tw:p-2 tw:rounded tw:text-sm">
-                                <div class="tw:flex tw:items-center tw:gap-2">
-                                  <div class="tw:flex tw:items-center tw:gap-1">
-                                    {% if match.team_home.logo %}
-                                      <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
-                                    {% endif %}
-                                    <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_guest %}tw:text-base-content/80{% endif %}">{{ match.team_home.title }}</span>
-                                  </div>
-                                  {% if match.is_played %}
-                                    <span class="tw:px-1 tw:font-bold">{{ match.score_home }}:{{ match.score_guest }}</span>
-                                  {% else %}
-                                    <span class="tw:px-1">vs</span>
-                                  {% endif %}
-                                  <div class="tw:flex tw:items-center tw:gap-1">
-                                    <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_home %}tw:text-base-content/80{% endif %}">{{ match.team_guest.title }}</span>
-                                    {% if match.team_guest.logo %}
-                                      <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
-                                    {% endif %}
-                                  </div>
-                                  <span class="tw:ml-2 tw:font-bold">
-                                    {{ prediction.get_predicted_result_display }}
-                                    {% if prediction.is_special %}*{% endif %}
-                                  </span>
-                                  {% if match.is_played %}
-                                    <span class="tw:ml-1">
-                                      {% if prediction.get_earned_points > 0 %}
-                                        <span class="tw:text-success">✓</span>
-                                      {% else %}
-                                        <span class="tw:text-error">✗</span>
+          {% if predictions_data %}
+            <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
+              {% for tour in selected_tournament.league.tours.all %}
+                {% with is_open=tour|is_open_for_predictions is_closed=tour|is_closed_for_predictions submission=predictions_data|get_or_default:tour.id %}
+                  {% if is_open or is_closed %}
+                    <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                      <div class="tw:card-body tw:p-4">
+                        <h6 class="tw:card-title tw:mb-0!">
+                          <span class="tw:font-semibold tw:text-lg">{{ tour|tour_name }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+                        </h6>
+                        {% if submission.predictions.count > 0 %}
+                          <div class="tw:mt-2 tw:space-y-1">
+                            {% for prediction in submission.predictions.all %}
+                              {% with match=prediction.match %}
+                                <div class="tw:flex tw:flex-col tw:bg-base-100 tw:p-2 tw:rounded tw:text-sm">
+                                  <div class="tw:flex tw:items-center tw:gap-2">
+                                    <div class="tw:flex tw:items-center tw:gap-1">
+                                      {% if match.team_home.logo %}
+                                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
                                       {% endif %}
+                                      <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_guest %}tw:text-base-content/80{% endif %}">{{ match.team_home.title }}</span>
+                                    </div>
+                                    {% if match.is_played %}
+                                      <span class="tw:px-1 tw:font-bold">{{ match.score_home }}:{{ match.score_guest }}</span>
+                                    {% else %}
+                                      <span class="tw:px-1">vs</span>
+                                    {% endif %}
+                                    <div class="tw:flex tw:items-center tw:gap-1">
+                                      <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_home %}tw:text-base-content/80{% endif %}">{{ match.team_guest.title }}</span>
+                                      {% if match.team_guest.logo %}
+                                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
+                                      {% endif %}
+                                    </div>
+                                    <span class="tw:ml-2 tw:font-bold">
+                                      {{ prediction.get_predicted_result_display }}
+                                      {% if prediction.is_special %}*{% endif %}
                                     </span>
-                                  {% endif %}
+                                    {% if match.is_played %}
+                                      <span class="tw:ml-1">
+                                        {% if prediction.get_earned_points > 0 %}
+                                          <span class="tw:text-success">✓</span>
+                                        {% else %}
+                                          <span class="tw:text-error">✗</span>
+                                        {% endif %}
+                                      </span>
+                                    {% endif %}
+                                  </div>
                                 </div>
-                              </div>
-                            {% endwith %}
-                          {% endfor %}
-                        </div>
-                      {% else %}
-                        <p class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
-                          {% if is_open %}
-                            Тур еще открыт для прогнозов
-                          {% elif is_closed %}
-                            Пользователь не оставил прогнозы на этот тур
-                          {% endif %}
-                        </p>
-                      {% endif %}
+                              {% endwith %}
+                            {% endfor %}
+                          </div>
+                        {% else %}
+                          <p class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
+                            {% if is_open %}
+                              Тур еще открыт для прогнозов
+                            {% elif is_closed %}
+                              Пользователь не оставил прогнозы на этот тур
+                            {% endif %}
+                          </p>
+                        {% endif %}
+                      </div>
                     </div>
-                  </div>
-                {% endif %}
-              {% endwith %}
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
-            <p>Пользователь еще не сделал ни одного прогноза в данном турнире</p>
-          </div>
-        {% endif %}
-      </div>
-    {% endif %}
-  </div>
+                  {% endif %}
+                {% endwith %}
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
+              <p>Пользователь еще не сделал ни одного прогноза в данном турнире</p>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
 </div>

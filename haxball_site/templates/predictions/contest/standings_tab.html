@@ -4,10 +4,7 @@
 
 <div class="tw:flex tw:flex-col tw:gap-6">
   {% if not selected_tournament %}
-    <div class="tw:alert tw:alert-warning">
-      <i class="fa fa-exclamation-triangle"></i>
-      <span>Выберите турнир для просмотра турнирной таблицы</span>
-    </div>
+    <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</div>
   {% else %}
     <div class="tw:[#standings-content:has(.htmx-request)_&]:opacity-50 tw:[#standings-content:has(.htmx-request)_&]:transition-opacity">
       <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
