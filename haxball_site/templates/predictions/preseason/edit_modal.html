@@ -1,6 +1,6 @@
 {% load static %}
 
-<dialog id="longterm_edit_modal" class="tw:modal">
+<dialog id="preseason_edit_modal" class="tw:modal">
   <div class="tw:modal-box tw:max-w-2xl">
     <h3 class="tw:font-bold tw:text-lg">Положение команд в итоговой таблице</h3>
 
@@ -41,9 +41,9 @@
           Отмена
         </button>
       </form>
-      <form id="longterm-save-form"
-            hx-post="{% url 'predictions:longterm_save' %}"
-            hx-target="#longterm-my-content"
+      <form id="preseason-save-form"
+            hx-post="{% url 'predictions:preseason_save' %}"
+            hx-target="#preseason-my-content"
             hx-swap="innerHTML"
             hx-disabled-elt="find button">
         <input type="hidden" name="tournament_id" value="{{ selected_tournament.pk }}" />

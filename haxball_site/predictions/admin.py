@@ -5,11 +5,12 @@ from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdo
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
 
 from .models import (
-    LongTermPredictionItem,
-    LongTermPredictionSubmission,
     Prediction,
+    PredictionsContestTournament,
     PredictionSubmission,
-    PredictionTournament,
+    PreseasonPredictionItem,
+    PreseasonPredictionsTournament,
+    PreseasonPredictionSubmission,
 )
 
 
@@ -20,9 +21,10 @@ class PredictionInline(UnfoldTabularInline):
     fields = ['match', 'predicted_result', 'is_special']
 
 
-@admin.register(PredictionTournament)
-class PredictionTournamentAdmin(UnfoldModelAdmin):
+@admin.register(PredictionsContestTournament)
+class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
     list_display = ['league', 'is_active']
+    list_editable = ['is_active']
     list_filter = ['is_active']
     search_fields = ['league__title']
     ordering = ['-id']
@@ -37,8 +39,17 @@ class PredictionSubmissionAdmin(UnfoldModelAdmin):
     readonly_fields = ['user', 'tournament', 'tour', 'created', 'updated']
 
 
-class LongTermPredictionItemInline(UnfoldTabularInline):
-    model = LongTermPredictionItem
+@admin.register(PreseasonPredictionsTournament)
+class PreseasonPredictionsTournamentAdmin(UnfoldModelAdmin):
+    list_display = ['league', 'is_active']
+    list_editable = ['is_active']
+    list_filter = ['is_active']
+    search_fields = ['league__title']
+    ordering = ['-id']
+
+
+class PreseasonPredictionItemInline(UnfoldTabularInline):
+    model = PreseasonPredictionItem
     extra = 0
     readonly_fields = ['team', 'position']
     fields = ['team', 'position']
@@ -50,10 +61,10 @@ class LongTermPredictionItemInline(UnfoldTabularInline):
         return False
 
 
-@admin.register(LongTermPredictionSubmission)
-class LongTermPredictionSubmissionAdmin(UnfoldModelAdmin):
-    list_display = ['tournament', 'user', 'created', 'updated']
+@admin.register(PreseasonPredictionSubmission)
+class PreseasonPredictionSubmissionAdmin(UnfoldModelAdmin):
     list_filter = [('tournament__league', RelatedDropdownFilter), ('user', AutocompleteSelectFilter)]
     list_filter_submit = True
     search_fields = ['user__username', 'tournament__league__title']
-    inlines = [LongTermPredictionItemInline]
+    inlines = [PreseasonPredictionItemInline]
+    readonly_fields = ['user', 'tournament', 'created', 'updated']

@@ -2,14 +2,14 @@
 
 <div class="tw:flex tw:flex-col tw:place-items-center">
   {% if not user.is_authenticated %}
-    <div class="tw:alert tw:alert-info">Для отправки долгосрочного прогноза необходимо войти в систему.</div>
+    <div class="tw:alert tw:alert-info">Для отправки предсезонного прогноза необходимо войти в систему.</div>
   {% else %}
     {% if submission %}
       <div class="tw:flex tw:items-center tw:gap-3">
         <h4 class="tw:text-lg tw:font-semibold">Ваш прогноз</h4>
         <i class="fa fa-pencil tw:text-warning tw:opacity-80 tw:hover:opacity-100 tw:cursor-pointer"
            aria-hidden="true"
-           onclick="longterm_edit_modal.showModal()">
+           onclick="preseason_edit_modal.showModal()">
         </i>
       </div>
       <ol class="tw:list tw:list-decimal tw:p-4 tw:space-y-1 tw:w-max">
@@ -28,10 +28,10 @@
     {% else %}
       <div class="tw:flex tw:flex-col tw:justify-center tw:gap-3 tw:min-h-50">
         <div class="tw:text-center tw:text-lg tw:text-base-content/70">Вы еще не оставили свой прогноз</div>
-        <button class="tw:btn tw:btn-primary" onclick="longterm_edit_modal.showModal()">Сделать прогноз</button>
+        <button class="tw:btn tw:btn-primary" onclick="preseason_edit_modal.showModal()">Сделать прогноз</button>
       </div>
     {% endif %}
   {% endif %}
 </div>
 
-{% include 'predictions/longterm/edit_modal.html' %}
+{% include 'predictions/preseason/edit_modal.html' %}

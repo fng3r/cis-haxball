@@ -30,21 +30,21 @@
              aria-labelledby="predictions-contest-tab">{% include 'predictions/contest/container.html' %}</div>
 
         <label class="tw:tab tw:has-[input:checked]:bg-base-300 tw:flex-1"
-               id="longterm-predictions-tab"
+               id="preseason-predictions-tab"
                role="tab"
                aria-label="Прогнозы на сезон"
-               aria-controls="longterm-predictions-content">
+               aria-controls="preseason-predictions-content">
           <input type="radio"
                  name="predictions-tabs"
-                 hx-get="{% url 'predictions:longterm' %}?tournament={{ selected_tournament.pk }}"
-                 hx-target="#longterm-predictions-content"
+                 hx-get="{% url 'predictions:preseason' %}?tournament={{ selected_preseason_tournament.pk }}"
+                 hx-target="#preseason-predictions-content"
                  hx-trigger="load" />
           <span class="tw:flex tw:items-center tw:gap-2">Прогнозы на сезон</span>
         </label>
-        <div id="longterm-predictions-content"
+        <div id="preseason-predictions-content"
              class="tw:tab-content tw:px-1 tw:py-2"
              role="tabpanel"
-             aria-labelledby="longterm-predictions-tab">
+             aria-labelledby="preseason-predictions-tab">
           <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
             <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
           </div>

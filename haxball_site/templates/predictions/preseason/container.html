@@ -3,11 +3,11 @@
 
 <div class="tw:w-full tw:space-y-2">
   <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
-    <form id="longterm-tournament-selector"
+    <form id="preseason-tournament-selector"
           class="tw:flex tw:flex-col tw:gap-1"
-          hx-get="{% url 'predictions:longterm' %}?tournament={{ selected_tournament.pk }}&only_tabs=true"
+          hx-get="{% url 'predictions:preseason' %}?tournament={{ selected_tournament.pk }}&only_tabs=true"
           hx-trigger="change"
-          hx-target="#longterm-tabs"
+          hx-target="#preseason-tabs"
           hx-swap="outerHTML">
       <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
       <div class="tw:flex tw:flex-wrap tw:gap-2">
@@ -26,19 +26,19 @@
   {% if not selected_tournament %}
     <div class="tw:alert tw:alert-warning tw:mb-4">
       <i class="fa fa-exclamation-triangle"></i>
-      <span>Выберите турнир для просмотра долгосрочных прогнозов</span>
+      <span>Выберите турнир для просмотра предсезонных прогнозов</span>
     </div>
   {% else %}
-    {% partialdef longterm-tabs inline=True %}
-      <div id="longterm-tabs"
-           class="tw:tabs tw:tabs-border tw:[:has(#longterm-tournament-selector.htmx-request)_&]:opacity-50 tw:[:has(#longterm-tournament-selector.htmx-request)_&]:transition-opacity"
+    {% partialdef preseason-tabs inline=True %}
+      <div id="preseason-tabs"
+           class="tw:tabs tw:tabs-border tw:[:has(#preseason-tournament-selector.htmx-request)_&]:opacity-50 tw:[:has(#preseason-tournament-selector.htmx-request)_&]:transition-opacity"
            role="tablist">
         <label class="tw:tab" role="tab">
           <input type="radio"
-                 name="longterm-tabs"
+                 name="preseason-tabs"
                  checked
-                 hx-get="{% url 'predictions:longterm_my_tab' %}?tournament={{ selected_tournament.pk }}"
-                 hx-target="#longterm-my-content"
+                 hx-get="{% url 'predictions:preseason_my_tab' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#preseason-my-content"
                  hx-swap="innerHTML"
                  hx-trigger="load" />
           <span class="tw:flex tw:items-center tw:gap-2">
@@ -46,7 +46,7 @@
             Мои прогнозы
           </span>
         </label>
-        <div id="longterm-my-content" class="tw:tab-content tw:p-2" role="tabpanel">
+        <div id="preseason-my-content" class="tw:tab-content tw:p-2" role="tabpanel">
           <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
             <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
           </div>
@@ -54,17 +54,17 @@
 
         <label class="tw:tab" role="tab">
           <input type="radio"
-                 name="longterm-tabs"
-                 hx-get="{% url 'predictions:longterm_results_tab' %}?tournament={{ selected_tournament.pk }}"
-                 hx-target="#longterm-results-content"
+                 name="preseason-tabs"
+                 hx-get="{% url 'predictions:preseason_results_tab' %}?tournament={{ selected_tournament.pk }}"
+                 hx-target="#preseason-results-content"
                  hx-swap="innerHTML"
-                 hx-trigger="load, prediction-saved from:#longterm-my-content" />
+                 hx-trigger="load, prediction-saved from:#preseason-my-content" />
           <span class="tw:flex tw:items-center tw:gap-2">
             <i class="fa fa-list-ol"></i>
             Результаты
           </span>
         </label>
-        <div id="longterm-results-content" class="tw:tab-content tw:p-2" role="tabpanel">
+        <div id="preseason-results-content" class="tw:tab-content tw:p-2" role="tabpanel">
           <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
             <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
           </div>

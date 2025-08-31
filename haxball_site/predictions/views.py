@@ -12,13 +12,14 @@ from django_htmx.http import trigger_client_event
 
 from tournament.models import TourNumber
 
-from .forms import TournamentFilterForm, UserFilterForm
+from .forms import PreseasonPredictionsTournamentFilterForm, TournamentFilterForm, UserFilterForm
 from .models import (
-    LongTermPredictionItem,
-    LongTermPredictionSubmission,
     Prediction,
+    PredictionsContestTournament,
     PredictionSubmission,
-    PredictionTournament,
+    PreseasonPredictionItem,
+    PreseasonPredictionsTournament,
+    PreseasonPredictionSubmission,
 )
 from .utils import (
     get_tournament_standings,
@@ -27,24 +28,28 @@ from .utils import (
 
 
 def get_default_tournament():
-    return PredictionTournament.objects.filter(is_active=True).select_related('league').first()
+    return PredictionsContestTournament.objects.filter(is_active=True).select_related('league').first()
+
+
+def get_default_preseason_tournament():
+    return PreseasonPredictionsTournament.objects.select_related('league').first()
 
 
 def resolve_selected_tournament(request, selected_tournament=None):
-    """Resolve selected tournament from GET or provided value and return (tournament, TournamentFilterForm).
+    """Resolve selected tournament from GET or provided value.
 
     Ensures the tournament is enriched with league and prefetches tours for later use.
     """
     default_tournament = get_default_tournament()
     if not selected_tournament:
         if request.GET.get('tournament'):
-            selected_tournament = PredictionTournament.objects.filter(pk=request.GET.get('tournament')).first()
+            selected_tournament = PredictionsContestTournament.objects.filter(pk=request.GET.get('tournament')).first()
         elif default_tournament:
             selected_tournament = default_tournament
 
     if selected_tournament:
         selected_tournament = (
-            PredictionTournament.objects.filter(pk=selected_tournament.pk)
+            PredictionsContestTournament.objects.filter(pk=selected_tournament.pk)
             .select_related('league')
             .prefetch_related(
                 'league__tours',
@@ -56,6 +61,37 @@ def resolve_selected_tournament(request, selected_tournament=None):
         )
 
     tournament_form = TournamentFilterForm(
+        initial={'tournament': selected_tournament.pk if selected_tournament else None}
+    )
+
+    return selected_tournament, tournament_form
+
+
+def resolve_selected_preseason_tournament(request, selected_tournament=None):
+    """Resolve selected preseason tournament from GET or provided value.
+
+    Ensures the tournament is enriched with league and prefetches teams for later use.
+    """
+    default_tournament = get_default_preseason_tournament()
+    if not selected_tournament:
+        if request.GET.get('tournament'):
+            selected_tournament = PreseasonPredictionsTournament.objects.filter(
+                pk=request.GET.get('tournament')
+            ).first()
+        elif default_tournament:
+            selected_tournament = default_tournament
+
+    if selected_tournament:
+        selected_tournament = (
+            PreseasonPredictionsTournament.objects.filter(pk=selected_tournament.pk)
+            .select_related('league')
+            .prefetch_related(
+                'league__teams',
+            )
+            .first()
+        )
+
+    tournament_form = PreseasonPredictionsTournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
 
@@ -74,11 +110,12 @@ def get_users_with_predictions(tournament=None):
 def predictions_main(request):
     """Main predictions page with three tabs"""
     selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_preseason_tournament, _ = resolve_selected_preseason_tournament(request)
     selected_user = None
 
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
 
-    active_tournaments = PredictionTournament.objects.filter(is_active=True)
+    active_tournaments = PredictionsContestTournament.objects.filter(is_active=True)
 
     make_predictions_tab_html = make_predictions_tab(
         request, initial_context=True, selected_tournament=selected_tournament
@@ -88,6 +125,7 @@ def predictions_main(request):
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
+        'selected_preseason_tournament': selected_preseason_tournament,
         'active_tournaments': active_tournaments,
         'make_predictions_tab_html': make_predictions_tab_html,
     }
@@ -260,7 +298,7 @@ def tour_card(request, tour_id):
 
     submission = None
     match_predictions = {}
-    prediction_tournament = PredictionTournament.objects.filter(league=tour.league).first()
+    prediction_tournament = PredictionsContestTournament.objects.filter(league=tour.league).first()
     if prediction_tournament:
         submission = (
             PredictionSubmission.objects.filter(user=request.user, tour=tour, tournament=prediction_tournament)
@@ -296,7 +334,7 @@ def edit_predictions(request, tour_id):
             return tour_card(request, tour_id)
         return redirect('predictions:main')
 
-    prediction_tournament = PredictionTournament.objects.filter(league=tour.league).first()
+    prediction_tournament = PredictionsContestTournament.objects.filter(league=tour.league).first()
     if not prediction_tournament:
         messages.error(request, 'Этот турнир не доступен для прогнозов.')
         if request.htmx:
@@ -348,8 +386,8 @@ def edit_predictions(request, tour_id):
     return render(request, 'predictions/contest/edit_predictions.html', context)
 
 
-def longterm(request):
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
+def preseason(request):
+    selected_tournament, tournament_form = resolve_selected_preseason_tournament(request)
     context = {
         'selected_tournament': selected_tournament,
         'tournament_form': tournament_form,
@@ -357,16 +395,16 @@ def longterm(request):
 
     only_tabs = request.GET.get('only_tabs', False)
     if only_tabs:
-        return render(request, 'predictions/longterm/container.html#longterm-tabs', context)
+        return render(request, 'predictions/preseason/container.html#preseason-tabs', context)
 
-    return render(request, 'predictions/longterm/container.html', context)
+    return render(request, 'predictions/preseason/container.html', context)
 
 
-def longterm_my_tab(request):
+def preseason_my_tab(request):
     if not request.user.is_authenticated:
-        return render(request, 'predictions/longterm/my_predictions_tab.html', {'user': request.user})
+        return render(request, 'predictions/preseason/my_predictions_tab.html', {'user': request.user})
 
-    selected_tournament, _ = resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_preseason_tournament(request)
     submission = None
     items = []
     league_teams = []
@@ -374,7 +412,7 @@ def longterm_my_tab(request):
         league = selected_tournament.league
         league_teams = list(league.teams.all().order_by('title'))
         submission = (
-            LongTermPredictionSubmission.objects.filter(user=request.user, tournament=selected_tournament)
+            PreseasonPredictionSubmission.objects.filter(user=request.user, tournament=selected_tournament)
             .prefetch_related('items__team')
             .first()
         )
@@ -387,10 +425,10 @@ def longterm_my_tab(request):
         'items': items,
         'league_teams': league_teams,
     }
-    return render(request, 'predictions/longterm/my_predictions_tab.html', context)
+    return render(request, 'predictions/preseason/my_predictions_tab.html', context)
 
 
-def _aggregate_longterm_results(tournament: PredictionTournament):
+def _aggregate_preseason_results(tournament: PreseasonPredictionsTournament):
     # Returns list of dicts: {team, avg_position, counts: {position: count}}
 
     league = tournament.league
@@ -399,7 +437,7 @@ def _aggregate_longterm_results(tournament: PredictionTournament):
     team_map = {t.id: t for t in teams}
 
     submissions = (
-        LongTermPredictionSubmission.objects.filter(tournament=tournament).prefetch_related('items__team').all()
+        PreseasonPredictionSubmission.objects.filter(tournament=tournament).prefetch_related('items__team').all()
     )
 
     positions_counts = {tid: defaultdict(int) for tid in team_ids}
@@ -428,48 +466,48 @@ def _aggregate_longterm_results(tournament: PredictionTournament):
     return results
 
 
-def longterm_results_tab(request):
-    selected_tournament, _ = resolve_selected_tournament(request)
+def preseason_results_tab(request):
+    selected_tournament, _ = resolve_selected_preseason_tournament(request)
     results = []
     if selected_tournament:
-        results = _aggregate_longterm_results(selected_tournament)
+        results = _aggregate_preseason_results(selected_tournament)
 
     context = {
         'selected_tournament': selected_tournament,
         'results': results,
     }
-    return render(request, 'predictions/longterm/results_tab.html', context)
+    return render(request, 'predictions/preseason/results_tab.html', context)
 
 
 @login_required
 @require_POST
 @transaction.atomic
-def longterm_save(request):
+def preseason_save(request):
     tournament_id = request.POST.get('tournament_id')
-    selected_tournament = PredictionTournament.objects.filter(pk=tournament_id).first()
+    selected_tournament = PreseasonPredictionsTournament.objects.filter(pk=tournament_id).first()
 
     order = request.POST.get('order')
     if not order:
-        return longterm_my_tab(request)
+        return preseason_my_tab(request)
 
     team_ids = [int(x) for x in order.split(',') if x.strip()]
     league_team_ids = set(selected_tournament.league.teams.values_list('id', flat=True))
     if not set(team_ids).issubset(league_team_ids):
         messages.error(request, 'Содержатся команды вне выбранного турнира.')
-        return longterm_my_tab(request)
+        return preseason_my_tab(request)
 
-    submission, _ = LongTermPredictionSubmission.objects.get_or_create(
+    submission, _ = PreseasonPredictionSubmission.objects.get_or_create(
         user=request.user, tournament=selected_tournament
     )
     submission.items.all().delete()
-    LongTermPredictionItem.objects.bulk_create(
+    PreseasonPredictionItem.objects.bulk_create(
         [
-            LongTermPredictionItem(submission=submission, team_id=tid, position=idx + 1)
+            PreseasonPredictionItem(submission=submission, team_id=tid, position=idx + 1)
             for idx, tid in enumerate(team_ids)
         ]
     )
 
-    response = longterm_my_tab(request)
+    response = preseason_my_tab(request)
     response = trigger_client_event(response, 'prediction-saved', {'tournament_id': tournament_id})
 
     return response

@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from predictions.models import Prediction, PredictionSubmission, PredictionTournament
+from predictions.models import Prediction, PredictionsContestTournament, PredictionSubmission
 from tournament.models import League, Match, MatchResult, RegularStage, Season, Team, TourNumber
 
 
@@ -61,7 +61,7 @@ class Command(BaseCommand):
         # Delete test predictions
         Prediction.objects.filter(submission__tournament__league__title__icontains='test').delete()
         PredictionSubmission.objects.filter(tournament__league__title__icontains='test').delete()
-        PredictionTournament.objects.filter(league__title__icontains='test').delete()
+        PredictionsContestTournament.objects.filter(league__title__icontains='test').delete()
 
         # Delete test matches and results
         MatchResult.objects.filter(match__league__title__icontains='test').delete()
@@ -116,7 +116,7 @@ class Command(BaseCommand):
         stage.teams.set(teams)
 
         # Create prediction tournament
-        prediction_tournament, created = PredictionTournament.objects.get_or_create(
+        prediction_tournament, created = PredictionsContestTournament.objects.get_or_create(
             league=tournament, defaults={'is_active': True}
         )
 
