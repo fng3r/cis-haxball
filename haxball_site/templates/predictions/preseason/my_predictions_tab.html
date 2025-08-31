@@ -1,18 +1,20 @@
 {% load static %}
 
-<div class="tw:flex tw:flex-col tw:place-items-center">
+<div class="tw:flex tw:flex-col tw:items-center">
   {% if not user.is_authenticated %}
     <div class="tw:alert tw:alert-info">Для отправки предсезонного прогноза необходимо войти в систему.</div>
   {% else %}
     {% if submission %}
       <div class="tw:flex tw:items-center tw:gap-3">
         <h4 class="tw:text-lg tw:font-semibold">Ваш прогноз</h4>
-        <i class="fa fa-pencil tw:text-warning tw:opacity-80 tw:hover:opacity-100 tw:cursor-pointer"
-           aria-hidden="true"
-           onclick="preseason_edit_modal.showModal()">
-        </i>
+        {% if selected_tournament.is_active %}
+          <i class="fa fa-pencil tw:text-warning tw:opacity-80 tw:hover:opacity-100 tw:cursor-pointer"
+             aria-hidden="true"
+             onclick="preseason_edit_modal.showModal()">
+          </i>
+        {% endif %}
       </div>
-      <ol class="tw:list tw:list-decimal tw:p-4 tw:space-y-1 tw:w-max">
+      <ol class="tw:list tw:list-decimal tw:p-2 tw:space-y-1 tw:w-max">
         {% for item in items %}
           <li class="tw:card tw:not-last:border-b-1 tw:rounded-none tw:border-base-content/10 tw:p-2 tw:pr-8 tw:text-2xl">
             <div class="tw:flex tw:items-center tw:gap-3">
@@ -27,8 +29,12 @@
       </ol>
     {% else %}
       <div class="tw:flex tw:flex-col tw:justify-center tw:gap-3 tw:min-h-50">
-        <div class="tw:text-center tw:text-lg tw:text-base-content/70">Вы еще не оставили свой прогноз</div>
-        <button class="tw:btn tw:btn-primary" onclick="preseason_edit_modal.showModal()">Сделать прогноз</button>
+        {% if selected_tournament.is_active %}
+          <div class="tw:text-center tw:text-lg tw:text-base-content/70">Вы еще не оставили свой прогноз</div>
+          <button class="tw:btn tw:btn-primary" onclick="preseason_edit_modal.showModal()">Сделать прогноз</button>
+        {% else %}
+          <div class="tw:text-center tw:text-lg tw:text-base-content/70">Сбор прогнозов закрыт</div>
+        {% endif %}
       </div>
     {% endif %}
   {% endif %}
