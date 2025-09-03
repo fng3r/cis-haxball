@@ -39,7 +39,7 @@
                     <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
                   </div>
                   {% if submission and not tour|is_tour_not_open_yet %}
-                    <span class="tw:badge tw:badge-primary">{{ submission|get_total_points_with_data:preloaded_data|floatformat:1 }} FP</span>
+                    <span class="tw:badge tw:badge-primary">{{ submission|get_total_points:preloaded_data|floatformat:1 }} FP</span>
                   {% endif %}
                 </div>
 

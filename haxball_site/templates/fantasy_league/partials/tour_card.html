@@ -42,9 +42,16 @@
         {% endif %}
       {% else %}
         {% if submission and not tour|is_tour_not_open_yet %}
-          <div class="tw:flex tw:justify-end tw:items-center">
-            {% with total_points=submission|get_total_points_with_data:preloaded_data %}
-              <span class="tw:badge tw:badge-primary">{{ total_points|floatformat:1 }} FP</span>
+          <div class="tw:flex tw:justify-end tw:items-center tw:gap-1">
+            {% with total_points=submission|get_total_points:preloaded_data penalty_points=submission|get_penalty_points %}
+              {% if penalty_points > 0 %}
+                <div class="tw:tooltip tw:cursor-default" data-tip="Штрафные очки">
+                  <span class="tw:badge tw:badge-error">-{{ penalty_points|floatformat:1 }} FP</span>
+                </div>
+              {% endif %}
+              <div class="tw:tooltip tw:tooltip-left tw:cursor-default" data-tip="Очки, набранные игроками команды">
+                <span class="tw:badge tw:badge-primary">{{ total_points|floatformat:1 }} FP</span>
+              </div>
             {% endwith %}
           </div>
         {% endif %}

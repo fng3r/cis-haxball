@@ -204,15 +204,15 @@ class SquadSubmissionForm(forms.Form):
                 team_counts[p.team] += 1
         for team, count in team_counts.items():
             if count > 2:
-                raise forms.ValidationError(f'Команда {team.title} имеет {count} игроков (максимум 2)')
+                raise forms.ValidationError(f'Состав содержит более 2 игроков из одной команды ({team.title})')
 
     def validate_transfers_limit(self, players):
-        """Ensure no more than 2 transfers in"""
+        """Ensure no more than 4 transfers in (2 free + 2 penalty)"""
         if not self.previous_player_ids:
             return
 
         selected_ids = {p.id for p in players if p}
         prev_ids = set(self.previous_player_ids)
         transfers_in = len(selected_ids - prev_ids)
-        if transfers_in > 2:
-            raise forms.ValidationError(f'Превышен лимит трансферов: {transfers_in}/2')
+        if transfers_in > 4:
+            raise forms.ValidationError(f'Превышен лимит трансферов: {transfers_in}/4')

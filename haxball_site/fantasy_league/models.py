@@ -73,6 +73,12 @@ class SquadSubmission(models.Model):
         related_name='fantasy_captaincies',
     )
 
+    penalized_transfers = models.PositiveIntegerField(
+        verbose_name='Штрафуемые трансферы',
+        default=0,
+        help_text='Количество трансферов сверх лимита доступных бесплатных трансферов',
+    )
+
     class Meta:
         verbose_name = 'Отправка состава'
         verbose_name_plural = 'Отправки составов'

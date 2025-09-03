@@ -1,7 +1,11 @@
 from django import template
 
 from .. import utils
-from ..points_service import calculate_player_breakdown, calculate_submission_total_points
+from ..points_service import (
+    calculate_player_breakdown,
+    calculate_submission_penalty_points,
+    calculate_submission_total_points,
+)
 
 register = template.Library()
 
@@ -54,10 +58,18 @@ def get_tour_opening_date(tour):
 
 
 @register.filter
-def get_total_points_with_data(submission, preloaded_data):
+def get_total_points(submission, preloaded_data):
     """Get total points for a submission with preloaded data"""
     if submission and preloaded_data:
         return calculate_submission_total_points(submission, preloaded_data)
+    return 0
+
+
+@register.filter
+def get_penalty_points(submission):
+    """Get penalty points for a submission"""
+    if submission:
+        return calculate_submission_penalty_points(submission)
     return 0
 
 

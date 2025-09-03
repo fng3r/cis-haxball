@@ -16,7 +16,7 @@ from tournament.models import (
 )
 
 from .models import FantasyTournament, SquadSubmission
-from .points_service import calculate_submission_total_points, calculate_total_points
+from .points_service import calculate_submission_total_points, calculate_total_points, calculate_user_total_points
 
 
 def is_tour_open_for_fantasy(tour):
@@ -101,12 +101,8 @@ def get_tournament_standings(tournament):
 
     standings = []
     for user in users_with_submissions:
-        user_submissions = submissions_by_user.get(user.id, [])
-        total_points = 0
-        for submission in user_submissions:
-            total_points += calculate_submission_total_points(submission, preloaded_data)
-
-        standings.append({'user': user, 'total_points': total_points})
+        user_points = calculate_user_total_points(user, tournament, preloaded_data)
+        standings.append({'user': user, 'total_points': user_points['total_points']})
 
     standings.sort(key=lambda x: x['total_points'], reverse=True)
 

@@ -1,4 +1,4 @@
-from .models import SquadPlayer
+from .models import SquadPlayer, SquadSubmission
 
 POINTS_CONFIG = {
     'goals': {
@@ -135,6 +135,30 @@ def calculate_submission_total_points(submission, preloaded_data):
                 break
 
     return total_points
+
+
+def calculate_submission_penalty_points(submission):
+    """Calculate penalty points for a submission"""
+    return submission.penalized_transfers * 15
+
+
+def calculate_user_total_points(user, tournament, preloaded_data):
+    """Calculate total points for a user across all their submissions in a tournament"""
+
+    user_submissions = SquadSubmission.objects.filter(user=user, tournament=tournament).prefetch_related(
+        'main_squad__player', 'bench_players__player'
+    )
+
+    total_points = 0
+    penalty_points = 0
+
+    for submission in user_submissions:
+        total_points += calculate_submission_total_points(submission, preloaded_data)
+        penalty_points += calculate_submission_penalty_points(submission)
+
+    total_points -= penalty_points
+
+    return {'total_points': total_points, 'penalty_points': penalty_points}
 
 
 def calculate_player_breakdown(submission, squad_player, role, preloaded_data):

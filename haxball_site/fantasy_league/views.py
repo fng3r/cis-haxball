@@ -11,7 +11,7 @@ from tournament.models import TourNumber
 
 from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
-from .points_service import calculate_submission_total_points
+from .points_service import calculate_submission_total_points, calculate_user_total_points
 from .utils import (
     get_blocking_tours,
     get_league_budget_limit,
@@ -254,6 +254,7 @@ def standings_tab(request):
 
     standings = []
     tour_points = {}
+    penalty_points = {}
 
     if selected_tournament:
         standings = get_tournament_standings(selected_tournament)
@@ -275,6 +276,10 @@ def standings_tab(request):
         for standing in standings:
             user = standing['user']
             tour_points[user.id] = {}
+
+            user_points = calculate_user_total_points(user, selected_tournament, preloaded_data)
+            penalty_points[user.id] = user_points['penalty_points']
+
             for tour in tours:
                 submission = submissions_lookup.get((user.id, tour.id))
                 if submission:
@@ -287,6 +292,7 @@ def standings_tab(request):
         'selected_tournament': selected_tournament,
         'standings': standings,
         'tour_points': tour_points,
+        'penalty_points': penalty_points,
     }
 
     return render(request, 'fantasy_league/standings_tab.html', context)
@@ -381,14 +387,14 @@ def edit_squad(request, tour_id):
                 submission.main_squad.clear()
                 submission.bench_players.clear()
 
-                primary_players_data = [
+                main_squad_data = [
                     (form.cleaned_data['main_squad_gk'], SquadPlayer.Position.GK),
                     (form.cleaned_data['main_squad_dm'], SquadPlayer.Position.DM),
                     (form.cleaned_data['main_squad_st1'], SquadPlayer.Position.ST),
                     (form.cleaned_data['main_squad_st2'], SquadPlayer.Position.ST),
                 ]
 
-                for player, position in primary_players_data:
+                for player, position in main_squad_data:
                     squad_player, _ = SquadPlayer.objects.get_or_create(player=player, position=position)
                     submission.main_squad.add(squad_player)
 
@@ -408,6 +414,12 @@ def edit_squad(request, tour_id):
                     from tournament.models import Player
 
                     submission.captain_player = Player.objects.filter(pk=captain_player_id).first()
+
+                selected_ids = {p.id for p in form.get_main_squad_players() + form.get_bench_players() if p}
+                prev_ids = set(prev_player_ids)
+                transfers_in = len(selected_ids - prev_ids)
+                penalized_transfers = max(0, transfers_in - 2)
+                submission.penalized_transfers = penalized_transfers
 
                 submission.save()
 

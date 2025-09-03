@@ -21,6 +21,7 @@
                 {% for tour in selected_tournament.league.tours.all %}
                   <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
                 {% endfor %}
+                <th class="tw:text-center tw:font-bold">Штрафы</th>
                 <th class="tw:text-center tw:font-bold">Всего</th>
               </tr>
             </thead>
@@ -60,6 +61,13 @@
                       {% endif %}
                     </td>
                   {% endfor %}
+                  <td class="tw:text-center">
+                    {% if penalty_points|get_item:standing.user.id > 0 %}
+                      <span class="tw:font-semibold tw:text-red-600">-{{ penalty_points|get_item:standing.user.id }}</span>
+                    {% else %}
+                      <span class="tw:text-base-content">-</span>
+                    {% endif %}
+                  </td>
                   <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points|floatformat:1 }}</th>
                 </tr>
               {% endfor %}

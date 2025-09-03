@@ -111,12 +111,25 @@
                     {% endif %}
                   {% endwith %}
                   },
+                  freeTransfersLimit: 2,
+                  transfersLimit: 4,
+                  freeTransfersUsed: 0,
+                  transfersUsed: 0,
+                  transfersPenaltyPoints: 0,
+                  get penalizedTransfersCount() { return Math.max(0, this.transfersUsed - this.freeTransfersUsed); },
+                  get transfersPenaltyPoints() { return -15 * this.penalizedTransfersCount; },
                   isMainSquadPlayer(position) { return ['main_squad_gk', 'main_squad_dm', 'main_squad_st1', 'main_squad_st2'].includes(position); },
                   benchPlayersCount() { return ['bench_gk', 'bench_dm', 'bench_st'].filter(pos => !!this.selected[pos]).length; },
                   currentSelectedIds() { return Object.values(this.selected).filter(Boolean).map(p => p.id); },
+                  get selectedPlayersCount() { return this.currentSelectedIds().length; },
                   transfersCount() {
                   const prev = new Set(this.previousPlayerIds || []);
                   return this.currentSelectedIds().filter(id => !prev.has(id)).length;
+                  },
+                  updateTransfers() {
+                  const prev = new Set(this.previousPlayerIds || []);
+                  this.transfersUsed = this.currentSelectedIds().filter(id => !prev.has(id)).length;
+                  this.freeTransfersUsed = Math.min(this.transfersUsed, this.freeTransfersLimit);
                   },
                   updateUsedBudget() {
                   const mainPositions = ['main_squad_gk', 'main_squad_dm', 'main_squad_st1', 'main_squad_st2'];
@@ -132,6 +145,7 @@
                   this.selectedCaptain = id;
                   }
                   this.updateUsedBudget();
+                  this.updateTransfers();
                   },
                   swap(positionA, positionB) {
                   const swappedOutPlayer = this.selected[positionA];
@@ -146,21 +160,21 @@
                   fmt(v) { return v.toFixed(1); }
                   }"
       {# djlint:on #}
-          x-init="updateUsedBudget()">
+          x-init="updateUsedBudget(); updateTransfers();">
       {% csrf_token %}
       <input type="hidden" name="captain_player_id" :value="selectedCaptain || ''" />
 
       <div class="tw:flex tw:gap-2 tw:items-center">
-        <div class="tw:badge" :class="currentSelectedIds().length === teamSize ? 'tw:badge-success' : 'tw:badge-error'">
-          <span x-text="`Команда: ${currentSelectedIds().length}/${teamSize}`"></span>
+        <div class="tw:badge" :class="selectedPlayersCount === teamSize ? 'tw:badge-success' : 'tw:badge-error'">
+          <span x-text="`Команда: ${selectedPlayersCount}/${teamSize}`"></span>
         </div>
         <div class="tw:badge" :class="budgetUsed > budgetLimit ? 'tw:badge-error' : 'tw:badge-success'">
           <span x-text="`Бюджет: ${fmt(budgetUsed)}M/${budgetLimit}M`"></span>
         </div>
         <div class="tw:badge"
              x-show="previousPlayerIds.length > 0"
-             :class="transfersCount() > 2 ? 'tw:badge-error' : 'tw:badge-success'">
-          <span x-text="`Трансферы: ${transfersCount()}/2`"></span>
+             :class="transfersUsed > transfersLimit ? 'tw:badge-error' : (transfersUsed > freeTransfersLimit ? 'tw:badge-warning' : 'tw:badge-success')">
+          <span x-text="`Трансферы: ${transfersUsed}/${freeTransfersLimit} ${transfersUsed > freeTransfersLimit  && transfersUsed <= transfersLimit ? `(${transfersPenaltyPoints} FP)` : ''}`"></span>
         </div>
       </div>
 
@@ -261,7 +275,7 @@
         </button>
         <button type="submit"
                 class="tw:btn tw:btn-primary"
-                :disabled="currentSelectedIds().length !== teamSize || budgetUsed > budgetLimit || benchPlayersCount() > 2 || (previousPlayerIds.length > 0 && transfersCount() > 2)">
+                :disabled="selectedPlayersCount !== teamSize || budgetUsed > budgetLimit || benchPlayersCount() > 2 || transfersUsed > transfersLimit">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>

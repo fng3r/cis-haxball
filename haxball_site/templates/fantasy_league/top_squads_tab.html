@@ -35,7 +35,7 @@
                            class="tw:size-6 tw:rounded-full">
                       {{ submission.user.username }}
                     </div>
-                    <span class="tw:badge tw:badge-primary">{{ submission|get_total_points_with_data:preloaded_data|floatformat:1 }} FP</span>
+                    <span class="tw:badge tw:badge-primary">{{ submission|get_total_points:preloaded_data|floatformat:1 }} FP</span>
                   </div>
                   <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:text-base">
                     <div class="tw:space-y-2">
