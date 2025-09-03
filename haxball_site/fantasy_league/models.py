@@ -28,15 +28,22 @@ class SquadPlayer(models.Model):
         DM = 'DM', 'Опорник'
         ST = 'ST', 'Нападающий'
 
-    player = models.ForeignKey(
-        Player, verbose_name='Игрок', on_delete=models.CASCADE, related_name='fantasy_squad_players'
+    class SquadType(models.TextChoices):
+        MAIN = 'main', 'Основной состав'
+        BENCH = 'bench', 'Скамейка'
+
+    submission = models.ForeignKey(
+        'SquadSubmission', verbose_name='Отправка состава', related_name='squad_players', on_delete=models.CASCADE
     )
+    player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE)
     position = models.CharField('Позиция', max_length=2, choices=Position.choices)
+    squad_type = models.CharField('Тип состава', max_length=5, choices=SquadType.choices, default=SquadType.MAIN)
 
     class Meta:
         verbose_name = 'Игрок состава'
         verbose_name_plural = 'Игроки составов'
-        unique_together = ['player', 'position']
+        ordering = ['squad_type', 'position']
+        unique_together = ['submission', 'player']
 
     def __str__(self):
         return f'{self.player.nickname} ({self.get_position_display()})'
@@ -57,26 +64,19 @@ class SquadSubmission(models.Model):
     created = models.DateTimeField('Создано', auto_now_add=True)
     updated = models.DateTimeField('Обновлено', auto_now=True)
 
-    main_squad = models.ManyToManyField(
-        SquadPlayer, verbose_name='Основной состав', related_name='main_squad_submissions'
-    )
-    bench_players = models.ManyToManyField(
-        SquadPlayer, verbose_name='Скамейка', related_name='bench_players_submissions'
-    )
-
     captain_player = models.ForeignKey(
         Player,
         verbose_name='Капитан',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        on_delete=models.DO_NOTHING,
+        null=False,
+        blank=False,
         related_name='fantasy_captaincies',
     )
 
     penalized_transfers = models.PositiveIntegerField(
         verbose_name='Штрафуемые трансферы',
         default=0,
-        help_text='Количество трансферов сверх лимита доступных бесплатных трансферов',
+        help_text='Количество использованных трансферов сверх лимита доступных бесплатных трансферов',
     )
 
     class Meta:
@@ -86,3 +86,13 @@ class SquadSubmission(models.Model):
 
     def __str__(self):
         return f'Состав {self.user.username} для {self.tour}'
+
+    @property
+    def main_squad(self):
+        """Get main squad players"""
+        return self.squad_players.filter(squad_type=SquadPlayer.SquadType.MAIN)
+
+    @property
+    def bench_players(self):
+        """Get bench players"""
+        return self.squad_players.filter(squad_type=SquadPlayer.SquadType.BENCH)

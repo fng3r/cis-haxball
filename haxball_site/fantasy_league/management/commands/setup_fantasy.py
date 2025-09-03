@@ -150,14 +150,6 @@ class Command(BaseCommand):
 
         self.stdout.write(f'Using {len(test_users)} users for fantasy: {", ".join([u.username for u in test_users])}')
 
-        squad_players = {}
-        positions = [SquadPlayer.Position.GK, SquadPlayer.Position.DM, SquadPlayer.Position.ST]
-
-        for player in available_players:
-            for position in positions:
-                squad_player, created = SquadPlayer.objects.get_or_create(player=player, position=position)
-                squad_players[(player.id, position)] = squad_player
-
         submissions_created = 0
         for user in test_users:
             for tour in tours:
@@ -177,22 +169,40 @@ class Command(BaseCommand):
                             tour__number__lt=tour.number,
                         )
                         .order_by('-tour__number')
-                        .prefetch_related('main_squad', 'bench_players')
+                        .prefetch_related('squad_players__player')
                         .first()
                     )
                     if prev_submission:
-                        submission.main_squad.set(prev_submission.main_squad.all())
-                        submission.bench_players.set(prev_submission.bench_players.all())
+                        for prev_sp in prev_submission.squad_players.all():
+                            SquadPlayer.objects.create(
+                                submission=submission,
+                                player=prev_sp.player,
+                                position=prev_sp.position,
+                                squad_type=prev_sp.squad_type,
+                            )
                         self._simulate_transfers(
                             submission=submission,
                             available_players=available_players,
-                            squad_players=squad_players,
                             max_transfers=2,
                         )
                     else:
-                        main_squad, bench_players = self.generate_random_team(available_players, squad_players)
-                        submission.main_squad.set(main_squad)
-                        submission.bench_players.set(bench_players)
+                        main_squad, bench_players = self.generate_random_team(available_players)
+                        # Create SquadPlayer objects for main squad
+                        for player, position in main_squad:
+                            SquadPlayer.objects.create(
+                                submission=submission,
+                                player=player,
+                                position=position,
+                                squad_type=SquadPlayer.SquadType.MAIN,
+                            )
+                        # Create SquadPlayer objects for bench
+                        for player, position in bench_players:
+                            SquadPlayer.objects.create(
+                                submission=submission,
+                                player=player,
+                                position=position,
+                                squad_type=SquadPlayer.SquadType.BENCH,
+                            )
 
                 if not submission.captain_player_id:
                     main_squad_players = list(submission.main_squad.all())
@@ -201,9 +211,6 @@ class Command(BaseCommand):
                     submission.save()
 
         self.stdout.write(f'Created {submissions_created} fantasy submissions')
-        self.stdout.write(
-            f'Created SquadPlayer instances for {len(available_players)} players in {len(positions)} positions'
-        )
 
         today = timezone.now().date()
         open_tours = [t for t in tours if timedelta(days=0) <= t.date_from - today <= timedelta(days=3)]
@@ -213,7 +220,7 @@ class Command(BaseCommand):
         self.stdout.write(f'Closed tours: {len(closed_tours)}')
         self.stdout.write(f'Users with fantasy submissions: {", ".join([u.username for u in test_users])}')
 
-    def generate_random_team(self, available_players, squad_players):
+    def generate_random_team(self, available_players):
         """Generate team: 4 main (GK, DM, ST, ST) + 2 bench (distinct positions)."""
         used_players = set()
         team_counts: dict[int, int] = {}
@@ -324,16 +331,15 @@ class Command(BaseCommand):
                     used_players.add(p.id)
                     bench.append((p, desired_pos))
 
-        main_squad = [squad_players[(p.id, pos)] for p, pos in primary if (p.id, pos) in squad_players]
-        bench_players = [squad_players[(p.id, pos)] for p, pos in bench if (p.id, pos) in squad_players]
-        return main_squad, bench_players
+        # Return the player-position tuples directly since we'll create SquadPlayer objects later
+        return primary, bench
 
     # ===== Helper utilities to keep logic small and readable =====
     def _get_prev_submission(self, user, tournament, tour):
         return (
             SquadSubmission.objects.filter(user=user, tournament=tournament, tour__number__lt=tour.number)
             .order_by('-tour__number')
-            .prefetch_related('main_squad', 'bench_players')
+            .prefetch_related('squad_players__player')
             .first()
         )
 
@@ -366,7 +372,7 @@ class Command(BaseCommand):
                 return cand
         return None
 
-    def _replace_main(self, state, pos, squad_players, available_players):
+    def _replace_main(self, state, pos, available_players, submission):
         main = state['main']
         candidates = [sp for sp in main if sp.position == pos]
         if not candidates:
@@ -384,13 +390,24 @@ class Command(BaseCommand):
         team_in = getattr(incoming_player, 'team_id', None)
         if team_in:
             state['team_counts'][team_in] = state['team_counts'].get(team_in, 0) + 1
-        idx = main.index(outgoing)
-        main[idx] = squad_players.get((incoming_player.id, pos))
+
+        # Delete old SquadPlayer and create new one
+        outgoing.delete()
+        new_squad_player = SquadPlayer.objects.create(
+            submission=submission,
+            player=incoming_player,
+            position=pos,
+            squad_type=SquadPlayer.SquadType.MAIN,
+        )
+
+        # Update the state to reflect the new SquadPlayer
+        state['main'] = [sp for sp in state['main'] if sp.id != outgoing.id] + [new_squad_player]
+
         if state['captain_id'] and outgoing.player_id == state['captain_id']:
             state['captain_id'] = incoming_player.id
         return True
 
-    def _replace_bench(self, state, pos, squad_players, available_players):
+    def _replace_bench(self, state, pos, available_players, submission):
         bench = state['bench']
         candidates = [sp for sp in bench if sp.position == pos]
         if not candidates:
@@ -399,6 +416,7 @@ class Command(BaseCommand):
         incoming_player = self._pick_candidate(pos, available_players, state['in_squad_ids'], state['team_counts'])
         if not incoming_player:
             return False
+
         state['in_squad_ids'].discard(outgoing.player_id)
         team_out = getattr(outgoing.player, 'team_id', None)
         if team_out:
@@ -407,11 +425,22 @@ class Command(BaseCommand):
         team_in = getattr(incoming_player, 'team_id', None)
         if team_in:
             state['team_counts'][team_in] = state['team_counts'].get(team_in, 0) + 1
-        idx = bench.index(outgoing)
-        bench[idx] = squad_players.get((incoming_player.id, pos))
+
+        # Delete old SquadPlayer and create new one
+        outgoing.delete()
+        new_squad_player = SquadPlayer.objects.create(
+            submission=submission,
+            player=incoming_player,
+            position=pos,
+            squad_type=SquadPlayer.SquadType.BENCH,
+        )
+
+        # Update the state to reflect the new SquadPlayer
+        state['bench'] = [sp for sp in state['bench'] if sp.id != outgoing.id] + [new_squad_player]
+
         return True
 
-    def _simulate_transfers(self, submission, available_players, squad_players, max_transfers=2):
+    def _simulate_transfers(self, submission, available_players, max_transfers=2):
         state = self._build_team_state(submission)
         transfers_to_make = random.randint(0, max_transfers)
         for _ in range(transfers_to_make):
@@ -420,15 +449,15 @@ class Command(BaseCommand):
                 is_main = random.choice([True, False])
                 pos = random.choice([SquadPlayer.Position.GK, SquadPlayer.Position.DM, SquadPlayer.Position.ST])
                 if is_main:
-                    made = self._replace_main(state, pos, squad_players, available_players)
+                    made = self._replace_main(state, pos, available_players, submission)
                 else:
-                    made = self._replace_bench(state, pos, squad_players, available_players)
+                    made = self._replace_bench(state, pos, available_players, submission)
                 if made:
                     break
             if not made:
                 break
 
-        submission.main_squad.set(state['main'])
-        submission.bench_players.set(state['bench'])
+        # Update captain if needed
         if state['captain_id']:
             submission.captain_player_id = state['captain_id']
+            submission.save()

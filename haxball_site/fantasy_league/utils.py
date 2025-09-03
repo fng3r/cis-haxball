@@ -47,12 +47,11 @@ def get_tour_opening_date(tour):
 
 def get_user_tour_points(user, tour, tournament):
     """Get total points for a user in a specific tour"""
-    # Preload fantasy data for this tournament
     preloaded_data = preload_fantasy_data(tournament)
 
     submission = (
         SquadSubmission.objects.filter(user=user, tour=tour, tournament=tournament)
-        .prefetch_related('main_squad__player', 'bench_players__player')
+        .prefetch_related('squad_players__player')
         .select_related('tour')
         .first()
     )
@@ -63,12 +62,11 @@ def get_user_tour_points(user, tour, tournament):
 
 def get_user_tournament_total_points(user, tournament):
     """Get total points for a user in a tournament"""
-    # Preload fantasy data for this tournament
     preloaded_data = preload_fantasy_data(tournament)
 
     submissions = (
         SquadSubmission.objects.filter(user=user, tournament=tournament)
-        .prefetch_related('main_squad__player', 'bench_players__player')
+        .prefetch_related('squad_players__player')
         .select_related('tour')
     )
 
@@ -89,7 +87,7 @@ def get_tournament_standings(tournament):
 
     all_submissions = (
         SquadSubmission.objects.filter(tournament=tournament)
-        .prefetch_related('main_squad__player', 'bench_players__player', 'user')
+        .prefetch_related('squad_players__player', 'user')
         .select_related('user', 'user__user_profile')
     )
 
@@ -119,7 +117,7 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
     players = Player.objects.filter(id__in=players_ids)
 
     all_submissions = SquadSubmission.objects.filter(tournament=tournament).prefetch_related(
-        'main_squad__player', 'bench_players__player', 'tour'
+        'squad_players__player', 'tour'
     )
 
     total_submissions = all_submissions.count()
@@ -151,11 +149,7 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
                 total_fp += match_points
 
         total_picked = (
-            SquadSubmission.objects.filter(
-                Q(main_squad__player=player) | Q(bench_players__player=player), tournament=tournament
-            )
-            .distinct()
-            .count()
+            SquadSubmission.objects.filter(Q(squad_players__player=player), tournament=tournament).distinct().count()
         )
 
         pickrate = total_picked / total_submissions

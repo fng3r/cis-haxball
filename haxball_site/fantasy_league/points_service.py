@@ -146,7 +146,7 @@ def calculate_user_total_points(user, tournament, preloaded_data):
     """Calculate total points for a user across all their submissions in a tournament"""
 
     user_submissions = SquadSubmission.objects.filter(user=user, tournament=tournament).prefetch_related(
-        'main_squad__player', 'bench_players__player'
+        'squad_players__player'
     )
 
     total_points = 0
