@@ -195,7 +195,6 @@ dependencies = [
     { name = "psycopg2" },
     { name = "ptyprocess" },
     { name = "pygments" },
-    { name = "pyjwt" },
     { name = "python-decouple" },
     { name = "python-memcached" },
     { name = "python3-openid" },
@@ -275,7 +274,6 @@ requires-dist = [
     { name = "psycopg2", specifier = "==2.9.10" },
     { name = "ptyprocess", specifier = "==0.6.0" },
     { name = "pygments", specifier = "==2.6.1" },
-    { name = "pyjwt", specifier = "==2.8.0" },
     { name = "python-decouple", specifier = "==3.8" },
     { name = "python-memcached", specifier = "==1.59" },
     { name = "python3-openid", specifier = "==3.2.0" },
@@ -1124,15 +1122,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/6e/4d/4d2fe93a35dfba417311a4ff627489a947b01dc0cc377a3673c00cf7e4b2/Pygments-2.6.1.tar.gz", hash = "sha256:647344a061c249a3b74e230c739f434d7ea4d8b1d5f3721bc0f3558049b38f44", size = 3303050 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2d/68/106af3ae51daf807e9cdcba6a90e518954eb8b70341cee52995540a53ead/Pygments-2.6.1-py3-none-any.whl", hash = "sha256:ff7a40b4860b727ab48fad6360eb351cc1b33cbf9b15a0f689ca5353e9463324", size = 914382 },
-]
-
-[[package]]
-name = "pyjwt"
-version = "2.8.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/30/72/8259b2bccfe4673330cea843ab23f86858a419d8f1493f66d413a76c7e3b/PyJWT-2.8.0.tar.gz", hash = "sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de", size = 78313 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2b/4f/e04a8067c7c96c364cef7ef73906504e2f40d690811c021e1a1901473a19/PyJWT-2.8.0-py3-none-any.whl", hash = "sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320", size = 22591 },
 ]
 
 [[package]]
