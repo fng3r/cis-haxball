@@ -87,7 +87,7 @@
                           </div>
                         {% endif %}
 
-                        {% include 'tournament/teams/partials/team_squad_stats.html' %}
+                        {% include 'tournament/teams/partials/team_squad_stats.html' with display_rating=True %}
                       {% endwith %}
                     </div>
                   {% endwith %}
@@ -116,7 +116,7 @@
                   </div>
 
                   {% with team_squad=team|all_time_squad_stats %}
-                    <div id="team-squad-stats">{% include 'tournament/teams/partials/team_squad_stats.html' %}</div>
+                    <div id="team-squad-stats">{% include 'tournament/teams/partials/team_squad_stats.html' with display_rating=False %}</div>
                   {% endwith %}
                 </div>
               </div>
