@@ -29,18 +29,18 @@ POINTS_CONFIG = {
         },
         (6, 10): {
             SquadPlayer.Position.ST: -2,
-            SquadPlayer.Position.DM: -4,
-            SquadPlayer.Position.GK: -5,
+            SquadPlayer.Position.DM: -3,
+            SquadPlayer.Position.GK: -4,
         },
         (11, 15): {
             SquadPlayer.Position.ST: -3,
-            SquadPlayer.Position.DM: -6,
-            SquadPlayer.Position.GK: -8,
+            SquadPlayer.Position.DM: -5,
+            SquadPlayer.Position.GK: -6,
         },
         (16, float('inf')): {
             SquadPlayer.Position.ST: -5,
-            SquadPlayer.Position.DM: -10,
-            SquadPlayer.Position.GK: -12,
+            SquadPlayer.Position.DM: -8,
+            SquadPlayer.Position.GK: -10,
         },
     },
 }
