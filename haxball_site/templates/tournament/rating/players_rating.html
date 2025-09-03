@@ -19,7 +19,8 @@
       <input type="radio" name="rating-tabs" class="tw:tab tw:pl-3! tw:font-semibold" role="tab" aria-label="Игроки" checked />
       <div class="tw:tab-content">
         <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
-          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2" x-data="{ search: '', onlyNewPlayers: false, selectedGrade: '', gradeChangedFilter: null }">
+          <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2"
+               x-data="{ search: '', onlyNewPlayers: false, selectedGrade: '', gradeChangedFilter: null }">
             <form id="filter-form"
                   class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
                   hx-get="{% url 'tournament:players_rating' %}"
@@ -29,7 +30,9 @@
                   hx-disabled-elt="find button">
 
               <div class="tw:flex tw:flex-col tw:justify-center">
-                <label class="tw:label tw:text-base-content tw:font-bold" for="{{ filter.form.version.id_for_label }}">{{ filter.form.version.label }}</label>
+                <label class="tw:label tw:text-base-content tw:font-bold" for="{{ filter.form.version.id_for_label }}">
+                  {{ filter.form.version.label }}
+                </label>
                 {% render_field filter.form.version|add_class:'tw:select' %}
               </div>
 
@@ -50,29 +53,37 @@
             </form>
 
             <div class="tw:px-1" x-data="{showAdditionalFilters: false}">
-              <input type="checkbox" class="tw:peer tw:btn tw:btn-neutral tw:w-fit" :aria-label="`Доп. фильтры ${showAdditionalFilters ? '-' : '+'}`" x-model="showAdditionalFilters" />
+              <input type="checkbox"
+                     class="tw:peer tw:btn tw:btn-neutral tw:w-fit"
+                     aria-label="Доп. фильтры +"
+                     :aria-label="`Доп. фильтры ${showAdditionalFilters ? '-' : '+'}`"
+                     x-model="showAdditionalFilters" />
               <div class="tw:max-h-0 tw:peer-checked:max-h-96 tw:overflow-hidden tw:transition-all tw:duration-500 tw:ease-in-out">
                 <div class="tw:flex tw:flex-col tw:gap-4 tw:p-2">
                   <div class="tw:flex tw:flex-col tw:justify-center tw:gap-1">
                     <span class="tw:font-semibold">Уровень</span>
                     <div class="tw:filter">
-                      <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="grade" aria-label="All" @click="selectedGrade = ''"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="S" @click="selectedGrade = 'S'"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="A" @click="selectedGrade = 'A'"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="B+" @click="selectedGrade = 'B+'"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="B" @click="selectedGrade = 'B'"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="C" @click="selectedGrade = 'C'"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="D" @click="selectedGrade = 'D'"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="E" @click="selectedGrade = 'E'"/>
+                      <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="grade" aria-label="All" @click="selectedGrade = ''" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="S" @click="selectedGrade = 'S'" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="A" @click="selectedGrade = 'A'" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="B+" @click="selectedGrade = 'B+'" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="B" @click="selectedGrade = 'B'" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="C" @click="selectedGrade = 'C'" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="D" @click="selectedGrade = 'D'" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade" aria-label="E" @click="selectedGrade = 'E'" />
                     </div>
                   </div>
 
                   <div class="tw:flex tw:flex-col tw:justify-center tw:gap-1">
                     <span class="tw:font-semibold">Изменился уровень</span>
                     <div class="tw:filter">
-                      <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="grade_changed" aria-label="All" @click="gradeChangedFilter = null"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade_changed" aria-label="Да" @click="gradeChangedFilter = true"/>
-                      <input class="tw:btn tw:btn-sm" type="radio" name="grade_changed" aria-label="Нет" @click="gradeChangedFilter = false"/>
+                      <input class="tw:btn tw:btn-sm tw:filter-reset"
+                             type="radio"
+                             name="grade_changed"
+                             aria-label="All"
+                             @click="gradeChangedFilter = null" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade_changed" aria-label="Да" @click="gradeChangedFilter = true" />
+                      <input class="tw:btn tw:btn-sm" type="radio" name="grade_changed" aria-label="Нет" @click="gradeChangedFilter = false" />
                     </div>
                   </div>
 
