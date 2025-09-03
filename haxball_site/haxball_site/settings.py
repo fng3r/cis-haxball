@@ -227,7 +227,8 @@ EDIT_COMMENT_LIMIT = config('APP_EDIT_COMMENT_LIMIT', cast=int, default=5)
 
 SHOW_USER_TEAM_ICONS = config('APP_SHOW_USER_TEAM_ICONS', cast=bool, default=True)
 
-SHOW_PLAYERS_RATING_WIDGET = config('APP_SHOW_PLAYERS_RATING_WIDGET', cast=bool, default=False)
+SHOW_PLAYERS_RATING_BANNER = config('APP_SHOW_PLAYERS_RATING_BANNER', cast=bool, default=False)
+SHOW_FREE_AGENTS_BANNER = config('APP_SHOW_FREE_AGENTS_BANNER', cast=bool, default=False)
 
 CKEDITOR_CONFIGS = {
     'default': {
