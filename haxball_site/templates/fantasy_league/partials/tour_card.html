@@ -1,7 +1,7 @@
 {% load tournament_extras %}
 {% load fantasy_league_extras %}
 
-<div id="tour-{{ tour.id }}-content" class="tw:card tw:bg-base-200 tw:shadow-sm tw:relative"
+<div id="tour-{{ tour.id }}-content" class="tw:card tw:bg-base-200 tw:shadow-sm tw:relative tw:has-[.htmx-request]:opacity-50 tw:has-[.htmx-request]:transition-opacity"
   {# djlint:off #}
      {% if blocking_tours %}
        hx-trigger="tour-submitted from:body"

@@ -14,8 +14,7 @@
         <span>Выберите турнир для участия в фэнтези лиге</span>
       </div>
     {% else %}
-      <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }"
-           class="tw:flex tw:flex-col tw:gap-2 tw:[#make-squad-content:has(.htmx-request)_&]:opacity-50 tw:[#make-squad-content:has(.htmx-request)_&]:transition-opacity">
+      <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }" class="tw:flex tw:flex-col tw:gap-2">
         <div class="tw:flex tw:items-center tw:justify-between">
           <div class="tw:text-xl tw:font-semibold">{{ selected_tournament.league.title }}</div>
           {% if selected_tournament.league.tours.count > 0 and not is_tournament_ended %}

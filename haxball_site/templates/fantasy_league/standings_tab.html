@@ -1,84 +1,82 @@
 {% load widget_tweaks %}
 {% load fantasy_league_extras %}
 
-<div class="tw:space-y-4">
-  {% if not selected_tournament %}
-    <div class="tw:alert tw:alert-warning">
-      <i class="fa fa-exclamation-triangle"></i>
-      <span>Выберите турнир для просмотра турнирной таблицы</span>
-    </div>
-  {% else %}
-    <div class="tw:[#standings-content:has(.htmx-request)_&]:opacity-50 tw:[#standings-content:has(.htmx-request)_&]:transition-opacity">
-      <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
+{% if not selected_tournament %}
+  <div class="tw:alert tw:alert-warning">
+    <i class="fa fa-exclamation-triangle"></i>
+    <span>Выберите турнир для просмотра турнирной таблицы</span>
+  </div>
+{% else %}
+  <div class="tw:[#standings-content:has(.htmx-request)_&]:opacity-50 tw:[#standings-content:has(.htmx-request)_&]:transition-opacity">
+    <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
 
-      {% if standings %}
-        <div class="tw:overflow-x-auto">
-          <table class="tw:table tw:table-zebra tw:table-pin-cols tw:w-full">
-            <thead>
+    {% if standings %}
+      <div class="tw:overflow-auto tw:max-h-[950px]">
+        <table class="tw:table tw:table-zebra tw:table-pin-cols tw:w-full">
+          <thead>
+            <tr>
+              <th class="tw:text-center">Место</th>
+              <th>Пользователь</th>
+              {% for tour in selected_tournament.league.tours.all %}
+                <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
+              {% endfor %}
+              <th class="tw:text-center tw:font-bold">Штрафы</th>
+              <th class="tw:text-center tw:font-bold">Всего</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for standing in standings %}
               <tr>
-                <th class="tw:text-center">Место</th>
-                <th>Пользователь</th>
-                {% for tour in selected_tournament.league.tours.all %}
-                  <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
-                {% endfor %}
-                <th class="tw:text-center tw:font-bold">Штрафы</th>
-                <th class="tw:text-center tw:font-bold">Всего</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for standing in standings %}
-                <tr>
-                  <th class="tw:text-center tw:font-bold">
-                    {% if forloop.counter == 1 %}
-                      <span class="tw:text-yellow-500">🥇</span>
-                    {% elif forloop.counter == 2 %}
-                      <span class="tw:text-gray-400">🥈</span>
-                    {% elif forloop.counter == 3 %}
-                      <span class="tw:text-amber-600">🥉</span>
+                <th class="tw:text-center tw:font-bold">
+                  {% if forloop.counter == 1 %}
+                    <span class="tw:text-yellow-500">🥇</span>
+                  {% elif forloop.counter == 2 %}
+                    <span class="tw:text-gray-400">🥈</span>
+                  {% elif forloop.counter == 3 %}
+                    <span class="tw:text-amber-600">🥉</span>
+                  {% else %}
+                    {{ forloop.counter }}
+                  {% endif %}
+                </th>
+                <th>
+                  <div class="tw:flex tw:items-center tw:gap-2">
+                    {% if standing.user.user_profile.avatar %}
+                      <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-cover tw:bg-center"
+                           style="background-image: url({{ standing.user.user_profile.avatar.url }})"></div>
                     {% else %}
-                      {{ forloop.counter }}
+                      <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-base-300 tw:flex tw:items-center tw:justify-center">
+                        <i class="fa fa-user tw:text-xs"></i>
+                      </div>
                     {% endif %}
-                  </th>
-                  <th>
-                    <div class="tw:flex tw:items-center tw:gap-2">
-                      {% if standing.user.user_profile.avatar %}
-                        <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-cover tw:bg-center"
-                             style="background-image: url({{ standing.user.user_profile.avatar.url }})"></div>
-                      {% else %}
-                        <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-base-300 tw:flex tw:items-center tw:justify-center">
-                          <i class="fa fa-user tw:text-xs"></i>
-                        </div>
-                      {% endif %}
-                      <span class="tw:font-medium">{{ standing.user.username }}</span>
-                    </div>
-                  </th>
-                  {% for tour in selected_tournament.league.tours.all %}
-                    <td class="tw:text-center">
-                      {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
-                        <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id|floatformat:1 }}</span>
-                      {% else %}
-                        <span class="tw:text-base-content/50">-</span>
-                      {% endif %}
-                    </td>
-                  {% endfor %}
+                    <span class="tw:font-medium">{{ standing.user.username }}</span>
+                  </div>
+                </th>
+                {% for tour in selected_tournament.league.tours.all %}
                   <td class="tw:text-center">
-                    {% if penalty_points|get_item:standing.user.id > 0 %}
-                      <span class="tw:font-semibold tw:text-red-600">-{{ penalty_points|get_item:standing.user.id }}</span>
+                    {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
+                      <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id|floatformat:1 }}</span>
                     {% else %}
-                      <span class="tw:text-base-content">-</span>
+                      <span class="tw:text-base-content/50">-</span>
                     {% endif %}
                   </td>
-                  <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points|floatformat:1 }}</th>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
-          <p>В данном турнире еще не было отправлено ни одного состава</p>
-        </div>
-      {% endif %}
-    </div>
-  {% endif %}
-</div>
+                {% endfor %}
+                <td class="tw:text-center">
+                  {% if penalty_points|get_item:standing.user.id > 0 %}
+                    <span class="tw:font-semibold tw:text-red-600">-{{ penalty_points|get_item:standing.user.id }}</span>
+                  {% else %}
+                    <span class="tw:text-base-content">-</span>
+                  {% endif %}
+                </td>
+                <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points|floatformat:1 }}</th>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
+        <p>В данном турнире еще не было отправлено ни одного состава</p>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
