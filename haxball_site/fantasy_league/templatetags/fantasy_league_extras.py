@@ -94,3 +94,8 @@ def get_player_by_id(players, player_id: int | str | None):
         player_id = int(player_id)
 
     return next((player for player in players if player.id == player_id), None)
+
+
+@register.simple_tag
+def get_positions():
+    return ['main_squad_gk', 'main_squad_dm', 'main_squad_st1', 'main_squad_st2', 'bench_gk', 'bench_dm', 'bench_st']

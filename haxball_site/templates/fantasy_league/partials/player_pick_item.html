@@ -12,8 +12,13 @@
         <template x-if="selected[position]">
           <div class="tw:flex tw:items-center tw:gap-2">
             <img :src="selected[position]?.teamLogo" alt="logo" class="tw:w-6 tw:h-6 tw:rounded-sm" />
-            <span x-text="selected[position]?.nickname"></span>
-            <span class="tw:text-xs tw:opacity-70 tw:ml-1" x-text="`${selected[position]?.cost}M`"></span>
+            <span x-text="selected[position]?.nickname" :class="selected[position]?.isUnavailable && 'tw:text-warning tw:font-semibold'"></span>
+            <template x-if="selected[position] && !selected[position].isUnavailable">
+              <span class="tw:text-xs tw:opacity-70 tw:ml-1" x-text="`${selected[position]?.cost}M`"></span>
+            </template>
+            <template x-if="selected[position]?.isUnavailable">
+              <i class="fa fa-exclamation-triangle tw:text-warning tw:text-sm" title="Игрок больше не доступен в лиге"></i>
+            </template>
           </div>
         </template>
         <template x-if="!selected[position]">

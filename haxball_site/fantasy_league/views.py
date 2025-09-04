@@ -17,6 +17,7 @@ from .utils import (
     get_league_budget_limit,
     get_player_fantasy_stats,
     get_tournament_standings,
+    get_unavailable_players_in_submission,
     is_tour_open_for_fantasy,
     preload_fantasy_data,
 )
@@ -122,12 +123,16 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
             if submission:
                 primary_players = list(submission.main_squad.all())
                 secondary_players = list(submission.bench_players.all())
+                unavailable_players = (
+                    get_unavailable_players_in_submission(submission) if is_tour_open_for_fantasy(tour) else []
+                )
                 user_squads[tour.id] = {
                     'submission': submission,
                     'primary_players': primary_players,
                     'secondary_players': secondary_players,
                     'can_submit': can_submit,
                     'blocking_tours': blocking_tours,
+                    'unavailable_players': unavailable_players,
                 }
             else:
                 user_squads[tour.id] = {
@@ -136,6 +141,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
                     'secondary_players': [],
                     'can_submit': can_submit,
                     'blocking_tours': blocking_tours,
+                    'unavailable_players': [],
                 }
 
         is_tournament_ended = all(tour.is_ended for tour in tours)
@@ -338,6 +344,7 @@ def tour_detail(request, tour_id):
 
     blocking_tours = get_blocking_tours(request.user, tour, tournament)
     can_submit = len(blocking_tours) == 0
+    unavailable_players = get_unavailable_players_in_submission(submission) if submission else []
 
     context = {
         'tour': tour,
@@ -347,6 +354,7 @@ def tour_detail(request, tour_id):
         'preloaded_data': preloaded_data,
         'can_submit': can_submit,
         'blocking_tours': blocking_tours,
+        'unavailable_players': unavailable_players,
     }
 
     return render(request, 'fantasy_league/partials/tour_card.html', context)
@@ -521,6 +529,7 @@ def edit_squad(request, tour_id):
         form = SquadSubmissionForm(initial=initial_data, tournament=tour.league, previous_player_ids=prev_player_ids)
 
     budget_limit = get_league_budget_limit(tour.league)
+    unavailable_players = get_unavailable_players_in_submission(submission) if submission else []
 
     context = {
         'form': form,
@@ -528,6 +537,7 @@ def edit_squad(request, tour_id):
         'submission': submission,
         'budget_limit': budget_limit,
         'previous_player_ids': prev_player_ids,
+        'unavailable_players': unavailable_players,
     }
 
     return render(request, 'fantasy_league/edit_squad.html', context)

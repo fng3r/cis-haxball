@@ -59,6 +59,18 @@
     </div>
 
     {% if submission %}
+      {% if is_open and unavailable_players %}
+        <div class="tw:alert tw:alert-warning tw:mt-2">
+          <i class="fa fa-exclamation-triangle"></i>
+          <div class="tw:font-semibold tw:space-y-1">
+            <div>
+              Внимание! Некоторые игроки вашей команды больше не доступны в данном турнире:
+              {{ unavailable_players|join:", " }}.
+            </div>
+            <div>Рекомендуется заменить этих игроков.</div>
+          </div>
+        </div>
+      {% endif %}
       <div class="tw:mt-2 tw:space-y-3">
         <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:text-base">
           <div class="tw:space-y-2">

@@ -4,7 +4,7 @@ from django.db.models import IntegerField, OuterRef, Subquery
 from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
 
 from .models import FantasyTournament
-from .utils import get_league_budget_limit, get_players_costs
+from .utils import get_available_players_in_league, get_league_budget_limit, get_players_costs
 
 
 class TournamentFilterForm(forms.Form):
@@ -96,6 +96,7 @@ class SquadSubmissionForm(forms.Form):
         self.previous_player_ids = previous_player_ids or []
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
         self.player_costs = get_players_costs(self.tournament)
+        self.available_player_ids = get_available_players_in_league(self.tournament)
 
         team_filter = {'team__in': tournament.teams.all()}
 
@@ -160,6 +161,7 @@ class SquadSubmissionForm(forms.Form):
         self.validate_team_limitations(all_players)
         self.validate_transfers_limit(all_players)
         self.validate_budget_limit(all_players)
+        self.validate_players_availability(all_players)
 
         return cleaned_data
 
@@ -186,6 +188,10 @@ class SquadSubmissionForm(forms.Form):
             self.cleaned_data.get('bench_st'),
         ]
         return [p for p in bench if p]
+
+    def is_player_available(self, player):
+        """Check if a player is available in the current league"""
+        return player.id in self.available_player_ids
 
     def validate_budget_limit(self, players):
         """Ensure total cost of players does not exceed budget limit"""
@@ -216,3 +222,18 @@ class SquadSubmissionForm(forms.Form):
         transfers_in = len(selected_ids - prev_ids)
         if transfers_in > 4:
             raise forms.ValidationError(f'Превышен лимит трансферов: {transfers_in}/4')
+
+    def validate_players_availability(self, players):
+        """Ensure all selected players are available in the current league"""
+        available_player_ids = get_available_players_in_league(self.tournament)
+        unavailable_players = []
+
+        for player in players:
+            if player and player.id not in available_player_ids:
+                unavailable_players.append(player.nickname)
+
+        if unavailable_players:
+            players_list = ', '.join(unavailable_players)
+            raise forms.ValidationError(
+                f'Следующие игроки больше не доступны в лиге и должны быть заменены: {players_list}'
+            )

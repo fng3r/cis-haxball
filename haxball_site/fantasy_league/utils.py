@@ -320,3 +320,27 @@ def get_players_costs(league):
 def get_total_cost_for_players(players, player_costs):
     """Sum total cost for a list of Player objects using provided cost map."""
     return sum(player_costs.get(p.id, 0) for p in players if p)
+
+
+def get_available_players_in_league(league):
+    """
+    Get all players that are currently available in the given league.
+    Returns a set of player IDs for efficient lookup.
+    """
+    return set(Player.objects.filter(team__in=league.teams.all()).values_list('id', flat=True))
+
+
+def get_unavailable_players_in_submission(submission):
+    """
+    Get list of players in a submission that are no longer available in the league.
+    Returns a list of SquadPlayer objects that need to be replaced.
+    """
+    league = submission.tournament.league
+    available_player_ids = get_available_players_in_league(league)
+
+    unavailable_players = []
+    for squad_player in submission.squad_players.all():
+        if squad_player.player_id not in available_player_ids:
+            unavailable_players.append(squad_player)
+
+    return unavailable_players

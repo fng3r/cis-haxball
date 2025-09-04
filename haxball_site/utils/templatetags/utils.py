@@ -24,3 +24,8 @@ def get(d: dict, key):
 @register.filter
 def get_or_default(d: dict, key, default=None):
     return d.get(key, default)
+
+
+@register.filter
+def contains(collection, item):
+    return item in collection

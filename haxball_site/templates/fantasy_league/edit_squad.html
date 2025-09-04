@@ -20,97 +20,12 @@
                   teamSize: 6,
                   selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
                   previousPlayerIds: {{ previous_player_ids }},
-                  selected: {
-                  {% with player=form.main_squad_gk.field.queryset|get_player_by_id:form.main_squad_gk.value %}
-                    {% if player %}
-                      main_squad_gk: {
-                      id: {{ form.main_squad_gk.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      main_squad_gk: null,
-                    {% endif %}
-                  {% endwith %}
-
-                  {% with player=form.main_squad_dm.field.queryset|get_player_by_id:form.main_squad_dm.value %}
-                    {% if player %}
-                      main_squad_dm: {
-                      id: {{ form.main_squad_dm.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      main_squad_dm: null,
-                    {% endif %}
-                  {% endwith %}
-
-                  {% with player=form.main_squad_st1.field.queryset|get_player_by_id:form.main_squad_st1.value %}
-                    {% if player %}
-                      main_squad_st1: {
-                      id: {{ form.main_squad_st1.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      main_squad_st1: null,
-                    {% endif %}
-                  {% endwith %}
-
-                  {% with player=form.main_squad_st2.field.queryset|get_player_by_id:form.main_squad_st2.value %}
-                    {% if player %}
-                      main_squad_st2: {
-                      id: {{ form.main_squad_st2.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      main_squad_st2: null,
-                    {% endif %}
-                  {% endwith %}
-
-                  {% with player=form.bench_gk.field.queryset|get_player_by_id:form.bench_gk.value %}
-                    {% if player %}
-                      bench_gk: {
-                      id: {{ form.bench_gk.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      bench_gk: null,
-                    {% endif %}
-                  {% endwith %}
-
-                  {% with player=form.bench_dm.field.queryset|get_player_by_id:form.bench_dm.value %}
-                    {% if player %}
-                      bench_dm: {
-                      id: {{ form.bench_dm.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      bench_dm: null,
-                    {% endif %}
-                  {% endwith %}
-
-                  {% with player=form.bench_st.field.queryset|get_player_by_id:form.bench_st.value %}
-                    {% if player %}
-                      bench_st: {
-                      id: {{ form.bench_st.value|default:'null' }},
-                      nickname: '{{ player.nickname|escapejs }}',
-                      cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                      teamLogo: '{{ player.team.logo.url }}',
-                      },
-                    {% else %}
-                      bench_st: null,
-                    {% endif %}
-                  {% endwith %}
+                  selected: {},
+                  get unavailablePlayersCount() {
+                  return Object.values(this.selected).filter(player => player?.isUnavailable).length;
+                  },
+                  hasUnavailablePlayers() {
+                  return Object.values(this.selected).some(player => player?.isUnavailable);
                   },
                   freeTransfersLimit: 2,
                   transfersLimit: 4,
@@ -141,7 +56,7 @@
                   },
                   handlePick(position, id, nickname, cost, teamLogo) {
                   const previousPlayerId = this.selected[position]?.id;
-                  this.selected[position] = { id, nickname, cost, teamLogo };
+                  this.selected[position] = { id, nickname, cost, teamLogo, isUnavailable: false };
                   if (this.isMainSquadPlayer(position) && this.selectedCaptain === previousPlayerId) {
                   this.selectedCaptain = id;
                   }
@@ -161,7 +76,26 @@
                   fmt(v) { return v.toFixed(1); }
                   }"
       {# djlint:on #}
-          x-init="updateUsedBudget(); updateTransfers();">
+          x-init="
+                  {% get_positions as positions %}
+                  {% for position in positions %}
+                    {% with player=form.initial|get_or_default:position %}
+                      {% if player %}
+                        selected['{{ position }}'] = {
+                        id: {{ player.id|default:'null' }},
+                        nickname: '{{ player.nickname|escapejs }}',
+                        cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                        teamLogo: '{{ player.team.logo.url }}',
+                        isUnavailable: {{ form.available_player_ids|contains:player.id|yesno:'false,true' }}
+                        },
+                      {% else %}
+                        selected['{{ position }}'] = null,
+                      {% endif %}
+                    {% endwith %}
+                  {% endfor %}
+                  updateUsedBudget();
+                  updateTransfers();
+                 ">
       {% csrf_token %}
       <input type="hidden" name="captain_player_id" :value="selectedCaptain || ''" />
 
@@ -177,6 +111,11 @@
              :class="transfersUsed > transfersLimit ? 'tw:badge-error' : (transfersUsed > freeTransfersLimit ? 'tw:badge-warning' : 'tw:badge-success')">
           <span x-text="`Трансферы: ${transfersUsed}/${freeTransfersLimit} ${transfersUsed > freeTransfersLimit  && transfersUsed <= transfersLimit ? `(${transfersPenaltyPoints} FP)` : ''}`"></span>
         </div>
+        <template x-if="unavailablePlayersCount > 0">
+          <div class="tw:badge tw:badge-error">
+            <span x-text="`Недоступные игроки: ${unavailablePlayersCount}`"></span>
+          </div>
+        </template>
       </div>
 
       <div class="tw:grid tw:grid-cols-[1fr_auto_1fr] tw:gap-x-4 tw:gap-y-2">
@@ -276,7 +215,7 @@
         </button>
         <button type="submit"
                 class="tw:btn tw:btn-primary"
-                :disabled="selectedPlayersCount !== teamSize || budgetUsed > budgetLimit || benchPlayersCount() > 2 || transfersUsed > transfersLimit">
+                :disabled="selectedPlayersCount !== teamSize || budgetUsed > budgetLimit || benchPlayersCount() > 2 || transfersUsed > transfersLimit || hasUnavailablePlayers()">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>
