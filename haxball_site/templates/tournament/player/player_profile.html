@@ -8,7 +8,12 @@
     </div>
   </div>
   <div class="tw:flex tw:flex-col tw:justify-center">
-    <h2 class="tw:text-4xl! tw:font-semibold">{{ user.username }}</h2>
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h2 class="tw:text-4xl! tw:font-semibold">{{ user.username }}</h2>
+      <img src="{{ user.user_player.player_nation.flag.url }}"
+           class="tw:size-6"
+           title="{{ user.user_player.player_nation.country }}">
+    </div>
     <h3 class="tw:text-lg tw:font-semibold tw:text-base-content/70">
       {% if player.team %}
         <a href="{% url 'tournament:team_detail' player.team.slug %}" class="tw:link tw:link-hover">{{ player.team.title }}</a>
