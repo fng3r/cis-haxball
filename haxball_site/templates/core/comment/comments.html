@@ -12,7 +12,8 @@
   </style>
 {% endblock %}
 
-<div class="tw:flex tw:flex-col tw:gap-2 tw:mt-2">
+<div class="tw:flex tw:flex-col tw:gap-2 tw:mt-2"
+     x-data="{ parentComment: null, attachComment(commentId, author) { this.parentComment = { id: commentId, author: author } }, detachComment() { this.parentComment = null } }">
   {% partialdef comment-form-container inline=True %}
     {% with content_type=object|content_type %}
       <div id="comment-form-container"
@@ -61,13 +62,17 @@
                 {% include 'core/comment/comment-item.html' with comment=comment %}
 
                 {% if comment.has_childs %}
-                  {% if comment.childs_count > 2 %}<div class="collapse show" id="commentcollapse{{ comment.id }}">{% endif %}
-
-                  {% for child_comment in comment.all_childs %}
-                    {% include 'core/comment/comment-item.html' with comment=child_comment %}
-                  {% endfor %}
-
-                  {% if comment.childs_count > 2 %}</div>{% endif %}
+                  {% if comment.childs_count > 2 %}
+                    <div class="collapse show" id="commentcollapse{{ comment.id }}">
+                      {% for child_comment in comment.all_childs %}
+                        {% include 'core/comment/comment-item.html' with comment=child_comment %}
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {% for child_comment in comment.all_childs %}
+                      {% include 'core/comment/comment-item.html' with comment=child_comment %}
+                    {% endfor %}
+                  {% endif %}
                 {% endif %}
               {% endif %}
             {% endfor %}
@@ -81,10 +86,6 @@
 </div>
 
 <script>
-  function addComment(name, id) {
-    document.getElementById('contactparent').value = id;
-  }
-
   document.body.addEventListener('htmx:afterRequest', (event) => {
     $('body').removeClass('modal-open');
     $('.modal-backdrop').remove();
