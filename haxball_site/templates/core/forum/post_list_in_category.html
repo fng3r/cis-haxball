@@ -26,8 +26,6 @@
       {% endfor %}
     </div>
 
-    {% if category.posts_in_category.all.count > 6 %}
-      {% include "core/include/pagination.html" with page=posts %}
-    {% endif %}
+    {% include "core/include/pagination.html" with page=posts %}
   </div>
 {% endblock %}

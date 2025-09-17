@@ -74,9 +74,7 @@
           </div>
         </div>
 
-        {% if object.comments.count > 2 %}
-          {% include "core/include/pagination.html" with page=comments paginated_type="comments" %}
-        {% endif %}
+        {% include "core/include/pagination.html" with page=comments paginated_type="comments" %}
       </div>
     {% endif %}
   {% endpartialdef %}

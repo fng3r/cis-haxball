@@ -15,12 +15,12 @@
       <h3 class="tw:text-center tw:mb-0">
         <i class="fa fa-trophy tw:text-yellow-400 tw:mr-1" aria-hidden="true"></i>Фасткапы
       </h3>
+
       <div class="tw:divider tw:my-0!"></div>
 
       {% for post in posts %}
         {% include "core/include/post_in_list.html" with post=post %}
       {% endfor %}
-
     </div>
 
     {% include "core/include/pagination.html" with page=page_obj %}
