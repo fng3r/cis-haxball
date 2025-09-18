@@ -134,7 +134,7 @@
                          role="tab"
                          aria-label="{{ season }}"
                          {% if forloop.first %}checked{% endif %} />
-                  <div class="tw:tab-content tw:pt-1" role="tabpanel">
+                  <div class="tw:tab-content tw:pt-2" role="tabpanel">
                     <div id="season-{{ season.id }}-panel" role="tabpanel" aria-labelledby="schedule-s{{ season.id }}-tab">
                       <div class="tw:flex tw:flex-col tw:gap-4">
                         {% for league in season.team_leagues %}
