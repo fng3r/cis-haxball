@@ -24,7 +24,7 @@
   {% partialdef team-page-container inline=True %}
     <div id="team-page-container">
       <div class="tw:flex tw:flex-col tw:rounded-lg tw:gap-2 tw:bg-base-100 tw:pt-4 tw:pb-2 tw:px-4"
-           style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})">
+           {% if team.color_1 != '#FFFFFF' and team.color_2 != '#FFFFFF' %}style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})"{% endif %}>
         <div class="tw:flex">
           <div class="tw:w-1/4 tw:mb-4">
             <img src="{{ team.logo.url }}" alt="{{ team.title }}" class="tw:size-full">
