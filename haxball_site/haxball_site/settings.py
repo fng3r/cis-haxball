@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'utils.apps.UtilsConfig',
     'custom_notifications.apps.CustomNotificationsConfig',
     'oauth.apps.OauthConfig',
-    'predictions.apps.PredictionsConfig',
     'fantasy_league.apps.FantasyLeagueConfig',
     'ckeditor',
     'django_summernote',
