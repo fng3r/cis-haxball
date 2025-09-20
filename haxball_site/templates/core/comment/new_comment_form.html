@@ -14,7 +14,17 @@
         hx-disabled-elt="find button[type=submit]">
 
     {{ comment_form.media }}
-    <input type="hidden" name="parent" id="contactparent" value="">
+    <input type="hidden" name="parent" id="parent-id" :value="parentComment?.id">
+
+    <template x-if="parentComment !== null">
+      <div class="tw:text-left tw:px-1 tw:font-semibold">
+        Ответить на
+        <a :href="`#r${parentComment.id}`" class="tw:link">комментарий</a>
+        <span x-text="parentComment.author"></span>
+
+        <i class="fa fa-times tw:text-base-content/70 tw:text-[13px]! tw:cursor-pointer" @click="detachComment()"></i>
+      </div>
+    </template>
 
     <div class="tw:mt-2 tw:mb-1 tw:ml-1">{{ comment_form.body }}</div>
 

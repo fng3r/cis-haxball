@@ -50,11 +50,13 @@
             <img src="{{ player.player_nation.flag.url }}" width="24" height="24" title="{{ player.player_nation.country }}">
             <a class="tw:link tw:link-hover tw:text-base-content/90 tw:align-middle"
                href="{{ player.name.user_profile.get_absolute_url }}">{{ player }}</a>
-            {% with player_rating=current_squad_rating|get_or_default:player %}
-              <span x-show="show_rating">
-                {% include 'tournament/rating/partials/player_rating_badge.html' with grade=player_rating.grade rating_points=player_rating.rating_points size='sm' %}
-              </span>
-            {% endwith %}
+            {% if display_rating %}
+              {% with player_rating=current_squad_rating|get_or_default:player %}
+                <span x-show="show_rating" x-cloak>
+                  {% include 'tournament/rating/partials/player_rating_badge.html' with grade=player_rating.grade rating_points=player_rating.rating_points size='sm' %}
+                </span>
+              {% endwith %}
+            {% endif %}
           </div>
         </td>
 

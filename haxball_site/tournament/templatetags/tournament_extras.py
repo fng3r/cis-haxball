@@ -1072,10 +1072,16 @@ def teams_in_navbar():
     leagues = (
         League.objects.filter(title__in=primary_leagues, championship__is_active=True)
         .prefetch_related(Prefetch('teams', queryset=Team.objects.order_by('title')))
+        .annotate(teams_count=Count('teams'))
+        .filter(teams_count__gt=0)
         .order_by('priority')
     )
 
-    return {'leagues': leagues}
+    if leagues:
+        return {'leagues': leagues}
+
+    all_teams = Team.objects.filter(leagues__championship__is_active=True).order_by('title')
+    return {'leagues': leagues, 'all_teams': all_teams}
 
 
 @register.filter

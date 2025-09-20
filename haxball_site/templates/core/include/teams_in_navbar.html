@@ -1,21 +1,31 @@
 {% load thumbnail %}
 
+{% partialdef team-list-item %}
+  <div class="tw:flex tw:justify-start tw:gap-x-1">
+    {% thumbnail team.logo "25x25" format="PNG" as im %}
+      <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1 tw:size-6">
+    {% endthumbnail %}
+
+    <a href="{{ team.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary tw:text-base">{{ team.title|truncatechars:18 }}</a>
+  </div>
+{% endpartialdef %}
+
 <div class="tw:flex tw:flex-col tw:mx-auto">
   {% for league in leagues %}
     <div class="tw:ml-1 tw:mb-2">
       <h5 class="tw:text-center">{{ league.title }}</h5>
 
-      <div class="tw:flex tw:flex-wrap tw:justify-start tw:gap-y-1.5">
+      <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-3 tw:justify-start tw:gap-y-2">
         {% for team in league.teams.all %}
-          <div class="tw:w-1/2 tw:lg:w-1/3 tw:flex tw:justify-start tw:gap-x-0.75">
-            {% thumbnail team.logo "25x25" format="PNG" as im %}
-              <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1" width="25px" height="25px">
-            {% endthumbnail %}
-
-            <a href="{{ team.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary tw:text-base">{{ team.title|truncatechars:18 }}</a>
-          </div>
+          {% partial team-list-item %}
         {% endfor %}
       </div>
+    </div>
+  {% empty %}
+    <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-3 tw:justify-start tw:gap-y-2">
+      {% for team in all_teams %}
+        {% partial team-list-item %}
+      {% endfor %}
     </div>
   {% endfor %}
 </div>

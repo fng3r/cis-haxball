@@ -71,7 +71,7 @@
           {% endfor %}
         {% endcomment %}
 
-        <a class="tw:link" href="{{ object.get_absolute_url }}?page={{ comments.number }}#r{{ comment.id }}">#{{ comment.id }}</a>
+        <a class="tw:link" href="{{ object.get_absolute_url }}{% querystring %}#r{{ comment.id }}">#{{ comment.id }}</a>
         {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
           <a :style="editingComment && {'pointer-events': 'none'}"
              @click="editingComment = true"
@@ -143,7 +143,7 @@
       <span class="action-icons">
         <a href="#addcomment"
            class="tw:align-middle tw:text-base-content/40 tw:hover:text-[#1976d2]!"
-           {% if user.is_authenticated %} onclick="addComment('{{ comment.author.username }}','{{ comment.id }}')" {% else %} onclick="login_modal.showModal()" {% endif %}>
+           {% if user.is_authenticated %} @click="attachComment('{{ comment.id }}', '{{ comment.author.username }}')" {% else %} onclick="login_modal.showModal()" {% endif %}>
           <i class="fa fa-reply tw:ml-2 tw:mt-1.5"></i>
         </a>
       </span>

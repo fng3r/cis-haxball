@@ -12,7 +12,7 @@
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
       <h3 class="tw:text-center tw:mb-0">
-        <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>{{ category }}
+        <i class="fa fa-list-alt tw:text-primary tw:mr-1.5" aria-hidden="true"></i>{{ category }}
       </h3>
       {% if user.is_authenticated and not category.is_official %}
         <a href="{% url 'core:new_post' category.slug %}" class="tw:link tw:text-lg">
@@ -26,8 +26,6 @@
       {% endfor %}
     </div>
 
-    {% if category.posts_in_category.all.count > 6 %}
-      {% include "core/include/pagination.html" with page=posts %}
-    {% endif %}
+    {% include "core/include/pagination.html" with page=posts %}
   </div>
 {% endblock %}

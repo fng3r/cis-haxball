@@ -1,0 +1,74 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load predictions_extras %}
+
+<div class="tw:flex tw:flex-col tw:gap-6">
+  {% if not selected_tournament %}
+    <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</div>
+  {% else %}
+    <div class="tw:[#standings-content:has(.htmx-request)_&]:opacity-50 tw:[#standings-content:has(.htmx-request)_&]:transition-opacity">
+      <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
+
+      {% if standings %}
+        <div class="tw:overflow-x-auto">
+          <table class="tw:table tw:table-zebra tw:w-full">
+            <thead>
+              <tr>
+                <th class="tw:text-center">Место</th>
+                <th>Пользователь</th>
+                {% for tour in selected_tournament.league.tours.all %}
+                  <th class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</th>
+                {% endfor %}
+                <th class="tw:text-center tw:font-bold">Всего</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for standing in standings %}
+                <tr>
+                  <td class="tw:text-center tw:font-bold">
+                    {% if standing.place == 1 %}
+                      <span class="tw:text-yellow-500">🥇</span>
+                    {% elif standing.place == 2 %}
+                      <span class="tw:text-gray-400">🥈</span>
+                    {% elif standing.place == 3 %}
+                      <span class="tw:text-amber-600">🥉</span>
+                    {% else %}
+                      {{ standing.place }}
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="tw:flex tw:items-center tw:gap-2">
+                      {% if standing.user.user_profile.avatar %}
+                        <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-cover tw:bg-center"
+                             style="background-image: url({{ standing.user.user_profile.avatar.url }})"></div>
+                      {% else %}
+                        <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-base-300 tw:flex tw:items-center tw:justify-center">
+                          <i class="fa fa-user tw:text-xs"></i>
+                        </div>
+                      {% endif %}
+                      <span class="tw:font-medium">{{ standing.user.username }}</span>
+                    </div>
+                  </td>
+                  {% for tour in selected_tournament.league.tours.all %}
+                    <td class="tw:text-center">
+                      {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
+                        <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id }}</span>
+                      {% else %}
+                        <span class="tw:text-base-content/50">-</span>
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                  <td class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
+          <p>В данном турнире еще не было сделано ни одного прогноза</p>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
