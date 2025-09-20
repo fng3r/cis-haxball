@@ -39,11 +39,17 @@
                   currentSelectedIds() { return Object.values(this.selected).filter(Boolean).map(p => p.id); },
                   get selectedPlayersCount() { return this.currentSelectedIds().length; },
                   transfersCount() {
-                  const prev = new Set(this.previousPlayerIds || []);
+                  if (this.previousPlayerIds.length === 0) {
+                  return 0;
+                  }
+                  const prev = new Set(this.previousPlayerIds);
                   return this.currentSelectedIds().filter(id => !prev.has(id)).length;
                   },
                   updateTransfers() {
-                  const prev = new Set(this.previousPlayerIds || []);
+                  if (this.previousPlayerIds.length === 0) {
+                  return;
+                  }
+                  const prev = new Set(this.previousPlayerIds);
                   this.transfersUsed = this.currentSelectedIds().filter(id => !prev.has(id)).length;
                   this.freeTransfersUsed = Math.min(this.transfersUsed, this.freeTransfersLimit);
                   },
