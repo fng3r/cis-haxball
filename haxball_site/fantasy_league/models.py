@@ -68,8 +68,8 @@ class SquadSubmission(models.Model):
         Player,
         verbose_name='Капитан',
         on_delete=models.DO_NOTHING,
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
         related_name='fantasy_captaincies',
     )
 
