@@ -625,12 +625,12 @@ def get_postponements_queryset():
             'cancelled_by__user_player__team__captain_assistant',
             Prefetch(
                 'taken_by__owned_teams',
-                queryset=Team.objects.filter(leagues__championship__is_active=True),
+                queryset=Team.objects.filter(leagues__championship__is_active=True).distinct(),
                 to_attr='active_owned_teams',
             ),
             Prefetch(
                 'cancelled_by__owned_teams',
-                queryset=Team.objects.filter(leagues__championship__is_active=True),
+                queryset=Team.objects.filter(leagues__championship__is_active=True).distinct(),
                 to_attr='active_owned_teams',
             ),
         )

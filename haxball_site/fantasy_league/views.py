@@ -101,6 +101,8 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
     selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
 
     user_squads = {}
+    print(selected_tournament)
+    is_tournament_ended = False
     if selected_tournament:
         preloaded_data = preload_fantasy_data(selected_tournament)
 

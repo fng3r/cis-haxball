@@ -37,7 +37,7 @@ def get_comments_for_object(model, obj_id):
     )
     prefetch_owned_teams = Prefetch(
         'author__owned_teams',
-        queryset=Team.objects.filter(leagues__championship__is_active=True),
+        queryset=Team.objects.filter(leagues__championship__is_active=True).distinct(),
         to_attr='active_owned_teams',
     )
 
