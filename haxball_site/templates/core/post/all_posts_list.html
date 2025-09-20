@@ -14,7 +14,9 @@
       <h3 class="tw:text-center tw:mb-0">
         <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>{{ title }}
       </h3>
+
       <div class="tw:divider tw:my-0!"></div>
+
       {% for post in posts %}
         {% include "core/include/post_in_list.html" with post=post %}
       {% endfor %}

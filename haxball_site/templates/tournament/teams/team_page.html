@@ -24,12 +24,10 @@
   {% partialdef team-page-container inline=True %}
     <div id="team-page-container">
       <div class="tw:flex tw:flex-col tw:rounded-lg tw:gap-2 tw:bg-base-100 tw:pt-4 tw:pb-2 tw:px-4"
-           style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})">
+           {% if team.color_1 != '#FFFFFF' and team.color_2 != '#FFFFFF' %}style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})"{% endif %}>
         <div class="tw:flex">
-          <div class="tw:w-1/4">
-            <div class="profile-img tw:mb-3">
-              <img src="{{ team.logo.url }}" alt="{{ team.title }}">
-            </div>
+          <div class="tw:w-1/4 tw:mb-4">
+            <img src="{{ team.logo.url }}" alt="{{ team.title }}" class="tw:size-full">
           </div>
 
           <div class="tw:grow tw:relative tw:px-4">
@@ -136,7 +134,7 @@
                          role="tab"
                          aria-label="{{ season }}"
                          {% if forloop.first %}checked{% endif %} />
-                  <div class="tw:tab-content tw:pt-1" role="tabpanel">
+                  <div class="tw:tab-content tw:pt-2" role="tabpanel">
                     <div id="season-{{ season.id }}-panel" role="tabpanel" aria-labelledby="schedule-s{{ season.id }}-tab">
                       <div class="tw:flex tw:flex-col tw:gap-4">
                         {% for league in season.team_leagues %}
@@ -214,7 +212,7 @@
                     <tbody>
                       <tr>
                         <td>
-                          <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Владелец</span>
+                          <span class="tw:text-lg tw:text-base-content/80 tw:font-semibold">Владелец</span>
                         </td>
                         <td>
                           <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
@@ -250,13 +248,13 @@
                         {% if cap %}
                           <tr>
                             <td>
-                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Капитан</span>
+                              <span class="tw:text-lg tw:text-base-content/80 tw:font-semibold">Капитан</span>
                             </td>
                             <td>
                               {% if cap.name %}
                                 <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold" href="{{ cap_profile.get_absolute_url }}">{{ cap }}</a>
                               {% else %}
-                                <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ cap }}</span>
+                                <span class="tw:text-lg tw:text-base-content/80 tw:font-semibold">{{ cap }}</span>
                               {% endif %}
                             </td>
                             <td class="tw:text-center">
@@ -291,14 +289,14 @@
                         {% if assistant %}
                           <tr>
                             <td>
-                              <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">Ассистент</span>
+                              <span class="tw:text-lg tw:text-base-content/80 tw:font-semibold">Ассистент</span>
                             </td>
                             <td>
                               {% if assistant.name %}
                                 <a class="tw:link tw:link-hover tw:link-primary tw:text-lg tw:font-semibold"
                                    href="{{ assistant_profile.get_absolute_url }}">{{ assistant }}</a>
                               {% else %}
-                                <span class="tw:text-lg tw:text-neutral-600 tw:font-semibold">{{ assistant }}</span>
+                                <span class="tw:text-lg tw:text-base-content/80 tw:font-semibold">{{ assistant }}</span>
 
                               {% endif %}
                             </td>

@@ -95,7 +95,7 @@
         <span class="action-icons tw:ml-1">
           <a href="#addcomment"
              class="tw:align-middle tw:text-base-content/40 tw:hover:text-[#1976d2]!"
-             {% if user.is_authenticated %} onclick="addComment('','')" {% else %} onclick="login_modal.showModal()" {% endif %}>
+             {% if not user.is_authenticated %}onclick="login_modal.showModal()"{% endif %}>
             <i class="fa fa-reply"></i>
           </a>
         </span>
