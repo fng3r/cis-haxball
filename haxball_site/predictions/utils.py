@@ -8,7 +8,7 @@ from .models import PredictionSubmission
 
 def is_tour_open_for_predictions(tour):
     """Check if a tour is currently open for predictions"""
-    now = timezone.now()
+    now = timezone.localtime()
     today = now.date()
 
     # Tour opens 3 days before start date

@@ -21,7 +21,7 @@ from .points_service import calculate_submission_total_points, calculate_total_p
 
 def is_tour_open_for_fantasy(tour):
     """Check if a tour is currently open for fantasy league submissions"""
-    now = timezone.now()
+    now = timezone.localtime()
     today = now.date()
 
     # Tour opens 3 days before start date
@@ -36,8 +36,9 @@ def is_tour_open_for_fantasy(tour):
 
 def is_tour_not_open_yet(tour):
     """Check if a tour is not open yet"""
-    now = timezone.now()
-    return tour.date_from > now.date()
+    opening_date = get_tour_opening_date(tour)
+    now = timezone.localtime()
+    return opening_date > now.date()
 
 
 def get_tour_opening_date(tour):
