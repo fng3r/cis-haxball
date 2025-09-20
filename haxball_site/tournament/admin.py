@@ -21,6 +21,7 @@ from unfold.contrib.filters.admin import (
     RelatedDropdownFilter,
     SingleNumericFilter,
 )
+from unfold.contrib.forms.widgets import ArrayWidget
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
 from unfold.sections import TableSection
@@ -163,6 +164,7 @@ class PlayerAdmin(UnfoldModelAdmin):
         'nickname',
         'team',
         'player_nation',
+        'get_positions',
     )
     autocomplete_fields = ('name',)
     list_filter = (
@@ -178,6 +180,11 @@ class PlayerAdmin(UnfoldModelAdmin):
     exclude = ('position',)
     inlines = [AchievementsInline]
 
+    def get_positions(self, obj):
+        return ', '.join(obj.positions or [])
+
+    get_positions.short_description = 'Позиции'
+
     def get_readonly_fields(self, request, obj=None):
         if obj:  # This is the case when object is already created
             return ['name']
@@ -186,6 +193,11 @@ class PlayerAdmin(UnfoldModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('name', 'team', 'player_nation')
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, change, **kwargs)
+        form.base_fields['positions'].widget = ArrayWidget(choices=Player.Position.choices)
+        return form
 
 
 @admin.register(PlayerTransfer)

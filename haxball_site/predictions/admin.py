@@ -1,0 +1,70 @@
+from django.contrib import admin
+
+from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter
+
+from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
+
+from .models import (
+    Prediction,
+    PredictionsContestTournament,
+    PredictionSubmission,
+    PreseasonPredictionItem,
+    PreseasonPredictionsTournament,
+    PreseasonPredictionSubmission,
+)
+
+
+class PredictionInline(UnfoldTabularInline):
+    model = Prediction
+    extra = 0
+    readonly_fields = ['match']
+    fields = ['match', 'predicted_result', 'is_special']
+
+
+@admin.register(PredictionsContestTournament)
+class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
+    list_display = ['league', 'is_active']
+    list_editable = ['is_active']
+    list_filter = ['is_active']
+    search_fields = ['league__title']
+    ordering = ['-id']
+
+
+@admin.register(PredictionSubmission)
+class PredictionSubmissionAdmin(UnfoldModelAdmin):
+    list_filter = ['tournament', 'tour__league', 'created']
+    search_fields = ['user__username', 'tour__number']
+    ordering = ['-created']
+    inlines = [PredictionInline]
+    readonly_fields = ['user', 'tournament', 'tour', 'created', 'updated']
+
+
+@admin.register(PreseasonPredictionsTournament)
+class PreseasonPredictionsTournamentAdmin(UnfoldModelAdmin):
+    list_display = ['league', 'is_active']
+    list_editable = ['is_active']
+    list_filter = ['is_active']
+    search_fields = ['league__title']
+    ordering = ['-id']
+
+
+class PreseasonPredictionItemInline(UnfoldTabularInline):
+    model = PreseasonPredictionItem
+    extra = 0
+    readonly_fields = ['team', 'position']
+    fields = ['team', 'position']
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PreseasonPredictionSubmission)
+class PreseasonPredictionSubmissionAdmin(UnfoldModelAdmin):
+    list_filter = [('tournament__league', RelatedDropdownFilter), ('user', AutocompleteSelectFilter)]
+    list_filter_submit = True
+    search_fields = ['user__username', 'tournament__league__title']
+    inlines = [PreseasonPredictionItemInline]
+    readonly_fields = ['user', 'tournament', 'created', 'updated']

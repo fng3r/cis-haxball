@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'utils.apps.UtilsConfig',
     'custom_notifications.apps.CustomNotificationsConfig',
     'oauth.apps.OauthConfig',
+    'predictions.apps.PredictionsConfig',
     'ckeditor',
     'django_summernote',
     'ckeditor_uploader',

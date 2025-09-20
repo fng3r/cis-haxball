@@ -1,0 +1,47 @@
+{% load static %}
+
+<div class="tw:flex tw:flex-col tw:items-center">
+  {% if not selected_tournament %}
+    <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турнира</div>
+  {% else %}
+    {% if not user.is_authenticated %}
+      <div class="tw:alert tw:alert-info">Для отправки предсезонного прогноза необходимо войти в систему.</div>
+    {% else %}
+      {% if submission %}
+        <div class="tw:flex tw:items-center tw:gap-3">
+          <h4 class="tw:text-lg tw:font-semibold">Ваш прогноз</h4>
+          {% if selected_tournament.is_active %}
+            <i class="fa fa-pencil tw:text-warning tw:opacity-80 tw:hover:opacity-100 tw:cursor-pointer"
+               aria-hidden="true"
+               onclick="preseason_edit_modal.showModal()">
+            </i>
+          {% endif %}
+        </div>
+        <ol class="tw:list tw:list-decimal tw:p-2 tw:space-y-1 tw:w-max">
+          {% for item in items %}
+            <li class="tw:card tw:not-last:border-b-1 tw:rounded-none tw:border-base-content/10 tw:p-2 tw:pr-8 tw:text-2xl">
+              <div class="tw:flex tw:items-center tw:gap-3">
+                <span class="tw:w-6 tw:text-center tw:opacity-70">{{ item.position }}</span>
+                <div class="tw:flex tw:items-center tw:gap-2">
+                  <img src="{{ item.team.logo.url }}" alt="{{ item.team.short_title }}" class="tw:w-6 tw:h-6 tw:rounded" />
+                  <a href="{{ item.team.get_absolute_url }}" class="tw:flex-1 tw:link tw:link-hover">{{ item.team.title }}</a>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <div class="tw:flex tw:flex-col tw:justify-center tw:gap-3 tw:min-h-50">
+          {% if selected_tournament.is_active %}
+            <div class="tw:text-center tw:text-lg tw:text-base-content/70">Вы еще не оставили свой прогноз</div>
+            <button class="tw:btn tw:btn-primary" onclick="preseason_edit_modal.showModal()">Сделать прогноз</button>
+          {% else %}
+            <div class="tw:text-center tw:text-lg tw:text-base-content/70">Сбор прогнозов закрыт</div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</div>
+
+{% include 'predictions/preseason/edit_modal.html' %}
