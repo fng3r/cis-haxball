@@ -255,10 +255,10 @@ PRICE_RANGES = {
     PlayerRating.Grade.S: (30, 40),
     PlayerRating.Grade.A: (19, 29),
     PlayerRating.Grade.B_PLUS: (13, 18),
-    PlayerRating.Grade.B: (9, 12),
-    PlayerRating.Grade.C: (6, 8),
-    PlayerRating.Grade.D: (3, 5),
-    PlayerRating.Grade.E: (1, 2),
+    PlayerRating.Grade.B: (8.5, 12.5),
+    PlayerRating.Grade.C: (5, 8.2),
+    PlayerRating.Grade.D: (2.5, 4.8),
+    PlayerRating.Grade.E: (1, 2.4),
 }
 
 RATING_RANGES = {
