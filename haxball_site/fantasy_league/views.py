@@ -436,7 +436,7 @@ def edit_squad(request, tour_id):
 
                 selected_ids = {p.id for p in form.get_main_squad_players() + form.get_bench_players() if p}
                 prev_ids = set(prev_player_ids)
-                transfers_in = len(selected_ids - prev_ids)
+                transfers_in = len(selected_ids - prev_ids) if prev_ids else 0
                 penalized_transfers = max(0, transfers_in - 2)
                 submission.penalized_transfers = penalized_transfers
 
