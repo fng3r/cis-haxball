@@ -7,6 +7,8 @@
 <div class="tw:flex tw:flex-col tw:gap-4">
   {% if not selected_tournament %}
     <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</div>
+  {% elif not selected_user %}
+    <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">В данном турнире еще не было сделано ни одного прогноза</div>
   {% else %}
     <div class="tw:flex tw:flex-col tw:gap-4">
       <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
