@@ -15,7 +15,7 @@ from tournament.models import (
     TourNumber,
 )
 
-from .models import FantasyTournament, SquadSubmission
+from .models import FantasyTournament, PlayerCost, SquadSubmission
 from .points_service import calculate_submission_total_points, calculate_total_points, calculate_user_total_points
 
 
@@ -259,7 +259,6 @@ PRICE_RANGES = {
     PlayerRating.Grade.C: (6, 8),
     PlayerRating.Grade.D: (3, 5),
     PlayerRating.Grade.E: (1, 2),
-    None: (1, 2),
 }
 
 RATING_RANGES = {
@@ -270,7 +269,6 @@ RATING_RANGES = {
     PlayerRating.Grade.C: (31, 45),
     PlayerRating.Grade.D: (16, 30),
     PlayerRating.Grade.E: (0, 15),
-    None: (0, 15),  # No rating - same as E
 }
 
 BUDGET_LIMITS = {
@@ -284,29 +282,32 @@ def get_league_budget_limit(league):
     return BUDGET_LIMITS.get(league.title)
 
 
-def calculate_player_cost(player_rating):
-    """Calculate player cost in millions based on grade and rating points"""
-    if not player_rating:
-        grade = None
-        rating_points = 15
-    else:
+def calculate_player_cost(player_rating, player):
+    """Calculate player cost in millions based on rating, custom cost, or default"""
+    if player_rating:
         grade = player_rating.grade
         rating_points = player_rating.rating_points
 
-    price_range = PRICE_RANGES.get(grade, (1, 2))
-    rating_range = RATING_RANGES.get(grade, (0, 15))
+        price_range = PRICE_RANGES.get(grade)
+        rating_range = RATING_RANGES.get(grade)
 
-    min_price, max_price = price_range
-    min_rating, max_rating = rating_range
+        min_price, max_price = price_range
+        min_rating, max_rating = rating_range
 
-    if max_rating == min_rating:
-        position_ratio = 0.0
-    else:
-        position_ratio = (rating_points - min_rating) / (max_rating - min_rating)
-    position_ratio = max(0.0, min(1.0, position_ratio))
-    cost = min_price + (max_price - min_price) * position_ratio
+        if max_rating == min_rating:
+            position_ratio = 0.0
+        else:
+            position_ratio = (rating_points - min_rating) / (max_rating - min_rating)
+        position_ratio = max(0.0, min(1.0, position_ratio))
+        cost = min_price + (max_price - min_price) * position_ratio
 
-    return round(cost, 1)
+        return round(cost, 1)
+
+    custom_cost = PlayerCost.objects.filter(player=player).first()
+    if custom_cost:
+        return float(custom_cost.cost)
+
+    return PRICE_RANGES.get(PlayerRating.Grade.E)[1]
 
 
 def get_players_costs(league):
@@ -315,7 +316,14 @@ def get_players_costs(league):
     league_player_ids = list(Player.objects.filter(team__in=league.teams.all()).values_list('id', flat=True))
     ratings = PlayerRating.objects.filter(player_id__in=league_player_ids, version=latest_rating_version)
     player_rating_map = {r.player_id: r for r in ratings}
-    return {pid: calculate_player_cost(player_rating_map.get(pid)) for pid in league_player_ids}
+
+    costs = {}
+    for pid in league_player_ids:
+        player = Player.objects.get(id=pid)
+        player_rating = player_rating_map.get(pid)
+        costs[pid] = calculate_player_cost(player_rating, player)
+
+    return costs
 
 
 def get_total_cost_for_players(players, player_costs):

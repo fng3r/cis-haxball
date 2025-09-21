@@ -97,3 +97,18 @@ class SquadSubmission(models.Model):
     def bench_players(self):
         """Get bench players"""
         return self.squad_players.filter(squad_type=SquadPlayer.SquadType.BENCH)
+
+
+class PlayerCost(models.Model):
+    """Custom cost for a player across all fantasy tournaments"""
+
+    player = models.OneToOneField(Player, verbose_name='Игрок', on_delete=models.CASCADE, related_name='fantasy_cost')
+    cost = models.DecimalField('Стоимость', max_digits=4, decimal_places=1, help_text='Стоимость игрока в миллионах')
+
+    class Meta:
+        verbose_name = 'Стоимость игрока'
+        verbose_name_plural = 'Стоимости игроков'
+        ordering = ['player__nickname']
+
+    def __str__(self):
+        return f'{self.player.nickname} - {self.cost}M'

@@ -6,7 +6,7 @@ from unfold.contrib.filters.admin import RelatedDropdownFilter
 
 from tournament.models import Player
 
-from .models import FantasyTournament, SquadPlayer, SquadSubmission
+from .models import FantasyTournament, PlayerCost, SquadPlayer, SquadSubmission
 
 
 @admin.register(FantasyTournament)
@@ -57,3 +57,12 @@ class SquadSubmissionAdmin(unfold_admin.ModelAdmin):
                 ).values_list('player_id', flat=True)
                 kwargs['queryset'] = Player.objects.filter(id__in=main_squad_players)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(PlayerCost)
+class PlayerCostAdmin(unfold_admin.ModelAdmin):
+    list_display = ('player', 'cost')
+    list_filter = (('player', RelatedDropdownFilter),)
+    list_filter_submit = True
+    search_fields = ('player__nickname',)
+    ordering = ('player__nickname',)
