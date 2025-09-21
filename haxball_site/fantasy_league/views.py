@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 
 from django_htmx.http import trigger_client_event
 
-from tournament.models import TourNumber
+from tournament.models import Player, TourNumber
 
 from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
@@ -101,7 +101,6 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
     selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
 
     user_squads = {}
-    print(selected_tournament)
     is_tournament_ended = False
     if selected_tournament:
         preloaded_data = preload_fantasy_data(selected_tournament)
@@ -382,13 +381,16 @@ def edit_squad(request, tour_id):
             sp.player_id for sp in prev_submission.bench_players.all()
         ]
 
-    if request.method == 'POST':
-        submission = SquadSubmission.objects.filter(
-            user=request.user,
-            tour=tour,
-            tournament__league=tour.league,
-        ).first()
+    submission = SquadSubmission.objects.filter(
+        user=request.user,
+        tour=tour,
+        tournament__league=tour.league,
+    ).first()
 
+    budget_limit = get_league_budget_limit(tour.league)
+    unavailable_players = get_unavailable_players_in_submission(submission) if submission else []
+
+    if request.method == 'POST':
         form = SquadSubmissionForm(request.POST, tournament=tour.league, previous_player_ids=prev_player_ids)
         if form.is_valid():
             with transaction.atomic():
@@ -433,8 +435,6 @@ def edit_squad(request, tour_id):
 
                 captain_player_id = form.cleaned_data.get('captain_player_id')
                 if captain_player_id:
-                    from tournament.models import Player
-
                     submission.captain_player = Player.objects.filter(pk=captain_player_id).first()
 
                 selected_ids = {p.id for p in form.get_main_squad_players() + form.get_bench_players() if p}
@@ -464,14 +464,45 @@ def edit_squad(request, tour_id):
                 )
                 response = trigger_client_event(response, 'tour-submitted', {'tour_number': tour.number})
                 return response
+        else:
+            player_fields = [
+                'main_squad_gk',
+                'main_squad_dm',
+                'main_squad_st1',
+                'main_squad_st2',
+                'bench_gk',
+                'bench_dm',
+                'bench_st',
+            ]
+
+            for field_name in player_fields:
+                player_id = request.POST.get(field_name)
+                if player_id:
+                    form.initial[field_name] = Player.objects.filter(pk=player_id).first()
+
+            captain_player_id = request.POST.get('captain_player_id')
+            if captain_player_id:
+                form.initial['captain_player_id'] = captain_player_id
+
+            context = {
+                'form': form,
+                'tour': tour,
+                'submission': submission,
+                'budget_limit': budget_limit,
+                'previous_player_ids': prev_player_ids,
+                'unavailable_players': unavailable_players,
+            }
+
+            return render(request, 'fantasy_league/edit_squad.html', context)
     else:
         initial_data = {}
         submission = SquadSubmission.objects.filter(
             user=request.user, tour=tour, tournament__league=tour.league
         ).first()
 
-        if submission:
-            primary_squad_players = list(submission.main_squad.select_related('player'))
+        actual_submission = submission or prev_submission
+        if actual_submission:
+            primary_squad_players = list(actual_submission.main_squad.select_related('player'))
             if len(primary_squad_players) >= 4:
                 gk_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.GK]
                 dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
@@ -486,7 +517,7 @@ def edit_squad(request, tour_id):
                 if len(st_players) >= 2:
                     initial_data['main_squad_st2'] = st_players[1].player
 
-            bench_squad_players = list(submission.bench_players.select_related('player'))
+            bench_squad_players = list(actual_submission.bench_players.select_related('player'))
             initial_data['bench_gk'] = next(
                 (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.GK), None
             )
@@ -497,41 +528,11 @@ def edit_squad(request, tour_id):
                 (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.ST), None
             )
 
-            initial_data['captain_player_id'] = submission.captain_player.id if submission.captain_player else None
-
-        if not submission and prev_submission:
-            primary_squad_players = list(prev_submission.main_squad.select_related('player'))
-            if len(primary_squad_players) >= 4:
-                gk_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.GK]
-                dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
-                st_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.ST]
-                if gk_players:
-                    initial_data['main_squad_gk'] = gk_players[0].player
-                if dm_players:
-                    initial_data['main_squad_dm'] = dm_players[0].player
-                if len(st_players) >= 1:
-                    initial_data['main_squad_st1'] = st_players[0].player
-                if len(st_players) >= 2:
-                    initial_data['main_squad_st2'] = st_players[1].player
-
-            bench_squad_players = list(prev_submission.bench_players.select_related('player'))
-            initial_data['bench_gk'] = next(
-                (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.GK), None
-            )
-            initial_data['bench_dm'] = next(
-                (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.DM), None
-            )
-            initial_data['bench_st'] = next(
-                (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.ST), None
-            )
             initial_data['captain_player_id'] = (
-                prev_submission.captain_player.id if prev_submission.captain_player else None
+                actual_submission.captain_player.id if actual_submission.captain_player else None
             )
 
         form = SquadSubmissionForm(initial=initial_data, tournament=tour.league, previous_player_ids=prev_player_ids)
-
-    budget_limit = get_league_budget_limit(tour.league)
-    unavailable_players = get_unavailable_players_in_submission(submission) if submission else []
 
     context = {
         'form': form,
