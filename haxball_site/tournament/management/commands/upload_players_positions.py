@@ -12,12 +12,25 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('filename', type=str, help='path to .csv file')
         parser.add_argument('-d', '--dry-run', dest='dry_run', action='store_true')
+        parser.add_argument(
+            '--reset', dest='reset', action='store_true', help='Remove all player positions before setting new ones'
+        )
 
     def handle(self, *args, **options):
         filename = options['filename']
         dry_run = options['dry_run']
+        reset = options['reset']
         updated = 0
         not_found = 0
+
+        # Reset all player positions if --reset option is used
+        if reset:
+            if not dry_run:
+                reset_count = Player.objects.exclude(positions__isnull=True).exclude(positions=[]).update(positions=[])
+                self.stdout.write(self.style.SUCCESS(f'Reset positions for {reset_count} players'))
+            else:
+                reset_count = Player.objects.exclude(positions__isnull=True).exclude(positions=[]).count()
+                self.stdout.write(self.style.WARNING(f'DRY RUN: Would reset positions for {reset_count} players'))
         with open(filename, 'r') as file:
             reader = csv.reader(file.readlines())
             for row in reader:
