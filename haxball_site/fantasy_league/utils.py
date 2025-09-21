@@ -266,7 +266,7 @@ RATING_RANGES = {
     PlayerRating.Grade.S: (91, 100),
     PlayerRating.Grade.A: (76, 90),
     PlayerRating.Grade.B_PLUS: (61, 75),
-    PlayerRating.Grade.B: (61, 75),
+    PlayerRating.Grade.B: (46, 60),
     PlayerRating.Grade.C: (31, 45),
     PlayerRating.Grade.D: (16, 30),
     PlayerRating.Grade.E: (0, 15),
