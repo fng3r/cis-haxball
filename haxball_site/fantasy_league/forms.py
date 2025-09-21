@@ -1,5 +1,5 @@
 from django import forms
-from django.db.models import IntegerField, OuterRef, Subquery
+from django.db.models import Case, IntegerField, OuterRef, Subquery, Value, When
 
 from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
 
@@ -104,12 +104,25 @@ class SquadSubmissionForm(forms.Form):
             player_id=OuterRef('pk'), version=latest_rating_version
         ).values('rating_points')[:1]
 
+        annotated_players = Player.objects.filter(**team_filter).annotate(
+            latest_rating=Subquery(latest_rating_subquery, output_field=IntegerField()),
+        )
+
+        players_list = list(annotated_players)
+        players_list.sort(key=lambda p: self.player_costs.get(p.id, 0), reverse=True)
+        player_ids = [p.id for p in players_list]
+
         annotated_players = (
             Player.objects.filter(**team_filter)
             .annotate(
                 latest_rating=Subquery(latest_rating_subquery, output_field=IntegerField()),
+                sort_order=Case(
+                    *[When(id=pid, then=Value(i)) for i, pid in enumerate(player_ids)],
+                    default=Value(len(player_ids)),
+                    output_field=IntegerField(),
+                ),
             )
-            .order_by('-latest_rating')
+            .order_by('sort_order')
         )
 
         self.fields['main_squad_gk'].queryset = annotated_players.filter(positions__contains=[Player.Position.GK])
