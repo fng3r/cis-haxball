@@ -12,9 +12,9 @@ POINTS_CONFIG = {
         SquadPlayer.Position.GK: 4,
     },
     'clean_sheet': {
-        SquadPlayer.Position.ST: 2,
-        SquadPlayer.Position.DM: 6,
-        SquadPlayer.Position.GK: 15,
+        SquadPlayer.Position.ST: 3,
+        SquadPlayer.Position.DM: 10,
+        SquadPlayer.Position.GK: 20,
     },
     'conceded_goals': {
         (1, 2): {
