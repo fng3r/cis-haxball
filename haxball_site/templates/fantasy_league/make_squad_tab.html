@@ -14,6 +14,13 @@
         <span>Выберите турнир для участия в фэнтези лиге</span>
       </div>
     {% else %}
+      <div class="tw:alert tw:alert-info">
+        <i class="fa fa-info-circle"></i>
+        <span>
+          Перед началом крайне рекомендуется изучить правила. По всем вопросам и предложениям можно обращаться
+          <a href="{% url 'core:profile_detail' 1918 'fng3r' %}" class="tw:link tw:text-info-content tw:font-semibold">сюда</a></span>
+      </div>
+
       <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }" class="tw:flex tw:flex-col tw:gap-2">
         <div class="tw:flex tw:items-center tw:justify-between">
           <div class="tw:text-xl tw:font-semibold">{{ selected_tournament.league.title }}</div>
