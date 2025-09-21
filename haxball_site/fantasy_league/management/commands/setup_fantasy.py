@@ -177,6 +177,7 @@ class Command(BaseCommand):
                             SquadPlayer.objects.create(
                                 submission=submission,
                                 player=prev_sp.player,
+                                team=prev_sp.player.team,
                                 position=prev_sp.position,
                                 squad_type=prev_sp.squad_type,
                             )
@@ -192,6 +193,7 @@ class Command(BaseCommand):
                             SquadPlayer.objects.create(
                                 submission=submission,
                                 player=player,
+                                team=player.team,
                                 position=position,
                                 squad_type=SquadPlayer.SquadType.MAIN,
                             )
@@ -200,6 +202,7 @@ class Command(BaseCommand):
                             SquadPlayer.objects.create(
                                 submission=submission,
                                 player=player,
+                                team=player.team,
                                 position=position,
                                 squad_type=SquadPlayer.SquadType.BENCH,
                             )
@@ -396,6 +399,7 @@ class Command(BaseCommand):
         new_squad_player = SquadPlayer.objects.create(
             submission=submission,
             player=incoming_player,
+            team=incoming_player.team,
             position=pos,
             squad_type=SquadPlayer.SquadType.MAIN,
         )
@@ -431,6 +435,7 @@ class Command(BaseCommand):
         new_squad_player = SquadPlayer.objects.create(
             submission=submission,
             player=incoming_player,
+            team=incoming_player.team,
             position=pos,
             squad_type=SquadPlayer.SquadType.BENCH,
         )

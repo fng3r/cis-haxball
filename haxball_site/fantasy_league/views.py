@@ -411,6 +411,7 @@ def edit_squad(request, tour_id):
                     SquadPlayer.objects.create(
                         submission=submission,
                         player=player,
+                        team=player.team,
                         position=position,
                         squad_type=SquadPlayer.SquadType.MAIN,
                     )
@@ -426,6 +427,7 @@ def edit_squad(request, tour_id):
                         SquadPlayer.objects.create(
                             submission=submission,
                             player=player,
+                            team=player.team,
                             position=position,
                             squad_type=SquadPlayer.SquadType.BENCH,
                         )

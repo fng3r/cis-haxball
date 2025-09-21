@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from tournament.models import League, Player, TourNumber
+from tournament.models import League, Player, Team, TourNumber
 
 
 class FantasyTournament(models.Model):
@@ -36,6 +36,7 @@ class SquadPlayer(models.Model):
         'SquadSubmission', verbose_name='Отправка состава', related_name='squad_players', on_delete=models.CASCADE
     )
     player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.CASCADE, null=False, blank=False)
     position = models.CharField('Позиция', max_length=2, choices=Position.choices)
     squad_type = models.CharField('Тип состава', max_length=5, choices=SquadType.choices, default=SquadType.MAIN)
 
