@@ -2,30 +2,24 @@
 {% load fantasy_league_extras %}
 
 <div class="tw:space-y-4">
-  <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
-    <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
-          hx-get="{% url 'fantasy_league:view_squads_tab' %}"
-          hx-target="#view-squads-content"
-          hx-trigger="change"
-          hx-vals='{"tournament": "{{ selected_tournament.id }}"}'>
-      <div class="tw:flex tw:flex-col tw:gap-1">
-        <label class="tw:label tw:text-base-content tw:font-bold">Пользователь</label>
-        {{ user_form.user|add_class:"tw:select tw:select-bordered" }}
-      </div>
-    </form>
-  </div>
-
   {% if not selected_tournament %}
-    <div class="tw:alert tw:alert-warning">
-      <i class="fa fa-exclamation-triangle"></i>
-      <span>Выберите турнир для просмотра составов</span>
-    </div>
+    <p class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</p>
   {% elif not selected_user %}
-    <div class="tw:alert tw:alert-warning">
-      <i class="fa fa-exclamation-triangle"></i>
-      <span>Выберите игрока для просмотра составов</span>
-    </div>
+    <p class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">Ни один пользователь еще не собрал состав в этом турнире</p>
   {% else %}
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
+      <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
+            hx-get="{% url 'fantasy_league:view_squads_tab' %}"
+            hx-target="#view-squads-content"
+            hx-trigger="change"
+            hx-vals='{"tournament": "{{ selected_tournament.id }}"}'>
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <label class="tw:label tw:text-base-content tw:font-bold">Пользователь</label>
+          {{ user_form.user|add_class:"tw:select tw:select-bordered" }}
+        </div>
+      </form>
+    </div>
+
     <div class="tw:[#view-squads-content:has(.htmx-request)_&]:opacity-50 tw:[#view-squads-content:has(.htmx-request)_&]:transition-opacity">
       <h5 class="tw:text-md tw:font-semibold">Пики {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}</h5>
 

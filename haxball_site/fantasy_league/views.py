@@ -163,20 +163,33 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
 def view_squads_tab(request):
     """Tab for viewing other users' squad submissions"""
     selected_tournament, tournament_form = resolve_selected_tournament(request)
+    users_with_submissions = get_users_with_submissions(selected_tournament)
 
     user_id = request.GET.get('user')
     selected_user = None
     if user_id:
         selected_user = User.objects.filter(pk=user_id).select_related('user_profile').first()
-    elif get_users_with_submissions(selected_tournament):
-        selected_user = get_users_with_submissions(selected_tournament).first()
-    if not selected_user:
-        selected_user = User.objects.select_related('user_profile').first()
+    elif users_with_submissions:
+        selected_user = users_with_submissions.first()
+
+    if not users_with_submissions:
+        return render(
+            request,
+            'fantasy_league/view_squads_tab.html',
+            {
+                'tournament_form': tournament_form,
+                'user_form': UserFilterForm(),
+                'selected_tournament': selected_tournament,
+                'selected_user': selected_user,
+                'squads_data': {},
+                'preloaded_data': None,
+            },
+        )
 
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
 
-    if get_users_with_submissions(selected_tournament):
-        user_form.fields['user'].queryset = get_users_with_submissions(selected_tournament)
+    if users_with_submissions:
+        user_form.fields['user'].queryset = users_with_submissions
 
     squads_data = {}
     if selected_tournament and selected_user:

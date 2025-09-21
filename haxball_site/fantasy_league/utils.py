@@ -153,7 +153,7 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
             SquadSubmission.objects.filter(Q(squad_players__player=player), tournament=tournament).distinct().count()
         )
 
-        pickrate = total_picked / total_submissions
+        pickrate = total_picked / max(total_submissions, 1)
         fp_per_match = total_fp / matches_played
 
         stats.append(
