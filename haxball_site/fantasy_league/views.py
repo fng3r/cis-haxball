@@ -193,10 +193,7 @@ def view_squads_tab(request):
         submissions_lookup = {sub.tour_id: sub for sub in submissions}
         for tour in tours:
             submission = submissions_lookup.get(tour.id)
-            if submission and not is_tour_open_for_fantasy(tour):
-                squads_data[tour.id] = submission
-            else:
-                squads_data[tour.id] = None
+            squads_data[tour.id] = submission
 
     context = {
         'tournament_form': tournament_form,
