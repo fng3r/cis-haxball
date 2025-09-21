@@ -38,6 +38,7 @@
                   benchPlayersCount() { return ['bench_gk', 'bench_dm', 'bench_st'].filter(pos => !!this.selected[pos]).length; },
                   currentSelectedIds() { return Object.values(this.selected).filter(Boolean).map(p => p.id); },
                   get selectedPlayersCount() { return this.currentSelectedIds().length; },
+                  get isFormValid() { return this.selectedPlayersCount === this.teamSize && this.budgetUsed <= this.budgetLimit && this.benchPlayersCount() <= 2 && this.transfersUsed <= this.transfersLimit && !this.hasUnavailablePlayers() && this.selectedCaptain !== null; },
                   transfersCount() {
                   if (this.previousPlayerIds.length === 0) {
                   return 0;
@@ -120,6 +121,11 @@
         <template x-if="unavailablePlayersCount > 0">
           <div class="tw:badge tw:badge-error">
             <span x-text="`Недоступные игроки: ${unavailablePlayersCount}`"></span>
+          </div>
+        </template>
+        <template x-if="selectedCaptain === null">
+          <div class="tw:badge tw:badge-error">
+            <span x-text="`Капитан не выбран`"></span>
           </div>
         </template>
       </div>
@@ -219,9 +225,7 @@
           <i class="fa fa-arrow-left"></i>
           Назад
         </button>
-        <button type="submit"
-                class="tw:btn tw:btn-primary"
-                :disabled="selectedPlayersCount !== teamSize || budgetUsed > budgetLimit || benchPlayersCount() > 2 || transfersUsed > transfersLimit || hasUnavailablePlayers()">
+        <button type="submit" class="tw:btn tw:btn-primary" :disabled="!isFormValid">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>
