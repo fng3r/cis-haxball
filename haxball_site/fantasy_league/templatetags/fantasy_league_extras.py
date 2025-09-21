@@ -1,4 +1,5 @@
 from django import template
+from django.utils import timezone
 
 from .. import utils
 from ..points_service import (
@@ -55,6 +56,12 @@ def is_tour_closed(tour):
 def get_tour_opening_date(tour):
     """Get the opening date of a tour"""
     return utils.get_tour_opening_date(tour)
+
+
+@register.filter
+def is_tour_actual(tour):
+    """Check if a tour is actual"""
+    return tour.date_to + timezone.timedelta(days=7) > timezone.localdate()
 
 
 @register.filter

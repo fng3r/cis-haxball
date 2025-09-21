@@ -26,7 +26,7 @@
         </div>
         <div class="tw:flex tw:flex-col tw:gap-4">
           {% for tour in selected_tournament.league.tours.all %}
-            <div x-data="{isPastTour: {{ tour.is_ended|yesno:'true,false' }}}" x-show="showAllTours || !isPastTour" x-cloak>
+            <div x-data="{isActual: {{ tour|is_tour_actual|yesno:'true,false' }}}" x-show="isActual || showAllTours" x-cloak>
               {% with squad_data=user_squads|get_item:tour.id %}
                 {% include 'fantasy_league/partials/tour_card.html' with tour=tour tournament=selected_tournament submission=squad_data.submission is_open=tour|is_tour_open_for_fantasy preloaded_data=preloaded_data can_submit=squad_data.can_submit blocking_tours=squad_data.blocking_tours unavailable_players=squad_data.unavailable_players %}
               {% endwith %}
