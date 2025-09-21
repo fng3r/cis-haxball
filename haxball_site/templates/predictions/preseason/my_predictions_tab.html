@@ -7,6 +7,12 @@
     {% if not user.is_authenticated %}
       <div class="tw:alert tw:alert-info">Для отправки предсезонного прогноза необходимо войти в систему.</div>
     {% else %}
+      <div class="tw:alert tw:alert-info tw:self-start tw:w-full tw:mt-2 tw:mb-4">
+        <i class="fa fa-info-circle" aria-hidden="true"></i>
+        <span class="tw:text-base">
+          Посмотреть на расклад сил среди команд согласно рейтингу игроков можно <a href="{% url 'tournament:players_rating' %}" class="tw:link">здесь</a>.
+        </span>
+      </div>
       {% if submission %}
         <div class="tw:flex tw:items-center tw:gap-3">
           <h4 class="tw:text-lg tw:font-semibold">Ваш прогноз</h4>
