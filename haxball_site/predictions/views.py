@@ -353,7 +353,7 @@ def edit_predictions(request, tour_id):
             return tour_card(request, tour_id)
         return redirect('predictions:main')
 
-    submission, created = PredictionSubmission.objects.get_or_create(
+    submission, _ = PredictionSubmission.objects.get_or_create(
         user=request.user, tour=tour, tournament=prediction_tournament
     )
 
@@ -382,6 +382,8 @@ def edit_predictions(request, tour_id):
                         prediction.predicted_result = prediction_value
                         prediction.is_special = is_special
                         prediction.save()
+
+            submission.save()
 
         if request.htmx:
             return tour_card(request, tour_id)
@@ -518,6 +520,7 @@ def preseason_save(request):
             for idx, tid in enumerate(team_ids)
         ]
     )
+    submission.save()
 
     response = preseason_my_tab(request)
     response = trigger_client_event(response, 'prediction-saved', {'tournament_id': tournament_id})
