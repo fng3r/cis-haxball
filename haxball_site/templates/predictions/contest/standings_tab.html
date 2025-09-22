@@ -10,8 +10,8 @@
       <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
 
       {% if standings %}
-        <div class="tw:overflow-x-auto">
-          <table class="tw:table tw:table-zebra tw:w-full">
+        <div class="tw:overflow-auto tw:max-h-[950px]">
+          <table class="tw:table tw:table-zebra tw:table-pin-cols tw:w-full">
             <thead>
               <tr>
                 <th class="tw:text-center">Место</th>
@@ -25,7 +25,7 @@
             <tbody>
               {% for standing in standings %}
                 <tr>
-                  <td class="tw:text-center tw:font-bold">
+                  <th class="tw:text-center tw:font-bold">
                     {% if standing.place == 1 %}
                       <span class="tw:text-yellow-500">🥇</span>
                     {% elif standing.place == 2 %}
@@ -35,8 +35,8 @@
                     {% else %}
                       {{ standing.place }}
                     {% endif %}
-                  </td>
-                  <td>
+                  </th>
+                  <th>
                     <div class="tw:flex tw:items-center tw:gap-2">
                       {% if standing.user.user_profile.avatar %}
                         <div class="tw:w-8 tw:h-8 tw:rounded-full tw:bg-cover tw:bg-center"
@@ -48,7 +48,7 @@
                       {% endif %}
                       <span class="tw:font-medium">{{ standing.user.username }}</span>
                     </div>
-                  </td>
+                  </th>
                   {% for tour in selected_tournament.league.tours.all %}
                     <td class="tw:text-center">
                       {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
@@ -58,7 +58,7 @@
                       {% endif %}
                     </td>
                   {% endfor %}
-                  <td class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points }}</td>
+                  <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points }}</th>
                 </tr>
               {% endfor %}
             </tbody>
