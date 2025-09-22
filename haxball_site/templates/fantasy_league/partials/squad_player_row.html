@@ -15,9 +15,7 @@
       </span>
     </div>
 
-    <img src="{{ squad_player.player.team.logo.url }}"
-         alt="{{ squad_player.player.team.title }}"
-         class="tw:size-5 tw:rounded-full">
+    <img src="{{ squad_player.player.team.logo.url }}" alt="{{ squad_player.player.team.title }}" class="tw:size-5 tw:rounded">
     <span>{{ squad_player.player.nickname }}</span>
     {% if squad_player.player_id == submission.captain_player_id %}
       <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="tw:size-5">

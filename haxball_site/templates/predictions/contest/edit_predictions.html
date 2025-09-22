@@ -39,14 +39,16 @@
               <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
                 <div class="tw:flex tw:items-center tw:gap-2">
                   <div class="tw:flex tw:items-center tw:gap-1">
-                    {% if match.team_home.logo %}<img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5">{% endif %}
+                    {% if match.team_home.logo %}
+                      <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded">
+                    {% endif %}
                     <span class="tw:font-semibold tw:text-sm">{{ match.team_home.title }}</span>
                   </div>
                   <span class="tw:text-sm tw:font-bold">vs</span>
                   <div class="tw:flex tw:items-center tw:gap-1">
                     <span class="tw:font-semibold tw:text-sm">{{ match.team_guest.title }}</span>
                     {% if match.team_guest.logo %}
-                      <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5">
+                      <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded">
                     {% endif %}
                   </div>
                 </div>

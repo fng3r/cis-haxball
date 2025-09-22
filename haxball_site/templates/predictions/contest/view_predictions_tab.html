@@ -50,7 +50,7 @@
                                   <div class="tw:flex tw:items-center tw:gap-2">
                                     <div class="tw:flex tw:items-center tw:gap-1">
                                       {% if match.team_home.logo %}
-                                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
+                                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded">
                                       {% endif %}
                                       <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_guest %}tw:text-base-content/80{% endif %}">{{ match.team_home.title }}</span>
                                     </div>
@@ -62,7 +62,7 @@
                                     <div class="tw:flex tw:items-center tw:gap-1">
                                       <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_home %}tw:text-base-content/80{% endif %}">{{ match.team_guest.title }}</span>
                                       {% if match.team_guest.logo %}
-                                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
+                                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded">
                                       {% endif %}
                                     </div>
                                     <span class="tw:ml-2 tw:font-bold">
