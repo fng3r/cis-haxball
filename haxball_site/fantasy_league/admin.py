@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import resolve
 
 from unfold import admin as unfold_admin
-from unfold.contrib.filters.admin import RelatedDropdownFilter
+from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter
 
 from tournament.models import Player
 
@@ -18,8 +18,9 @@ class FantasyTournamentAdmin(unfold_admin.ModelAdmin):
 
 @admin.register(SquadPlayer)
 class SquadPlayerAdmin(unfold_admin.ModelAdmin):
-    list_display = ('player', 'position', 'squad_type')
-    list_filter = ('position',)
+    list_display = ('player', 'position', 'squad_type', 'submission')
+    list_filter = (('player', AutocompleteSelectFilter), 'position', 'squad_type')
+    list_filter_submit = True
     search_fields = ('player__nickname',)
 
 
@@ -33,7 +34,7 @@ class SquadPlayerInline(unfold_admin.StackedInline):
 
 @admin.register(SquadSubmission)
 class SquadSubmissionAdmin(unfold_admin.ModelAdmin):
-    list_display = ('user', 'tour', 'tournament', 'created', 'updated')
+    list_display = ('user', 'tournament', 'tour', 'created', 'updated')
     list_filter = (('tournament', RelatedDropdownFilter), ('tour', RelatedDropdownFilter), 'created')
     search_fields = ('user__username',)
     readonly_fields = (
@@ -64,5 +65,6 @@ class PlayerCostAdmin(unfold_admin.ModelAdmin):
     list_display = ('player', 'cost')
     list_filter = (('player', RelatedDropdownFilter),)
     list_filter_submit = True
+    list_filter_sheet = False
     search_fields = ('player__nickname',)
     ordering = ('player__nickname',)
