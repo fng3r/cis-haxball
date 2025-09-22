@@ -14,7 +14,7 @@
   <div class="tw:card-body tw:p-4">
     <div class="tw:flex tw:items-center tw:justify-between">
       <div class="tw:card-title">
-        <span class="tw:font-semibold tw:text-lg">Тур {{ tour.number }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+        <span class="tw:font-semibold tw:text-lg">{{ tour.number }} тур ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
         {% if is_open %}
           {% if can_submit %}
             <span class="tw:badge tw:badge-success tw:badge-sm">Открыт</span>

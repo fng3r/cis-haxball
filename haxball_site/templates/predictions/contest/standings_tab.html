@@ -17,7 +17,7 @@
                 <th class="tw:text-center">Место</th>
                 <th>Пользователь</th>
                 {% for tour in selected_tournament.league.tours.all %}
-                  <th class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</th>
+                  <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
                 {% endfor %}
                 <th class="tw:text-center tw:font-bold">Всего</th>
               </tr>
