@@ -6,6 +6,15 @@
   <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">Турниры</li>
 
   <li>
+    <a href="{% url 'tournament:league' 's15-premier-league' %}">Высшая лига</a>
+  </li>
+  <li>
+    <a href="{% url 'tournament:league' 's15-first-league' %}">Первая лига</a>
+  </li>
+  <li>
+    <a href="{% url 'tournament:league' 's15-second-league' %}">Вторая лига</a>
+  </li>
+  <li>
     <a href="{% url 'tournament:league' 's15-russian-cup' %}">Кубок России</a>
   </li>
 
@@ -13,7 +22,7 @@
 
   <li>
     <a target="_blank"
-       href="https://docs.google.com/spreadsheets/d/1kNkBIwFxWB_5Whlg1zWm-xN8PwltVKY2mSP-KJXTM1M/edit?usp=sharing">Календарь</a>
+       href="https://docs.google.com/spreadsheets/d/1_FD2EJVlws81kfH4uuShTCkjI6XaU5geagLYpBgVFtY/edit?usp=sharing">Календарь</a>
   </li>
   <li>
     <a href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
@@ -28,7 +37,7 @@
     <a href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
   </li>
   <li>
-    <a href="{% url 'core:post_detail' '1012' 'transfers-cl-5' %}">Трансферы</a>
+    <a href="{% url 'core:post_detail' '1055' 'transfers-s15' %}">Трансферы</a>
   </li>
   <li>
     <a href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
