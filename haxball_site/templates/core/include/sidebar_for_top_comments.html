@@ -23,7 +23,7 @@
                 {% for comment in period.comments %}
                   <a href="{{ comment.get_absolute_url }}"
                      title="от {{ comment.author }} в {{ comment.content_object }}"
-                     class="tw:rounded-lg tw:hover:bg-base-300 tw:transition tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:group">
+                     class="tw:rounded-lg tw:hover:bg-base-300 tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:active:translate-y-[0.5px]">
                     <div class="tw:flex tw:items-center tw:gap-2 tw:min-w-0 tw:flex-grow">
                       <span class="tw:badge tw:badge-success tw:font-bold tw:flex-shrink-0">{{ comment.likes_count }}</span>
                       <span class="tw:truncate tw:text-base tw:font-medium">{{ comment.body|striptags|safe|default:"*Медиа-контент*" }}</span>
