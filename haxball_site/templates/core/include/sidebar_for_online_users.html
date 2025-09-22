@@ -4,14 +4,12 @@
   <div class="tw:card-title tw:rounded-t-lg tw:justify-center tw:p-2 tw:bg-card-header tw:text-card-header {% if users_online_count == 0 %}tw:rounded-b-lg{% endif %}">
     <span class="tw:mb-0">Сейчас онлайн: {{ users_online_count }}</span>
   </div>
-  <div class="tw:card-body tw:max-h-[250px] tw:overflow-y-auto tw:rounded-b-lg tw:p-0 tw:bg-base-100">
-    <div class="tw:flex tw:flex-col">
+  <div class="tw:card-body tw:max-h-[260px] tw:overflow-y-auto tw:rounded-b-lg tw:p-0 tw:bg-base-100">
+    <div class="tw:flex tw:flex-col tw:p-1.5 tw:space-y-1">
       {% for user in users_online %}
-        <a role="button"
-           class="tw:btn-link-block tw:bg-card-button tw:text-card-button tw:transform-gpu tw:will-change-transform"
-           href="{{ user.user_profile.get_absolute_url }}">
+        <a href="{{ user.user_profile.get_absolute_url }}"
+           class="tw:flex tw:items-center tw:rounded-lg tw:hover:bg-base-300 tw:font-semibold tw:p-2 tw:px-3 tw:gap-2 tw:active:translate-y-[0.5px]">
           <span class="tw:status tw:status-success tw:status-lg" aria-label="status"></span>{{ user }}
-
           {% for icon in user.user_profile.user_icon.all %}
             <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
           {% endfor %}
