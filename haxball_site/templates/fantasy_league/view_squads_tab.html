@@ -1,0 +1,99 @@
+{% load widget_tweaks %}
+{% load fantasy_league_extras %}
+
+<div class="tw:space-y-4">
+  {% if not selected_tournament %}
+    <p class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</p>
+  {% elif not selected_user %}
+    <p class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">Ни один пользователь еще не собрал состав в этом турнире</p>
+  {% else %}
+    <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
+      <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
+            hx-get="{% url 'fantasy_league:view_squads_tab' %}"
+            hx-target="#view-squads-content"
+            hx-trigger="change"
+            hx-vals='{"tournament": "{{ selected_tournament.id }}"}'>
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <label class="tw:label tw:text-base-content tw:font-bold">Пользователь</label>
+          {{ user_form.user|add_class:"tw:select tw:select-bordered" }}
+        </div>
+      </form>
+    </div>
+
+    <div class="tw:[#view-squads-content:has(.htmx-request)_&]:opacity-50 tw:[#view-squads-content:has(.htmx-request)_&]:transition-opacity">
+      <h5 class="tw:text-md tw:font-semibold">Пики {{ selected_user.username }} в турнире {{ selected_tournament.league.title }}</h5>
+
+      <div class="tw:flex tw:flex-col tw:gap-4">
+        {% for tour in selected_tournament.league.tours.all %}
+          {% with submission=squads_data|get_item:tour.id %}
+            <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+              <div class="tw:card-body tw:p-4">
+                <div class="tw:flex tw:items-center tw:justify-between">
+                  <div class="tw:card-title">
+                    <span class="tw:font-semibold tw:text-lg">{{ tour.number }} тур ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+                  </div>
+                  {% if submission and not tour|is_tour_not_open_yet %}
+                    <div class="tw:flex tw:justify-end tw:items-center tw:gap-1">
+                      {% with total_points=submission|get_total_points:preloaded_data penalty_points=submission|get_penalty_points %}
+                        {% if penalty_points > 0 %}
+                          <div class="tw:tooltip tw:cursor-default" data-tip="Штрафные очки">
+                            <span class="tw:badge tw:badge-error">-{{ penalty_points|floatformat:1 }} FP</span>
+                          </div>
+                        {% endif %}
+                        <div class="tw:tooltip tw:tooltip-left tw:cursor-default" data-tip="Очки, набранные игроками команды">
+                          <span class="tw:badge tw:badge-primary">{{ total_points|floatformat:1 }} FP</span>
+                        </div>
+                      {% endwith %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                {% comment %} {% if tour|is_tour_closed %} {% endcomment %}
+                {% if submission %}
+                  <div class="tw:mt-2">
+                    <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:text-base">
+                      <div class="tw:space-y-2">
+                        <div class="tw:font-medium tw:text-primary">Основной состав</div>
+                        <div class="tw:space-y-1">
+                          {% for squad_player in submission.main_squad.all|sort_squad_players %}
+                            {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='main' tab='all' %}
+                          {% endfor %}
+                        </div>
+                      </div>
+
+                      <div class="tw:space-y-2">
+                        <div class="tw:font-medium tw:text-secondary">Скамейка</div>
+                        <div class="tw:space-y-1">
+                          {% for squad_player in submission.bench_players.all|sort_squad_players %}
+                            {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='bench' tab='all' %}
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="tw:p-8 tw:text-base tw:text-base-content/70 tw:text-center">
+                    <span>Состав не выбран</span>
+                  </div>
+                {% endif %}
+                {% comment %} {% else %}
+                  <div class="tw:p-8 tw:text-base tw:text-base-content/70 tw:text-center">
+                    <span>Составы будут доступны после начала тура</span>
+                  </div>
+                {% endif %} {% endcomment %}
+
+              </div>
+            </div>
+          {% endwith %}
+        {% empty %}
+          <div class="tw:col-span-full">
+            <div class="tw:alert tw:alert-info">
+              <i class="fa fa-info-circle"></i>
+              <span>В этом турнире пока нет туров</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>

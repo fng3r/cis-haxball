@@ -33,6 +33,7 @@ urlpatterns = [
     path('championship/', include('tournament.urls', namespace='tournament')),
     path('host_reservation/', include('reservation.urls', namespace='reservation')),
     path('polls/', include('polls.urls', namespace='polls')),
+    path('fantasy/', include('fantasy_league.urls', namespace='fantasy_league')),
     path('predictions/', include('predictions.urls', namespace='predictions')),
     path('accounts/', include('allauth.urls')),
     path('summernote/', include('django_summernote.urls')),

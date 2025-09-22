@@ -7,6 +7,8 @@
 <div class="tw:flex tw:flex-col tw:gap-4">
   {% if not selected_tournament %}
     <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</div>
+  {% elif not selected_user %}
+    <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">В данном турнире еще не было сделано ни одного прогноза</div>
   {% else %}
     <div class="tw:flex tw:flex-col tw:gap-4">
       <form class="tw:flex tw:flex-wrap tw:items-center tw:gap-4"
@@ -48,7 +50,7 @@
                                   <div class="tw:flex tw:items-center tw:gap-2">
                                     <div class="tw:flex tw:items-center tw:gap-1">
                                       {% if match.team_home.logo %}
-                                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
+                                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:w-5 tw:h-5 tw:rounded">
                                       {% endif %}
                                       <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_guest %}tw:text-base-content/80{% endif %}">{{ match.team_home.title }}</span>
                                     </div>
@@ -60,7 +62,7 @@
                                     <div class="tw:flex tw:items-center tw:gap-1">
                                       <span class="tw:font-semibold {% if match.result and match.result.winner == match.team_home %}tw:text-base-content/80{% endif %}">{{ match.team_guest.title }}</span>
                                       {% if match.team_guest.logo %}
-                                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded-full">
+                                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded">
                                       {% endif %}
                                     </div>
                                     <span class="tw:ml-2 tw:font-bold">
@@ -84,7 +86,7 @@
                         {% else %}
                           <p class="tw:py-8 tw:text-center tw:text-base tw:text-base-content/70">
                             {% if is_open %}
-                              Тур еще открыт для прогнозов
+                              Прогнозы будут доступны после начала тура
                             {% elif is_closed %}
                               Пользователь не оставил прогнозы на этот тур
                             {% endif %}

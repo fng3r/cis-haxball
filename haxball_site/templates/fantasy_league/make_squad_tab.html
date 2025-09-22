@@ -1,0 +1,53 @@
+{% load widget_tweaks %}
+{% load fantasy_league_extras %}
+
+<div class="tw:flex tw:flex-col tw:gap-4">
+  {% if not user.is_authenticated %}
+    <div class="tw:alert tw:alert-warning">
+      <i class="fa fa-info-circle"></i>
+      <span><a href="{% url 'account_login' %}" class="tw:link tw:text-warning-content tw:font-semibold">Войдите</a> в систему, чтобы участвовать в фэнтези лиге</span>
+    </div>
+  {% else %}
+    {% if not selected_tournament %}
+      <div class="tw:alert tw:alert-warning">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span>Выберите турнир для участия в фэнтези лиге</span>
+      </div>
+    {% else %}
+      <div class="tw:alert tw:alert-info">
+        <i class="fa fa-info-circle"></i>
+        <span>
+          Перед началом крайне рекомендуется изучить правила. По всем вопросам и предложениям можно обращаться
+          <a href="{% url 'core:profile_detail' 1918 'fng3r' %}" class="tw:link tw:text-info-content tw:font-semibold">сюда</a></span>
+      </div>
+
+      <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }" class="tw:flex tw:flex-col tw:gap-2">
+        <div class="tw:flex tw:items-center tw:justify-between">
+          <div class="tw:text-xl tw:font-semibold">{{ selected_tournament.league.title }}</div>
+          {% if selected_tournament.league.tours.count > 0 and not is_tournament_ended %}
+            <label class="tw:label tw:text-base-content/60">
+              <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm tw:peer">
+              <span class="tw:peer-checked:text-base-content/80">Все туры</span>
+            </label>
+          {% endif %}
+        </div>
+        <div class="tw:flex tw:flex-col tw:gap-4">
+          {% for tour in selected_tournament.league.tours.all %}
+            <div x-data="{isActual: {{ tour|is_tour_actual|yesno:'true,false' }}}" x-show="isActual || showAllTours" x-cloak>
+              {% with squad_data=user_squads|get_item:tour.id %}
+                {% include 'fantasy_league/partials/tour_card.html' with tour=tour tournament=selected_tournament submission=squad_data.submission is_open=tour|is_tour_open_for_fantasy preloaded_data=preloaded_data can_submit=squad_data.can_submit blocking_tours=squad_data.blocking_tours unavailable_players=squad_data.unavailable_players %}
+              {% endwith %}
+            </div>
+          {% empty %}
+            <div class="tw:col-span-full">
+              <div class="tw:alert tw:alert-info">
+                <i class="fa fa-info-circle"></i>
+                <span>В этом турнире пока нет туров</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>

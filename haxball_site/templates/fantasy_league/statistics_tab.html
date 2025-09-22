@@ -1,0 +1,116 @@
+{% load mathfilters %}
+{% load widget_tweaks %}
+{% load thumbnail %}
+{% load static %}
+
+<div class="tw:space-y-4">
+  {% if not selected_tournament %}
+    <div class="tw:alert tw:alert-warning">
+      <i class="fa fa-exclamation-triangle"></i>
+      <span>Выберите турнир для просмотра статистики игроков</span>
+    </div>
+  {% else %}
+    <div class="tw:[#statistics-content:has(.htmx-request)_&]:opacity-50 tw:[#statistics-content:has(.htmx-request)_&]:transition-opacity"
+         x-data="{ selectedPosition: null }">
+      <h5 class="tw:text-md tw:font-semibold">Статистика игроков</h5>
+
+      <div class="tw:flex tw:flex-col tw:gap-2 tw:justify-center tw:mt-3 tw:mb-2">
+        <span class="tw:text-sm tw:font-medium tw:text-base-content/70">Позиция</span>
+        <form class="tw:filter">
+          <input class="tw:btn tw:btn-xs tw:btn-square" type="reset" value="×" @click="selectedPosition = null" />
+          <input class="tw:btn tw:btn-xs" type="radio" name="positions" aria-label="ГК" value="GK" x-model="selectedPosition" />
+          <input class="tw:btn tw:btn-xs" type="radio" name="positions" aria-label="ОП" value="DM" x-model="selectedPosition" />
+          <input class="tw:btn tw:btn-xs" type="radio" name="positions" aria-label="НАП" value="ST" x-model="selectedPosition" />
+        </form>
+      </div>
+
+      {% if player_stats %}
+        <div class="tw:overflow-x-auto">
+          <table class="tw:mt-2 tw:table tw:table-zebra tw:w-full">
+            <thead>
+              <tr>
+                <th class="tw:text-center tw:w-5">#</th>
+                <th>Игрок</th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">Количество матчей, в которых участвовал игрок</div>
+                    Матчи
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">Процент составов, в которые был включен игрок</div>
+                    Пикрейт
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-bottom">
+                    <div class="tw:tooltip-content">Среднее количество FP за матч</div>
+                    FP/матч
+                  </div>
+                </th>
+                <th class="tw:text-center">
+                  <div class="tw:tooltip tw:tooltip-left">
+                    <div class="tw:tooltip-content">Общее количество FP, заработанных игроком в турнире</div>
+                    Всего FP
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for stat in player_stats %}
+                <tr x-data="{ playerPosition: '{{ stat.position }}' }"
+                    x-show="!selectedPosition || selectedPosition === playerPosition"
+                    x-transition:enter="tw:transition tw:ease-in tw:duration-200"
+                    x-transition:enter-start="tw:opacity-0 tw:transform tw:translate-y-2"
+                    x-transition:enter-end="tw:opacity-100 tw:transform tw:translate-y-0"
+                    x-transition:leave="tw:transition tw:ease-out tw:duration-200"
+                    x-transition:leave-start="tw:opacity-100 tw:transform tw:translate-y-0"
+                    x-transition:leave-end="tw:opacity-0 tw:transform tw:translate-y-2">
+                  <td class="tw:text-center">{{ forloop.counter }}</td>
+                  <td>
+                    <div class="tw:flex tw:items-center tw:gap-3">
+                      <div class="tw:avatar">
+                        <div class="tw:size-8 tw:rounded-full">
+                          {% if stat.player.name and stat.player.name.user_profile.avatar %}
+                            {% thumbnail stat.player.name.user_profile.avatar "50x50" crop="center" as avatar %}
+                              <img src="{{ avatar.url }}" alt="{{ stat.player.nickname }}" class="tw:rounded-full">
+                            {% endthumbnail %}
+                          {% else %}
+                            <img src="{% static 'img/no_avatar.png' %}" alt="{{ stat.player.nickname }}" class="tw:rounded-full">
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="tw:flex tw:items-baseline tw:gap-2">
+                        <a href="{% url 'core:profile_detail' stat.player.name.user_profile.id stat.player.name.user_profile.slug %}"
+                           class="tw:link tw:link-hover tw:text-lg tw:font-medium">{{ stat.player.nickname }}</a>
+
+                        {% with position=stat.position %}
+                          <span class="tw:badge tw:badge-outline tw:badge-xs {% if position == 'GK' %}tw:badge-primary {% elif position == 'DM' %}tw:badge-secondary {% else %}tw:badge-accent{% endif %}">
+                            {% if position == 'GK' %}
+                              ГК
+                            {% elif position == 'DM' %}
+                              ОП
+                            {% elif position == 'ST' %}
+                              НАП
+                            {% endif %}
+                          </span>
+                        {% endwith %}
+                      </div>
+                    </div>
+                  </td>
+                  <td class="tw:text-center tw:font-bold">{{ stat.matches_played }}</td>
+                  <td class="tw:text-center">{{ stat.pickrate|mul:100|floatformat:1 }}%</td>
+                  <td class="tw:text-center">{{ stat.fp_per_match|floatformat:1 }}</td>
+                  <td class="tw:text-center tw:font-bold tw:text-primary">{{ stat.total_fp|floatformat:1 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">На текущий момент нет данных для отображения статистики</div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

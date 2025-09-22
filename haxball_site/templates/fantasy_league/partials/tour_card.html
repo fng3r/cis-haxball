@@ -1,0 +1,117 @@
+{% load tournament_extras %}
+{% load fantasy_league_extras %}
+
+<div id="tour-{{ tour.id }}-content" class="tw:card tw:bg-base-200 tw:shadow-sm tw:relative tw:has-[.htmx-request]:opacity-50 tw:has-[.htmx-request]:transition-opacity"
+  {# djlint:off #}
+     {% if blocking_tours %}
+       hx-trigger="tour-submitted from:body"
+       hx-get="{% url 'fantasy_league:tour_detail' tour.id %}"
+       hx-target="#tour-{{ tour.id }}-content"
+       hx-swap="outerHTML"
+     {% endif %}
+>
+  {# djlint:on #}
+  <div class="tw:card-body tw:p-4">
+    <div class="tw:flex tw:items-center tw:justify-between">
+      <div class="tw:card-title">
+        <span class="tw:font-semibold tw:text-lg">{{ tour.number }} тур ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+        {% if is_open %}
+          {% if can_submit %}
+            <span class="tw:badge tw:badge-success tw:badge-sm">Открыт</span>
+          {% else %}
+            <span class="tw:badge tw:badge-warning tw:badge-sm">Заблокирован</span>
+          {% endif %}
+        {% elif tour|is_tour_not_open_yet %}
+          <span class="tw:badge tw:badge-info tw:badge-sm">Откроется {{ tour|get_tour_opening_date|date:"d.m" }}</span>
+        {% else %}
+          <span class="tw:badge tw:badge-neutral tw:badge-sm">Закрыт</span>
+        {% endif %}
+      </div>
+      {% if is_open %}
+        {% if can_submit %}
+          <button class="tw:btn tw:btn-primary tw:btn-sm"
+                  hx-get="{% url 'fantasy_league:edit_squad' tour.id %}"
+                  hx-target="#tour-{{ tour.id }}-content"
+                  hx-swap="outerHTML show:top">
+            {% if submission %}
+              <i class="fa fa-pencil"></i> Изменить состав
+            {% else %}
+              <i class="fa fa-plus"></i> Выбрать состав
+            {% endif %}
+          </button>
+        {% endif %}
+      {% else %}
+        {% if submission and not tour|is_tour_not_open_yet %}
+          <div class="tw:flex tw:justify-end tw:items-center tw:gap-1">
+            {% with total_points=submission|get_total_points:preloaded_data penalty_points=submission|get_penalty_points %}
+              {% if penalty_points > 0 %}
+                <div class="tw:tooltip tw:cursor-default" data-tip="Штрафные очки">
+                  <span class="tw:badge tw:badge-error">-{{ penalty_points|floatformat:1 }} FP</span>
+                </div>
+              {% endif %}
+              <div class="tw:tooltip tw:tooltip-left tw:cursor-default" data-tip="Очки, набранные игроками команды">
+                <span class="tw:badge tw:badge-primary">{{ total_points|floatformat:1 }} FP</span>
+              </div>
+            {% endwith %}
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    {% if submission %}
+      {% if is_open and unavailable_players %}
+        <div class="tw:alert tw:alert-warning tw:mt-2">
+          <i class="fa fa-exclamation-triangle"></i>
+          <div class="tw:font-semibold tw:space-y-1">
+            <div>
+              Внимание! Некоторые игроки вашей команды больше не доступны в данном турнире:
+              {{ unavailable_players|join:", " }}.
+            </div>
+            <div>Рекомендуется заменить этих игроков.</div>
+          </div>
+        </div>
+      {% endif %}
+      <div class="tw:mt-2 tw:space-y-3">
+        <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:text-base">
+          <div class="tw:space-y-2">
+            <div class="tw:font-medium tw:text-primary">Основной состав</div>
+            <div class="tw:space-y-1">
+              {% for squad_player in submission.main_squad.all|sort_squad_players %}
+                {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='main' tab='my' %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="tw:space-y-2">
+            <div class="tw:font-medium tw:text-secondary">Скамейка</div>
+            <div class="tw:space-y-1">
+              {% for squad_player in submission.bench_players.all|sort_squad_players %}
+                {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='bench' tab='my' %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="tw:p-8 tw:text-base tw:text-base-content/70 tw:text-center">
+        {% if is_open and not can_submit %}
+          <div class="tw:flex tw:flex-col tw:items-center tw:gap-2">
+            <i class="fa fa-lock tw:text-2xl tw:text-warning"></i>
+            <span class="tw:font-medium">Выбор состава заблокирован</span>
+            {% if blocking_tours %}
+              <div class="tw:text-sm tw:text-center">
+                Сначала отправьте состав для следующих туров:
+                {% for blocking_tour in blocking_tours %}
+                  {{ blocking_tour.number }}
+                  {% if not forloop.last %},{% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <span>Состав не выбран</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>

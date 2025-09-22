@@ -28,7 +28,7 @@
 
           <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
             {% for tour in selected_tournament.league.tours.all %}
-              <div x-show="showAllTours || {% if tour|is_open_for_predictions or tour|is_not_open_yet %}true{% else %}false{% endif %}">
+              <div x-data="{isActual: {{ tour|is_tour_actual|yesno:'true,false' }}}" x-show="isActual || showAllTours" x-cloak>
                 {% with prediction_data=user_predictions|get_item:tour.id %}
                   {% include "predictions/contest/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions %}
                 {% endwith %}

@@ -21,7 +21,7 @@ def get_managed_teams(user: User):
     if current_team is not None and (player == current_team.captain or player == current_team.captain_assistant):
         teams.append(current_team)
 
-    owned_teams = Team.objects.filter(owner=user, leagues__championship__is_active=True)
+    owned_teams = Team.objects.filter(owner=user, leagues__championship__is_active=True).distinct()
     for team in owned_teams:
         teams.append(team)
 

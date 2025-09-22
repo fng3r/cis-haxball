@@ -177,7 +177,6 @@ class PlayerAdmin(UnfoldModelAdmin):
         'nickname',
         'name__username',
     )
-    exclude = ('position',)
     inlines = [AchievementsInline]
 
     def get_positions(self, obj):
@@ -188,7 +187,6 @@ class PlayerAdmin(UnfoldModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj:  # This is the case when object is already created
             return ['name']
-
         return []
 
     def get_queryset(self, request):
@@ -268,8 +266,8 @@ class PlayerTransferAdmin(UnfoldModelAdmin):
 
 class PlayerInline(UnfoldTabularInline):
     model = Player
-    exclude = ('position',)
     tab = True
+    fields = ('nickname', 'positions', 'team', 'player_nation')
 
     def has_add_permission(self, request, obj):
         return False
@@ -1030,7 +1028,6 @@ class MatchInline(unfold_admin.StackedInline):
                 return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
             tour = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
-
             if db_field.name == 'league':
                 kwargs['queryset'] = League.objects.filter(id__in=[tour.league.id])
                 formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)

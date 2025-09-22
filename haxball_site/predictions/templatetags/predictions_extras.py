@@ -25,7 +25,7 @@ def is_open_for_predictions(tour):
 @register.filter
 def is_not_open_yet(tour):
     """Template filter to check if a tour hasn't opened for predictions yet (future)"""
-    today = timezone.now().date()
+    today = timezone.localdate()
     open_date = get_tour_opening_date(tour)
 
     return today < open_date
@@ -41,3 +41,9 @@ def is_closed_for_predictions(tour):
 def get_tour_opening_date(tour):
     """Template filter to get the date when a tour opens for predictions"""
     return tour.date_from - timedelta(days=3)
+
+
+@register.filter
+def is_tour_actual(tour):
+    """Check if a tour is actual"""
+    return tour.date_to + timezone.timedelta(days=7) > timezone.localdate()

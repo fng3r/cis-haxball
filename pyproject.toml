@@ -79,7 +79,7 @@ dependencies = [
 dev-dependencies = [
     "djhtml==3.0.6",
     "pre-commit==3.8.0",
-    "ruff==0.11.12",
+    "ruff==0.13.1",
 ]
 
 [tool.ruff]
@@ -91,7 +91,7 @@ ignore = ["E722", "SIM108", "RET504"]
 
 [tool.ruff.lint.isort]
 extra-standard-library = ["isodate"]
-known-first-party = ["core", "tournament", "polls", "reservation"]
+known-first-party = ["haxball_site", "core", "tournament", "polls", "reservation", "custom_notifications", "predictions", "fantasy_league"]
 section-order = [
   "future",
   "standard-library",

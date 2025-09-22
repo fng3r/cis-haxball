@@ -198,21 +198,33 @@ def view_predictions_tab(request):
     selected_tournament, tournament_form = resolve_selected_tournament(request)
 
     user_id = request.GET.get('user')
+    users_with_predictions = get_users_with_predictions(selected_tournament)
     selected_user = None
     if user_id:
         selected_user = User.objects.filter(pk=user_id).first()
-    elif get_users_with_predictions(selected_tournament):
-        selected_user = get_users_with_predictions(selected_tournament).first()
-    if not selected_user:
-        selected_user = User.objects.first()
+    elif users_with_predictions:
+        selected_user = users_with_predictions.first()
 
     tournament_form = TournamentFilterForm(
         initial={'tournament': selected_tournament.pk if selected_tournament else None}
     )
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
 
-    if get_users_with_predictions(selected_tournament):
-        user_form.fields['user'].queryset = get_users_with_predictions(selected_tournament)
+    if not selected_user:
+        return render(
+            request,
+            'predictions/contest/view_predictions_tab.html',
+            {
+                'tournament_form': tournament_form,
+                'user_form': user_form,
+                'selected_tournament': selected_tournament,
+                'selected_user': selected_user,
+                'predictions_data': {},
+            },
+        )
+
+    if users_with_predictions:
+        user_form.fields['user'].queryset = users_with_predictions
 
     predictions_data = {}
     if selected_tournament and selected_user:

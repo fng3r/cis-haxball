@@ -439,20 +439,20 @@ class Player(models.Model):
         max_length=150,
     )
 
-    positions = ArrayField(
-        models.CharField('Позиция', max_length=2, choices=Position.choices),
-        null=True,
-        blank=True,
-        default=list,
-        verbose_name='Позиции',
-    )
-
     team = models.ForeignKey(
         Team, verbose_name='Команда', related_name='players_in_team', blank=True, null=True, on_delete=models.SET_NULL
     )
 
     player_nation = models.ForeignKey(
         Nation, verbose_name='Национальность', related_name='country_players', null=True, on_delete=models.SET_NULL
+    )
+
+    positions = ArrayField(
+        models.CharField('Позиция', max_length=2, choices=Position.choices),
+        null=True,
+        blank=True,
+        default=list,
+        verbose_name='Позиции',
     )
 
     @staticmethod
@@ -498,6 +498,14 @@ class TourNumber(models.Model):
     def is_actual(self):
         today = timezone.localdate()
         return today >= self.date_from and any(not match.is_played for match in self.tour_matches.all())
+
+    @property
+    def is_started(self):
+        return timezone.now().date() >= self.date_from
+
+    @property
+    def is_ended(self):
+        return timezone.now().date() > self.date_to
 
     def __str__(self):
         bracket_postfix = ''
