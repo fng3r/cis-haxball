@@ -56,7 +56,9 @@
                             <span class="tw:min-w-0 tw:max-w-full tw:overflow-hidden">
                               {% for icon in profile.user_icon.all %}<img src="{{ icon.image.url }}" class="tw:size-6" title="{{ icon.description }}">{% endfor %}
                               <span class="tw:break-words" title="{{ profile.name.username }}">{{ profile.name.username|truncatechars:50 }}</span>
-                              {% if profile.tag %}<span class="tw:text-base-content/85">[{{ profile.tag }}]</span>{% endif %}
+                              {% if profile.tag %}
+                                {% include 'core/include/user_tag.html' with tag=profile.tag size='sm' %}
+                              {% endif %}
                             </span>
                             {% if previous_nicknames.count > 0 %}
                               <div class="tw:relative">
