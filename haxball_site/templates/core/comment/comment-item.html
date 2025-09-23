@@ -47,9 +47,7 @@
           <div class="tw:m-0 tw:flex tw:ml-2 tw:font-semibold">
             <div class="tw:flex tw:gap-1 tw:items-center">
               {% for icon in child_comment.parent.author.user_profile.user_icon.all %}
-                <div class="tw:mr-1 tw:align-middle">
-                  <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                </div>
+                <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
               {% endfor %}
 
               <a href="{{ child_comment.parent.author.user_profile.get_absolute_url }}"
