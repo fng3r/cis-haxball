@@ -1,6 +1,7 @@
 {% extends "core.html" %}
 
 {% load static %}
+{% load predictions_extras %}
 {% load widget_tweaks %}
 
 {% block title %}Прогнозы — CIS-HAXBALL{% endblock %}
@@ -39,7 +40,13 @@
                  hx-get="{% url 'predictions:preseason' %}?tournament={{ selected_preseason_tournament.pk }}"
                  hx-target="#preseason-predictions-content"
                  hx-trigger="load" />
-          <span class="tw:flex tw:items-center tw:gap-2">Прогнозы на сезон</span>
+          <span class="tw:flex tw:items-center tw:gap-2">
+            Прогнозы на сезон
+            <div class="tw:badge tw:badge-warning tw:badge-soft tw:gap-1">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              {{ selected_tournament.league|time_until_start_date }} ч.
+            </div>
+          </span>
         </label>
         <div id="preseason-predictions-content"
              class="tw:tab-content tw:px-1 tw:py-2"

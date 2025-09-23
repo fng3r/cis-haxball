@@ -1,3 +1,6 @@
+from datetime import time
+from math import ceil
+
 from django import template
 from django.utils import timezone
 
@@ -44,3 +47,12 @@ def get_tour_opening_datetime(tour):
 def is_tour_actual(tour):
     """Check if a tour is actual"""
     return tour.date_to + timezone.timedelta(days=7) > timezone.localdate()
+
+
+@register.filter
+def time_until_start_date(tournament):
+    first_tour = tournament.tours.order_by('number').first()
+    start_date = timezone.make_aware(timezone.datetime.combine(first_tour.date_from, time(18, 0)))
+    delta = start_date - timezone.localtime()
+
+    return max(0, ceil(delta.total_seconds() / 3600))
