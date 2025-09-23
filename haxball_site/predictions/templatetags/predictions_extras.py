@@ -1,9 +1,7 @@
-from datetime import timedelta
-
 from django import template
 from django.utils import timezone
 
-from ..utils import is_tour_open_for_predictions
+from .. import utils
 
 register = template.Library()
 
@@ -19,16 +17,15 @@ def get_item(dictionary, key):
 @register.filter
 def is_open_for_predictions(tour):
     """Template filter to check if a tour is open for predictions"""
-    return is_tour_open_for_predictions(tour)
+    return utils.is_tour_open_for_predictions(tour)
 
 
 @register.filter
 def is_not_open_yet(tour):
     """Template filter to check if a tour hasn't opened for predictions yet (future)"""
-    today = timezone.localdate()
-    open_date = get_tour_opening_date(tour)
+    open_datetime = utils.get_tour_opening_datetime(tour)
 
-    return today < open_date
+    return timezone.localtime() < open_datetime
 
 
 @register.filter
@@ -38,9 +35,9 @@ def is_closed_for_predictions(tour):
 
 
 @register.filter
-def get_tour_opening_date(tour):
+def get_tour_opening_datetime(tour):
     """Template filter to get the date when a tour opens for predictions"""
-    return tour.date_from - timedelta(days=3)
+    return utils.get_tour_opening_datetime(tour)
 
 
 @register.filter

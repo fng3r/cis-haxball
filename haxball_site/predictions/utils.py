@@ -9,16 +9,24 @@ from .models import PredictionSubmission
 def is_tour_open_for_predictions(tour):
     """Check if a tour is currently open for predictions"""
     now = timezone.localtime()
-    today = now.date()
 
-    # Tour opens 3 days before start date
-    open_date = tour.date_from - timezone.timedelta(days=3)
+    closed_at = get_tour_start_datetime(tour)
+    open_at = get_tour_opening_datetime(tour)
 
-    # Tour closes at 18:00 on the start date
-    close_datetime = timezone.datetime.combine(tour.date_from, time(18, 0))
-    close_datetime = timezone.make_aware(close_datetime)
+    return open_at <= now <= closed_at
 
-    return open_date <= today and now <= close_datetime
+
+def get_tour_opening_datetime(tour):
+    start_datetime = get_tour_start_datetime(tour)
+
+    return start_datetime - timezone.timedelta(days=3)
+
+
+def get_tour_start_datetime(tour):
+    start_datetime = timezone.datetime.combine(tour.date_from, time(18, 0))
+    start_datetime = timezone.make_aware(start_datetime)
+
+    return start_datetime
 
 
 def get_user_tour_points(user, tour, tournament):

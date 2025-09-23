@@ -22,7 +22,7 @@
             <span class="tw:badge tw:badge-warning tw:badge-sm">Заблокирован</span>
           {% endif %}
         {% elif tour|is_tour_not_open_yet %}
-          <span class="tw:badge tw:badge-info tw:badge-sm">Откроется {{ tour|get_tour_opening_date|date:"d.m" }}</span>
+          <span class="tw:badge tw:badge-info tw:badge-sm">Откроется {{ tour|get_tour_opening_datetime|date:"d.m в H:i" }}</span>
         {% else %}
           <span class="tw:badge tw:badge-neutral tw:badge-sm">Закрыт</span>
         {% endif %}
