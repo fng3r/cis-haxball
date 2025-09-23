@@ -414,11 +414,11 @@ def preseason(request):
     return render(request, 'predictions/preseason/container.html', context)
 
 
-def preseason_my_tab(request):
+def preseason_my_tab(request, selected_tournament=None):
     if not request.user.is_authenticated:
         return render(request, 'predictions/preseason/my_predictions_tab.html', {'user': request.user})
 
-    selected_tournament, _ = resolve_selected_preseason_tournament(request)
+    selected_tournament, _ = resolve_selected_preseason_tournament(request, selected_tournament)
     submission = None
     items = []
     league_teams = []
@@ -522,7 +522,7 @@ def preseason_save(request):
     )
     submission.save()
 
-    response = preseason_my_tab(request)
+    response = preseason_my_tab(request, selected_tournament)
     response = trigger_client_event(response, 'prediction-saved', {'tournament_id': tournament_id})
 
     return response
