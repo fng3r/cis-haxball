@@ -997,6 +997,8 @@ class OtherEventsAdmin(UnfoldModelAdmin):
         ('event', MultipleChoicesDropdownFilter),
         ('team', RelatedDropdownFilter),
         ('author', RelatedDropdownFilter),
+        ('match__league__championship', RelatedDropdownFilter),
+        ('match__league', RelatedDropdownFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
