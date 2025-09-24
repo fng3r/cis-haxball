@@ -4,12 +4,12 @@
       <span class="tw:mb-0 tw:text-lg tw:text-center">Трансляции</span>
     </div>
 
-    <div class="tw:flex tw:flex-col tw:w-full tw:mb-0! tw:bg-base-100 tw:p-2 tw:rounded-b-lg tw:gap-3">
+    <div class="tw:flex tw:flex-col tw:w-full tw:mb-0! tw:bg-base-100 tw:p-2 tw:rounded-b-lg tw:gap-4">
       {% for stream in livestreams %}
         <div class="tw:flex tw:flex-col tw:gap-1">
           <a href="{{ stream.url }}"
              target="_blank"
-             class="tw:block tw:bg-base-200 tw:hover:bg-base-300 tw:rounded-lg tw:overflow-hidden tw:transition-colors">
+             class="tw:block tw:hover:bg-base-300 tw:rounded-lg tw:overflow-hidden tw:transition-colors">
             <div class="tw:flex tw:justify-center tw:relative">
               <img src="{{ stream.thumbnail_url }}" alt="{{ stream.title }}" class="tw:w-full tw:rounded">
               {% if stream.is_live %}
