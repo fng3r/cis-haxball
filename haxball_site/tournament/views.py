@@ -1150,7 +1150,7 @@ class TeamPlayersRatingView(View):
             earliest_tour = TourNumber.objects.filter(league__championship=season).order_by('date_from').first()
 
             if earliest_tour:
-                return earliest_tour.date_from - timedelta(days=1)
+                return earliest_tour.date_from
 
         if phase == self.SeasonPhase.END:
             latest_tour = TourNumber.objects.filter(league__championship=season).order_by('-date_to').first()
