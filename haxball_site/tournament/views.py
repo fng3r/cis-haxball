@@ -1052,13 +1052,15 @@ class TeamPlayersRatingView(View):
 
     def get(self, request):
         season_id = request.GET.get('season')
-        phase = request.GET.get('phase', self.SeasonPhase.START)
+        phase = request.GET.get('phase')
         league = request.GET.get('league')
 
         if season_id:
             season = get_object_or_404(Season, id=season_id)
         else:
             season = Season.objects.filter(number__gte=16).order_by('-number').first()
+        if not phase:
+            phase = self.SeasonPhase.NOW if season.is_active else self.SeasonPhase.START
 
         selected_phase_date = self.get_phase_date(season, phase)
         start_phase_date = self.get_phase_date(season, self.SeasonPhase.START)
