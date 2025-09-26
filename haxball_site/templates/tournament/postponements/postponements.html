@@ -49,15 +49,15 @@
             <table id="postponements-table" class="tw:table tw:table-pin-rows">
               <thead class="tw:text-center">
                 <tr class="tw:bg-base-300!">
-                  <th scope="col" class="tw:border-r tw:border-neutral-200">Команда</th>
+                  <th scope="col" class="tw:border-r tw:border-neutral-200/50">Команда</th>
                   {% for i in ''|rjust:league.get_postponement_slots.common_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200">Обычн. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Обычн. {{ forloop.counter }}</th>
                   {% endfor %}
                   {% for i in ''|rjust:league.get_postponement_slots.emergency_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200">Экстр. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Экстр. {{ forloop.counter }}</th>
                   {% endfor %}
                   {% for i in ''|rjust:league.get_postponement_slots.extra_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200">Платн. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Платн. {{ forloop.counter }}</th>
                   {% endfor %}
                 </tr>
               </thead>
