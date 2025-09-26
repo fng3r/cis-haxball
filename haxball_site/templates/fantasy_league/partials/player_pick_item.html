@@ -12,12 +12,26 @@
         <template x-if="selected[position]">
           <div class="tw:flex tw:items-center tw:gap-2">
             <img :src="selected[position]?.teamLogo" alt="logo" class="tw:w-6 tw:h-6 tw:rounded-sm" />
-            <span x-text="selected[position]?.nickname" :class="selected[position]?.isUnavailable && 'tw:text-warning tw:font-semibold'"></span>
-            <template x-if="selected[position] && !selected[position].isUnavailable">
-              <span class="tw:text-xs tw:opacity-70 tw:ml-1" x-text="`${selected[position]?.cost}M`"></span>
-            </template>
+            <span x-text="selected[position]?.nickname"
+                  :class="(selected[position]?.isUnavailable || selected[position]?.isPositionChanged) && 'tw:text-warning tw:font-semibold'"></span>
+
             <template x-if="selected[position]?.isUnavailable">
               <i class="fa fa-exclamation-triangle tw:text-warning tw:text-sm" title="Игрок больше не доступен в лиге"></i>
+            </template>
+
+            <template x-if="!selected[position]?.isUnavailable && selected[position]?.isPositionChanged">
+              <i class="fa fa-exclamation-triangle tw:tooltip tw:text-warning tw:text-sm"
+                 x-data="{prev: selected[position].changedPositions.prev, current: selected[position].changedPositions.current}">
+                <div class="tw:tooltip-content tw:text-left">
+                  <span x-text="`Позиция игрока изменилась (${prev} -> ${current}).`"></span>
+                  <br>
+                  <span>Выберите игрока на его актуальную позицию или замените</span>
+                </div>
+              </i>
+            </template>
+
+            <template x-if="selected[position] && !selected[position].isUnavailable">
+              <span class="tw:text-xs tw:opacity-70 tw:ml-1" x-text="`${selected[position]?.cost}M`"></span>
             </template>
           </div>
         </template>

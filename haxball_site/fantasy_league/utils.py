@@ -1,7 +1,7 @@
 from datetime import time
 
 from django.contrib.auth.models import User
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q
 from django.utils import timezone
 
 from tournament.models import (
@@ -342,7 +342,7 @@ def get_available_players_in_league(league):
     return set(Player.objects.filter(team__in=league.teams.all()).values_list('id', flat=True))
 
 
-def get_unavailable_players_in_submission(submission):
+def get_unavailable_players_in_submission(submission: SquadSubmission):
     """
     Get list of players in a submission that are no longer available in the league.
     Returns a list of SquadPlayer objects that need to be replaced.
@@ -356,3 +356,24 @@ def get_unavailable_players_in_submission(submission):
             unavailable_players.append(squad_player)
 
     return unavailable_players
+
+
+def get_players_with_changed_positions(submission: SquadSubmission):
+    """
+    Get list of players in a submission that have positions changed since submission was made.
+    """
+    squad_players = submission.squad_players.select_related('player').annotate(
+        current_position=F('player__positions__0')
+    )
+
+    result = {
+        player.player_id: {
+            'player': player,
+            'prev_position': player.position,
+            'current_position': player.current_position,
+        }
+        for player in squad_players
+        if player.position != player.current_position
+    }
+
+    return result

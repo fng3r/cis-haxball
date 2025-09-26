@@ -16,6 +16,7 @@ from .utils import (
     get_blocking_tours,
     get_league_budget_limit,
     get_player_fantasy_stats,
+    get_players_with_changed_positions,
     get_tournament_standings,
     get_unavailable_players_in_submission,
     is_tour_open_for_fantasy,
@@ -386,10 +387,12 @@ def edit_squad(request, tour_id):
         .prefetch_related('squad_players__player')
     ).first()
     prev_player_ids = []
+    players_with_changed_positions = {}
     if prev_submission:
         prev_player_ids = [sp.player_id for sp in prev_submission.main_squad.all()] + [
             sp.player_id for sp in prev_submission.bench_players.all()
         ]
+        players_with_changed_positions = get_players_with_changed_positions(prev_submission)
 
     submission = SquadSubmission.objects.filter(
         user=request.user,
@@ -503,6 +506,7 @@ def edit_squad(request, tour_id):
                 'budget_limit': budget_limit,
                 'previous_player_ids': prev_player_ids,
                 'unavailable_players': unavailable_players,
+                'players_with_changed_positions': players_with_changed_positions,
             }
 
             return render(request, 'fantasy_league/edit_squad.html', context)
@@ -553,6 +557,7 @@ def edit_squad(request, tour_id):
         'budget_limit': budget_limit,
         'previous_player_ids': prev_player_ids,
         'unavailable_players': unavailable_players,
+        'players_with_changed_positions': players_with_changed_positions,
     }
 
     return render(request, 'fantasy_league/edit_squad.html', context)
