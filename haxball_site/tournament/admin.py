@@ -194,7 +194,10 @@ class PlayerAdmin(UnfoldModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change, **kwargs)
-        form.base_fields['positions'].widget = ArrayWidget(choices=Player.Position.choices)
+        # manually add a blank choice to avoid unintentional appends of items
+        # since ArrayWidget is rendered with one extra item (with value of default choice) when array is empty
+        positions_choices = [(None, 'Select value')] + Player.Position.choices
+        form.base_fields['positions'].widget = ArrayWidget(choices=positions_choices)
         return form
 
 
