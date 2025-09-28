@@ -32,7 +32,7 @@ def is_tour_open_for_fantasy(tour):
 def get_tour_opening_datetime(tour):
     start_datetime = get_tour_start_datetime(tour)
 
-    return start_datetime - timezone.timedelta(days=3)
+    return start_datetime - timezone.timedelta(days=3) + timezone.timedelta(minutes=30)
 
 
 def get_tour_start_datetime(tour):
