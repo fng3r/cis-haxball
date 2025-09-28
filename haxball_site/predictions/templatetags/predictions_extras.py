@@ -46,7 +46,7 @@ def get_tour_opening_datetime(tour):
 @register.filter
 def is_tour_actual(tour):
     """Check if a tour is actual"""
-    return tour.date_to + timezone.timedelta(days=7) > timezone.localdate()
+    return tour.date_to + timezone.timedelta(days=7) >= timezone.localdate()
 
 
 @register.filter
