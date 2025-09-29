@@ -746,8 +746,7 @@ def cancel_postponement(request, pk):
     user_teams = get_user_teams(request.user)
 
     if (postponement.match.team_home in user_teams) or (postponement.match.team_guest in user_teams):
-        postponement.cancelled_at = timezone.now()
-        postponement.cancelled_by = request.user
+        postponement.cancel(request.user)
         postponement.save()
     else:
         messages.error(request, 'Ошибка доступа')

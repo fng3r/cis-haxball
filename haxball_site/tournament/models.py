@@ -1187,6 +1187,10 @@ class Postponement(models.Model):
     def league(self):
         return self.match.league
 
+    def cancel(self, cancelled_by: User):
+        self.cancelled_at = timezone.now()
+        self.cancelled_by = cancelled_by
+
     def __str__(self):
         return 'Перенос матча {} - {}, {} тур ({} - {})'.format(
             self.match.team_home,

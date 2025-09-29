@@ -3,7 +3,6 @@ from django.contrib import admin, messages
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import resolve, reverse_lazy
-from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from polymorphic.admin import (
@@ -467,8 +466,7 @@ class PostponementAdmin(UnfoldModelAdmin):
             messages.warning(request, 'Выбранный перенос уже был отменен ранее')
             return redirect(reverse_lazy('admin:tournament_postponement_change', args=[object_id]))
 
-        postponement.cancelled_at = timezone.now()
-        postponement.cancelled_by = request.user
+        postponement.cancel(request.user)
         postponement.save(update_fields=['cancelled_at', 'cancelled_by'])
 
         messages.success(request, 'Перенос успешно отменен')
