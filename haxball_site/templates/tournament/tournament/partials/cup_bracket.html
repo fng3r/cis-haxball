@@ -9,7 +9,7 @@
       <img src="{{ team.logo.url }}" alt="{{ team.title }}" width="24" height="24">
     </span>
     <span class="name">
-      <a href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
+      <a href="{{ team.get_absolute_url }}" class="tw:link tw:link-hover">{{ team.short_title }}</a>
     </span>
     {% for match in matches %}
       {% if match.is_played %}
@@ -26,7 +26,7 @@
         <img src="{{ team.logo.url }}" alt="{{ team.title }}" width="24" height="24">
       </span>
       <span class="name">
-        <a href="{{ team.get_absolute_url }}">{{ team.short_title }}</a>
+        <a href="{{ team.get_absolute_url }}" class="tw:link tw:link-hover">{{ team.short_title }}</a>
       </span>
     {% elif team_placeholder %}
       <span class="name">{{ team_placeholder }}</span>

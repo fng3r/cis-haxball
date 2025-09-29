@@ -26,10 +26,10 @@
             {% endfor %}
 
             <a href="{{ comment.author.user_profile.get_absolute_url }}"
-               class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
-              {{ comment.author.username }}
-              {% if comment.author.user_profile.tag %}<span>[{{ comment.author.user_profile.tag }}]</span>{% endif %}
-            </a>
+               class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.author.username }}</a>
+            {% if comment.author.user_profile.tag %}
+              {% include 'core/include/user_tag.html' with tag=comment.author.user_profile.tag %}
+            {% endif %}
 
             {% include 'core/comment/user-teams.html' with user=comment.author %}
           </div>
@@ -47,15 +47,15 @@
           <div class="tw:m-0 tw:flex tw:ml-2 tw:font-semibold">
             <div class="tw:flex tw:gap-1 tw:items-center">
               {% for icon in child_comment.parent.author.user_profile.user_icon.all %}
-                <div class="tw:mr-1 tw:align-middle">
-                  <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                </div>
+                <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
               {% endfor %}
 
               <a href="{{ child_comment.parent.author.user_profile.get_absolute_url }}"
                  class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
                 {{ child_comment.parent.author.username }}
-                {% if child_comment.parent.author.user_profile.tag %}<span>[{{ child_comment.parent.author.user_profile.tag }}]</span>{% endif %}
+                {% if child_comment.parent.author.user_profile.tag %}
+                  {% include 'core/include/user_tag.html' with tag=child_comment.parent.author.user_profile.tag %}
+                {% endif %}
               </a>
 
               {% include 'core/comment/user-teams.html' with user=child_comment.parent.author %}

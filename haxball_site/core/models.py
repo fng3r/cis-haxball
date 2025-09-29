@@ -149,13 +149,11 @@ class NewComment(models.Model):
 
     def get_absolute_url(self):
         if self.parent:
-            return self.get_root().get_absolute_url()
+            root_comment_page = self.get_root()._get_page()
+            return f'{self.content_object.get_absolute_url()}?page={root_comment_page}#r{self.id}'
 
-        commented_object = self.content_object
-        # count how many top-level comments were left *after* current comment was created
-        index = commented_object.comments.filter(parent=None, id__gt=self.id).count()
-        page = (index // 20) + 1
-        return f'{commented_object.get_absolute_url()}?page={page}#r{self.id}'
+        page = self._get_page()
+        return f'{self.content_object.get_absolute_url()}?page={page}#r{self.id}'
 
     def get_root(self):
         obj = self
@@ -174,6 +172,14 @@ class NewComment(models.Model):
 
     def childs_count(self):
         return len(list(bfs(self)))
+
+    def _get_page(self):
+        commented_object = self.content_object
+        # count how many top-level comments were left *after* current comment was created
+        index = commented_object.comments.filter(parent=None, id__gt=self.id).count()
+        page = (index // 20) + 1
+
+        return page
 
 
 class CommentHistoryItem(models.Model):

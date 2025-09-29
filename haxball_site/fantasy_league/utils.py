@@ -1,7 +1,7 @@
 from datetime import time
 
 from django.contrib.auth.models import User
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q
 from django.utils import timezone
 
 from tournament.models import (
@@ -22,28 +22,31 @@ from .points_service import calculate_submission_total_points, calculate_total_p
 def is_tour_open_for_fantasy(tour):
     """Check if a tour is currently open for fantasy league submissions"""
     now = timezone.localtime()
-    today = now.date()
 
-    # Tour opens 3 days before start date
-    open_date = tour.date_from - timezone.timedelta(days=3)
+    closed_at = get_tour_start_datetime(tour)
+    open_at = get_tour_opening_datetime(tour)
 
-    # Tour closes at 18:00 on the start date
-    close_datetime = timezone.datetime.combine(tour.date_from, time(18, 0))
-    close_datetime = timezone.make_aware(close_datetime)
+    return open_at <= now <= closed_at
 
-    return open_date <= today and now <= close_datetime
+
+def get_tour_opening_datetime(tour):
+    start_datetime = get_tour_start_datetime(tour)
+
+    return start_datetime - timezone.timedelta(days=3) + timezone.timedelta(minutes=30)
+
+
+def get_tour_start_datetime(tour):
+    start_datetime = timezone.datetime.combine(tour.date_from, time(18, 0))
+    start_datetime = timezone.make_aware(start_datetime)
+
+    return start_datetime
 
 
 def is_tour_not_open_yet(tour):
     """Check if a tour is not open yet"""
-    opening_date = get_tour_opening_date(tour)
-    now = timezone.localtime()
-    return opening_date > now.date()
+    opening_datetime = get_tour_opening_datetime(tour)
 
-
-def get_tour_opening_date(tour):
-    """Get the opening date of a tour"""
-    return tour.date_from - timezone.timedelta(days=3)
+    return timezone.localtime() < opening_datetime
 
 
 def get_user_tour_points(user, tour, tournament):
@@ -339,7 +342,7 @@ def get_available_players_in_league(league):
     return set(Player.objects.filter(team__in=league.teams.all()).values_list('id', flat=True))
 
 
-def get_unavailable_players_in_submission(submission):
+def get_unavailable_players_in_submission(submission: SquadSubmission):
     """
     Get list of players in a submission that are no longer available in the league.
     Returns a list of SquadPlayer objects that need to be replaced.
@@ -353,3 +356,24 @@ def get_unavailable_players_in_submission(submission):
             unavailable_players.append(squad_player)
 
     return unavailable_players
+
+
+def get_players_with_changed_positions(submission: SquadSubmission):
+    """
+    Get list of players in a submission that have positions changed since submission was made.
+    """
+    squad_players = submission.squad_players.select_related('player').annotate(
+        current_position=F('player__positions__0')
+    )
+
+    result = {
+        player.player_id: {
+            'player': player,
+            'prev_position': player.position,
+            'current_position': player.current_position,
+        }
+        for player in squad_players
+        if player.position != player.current_position
+    }
+
+    return result

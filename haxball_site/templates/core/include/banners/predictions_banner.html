@@ -1,0 +1,15 @@
+{% load static %}
+
+<div class="tw:card tw:bg-base-100 tw:rounded-lg">
+  <div class="tw:p-4">
+    <div class="tw:flex tw:items-center tw:gap-1 tw:font-bold">
+      <img src="{% static 'img/ico/forecasting.png' %}" class="tw:size-8 tw:mb-1.5">
+      <h5 class="tw:text-lg tw:mb-1.5!">Прогнозы</h5>
+      <div class="tw:badge tw:badge-xs tw:badge-warning">NEW</div>
+    </div>
+    <p class="tw:text-sm tw:mb-4">
+      <span>Сделать ставку на итоги чемпионата, а также посостязаться в прозорливости в течение сезона теперь можно здесь 👇</span>
+    </p>
+    <a href="{% url 'predictions:main' %}" class="tw:btn tw:btn-primary tw:btn-soft tw:btn-sm tw:w-full">К прогнозам</a>
+  </div>
+</div>

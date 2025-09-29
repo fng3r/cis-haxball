@@ -16,18 +16,16 @@
 {% block content %}
   {% include "core/include/navbar.html" %}
 
-  <div class="tw:mx-auto tw:max-w-[1600px] tw:py-2 tw:flex tw:flex-wrap">
-    <aside class="tw:w-1/2 tw:order-2 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:xl:order-1 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
+  <div class="tw:mx-auto tw:max-w-[1600px] tw:p-2 tw:flex tw:flex-wrap">
+    <aside class="tw:w-1/2 tw:order-2 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:xl:order-1 tw:lg:w-1/4 tw:space-y-2 tw:pr-1">
       {% polls_list 2 user %}
 
-      {% include 'core/include/tg_banner.html' %}
+      {% include 'core/include/banners/tg_banner.html' %}
 
-      {% include 'core/include/fantasy_banner.html' %}
-
-      {% include 'core/include/predictions_banner.html' %}
+      {% include 'core/include/banners/activities_banner.html' %}
 
       {% if project_settings.SHOW_FREE_AGENTS_BANNER %}
-        {% include 'core/include/free_agents_banner.html' %}
+        {% include 'core/include/banners/free_agents_banner.html' %}
       {% endif %}
 
       {% if project_settings.SHOW_PLAYERS_RATING_BANNER %}
@@ -43,7 +41,7 @@
       {% show_last_transfers %}
     </aside>
 
-    <main class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:px-1">
+    <main class="tw:w-full tw:order-1 tw:xl:w-2/3 tw:xl:order-2 tw:xl:px-1">
       {% block main_content %}{% endblock %}
 
       {# Блок для отображение профиля пользователя #}
@@ -59,7 +57,7 @@
       {% block comments %}{% endblock %}
     </main>
 
-    <aside class="tw:w-1/2 tw:order-3 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:lg:w-1/4 tw:space-y-2 tw:px-1">
+    <aside class="tw:w-1/2 tw:order-3 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:lg:w-1/4 tw:space-y-2 tw:pl-1">
       {% include 'core/include/sidebar_for_online_users.html' %}
 
       {% block sidebar_last_activity %}

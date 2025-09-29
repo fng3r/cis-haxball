@@ -746,8 +746,7 @@ def cancel_postponement(request, pk):
     user_teams = get_user_teams(request.user)
 
     if (postponement.match.team_home in user_teams) or (postponement.match.team_guest in user_teams):
-        postponement.cancelled_at = timezone.now()
-        postponement.cancelled_by = request.user
+        postponement.cancel(request.user)
         postponement.save()
     else:
         messages.error(request, 'Ошибка доступа')
@@ -1052,13 +1051,15 @@ class TeamPlayersRatingView(View):
 
     def get(self, request):
         season_id = request.GET.get('season')
-        phase = request.GET.get('phase', self.SeasonPhase.START)
+        phase = request.GET.get('phase')
         league = request.GET.get('league')
 
         if season_id:
             season = get_object_or_404(Season, id=season_id)
         else:
             season = Season.objects.filter(number__gte=16).order_by('-number').first()
+        if not phase:
+            phase = self.SeasonPhase.NOW if season.is_active else self.SeasonPhase.START
 
         selected_phase_date = self.get_phase_date(season, phase)
         start_phase_date = self.get_phase_date(season, self.SeasonPhase.START)
@@ -1148,7 +1149,7 @@ class TeamPlayersRatingView(View):
             earliest_tour = TourNumber.objects.filter(league__championship=season).order_by('date_from').first()
 
             if earliest_tour:
-                return earliest_tour.date_from - timedelta(days=1)
+                return earliest_tour.date_from
 
         if phase == self.SeasonPhase.END:
             latest_tour = TourNumber.objects.filter(league__championship=season).order_by('-date_to').first()

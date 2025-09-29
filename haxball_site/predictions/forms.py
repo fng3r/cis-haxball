@@ -8,7 +8,7 @@ class TournamentFilterForm(forms.Form):
     """Form for filtering by tournament"""
 
     tournament = forms.ModelChoiceField(
-        queryset=PredictionsContestTournament.objects.filter(is_active=True),
+        queryset=PredictionsContestTournament.objects.filter(is_active=True).order_by('league__priority'),
         empty_label=None,
         label='Турнир',
         required=False,
@@ -19,7 +19,7 @@ class PreseasonPredictionsTournamentFilterForm(forms.Form):
     """Form for filtering by preseason predictions tournament"""
 
     tournament = forms.ModelChoiceField(
-        queryset=PreseasonPredictionsTournament.objects.all(),
+        queryset=PreseasonPredictionsTournament.objects.order_by('league__priority'),
         empty_label=None,
         label='Турнир',
         required=False,

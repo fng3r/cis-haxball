@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <div class="tw:card-body tw:p-1">
+    <div class="tw:card-body tw:p-1" x-data="{}">
       <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
         <form id="tournament_selector" class="tw:flex tw:flex-col tw:gap-2">
           <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
@@ -32,9 +32,37 @@
           </div>
         </form>
 
-        <button class="tw:btn tw:btn-outline tw:btn-sm tw:self-end" onclick="rules_modal.showModal()">
-          <i class="fa fa-book"></i> Правила
-        </button>
+        {# djlint:off #}
+        <div x-data="{
+                     lastSeenRulesVersion: JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0,
+                     latestRulesVersion: 1,
+                     updateLastSeenVersion() { localStorage.setItem('fantasy.lastSeenRulesVersion', this.latestRulesVersion); },
+                     }">
+        {# djlint:on #}
+
+          <button class="tw:btn tw:btn-outline tw:btn-sm tw:self-end" onclick="rules_modal.showModal()">
+            <i class="fa fa-book"></i> Правила
+            <span x-show="lastSeenRulesVersion < latestRulesVersion" x-cloak class="tw:status tw:status-warning"></span>
+          </button>
+
+          <dialog id="rules_modal"
+                  class="tw:modal"
+                  @close="lastSeenRulesVersion = JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0">
+            <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
+              <div class="tw:flex tw:gap-3 tw:items-center">
+                <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила</h3>
+                <span class="tw:text-base tw:text-base-content/70 tw:pb-1">
+                  (<a href="#rules-updates" class="tw:link tw:font-semibold">К изменениям</a>
+                  <i class="fa fa-arrow-down tw:text-sm! tw:mt-1" aria-hidden="true"></i>)
+                </span>
+              </div>
+              <div class="tw:overflow-y-auto">{% include 'fantasy_league/partials/rules.html' %}</div>
+            </div>
+            <form method="dialog" class="tw:modal-backdrop">
+              <button>close</button>
+            </form>
+          </dialog>
+        </div>
       </div>
 
       {% partialdef tabs inline=True %}
@@ -121,14 +149,4 @@
       {% endpartialdef %}
     </div>
   </div>
-
-  <dialog id="rules_modal" class="tw:modal">
-    <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
-      <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила</h3>
-      <div class="tw:overflow-y-auto">{% include 'fantasy_league/partials/rules.html' %}</div>
-    </div>
-    <form method="dialog" class="tw:modal-backdrop">
-      <button>close</button>
-    </form>
-  </dialog>
 {% endblock %}

@@ -53,15 +53,15 @@ def is_tour_closed(tour):
 
 
 @register.filter
-def get_tour_opening_date(tour):
+def get_tour_opening_datetime(tour):
     """Get the opening date of a tour"""
-    return utils.get_tour_opening_date(tour)
+    return utils.get_tour_opening_datetime(tour)
 
 
 @register.filter
 def is_tour_actual(tour):
     """Check if a tour is actual"""
-    return tour.date_to + timezone.timedelta(days=7) > timezone.localdate()
+    return tour.date_to + timezone.timedelta(days=7) >= timezone.localdate()
 
 
 @register.filter

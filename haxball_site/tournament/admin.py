@@ -3,7 +3,6 @@ from django.contrib import admin, messages
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import resolve, reverse_lazy
-from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from polymorphic.admin import (
@@ -164,7 +163,7 @@ class PlayerAdmin(UnfoldModelAdmin):
         'nickname',
         'team',
         'player_nation',
-        'get_positions',
+        'display_positions',
     )
     autocomplete_fields = ('name',)
     list_filter = (
@@ -179,10 +178,9 @@ class PlayerAdmin(UnfoldModelAdmin):
     )
     inlines = [AchievementsInline]
 
-    def get_positions(self, obj):
-        return ', '.join(obj.positions or [])
-
-    get_positions.short_description = 'Позиции'
+    @display(description='Позиции', label=True)
+    def display_positions(self, obj):
+        return obj.positions
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # This is the case when object is already created
@@ -194,7 +192,10 @@ class PlayerAdmin(UnfoldModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change, **kwargs)
-        form.base_fields['positions'].widget = ArrayWidget(choices=Player.Position.choices)
+        # manually add a blank choice to avoid unintentional appends of items
+        # since ArrayWidget is rendered with one extra item (with value of default choice) when array is empty
+        positions_choices = [(None, 'Select value')] + Player.Position.choices
+        form.base_fields['positions'].widget = ArrayWidget(choices=positions_choices)
         return form
 
 
@@ -449,7 +450,10 @@ class PostponementAdmin(UnfoldModelAdmin):
 
     @display(description='На кого взят перенос')
     def display_teams(self, model):
-        return mark_safe('<br>'.join(map(lambda t: str(t), model.teams.all())))
+        teams = list(model.teams.all())
+        if len(teams) > 1:
+            return 'Обоюдный'
+        return teams[0]
 
     @display(description='Отменен', boolean=True)
     def display_is_cancelled(self, model):
@@ -462,8 +466,7 @@ class PostponementAdmin(UnfoldModelAdmin):
             messages.warning(request, 'Выбранный перенос уже был отменен ранее')
             return redirect(reverse_lazy('admin:tournament_postponement_change', args=[object_id]))
 
-        postponement.cancelled_at = timezone.now()
-        postponement.cancelled_by = request.user
+        postponement.cancel(request.user)
         postponement.save(update_fields=['cancelled_at', 'cancelled_by'])
 
         messages.success(request, 'Перенос успешно отменен')
@@ -997,6 +1000,8 @@ class OtherEventsAdmin(UnfoldModelAdmin):
         ('event', MultipleChoicesDropdownFilter),
         ('team', RelatedDropdownFilter),
         ('author', RelatedDropdownFilter),
+        ('match__league__championship', RelatedDropdownFilter),
+        ('match__league', RelatedDropdownFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False

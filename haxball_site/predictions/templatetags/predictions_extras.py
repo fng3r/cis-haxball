@@ -1,9 +1,10 @@
-from datetime import timedelta
+from datetime import time
+from math import ceil
 
 from django import template
 from django.utils import timezone
 
-from ..utils import is_tour_open_for_predictions
+from .. import utils
 
 register = template.Library()
 
@@ -19,16 +20,15 @@ def get_item(dictionary, key):
 @register.filter
 def is_open_for_predictions(tour):
     """Template filter to check if a tour is open for predictions"""
-    return is_tour_open_for_predictions(tour)
+    return utils.is_tour_open_for_predictions(tour)
 
 
 @register.filter
 def is_not_open_yet(tour):
     """Template filter to check if a tour hasn't opened for predictions yet (future)"""
-    today = timezone.localdate()
-    open_date = get_tour_opening_date(tour)
+    open_datetime = utils.get_tour_opening_datetime(tour)
 
-    return today < open_date
+    return timezone.localtime() < open_datetime
 
 
 @register.filter
@@ -38,12 +38,21 @@ def is_closed_for_predictions(tour):
 
 
 @register.filter
-def get_tour_opening_date(tour):
+def get_tour_opening_datetime(tour):
     """Template filter to get the date when a tour opens for predictions"""
-    return tour.date_from - timedelta(days=3)
+    return utils.get_tour_opening_datetime(tour)
 
 
 @register.filter
 def is_tour_actual(tour):
     """Check if a tour is actual"""
-    return tour.date_to + timezone.timedelta(days=7) > timezone.localdate()
+    return tour.date_to + timezone.timedelta(days=7) >= timezone.localdate()
+
+
+@register.filter
+def hours_until_start(tournament):
+    first_tour = tournament.tours.order_by('number').first()
+    start_date = timezone.make_aware(timezone.datetime.combine(first_tour.date_from, time(18, 0)))
+    delta = start_date - timezone.localtime()
+
+    return max(0, ceil(delta.total_seconds() / 3600))

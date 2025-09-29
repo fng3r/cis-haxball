@@ -49,15 +49,15 @@
             <table id="postponements-table" class="tw:table tw:table-pin-rows">
               <thead class="tw:text-center">
                 <tr class="tw:bg-base-300!">
-                  <th scope="col" class="tw:border-r tw:border-neutral-200">Команда</th>
+                  <th scope="col" class="tw:border-r tw:border-neutral-200/50">Команда</th>
                   {% for i in ''|rjust:league.get_postponement_slots.common_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200">Обычн. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Обычн. {{ forloop.counter }}</th>
                   {% endfor %}
                   {% for i in ''|rjust:league.get_postponement_slots.emergency_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200">Экстр. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Экстр. {{ forloop.counter }}</th>
                   {% endfor %}
                   {% for i in ''|rjust:league.get_postponement_slots.extra_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200">Платн. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Платн. {{ forloop.counter }}</th>
                   {% endfor %}
                 </tr>
               </thead>
@@ -159,7 +159,9 @@
                         <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}"
                            class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
                           {{ postponement.taken_by.username }}
-                          {% if postponement.taken_by.user_profile.tag %}<span>[{{ postponement.taken_by.user_profile.tag }}]</span>{% endif %}
+                          {% if postponement.taken_by.user_profile.tag %}
+                            {% include 'core/include/user_tag.html' with tag=postponement.taken_by.user_profile.tag %}
+                          {% endif %}
                         </a>
 
                         {% include 'core/comment/user-teams.html' with user=postponement.taken_by %}
@@ -219,7 +221,9 @@
                           <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}"
                              class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
                             {{ postponement.cancelled_by.username }}
-                            {% if postponement.cancelled_by.user_profile.tag %}<span>[{{ postponement.cancelled_by.user_profile.tag }}]</span>{% endif %}
+                            {% if postponement.cancelled_by.user_profile.tag %}
+                              {% include 'core/include/user_tag.html' with tag=postponement.cancelled_by.user_profile.tag %}
+                            {% endif %}
                           </a>
 
                           {% include 'core/comment/user-teams.html' with user=postponement.cancelled_by %}

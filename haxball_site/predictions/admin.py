@@ -26,13 +26,16 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
     list_display = ['league', 'is_active']
     list_editable = ['is_active']
     list_filter = ['is_active']
+    list_filter_sheet = False
     search_fields = ['league__title']
     ordering = ['-id']
 
 
 @admin.register(PredictionSubmission)
 class PredictionSubmissionAdmin(UnfoldModelAdmin):
-    list_filter = ['tournament', 'tour__league', 'created']
+    list_display = ['tournament', 'tour', 'user', 'created', 'updated']
+    list_filter = [('user', AutocompleteSelectFilter), ('tournament__league', RelatedDropdownFilter), 'created']
+    list_filter_submit = True
     search_fields = ['user__username', 'tour__number']
     ordering = ['-created']
     inlines = [PredictionInline]
@@ -44,6 +47,7 @@ class PreseasonPredictionsTournamentAdmin(UnfoldModelAdmin):
     list_display = ['league', 'is_active']
     list_editable = ['is_active']
     list_filter = ['is_active']
+    list_filter_sheet = False
     search_fields = ['league__title']
     ordering = ['-id']
 
@@ -63,7 +67,8 @@ class PreseasonPredictionItemInline(UnfoldTabularInline):
 
 @admin.register(PreseasonPredictionSubmission)
 class PreseasonPredictionSubmissionAdmin(UnfoldModelAdmin):
-    list_filter = [('tournament__league', RelatedDropdownFilter), ('user', AutocompleteSelectFilter)]
+    list_display = ['tournament', 'user', 'created', 'updated']
+    list_filter = [('user', AutocompleteSelectFilter), ('tournament__league', RelatedDropdownFilter)]
     list_filter_submit = True
     search_fields = ['user__username', 'tournament__league__title']
     inlines = [PreseasonPredictionItemInline]

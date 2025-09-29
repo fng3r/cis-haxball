@@ -6,6 +6,15 @@
   <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">Турниры</li>
 
   <li>
+    <a href="{% url 'tournament:league' 's15-premier-league' %}">Высшая лига</a>
+  </li>
+  <li>
+    <a href="{% url 'tournament:league' 's15-first-league' %}">Первая лига</a>
+  </li>
+  <li>
+    <a href="{% url 'tournament:league' 's15-second-league' %}">Вторая лига</a>
+  </li>
+  <li>
     <a href="{% url 'tournament:league' 's15-russian-cup' %}">Кубок России</a>
   </li>
 
@@ -13,7 +22,7 @@
 
   <li>
     <a target="_blank"
-       href="https://docs.google.com/spreadsheets/d/1kNkBIwFxWB_5Whlg1zWm-xN8PwltVKY2mSP-KJXTM1M/edit?usp=sharing">Календарь</a>
+       href="https://docs.google.com/spreadsheets/d/1_FD2EJVlws81kfH4uuShTCkjI6XaU5geagLYpBgVFtY/edit?usp=sharing">Календарь</a>
   </li>
   <li>
     <a href="{% url 'reservation:host_reservation' %}">Бронь хоста</a>
@@ -28,7 +37,7 @@
     <a href="{% url 'tournament:disqualifications' %}">Дисквалификации</a>
   </li>
   <li>
-    <a href="{% url 'core:post_detail' '1012' 'transfers-cl-5' %}">Трансферы</a>
+    <a href="{% url 'core:post_detail' '1055' 'transfers-s15' %}">Трансферы</a>
   </li>
   <li>
     <a href="{% url 'tournament:free_agents' %}">Свободные агенты</a>
@@ -416,37 +425,37 @@
       <ul tabindex="0"
           class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
         <li>
-          <a href="https://discord.gg/h6mgc4bTJh" target="_blank">
+          <a href="https://discord.gg/h6mgc4bTJh" target="_blank" class="tw:flex tw:items-center tw:gap-2">
             <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%">
             Discord
           </a>
         </li>
         <li>
-          <a href="https://www.youtube.com/@cis-haxball" target="_blank">
+          <a href="https://www.youtube.com/@cis-haxball" target="_blank" class="tw:flex tw:items-center tw:gap-2">
             <img src="{% static 'img/ico/youtube.PNG' %}" title="youtube" width="20%">
             YouTube
           </a>
         </li>
         <li>
-          <a href="https://www.twitch.tv/cis_haxball" target="_blank">
+          <a href="https://www.twitch.tv/cis_haxball" target="_blank" class="tw:flex tw:items-center tw:gap-2">
             <img src="{% static 'img/ico/twitch.PNG' %}" title="twitch" width="20%">
             Twitch
           </a>
         </li>
         <li>
-          <a href="https://t.me/+GRxpyqeJKosxODQy" target="_blank">
+          <a href="https://t.me/+GRxpyqeJKosxODQy" target="_blank" class="tw:flex tw:items-center tw:gap-2">
             <img src="{% static 'img/ico/tg_1.png' %}" width="20%" title="telegram">
             Telegram
           </a>
         </li>
         <li>
-          <a href="https://www.tiktok.com/@cishaxball3" target="_blank">
+          <a href="https://www.tiktok.com/@cishaxball3" target="_blank" class="tw:flex tw:items-center tw:gap-2">
             <img src="{% static 'img/ico/tik_tok.png' %}" width="20%" title="tiktok">
             TikTok
           </a>
         </li>
         <li>
-          <a href="https://vk.com/haxball_ru" target="_blank">
+          <a href="https://vk.com/haxball_ru" target="_blank" class="tw:flex tw:items-center tw:gap-2">
             <img src="{% static 'img/ico/vk_1.png' %}" width="20%" title="vk">
             VK
           </a>
@@ -457,7 +466,7 @@
 {% endpartialdef %}
 
 <header class="tw:bg-base-200 tw:shadow-sm">
-  <div class="tw:mx-auto tw:navbar tw:pl-1 tw:max-w-[1600px] tw:justify-between">
+  <div class="tw:mx-auto tw:navbar tw:max-w-[1600px] tw:justify-between">
     <div class="tw:flex tw:items-center tw:text-lg">
       <div class="tw:dropdown">
         <div tabindex="0" role="button" class="tw:lg:hidden tw:btn tw:btn-ghost tw:btn-lg tw:btn-square">
@@ -677,7 +686,8 @@
           <i class="fa fa-chevron-down" style="font-size: 10px;"></i>
         </div>
         <ul tabindex="0"
-            class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-300 tw:rounded-box tw:z-1 tw:w-45 tw:p-2 tw:shadow-2xl">
+            class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:w-45 tw:p-2 tw:shadow-2xl">
+          <li class="tw:menu-title">Тема</li>
           {% for theme in themes %}
             <li>
               <div class="tw:relative tw:flex tw:items-center tw:justify-between tw:gap-1">
