@@ -36,6 +36,7 @@ class SquadPlayerInline(unfold_admin.StackedInline):
 class SquadSubmissionAdmin(unfold_admin.ModelAdmin):
     list_display = ('user', 'tournament', 'tour', 'created', 'updated')
     list_filter = (('tournament', RelatedDropdownFilter), ('tour', RelatedDropdownFilter), 'created')
+    list_filter_submit = True
     search_fields = ('user__username',)
     readonly_fields = (
         'created',
