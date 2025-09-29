@@ -232,6 +232,8 @@ SHOW_USER_TEAM_ICONS = config('APP_SHOW_USER_TEAM_ICONS', cast=bool, default=Tru
 SHOW_PLAYERS_RATING_BANNER = config('APP_SHOW_PLAYERS_RATING_BANNER', cast=bool, default=False)
 SHOW_FREE_AGENTS_BANNER = config('APP_SHOW_FREE_AGENTS_BANNER', cast=bool, default=False)
 
+ACTIVITIES_CURRENT_TOUR = config('APP_ACTIVITIES_CURRENT_TOUR', cast=int, default=1)
+
 CKEDITOR_CONFIGS = {
     'default': {
         'skin': 'moono',

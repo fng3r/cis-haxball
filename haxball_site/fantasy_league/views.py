@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 
 from django_htmx.http import trigger_client_event
 
+from haxball_site import settings
 from tournament.models import Player, TourNumber
 
 from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
@@ -232,8 +233,9 @@ def top_squads_tab(request):
         initial_tour = None
         if request.GET.get('tour'):
             initial_tour = tour_qs.filter(pk=request.GET.get('tour')).first()
-        if not initial_tour and tour_qs.exists():
-            initial_tour = tour_qs.first()
+        if not initial_tour:
+            activites_current_tour = settings.ACTIVITIES_CURRENT_TOUR
+            initial_tour = tour_qs.filter(number=activites_current_tour - 1).first()
         tour = initial_tour
         tour_form = TourFilterForm(
             initial={'tour': initial_tour.pk if initial_tour else None},
