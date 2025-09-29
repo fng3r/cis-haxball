@@ -164,7 +164,7 @@ class PlayerAdmin(UnfoldModelAdmin):
         'nickname',
         'team',
         'player_nation',
-        'get_positions',
+        'display_positions',
     )
     autocomplete_fields = ('name',)
     list_filter = (
@@ -179,10 +179,9 @@ class PlayerAdmin(UnfoldModelAdmin):
     )
     inlines = [AchievementsInline]
 
-    def get_positions(self, obj):
-        return ', '.join(obj.positions or [])
-
-    get_positions.short_description = 'Позиции'
+    @display(description='Позиции', label=True)
+    def display_positions(self, obj):
+        return obj.positions
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # This is the case when object is already created
