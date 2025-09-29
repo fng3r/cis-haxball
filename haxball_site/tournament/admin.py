@@ -451,7 +451,10 @@ class PostponementAdmin(UnfoldModelAdmin):
 
     @display(description='На кого взят перенос')
     def display_teams(self, model):
-        return mark_safe('<br>'.join(map(lambda t: str(t), model.teams.all())))
+        teams = list(model.teams.all())
+        if len(teams) > 1:
+            return 'Обоюдный'
+        return teams[0]
 
     @display(description='Отменен', boolean=True)
     def display_is_cancelled(self, model):
