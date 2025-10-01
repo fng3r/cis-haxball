@@ -5,7 +5,7 @@
       Нет аккаунта? <a class="tw:link tw:link-primary tw:font-semibold" href="{% url 'account_signup' %}">Зарегистрируйтесь!</a>
     </h6>
 
-    <form method="POST" action="{% url 'account_login' %}" class="tw:mt-3">
+    <form method="POST" action="{% url 'account_login' %}?next={{ request.get_full_path }}" class="tw:mt-3">
       {% csrf_token %}
 
       <div class="tw:flex tw:flex-col tw:gap-y-2! tw:mb-2">
