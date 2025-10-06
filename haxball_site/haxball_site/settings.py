@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'oauth.apps.OauthConfig',
     'predictions.apps.PredictionsConfig',
     'fantasy_league.apps.FantasyLeagueConfig',
+    'balance.apps.BalanceConfig',
     'ckeditor',
     'django_summernote',
     'ckeditor_uploader',
