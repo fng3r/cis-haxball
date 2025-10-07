@@ -1,4 +1,5 @@
 from datetime import time
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.db.models import Count, F, Q
@@ -377,3 +378,50 @@ def get_players_with_changed_positions(submission: SquadSubmission):
     }
 
     return result
+
+
+def calculate_tour_rewards(tour, tournament):
+    """Calculate rewards distribution for a specific tour in fantasy league"""
+    # Get all submissions for this tour
+    submissions = SquadSubmission.objects.filter(tour=tour, tournament=tournament).prefetch_related(
+        'squad_players__player', 'user'
+    )
+
+    if not submissions.exists():
+        return {'total_participants': 0, 'total_prize_pool': 0, 'user_rewards': []}
+
+    # Calculate total participants and prize pool
+    total_participants = submissions.count()
+    total_prize_pool = total_participants * 10  # 10 CC per participant
+
+    # Preload fantasy data for points calculation
+    preloaded_data = preload_fantasy_data(tournament)
+
+    # Get points for each user
+    user_points = []
+    for submission in submissions:
+        points = calculate_submission_total_points(submission, preloaded_data)
+        user_points.append({'user': submission.user, 'points': points})
+
+    total_points = sum(up['points'] for up in user_points if up['points'] >= 0)
+
+    user_rewards = []
+    for up in user_points:
+        if up['points'] < 0:
+            reward_amount = Decimal('0.00')
+        elif total_points > 0:
+            proportion = up['points'] / total_points
+            reward_amount = Decimal(str(total_prize_pool)) * Decimal(str(proportion))
+            reward_amount = reward_amount.quantize(Decimal('0.01'))
+        else:
+            reward_amount = Decimal('0.00')
+
+        user_rewards.append({'user': up['user'], 'points': up['points'], 'reward_amount': reward_amount})
+
+    user_rewards.sort(key=lambda x: x['points'], reverse=True)
+
+    return {
+        'total_participants': total_participants,
+        'total_prize_pool': total_prize_pool,
+        'user_rewards': user_rewards,
+    }

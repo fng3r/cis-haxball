@@ -145,6 +145,23 @@
               <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
             </div>
           </div>
+
+          <label class="tw:tab" role="tab">
+            <input type="radio"
+                   name="fantasy-tabs"
+                   hx-get="{% url 'fantasy_league:rewards_tab' %}?tournament={{ selected_tournament.pk }}"
+                   hx-target="#rewards-content"
+                   hx-trigger="load delay:2s" />
+            <span class="tw:flex tw:items-center tw:gap-2">
+              <i class="fa fa-money"></i>
+              Награды
+            </span>
+          </label>
+          <div id="rewards-content" class="tw:tab-content tw:p-2" role="tabpanel">
+            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+            </div>
+          </div>
         </div>
       {% endpartialdef %}
     </div>

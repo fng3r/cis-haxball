@@ -14,6 +14,7 @@ from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, Us
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
 from .points_service import calculate_submission_total_points, calculate_user_total_points
 from .utils import (
+    calculate_tour_rewards,
     get_blocking_tours,
     get_league_budget_limit,
     get_player_fantasy_stats,
@@ -563,3 +564,40 @@ def edit_squad(request, tour_id):
     }
 
     return render(request, 'fantasy_league/edit_squad.html', context)
+
+
+def rewards_tab(request):
+    """Tab for displaying rewards distribution"""
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
+
+    selected_tour = None
+    tour_rewards_data = None
+
+    if selected_tournament:
+        tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('-number')
+
+        tour_id = request.GET.get('tour')
+        if tour_id:
+            selected_tour = tours.filter(pk=tour_id).first()
+        if not selected_tour:
+            activites_current_tour = settings.ACTIVITIES_CURRENT_TOUR
+            selected_tour = tours.filter(number=activites_current_tour - 1).first()
+
+        tour_form = TourFilterForm(
+            initial={'tour': selected_tour.pk if selected_tour else None},
+            league=selected_tournament.league,
+        )
+
+        if selected_tour:
+            rewards_data = calculate_tour_rewards(selected_tour, selected_tournament)
+            tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
+
+    context = {
+        'tournament_form': tournament_form,
+        'selected_tournament': selected_tournament,
+        'tour_form': tour_form,
+        'selected_tour': selected_tour,
+        'tour_rewards_data': tour_rewards_data,
+    }
+
+    return render(request, 'fantasy_league/rewards_tab.html', context)
