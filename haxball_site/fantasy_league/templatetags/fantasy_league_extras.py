@@ -1,5 +1,10 @@
+from math import ceil, floor
+
 from django import template
 from django.utils import timezone
+
+from haxball_site import settings
+from tournament.models import TourNumber
 
 from .. import utils
 from ..points_service import (
@@ -62,6 +67,29 @@ def get_tour_opening_datetime(tour):
 def is_tour_actual(tour):
     """Check if a tour is actual"""
     return tour.date_to + timezone.timedelta(days=7) >= timezone.localdate()
+
+
+@register.simple_tag
+def time_until_current_tour_deadline():
+    current_tour = TourNumber.objects.filter(
+        number=settings.ACTIVITIES_CURRENT_TOUR, league__championship__is_active=True, league__title='Высшая лига'
+    ).first()
+    if current_tour is None:
+        return None
+
+    tour_start_datetime = utils.get_tour_start_datetime(current_tour)
+    delta = tour_start_datetime - timezone.localtime()
+    print(delta, delta.total_seconds())
+    if delta.total_seconds() < 0:
+        return None
+
+    total_minutes = delta.total_seconds() / 60
+    if total_minutes >= 60:
+        total_hours = total_minutes / 60
+        if total_hours > 24:
+            return None
+        return f'{floor(total_hours)} ч.'
+    return f'{ceil(total_minutes)} м.'
 
 
 @register.filter
