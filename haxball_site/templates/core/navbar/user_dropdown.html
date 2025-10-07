@@ -1,4 +1,5 @@
 {% load static %}
+{% load mathfilters %}
 
 <div class="tw:dropdown tw:dropdown-end"
      x-data="{ isInvisibilityEnabled: {{ user.user_profile.invisibility_enabled|yesno:'true,false' }} }">
@@ -18,7 +19,7 @@
     </span>
     <div class="tw:px-1 tw:mb-1 tw:flex tw:items-center tw:gap-1">
       <img src="{% static 'img/cis-coin.png' %}" class="tw:size-4" />
-      <span class="tw:pointer-events-none tw:text-xs tw:text-base-content/80">{{ user.balance.current_balance|floatformat:0 }} CC</span>
+      <span class="tw:pointer-events-none tw:text-xs tw:text-base-content/80">{{ user.balance.current_balance|intdiv:1 }} CC</span>
     </div>
     <li>
       <a href="{{ user.user_profile.get_absolute_url }}">Профиль</a>
