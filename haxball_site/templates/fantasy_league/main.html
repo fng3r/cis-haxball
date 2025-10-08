@@ -83,7 +83,7 @@
                    name="fantasy-tabs"
                    hx-get="{% url 'fantasy_league:view_squads_tab' %}?tournament={{ selected_tournament.pk }}"
                    hx-target="#view-squads-content"
-                   hx-trigger="load delay:2s" />
+                   hx-trigger="load" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-th-list"></i>
               Все составы
@@ -100,7 +100,7 @@
                    name="fantasy-tabs"
                    hx-get="{% url 'fantasy_league:top_squads_tab' %}?tournament={{ selected_tournament.pk }}"
                    hx-target="#top-squads-content"
-                   hx-trigger="load delay:2s" />
+                   hx-trigger="load" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-star"></i>
               Топ-составы
@@ -117,7 +117,7 @@
                    name="fantasy-tabs"
                    hx-get="{% url 'fantasy_league:standings_tab' %}?tournament={{ selected_tournament.pk }}"
                    hx-target="#standings-content"
-                   hx-trigger="load delay:2s" />
+                   hx-trigger="load" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-trophy"></i>
               Турнирная таблица
@@ -134,7 +134,7 @@
                    name="fantasy-tabs"
                    hx-get="{% url 'fantasy_league:statistics_tab' %}?tournament={{ selected_tournament.pk }}"
                    hx-target="#statistics-content"
-                   hx-trigger="load delay:2s" />
+                   hx-trigger="load" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-bar-chart"></i>
               Статистика игроков
@@ -151,7 +151,7 @@
                    name="fantasy-tabs"
                    hx-get="{% url 'fantasy_league:rewards_tab' %}?tournament={{ selected_tournament.pk }}"
                    hx-target="#rewards-content"
-                   hx-trigger="load delay:2s" />
+                   hx-trigger="load" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-money"></i>
               Награды
