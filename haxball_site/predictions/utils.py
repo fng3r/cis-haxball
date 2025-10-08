@@ -91,7 +91,7 @@ def get_tournament_standings(tournament):
 def calculate_tour_rewards(tour, tournament):
     """Calculate rewards distribution for a specific tour in predictions"""
     submissions = PredictionSubmission.objects.filter(tour=tour, tournament=tournament).prefetch_related(
-        'predictions__match__result', 'user'
+        'predictions__match__result', 'user__user_profile'
     )
 
     if not submissions.exists():

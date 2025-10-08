@@ -17,7 +17,7 @@ register = template.Library()
 
 
 @register.filter
-def get_item(dictionary, key):
+def get_item(dictionary: dict, key):
     """Get item from dictionary by key"""
     return dictionary.get(key)
 
@@ -26,6 +26,18 @@ def get_item(dictionary, key):
 def in_list(value, list_obj):
     """Check if value is in list"""
     return value in list_obj
+
+
+@register.filter
+def main_squad_players(submission):
+    """Get main squad players from list of squad players"""
+    return sort_squad_players([player for player in submission.squad_players.all() if player.is_main_squad_player])
+
+
+@register.filter
+def bench_players(submission):
+    """Get bench players from list of squad players"""
+    return sort_squad_players([player for player in submission.squad_players.all() if player.is_bench_player])
 
 
 @register.filter
@@ -79,7 +91,6 @@ def time_until_current_tour_deadline():
 
     tour_start_datetime = utils.get_tour_start_datetime(current_tour)
     delta = tour_start_datetime - timezone.localtime()
-    print(delta, delta.total_seconds())
     if delta.total_seconds() < 0:
         return None
 
@@ -109,15 +120,12 @@ def get_penalty_points(submission):
 
 
 @register.simple_tag(takes_context=True)
-def player_points_breakdown(context, squad_player, role: str = 'main'):
-    """Return per-player points breakdown dict for the given `squad_player`.
-
-    role: 'main' or 'bench' to apply correct multipliers.
-    """
+def player_points_breakdown(context, squad_player):
+    """Return per-player points breakdown dict for the given `squad_player`."""
     preloaded_data = context.get('preloaded_data')
     submission = context.get('submission')
 
-    return calculate_player_breakdown(submission, squad_player, role, preloaded_data)
+    return calculate_player_breakdown(submission, squad_player, preloaded_data)
 
 
 @register.filter

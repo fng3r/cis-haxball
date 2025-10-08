@@ -40,6 +40,14 @@ class SquadPlayer(models.Model):
     position = models.CharField('Позиция', max_length=2, choices=Position.choices)
     squad_type = models.CharField('Тип состава', max_length=5, choices=SquadType.choices, default=SquadType.MAIN)
 
+    @property
+    def is_main_squad_player(self):
+        return self.squad_type == self.SquadType.MAIN
+
+    @property
+    def is_bench_player(self):
+        return self.squad_type == self.SquadType.BENCH
+
     class Meta:
         verbose_name = 'Игрок состава'
         verbose_name_plural = 'Игроки составов'
