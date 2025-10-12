@@ -10,6 +10,8 @@ from django.views.decorators.http import require_POST
 
 from django_htmx.http import trigger_client_event
 
+from fantasy_league.forms import TourFilterForm
+from haxball_site import settings
 from tournament.models import TourNumber
 
 from .forms import PreseasonPredictionsTournamentFilterForm, TournamentFilterForm, UserFilterForm
@@ -22,6 +24,7 @@ from .models import (
     PreseasonPredictionSubmission,
 )
 from .utils import (
+    calculate_tour_rewards,
     get_tournament_standings,
     is_tour_open_for_predictions,
 )
@@ -526,3 +529,42 @@ def preseason_save(request):
     response = trigger_client_event(response, 'prediction-saved', {'tournament_id': tournament_id})
 
     return response
+
+
+def rewards_tab(request):
+    """Tab for displaying rewards distribution"""
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
+
+    selected_tour = None
+    tour_rewards_data = None
+
+    if selected_tournament:
+        tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('-number')
+
+        tour_id = request.GET.get('tour')
+        if tour_id:
+            selected_tour = tours.filter(pk=tour_id).first()
+        if not selected_tour:
+            activites_current_tour = settings.ACTIVITIES_CURRENT_TOUR
+            selected_tour = tours.filter(number=activites_current_tour - 1).first()
+
+        tour_form = TourFilterForm(
+            initial={'tour': selected_tour.pk if selected_tour else None},
+            league=selected_tournament.league,
+        )
+
+        if selected_tour:
+            rewards_data = calculate_tour_rewards(selected_tour, selected_tournament)
+            tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
+    else:
+        tours = TourNumber.objects.none()
+
+    context = {
+        'tournament_form': tournament_form,
+        'selected_tournament': selected_tournament,
+        'tour_form': tour_form,
+        'selected_tour': selected_tour,
+        'tour_rewards_data': tour_rewards_data,
+    }
+
+    return render(request, 'predictions/contest/rewards_tab.html', context)

@@ -1,5 +1,10 @@
+from math import ceil, floor
+
 from django import template
 from django.utils import timezone
+
+from haxball_site import settings
+from tournament.models import TourNumber
 
 from .. import utils
 from ..points_service import (
@@ -12,7 +17,7 @@ register = template.Library()
 
 
 @register.filter
-def get_item(dictionary, key):
+def get_item(dictionary: dict, key):
     """Get item from dictionary by key"""
     return dictionary.get(key)
 
@@ -21,6 +26,18 @@ def get_item(dictionary, key):
 def in_list(value, list_obj):
     """Check if value is in list"""
     return value in list_obj
+
+
+@register.filter
+def main_squad_players(submission):
+    """Get main squad players from list of squad players"""
+    return sort_squad_players([player for player in submission.squad_players.all() if player.is_main_squad_player])
+
+
+@register.filter
+def bench_players(submission):
+    """Get bench players from list of squad players"""
+    return sort_squad_players([player for player in submission.squad_players.all() if player.is_bench_player])
 
 
 @register.filter
@@ -64,6 +81,28 @@ def is_tour_actual(tour):
     return tour.date_to + timezone.timedelta(days=7) >= timezone.localdate()
 
 
+@register.simple_tag
+def time_until_current_tour_deadline():
+    current_tour = TourNumber.objects.filter(
+        number=settings.ACTIVITIES_CURRENT_TOUR, league__championship__is_active=True, league__title='Высшая лига'
+    ).first()
+    if current_tour is None:
+        return None
+
+    tour_start_datetime = utils.get_tour_start_datetime(current_tour)
+    delta = tour_start_datetime - timezone.localtime()
+    if delta.total_seconds() < 0:
+        return None
+
+    total_minutes = delta.total_seconds() / 60
+    if total_minutes >= 60:
+        total_hours = total_minutes / 60
+        if total_hours > 24:
+            return None
+        return f'{floor(total_hours)} ч.'
+    return f'{ceil(total_minutes)} м.'
+
+
 @register.filter
 def get_total_points(submission, preloaded_data):
     """Get total points for a submission with preloaded data"""
@@ -81,15 +120,12 @@ def get_penalty_points(submission):
 
 
 @register.simple_tag(takes_context=True)
-def player_points_breakdown(context, squad_player, role: str = 'main'):
-    """Return per-player points breakdown dict for the given `squad_player`.
-
-    role: 'main' or 'bench' to apply correct multipliers.
-    """
+def player_points_breakdown(context, squad_player):
+    """Return per-player points breakdown dict for the given `squad_player`."""
     preloaded_data = context.get('preloaded_data')
     submission = context.get('submission')
 
-    return calculate_player_breakdown(submission, squad_player, role, preloaded_data)
+    return calculate_player_breakdown(submission, squad_player, preloaded_data)
 
 
 @register.filter

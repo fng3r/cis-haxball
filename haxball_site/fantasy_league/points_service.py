@@ -102,7 +102,7 @@ def calculate_submission_total_points(submission, preloaded_data):
     total_points = 0
     tour_matches = [match for match in tour_matches if match.numb_tour_id == submission.tour_id]
 
-    for squad_player in submission.main_squad.all():
+    for squad_player in submission.squad_players.all():
         player_id = squad_player.player.id
         for match in tour_matches:
             if player_id in match_participants.get(match.id):
@@ -117,21 +117,9 @@ def calculate_submission_total_points(submission, preloaded_data):
 
                 if submission.captain_player_id == player_id:
                     points *= 2
+                if squad_player.squad_type == SquadPlayer.SquadType.BENCH:
+                    points *= 0.5
                 total_points += points
-                break
-
-    for squad_player in submission.bench_players.all():
-        player_id = squad_player.player.id
-        for match in tour_matches:
-            if player_id in match_participants.get(match.id):
-                match_points = calculate_match_points(
-                    squad_player.player,
-                    match,
-                    squad_player.position,
-                    match_goals.get(match.id, []),
-                    match_cs.get(match.id, []),
-                )
-                total_points += match_points['total'] * 0.5  # Bench penalty
                 break
 
     return total_points
@@ -161,7 +149,7 @@ def calculate_user_total_points(user, tournament, preloaded_data):
     return {'total_points': total_points, 'penalty_points': penalty_points}
 
 
-def calculate_player_breakdown(submission, squad_player, role, preloaded_data):
+def calculate_player_breakdown(submission, squad_player, preloaded_data):
     """Calculate detailed breakdown for a specific player in a submission"""
     tour_matches = preloaded_data.get('tour_matches')
     match_participants = preloaded_data.get('match_participants')
@@ -188,7 +176,7 @@ def calculate_player_breakdown(submission, squad_player, role, preloaded_data):
             break
 
     is_captain = submission.captain_player_id == player.id
-    is_bench = role == 'bench'
+    is_bench = squad_player.is_bench_player
     multiplier = 1.0
     if is_captain:
         multiplier = 2.0

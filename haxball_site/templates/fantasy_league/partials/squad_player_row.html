@@ -28,49 +28,47 @@
 
   <div class="tw:flex tw:items-center tw:gap-2">
     {% if not is_open and not tour|is_tour_not_open_yet %}
-      {% player_points_breakdown squad_player role as breakdown %}
+      {% player_points_breakdown squad_player as breakdown %}
+
       <button type="button"
               class="tw:badge tw:badge-primary tw:badge-sm tw:cursor-pointer"
               onclick="document.getElementById('{{ tab }}-fl-points-{{ submission.id }}-{{ squad_player.player.id }}').showModal()">
         {{ breakdown.total|floatformat:1 }} FP
       </button>
+
+      <dialog id="{{ tab }}-fl-points-{{ submission.id }}-{{ squad_player.player.id }}" class="tw:modal">
+        <div class="tw:modal-box">
+          <h3 class="tw:text-lg tw:font-bold">{{ squad_player.player.nickname }} — {{ breakdown.total|floatformat:1 }} FP</h3>
+          {% if breakdown.multipliers.captain or breakdown.multipliers.bench %}
+            <p class="tw:text-sm tw:text-base-content/70 tw:mt-1">
+              Множитель: ×{{ breakdown.multipliers.multiplier|floatformat:1 }}
+              {% if breakdown.multipliers.captain %}(Капитан){% endif %}
+              {% if breakdown.multipliers.bench %}(Скамейка){% endif %}
+            </p>
+          {% endif %}
+          <div class="tw:mt-4">
+            <ul class="tw:flex tw:flex-col tw:gap-3 tw:text-sm">
+              {% for item in breakdown.items %}
+                <li class="tw:flex tw:justify-between tw:rounded-box tw:border tw:p-3">
+                  <div class="tw:flex tw:items-center tw:gap-2">
+                    <span class="tw:font-semibold">{{ item.name }}</span>
+                    <span>{{ item.value }}</span>
+                  </div>
+                  <span class="tw:badge tw:badge-soft tw:font-semibold">{{ item.points|floatformat:1 }} FP</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="tw:modal-action">
+            <form method="dialog">
+              <button class="tw:btn">Закрыть</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" class="tw:modal-backdrop">
+          <button />
+        </form>
+      </dialog>
     {% endif %}
   </div>
 </div>
-
-{% if not is_open and not tour|is_tour_not_open_yet %}
-  {% player_points_breakdown squad_player role as breakdown %}
-  <dialog id="{{ tab }}-fl-points-{{ submission.id }}-{{ squad_player.player.id }}" class="tw:modal">
-    <div class="tw:modal-box">
-      <h3 class="tw:text-lg tw:font-bold">{{ squad_player.player.nickname }} — {{ breakdown.total|floatformat:1 }} FP</h3>
-      {% if breakdown.multipliers.captain or breakdown.multipliers.bench %}
-        <p class="tw:text-sm tw:text-base-content/70 tw:mt-1">
-          Множитель: ×{{ breakdown.multipliers.multiplier|floatformat:1 }}
-          {% if breakdown.multipliers.captain %}(Капитан){% endif %}
-          {% if breakdown.multipliers.bench %}(Скамейка){% endif %}
-        </p>
-      {% endif %}
-      <div class="tw:mt-4">
-        <ul class="tw:flex tw:flex-col tw:gap-3 tw:text-sm">
-          {% for item in breakdown.items %}
-            <li class="tw:flex tw:justify-between tw:rounded-box tw:border tw:p-3">
-              <div class="tw:flex tw:items-center tw:gap-2">
-                <span class="tw:font-semibold">{{ item.name }}</span>
-                <span>{{ item.value }}</span>
-              </div>
-              <span class="tw:badge tw:badge-soft tw:font-semibold">{{ item.points|floatformat:1 }} FP</span>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-      <div class="tw:modal-action">
-        <form method="dialog">
-          <button class="tw:btn">Закрыть</button>
-        </form>
-      </div>
-    </div>
-    <form method="dialog" class="tw:modal-backdrop">
-      <button />
-    </form>
-  </dialog>
-{% endif %}

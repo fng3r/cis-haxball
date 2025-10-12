@@ -55,8 +55,8 @@
                       <div class="tw:space-y-2">
                         <div class="tw:font-medium tw:text-primary">Основной состав</div>
                         <div class="tw:space-y-1">
-                          {% for squad_player in submission.main_squad.all|sort_squad_players %}
-                            {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='main' tab='all' %}
+                          {% for squad_player in submission|main_squad_players %}
+                            {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player submission=submission tab='all' %}
                           {% endfor %}
                         </div>
                       </div>
@@ -64,8 +64,8 @@
                       <div class="tw:space-y-2">
                         <div class="tw:font-medium tw:text-secondary">Скамейка</div>
                         <div class="tw:space-y-1">
-                          {% for squad_player in submission.bench_players.all|sort_squad_players %}
-                            {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player role='bench' tab='all' %}
+                          {% for squad_player in submission|bench_players %}
+                            {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player submission=submission tab='all' %}
                           {% endfor %}
                         </div>
                       </div>

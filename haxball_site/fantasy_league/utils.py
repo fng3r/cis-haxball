@@ -1,7 +1,8 @@
 from datetime import time
+from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.db.models import Count, F, Q
+from django.db.models import Count, F
 from django.utils import timezone
 
 from tournament.models import (
@@ -16,7 +17,11 @@ from tournament.models import (
 )
 
 from .models import FantasyTournament, PlayerCost, SquadSubmission
-from .points_service import calculate_submission_total_points, calculate_total_points, calculate_user_total_points
+from .points_service import (
+    calculate_submission_penalty_points,
+    calculate_submission_total_points,
+    calculate_total_points,
+)
 
 
 def is_tour_open_for_fantasy(tour):
@@ -102,9 +107,32 @@ def get_tournament_standings(tournament):
         submissions_by_user[submission.user_id].append(submission)
 
     standings = []
+
     for user in users_with_submissions:
-        user_points = calculate_user_total_points(user, tournament, preloaded_data)
-        standings.append({'user': user, 'total_points': user_points['total_points']})
+        user_submissions = submissions_by_user.get(user.id, [])
+
+        total_points = 0
+        penalty_points = 0
+        tour_points = {}
+
+        for submission in user_submissions:
+            submission_total = calculate_submission_total_points(submission, preloaded_data)
+            submission_penalty = calculate_submission_penalty_points(submission)
+
+            total_points += submission_total
+            penalty_points += submission_penalty
+            tour_points[submission.tour_id] = submission_total
+
+        total_points -= penalty_points
+
+        standings.append(
+            {
+                'user': user,
+                'total_points': total_points,
+                'penalty_points': penalty_points,
+                'tour_points': tour_points,
+            }
+        )
 
     standings.sort(key=lambda x: x['total_points'], reverse=True)
 
@@ -118,7 +146,7 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
     players_ids = (
         PlayerMatchStatistics.objects.filter(league=tournament.league_id).values_list('player', flat=True).distinct()
     )
-    players = Player.objects.filter(id__in=players_ids)
+    players = Player.objects.filter(id__in=players_ids).prefetch_related('name__user_profile')
 
     all_submissions = SquadSubmission.objects.filter(tournament=tournament).prefetch_related(
         'squad_players__player', 'tour'
@@ -132,6 +160,13 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
         .annotate(matches_count=Count('match'))
     )
     matches_by_player_map = {match['player']: match['matches_count'] for match in matches_by_player}
+
+    pick_counts = (
+        SquadSubmission.objects.filter(tournament=tournament)
+        .values('squad_players__player')
+        .annotate(pick_count=Count('id', distinct=True))
+    )
+    pick_counts_map = {pick['squad_players__player']: pick['pick_count'] for pick in pick_counts}
 
     stats = []
 
@@ -152,9 +187,7 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
                 match_points = calculate_total_points(player, match, primary_position, match_goals, match_cs)
                 total_fp += match_points
 
-        total_picked = (
-            SquadSubmission.objects.filter(Q(squad_players__player=player), tournament=tournament).distinct().count()
-        )
+        total_picked = pick_counts_map.get(player.id, 0)
 
         pickrate = total_picked / max(total_submissions, 1)
         fp_per_match = total_fp / matches_played
@@ -377,3 +410,46 @@ def get_players_with_changed_positions(submission: SquadSubmission):
     }
 
     return result
+
+
+def calculate_tour_rewards(tour, tournament):
+    """Calculate rewards distribution for a specific tour in fantasy league"""
+    submissions = SquadSubmission.objects.filter(tour=tour, tournament=tournament).prefetch_related(
+        'squad_players__player', 'user__user_profile'
+    )
+
+    if not submissions.exists():
+        return {'total_participants': 0, 'total_prize_pool': 0, 'user_rewards': []}
+
+    total_participants = submissions.count()
+    total_prize_pool = total_participants * 10
+
+    preloaded_data = preload_fantasy_data(tournament)
+
+    user_points = []
+    for submission in submissions:
+        points = calculate_submission_total_points(submission, preloaded_data)
+        user_points.append({'user': submission.user, 'points': points})
+
+    total_points = sum(up['points'] for up in user_points if up['points'] >= 0)
+
+    user_rewards = []
+    for up in user_points:
+        if up['points'] < 0:
+            reward_amount = Decimal('0.00')
+        elif total_points > 0:
+            proportion = up['points'] / total_points
+            reward_amount = Decimal(str(total_prize_pool)) * Decimal(str(proportion))
+            reward_amount = reward_amount.quantize(Decimal('0.01'))
+        else:
+            reward_amount = Decimal('0.00')
+
+        user_rewards.append({'user': up['user'], 'points': up['points'], 'reward_amount': reward_amount})
+
+    user_rewards.sort(key=lambda x: x['points'], reverse=True)
+
+    return {
+        'total_participants': total_participants,
+        'total_prize_pool': total_prize_pool,
+        'user_rewards': user_rewards,
+    }

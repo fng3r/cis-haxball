@@ -12,8 +12,9 @@ from tournament.models import Player, TourNumber
 
 from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
 from .models import FantasyTournament, SquadPlayer, SquadSubmission
-from .points_service import calculate_submission_total_points, calculate_user_total_points
+from .points_service import calculate_submission_total_points
 from .utils import (
+    calculate_tour_rewards,
     get_blocking_tours,
     get_league_budget_limit,
     get_player_fantasy_stats,
@@ -111,7 +112,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
 
         submissions = (
             SquadSubmission.objects.filter(user=request.user, tournament=selected_tournament)
-            .prefetch_related('squad_players__player', 'tour')
+            .prefetch_related('squad_players__player__team', 'tour')
             .select_related('tour')
         )
 
@@ -124,15 +125,17 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
             can_submit = len(blocking_tours) == 0
 
             if submission:
-                primary_players = list(submission.main_squad.all())
-                secondary_players = list(submission.bench_players.all())
+                main_squad_players = [
+                    player for player in submission.squad_players.all() if player.is_main_squad_player
+                ]
+                bench_players = [player for player in submission.squad_players.all() if player.is_bench_player]
                 unavailable_players = (
                     get_unavailable_players_in_submission(submission) if is_tour_open_for_fantasy(tour) else []
                 )
                 user_squads[tour.id] = {
                     'submission': submission,
-                    'primary_players': primary_players,
-                    'secondary_players': secondary_players,
+                    'primary_players': main_squad_players,
+                    'secondary_players': bench_players,
                     'can_submit': can_submit,
                     'blocking_tours': blocking_tours,
                     'unavailable_players': unavailable_players,
@@ -201,7 +204,7 @@ def view_squads_tab(request):
 
         submissions = (
             SquadSubmission.objects.filter(user=selected_user, tournament=selected_tournament)
-            .prefetch_related('squad_players__player', 'tour')
+            .prefetch_related('squad_players__player__team', 'tour')
             .select_related('tour')
         )
 
@@ -252,7 +255,7 @@ def top_squads_tab(request):
         else:
             submissions = (
                 SquadSubmission.objects.filter(tournament=selected_tournament, tour=tour)
-                .prefetch_related('squad_players__player')
+                .prefetch_related('squad_players__player__team')
                 .select_related('tour', 'user', 'user__user_profile')
             )
             top_submissions = sorted(
@@ -278,46 +281,13 @@ def standings_tab(request):
     selected_tournament, tournament_form = resolve_selected_tournament(request)
 
     standings = []
-    tour_points = {}
-    penalty_points = {}
-
     if selected_tournament:
         standings = get_tournament_standings(selected_tournament)
-
-        tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
-
-        preloaded_data = preload_fantasy_data(selected_tournament)
-        all_submissions = (
-            SquadSubmission.objects.filter(tournament=selected_tournament)
-            .prefetch_related('squad_players__player')
-            .select_related('user', 'tour')
-        )
-
-        submissions_lookup = {}
-        for submission in all_submissions:
-            key = (submission.user_id, submission.tour_id)
-            submissions_lookup[key] = submission
-
-        for standing in standings:
-            user = standing['user']
-            tour_points[user.id] = {}
-
-            user_points = calculate_user_total_points(user, selected_tournament, preloaded_data)
-            penalty_points[user.id] = user_points['penalty_points']
-
-            for tour in tours:
-                submission = submissions_lookup.get((user.id, tour.id))
-                if submission:
-                    tour_points[user.id][tour.id] = calculate_submission_total_points(submission, preloaded_data)
-                else:
-                    tour_points[user.id][tour.id] = None
 
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'standings': standings,
-        'tour_points': tour_points,
-        'penalty_points': penalty_points,
     }
 
     return render(request, 'fantasy_league/standings_tab.html', context)
@@ -352,7 +322,7 @@ def tour_detail(request, tour_id):
 
     submission = (
         SquadSubmission.objects.filter(user=request.user, tournament=tournament, tour=tour)
-        .prefetch_related('squad_players__player')
+        .prefetch_related('squad_players__player__team')
         .first()
     )
 
@@ -386,14 +356,12 @@ def edit_squad(request, tour_id):
     prev_submission = (
         SquadSubmission.objects.filter(user=request.user, tournament__league=tour.league, tour__number__lt=tour.number)
         .order_by('-tour__number')
-        .prefetch_related('squad_players__player')
+        .prefetch_related('squad_players__player__team')
     ).first()
     prev_player_ids = []
     players_with_changed_positions = {}
     if prev_submission:
-        prev_player_ids = [sp.player_id for sp in prev_submission.main_squad.all()] + [
-            sp.player_id for sp in prev_submission.bench_players.all()
-        ]
+        prev_player_ids = [sp.player_id for sp in prev_submission.squad_players.all()]
         players_with_changed_positions = get_players_with_changed_positions(prev_submission)
 
     submission = SquadSubmission.objects.filter(
@@ -520,7 +488,11 @@ def edit_squad(request, tour_id):
 
         actual_submission = submission or prev_submission
         if actual_submission:
-            primary_squad_players = list(actual_submission.main_squad.select_related('player'))
+            primary_squad_players = [
+                player
+                for player in actual_submission.squad_players.select_related('player')
+                if player.is_main_squad_player
+            ]
             if len(primary_squad_players) >= 4:
                 gk_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.GK]
                 dm_players = [sp for sp in primary_squad_players if sp.position == SquadPlayer.Position.DM]
@@ -535,7 +507,9 @@ def edit_squad(request, tour_id):
                 if len(st_players) >= 2:
                     initial_data['main_squad_st2'] = st_players[1].player
 
-            bench_squad_players = list(actual_submission.bench_players.select_related('player'))
+            bench_squad_players = [
+                player for player in actual_submission.squad_players.select_related('player') if player.is_bench_player
+            ]
             initial_data['bench_gk'] = next(
                 (sp.player for sp in bench_squad_players if sp.position == SquadPlayer.Position.GK), None
             )
@@ -563,3 +537,40 @@ def edit_squad(request, tour_id):
     }
 
     return render(request, 'fantasy_league/edit_squad.html', context)
+
+
+def rewards_tab(request):
+    """Tab for displaying rewards distribution"""
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
+
+    selected_tour = None
+    tour_rewards_data = None
+
+    if selected_tournament:
+        tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('-number')
+
+        tour_id = request.GET.get('tour')
+        if tour_id:
+            selected_tour = tours.filter(pk=tour_id).first()
+        if not selected_tour:
+            activites_current_tour = settings.ACTIVITIES_CURRENT_TOUR
+            selected_tour = tours.filter(number=activites_current_tour - 1).first()
+
+        tour_form = TourFilterForm(
+            initial={'tour': selected_tour.pk if selected_tour else None},
+            league=selected_tournament.league,
+        )
+
+        if selected_tour:
+            rewards_data = calculate_tour_rewards(selected_tour, selected_tournament)
+            tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
+
+    context = {
+        'tournament_form': tournament_form,
+        'selected_tournament': selected_tournament,
+        'tour_form': tour_form,
+        'selected_tour': selected_tour,
+        'tour_rewards_data': tour_rewards_data,
+    }
+
+    return render(request, 'fantasy_league/rewards_tab.html', context)

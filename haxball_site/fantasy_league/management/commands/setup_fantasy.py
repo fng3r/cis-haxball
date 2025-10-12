@@ -208,7 +208,9 @@ class Command(BaseCommand):
                             )
 
                 if not submission.captain_player_id:
-                    main_squad_players = list(submission.main_squad.all())
+                    main_squad_players = [
+                        player for player in submission.squad_players.all() if player.is_main_squad_player
+                    ]
                     random.shuffle(main_squad_players)
                     submission.captain_player = main_squad_players[0].player
                     submission.save()
@@ -347,8 +349,8 @@ class Command(BaseCommand):
         )
 
     def _build_team_state(self, submission):
-        current_main = list(submission.main_squad.all())
-        current_bench = list(submission.bench_players.all())
+        current_main = [player for player in submission.squad_players.all() if player.is_main_squad_player]
+        current_bench = [player for player in submission.squad_players.all() if player.is_bench_player]
 
         team_counts = {}
         for sp in current_main + current_bench:

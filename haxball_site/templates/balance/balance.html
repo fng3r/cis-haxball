@@ -1,0 +1,46 @@
+{% extends "core.html" %}
+
+{% load static %}
+{% load mathfilters %}
+{% load user_tags %}
+
+{% block title %}Баланс — CIS-HAXBALL{% endblock %}
+
+{% block main_content %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
+      <div class="tw:card-title tw:py-1">
+        <h3 class="tw:text-center">Мой баланс</h3>
+      </div>
+    </div>
+
+    <div class="tw:card-body tw:p-4">
+      <div class="tw:flex tw:items-center tw:justify-center tw:mb-4 tw:p-4 tw:bg-gradient-to-r tw:from-primary tw:to-secondary tw:rounded-lg tw:text-white">
+        <div class="tw:text-center">
+          <div class="tw:flex tw:items-center tw:justify-center tw:gap-1 tw:mb-2">
+            <img src="{% static 'img/cis-coin.png' %}" class="tw:size-10 tw:mt-1" alt="CIS Coin" />
+            <span class="tw:text-4xl tw:font-bold">{{ current_balance }} CC</span>
+          </div>
+          <p class="tw:text-base tw:opacity-90">Текущий баланс</p>
+        </div>
+      </div>
+
+      <div class="tw:space-y-3">
+        <div class="tw:flex tw:items-center tw:justify-between">
+          <h4 class="tw:text-lg tw:font-semibold tw:mb-0!">История операций</h4>
+        </div>
+
+        <div id="transactions-container" class="tw:flex tw:flex-col tw:gap-y-2">
+          {% if transactions|length > 0 %}
+            {% include 'balance/partials/transaction_list.html' with transactions=transactions %}
+          {% else %}
+            <div class="tw:text-center tw:py-8 tw:text-base-content/60">
+              <i class="fa fa-history tw:text-lg tw:mb-2"></i>
+              <p>История операций пока пуста</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

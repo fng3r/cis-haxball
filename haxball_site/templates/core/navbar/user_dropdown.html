@@ -1,0 +1,61 @@
+{% load static %}
+{% load mathfilters %}
+
+<div class="tw:dropdown tw:dropdown-end"
+     x-data="{ isInvisibilityEnabled: {{ user.user_profile.invisibility_enabled|yesno:'true,false' }} }">
+  <div tabindex="0"
+       role="button"
+       class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar"
+       :class="{ 'tw:avatar-offline': isInvisibilityEnabled }">
+    <div class="tw:w-[45px] tw:rounded-full">
+      <img src="{{ user.user_profile.avatar.url }}" />
+    </div>
+  </div>
+
+  <ul tabindex="0"
+      class="tw:menu tw:dropdown-content tw:min-w-30 tw:max-w-40 tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:p-2 tw:shadow">
+    <span class="tw:mb-1 tw:px-1 tw:w-full tw:line-clamp-2 tw:break-words tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">
+      {{ user.username }}
+    </span>
+    <div class="tw:px-1 tw:mb-1 tw:flex tw:items-center tw:gap-1">
+      <img src="{% static 'img/cis-coin.png' %}" class="tw:size-4" />
+      <a href="{% url 'balance:balance' %}" class="tw:link tw:link-hover tw:text-xs tw:text-base-content/80 tw:font-semibold">{{ user.balance.current_balance|intdiv:1 }} CC</a>
+    </div>
+    <li>
+      <a href="{{ user.user_profile.get_absolute_url }}">Профиль</a>
+    </li>
+    {% if user.is_superuser %}
+      <div class="tw:px-3 tw:flex tw:items-center tw:gap-2">
+        <span class="tw:text-base-content tw:py-1 tw:cursor-default">Невидимка</span>
+        <label class="tw:toggle tw:toggle-xs">
+          <input type="checkbox"
+                 name="is_enabled"
+                 x-model="isInvisibilityEnabled"
+                 hx-post="{% url 'core:toggle_invisibility' %}"
+                 hx-trigger="change"
+                 hx-swap="none"
+                 :hx-vals="JSON.stringify({is_enabled: isInvisibilityEnabled})" />
+          <svg aria-label="disabled"
+               xmlns="http://www.w3.org/2000/svg"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="4"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+          <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor">
+              <path d="M20 6 9 17l-5-5"></path>
+            </g>
+          </svg>
+        </label>
+      </div>
+    {% endif %}
+    <li>
+      <span class="tw:text-sm tw:mb-0!" onclick="logout_modal.showModal()">Выход</span>
+    </li>
+  </ul>
+</div>

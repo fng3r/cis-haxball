@@ -1,0 +1,57 @@
+{% load static %}
+{% load mathfilters %}
+{% load user_tags %}
+
+{% for transaction in transactions %}
+  <div class="transaction-item tw:card tw:bg-base-200 tw:shadow-sm">
+    <div class="tw:card-body tw:p-3">
+      <div class="tw:flex tw:items-center tw:justify-between">
+        <div class="tw:flex tw:items-center tw:gap-3">
+          <div class="tw:flex tw:items-center tw:justify-center tw:w-8 tw:h-8 tw:rounded-full tw:text-xs tw:font-bold {% if transaction.is_deposit or transaction.is_incoming_transfer %} tw:bg-success tw:text-success-content {% else %} tw:bg-error tw:text-error-content {% endif %}">
+            {% if transaction.is_deposit or transaction.is_incoming_transfer %}
+              +
+            {% else %}
+              -
+            {% endif %}
+          </div>
+          <div>
+            <div class="tw:font-medium tw:text-sm">{{ transaction.get_transaction_type_display }}</div>
+            <div class="tw:text-xs tw:text-base-content/70">{{ transaction.description }}</div>
+          </div>
+        </div>
+        <div class="tw:text-right">
+          <div class="tw:font-bold tw:text-sm {% if transaction.is_deposit or transaction.is_incoming_transfer %} tw:text-success {% else %} tw:text-error {% endif %}">
+            {% if transaction.is_deposit or transaction.is_incoming_transfer %}
+              +{{ transaction.amount }} CC
+            {% else %}
+              -{{ transaction.amount }} CC
+            {% endif %}
+          </div>
+          <div class="tw:text-xs tw:text-base-content/70">{{ transaction.created_at|date:"d.m.y H:i" }}</div>
+        </div>
+      </div>
+      {% if transaction.related_user %}
+        <div class="tw:mt-2 tw:text-xs tw:text-base-content/60">
+          {% if transaction.is_incoming_transfer %}
+            От: {{ transaction.related_user.username }}
+          {% else %}
+            Кому: {{ transaction.related_user.username }}
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+
+{% if has_more_transactions %}
+  <div id="load-more-btn" class="tw:text-center tw:pt-2">
+    <button class="tw:btn tw:btn-outline tw:btn-sm"
+            hx-get="{% url 'balance:transactions' %}?page={{ next_page }}"
+            hx-target="#load-more-btn"
+            hx-swap="outerHTML"
+            hx-trigger="click">
+      <i class="fa fa-plus"></i> Загрузить еще
+    </button>
+    <img class="htmx-indicator tw:ml-2 tw:w-4" src="{% static 'img/svg-loaders/bars.svg' %}">
+  </div>
+{% endif %}

@@ -1,4 +1,5 @@
 from datetime import time
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -85,3 +86,44 @@ def get_tournament_standings(tournament):
         standing['place'] = i + 1
 
     return standings
+
+
+def calculate_tour_rewards(tour, tournament):
+    """Calculate rewards distribution for a specific tour in predictions"""
+    submissions = PredictionSubmission.objects.filter(tour=tour, tournament=tournament).prefetch_related(
+        'predictions__match__result', 'user__user_profile'
+    )
+
+    if not submissions.exists():
+        return {'total_participants': 0, 'total_prize_pool': 0, 'user_rewards': []}
+
+    total_participants = submissions.count()
+    total_prize_pool = total_participants * 10
+
+    user_points = []
+    for submission in submissions:
+        points = submission.get_total_points()
+        user_points.append({'user': submission.user, 'points': points})
+
+    total_points = sum(up['points'] for up in user_points if up['points'] >= 0)
+
+    user_rewards = []
+    for up in user_points:
+        if up['points'] < 0:
+            reward_amount = Decimal('0.00')
+        elif total_points > 0:
+            proportion = up['points'] / total_points
+            reward_amount = Decimal(str(total_prize_pool)) * Decimal(str(proportion))
+            reward_amount = reward_amount.quantize(Decimal('0.01'))
+        else:
+            reward_amount = Decimal('0.00')
+
+        user_rewards.append({'user': up['user'], 'points': up['points'], 'reward_amount': reward_amount})
+
+    user_rewards.sort(key=lambda x: x['points'], reverse=True)
+
+    return {
+        'total_participants': total_participants,
+        'total_prize_pool': total_prize_pool,
+        'user_rewards': user_rewards,
+    }

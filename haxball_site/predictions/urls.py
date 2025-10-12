@@ -10,6 +10,7 @@ urlpatterns = [
     path('make-predictions/', views.make_predictions_tab, name='make_predictions_tab'),
     path('view-predictions/', views.view_predictions_tab, name='view_predictions_tab'),
     path('standings/', views.standings_tab, name='standings_tab'),
+    path('rewards/', views.rewards_tab, name='rewards_tab'),
     path('edit/<int:tour_id>/', views.edit_predictions, name='edit_predictions'),
     path('tour-card/<int:tour_id>/', views.tour_card, name='tour_card'),
     # Preseason predictions
