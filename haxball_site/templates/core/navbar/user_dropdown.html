@@ -19,7 +19,7 @@
     </span>
     <div class="tw:px-1 tw:mb-1 tw:flex tw:items-center tw:gap-1">
       <img src="{% static 'img/cis-coin.png' %}" class="tw:size-4" />
-      <span class="tw:pointer-events-none tw:text-xs tw:text-base-content/80">{{ user.balance.current_balance|intdiv:1 }} CC</span>
+      <a href="{% url 'balance:balance' %}" class="tw:link tw:link-hover tw:text-xs tw:text-base-content/80 tw:font-semibold">{{ user.balance.current_balance|intdiv:1 }} CC</a>
     </div>
     <li>
       <a href="{{ user.user_profile.get_absolute_url }}">Профиль</a>
