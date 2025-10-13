@@ -22,7 +22,7 @@
                   selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
                   previousPlayerIds: {{ previous_player_ids }},
                   availableBoosters: {{ form.available_boosters }},
-                  selectedBooster: '{{ form.used_booster.value|default:"null" }}',
+                  selectedBooster: {% if form.used_booster.value %}'{{ form.used_booster.value }}'{% else %}null{% endif %},
                   selected: {},
                   get unavailablePlayersCount() {
                   return Object.values(this.selected).filter(player => player?.isUnavailable).length;

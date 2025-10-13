@@ -110,14 +110,18 @@ class SquadSubmissionForm(forms.Form):
         self.available_boosters = []
 
         if user and tour:
-            used_booster_types = SquadSubmission.objects.filter(
-                user=user,
-                tournament=tournament.fantasy_tournament,
-                tour__number__lt=tour.number,
-                used_booster__isnull=False,
-            ).values_list('used_booster', flat=True)
+            total_tours = tournament.tours.count()
+            if tour.number != 1 and tour.number != (total_tours / 2 + 1):
+                used_booster_types = SquadSubmission.objects.filter(
+                    user=user,
+                    tournament=tournament.fantasy_tournament,
+                    tour__number__lt=tour.number,
+                    used_booster__isnull=False,
+                ).values_list('used_booster', flat=True)
 
-            self.available_boosters = [booster for booster in BoosterType.values if booster not in used_booster_types]
+                self.available_boosters = [
+                    booster for booster in BoosterType.values if booster not in used_booster_types
+                ]
 
         team_filter = {'team__in': tournament.teams.all()}
 
@@ -288,6 +292,10 @@ class SquadSubmissionForm(forms.Form):
         booster = self.cleaned_data.get('used_booster')
         if not booster or not self.user or not self.tour:
             return
+
+        total_tours = self.tournament.tours.count()
+        if self.tour.number == 1 or self.tour.number == (total_tours / 2 + 1):
+            raise forms.ValidationError('Бустеры не могут быть использованы в текущем туре')
 
         previous_usage = SquadSubmission.objects.filter(
             user=self.user,
