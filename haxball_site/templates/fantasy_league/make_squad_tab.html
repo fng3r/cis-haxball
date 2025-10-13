@@ -15,12 +15,15 @@
       </div>
     {% else %}
       <div class="tw:alert tw:alert-info"
-           x-data="{hide: JSON.parse(localStorage.getItem('fantasy.hideRulesUpdatesAlert')) || false}"
+           x-data="{hide: JSON.parse(localStorage.getItem('fantasy.hideBoostersAlert')) || false}"
            x-show="!hide"
            x-cloak>
         <i class="fa fa-info-circle"></i>
-        <span>Правила были обновлены. Текущие и последующие обновления можно найти во вкладке с правилами в секции "История изменений"</span>
-        <button class="tw:btn" @click="localStorage.setItem('fantasy.hideRulesUpdatesAlert', true); hide = true;">Больше не показывать</button>
+        <span class="">
+          При выборе состава на тур теперь можно использовать бустеры.
+          Подробную информацию о бустерах и их применении можно найти в соответствующем разделе правил
+        </span>
+        <button class="tw:btn" @click="localStorage.setItem('fantasy.hideBoostersAlert', true); hide = true;">Больше не показывать</button>
       </div>
 
       <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }" class="tw:flex tw:flex-col tw:gap-2">
