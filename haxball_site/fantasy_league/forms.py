@@ -3,7 +3,7 @@ from django.db.models import Case, IntegerField, OuterRef, Subquery, Value, When
 
 from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
 
-from .models import FantasyTournament
+from .models import BoosterType, FantasyTournament, SquadSubmission
 from .utils import get_available_players_in_league, get_league_budget_limit, get_players_costs
 
 
@@ -90,13 +90,34 @@ class SquadSubmissionForm(forms.Form):
         required=False,
     )
 
-    def __init__(self, *args, tournament: League, previous_player_ids: list[int] | None = None, **kwargs):
+    used_booster = forms.ChoiceField(
+        choices=BoosterType.choices,
+        required=False,
+        label='Бустер',
+    )
+
+    def __init__(
+        self, *args, tournament: League, previous_player_ids: list[int] | None = None, user=None, tour=None, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.tournament = tournament
         self.previous_player_ids = previous_player_ids or []
+        self.user = user
+        self.tour = tour
         latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
         self.player_costs = get_players_costs(self.tournament)
         self.available_player_ids = get_available_players_in_league(self.tournament)
+        self.available_boosters = []
+
+        if user and tour:
+            used_booster_types = SquadSubmission.objects.filter(
+                user=user,
+                tournament=tournament.fantasy_tournament,
+                tour__number__lt=tour.number,
+                used_booster__isnull=False,
+            ).values_list('used_booster', flat=True)
+
+            self.available_boosters = [booster for booster in BoosterType.values if booster not in used_booster_types]
 
         team_filter = {'team__in': tournament.teams.all()}
 
@@ -175,6 +196,7 @@ class SquadSubmissionForm(forms.Form):
         self.validate_transfers_limit(all_players)
         self.validate_budget_limit(all_players)
         self.validate_players_availability(all_players)
+        self.validate_booster_usage()
 
         return cleaned_data
 
@@ -208,6 +230,11 @@ class SquadSubmissionForm(forms.Form):
 
     def validate_budget_limit(self, players):
         """Ensure total cost of players does not exceed budget limit"""
+        booster = self.cleaned_data.get('used_booster')
+
+        if booster == BoosterType.LIMITLESS:
+            return
+
         total_cost = sum(self.player_costs[p.id] for p in players if p)
         budget_limit = get_league_budget_limit(self.tournament)
         if total_cost > budget_limit:
@@ -227,6 +254,11 @@ class SquadSubmissionForm(forms.Form):
 
     def validate_transfers_limit(self, players):
         """Ensure no more than 4 transfers in (2 free + 2 penalty)"""
+        booster = self.cleaned_data.get('used_booster')
+
+        if booster in [BoosterType.JOKER, BoosterType.LIMITLESS]:
+            return
+
         if not self.previous_player_ids:
             return
 
@@ -249,4 +281,24 @@ class SquadSubmissionForm(forms.Form):
             players_list = ', '.join(unavailable_players)
             raise forms.ValidationError(
                 f'Следующие игроки больше не доступны в лиге и должны быть заменены: {players_list}'
+            )
+
+    def validate_booster_usage(self):
+        """Validate that booster hasn't been used before in this tournament"""
+        booster = self.cleaned_data.get('used_booster')
+        if not booster or not self.user or not self.tour:
+            return
+
+        previous_usage = SquadSubmission.objects.filter(
+            user=self.user,
+            tournament=self.tournament.fantasy_tournament,
+            used_booster=booster,
+            tour__number__lt=self.tour.number,
+        ).exists()
+
+        if previous_usage:
+            booster_name = dict(BoosterType.choices)[booster]
+            raise forms.ValidationError(
+                f'Бустер "{booster_name}" уже был использован в этом турнире. '
+                f'Каждый тип бустера можно использовать только один раз за турнир.'
             )

@@ -46,7 +46,7 @@ class SquadSubmissionAdmin(unfold_admin.ModelAdmin):
 
     fieldsets = (
         ('Основная информация', {'fields': ('user', 'tour', 'tournament', 'created', 'updated')}),
-        ('Состав', {'fields': ('captain_player',)}),
+        ('Информация о составе', {'fields': ('captain_player', 'used_booster', 'penalized_transfers')}),
     )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

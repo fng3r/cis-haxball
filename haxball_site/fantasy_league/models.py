@@ -58,6 +58,11 @@ class SquadPlayer(models.Model):
         return f'{self.player.nickname} ({self.get_position_display()})'
 
 
+class BoosterType(models.TextChoices):
+    JOKER = 'joker', 'Джокер'
+    LIMITLESS = 'limitless', 'Безлимитный'
+
+
 class SquadSubmission(models.Model):
     """User's squad submission for a specific tour"""
 
@@ -86,6 +91,15 @@ class SquadSubmission(models.Model):
         verbose_name='Штрафуемые трансферы',
         default=0,
         help_text='Количество использованных трансферов сверх лимита доступных бесплатных трансферов',
+    )
+
+    used_booster = models.CharField(
+        verbose_name='Использованный бустер',
+        max_length=10,
+        choices=BoosterType.choices,
+        null=True,
+        blank=True,
+        help_text='Бустер, использованный при выборе состава',
     )
 
     class Meta:
