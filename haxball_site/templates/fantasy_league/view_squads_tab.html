@@ -48,7 +48,6 @@
                   {% endif %}
                 </div>
 
-                {% comment %} {% if tour|is_tour_closed %} {% endcomment %}
                 {% if submission %}
                   <div class="tw:mt-2">
                     <div class="tw:grid tw:grid-cols-2 tw:gap-4 tw:text-base">
@@ -68,6 +67,8 @@
                             {% include 'fantasy_league/partials/squad_player_row.html' with squad_player=squad_player submission=submission tab='all' %}
                           {% endfor %}
                         </div>
+
+                        {% include 'fantasy_league/partials/booster.html' %}
                       </div>
                     </div>
                   </div>
@@ -76,12 +77,6 @@
                     <span>Состав не выбран</span>
                   </div>
                 {% endif %}
-                {% comment %} {% else %}
-                  <div class="tw:p-8 tw:text-base tw:text-base-content/70 tw:text-center">
-                    <span>Составы будут доступны после начала тура</span>
-                  </div>
-                {% endif %} {% endcomment %}
-
               </div>
             </div>
           {% endwith %}
