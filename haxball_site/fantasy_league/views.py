@@ -11,7 +11,7 @@ from haxball_site import settings
 from tournament.models import Player, TourNumber
 
 from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
-from .models import FantasyTournament, SquadPlayer, SquadSubmission
+from .models import BoosterType, FantasyTournament, SquadPlayer, SquadSubmission
 from .points_service import calculate_submission_total_points
 from .utils import (
     calculate_tour_rewards,
@@ -358,11 +358,22 @@ def edit_squad(request, tour_id):
         .order_by('-tour__number')
         .prefetch_related('squad_players__player__team')
     ).first()
+
     prev_player_ids = []
     players_with_changed_positions = {}
+
     if prev_submission:
-        prev_player_ids = [sp.player_id for sp in prev_submission.squad_players.all()]
-        players_with_changed_positions = get_players_with_changed_positions(prev_submission)
+        base_submission = prev_submission
+        if prev_submission.used_booster == BoosterType.LIMITLESS:
+            base_submission = (
+                SquadSubmission.objects.filter(
+                    user=request.user, tournament__league=tour.league, tour__number__lt=tour.number - 1
+                )
+                .prefetch_related('squad_players__player__team')
+                .first()
+            )
+        prev_player_ids = [sp.player_id for sp in base_submission.squad_players.all()]
+        players_with_changed_positions = get_players_with_changed_positions(base_submission)
 
     submission = SquadSubmission.objects.filter(
         user=request.user,
@@ -374,7 +385,9 @@ def edit_squad(request, tour_id):
     unavailable_players = get_unavailable_players_in_submission(submission) if submission else []
 
     if request.method == 'POST':
-        form = SquadSubmissionForm(request.POST, tournament=tour.league, previous_player_ids=prev_player_ids)
+        form = SquadSubmissionForm(
+            request.POST, tournament=tour.league, previous_player_ids=prev_player_ids, user=request.user, tour=tour
+        )
         if form.is_valid():
             with transaction.atomic():
                 if not submission:
@@ -425,7 +438,14 @@ def edit_squad(request, tour_id):
                 selected_ids = {p.id for p in form.get_main_squad_players() + form.get_bench_players() if p}
                 prev_ids = set(prev_player_ids)
                 transfers_in = len(selected_ids - prev_ids) if prev_ids else 0
-                penalized_transfers = max(0, transfers_in - 2)
+
+                booster = form.cleaned_data.get('used_booster')
+                if booster in [BoosterType.JOKER, BoosterType.LIMITLESS]:
+                    penalized_transfers = 0
+                else:
+                    penalized_transfers = max(0, transfers_in - 2)
+                if booster:
+                    submission.used_booster = booster
                 submission.penalized_transfers = penalized_transfers
 
                 submission.save()
@@ -486,7 +506,7 @@ def edit_squad(request, tour_id):
             user=request.user, tour=tour, tournament__league=tour.league
         ).first()
 
-        actual_submission = submission or prev_submission
+        actual_submission = submission or base_submission
         if actual_submission:
             primary_squad_players = [
                 player
@@ -524,7 +544,16 @@ def edit_squad(request, tour_id):
                 actual_submission.captain_player.id if actual_submission.captain_player else None
             )
 
-        form = SquadSubmissionForm(initial=initial_data, tournament=tour.league, previous_player_ids=prev_player_ids)
+            if submission and submission.used_booster:
+                initial_data['used_booster'] = submission.used_booster
+
+        form = SquadSubmissionForm(
+            initial=initial_data,
+            tournament=tour.league,
+            previous_player_ids=prev_player_ids,
+            user=request.user,
+            tour=tour,
+        )
 
     context = {
         'form': form,

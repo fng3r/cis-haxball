@@ -1,0 +1,12 @@
+{% load static %}
+
+{% if submission.used_booster %}
+  <div class="tw:space-y-1">
+    <div class="tw:font-medium tw:text-base-content">Бустер</div>
+    {% if submission.used_booster == 'joker' %}
+      <img src="{% static "img/ico/fantasy/joker.svg" %}" alt="Джокер" title="Джокер" class="tw:size-7">
+    {% elif submission.used_booster == 'limitless' %}
+      <img src="{% static "img/ico/fantasy/limitless.svg" %}" alt="Безлимит" title="Безлимит" class="tw:size-7">
+    {% endif %}
+  </div>
+{% endif %}

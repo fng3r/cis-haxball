@@ -1,5 +1,6 @@
 {% load fantasy_league_extras %}
 {% load widget_tweaks %}
+{% load static %}
 {% load utils %}
 
 <div id="tour-{{ tour.id }}-content"
@@ -15,11 +16,14 @@
           hx-swap="outerHTML"
       {# djlint:off #}
           x-data="{
-                  budgetLimit: parseCost('{{ budget_limit }}'),
+                  initialBudgetLimit: parseCost('{{ budget_limit }}'),
+                  get budgetLimit() { return this.selectedBooster === 'limitless' ? Infinity : this.initialBudgetLimit; },
                   budgetUsed: 0,
                   teamSize: 6,
                   selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
                   previousPlayerIds: {{ previous_player_ids }},
+                  availableBoosters: {{ form.available_boosters }},
+                  selectedBooster: {% if form.used_booster.value %}'{{ form.used_booster.value }}'{% else %}null{% endif %},
                   selected: {},
                   get unavailablePlayersCount() {
                   return Object.values(this.selected).filter(player => player?.isUnavailable).length;
@@ -33,8 +37,10 @@
                   hasPlayersWithChangedPositions() {
                   return Object.values(this.selected).some(player => player?.isPositionChanged);
                   },
-                  freeTransfersLimit: 2,
-                  transfersLimit: 4,
+                  initialFreeTransfersLimit: 2,
+                  get freeTransfersLimit() { return this.selectedBooster === 'limitless' || this.selectedBooster === 'joker' ? Infinity : this.initialFreeTransfersLimit; },
+                  initialTransfersLimit: 4,
+                  get transfersLimit() { return this.selectedBooster === 'limitless' || this.selectedBooster === 'joker' ? Infinity : this.initialTransfersLimit; },
                   freeTransfersUsed: 0,
                   transfersUsed: 0,
                   transfersPenaltyPoints: 0,
@@ -114,30 +120,82 @@
                   updateTransfers();
                  ">
       {% csrf_token %}
-      <input type="hidden" name="captain_player_id" :value="selectedCaptain || ''" />
+      <input type="hidden" name="captain_player_id" :value="selectedCaptain" />
+      <input type="hidden" name="used_booster" :value="selectedBooster" />
 
-      <div class="tw:flex tw:gap-2 tw:items-center">
-        <div class="tw:badge" :class="selectedPlayersCount === teamSize ? 'tw:badge-success' : 'tw:badge-error'">
-          <span x-text="`Команда: ${selectedPlayersCount}/${teamSize}`"></span>
-        </div>
-        <div class="tw:badge" :class="budgetUsed > budgetLimit ? 'tw:badge-error' : 'tw:badge-success'">
-          <span x-text="`Бюджет: ${fmt(budgetUsed)}M/${budgetLimit}M`"></span>
-        </div>
-        <div class="tw:badge"
-             x-show="previousPlayerIds.length > 0"
-             :class="transfersUsed > transfersLimit ? 'tw:badge-error' : (transfersUsed > freeTransfersLimit ? 'tw:badge-warning' : 'tw:badge-success')">
-          <span x-text="`Трансферы: ${transfersUsed}/${freeTransfersLimit} ${transfersUsed > freeTransfersLimit  && transfersUsed <= transfersLimit ? `(${transfersPenaltyPoints} FP)` : ''}`"></span>
-        </div>
-        <template x-if="hasUnavailablePlayers() || hasPlayersWithChangedPositions()">
-          <div class="tw:badge tw:badge-error">
-            <span x-text="`Недоступные игроки: ${unavailablePlayersCount + playersWithChangedPositionsCount}`"></span>
+      <div class="tw:flex tw:flex-col tw:gap-2">
+        <div class="tw:flex tw:gap-2 tw:items-center">
+          <div class="tw:badge" :class="selectedPlayersCount === teamSize ? 'tw:badge-success' : 'tw:badge-error'">
+            <span x-text="`Команда: ${selectedPlayersCount}/${teamSize}`"></span>
           </div>
-        </template>
-        <template x-if="selectedCaptain === null">
-          <div class="tw:badge tw:badge-error">
-            <span x-text="`Капитан не выбран`"></span>
+          <div class="tw:badge" :class="budgetUsed > budgetLimit ? 'tw:badge-error' : 'tw:badge-success'">
+            <span x-text="`Бюджет: ${fmt(budgetUsed)}M/${budgetLimit === Infinity ? '∞' : `${budgetLimit}M`}`"></span>
           </div>
-        </template>
+          <div class="tw:badge"
+               x-show="previousPlayerIds.length > 0"
+               :class="transfersUsed > transfersLimit ? 'tw:badge-error' : (transfersUsed > freeTransfersLimit ? 'tw:badge-warning' : 'tw:badge-success')">
+            <span x-text="`Трансферы: ${transfersUsed}/${freeTransfersLimit === Infinity ? '∞' : freeTransfersLimit} ${transfersUsed > freeTransfersLimit  && transfersUsed <= transfersLimit ? `(${transfersPenaltyPoints} FP)` : ''}`"></span>
+          </div>
+          <template x-if="hasUnavailablePlayers() || hasPlayersWithChangedPositions()">
+            <div class="tw:badge tw:badge-error">
+              <span x-text="`Недоступные игроки: ${unavailablePlayersCount + playersWithChangedPositionsCount}`"></span>
+            </div>
+          </template>
+          <template x-if="selectedCaptain === null">
+            <div class="tw:badge tw:badge-error">
+              <span x-text="`Капитан не выбран`"></span>
+            </div>
+          </template>
+        </div>
+
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <div class="tw:text-base tw:font-medium tw:text-base-content">Бустеры</div>
+          <div class="tw:flex tw:gap-2">
+            <button type="button"
+                    title="Джокер"
+                    class="tw:relative tw:btn tw:btn-lg tw:btn-square tw:disabled:cursor-not-allowed!"
+                    x-data="{booster: 'joker'}"
+                    :class="{'tw:btn-primary': selectedBooster === booster, 'tw:btn-ghost': selectedBooster !== booster, 'tw:opacity-60': !availableBoosters.includes(booster)}"
+                    :disabled="!availableBoosters.includes(booster)"
+                    @click="selectedBooster = booster == selectedBooster ? null : booster">
+              <img src="{% static "img/ico/fantasy/joker.svg" %}" alt="Джокер" class="tw:size-9">
+
+              <span x-show="selectedBooster !== booster"
+                    class="tw:absolute tw:-top-1 tw:-right-1 tw:badge tw:badge-xs tw:badge-neutral"
+                    x-text="`${availableBoosters.includes(booster) ? 1 : 0}`"></span>
+              <div x-show="selectedBooster === booster"
+                   x-cloak
+                   class="tw:absolute tw:-top-1 tw:-right-1 tw:bg-green-500 tw:text-white tw:rounded-full tw:w-4 tw:h-4 tw:flex tw:items-center tw:justify-center tw:text-xs tw:font-bold">
+                <svg class="tw:w-3 tw:h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd">
+                  </path>
+                </svg>
+              </div>
+            </button>
+
+            <button type="button"
+                    title="Безлимит"
+                    class="tw:relative tw:btn tw:btn-lg tw:btn-square"
+                    x-data="{booster: 'limitless'}"
+                    :class="{'tw:btn-primary': selectedBooster === booster, 'tw:btn-ghost': selectedBooster !== booster, 'tw:opacity-60': !availableBoosters.includes(booster)}"
+                    :disabled="!availableBoosters.includes(booster)"
+                    @click="selectedBooster = booster == selectedBooster ? null : booster">
+              <img src="{% static "img/ico/fantasy/limitless.svg" %}" alt="Безлимит" class="tw:size-9">
+
+              <span x-show="selectedBooster !== booster"
+                    class="tw:absolute tw:-top-1 tw:-right-1 tw:badge tw:badge-xs tw:badge-neutral"
+                    x-text="`${availableBoosters.includes(booster) ? 1 : 0}`"></span>
+              <div x-show="selectedBooster === booster"
+                   x-cloak
+                   class="tw:absolute tw:-top-1 tw:-right-1 tw:bg-green-500 tw:text-white tw:rounded-full tw:w-4 tw:h-4 tw:flex tw:items-center tw:justify-center tw:text-xs tw:font-bold">
+                <svg class="tw:size-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd">
+                  </path>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="tw:grid tw:grid-cols-[1fr_auto_1fr] tw:gap-x-4 tw:gap-y-2">

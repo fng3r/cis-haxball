@@ -1,3 +1,5 @@
+{% load static %}
+
 <div class="tw:p-3 tw:prose tw:max-w-none">
   <h4>Как это работает</h4>
   <p>
@@ -66,6 +68,37 @@
       </li>
     </ul>
   </p>
+
+  <h5 id="boosters">Бустеры</h5>
+  <p>
+    При выборе состава участники имеют возможность использовать бустеры, которые позволяют избежать некоторых ограничений и открывают дополнительные возможности.
+    Каждый из бустеров может быть использован только один раз за турнир, при этом одновременно может быть применен только один бустер.
+    Бустеры можно использовать в любом из туров за исключением первого тура каждого круга.
+  </p>
+
+  <h6 class="tw:mb-3!">Виды бустеров</h6>
+  <div class="tw:pl-1">
+    <span class="tw:inline-flex tw:gap-1 tw:text-base tw:font-semibold">
+      <img src="{% static "img/ico/fantasy/joker.svg" %}" alt="Джокер" class="tw:my-0! tw:size-6">
+      Джокер
+    </span>
+    <ul class="tw:mt-0 tw:list-disc">
+      <li>Неограниченное количество трансферов в текущем туре</li>
+      <li>В следующем туре состав сохраняется (точно так же, как и без использования бустера)</li>
+    </ul>
+
+    <span class="tw:inline-flex tw:gap-1 tw:text-base tw:font-semibold">
+      <img src="{% static "img/ico/fantasy/limitless.svg" %}" alt="Безлимит" class="tw:my-0! tw:size-6">
+      Безлимит
+    </span>
+    <ul class="tw:mt-0 tw:list-disc">
+      <li>Неограниченное количество трансферов в текущем туре</li>
+      <li>Неограниченный бюджет в текущем туре</li>
+      <li>
+        В следующем туре состав сбрасывается до состояния перед использованием бустера (т.е если бустер был применен в туре N, то состав в туре N+1 будет основываться на составе, выбранном в туре N-1)
+      </li>
+    </ul>
+  </div>
 
   <h5>Стоимость игроков</h5>
   <p>
@@ -139,6 +172,20 @@
   <div class="tw:divider"></div>
 
   <h5 id="rules-updates" class="tw:mb-4!" x-intersect="updateLastSeenVersion()">История изменений</h5>
+
+  <div x-data="{version: 2}" class="tw:pl-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h6 class="tw:mb-0!">v2 (14.10.25)</h6>
+      <span x-show="lastSeenRulesVersion < version" class="tw:status tw:status-warning"></span>
+    </div>
+    <p>
+      <ul>
+        <li>
+          Добавлен раздел правил, содержащий информацию о <a href="#boosters" class="tw:link">бустерах</a> и их использовании
+        </li>
+      </ul>
+    </p>
+  </div>
 
   <div x-data="{version: 1}" class="tw:pl-2">
     <div class="tw:flex tw:items-center tw:gap-2">
