@@ -152,6 +152,13 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
         'squad_players__player', 'tour'
     )
 
+    player_to_position_map = {}
+    players_positions = all_submissions.values(
+        'tour', position=F('squad_players__position'), player=F('squad_players__player')
+    )
+    for pp in players_positions:
+        player_to_position_map[(pp['player'], pp['tour'])] = pp['position']
+
     total_submissions = all_submissions.count()
 
     matches_by_player = (
@@ -183,8 +190,9 @@ def get_player_fantasy_stats(tournament: FantasyTournament):
             if player.id in match_participants.get(match.id, []):
                 match_goals = preloaded_data['match_goals'].get(match.id, [])
                 match_cs = preloaded_data['match_cs'].get(match.id, [])
+                position = player_to_position_map.get((player.id, match.numb_tour_id), primary_position)
 
-                match_points = calculate_total_points(player, match, primary_position, match_goals, match_cs)
+                match_points = calculate_total_points(player, match, position, match_goals, match_cs)
                 total_fp += match_points
 
         total_picked = pick_counts_map.get(player.id, 0)
