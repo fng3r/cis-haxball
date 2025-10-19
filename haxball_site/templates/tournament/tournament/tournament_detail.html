@@ -49,12 +49,14 @@
               {% endif %}
             {% else %}
               {% if stage.is_group_stage %}
-                <div class="tw:flex tw:flex-col tw:gap-2 tw:py-1">
+                <div class="tw:flex tw:flex-col tw:py-1">
                   {% for group in stage.groups.all %}
                     <div class="tw:text-center">
                       <h4 class="tw:text-lg">{{ group.name }}</h4>
                       {% tournament_table league stage group %}
                     </div>
+
+                    {% if not forloop.last %}<div class="tw:divider tw:m-1"></div>{% endif %}
                   {% endfor %}
                 </div>
               {% else %}
