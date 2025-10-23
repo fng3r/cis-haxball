@@ -370,6 +370,7 @@ def edit_squad(request, tour_id):
                     user=request.user, tournament__league=tour.league, tour__number__lt=tour.number - 1
                 )
                 .prefetch_related('squad_players__player__team')
+                .order_by('-tour__number')
                 .first()
             )
         prev_player_ids = [sp.player_id for sp in base_submission.squad_players.all()]
