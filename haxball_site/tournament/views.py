@@ -1,6 +1,7 @@
 import statistics
 from collections import defaultdict
 from datetime import datetime, timedelta
+from itertools import groupby
 
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -43,6 +44,7 @@ from .models import (
     Team,
     TeamRating,
     TeamRatingVersion,
+    TournamentWinner,
     TourNumber,
 )
 from .services.hall_of_fame import HallOfFameService
@@ -405,8 +407,24 @@ class LeagueDetail(DetailView):
         comments_obj = get_comments_for_object(League, league.id)
         comments = get_paginated_comments(comments_obj, page)
 
+        league_filters = {}
+        if league.title in ['Высшая лига', 'Единая лига']:
+            league_filters = {'league__title__in': ['Высшая лига', 'Единая лига']}
+        elif league.title.startswith('Первая лига'):
+            league_filters = {'league__title__istartswith': 'Первая лига'}
+        else:
+            league_filters = {'league__title': league.title}
+
+        winners = (
+            TournamentWinner.objects.filter(**league_filters)
+            .select_related('season', 'winner')
+            .order_by('-season__number')
+        )
+        winners_by_season = {season: list(winners) for season, winners in groupby(winners, key=lambda x: x.season)}
+
         context['page'] = page
         context['comments'] = comments
+        context['winners'] = winners_by_season
         comment_form = NewCommentForm()
         context['comment_form'] = comment_form
         return context

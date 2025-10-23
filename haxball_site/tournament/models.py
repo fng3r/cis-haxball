@@ -182,6 +182,39 @@ class League(models.Model):
         verbose_name_plural = 'Турниры'
 
 
+class TournamentWinner(models.Model):
+    season = models.ForeignKey(Season, verbose_name='Сезон', related_name='winners', on_delete=models.CASCADE)
+    league = ChainedForeignKey(
+        League,
+        verbose_name='Турнир',
+        chained_field='season',
+        chained_model_field='championship',
+        related_name='winners',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
+    )
+    winner = ChainedForeignKey(
+        Team,
+        verbose_name='Победитель',
+        chained_field='league',
+        chained_model_field='leagues',
+        related_name='winners',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return f'{self.winner.title} - {self.league}'
+
+    class Meta:
+        verbose_name = 'Победитель турнира'
+        verbose_name_plural = 'Победители турниров'
+        ordering = ['season', 'league']
+        unique_together = [('season', 'league')]
+
+
 class Nation(models.Model):
     country = models.CharField(
         'Страна',

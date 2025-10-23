@@ -59,6 +59,7 @@ from .models import (
     TeamRating,
     TeamRatingVersion,
     TournamentStage,
+    TournamentWinner,
     TourNumber,
 )
 
@@ -1146,3 +1147,31 @@ class PlayerRatingAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     list_filter_sheet = False
+
+
+@admin.register(TournamentWinner)
+class TournamentWinnerAdmin(UnfoldModelAdmin):
+    list_display = ('season', 'league', 'display_winner')
+    list_filter = (
+        ('season', RelatedDropdownFilter),
+        ('league', RelatedDropdownFilter),
+        ('winner', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    search_fields = ('winner__title', 'league__title')
+    ordering = ('-season__number', 'league__priority')
+
+    @display(description='Победитель', header=True)
+    def display_winner(self, model):
+        return [
+            model.winner.title,
+            None,
+            None,
+            {
+                'path': model.winner.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            },
+        ]
