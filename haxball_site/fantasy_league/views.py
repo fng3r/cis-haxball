@@ -353,26 +353,35 @@ def edit_squad(request, tour_id):
         messages.error(request, 'Тур уже закрыт для отправки составов')
         return redirect('fantasy_league:main')
 
-    prev_submission = (
-        SquadSubmission.objects.filter(user=request.user, tournament__league=tour.league, tour__number__lt=tour.number)
-        .order_by('-tour__number')
-        .prefetch_related('squad_players__player__team')
-    ).first()
+    total_tours = tour.league.tours.count()
+    if tour.number == (total_tours / 2 + 1):
+        prev_submission = None
+    else:
+        prev_submission = (
+            SquadSubmission.objects.filter(
+                user=request.user, tournament__league=tour.league, tour__number__lt=tour.number
+            )
+            .prefetch_related('squad_players__player__team')
+            .order_by('-tour__number')
+            .first()
+        )
 
-    prev_player_ids = []
-    players_with_changed_positions = {}
-
+    base_submission = None
     if prev_submission:
         base_submission = prev_submission
         if prev_submission.used_booster == BoosterType.LIMITLESS:
             base_submission = (
                 SquadSubmission.objects.filter(
-                    user=request.user, tournament__league=tour.league, tour__number__lt=tour.number - 1
+                    user=request.user, tournament__league=tour.league, tour__number__lt=prev_submission.tour.number
                 )
                 .prefetch_related('squad_players__player__team')
                 .order_by('-tour__number')
                 .first()
             )
+
+    prev_player_ids = []
+    players_with_changed_positions = {}
+    if base_submission:
         prev_player_ids = [sp.player_id for sp in base_submission.squad_players.all()]
         players_with_changed_positions = get_players_with_changed_positions(base_submission)
 
