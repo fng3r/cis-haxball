@@ -50,6 +50,7 @@
                   benchPlayersCount() { return ['bench_gk', 'bench_dm', 'bench_st'].filter(pos => !!this.selected[pos]).length; },
                   currentSelectedIds() { return Object.values(this.selected).filter(Boolean).map(p => p.id); },
                   get selectedPlayersCount() { return this.currentSelectedIds().length; },
+                  canBeEdited: {{ can_be_edited|yesno:'true,false' }},
                   get isFormValid() { return this.selectedPlayersCount === this.teamSize && this.budgetUsed <= this.budgetLimit && this.benchPlayersCount() <= 2 && this.transfersUsed <= this.transfersLimit && !this.hasUnavailablePlayers() && !this.hasPlayersWithChangedPositions() && this.selectedCaptain !== null; },
                   transfersCount() {
                   if (this.previousPlayerIds.length === 0) {
@@ -124,6 +125,13 @@
       <input type="hidden" name="used_booster" :value="selectedBooster" />
 
       <div class="tw:flex tw:flex-col tw:gap-2">
+        {% if not can_be_edited %}
+          <div class="tw:alert tw:alert-warning tw:mb-2">
+            <i class="fa fa-exclamation-triangle"></i>
+            <span>Состав не может быть изменен, так как Вы уже выбрали состав на следующий тур</span>
+          </div>
+        {% endif %}
+
         <div class="tw:flex tw:gap-2 tw:items-center">
           <div class="tw:badge" :class="selectedPlayersCount === teamSize ? 'tw:badge-success' : 'tw:badge-error'">
             <span x-text="`Команда: ${selectedPlayersCount}/${teamSize}`"></span>
@@ -293,7 +301,7 @@
           <i class="fa fa-arrow-left"></i>
           Назад
         </button>
-        <button type="submit" class="tw:btn tw:btn-primary" :disabled="!isFormValid">
+        <button type="submit" class="tw:btn tw:btn-primary" :disabled="!canBeEdited || !isFormValid">
           <i class="fa fa-save"></i>
           Сохранить состав
         </button>

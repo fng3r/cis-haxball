@@ -394,6 +394,12 @@ def edit_squad(request, tour_id):
     budget_limit = get_league_budget_limit(tour.league)
     unavailable_players = get_unavailable_players_in_submission(submission) if submission else []
 
+    can_be_edited = not (
+        SquadSubmission.objects.filter(
+            user=request.user, tournament__league=tour.league, tour__number__gt=tour.number
+        ).exists()
+    )
+
     if request.method == 'POST':
         form = SquadSubmissionForm(
             request.POST, tournament=tour.league, previous_player_ids=prev_player_ids, user=request.user, tour=tour
@@ -507,6 +513,7 @@ def edit_squad(request, tour_id):
                 'previous_player_ids': prev_player_ids,
                 'unavailable_players': unavailable_players,
                 'players_with_changed_positions': players_with_changed_positions,
+                'can_be_edited': can_be_edited,
             }
 
             return render(request, 'fantasy_league/edit_squad.html', context)
@@ -573,6 +580,7 @@ def edit_squad(request, tour_id):
         'previous_player_ids': prev_player_ids,
         'unavailable_players': unavailable_players,
         'players_with_changed_positions': players_with_changed_positions,
+        'can_be_edited': can_be_edited,
     }
 
     return render(request, 'fantasy_league/edit_squad.html', context)
