@@ -5,7 +5,7 @@
   <div class="tw:p-4">
     <div class="tw:flex tw:items-center tw:gap-2 tw:font-bold">
       <h5 class="tw:text-lg tw:mb-3!">Активности</h5>
-      <span class="tw:badge tw:badge-neutral tw:badge-xs tw:mb-1.5">{{ project_settings.ACTIVITIES_CURRENT_TOUR }} тур</span>
+      <span class="tw:badge tw:badge-neutral tw:badge-xs tw:mb-1.5">{{ project_settings.ACTIVITIES_BADGE_LABEL }}</span>
     </div>
 
     {% time_until_current_tour_deadline as time_until_start %}
