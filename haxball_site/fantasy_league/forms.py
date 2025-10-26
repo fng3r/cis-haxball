@@ -4,7 +4,13 @@ from django.db.models import Case, IntegerField, OuterRef, Subquery, Value, When
 from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
 
 from .models import BoosterType, FantasyTournament, SquadSubmission
-from .utils import get_available_players_in_league, get_later_blocking_tours, get_league_budget_limit, get_players_costs
+from .utils import (
+    get_available_players_in_league,
+    get_blocking_tours,
+    get_later_blocking_tours,
+    get_league_budget_limit,
+    get_players_costs,
+)
 
 
 class TournamentFilterForm(forms.Form):
@@ -161,7 +167,7 @@ class SquadSubmissionForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
 
-        self.validate_later_blocking_tours()
+        self.validate_blocking_tours()
 
         primary_players = [
             cleaned_data.get('main_squad_gk'),
@@ -233,8 +239,15 @@ class SquadSubmissionForm(forms.Form):
         """Check if a player is available in the current league"""
         return player.id in self.available_player_ids
 
-    def validate_later_blocking_tours(self):
-        """Ensure no later blocking tours exist for this tour"""
+    def validate_blocking_tours(self):
+        """Ensure no blocking tours exist for this tour"""
+        blocking_tours = get_blocking_tours(self.user, self.tour, self.tournament.fantasy_tournament)
+        if blocking_tours:
+            raise forms.ValidationError(
+                f'Выбор состава заблокирован, так как еще не выбран состав для следующих туров: '
+                f'{", ".join([f"{tour.number} тур" for tour in blocking_tours])}'
+            )
+
         later_blocking_tours = get_later_blocking_tours(self.user, self.tour, self.tournament.fantasy_tournament)
         if later_blocking_tours:
             raise forms.ValidationError(

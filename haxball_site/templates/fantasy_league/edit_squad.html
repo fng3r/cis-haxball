@@ -292,20 +292,57 @@
         </div>
       {% endif %}
 
-      <div class="tw:flex tw:justify-end tw:items-center tw:gap-2">
-        <button type="button"
-                class="tw:btn tw:btn-outline"
-                hx-get="{% url 'fantasy_league:tour_detail' tour.id %}"
-                hx-target="#tour-{{ tour.id }}-content"
-                hx-swap="outerHTML">
-          <i class="fa fa-arrow-left"></i>
-          Назад
-        </button>
-        <button type="submit" class="tw:btn tw:btn-primary" :disabled="!canBeEdited || !isFormValid">
-          <i class="fa fa-save"></i>
-          Сохранить состав
-        </button>
+      <div class="tw:flex tw:justify-between tw:items-center tw:gap-2">
+        {% if submission %}
+          <button type="button"
+                  class="tw:btn tw:btn-error"
+                  @click="deleteModal.showModal()"
+                  {% if not can_be_edited %}disabled{% endif %}>
+            <i class="fa fa-trash"></i>
+            Удалить состав
+          </button>
+        {% endif %}
+
+        <div class="tw:flex tw:gap-2 tw:ml-auto">
+          <button type="button"
+                  class="tw:btn tw:btn-outline"
+                  hx-get="{% url 'fantasy_league:tour_detail' tour.id %}"
+                  hx-target="#tour-{{ tour.id }}-content"
+                  hx-swap="outerHTML">
+            <i class="fa fa-arrow-left"></i>
+            Назад
+          </button>
+          <button type="submit" class="tw:btn tw:btn-primary" :disabled="!canBeEdited || !isFormValid">
+            <i class="fa fa-save"></i>
+            Сохранить состав
+          </button>
+        </div>
       </div>
     </form>
+
+    {% if submission and can_be_edited %}
+      <dialog id="deleteModal" ref="deleteModal" class="tw:modal">
+        <div class="tw:modal-box">
+          <h3 class="tw:font-bold">Подтверждение удаления</h3>
+          <p class="tw:py-2 tw:text-base">Вы уверены, что хотите удалить состав для {{ tour.number }} тура?</p>
+          <div class="tw:modal-action">
+            <form method="dialog">
+              <button class="tw:btn">Отмена</button>
+            </form>
+
+            <form hx-post="{% url 'fantasy_league:delete_squad' tour.id %}"
+                  hx-target="#tour-{{ tour.id }}-content"
+                  hx-swap="outerHTML"
+                  style="display: inline">
+              {% csrf_token %}
+              <button type="submit" class="tw:btn tw:btn-error">
+                <i class="fa fa-trash"></i>
+                Удалить
+              </button>
+            </form>
+          </div>
+        </div>
+      </dialog>
+    {% endif %}
   </div>
 </div>

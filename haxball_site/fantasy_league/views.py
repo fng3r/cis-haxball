@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from django_htmx.http import trigger_client_event
 
@@ -584,6 +586,37 @@ def edit_squad(request, tour_id):
     }
 
     return render(request, 'fantasy_league/edit_squad.html', context)
+
+
+@login_required
+@require_POST
+def delete_squad(request, tour_id):
+    """Delete a squad submission for a specific tour"""
+    tour = get_object_or_404(TourNumber, pk=tour_id)
+
+    tournament = tour.league.fantasy_tournament
+    if not tournament:
+        messages.error(request, 'Турнир не найден')
+        return redirect('fantasy_league:main')
+
+    submission = SquadSubmission.objects.filter(
+        user=request.user,
+        tour=tour,
+        tournament__league=tour.league,
+    ).first()
+
+    is_open = is_tour_open_for_fantasy(tour)
+
+    can_be_deleted = not (
+        SquadSubmission.objects.filter(
+            user=request.user, tournament__league=tour.league, tour__number__gt=tour.number
+        ).exists()
+    )
+
+    if submission and is_open and can_be_deleted:
+        submission.delete()
+
+    return redirect(reverse('fantasy_league:tour_detail', args=[tour.id]))
 
 
 def rewards_tab(request):

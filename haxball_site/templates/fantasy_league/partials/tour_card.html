@@ -104,7 +104,7 @@
               <div class="tw:text-sm tw:text-center">
                 Сначала отправьте состав для следующих туров:
                 {% for blocking_tour in blocking_tours %}
-                  {{ blocking_tour.number }}
+                  {{ blocking_tour.number }} тур
                   {% if not forloop.last %},{% endif %}
                 {% endfor %}
               </div>
