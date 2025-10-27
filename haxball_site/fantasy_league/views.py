@@ -143,7 +143,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
 
         submissions = (
             SquadSubmission.objects.filter(user=request.user, tournament=selected_tournament)
-            .prefetch_related('squad_players__player__team', 'tour')
+            .prefetch_related('squad_players__player', 'squad_players__team', 'tour')
             .select_related('tour')
         )
 
@@ -235,7 +235,7 @@ def view_squads_tab(request):
 
         submissions = (
             SquadSubmission.objects.filter(user=selected_user, tournament=selected_tournament)
-            .prefetch_related('squad_players__player__team', 'tour')
+            .prefetch_related('squad_players__player', 'squad_players__team', 'tour')
             .select_related('tour')
         )
 
@@ -271,7 +271,7 @@ def top_squads_tab(request):
         else:
             submissions = (
                 SquadSubmission.objects.filter(tournament=selected_tournament, tour=selected_tour)
-                .prefetch_related('squad_players__player__team')
+                .prefetch_related('squad_players__player', 'squad_players__team')
                 .select_related('tour', 'user', 'user__user_profile')
             )
             top_submissions = sorted(
@@ -338,7 +338,7 @@ def tour_detail(request, tour_id):
 
     submission = (
         SquadSubmission.objects.filter(user=request.user, tournament=tournament, tour=tour)
-        .prefetch_related('squad_players__player__team')
+        .prefetch_related('squad_players__player', 'squad_players__team')
         .first()
     )
 
@@ -377,7 +377,7 @@ def edit_squad(request, tour_id):
             SquadSubmission.objects.filter(
                 user=request.user, tournament__league=tour.league, tour__number__lt=tour.number
             )
-            .prefetch_related('squad_players__player__team')
+            .prefetch_related('squad_players__player', 'squad_players__team')
             .order_by('-tour__number')
             .first()
         )
@@ -390,7 +390,7 @@ def edit_squad(request, tour_id):
                 SquadSubmission.objects.filter(
                     user=request.user, tournament__league=tour.league, tour__number__lt=prev_submission.tour.number
                 )
-                .prefetch_related('squad_players__player__team')
+                .prefetch_related('squad_players__player', 'squad_players__team')
                 .order_by('-tour__number')
                 .first()
             )
