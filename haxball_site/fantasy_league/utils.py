@@ -275,12 +275,12 @@ def get_blocking_tours(user, tour, tournament):
     return blocking_tours
 
 
-def get_reverse_blocking_tours(user, tour, tournament):
+def get_later_blocking_tours(user, tour, tournament):
     """
-    Get tours that are blocked by this tour (reverse blocking).
+    Get later tours that are blocking this tour.
     When a later tour is submitted, earlier tours become locked for modification.
     """
-    reverse_blocking_tours = []
+    later_blocking_tours = []
     later_tours = TourNumber.objects.filter(league=tour.league, number__gt=tour.number).order_by('number')
 
     for later_tour in later_tours:
@@ -288,9 +288,9 @@ def get_reverse_blocking_tours(user, tour, tournament):
             has_submission = SquadSubmission.objects.filter(user=user, tour=later_tour, tournament=tournament).exists()
 
             if has_submission:
-                reverse_blocking_tours.append(later_tour)
+                later_blocking_tours.append(later_tour)
 
-    return reverse_blocking_tours
+    return later_blocking_tours
 
 
 # ===== Budget and player cost helpers (shared between forms and setup scripts) =====

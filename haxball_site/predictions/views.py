@@ -4,14 +4,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from django_htmx.http import trigger_client_event
 
 from fantasy_league.forms import TourFilterForm
-from haxball_site import settings
 from tournament.models import TourNumber
 
 from .forms import PreseasonPredictionsTournamentFilterForm, TournamentFilterForm, UserFilterForm
@@ -68,6 +69,36 @@ def resolve_selected_tournament(request, selected_tournament=None):
     )
 
     return selected_tournament, tournament_form
+
+
+def resolve_selected_tour(request, selected_tournament):
+    """Resolve selected tour from GET or provided value and return (tour, TourFilterForm)."""
+
+    tour = None
+    tour_form = None
+    if selected_tournament:
+        tour_qs = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
+        initial_tour = None
+        if request.GET.get('tour'):
+            initial_tour = tour_qs.filter(pk=request.GET.get('tour')).first()
+        if not initial_tour:
+            latest_submitted_tour = (
+                PredictionSubmission.objects.filter(
+                    tournament=selected_tournament, tour__date_to__lt=timezone.localdate()
+                )
+                .order_by('-tour__number')
+                .values(number=F('tour__number'))
+                .first()
+            )
+            if latest_submitted_tour:
+                initial_tour = tour_qs.filter(number=latest_submitted_tour['number']).first()
+        tour = initial_tour
+        tour_form = TourFilterForm(
+            initial={'tour': initial_tour.pk if initial_tour else None},
+            league=selected_tournament.league,
+        )
+
+    return tour, tour_form
 
 
 def resolve_selected_preseason_tournament(request, selected_tournament=None):
@@ -534,30 +565,12 @@ def preseason_save(request):
 def rewards_tab(request):
     """Tab for displaying rewards distribution"""
     selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tour, tour_form = resolve_selected_tour(request, selected_tournament)
 
-    selected_tour = None
-    tour_rewards_data = None
-
-    if selected_tournament:
-        tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('-number')
-
-        tour_id = request.GET.get('tour')
-        if tour_id:
-            selected_tour = tours.filter(pk=tour_id).first()
-        if not selected_tour:
-            activites_current_tour = settings.ACTIVITIES_CURRENT_TOUR
-            selected_tour = tours.filter(number=activites_current_tour - 1).first()
-
-        tour_form = TourFilterForm(
-            initial={'tour': selected_tour.pk if selected_tour else None},
-            league=selected_tournament.league,
-        )
-
-        if selected_tour:
-            rewards_data = calculate_tour_rewards(selected_tour, selected_tournament)
-            tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
-    else:
-        tours = TourNumber.objects.none()
+    tour_rewards_data = {}
+    if selected_tour:
+        rewards_data = calculate_tour_rewards(selected_tour, selected_tournament)
+        tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
 
     context = {
         'tournament_form': tournament_form,

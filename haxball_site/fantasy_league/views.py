@@ -2,12 +2,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from django_htmx.http import trigger_client_event
 
-from haxball_site import settings
 from tournament.models import Player, TourNumber
 
 from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
@@ -62,6 +65,34 @@ def resolve_selected_tournament(request, selected_tournament=None):
     return selected_tournament, tournament_form
 
 
+def resolve_selected_tour(request, selected_tournament):
+    """Resolve selected tour from GET or provided value and return (tour, TourFilterForm)."""
+
+    tour = None
+    tour_form = None
+    if selected_tournament:
+        tour_qs = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
+        initial_tour = None
+        if request.GET.get('tour'):
+            initial_tour = tour_qs.filter(pk=request.GET.get('tour')).first()
+        if not initial_tour:
+            latest_submitted_tour = (
+                SquadSubmission.objects.filter(tournament=selected_tournament, tour__date_to__lt=timezone.localdate())
+                .order_by('-tour__number')
+                .values(number=F('tour__number'))
+                .first()
+            )
+            if latest_submitted_tour:
+                initial_tour = tour_qs.filter(number=latest_submitted_tour['number']).first()
+        tour = initial_tour
+        tour_form = TourFilterForm(
+            initial={'tour': initial_tour.pk if initial_tour else None},
+            league=selected_tournament.league,
+        )
+
+    return tour, tour_form
+
+
 def get_users_with_submissions(tournament=None):
     """Get users who have made at least one squad submission"""
     if tournament:
@@ -112,7 +143,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
 
         submissions = (
             SquadSubmission.objects.filter(user=request.user, tournament=selected_tournament)
-            .prefetch_related('squad_players__player__team', 'tour')
+            .prefetch_related('squad_players__player', 'squad_players__team', 'tour')
             .select_related('tour')
         )
 
@@ -204,7 +235,7 @@ def view_squads_tab(request):
 
         submissions = (
             SquadSubmission.objects.filter(user=selected_user, tournament=selected_tournament)
-            .prefetch_related('squad_players__player__team', 'tour')
+            .prefetch_related('squad_players__player', 'squad_players__team', 'tour')
             .select_related('tour')
         )
 
@@ -228,34 +259,19 @@ def view_squads_tab(request):
 def top_squads_tab(request):
     """Tab for viewing top-3 squad submissions per tour"""
     selected_tournament, tournament_form = resolve_selected_tournament(request)
-
-    tour = None
-    tour_form = None
-    if selected_tournament:
-        tour_qs = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
-        initial_tour = None
-        if request.GET.get('tour'):
-            initial_tour = tour_qs.filter(pk=request.GET.get('tour')).first()
-        if not initial_tour:
-            activites_current_tour = settings.ACTIVITIES_CURRENT_TOUR
-            initial_tour = tour_qs.filter(number=activites_current_tour - 1).first()
-        tour = initial_tour
-        tour_form = TourFilterForm(
-            initial={'tour': initial_tour.pk if initial_tour else None},
-            league=selected_tournament.league,
-        )
+    selected_tour, tour_form = resolve_selected_tour(request, selected_tournament)
 
     top_submissions = []
     preloaded_data = None
-    if selected_tournament and tour:
+    if selected_tournament and selected_tour:
         preloaded_data = preload_fantasy_data(selected_tournament)
 
-        if is_tour_open_for_fantasy(tour):
+        if is_tour_open_for_fantasy(selected_tour):
             top_submissions = []
         else:
             submissions = (
-                SquadSubmission.objects.filter(tournament=selected_tournament, tour=tour)
-                .prefetch_related('squad_players__player__team')
+                SquadSubmission.objects.filter(tournament=selected_tournament, tour=selected_tour)
+                .prefetch_related('squad_players__player', 'squad_players__team')
                 .select_related('tour', 'user', 'user__user_profile')
             )
             top_submissions = sorted(
@@ -267,7 +283,7 @@ def top_squads_tab(request):
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
-        'selected_tour': tour,
+        'selected_tour': selected_tour,
         'tour_form': tour_form,
         'top_submissions': top_submissions,
         'preloaded_data': preloaded_data if selected_tournament else None,
@@ -322,7 +338,7 @@ def tour_detail(request, tour_id):
 
     submission = (
         SquadSubmission.objects.filter(user=request.user, tournament=tournament, tour=tour)
-        .prefetch_related('squad_players__player__team')
+        .prefetch_related('squad_players__player', 'squad_players__team')
         .first()
     )
 
@@ -353,26 +369,35 @@ def edit_squad(request, tour_id):
         messages.error(request, 'Тур уже закрыт для отправки составов')
         return redirect('fantasy_league:main')
 
-    prev_submission = (
-        SquadSubmission.objects.filter(user=request.user, tournament__league=tour.league, tour__number__lt=tour.number)
-        .order_by('-tour__number')
-        .prefetch_related('squad_players__player__team')
-    ).first()
+    total_tours = tour.league.tours.count()
+    if tour.number == (total_tours / 2 + 1):
+        prev_submission = None
+    else:
+        prev_submission = (
+            SquadSubmission.objects.filter(
+                user=request.user, tournament__league=tour.league, tour__number__lt=tour.number
+            )
+            .prefetch_related('squad_players__player', 'squad_players__team')
+            .order_by('-tour__number')
+            .first()
+        )
 
-    prev_player_ids = []
-    players_with_changed_positions = {}
-
+    base_submission = None
     if prev_submission:
         base_submission = prev_submission
         if prev_submission.used_booster == BoosterType.LIMITLESS:
             base_submission = (
                 SquadSubmission.objects.filter(
-                    user=request.user, tournament__league=tour.league, tour__number__lt=tour.number - 1
+                    user=request.user, tournament__league=tour.league, tour__number__lt=prev_submission.tour.number
                 )
-                .prefetch_related('squad_players__player__team')
+                .prefetch_related('squad_players__player', 'squad_players__team')
                 .order_by('-tour__number')
                 .first()
             )
+
+    prev_player_ids = []
+    players_with_changed_positions = {}
+    if base_submission:
         prev_player_ids = [sp.player_id for sp in base_submission.squad_players.all()]
         players_with_changed_positions = get_players_with_changed_positions(base_submission)
 
@@ -384,6 +409,12 @@ def edit_squad(request, tour_id):
 
     budget_limit = get_league_budget_limit(tour.league)
     unavailable_players = get_unavailable_players_in_submission(submission) if submission else []
+
+    can_be_edited = not (
+        SquadSubmission.objects.filter(
+            user=request.user, tournament__league=tour.league, tour__number__gt=tour.number
+        ).exists()
+    )
 
     if request.method == 'POST':
         form = SquadSubmissionForm(
@@ -498,6 +529,7 @@ def edit_squad(request, tour_id):
                 'previous_player_ids': prev_player_ids,
                 'unavailable_players': unavailable_players,
                 'players_with_changed_positions': players_with_changed_positions,
+                'can_be_edited': can_be_edited,
             }
 
             return render(request, 'fantasy_league/edit_squad.html', context)
@@ -564,36 +596,52 @@ def edit_squad(request, tour_id):
         'previous_player_ids': prev_player_ids,
         'unavailable_players': unavailable_players,
         'players_with_changed_positions': players_with_changed_positions,
+        'can_be_edited': can_be_edited,
     }
 
     return render(request, 'fantasy_league/edit_squad.html', context)
 
 
+@login_required
+@require_POST
+def delete_squad(request, tour_id):
+    """Delete a squad submission for a specific tour"""
+    tour = get_object_or_404(TourNumber, pk=tour_id)
+
+    tournament = tour.league.fantasy_tournament
+    if not tournament:
+        messages.error(request, 'Турнир не найден')
+        return redirect('fantasy_league:main')
+
+    submission = SquadSubmission.objects.filter(
+        user=request.user,
+        tour=tour,
+        tournament__league=tour.league,
+    ).first()
+
+    is_open = is_tour_open_for_fantasy(tour)
+
+    can_be_deleted = not (
+        SquadSubmission.objects.filter(
+            user=request.user, tournament__league=tour.league, tour__number__gt=tour.number
+        ).exists()
+    )
+
+    if submission and is_open and can_be_deleted:
+        submission.delete()
+
+    return redirect(reverse('fantasy_league:tour_detail', args=[tour.id]))
+
+
 def rewards_tab(request):
     """Tab for displaying rewards distribution"""
     selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tour, tour_form = resolve_selected_tour(request, selected_tournament)
 
-    selected_tour = None
-    tour_rewards_data = None
-
-    if selected_tournament:
-        tours = TourNumber.objects.filter(league=selected_tournament.league).order_by('-number')
-
-        tour_id = request.GET.get('tour')
-        if tour_id:
-            selected_tour = tours.filter(pk=tour_id).first()
-        if not selected_tour:
-            activites_current_tour = settings.ACTIVITIES_CURRENT_TOUR
-            selected_tour = tours.filter(number=activites_current_tour - 1).first()
-
-        tour_form = TourFilterForm(
-            initial={'tour': selected_tour.pk if selected_tour else None},
-            league=selected_tournament.league,
-        )
-
-        if selected_tour:
-            rewards_data = calculate_tour_rewards(selected_tour, selected_tournament)
-            tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
+    tour_rewards_data = {}
+    if selected_tour:
+        rewards_data = calculate_tour_rewards(selected_tour, selected_tournament)
+        tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
 
     context = {
         'tournament_form': tournament_form,

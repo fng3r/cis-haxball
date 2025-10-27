@@ -4,7 +4,13 @@ from django.db.models import Case, IntegerField, OuterRef, Subquery, Value, When
 from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
 
 from .models import BoosterType, FantasyTournament, SquadSubmission
-from .utils import get_available_players_in_league, get_league_budget_limit, get_players_costs
+from .utils import (
+    get_available_players_in_league,
+    get_blocking_tours,
+    get_later_blocking_tours,
+    get_league_budget_limit,
+    get_players_costs,
+)
 
 
 class TournamentFilterForm(forms.Form):
@@ -161,6 +167,8 @@ class SquadSubmissionForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
 
+        self.validate_blocking_tours()
+
         primary_players = [
             cleaned_data.get('main_squad_gk'),
             cleaned_data.get('main_squad_dm'),
@@ -201,7 +209,6 @@ class SquadSubmissionForm(forms.Form):
         self.validate_budget_limit(all_players)
         self.validate_players_availability(all_players)
         self.validate_booster_usage()
-
         return cleaned_data
 
     def get_main_squad_players(self):
@@ -231,6 +238,22 @@ class SquadSubmissionForm(forms.Form):
     def is_player_available(self, player):
         """Check if a player is available in the current league"""
         return player.id in self.available_player_ids
+
+    def validate_blocking_tours(self):
+        """Ensure no blocking tours exist for this tour"""
+        blocking_tours = get_blocking_tours(self.user, self.tour, self.tournament.fantasy_tournament)
+        if blocking_tours:
+            raise forms.ValidationError(
+                f'Выбор состава заблокирован, так как еще не выбран состав для следующих туров: '
+                f'{", ".join([f"{tour.number} тур" for tour in blocking_tours])}'
+            )
+
+        later_blocking_tours = get_later_blocking_tours(self.user, self.tour, self.tournament.fantasy_tournament)
+        if later_blocking_tours:
+            raise forms.ValidationError(
+                f'Cостав не может быть изменен, так как уже выбран состав для следующих туров: '
+                f'{", ".join([f"{tour.number} тур" for tour in later_blocking_tours])}'
+            )
 
     def validate_budget_limit(self, players):
         """Ensure total cost of players does not exceed budget limit"""
