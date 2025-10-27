@@ -12,7 +12,7 @@
 </style>
 
 {% if stage.is_regular and first_half_table and second_half_table %}
-  <div x-data="{ activeTab: 'general' }" x-cloak>
+  <div x-data="{ activeTab: 'general' }">
     <div class="tw:flex tw:gap-2 tw:ml-1 tw:my-1">
       <button @click="activeTab = 'general'"
               :class="activeTab === 'general' ? 'tw:btn-primary' : 'tw:btn-outline'"
