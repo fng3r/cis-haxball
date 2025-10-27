@@ -484,10 +484,25 @@ def cup_round_name(tour: TourNumber):
 def tournament_table(league: League, stage: TournamentStage, group: Group | None):
     table = get_league_table(league, stage, group)
     has_penalties = any(x[10] > 0 for x in table)
-    return {'teams': table, 'stage': stage, 'has_penalties': has_penalties}
 
+    first_half_table = None
+    second_half_table = None
 
-# Конец тегов и фильтров для таблицы лиги
+    if stage.is_regular and stage.is_round_robin and stage.round_robin_rounds > 1:
+        total_tours = stage.tours.count()
+        tours_per_round = total_tours // 2
+        first_round_end = tours_per_round
+
+        first_half_table = get_league_table(league, stage, group, (1, first_round_end))
+        second_half_table = get_league_table(league, stage, group, (first_round_end + 1, total_tours))
+
+    return {
+        'table': table,
+        'stage': stage,
+        'has_penalties': has_penalties,
+        'first_half_table': first_half_table,
+        'second_half_table': second_half_table,
+    }
 
 
 @register.filter
@@ -871,7 +886,7 @@ def sort_teams(league: League):
     return [i[0] for i in lt]
 
 
-def get_league_table(league: League, stage: TournamentStage = None, group: Group = None):
+def get_league_table(league: League, stage: TournamentStage = None, group: Group = None, tour_range: tuple = None):
     always_true = ~Q(pk__in=[])
     stage_condition = Q(stages=stage) if stage is not None else always_true
     group_condition = Q(groups=group) if group is not None else always_true
@@ -899,6 +914,10 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
             group=group,
             is_played=True,
         )
+        if tour_range is not None:
+            min_tour, max_tour = tour_range
+            matches = matches.filter(numb_tour__number__gte=min_tour, numb_tour__number__lte=max_tour)
+        matches = matches
         matches_played[i] = matches.count()
         penalty = TeamPenaltyPoints.objects.filter(stage=stage, team=team).first()
         penalty_points = penalty.penalty_points if penalty else 0

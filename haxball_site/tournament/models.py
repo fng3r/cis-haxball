@@ -255,7 +255,7 @@ class TournamentStage(PolymorphicModel):
 
     @property
     def is_regular(self):
-        return self.is_playoff and self.has_match_for_third_place
+        return self.type == self.StageType.REGULAR
 
     @property
     def is_group_stage(self):
@@ -298,6 +298,15 @@ class RegularStage(TournamentStage):
         'Кол-во команд, вылетающих в лигу ниже',
         choices=[(i, i) for i in range(0, 17)],
         default=2,
+    )
+    is_round_robin = models.BooleanField(
+        'Используется круговая система',
+        default=True,
+    )
+    round_robin_rounds = models.PositiveSmallIntegerField(
+        'Количество кругов',
+        default=2,
+        help_text='Количество раз, которое каждая команда играет с каждой',
     )
 
     class Meta:
