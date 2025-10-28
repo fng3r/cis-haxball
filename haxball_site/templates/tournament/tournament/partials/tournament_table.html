@@ -14,15 +14,18 @@
 {% if stage.is_regular and first_half_table and second_half_table %}
   <div x-data="{ activeTab: 'general' }">
     <div class="tw:flex tw:gap-2 tw:ml-1 tw:my-1">
-      <button @click="activeTab = 'general'"
-              :class="activeTab === 'general' ? 'tw:btn-primary' : 'tw:btn-outline'"
-              class="tw:btn tw:btn-xs">Общая</button>
-      <button @click="activeTab = 'first'"
-              :class="activeTab === 'first' ? 'tw:btn-primary' : 'tw:btn-outline'"
-              class="tw:btn tw:btn-xs">1 круг</button>
-      <button @click="activeTab = 'second'"
-              :class="activeTab === 'second' ? 'tw:btn-primary' : 'tw:btn-outline'"
-              class="tw:btn tw:btn-xs">2 круг</button>
+      <button x-data="{ tab: 'general'}"
+              @click="activeTab = tab"
+              class="tw:btn tw:btn-xs tw:btn-primary"
+              :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">Общая</button>
+      <button x-data="{ tab: 'first'}"
+              @click="activeTab = tab"
+              class="tw:btn tw:btn-xs tw:btn-outline"
+              :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">1 круг</button>
+      <button x-data="{ tab: 'second'}"
+              @click="activeTab = tab"
+              class="tw:btn tw:btn-xs tw:btn-outline"
+              :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">2 круг</button>
     </div>
 
     <div class="tw:relative">
