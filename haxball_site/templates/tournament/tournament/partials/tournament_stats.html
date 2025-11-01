@@ -2,6 +2,8 @@
 {% load tournament_extras %}
 {% load utils %}
 
+{% tournament_statistic league as stats_data %}
+
 {% partialdef statistics-card %}
   <div class="tw:card tw:h-[570px] tw:bg-base-100 tw:rounded-lg tw:border tw:border-neutral-200">
     <div class="tw:w-full tw:flex tw:justify-center tw:items-center tw:bg-base-300 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
@@ -17,139 +19,249 @@
     </div>
 
     <div class="tw:card-body tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
-      <table class="tw:table tw:mb-0">
-        <tbody>
-          {% for player in players %}
-            <tr>
-              <td width="24px" class="tw:pl-3 tw:pr-2 tw:text-center">
-                <span class="tw:text-base tw:font-semibold">{{ forloop.counter }}</span>
-              </td>
+      {% if players %}
+        <table class="tw:table tw:mb-0">
+          <tbody>
+            {% for player in players %}
+              <tr>
+                <td width="24px" class="tw:pl-3 tw:pr-2 tw:text-center">
+                  <span class="tw:text-base tw:font-semibold">{{ forloop.counter }}</span>
+                </td>
 
-              <td class="tw:px-1! tw:truncate">
-                {% if league.championship.is_active %}
-                  {% if player.team %}
-                    <img src="{{ player.team.logo.url }}" width="25px" height="25px">
+                <td class="tw:px-1! tw:truncate">
+                  {% if league.championship.is_active %}
+                    {% if player.team %}
+                      <img src="{{ player.team.logo.url }}" width="25px" height="25px">
+                    {% else %}
+                      <img src="{% static "img/ico/free_player.png" %}"  width="25px" height="25px">
+                    {% endif %}
                   {% else %}
-                    <img src="{% static "img/ico/free_player.png" %}"  width="25px" height="25px">
+                    <img src="{% media player.last_team_logo %}" width="25px" height="25px">
                   {% endif %}
-                {% else %}
-                  <img src="{% media player.last_team_logo %}" width="25px" height="25px">
-                {% endif %}
-                {% if player.name %}
-                  <a class="tw:link tw:link-hover tw:text-base tw:font-semibold tw:ml-1"
-                     href="{{ player.name.user_profile.get_absolute_url }}">{{ player.nickname }}</a>
-                {% else %}
-                  <span class="tw:text-base-content tw:text-base tw:font-semibold tw:ml-1">{{ player.nickname }}</span>
-                {% endif %}
-              </td>
+                  {% if player.name %}
+                    <a class="tw:link tw:link-hover tw:text-base tw:font-semibold tw:ml-1"
+                       href="{{ player.name.user_profile.get_absolute_url }}">{{ player.nickname }}</a>
+                  {% else %}
+                    <span class="tw:text-base-content tw:text-base tw:font-semibold tw:ml-1">{{ player.nickname }}</span>
+                  {% endif %}
+                </td>
 
-              <td width="16%" class="tw:text-center">
-                <span class="tw:font-semibold tw:text-base">
-                  {% if stat_type == 'avg' %}
-                    {{ player.count|floatformat:2 }}
-                  {% else %}
-                    {{ player.count }}
-                  {% endif %}
-                </span>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+                <td width="16%" class="tw:text-center">
+                  <span class="tw:font-semibold tw:text-base">
+                    {% if stat_type == 'avg' %}
+                      {{ player.count|floatformat:2 }}
+                    {% else %}
+                      {{ player.count }}
+                    {% endif %}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="tw:m-auto tw:px-8 tw:text-lg tw:text-base-content/70 tw:font-semibold">Нет данных</div>
+      {% endif %}
     </div>
   </div>
 {% endpartialdef %}
 
-<div class="tw:flex tw:flex-col tw:w-full">
-  <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
-    <input type="radio" name="statistics-tabs" class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!" aria-label="Общая" checked />
-    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
-      <div role="tabpanel" aria-labelledby="general-stats-tab" class="tw:flex tw:flex-col tw:p-2 tw:gap-y-2">
-        <div class="tw:flex tw:gap-x-2">
-          <div class="tw:w-1/3">
-            {% with players=league|top_goalscorers title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
-              {% partial statistics-card %}
-            {% endwith %}
+{% if stats_data.show_rounds %}
+  <div x-data="{ activeRoundTab: 'general' }" x-cloak class="tw:flex tw:flex-col tw:w-full">
+    <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
+      <input type="radio" name="statistics-tabs" class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!" aria-label="Общая" checked />
+      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
+        <div role="tabpanel" aria-labelledby="general-stats-tab">
+          <div class="tw:flex tw:gap-2 tw:mx-2 tw:mt-3 tw:mb-1">
+            <button x-data="{ tab: 'general'}"
+                    @click="activeRoundTab = tab"
+                    class="tw:btn tw:btn-xs tw:btn-primary"
+                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">Общая</button>
+            <button x-data="{ tab: 'first'}"
+                    @click="activeRoundTab = tab"
+                    class="tw:btn tw:btn-xs tw:btn-outline"
+                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">1 круг</button>
+            <button x-data="{ tab: 'second'}"
+                    @click="activeRoundTab = tab"
+                    class="tw:btn tw:btn-xs tw:btn-outline"
+                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">2 круг</button>
           </div>
 
-          <div class="tw:w-1/3">
-            {% with players=league|top_assistants title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
+          <div class="tw:p-2">
+            <div class="tw:relative">
+              <div x-show="activeRoundTab === 'general'"
+                   x-transition:enter="tw:transition-opacity tw:duration-200"
+                   x-transition:enter-start="tw:opacity-0"
+                   x-transition:enter-end="tw:opacity-100"
+                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+                   x-transition:leave-start="tw:opacity-100"
+                   x-transition:leave-end="tw:opacity-0">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                  {% for stat_item in stats_data.general_stats.total %}
+                    <div>
+                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
+                        {% partial statistics-card %}
+                      {% endwith %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
 
-          <div class="tw:w-1/3">
-            {% with players=league|top_clean_sheets title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
-        </div>
+              <div x-show="activeRoundTab === 'first'"
+                   x-cloak
+                   x-transition:enter="tw:transition-opacity tw:duration-200"
+                   x-transition:enter-start="tw:opacity-0"
+                   x-transition:enter-end="tw:opacity-100"
+                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+                   x-transition:leave-start="tw:opacity-100"
+                   x-transition:leave-end="tw:opacity-0">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                  {% for stat_item in stats_data.first_round_stats.total %}
+                    <div>
+                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
+                        {% partial statistics-card %}
+                      {% endwith %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
 
-        <div class="tw:flex tw:gap-x-2">
-          <div class="tw:w-1/3">
-            {% with players=league|top_goals_assists title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
-
-          <div class="tw:w-1/3">
-            {% with players=league|top_yellow_cards title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
-
-          <div class="tw:w-1/3">
-            {% with players=league|top_red_cards title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
-              {% partial statistics-card %}
-            {% endwith %}
+              <div x-show="activeRoundTab === 'second'"
+                   x-cloak
+                   x-transition:enter="tw:transition-opacity tw:duration-200"
+                   x-transition:enter-start="tw:opacity-0"
+                   x-transition:enter-end="tw:opacity-100"
+                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+                   x-transition:leave-start="tw:opacity-100"
+                   x-transition:leave-end="tw:opacity-0">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                  {% for stat_item in stats_data.second_round_stats.total %}
+                    <div>
+                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
+                        {% partial statistics-card %}
+                      {% endwith %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <input type="radio" name="statistics-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="В среднем за матч" />
-    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
-      <div role="tabpanel" aria-labelledby="avg-stats-tab" class="tw:flex tw:flex-col tw:p-2 tw:gap-y-2">
-        <div class="tw:flex tw:gap-x-2">
-          <div class="tw:w-1/3">
-            {% with players=league|top_goalscorers_per_match stat_type='avg' title='Бомбардиры' icon_url='img/ico/ball_2.png' icon_title='Забито' %}
-              {% partial statistics-card %}
-            {% endwith %}
+      <input type="radio" name="statistics-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="В среднем за матч" />
+      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
+        <div role="tabpanel" aria-labelledby="avg-stats-tab">
+          <div class="tw:flex tw:gap-2 tw:mx-2 tw:mt-3 tw:mb-1">
+            <button x-data="{ tab: 'general'}"
+                    @click="activeRoundTab = tab"
+                    class="tw:btn tw:btn-xs tw:btn-primary"
+                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">Общая</button>
+            <button x-data="{ tab: 'first'}"
+                    @click="activeRoundTab = tab"
+                    class="tw:btn tw:btn-xs tw:btn-outline"
+                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">1 круг</button>
+            <button x-data="{ tab: 'second'}"
+                    @click="activeRoundTab = tab"
+                    class="tw:btn tw:btn-xs tw:btn-outline"
+                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">2 круг</button>
           </div>
 
-          <div class="tw:w-1/3">
-            {% with players=league|top_assistants_per_match stat_type='avg' title='Ассистенты' icon_url='img/ico/boot_ass_2.png' icon_title='Голевые передачи' icon_width=28 icon_height=28 %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
+          <div class="tw:p-2">
+            <div class="tw:relative">
+              <div x-show="activeRoundTab === 'general'"
+                   x-transition:enter="tw:transition-opacity tw:duration-200"
+                   x-transition:enter-start="tw:opacity-0"
+                   x-transition:enter-end="tw:opacity-100"
+                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+                   x-transition:leave-start="tw:opacity-100"
+                   x-transition:leave-end="tw:opacity-0">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                  {% for stat_item in stats_data.general_stats.avg %}
+                    <div>
+                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
+                        {% partial statistics-card %}
+                      {% endwith %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
 
-          <div class="tw:w-1/3">
-            {% with players=league|top_clean_sheets_per_match stat_type='avg' title='Сухие таймы' icon_url='img/ico/clean_sheet1.png' icon_title='Сухие таймы' %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
-        </div>
+              <div x-show="activeRoundTab === 'first'"
+                   x-cloak
+                   x-transition:enter="tw:transition-opacity tw:duration-200"
+                   x-transition:enter-start="tw:opacity-0"
+                   x-transition:enter-end="tw:opacity-100"
+                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+                   x-transition:leave-start="tw:opacity-100"
+                   x-transition:leave-end="tw:opacity-0">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                  {% for stat_item in stats_data.first_round_stats.avg %}
+                    <div>
+                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
+                        {% partial statistics-card %}
+                      {% endwith %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
 
-        <div class="tw:flex tw:gap-x-2">
-          <div class="tw:w-1/3">
-            {% with players=league|top_goals_assists_per_match stat_type='avg' title='Результат. действия' icon_url='img/ico/goal_assist.png' icon_title='Голы + передачи' icon_width=66 icon_height=28 %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
-
-          <div class="tw:w-1/3">
-            {% with players=league|top_yellow_cards_per_match stat_type='avg' title='Желтые карточки' icon_url='img/ico/yellow_card.png' icon_title='ЖК' %}
-              {% partial statistics-card %}
-            {% endwith %}
-          </div>
-
-          <div class="tw:w-1/3">
-            {% with players=league|top_red_cards_per_match stat_type='avg' title='Красные карточки' icon_url='img/ico/red_card.png' icon_title='КК' %}
-              {% partial statistics-card %}
-            {% endwith %}
+              <div x-show="activeRoundTab === 'second'"
+                   x-cloak
+                   x-transition:enter="tw:transition-opacity tw:duration-200"
+                   x-transition:enter-start="tw:opacity-0"
+                   x-transition:enter-end="tw:opacity-100"
+                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+                   x-transition:leave-start="tw:opacity-100"
+                   x-transition:leave-end="tw:opacity-0">
+                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+                  {% for stat_item in stats_data.second_round_stats.avg %}
+                    <div>
+                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
+                        {% partial statistics-card %}
+                      {% endwith %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+{% else %}
+  <div class="tw:flex tw:flex-col tw:w-full">
+    <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
+      <input type="radio" name="statistics-tabs" class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!" aria-label="Общая" checked />
+      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
+        <div role="tabpanel" aria-labelledby="general-stats-tab" class="tw:p-2">
+          <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+            {% for stat_item in stats_data.general_stats.total %}
+              <div>
+                {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
+                  {% partial statistics-card %}
+                {% endwith %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <input type="radio" name="statistics-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="В среднем за матч" />
+      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
+        <div role="tabpanel" aria-labelledby="avg-stats-tab" class="tw:p-2">
+          <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+            {% for stat_item in stats_data.general_stats.avg %}
+              <div>
+                {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
+                  {% partial statistics-card %}
+                {% endwith %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}

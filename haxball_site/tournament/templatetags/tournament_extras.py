@@ -6,7 +6,7 @@ from typing import Iterable
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery
+from django.db.models import Case, Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery, Value, When
 from django.db.models.functions import Cast, Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
@@ -505,28 +505,177 @@ def tournament_table(league: League, stage: TournamentStage, group: Group | None
     }
 
 
-@register.filter
-def top_goalscorers(league: League):
+@register.simple_tag
+def tournament_statistic(league: League):
+    """
+    Get tournament statistics with support for round-robin stages.
+    Returns dict with general_stats, first_round_stats, second_round_stats as arrays.
+    """
+    # Check if league has single regular stage with round-robin
+    stages = league.stages.all()
+    show_rounds = False
+    first_round_range = None
+    second_round_range = None
+
+    if stages.count() == 1:
+        stage = stages.first()
+        if (
+            stage.is_regular
+            and hasattr(stage, 'is_round_robin')
+            and stage.is_round_robin
+            and stage.round_robin_rounds > 1
+        ):
+            show_rounds = True
+            total_tours = stage.tours.count()
+            tours_per_round = total_tours // 2
+            first_round_range = (1, tours_per_round)
+            second_round_range = (tours_per_round + 1, total_tours)
+
+    result = {
+        'show_rounds': show_rounds,
+        'general_stats': _get_league_statistics(league),
+    }
+
+    if show_rounds:
+        result['first_round_stats'] = _get_league_statistics(league, first_round_range)
+        result['second_round_stats'] = _get_league_statistics(league, second_round_range)
+
+    return result
+
+
+def _get_league_statistics(league: League, tour_range: tuple = None):
+    """Get all statistics for a league, optionally filtered by tour range.
+    Returns dict with 'total' and 'avg' arrays."""
+    return {
+        'total': [
+            {
+                'title': 'Бомбардиры',
+                'players': _get_top_goalscorers(league, tour_range),
+                'icon_url': 'img/ico/ball_2.png',
+                'icon_title': 'Забито',
+            },
+            {
+                'title': 'Ассистенты',
+                'players': _get_top_assistants(league, tour_range),
+                'icon_url': 'img/ico/boot_ass_2.png',
+                'icon_title': 'Голевые передачи',
+                'icon_width': 28,
+                'icon_height': 28,
+            },
+            {
+                'title': 'Сухие таймы',
+                'players': _get_top_clean_sheets(league, tour_range),
+                'icon_url': 'img/ico/clean_sheet1.png',
+                'icon_title': 'Сухие таймы',
+            },
+            {
+                'title': 'Результат. действия',
+                'players': _get_top_goals_assists(league, tour_range),
+                'icon_url': 'img/ico/goal_assist.png',
+                'icon_title': 'Голы + передачи',
+                'icon_width': 66,
+                'icon_height': 28,
+            },
+            {
+                'title': 'Желтые карточки',
+                'players': _get_top_yellow_cards(league, tour_range),
+                'icon_url': 'img/ico/yellow_card.png',
+                'icon_title': 'ЖК',
+            },
+            {
+                'title': 'Красные карточки',
+                'players': _get_top_red_cards(league, tour_range),
+                'icon_url': 'img/ico/red_card.png',
+                'icon_title': 'КК',
+            },
+        ],
+        'avg': [
+            {
+                'title': 'Бомбардиры',
+                'players': _get_top_goalscorers_per_match(league, tour_range),
+                'icon_url': 'img/ico/ball_2.png',
+                'icon_title': 'Забито',
+                'stat_type': 'avg',
+            },
+            {
+                'title': 'Ассистенты',
+                'players': _get_top_assistants_per_match(league, tour_range),
+                'icon_url': 'img/ico/boot_ass_2.png',
+                'icon_title': 'Голевые передачи',
+                'icon_width': 28,
+                'icon_height': 28,
+                'stat_type': 'avg',
+            },
+            {
+                'title': 'Сухие таймы',
+                'players': _get_top_clean_sheets_per_match(league, tour_range),
+                'icon_url': 'img/ico/clean_sheet1.png',
+                'icon_title': 'Сухие таймы',
+                'stat_type': 'avg',
+            },
+            {
+                'title': 'Результат. действия',
+                'players': _get_top_goals_assists_per_match(league, tour_range),
+                'icon_url': 'img/ico/goal_assist.png',
+                'icon_title': 'Голы + передачи',
+                'icon_width': 66,
+                'icon_height': 28,
+                'stat_type': 'avg',
+            },
+            {
+                'title': 'Желтые карточки',
+                'players': _get_top_yellow_cards_per_match(league, tour_range),
+                'icon_url': 'img/ico/yellow_card.png',
+                'icon_title': 'ЖК',
+                'stat_type': 'avg',
+            },
+            {
+                'title': 'Красные карточки',
+                'players': _get_top_red_cards_per_match(league, tour_range),
+                'icon_url': 'img/ico/red_card.png',
+                'icon_title': 'КК',
+                'stat_type': 'avg',
+            },
+        ],
+    }
+
+
+def _get_top_goalscorers(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    goals_filter = Q(goals__match__league=league)
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        goals_filter &= Q(goals__match__numb_tour__number__gte=min_tour, goals__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(goals__match__league=league)
+        queryset.filter(goals_filter)
         .annotate(count=Count('goals'), last_team_logo=get_player_last_team_logo_subquery(league))
         .order_by('-count')
     )
 
 
-@register.filter
-def top_goalscorers_per_match(league: League):
+def _get_top_goalscorers_per_match(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    goals_filter = Q(
+        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+        goals__match__league=league,
+    )
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        goals_filter &= Q(goals__match__numb_tour__number__gte=min_tour, goals__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(
-            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-            goals__match__league=league,
-        )
+        queryset.filter(goals_filter)
         .annotate(
             goals_count=Count('goals'),
-            matches_count=Coalesce(get_player_matches_subquery(league), 0),
-            count=Cast(F('goals_count'), FloatField()) / F('matches_count'),
+            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
+            count=Case(
+                When(matches_count__gt=0, then=Cast(F('goals_count'), FloatField()) / F('matches_count')),
+                default=Value(0),
+                output_field=FloatField(),
+            ),
             last_team_logo=get_player_last_team_logo_subquery(league),
         )
         .filter(count__gt=0, matches_count__gte=3)
@@ -534,11 +683,18 @@ def top_goalscorers_per_match(league: League):
     )
 
 
-@register.filter
-def top_assistants(league: League):
+def _get_top_assistants(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    assists_filter = Q(assists__match__league=league)
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        assists_filter &= Q(
+            assists__match__numb_tour__number__gte=min_tour, assists__match__numb_tour__number__lte=max_tour
+        )
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(assists__match__league=league)
+        queryset.filter(assists_filter)
         .annotate(
             count=Count('assists'),
             last_team_logo=get_player_last_team_logo_subquery(league),
@@ -547,18 +703,29 @@ def top_assistants(league: League):
     )
 
 
-@register.filter
-def top_assistants_per_match(league: League):
-    return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(
-            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-            assists__match__league=league,
+def _get_top_assistants_per_match(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    assists_filter = Q(
+        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+        assists__match__league=league,
+    )
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        assists_filter &= Q(
+            assists__match__numb_tour__number__gte=min_tour, assists__match__numb_tour__number__lte=max_tour
         )
+
+    return (
+        queryset.filter(assists_filter)
         .annotate(
             assists_count=Count('assists'),
-            matches_count=Coalesce(get_player_matches_subquery(league), 0),
-            count=Cast(F('assists_count'), FloatField()) / F('matches_count'),
+            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
+            count=Case(
+                When(matches_count__gt=0, then=Cast(F('assists_count'), FloatField()) / F('matches_count')),
+                default=Value(0),
+                output_field=FloatField(),
+            ),
             last_team_logo=get_player_last_team_logo_subquery(league),
         )
         .filter(count__gt=0, matches_count__gte=3)
@@ -566,34 +733,32 @@ def top_assistants_per_match(league: League):
     )
 
 
-def _get_player_goals_assists_data(league: League):
-    goals_data = (
-        Goal.objects.filter(match__league=league, author__isnull=False)
-        .values('author')
-        .annotate(goals_count=Count('id'))
-    )
+def _get_player_goals_assists_data(league: League, tour_range: tuple = None):
+    goals_queryset = Goal.objects.filter(match__league=league, author__isnull=False)
+    assists_queryset = Goal.objects.filter(match__league=league, assistent__isnull=False)
+    matches_queryset = PlayerMatchStatistics.objects.filter(league=league)
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        tour_filter = Q(match__numb_tour__number__gte=min_tour, match__numb_tour__number__lte=max_tour)
+        goals_queryset = goals_queryset.filter(tour_filter)
+        assists_queryset = assists_queryset.filter(tour_filter)
+        matches_queryset = matches_queryset.filter(tour_filter)
+
+    goals_data = goals_queryset.values('author').annotate(goals_count=Count('id'))
     goals_lookup = {data['author']: data['goals_count'] for data in goals_data}
 
-    assists_data = (
-        Goal.objects.filter(match__league=league, assistent__isnull=False)
-        .values('assistent')
-        .annotate(assists_count=Count('id'))
-    )
+    assists_data = assists_queryset.values('assistent').annotate(assists_count=Count('id'))
     assists_lookup = {data['assistent']: data['assists_count'] for data in assists_data}
 
-    matches_data = (
-        PlayerMatchStatistics.objects.filter(league=league)
-        .values('player')
-        .annotate(matches_count=Count('id', distinct=True))
-    )
+    matches_data = matches_queryset.values('player').annotate(matches_count=Count('id', distinct=True))
     matches_lookup = {data['player']: data['matches_count'] for data in matches_data}
 
     return goals_lookup, assists_lookup, matches_lookup
 
 
-@register.filter
-def top_goals_assists(league: League):
-    goals_lookup, assists_lookup, matches_lookup = _get_player_goals_assists_data(league)
+def _get_top_goals_assists(league: League, tour_range: tuple = None):
+    goals_lookup, assists_lookup, matches_lookup = _get_player_goals_assists_data(league, tour_range)
 
     players = (
         Player.objects.select_related('team', 'name__user_profile')
@@ -618,9 +783,8 @@ def top_goals_assists(league: League):
     return sorted(result, key=lambda x: x.count, reverse=True)
 
 
-@register.filter
-def top_goals_assists_per_match(league: League):
-    goals_lookup, assists_lookup, matches_lookup = _get_player_goals_assists_data(league)
+def _get_top_goals_assists_per_match(league: League, tour_range: tuple = None):
+    goals_lookup, assists_lookup, matches_lookup = _get_player_goals_assists_data(league, tour_range)
 
     players = (
         Player.objects.select_related('team', 'name__user_profile')
@@ -646,11 +810,16 @@ def top_goals_assists_per_match(league: League):
     return sorted(result, key=lambda x: x.count, reverse=True)
 
 
-@register.filter
-def top_clean_sheets(league: League):
+def _get_top_clean_sheets(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    event_filter = Q(event__match__league=league, event__event='CLN')
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(event__match__league=league, event__event='CLN')
+        queryset.filter(event_filter)
         .annotate(
             count=Count('event__match__league'),
             last_team_logo=get_player_last_team_logo_subquery(league),
@@ -659,15 +828,24 @@ def top_clean_sheets(league: League):
     )
 
 
-@register.filter
-def top_clean_sheets_per_match(league: League):
+def _get_top_clean_sheets_per_match(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    event_filter = Q(event__match__league=league, event__event='CLN')
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(event__match__league=league, event__event='CLN')
+        queryset.filter(event_filter)
         .annotate(
             cs_count=Count('event__match__league'),
-            matches_count=Coalesce(get_player_matches_subquery(league), 0),
-            count=Cast(F('cs_count'), FloatField()) / F('matches_count'),
+            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
+            count=Case(
+                When(matches_count__gt=0, then=Cast(F('cs_count'), FloatField()) / F('matches_count')),
+                default=Value(0),
+                output_field=FloatField(),
+            ),
             last_team_logo=get_player_last_team_logo_subquery(league),
         )
         .filter(matches_count__gte=3)
@@ -675,11 +853,16 @@ def top_clean_sheets_per_match(league: League):
     )
 
 
-@register.filter
-def top_yellow_cards(league: League):
+def _get_top_yellow_cards(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    event_filter = Q(event__match__league=league, event__event='YEL')
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(event__match__league=league, event__event='YEL')
+        queryset.filter(event_filter)
         .annotate(
             count=Count('event__match__league'),
             last_team_logo=get_player_last_team_logo_subquery(league),
@@ -688,30 +871,44 @@ def top_yellow_cards(league: League):
     )
 
 
-@register.filter
-def top_yellow_cards_per_match(league: League):
+def _get_top_yellow_cards_per_match(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    event_filter = Q(
+        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+        event__match__league=league,
+        event__event='YEL',
+    )
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(
-            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-            event__match__league=league,
-            event__event='YEL',
-        )
+        queryset.filter(event_filter)
         .annotate(
             yellow_cards_count=Count('event__match__league'),
-            matches_count=Coalesce(get_player_matches_subquery(league), 0),
-            count=Cast(F('yellow_cards_count'), FloatField()) / F('matches_count'),
+            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
+            count=Case(
+                When(matches_count__gt=0, then=Cast(F('yellow_cards_count'), FloatField()) / F('matches_count')),
+                default=Value(0),
+                output_field=FloatField(),
+            ),
             last_team_logo=get_player_last_team_logo_subquery(league),
         )
         .order_by('-count')
     )
 
 
-@register.filter
-def top_red_cards(league: League):
+def _get_top_red_cards(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    event_filter = Q(event__match__league=league, event__event='RED')
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(event__match__league=league, event__event='RED')
+        queryset.filter(event_filter)
         .annotate(
             count=Count('event__match__league'),
             last_team_logo=get_player_last_team_logo_subquery(league),
@@ -720,19 +917,28 @@ def top_red_cards(league: League):
     )
 
 
-@register.filter
-def top_red_cards_per_match(league: League):
+def _get_top_red_cards_per_match(league: League, tour_range: tuple = None):
+    queryset = Player.objects.select_related('team', 'name__user_profile')
+    event_filter = Q(
+        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
+        event__match__league=league,
+        event__event='RED',
+    )
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
+
     return (
-        Player.objects.select_related('team', 'name__user_profile')
-        .filter(
-            Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-            event__match__league=league,
-            event__event='RED',
-        )
+        queryset.filter(event_filter)
         .annotate(
             red_cards_count=Count('event__match__league'),
-            matches_count=Coalesce(get_player_matches_subquery(league), 0),
-            count=Cast(F('red_cards_count'), FloatField()) / F('matches_count'),
+            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
+            count=Case(
+                When(matches_count__gt=0, then=Cast(F('red_cards_count'), FloatField()) / F('matches_count')),
+                default=Value(0),
+                output_field=FloatField(),
+            ),
             last_team_logo=get_player_last_team_logo_subquery(league),
         )
         .order_by('-count')
@@ -751,14 +957,14 @@ def get_player_last_team_logo_subquery(league: League):
     )
 
 
-def get_player_matches_subquery(league: League):
-    return Subquery(
-        PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)
-        .order_by()
-        .values('player')
-        .annotate(c=Count('id', distinct=True))
-        .values('c')
-    )
+def get_player_matches_subquery(league: League, tour_range: tuple = None):
+    queryset = PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)
+
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        queryset = queryset.filter(match__numb_tour__number__gte=min_tour, match__numb_tour__number__lte=max_tour)
+
+    return Subquery(queryset.order_by().values('player').annotate(c=Count('id', distinct=True)).values('c'))
 
 
 def get_player_goals_subquery(league: League):
