@@ -9,6 +9,7 @@
           <form hx-post="{% url 'balance:shop_purchase' item.slug %}"
                 hx-target="#shop-items-container"
                 hx-swap="innerHTML"
+                hx-disabled-elt="find button"
                 class="tw:flex tw:items-center tw:gap-3">
             {% csrf_token %}
             <button type="submit" class="tw:btn tw:btn-primary tw:disabled:[&_img]:opacity-50" {% if not can_afford %}disabled{% endif %}>
