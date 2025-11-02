@@ -7,6 +7,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from core.models import Subscription
+
 
 class BalanceManager(models.Manager):
     def get_user_balance(self, user: User) -> Decimal:
@@ -162,3 +164,70 @@ class Transaction(models.Model):
     @property
     def is_outgoing_transfer(self) -> bool:
         return self.transaction_type == self.TransactionType.TRANSFER_OUT
+
+
+class ShopItemQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(is_active=True)
+
+
+class ShopItem(models.Model):
+    class ProductType(models.TextChoices):
+        STUB = 'stub', 'Заглушка'
+        SUBSCRIPTION = 'subscription', 'Подписка'
+
+    slug = models.SlugField('Слаг', unique=True, max_length=128)
+    product_type = models.CharField(
+        'Тип товара', max_length=32, choices=ProductType.choices, default=ProductType.SUBSCRIPTION
+    )
+    name = models.CharField('Название', max_length=255)
+    description = models.TextField('Описание', blank=True)
+    price = models.DecimalField('Стоимость', max_digits=10, decimal_places=2)
+    image = models.ImageField('Изображение', upload_to='shop_items/', blank=True, null=True)
+    metadata = models.JSONField('Дополнительные данные', default=dict, blank=True)
+    position = models.PositiveIntegerField('Порядок отображения', default=0)
+    is_active = models.BooleanField('Активен', default=True)
+    created_at = models.DateTimeField('Создан', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлен', auto_now=True)
+
+    objects = ShopItemQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = 'Товар магазина'
+        verbose_name_plural = 'Товары магазина'
+        ordering = ['position', 'name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def subscription_tier(self):
+        if self.product_type != self.ProductType.SUBSCRIPTION:
+            return None
+        return (self.metadata or {}).get('tier', Subscription.TIER_1)
+
+    @property
+    def subscription_duration_in_days(self):
+        if self.product_type != self.ProductType.SUBSCRIPTION:
+            return None
+        return (self.metadata or {}).get('duration_in_days', 30)
+
+
+class ShopPurchase(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name='ID покупки')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shop_purchases', verbose_name='Пользователь')
+    item = models.ForeignKey(ShopItem, on_delete=models.PROTECT, related_name='purchases', verbose_name='Товар')
+    amount = models.DecimalField('Сумма списания', max_digits=10, decimal_places=2)
+    transaction = models.ForeignKey(
+        Transaction, on_delete=models.PROTECT, related_name='shop_purchases', verbose_name='Транзакция'
+    )
+    metadata = models.JSONField('Детали покупки', default=dict, blank=True)
+    created_at = models.DateTimeField('Дата покупки', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Покупка'
+        verbose_name_plural = 'Покупки'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.username} — {self.item.name} ({self.amount} CC)'

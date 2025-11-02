@@ -36,7 +36,7 @@ urlpatterns = [
     path('fantasy/', include('fantasy_league.urls', namespace='fantasy_league')),
     path('predictions/', include('predictions.urls', namespace='predictions')),
     path('notifications/', include('custom_notifications.urls', namespace='notifications')),
-    path('balance/', include('balance.urls', namespace='balance')),
+    path('coins/', include('balance.urls', namespace='balance')),
     path('accounts/', include('allauth.urls')),
     path('summernote/', include('django_summernote.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
