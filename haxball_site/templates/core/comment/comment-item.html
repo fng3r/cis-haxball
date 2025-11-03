@@ -3,7 +3,8 @@
 {% load tournament_extras %}
 {% load thumbnail %}
 
-<div class="tw:flex tw:p-4 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}" id="r{{ comment.id }}">
+<div class="tw:flex tw:p-4 tw:gap-0.5 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}"
+     id="r{{ comment.id }}">
   <div class="tw:flex tw:flex-col tw:gap-1.5 tw:pl-2">
     <a href="{{ comment.author.user_profile.get_absolute_url }}">
       <div class="tw:mr-2 tw:avatar {% if comment.author|is_online:users_online %}tw:avatar-online{% else %}tw:avatar-offline{% endif %}">
@@ -159,7 +160,7 @@
         </span>
       </div>
     {% endif %}
-    <div class="comment-body tw:mt-3 tw:prose tw:max-w-none tw:text-base-content tw:prose-img:my-0">{{ comment.body|safe }}</div>
+    <div class="comment-body tw:mt-1.5 tw:prose tw:max-w-none tw:text-base-content tw:prose-img:my-0">{{ comment.body|safe }}</div>
 
     <div class="comment-footer" x-data="{showReplies: true}">
       {% if comment.is_parent and comment.childs_count > 2 %}

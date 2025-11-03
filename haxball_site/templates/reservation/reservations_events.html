@@ -8,13 +8,13 @@
 {% endblock %}
 
 <div id="reservations-events" class="tw:card tw:bg-base-100 tw:rounded-lg">
-  <div class="tw:card-title tw:rounded-t-lg tw:p-4">
+  <div class="tw:card-title tw:rounded-t-lg tw:p-4 tw:pb-2">
     <h4 class="tw:card-title">Журнал событий ({{ reservations.paginator.count }})</h4>
   </div>
 
   <div class="comment-widgets">
     {% for reservation in reservations %}
-      <div class="tw:flex tw:p-3 comment-row" id="reservation{{ reservation.id }}">
+      <div class="tw:flex tw:p-3 tw:py-4 tw:gap-0.5 comment-row" id="reservation{{ reservation.id }}">
         <div class="tw:pl-2">
           <a href="{{ reservation.author.user_profile.get_absolute_url }}">
             <div class="tw:mr-2 tw:avatar">
@@ -53,10 +53,9 @@
               {{ reservation.created|time:"H:i" }}
             </span>
           </div>
-          <div class="comment-body">
+          <div class="comment-body tw:my-1.5">
             <div id="reservation-log-entry">
-              <p></p>
-              <p class="tw:flex tw:flex-col">
+              <p class="tw:flex tw:flex-col tw:mb-0!">
                 <span class="tw:inline-flex tw:flex-wrap tw:items-center tw:gap-x-1">
                   <span class="tw:font-semibold">Матч:</span>
                   <img src="{{ reservation.match.team_home.logo.url }}"
@@ -88,7 +87,7 @@
       </div>
 
       {% if reservation.is_cancelled %}
-        <div class="tw:flex tw:p-3 tw:pl-[7%] comment-row" id="reservation_c{{ reservation.id }}">
+        <div class="tw:flex tw:p-3 tw:py-4 tw:pl-[7%] tw:gap-0.5 comment-row" id="reservation_c{{ reservation.id }}">
           <div class="tw:pl-2">
             <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}">
               <div class="tw:mr-2 tw:avatar">
@@ -127,12 +126,8 @@
                 {{ reservation.cancelled_at|time:"H:i" }}
               </span>
             </div>
-            <div class="comment-body">
-              <p></p>
-              <p>
-                <span>Отмена брони</span>
-              </p>
-              <p></p>
+            <div class="comment-body tw:my-1.5">
+              <span>Отмена брони</span>
             </div>
           </div>
         </div>
