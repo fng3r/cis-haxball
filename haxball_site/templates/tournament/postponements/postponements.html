@@ -140,11 +140,9 @@
                 <div class="tw:pl-2">
                   <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
                     <div class="tw:mr-2 tw:avatar">
-                      <div class="tw:w-[50px] tw:rounded-full">
-                        {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                          <img src="{{ avatar.url }}" alt="{{ postponement.taken_by.username }}" width="50" class="tw:rounded-full">
-                        {% endthumbnail %}
-                      </div>
+                      {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                        {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.taken_by.username frame=postponement.taken_by.user_profile.avatar_frame %}
+                      {% endthumbnail %}
                     </div>
                   </a>
                 </div>
@@ -201,11 +199,9 @@
                   <div class="tw:pl-2">
                     <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
                       <div class="tw:mr-2 tw:avatar">
-                        <div class="tw:w-[50px] tw:rounded-full">
-                          {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                            <img src="{{ avatar.url }}" alt="{{ postponement.cancelled_by.username }}" width="50" class="tw:rounded-full">
-                          {% endthumbnail %}
-                        </div>
+                        {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                          {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.cancelled_by.username frame=postponement.cancelled_by.user_profile.avatar_frame %}
+                        {% endthumbnail %}
                       </div>
                     </a>
                   </div>

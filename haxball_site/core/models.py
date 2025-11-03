@@ -320,8 +320,24 @@ class Profile(models.Model):
         User, verbose_name='Пользователь', on_delete=models.CASCADE, related_name='user_profile'
     )
     tag = models.CharField('Тег', max_length=5, blank=True, null=True, help_text='Максимальная длина тега - 5 символов')
+
+    class AvatarFrame(models.TextChoices):
+        NONE = '', 'Без рамки'
+        YELLOW = 'yellow', 'Жёлтая'
+        ORANGE = 'orange', 'Оранжевая'
+        BLUE = 'blue', 'Синяя'
+        VIOLET = 'violet', 'Фиолетовая'
+        ROSE = 'rose', 'Розовая'
+
     slug = AutoSlugField(always_update=True, populate_from='name')
     avatar = models.ImageField('Аватар', upload_to='users_avatars/', default='users_avatars/default/default.png')
+    avatar_frame = models.CharField(
+        'Рамка аватара',
+        max_length=16,
+        choices=AvatarFrame.choices,
+        blank=True,
+        default=AvatarFrame.NONE,
+    )
     background = models.ImageField('Фон профиля', upload_to='users_background/', blank=True, null=True)
     born_date = models.DateField('Дата рождения', blank=True, null=True)
     about = models.TextField('О себе', max_length=1000, blank=True)

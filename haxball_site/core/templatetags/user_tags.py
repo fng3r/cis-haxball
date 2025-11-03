@@ -203,21 +203,12 @@ def user_in_list(objects, user):
 
 
 @register.filter
-def can_edit_profile_bg(user: User):
+def can_use_premium_features(user: User):
     if user.is_superuser:
         return True
 
     subscriptions = Subscription.objects.by_user(user).active().order_by('tier')
-    return subscriptions.count() > 0
-
-
-@register.filter
-def can_edit_user_tag(user: User):
-    if user.is_superuser:
-        return True
-
-    subscriptions = Subscription.objects.by_user(user).active().order_by('tier')
-    return subscriptions.count() > 0
+    return subscriptions.exists()
 
 
 @register.filter

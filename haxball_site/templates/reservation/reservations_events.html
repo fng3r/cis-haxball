@@ -18,11 +18,9 @@
         <div class="tw:pl-2">
           <a href="{{ reservation.author.user_profile.get_absolute_url }}">
             <div class="tw:mr-2 tw:avatar">
-              <div class="tw:w-[50px] tw:rounded-full">
-                {% thumbnail reservation.author.user_profile.avatar "50x50" crop="center" as avatar %}
-                  <img src="{{ avatar.url }}" alt="{{ reservation.author.username }}" width="50" class="tw:rounded-full">
-                {% endthumbnail %}
-              </div>
+              {% thumbnail reservation.author.user_profile.avatar "50x50" crop="center" as avatar %}
+                {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=reservation.author.username frame=reservation.author.user_profile.avatar_frame %}
+              {% endthumbnail %}
             </div>
           </a>
         </div>
@@ -94,11 +92,9 @@
           <div class="tw:pl-2">
             <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}">
               <div class="tw:mr-2 tw:avatar">
-                <div class="tw:w-[50px] tw:rounded-full">
-                  {% thumbnail reservation.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                    <img src="{{ avatar.url }}" alt="{{ reservation.cancelled_by.username }}" width="50" class="tw:rounded-full">
-                  {% endthumbnail %}
-                </div>
+                {% thumbnail reservation.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                  {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=reservation.cancelled_by.username frame=reservation.cancelled_by.user_profile.avatar_frame %}
+                {% endthumbnail %}
               </div>
             </a>
           </div>

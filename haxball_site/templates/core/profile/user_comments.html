@@ -7,11 +7,9 @@
     <div class="tw:pl-2">
       <a href="{{ comment.author.user_profile.get_absolute_url }}">
         <div class="tw:mr-2 tw:avatar {% if comment.author|is_online:users_online %}tw:avatar-online{% else %}tw:avatar-offline{% endif %}">
-          <div class="tw:w-[50px] tw:rounded-full {% if comment.author.is_superuser %}tw:ring tw:ring-warning tw:ring-offset-base-100 tw:ring-offset-1{% endif %}">
-            {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as avatar %}
-              <img src="{{ avatar.url }}" alt="{{ comment.author.username }}" width="50" class="tw:rounded-full">
-            {% endthumbnail %}
-          </div>
+          {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as avatar %}
+            {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=comment.author.username frame=comment.author.user_profile.avatar_frame %}
+          {% endthumbnail %}
         </div>
       </a>
     </div>
@@ -21,18 +19,23 @@
         <div class="tw:inline-flex tw:items-center">
 
           <div class="tw:m-0 tw:flex tw:items-center">
+            <div class="tw:flex tw:gap-1 tw:items-center">
+              {% for icon in comment.author.user_profile.user_icon.all %}
+                <div class="tw:align-middle">
+                  <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                </div>
+              {% endfor %}
+              <a href="{{ comment.author.user_profile.get_absolute_url }}"
+                 class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.author.username }}</a>
 
-            {% for icon in comment.author.user_profile.user_icon.all %}
-              <div class="tw:mr-1 tw:align-middle">
-                <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-              </div>
-            {% endfor %}
-            <a href="{{ comment.author.user_profile.get_absolute_url }}"
-               class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.author.username }}</a>
+              {% if comment.author.user_profile.tag %}
+                {% include 'core/include/user_tag.html' with tag=comment.author.user_profile.tag %}
+              {% endif %}
 
-            <span class="tw:ml-1 tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
-              {{ comment.author.user_profile.karma }}
-            </span>
+              <span class="tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
+                {{ comment.author.user_profile.karma }}
+              </span>
+            </div>
           </div>
 
           {% if not comment.is_parent %}
@@ -41,13 +44,19 @@
             </i>
 
             <div class="tw:m-0 tw:flex tw:ml-2 tw:font-semibold">
-              {% for icon in comment.parent.author.user_profile.user_icon.all %}
-                <div class="tw:mr-1 tw:align-middle">
-                  <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                </div>
-              {% endfor %}
-              <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
-                 class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
+              <div class="tw:flex tw:gap-1 tw:items-center">
+                {% for icon in comment.parent.author.user_profile.user_icon.all %}
+                  <div class="tw:align-middle">
+                    <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                  </div>
+                {% endfor %}
+                <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
+                   class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
+
+                {% if comment.parent.author.user_profile.tag %}
+                  {% include 'core/include/user_tag.html' with tag=comment.parent.author.user_profile.tag %}
+                {% endif %}
+              </div>
             </div>
           {% endif %}
 
@@ -90,9 +99,7 @@
 
         {% include 'core/include/like_dislike_comment.html' with comment=comment %}
       </div>
-      <div class="comment-body tw:mt-3 tw:prose tw:max-w-none tw:text-base-content">
-        {{ comment.body|safe }}
-      </div>
+      <div class="comment-body tw:mt-3 tw:prose tw:max-w-none tw:text-base-content">{{ comment.body|safe }}</div>
     </div>
   </div>
 {% endpartialdef %}
@@ -114,22 +121,16 @@
         <div id="pagination" aria-label="Page navigation" class="tw:join tw:my-3 tw:justify-self-center">
           {% for page_number in page|pages_to_show %}
             {% if not page_number %}
-              <button class="tw:join-item tw:btn tw:btn-disabled">
-                ...
-              </button>
+              <button class="tw:join-item tw:btn tw:btn-disabled">...</button>
             {% elif page_number == page.number %}
-              <button class="tw:join-item tw:btn tw:btn-active">
-                {{ page_number }}
-              </button>
+              <button class="tw:join-item tw:btn tw:btn-active">{{ page_number }}</button>
             {% else %}
               <button class="tw:join-item tw:btn tw:bg-base-100"
                       hx-get="{% url 'core:user_comments' user_id %}?page={{ page_number }}"
                       hx-push-url="false"
                       hx-target="#user-comments-container"
                       hx-swap="innerHTML show:top"
-                      hx-indicator="#page-indicator">
-                {{ page_number }}
-              </button>
+                      hx-indicator="#page-indicator">{{ page_number }}</button>
             {% endif %}
           {% endfor %}
         </div>
@@ -138,9 +139,7 @@
     {% endif %}
   {% else %}
     <div class="tw:text-center">
-      <p class="tw:text-xl! tw:p-2 tw:text-base-content/70">
-        У пользователя пока нет комментариев
-      </p>
+      <p class="tw:text-xl! tw:p-2 tw:text-base-content/70">У пользователя пока нет комментариев</p>
     </div>
   {% endif %}
 </div>

@@ -415,18 +415,23 @@ class EditProfile(DetailView, View):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile = context['profile']
-        context['profile_form'] = EditProfileForm(instance=profile)
+
+        profile_form = kwargs.pop('profile_form', None)
+        can_use_premium_features = self._can_use_premium_features(self.request.user)
+        if profile_form is None:
+            profile_form = EditProfileForm(
+                instance=profile,
+                can_use_premium_features=can_use_premium_features,
+            )
+
+        context['profile_form'] = profile_form
+        context['can_use_premium_features'] = can_use_premium_features
+        context['avatar_frame_choices'] = Profile.AvatarFrame.choices
+        context['selected_avatar_frame'] = profile_form['avatar_frame'].value() or ''
+
         return context
 
-    def _can_edit_tag(self, user: User) -> bool:
-        """Check if user can edit their tag (superuser or premium)"""
-        if user.is_superuser:
-            return True
-        subscriptions = Subscription.objects.by_user(user).active()
-        return subscriptions.exists()
-
-    def _can_edit_profile_bg(self, user: User) -> bool:
-        """Check if user can edit profile background (superuser or premium)"""
+    def _can_use_premium_features(self, user: User) -> bool:
         if user.is_superuser:
             return True
         subscriptions = Subscription.objects.by_user(user).active()
@@ -436,33 +441,52 @@ class EditProfile(DetailView, View):
         profile = Profile.objects.get(slug=slug, id=pk)
         self.object = profile
 
-        original_tag = profile.tag
-
-        profile_form = EditProfileForm(request.POST, request.FILES, instance=profile)
+        user = request.user
+        can_use_premium_features = self._can_use_premium_features(user)
+        profile_form = EditProfileForm(
+            request.POST,
+            request.FILES,
+            instance=profile,
+            can_use_premium_features=can_use_premium_features,
+        )
         commentable = profile.commentable
 
         if not profile_form.is_valid():
-            context = self.get_context_data()
-            context['profile_form'] = profile_form
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
             return render(request, self.get_template_names(), context)
 
-        user = request.user
-
         tag_value = profile_form.cleaned_data.get('tag')
-        tag_changed = tag_value is not None and tag_value != original_tag
-        if tag_changed and not self._can_edit_tag(user):
-            context = self.get_context_data()
-            context['error_message'] = 'У вас нет прав для редактирования тега. Необходима активная подписка.'
+        tag_changed = tag_value is not None and tag_value != profile.tag
+        if tag_changed and not can_use_premium_features:
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
+            context['error_message'] = 'У вас нет прав для выбора тега. Необходима активная подписка.'
+            return render(request, self.get_template_names(), context)
+
+        frame_value = profile_form.cleaned_data.get('avatar_frame', Profile.AvatarFrame.NONE)
+        frame_changed = frame_value != (profile.avatar_frame or Profile.AvatarFrame.NONE)
+        if frame_changed and not can_use_premium_features:
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
+            context['error_message'] = 'У вас нет прав для выбора рамки аватара. Необходима активная подписка.'
             return render(request, self.get_template_names(), context)
 
         background_changed = 'background' in request.FILES
-        if background_changed and not self._can_edit_profile_bg(user):
-            context = self.get_context_data()
+        if background_changed and not can_use_premium_features:
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
             context['error_message'] = 'У вас нет прав для редактирования фона профиля. Необходима активная подписка.'
             return render(request, self.get_template_names(), context)
 
-        if tag_value is not None:
-            profile.tag = tag_value
         if 'avatar' in request.FILES:
             profile.avatar = request.FILES['avatar']
         if 'background' in request.FILES:
