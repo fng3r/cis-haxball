@@ -35,7 +35,9 @@
         </fieldset>
       {% endif %}
 
-      {% if item.description %}<div class="tw:prose tw:text-sm tw:text-base-content/80">{{ item.description|safe }}</div>{% endif %}
+      {% if item.description %}
+        <div class="tw:prose tw:text-sm tw:text-base-content/80 tw:prose-img:my-0">{{ item.description|safe }}</div>
+      {% endif %}
 
       {% if not can_afford %}
         <div class="tw:text-sm tw:text-error tw:bg-error/10 tw:rounded-md tw:px-3 tw:py-2">Недостаточно средств на балансе</div>
