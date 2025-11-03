@@ -11,7 +11,7 @@
           {% csrf_token %}
 
           {% include 'balance/partials/shop_item_modal.html' with item=item can_afford=can_afford %}
-          <div class="tw:modal-action tw:flex tw:gap-3">
+          <div class="tw:modal-action tw:flex tw:gap-3 tw:justify-start tw:md:justify-end">
             <button type="submit" class="tw:btn tw:btn-primary tw:disabled:[&_img]:opacity-50" {% if not can_afford %}disabled{% endif %}>
               <span class="tw:flex tw:items-center tw:gap-2">
                 <span>Купить</span>
