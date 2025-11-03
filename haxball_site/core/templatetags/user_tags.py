@@ -212,6 +212,15 @@ def can_edit_profile_bg(user: User):
 
 
 @register.filter
+def can_edit_user_tag(user: User):
+    if user.is_superuser:
+        return True
+
+    subscriptions = Subscription.objects.by_user(user).active().order_by('tier')
+    return subscriptions.count() > 0
+
+
+@register.filter
 def is_executive(user: User, league: League):
     try:
         player = user.user_player

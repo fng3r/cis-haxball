@@ -21,7 +21,7 @@ from pytils.translit import slugify
 from tournament.models import Achievements, Team
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
-from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
+from .models import Category, LikeDislike, NewComment, Post, Profile, Subscription, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments, strtobool
 
@@ -412,21 +412,67 @@ class EditProfile(DetailView, View):
 
         return 'core/profile/edit_profile.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile = context['profile']
+        context['profile_form'] = EditProfileForm(instance=profile)
+        return context
+
+    def _can_edit_tag(self, user: User) -> bool:
+        """Check if user can edit their tag (superuser or premium)"""
+        if user.is_superuser:
+            return True
+        subscriptions = Subscription.objects.by_user(user).active()
+        return subscriptions.exists()
+
+    def _can_edit_profile_bg(self, user: User) -> bool:
+        """Check if user can edit profile background (superuser or premium)"""
+        if user.is_superuser:
+            return True
+        subscriptions = Subscription.objects.by_user(user).active()
+        return subscriptions.exists()
+
     def post(self, request, pk, slug):
         profile = Profile.objects.get(slug=slug, id=pk)
-        profile_form = EditProfileForm(request.POST, instance=profile)
-        commentable = profile.commentable
-        if profile_form.is_valid():
-            if 'avatar' in request.FILES:
-                profile.avatar = request.FILES['avatar']
-            if 'background' in request.FILES:
-                profile.background = request.FILES['background']
-            if profile_form.cleaned_data['remove_bg']:
-                profile.background = None
+        self.object = profile
 
-            updated_profile = profile_form.save()
-            if commentable != updated_profile.commentable:
-                return redirect(profile.get_absolute_url() + '?commentableChanged=true')
+        original_tag = profile.tag
+
+        profile_form = EditProfileForm(request.POST, request.FILES, instance=profile)
+        commentable = profile.commentable
+
+        if not profile_form.is_valid():
+            context = self.get_context_data()
+            context['profile_form'] = profile_form
+            return render(request, self.get_template_names(), context)
+
+        user = request.user
+
+        tag_value = profile_form.cleaned_data.get('tag')
+        tag_changed = tag_value is not None and tag_value != original_tag
+        if tag_changed and not self._can_edit_tag(user):
+            context = self.get_context_data()
+            context['error_message'] = 'У вас нет прав для редактирования тега. Необходима активная подписка.'
+            return render(request, self.get_template_names(), context)
+
+        background_changed = 'background' in request.FILES
+        if background_changed and not self._can_edit_profile_bg(user):
+            context = self.get_context_data()
+            context['error_message'] = 'У вас нет прав для редактирования фона профиля. Необходима активная подписка.'
+            return render(request, self.get_template_names(), context)
+
+        if tag_value is not None:
+            profile.tag = tag_value
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+        if 'background' in request.FILES:
+            profile.background = request.FILES['background']
+        if profile_form.cleaned_data.get('remove_bg'):
+            profile.background = None
+
+        updated_profile = profile_form.save()
+        if commentable != updated_profile.commentable:
+            return redirect(profile.get_absolute_url() + '?commentableChanged=true')
 
         return redirect(profile.get_absolute_url())
 
