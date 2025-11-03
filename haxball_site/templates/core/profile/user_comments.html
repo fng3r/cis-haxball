@@ -4,7 +4,7 @@
 
 {% partialdef comment-item %}
   <div class="tw:flex tw:p-4 comment-row" id="r{{ comment.id }}">
-    <div class="tw:pl-2">
+    <div class="tw:flex tw:flex-col tw:gap-1.5 tw:pl-2">
       <a href="{{ comment.author.user_profile.get_absolute_url }}">
         <div class="tw:mr-2 tw:avatar {% if comment.author|is_online:users_online %}tw:avatar-online{% else %}tw:avatar-offline{% endif %}">
           {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as avatar %}
@@ -12,12 +12,15 @@
           {% endthumbnail %}
         </div>
       </a>
+
+      <span class="tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
+        {{ comment.author.user_profile.karma }}
+      </span>
     </div>
 
     <div class="comment-text tw:w-full">
       <div class="tw:flex tw:justify-between">
         <div class="tw:inline-flex tw:items-center">
-
           <div class="tw:m-0 tw:flex tw:items-center">
             <div class="tw:flex tw:gap-1 tw:items-center">
               {% for icon in comment.author.user_profile.user_icon.all %}
@@ -31,10 +34,6 @@
               {% if comment.author.user_profile.tag %}
                 {% include 'core/include/user_tag.html' with tag=comment.author.user_profile.tag %}
               {% endif %}
-
-              <span class="tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
-                {{ comment.author.user_profile.karma }}
-              </span>
             </div>
           </div>
 
