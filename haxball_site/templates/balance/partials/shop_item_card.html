@@ -4,14 +4,14 @@
   {% if item.product_type != 'stub' %}
     <dialog id="shop-modal-{{ item.pk }}" class="tw:modal">
       <div class="tw:modal-box tw:max-w-3xl tw:w-full tw:space-y-5">
-        {% include 'balance/partials/shop_item_modal.html' with item=item can_afford=can_afford %}
-        <div class="tw:modal-action tw:flex tw:gap-3">
-          <form hx-post="{% url 'balance:shop_purchase' item.slug %}"
-                hx-target="#shop-items-container"
-                hx-swap="innerHTML"
-                hx-disabled-elt="find button"
-                class="tw:flex tw:items-center tw:gap-3">
-            {% csrf_token %}
+        <form hx-post="{% url 'balance:shop_purchase' item.slug %}"
+              hx-target="#shop-items-container"
+              hx-swap="innerHTML"
+              hx-disabled-elt="find button">
+          {% csrf_token %}
+
+          {% include 'balance/partials/shop_item_modal.html' with item=item can_afford=can_afford %}
+          <div class="tw:modal-action tw:flex tw:gap-3">
             <button type="submit" class="tw:btn tw:btn-primary tw:disabled:[&_img]:opacity-50" {% if not can_afford %}disabled{% endif %}>
               <span class="tw:flex tw:items-center tw:gap-2">
                 <span>Купить</span>
@@ -21,19 +21,20 @@
                 </div>
               </span>
             </button>
-          </form>
-          <form method="dialog">
-            <button class="tw:btn tw:btn-outline">Закрыть</button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
+
+      <form method="dialog" class="tw:modal-backdrop">
+        <button />
+      </form>
     </dialog>
   {% endif %}
 
   <div {% if item.product_type != 'stub' %}onclick="document.getElementById('shop-modal-{{ item.pk }}').showModal()"{% endif %}
        class="tw:w-full tw:card tw:bg-base-100 tw:shadow-sm tw:border tw:border-base-300 tw:cursor-pointer tw:transition tw:duration-200 tw:hover:-translate-y-1 tw:hover:shadow-lg">
     <div class="tw:flex tw:flex-col tw:h-full">
-      <div class="tw:h-40 tw:flex tw:items-center tw:justify-center tw:bg-base-200">
+      <div class="tw:h-40 tw:flex tw:items-center tw:justify-center tw:bg-base-200 tw:rounded-t-[var(--radius-box)]">
         {% if item.image %}
           <img src="{{ item.image.url }}" alt="{{ item.name }}" class="tw:max-h-28 tw:w-auto tw:object-contain">
         {% else %}

@@ -175,6 +175,8 @@ class ShopItem(models.Model):
     class ProductType(models.TextChoices):
         STUB = 'stub', 'Заглушка'
         SUBSCRIPTION = 'subscription', 'Подписка'
+        CHANGE_USERNAME = 'change_username', 'Смена никнейма'
+        CHANGE_PUBLIC_ID = 'change_public_id', 'Смена public id'
 
     slug = models.SlugField('Слаг', unique=True, max_length=128)
     product_type = models.CharField(

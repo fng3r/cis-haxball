@@ -130,6 +130,15 @@ class NewComment(models.Model):
     )
     votes = GenericRelation(LikeDislike, related_query_name='comments')
     version = models.PositiveSmallIntegerField('Версия', default=1)
+    purchase = models.ForeignKey(
+        'balance.ShopPurchase',
+        verbose_name='Покупка',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='comments',
+        help_text='Связанная покупка, в результате которой был сгенерирован этот комментарий',
+    )
 
     tracker = FieldTracker()
 

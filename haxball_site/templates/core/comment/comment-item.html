@@ -148,6 +148,19 @@
         </a>
       </span>
     </div>
+    {% if comment.purchase %}
+      <div class="tw:mt-2 tw:mb-1">
+        <span class="tw:badge tw:badge-neutral tw:gap-1">
+          <i class="fa fa-check-circle tw:text-success" aria-hidden="true"></i>
+          Оплачено: {{ comment.purchase.amount|floatformat:0 }} CC
+          {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'admin:balance_shoppurchase_change' comment.purchase.id %}"
+               class="tw:link tw:link-primary tw:ml-2"
+               target="_blank">проверить</a>
+          {% endif %}
+        </span>
+      </div>
+    {% endif %}
     <div class="comment-body tw:mt-3 tw:prose tw:max-w-none tw:text-base-content tw:prose-img:my-0">{{ comment.body|safe }}</div>
 
     <div class="comment-footer" x-data="{showReplies: true}">

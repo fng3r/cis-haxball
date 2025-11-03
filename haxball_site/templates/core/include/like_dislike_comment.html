@@ -2,7 +2,7 @@
 {% load static %}
 
 <ul id="comment-reactions-{{ comment.id }}" class="tw:inline-flex tw:mb-0!">
-  <li class="tw:pl-2 fa fa-thumbs-up tw:text-base-content/40 tw:hover:text-success {% if comment|get_likes|user_in_list:user %}tw:text-success{% endif %}"
+  <li class="tw:pl-2 fa fa-thumbs-up tw:cursor-pointer tw:text-base-content/40 tw:hover:text-success {% if comment|get_likes|user_in_list:user %}tw:text-success{% endif %}"
     {# djlint:off #}
       {% if user.is_authenticated %}
         {% if user.user_profile.can_vote %}
@@ -20,7 +20,7 @@
     <span data-count="like">{{ comment|likes_count }}</span>
   </li>
 
-  <li class="tw:pl-2 fa fa-thumbs-down tw:text-base-content/40 tw:hover:text-error {% if comment|get_dislikes|user_in_list:user %}tw:text-error{% endif %}"
+  <li class="tw:pl-2 fa fa-thumbs-down tw:cursor-pointer tw:text-base-content/40 tw:hover:text-error {% if comment|get_dislikes|user_in_list:user %}tw:text-error{% endif %}"
     {# djlint:off #}
       {% if user.is_authenticated %}
         {% if user.user_profile.can_vote %}

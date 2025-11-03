@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
@@ -8,7 +10,9 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
-from balance.services import ShopPurchase, ShopService
+from balance.models import ShopPurchase
+from balance.services import ShopService
+from core.models import NewComment
 
 from .models import ShopItem, Transaction
 
@@ -104,8 +108,17 @@ class ShopPurchaseView(LoginRequiredMixin, View):
         error_message = None
 
         try:
-            purchase = ShopService.purchase_item(user, item)
+            purchase_metadata = {}
+            if item.product_type == ShopItem.ProductType.CHANGE_USERNAME:
+                purchase_metadata['new_username'] = request.POST.get('new_username', '').strip()
+            elif item.product_type == ShopItem.ProductType.CHANGE_PUBLIC_ID:
+                purchase_metadata['new_public_id'] = request.POST.get('new_public_id', '').strip()
+            purchase = ShopService.purchase_item(user, item, metadata=purchase_metadata)
             success_message = _build_success_message(purchase)
+            comment = None
+            if purchase.metadata.get('comment_id'):
+                with suppress(NewComment.DoesNotExist):
+                    comment = NewComment.objects.get(id=purchase.metadata['comment_id'])
 
         except ValidationError as exc:
             error_message = _build_error_message(exc)
@@ -136,6 +149,7 @@ class ShopPurchaseView(LoginRequiredMixin, View):
                 {
                     'shop_success_message': success_message,
                     'shop_error_message': error_message,
+                    'shop_comment': comment,
                 },
                 request=request,
             )
@@ -152,6 +166,10 @@ def _build_success_message(purchase: ShopPurchase) -> str:
         if starts_at > now:
             return 'Подписка продлена. Новая активация запланирована на ' + starts_at.strftime('%d.%m.%Y %H:%M')
         return f'Подписка активирована до {expires_at.strftime("%d.%m.%Y %H:%M")}'
+    if purchase.item.product_type == ShopItem.ProductType.CHANGE_USERNAME:
+        return 'Заявка на смену никнейма создана. Комментарий с заявкой автоматически добавлен в "Орг. раздел".'
+    if purchase.item.product_type == ShopItem.ProductType.CHANGE_PUBLIC_ID:
+        return 'Заявка на смену public id создана. Комментарий с заявкой автоматически добавлен в "Орг. раздел".'
 
     return 'Покупка успешно завершена.'
 

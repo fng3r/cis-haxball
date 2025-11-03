@@ -46,6 +46,7 @@ def get_comments_for_object(model, obj_id):
         'author__user_player__team__owner',
         'author__user_player__team__captain',
         'author__user_player__team__captain_assistant',
+        'purchase',
         prefetch_owned_teams,
         prefetch_likes,
         prefetch_dislikes,
