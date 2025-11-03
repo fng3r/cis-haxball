@@ -136,10 +136,10 @@
           <div class="comment-widgets">
             {% for postponement in postponements %}
 
-              <div class="tw:flex tw:p-3 tw:py-4 tw:gap-0.5 comment-row" id="postponement{{ postponement.id }}">
+              <div class="tw:flex tw:p-3 tw:py-4 tw:gap-2.5 comment-row" id="postponement{{ postponement.id }}">
                 <div class="tw:pl-2">
                   <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
-                    <div class="tw:mr-2 tw:avatar">
+                    <div class="tw:avatar">
                       {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
                         {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.taken_by.username frame=postponement.taken_by.user_profile.avatar_frame %}
                       {% endthumbnail %}
@@ -194,10 +194,10 @@
                 </div>
               </div>
               {% if postponement.is_cancelled %}
-                <div class="tw:flex tw:p-3 tw:py-4 tw:pl-[7%] tw:gap-0.5 comment-row" id="postponement_c{{ postponement.id }}">
+                <div class="tw:flex tw:p-3 tw:py-4 tw:pl-[7%] tw:gap-2.5 comment-row" id="postponement_c{{ postponement.id }}">
                   <div class="tw:pl-2">
                     <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
-                      <div class="tw:mr-2 tw:avatar">
+                      <div class="tw:avatar">
                         {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
                           {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.cancelled_by.username frame=postponement.cancelled_by.user_profile.avatar_frame %}
                         {% endthumbnail %}

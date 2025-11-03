@@ -3,18 +3,18 @@
 {% load tournament_extras %}
 {% load thumbnail %}
 
-<div class="tw:flex tw:p-4 tw:gap-0.5 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}"
+<div class="tw:flex tw:p-4 tw:gap-2.5 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}"
      id="r{{ comment.id }}">
-  <div class="tw:flex tw:flex-col tw:gap-1.5 tw:pl-2">
+  <div class="tw:flex tw:flex-col tw:items-center tw:gap-1.5 tw:pl-2">
     <a href="{{ comment.author.user_profile.get_absolute_url }}">
-      <div class="tw:mr-2 tw:avatar {% if comment.author|is_online:users_online %}tw:avatar-online{% else %}tw:avatar-offline{% endif %}">
+      <div class="tw:avatar {% if comment.author|is_online:users_online %}tw:avatar-online{% else %}tw:avatar-offline{% endif %}">
         {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as avatar %}
           {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=comment.author.username frame=comment.author.user_profile.avatar_frame %}
         {% endthumbnail %}
       </div>
     </a>
 
-    <span class="tw:ml-1 tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
+    <span class="tw:badge tw:badge-sm tw:font-bold {% if comment.author.user_profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">
       {{ comment.author.user_profile.karma }}
     </span>
   </div>

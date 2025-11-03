@@ -14,10 +14,10 @@
 
   <div class="comment-widgets">
     {% for reservation in reservations %}
-      <div class="tw:flex tw:p-3 tw:py-4 tw:gap-0.5 comment-row" id="reservation{{ reservation.id }}">
+      <div class="tw:flex tw:p-3 tw:py-4 tw:gap-2.5 comment-row" id="reservation{{ reservation.id }}">
         <div class="tw:pl-2">
           <a href="{{ reservation.author.user_profile.get_absolute_url }}">
-            <div class="tw:mr-2 tw:avatar">
+            <div class="tw:avatar">
               {% thumbnail reservation.author.user_profile.avatar "50x50" crop="center" as avatar %}
                 {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=reservation.author.username frame=reservation.author.user_profile.avatar_frame %}
               {% endthumbnail %}
@@ -87,10 +87,10 @@
       </div>
 
       {% if reservation.is_cancelled %}
-        <div class="tw:flex tw:p-3 tw:py-4 tw:pl-[7%] tw:gap-0.5 comment-row" id="reservation_c{{ reservation.id }}">
+        <div class="tw:flex tw:p-3 tw:py-4 tw:pl-[7%] tw:gap-2.5 comment-row" id="reservation_c{{ reservation.id }}">
           <div class="tw:pl-2">
             <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}">
-              <div class="tw:mr-2 tw:avatar">
+              <div class="tw:avatar">
                 {% thumbnail reservation.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
                   {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=reservation.cancelled_by.username frame=reservation.cancelled_by.user_profile.avatar_frame %}
                 {% endthumbnail %}
