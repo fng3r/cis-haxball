@@ -6,7 +6,7 @@ from typing import Iterable
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Case, Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery, Value, When
+from django.db.models import Case, Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery, Sum, Value, When
 from django.db.models.functions import Cast, Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
@@ -1085,6 +1085,14 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
     group_condition = Q(groups=group) if group is not None else always_true
     teams = list(Team.objects.filter(stage_condition, group_condition, leagues=league))
     teams_count = len(teams)
+    penalties_by_team = {
+        entry['team']: entry['penalty']
+        for entry in (
+            TeamPenaltyPoints.objects.filter(stage=stage, team__in=teams)
+            .annotate(penalty=Sum('penalty_points'))
+            .values('team', 'penalty')
+        )
+    }
 
     points = [0 for _ in range(teams_count)]  # Количество очков
     penalties = [0 for _ in range(teams_count)]  # Количество очков
@@ -1098,6 +1106,7 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
     last_matches = [[] for _ in range(teams_count)]
     teams_indexes = {}
     opponents_by_team = defaultdict(list)
+
     for i, team in enumerate(teams):
         teams_indexes[team] = i
         matches = Match.objects.select_related('team_home', 'team_guest', 'result__winner', 'numb_tour').filter(
@@ -1112,8 +1121,7 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
             matches = matches.filter(numb_tour__number__gte=min_tour, numb_tour__number__lte=max_tour)
         matches = matches
         matches_played[i] = matches.count()
-        penalty = TeamPenaltyPoints.objects.filter(stage=stage, team=team).first()
-        penalty_points = penalty.penalty_points if penalty else 0
+        penalty_points = penalties_by_team.get(team.id, 0)
 
         wins_count = 0
         draws_count = 0
