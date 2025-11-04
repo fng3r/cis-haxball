@@ -6,7 +6,15 @@
   <div id="edit-profile-form-container" class="tw:card tw:bg-base-100 tw:rounded-lg">
     <h4 class="tw:text-center tw:mb-0! tw:pl-2 tw:pt-1 tw:pb-2 tw:border-b tw:border-neutral-300">Редактирование профиля</h4>
 
-    <form method="post"
+    {% if error_message %}
+      <div class="tw:alert tw:alert-error tw:m-2">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        <span>{{ error_message }}</span>
+      </div>
+    {% endif %}
+
+    <form x-data="{ tag: '{{ profile.tag|default_if_none:'' }}', frame: '{{ selected_avatar_frame|default:'' }}', frameClasses: { yellow: 'tw:ring-yellow-400', orange: 'tw:ring-orange-400', blue: 'tw:ring-blue-500', violet: 'tw:ring-violet-500', rose: 'tw:ring-rose-500' } }"
+          method="post"
           enctype="multipart/form-data"
           hx-post="{% url 'core:edit_profile' profile.slug profile.id %}"
           hx-trigger="submit"
@@ -17,77 +25,144 @@
 
       <div class="tw:card user-card-full">
         <div class="tw:flex">
-          <div class="tw:w-1/3 tw:rounded-bl-md bg-c-lite-green user-profile">
-            <div class="tw:flex tw:flex-col tw:p-4 tw:text-white">
-              <div class="tw:mb-2.5 tw:flex tw:flex-col tw:gap-2">
-                <img src="{{ profile.avatar.url }}" width="100%" height="100%" class="tw:rounded" alt="User-Profile-Image">
+          <div class="tw:w-1/3 tw:rounded-bl-md tw:bg-base-200 tw:border-r tw:border-neutral-300">
+            <div class="tw:flex tw:flex-col tw:p-4">
+              <div class="tw:mb-2.5 tw:flex tw:flex-col tw:gap-3">
+                <div class="tw:flex tw:flex-col tw:items-center tw:gap-4">
+                  <img src="{{ profile.avatar.url }}" width="90%" class="tw:rounded" alt="User-Profile-Image">
 
-                <h4 class="tw:font-semibold tw:text-center">{{ profile.name }}</h4>
+                  <h4 class="tw:font-semibold tw:text-center tw:mb-0!">
+                    {{ profile.name }}
+                    {% if profile.tag and can_use_premium_features %}
+                      <span class="tw:badge tw:badge-sm tw:badge-soft tw:font-semibold" x-text="tag" x-show="tag"></span>
+                    {% endif %}
+                  </h4>
+                </div>
 
-                {# disable tag input if user has no permissions to edit it instead of not rendering it at all #}
-                {% if user.is_superuser %}
-                  <div class="tw:mt-2">
+                <div class="tw:flex tw:flex-col tw:gap-3">
+                  <fieldset class="tw:fieldset">
+                    <legend class="tw:fieldset-legend tw:text-base">Аватар</legend>
+                    <input id="avatar-file" type="file" name="avatar" accept="image/*" class="tw:file-input tw:text-base-content" />
+                  </fieldset>
+
+                  <div class="tw:inline-flex tw:gap-2 tw:font-semibold">
+                    <label for="commentableCheck" class="tw:cursor-pointer">Комментарии к профилю</label>
+                    <label class="tw:toggle tw:inline-grid!">
+                      <input type="checkbox" id="commentableCheck" name="commentable" {% if profile.commentable %}checked{% endif %} />
+                      <svg aria-label="disabled"
+                           xmlns="http://www.w3.org/2000/svg"
+                           viewBox="0 0 24 24"
+                           fill="none"
+                           stroke="currentColor"
+                           stroke-width="4"
+                           stroke-linecap="round"
+                           stroke-linejoin="round">
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                      </svg>
+                      <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor">
+                          <path d="M20 6 9 17l-5-5"></path>
+                        </g>
+                      </svg>
+                    </label>
+                  </div>
+
+                  <fieldset class="tw:fieldset">
+                    <legend class="tw:fieldset-legend tw:gap-1 tw:text-base tw:flex tw:items-center">
+                      <span>Тег</span>
+                      <div class="tw:tooltip tw:tooltip-right tw:inline-block">
+                        <div class="tw:tooltip-content">
+                          Тег отображается рядом с именем пользователя в профиле и комментариях в виде бэйджика с содержимым тега.
+                          Разрешенные символы: A-Z, a-z, 0-9
+                        </div>
+                        <i class="fa fa-info-circle tw:text-sm!" aria-hidden="true"></i>
+                      </div>
+                      {% if not can_use_premium_features %}
+                        <div class="tw:tooltip tw:tooltip-right tw:ml-1" data-tip="Доступно с премиум подпиской">
+                          <span class="tw:badge tw:badge-warning tw:badge-sm tw:cursor-default">Premium</span>
+                        </div>
+                      {% endif %}
+                    </legend>
+                    <input type="text"
+                           name="tag"
+                           value="{{ profile.tag|default_if_none:'' }}"
+                           pattern="[A-Za-z0-9]{0,5}"
+                           maxlength="5"
+                           x-model="tag"
+                           class="tw:input tw:w-full tw:disabled:border-base-300 tw:disabled:bg-base-300"
+                           placeholder="Максимум 5 символов (A-Z, a-z, 0-9)"
+                           {% if not can_use_premium_features %}disabled{% endif %}>
+                  </fieldset>
+
+                  {% with can_edit=can_use_premium_features %}
                     <fieldset class="tw:fieldset">
-                      <legend class="tw:fieldset-legend tw:gap-0 tw:text-base">
-                        Тег
-                        <div class="tw:tooltip tw:tooltip-right tw:inline-block tw:ml-1"
-                             data-tip="Тег - это набор символов, который отображается рядом с именем пользователя в профиле и комментариях в формате: username [tag]">
+                      <legend class="tw:fieldset-legend tw:gap-1 tw:text-base tw:flex tw:items-center">
+                        <span>Рамка аватара</span>
+                        <div class="tw:tooltip tw:tooltip-right tw:inline-block">
+                          <div class="tw:tooltip-content">Рамка будет отображаться вокруг аватара в комментариях</div>
                           <i class="fa fa-info-circle tw:text-sm!" aria-hidden="true"></i>
                         </div>
+                        {% if not can_edit %}
+                          <div class="tw:tooltip tw:tooltip-right tw:ml-1" data-tip="Доступно с премиум подпиской">
+                            <span class="tw:badge tw:badge-warning tw:badge-sm tw:cursor-default">Premium</span>
+                          </div>
+                        {% endif %}
                       </legend>
-                      <input type="text"
-                             name="tag"
-                             value="{{ profile.tag }}"
-                             maxlength="7"
-                             class="tw:input tw:input-bordered tw:w-full tw:text-base-content"
-                             placeholder="Максимум 7 символов">
+                      <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-3 tw:gap-2 tw:mt-1">
+                        {% for value, label in avatar_frame_choices %}
+                          {% with choice_id='avatar-frame-'|add:value %}
+                            <input type="radio"
+                                   name="avatar_frame"
+                                   id="{{ choice_id }}"
+                                   value="{{ value }}"
+                                   x-model="frame"
+                                   class="tw:hidden"
+                                   {% if not can_edit %}disabled{% endif %}>
+                            <label for="{{ choice_id }}"
+                                   class="tw:relative tw:flex tw:flex-col tw:items-center tw:gap-1 tw:p-2 tw:rounded-lg tw:border tw:border-base-300 tw:bg-base-200/70 tw:transition {% if can_edit %}tw:cursor-pointer tw:hover:border-primary/60{% else %}tw:cursor-not-allowed tw:opacity-60{% endif %}"
+                                   :class="frame === '{{ value }}' ? 'tw:border-primary tw:bg-primary/10 tw:shadow-inner' : ''">
+                              <div class="tw:flex tw:flex-col tw:items-center tw:gap-2">
+                                <div class="tw:avatar tw:flex tw:items-center tw:justify-center">
+                                  <div class="tw:size-12 tw:rounded-full tw:overflow-hidden tw:bg-base-100 tw:flex tw:items-center tw:justify-center{% if value %} tw:ring-2 tw:ring-offset-1 tw:ring-offset-base-200{% endif %} {% if value == 'yellow' %} tw:ring-yellow-400{% elif value == 'orange' %} tw:ring-orange-400{% elif value == 'blue' %} tw:ring-blue-500{% elif value == 'violet' %} tw:ring-violet-500{% elif value == 'rose' %} tw:ring-rose-500{% endif %}">
+                                    <img src="{{ profile.avatar.url }}" alt="{{ profile.name }}">
+                                  </div>
+                                </div>
+                                <span class="tw:text-center tw:text-xs tw:font-semibold">{{ label }}</span>
+                              </div>
+                            </label>
+                          {% endwith %}
+                        {% endfor %}
+                      </div>
                     </fieldset>
-                  </div>
-                {% endif %}
+                  {% endwith %}
 
-                <fieldset class="tw:fieldset">
-                  <legend class="tw:fieldset-legend tw:text-base">Аватар</legend>
-                  <input id="avatar-file" type="file" name="avatar" accept="image/*" class="tw:file-input tw:text-base-content" />
-                </fieldset>
-
-                {% if profile.name|can_edit_profile_bg %}
                   <div>
                     <fieldset class="tw:fieldset">
-                      <legend class="tw:fieldset-legend tw:text-base">Фон</legend>
-                      <input id="bg-file" type="file" name="background" accept="image/*" class="tw:file-input tw:text-base-content" />
+                      <legend class="tw:fieldset-legend tw:gap-1 tw:text-base tw:flex tw:items-center">
+                        <span>Фон профиля</span>
+                        {% if not can_use_premium_features %}
+                          <div class="tw:tooltip tw:tooltip-right tw:ml-1" data-tip="Доступно с премиум подпиской">
+                            <span class="tw:badge tw:badge-warning tw:badge-sm tw:cursor-default">Premium</span>
+                          </div>
+                        {% endif %}
+                      </legend>
+                      <input id="bg-file"
+                             type="file"
+                             name="background"
+                             accept="image/*"
+                             class="tw:file-input tw:disabled:border-base-300 tw:disabled:bg-base-300"
+                             {% if not can_use_premium_features %}disabled{% endif %} />
                     </fieldset>
 
                     <fieldset class="tw:fieldset tw:my-1!">
-                      <label class="tw:fieldset-label tw:text-base tw:text-white!">
+                      <label class="tw:fieldset-label">
                         <input id="remove_bg" type="checkbox" name="remove_bg" class="tw:checkbox tw:checkbox-sm" />
-                        <span class="tw:align-middle">Удалить фон</span>
+                        <span>Удалить фон</span>
                       </label>
                     </fieldset>
                   </div>
-                {% endif %}
-              </div>
-
-              <div class="tw:inline-flex tw:gap-3 tw:mt-3">
-                Комментарии к профилю
-                <label class="tw:toggle tw:text-base-content tw:inline-grid!">
-                  <input type="checkbox" id="commentableCheck" name="commentable" {% if profile.commentable %}checked{% endif %} />
-                  <svg aria-label="disabled"
-                       xmlns="http://www.w3.org/2000/svg"
-                       viewBox="0 0 24 24"
-                       fill="none"
-                       stroke="currentColor"
-                       stroke-width="4"
-                       stroke-linecap="round"
-                       stroke-linejoin="round">
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                  <svg aria-label="enabled" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <g stroke-linejoin="round" stroke-linecap="round" stroke-width="4" fill="none" stroke="currentColor">
-                      <path d="M20 6 9 17l-5-5"></path>
-                    </g>
-                  </svg>
-                </label>
+                </div>
               </div>
             </div>
           </div>
@@ -102,57 +177,56 @@
                 </div>
               </div>
 
-              <div class="tw:flex tw:flex-wrap tw:gap-y-2">
-                <div class="tw:sm:w-1/2 tw:w-full">
+              <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-2">
+                <div class="tw:flex tw:flex-col">
                   <div class="tw:font-semibold">Дата регистрации</div>
-                  <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">{{ profile.name.date_joined|date }}</div>
+                  <div class="tw:text-base-content/60 tw:text-sm tw:font-semibold">{{ profile.name.date_joined|date }}</div>
                 </div>
-                <div class="tw:sm:w-1/2 tw:w-full">
+                <div class="tw:flex tw:flex-col">
                   <div class="tw:font-semibold">Последний визит</div>
-                  <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">{{ profile.name.last_login }}</div>
+                  <div class="tw:text-base-content/60 tw:text-sm tw:font-semibold">{{ profile.name.last_login }}</div>
                 </div>
-                <div class="tw:sm:w-1/2 tw:w-full">
-                  <div class="tw:font-semibold tw:mb-1">Дата рождения</div>
-                  <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">
-                    <input type="date" id="start" name="born_date" value="{{ profile.born_date|date:"Y-m-d" }}" min="1966-01-01" max="2020-07-17">
+                <div class="tw:flex tw:flex-col tw:gap-y-1">
+                  <div class="tw:font-semibold">Дата рождения</div>
+                  <div class="tw:text-base-content/60 tw:text-sm tw:font-semibold">
+                    <input type="date"
+                           class="tw:input"
+                           name="born_date"
+                           value="{{ profile.born_date|date:"Y-m-d" }}"
+                           min="1966-01-01"
+                           max="2020-07-17">
                   </div>
                 </div>
-                <div class="tw:sm:w-1/2 tw:w-full">
-                  <div class="tw:font-semibold tw:mb-1">Город</div>
-                  <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold">
-                    <input type="text" class="tw:input tw:input-bordered" name="city" value="{{ profile.city }}">
+                <div class="tw:flex tw:flex-col tw:gap-y-1">
+                  <div class="tw:font-semibold">Город</div>
+                  <div class="tw:text-base-content/60 tw:text-sm tw:font-semibold">
+                    <input type="text" class="tw:input" name="city" value="{{ profile.city }}">
                   </div>
                 </div>
               </div>
 
               <div class="tw:my-3">
                 <h5 class="tw:pb-1 tw:border-b tw:border-neutral-300">Контакты</h5>
-                <div class="tw:flex tw:flex-wrap tw:gap-2">
-                  <div class="tw:w-full tw:md:flex-1">
-                    <div class="tw:flex tw:flex-col">
-                      <div class="tw:font-semibold" style="margin-bottom: 0">Вк</div>
-                      <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">id/никнейм (id12345)</div>
+                <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-2">
+                  <div class="tw:flex tw:flex-col">
+                    <div class="tw:font-semibold" style="margin-bottom: 0">Вк</div>
+                    <div class="tw:text-base-content/60 tw:text-sm tw:font-semibold" style="margin-bottom: 0">id/никнейм (id12345)</div>
 
-                      <input type="text" class="tw:input tw:input-bordered" name="vk" value="{{ profile.vk }}">
-                    </div>
+                    <input type="text" class="tw:input" name="vk" value="{{ profile.vk }}">
                   </div>
 
-                  <div class="tw:w-full tw:md:flex-1">
-                    <div class="tw:flex tw:flex-col">
-                      <div class="tw:font-semibold" style="margin-bottom: 0">Telegram</div>
-                      <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">Никнейм (без @)</div>
+                  <div class="tw:flex tw:flex-col">
+                    <div class="tw:font-semibold" style="margin-bottom: 0">Telegram</div>
+                    <div class="tw:text-base-content/60 tw:text-sm tw:font-semibold" style="margin-bottom: 0">Никнейм (без @)</div>
 
-                      <input type="text" class="tw:input tw:input-bordered" name="telegram" value="{{ profile.telegram }}">
-                    </div>
+                    <input type="text" class="tw:input" name="telegram" value="{{ profile.telegram }}">
                   </div>
 
-                  <div class="tw:w-full tw:md:flex-1">
-                    <div class="tw:flex tw:flex-col">
-                      <div class="tw:font-semibold" style="margin-bottom: 0">Discord</div>
-                      <div class="tw:text-neutral-500 tw:text-sm tw:font-semibold" style="margin-bottom: 0">Имя#1234</div>
+                  <div class="tw:flex tw:flex-col">
+                    <div class="tw:font-semibold" style="margin-bottom: 0">Discord</div>
+                    <div class="tw:text-base-content/60 tw:text-sm tw:font-semibold" style="margin-bottom: 0">username</div>
 
-                      <input type="text" class="tw:input tw:input-bordered" name="discord" value="{{ profile.discord }}">
-                    </div>
+                    <input type="text" class="tw:input" name="discord" value="{{ profile.discord }}">
                   </div>
                 </div>
               </div>

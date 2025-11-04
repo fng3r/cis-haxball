@@ -1,0 +1,22 @@
+{% load mathfilters %}
+{% load static %}
+
+{% for item_ctx in items %}
+  {% include 'balance/partials/shop_item_card.html' with item=item_ctx.item can_afford=item_ctx.can_afford %}
+{% empty %}
+  <div class="tw:col-span-full tw:text-center tw:py-10 tw:bg-base-100 tw:rounded-lg">
+    <p class="tw:text-base tw:text-base-content/70">В магазине пока нет доступных товаров</p>
+  </div>
+{% endfor %}
+
+{% if is_htmx %}
+  <div id="shop-balance-display"
+       hx-swap-oob="true"
+       class="tw:flex tw:flex-col tw:items-end tw:justify-center tw:gap-1 tw:bg-base-100 tw:rounded-xl tw:py-1 tw:px-3 tw:shadow-inner">
+    <div class="tw:text-base-content/70">Баланс</div>
+    <div class="tw:flex tw:items-center tw:gap-1">
+      <img src="{% static 'img/cis-coin.png' %}" class="tw:size-5" alt="CIS Coin">
+      <div class="tw:font-semibold">{{ current_balance|intdiv:1 }}</div>
+    </div>
+  </div>
+{% endif %}

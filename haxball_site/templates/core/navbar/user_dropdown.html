@@ -7,9 +7,7 @@
        role="button"
        class="tw:btn tw:btn-ghost tw:btn-circle tw:avatar"
        :class="{ 'tw:avatar-offline': isInvisibilityEnabled }">
-    <div class="tw:w-[45px] tw:rounded-full">
-      <img src="{{ user.user_profile.avatar.url }}" />
-    </div>
+    {% include 'core/include/avatar_with_frame.html' with avatar_url=user.user_profile.avatar.url size=45 alt=user.username frame=user.user_profile.avatar_frame %}
   </div>
 
   <ul tabindex="0"

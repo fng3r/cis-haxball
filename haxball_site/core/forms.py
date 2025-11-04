@@ -30,6 +30,7 @@ class EditProfileForm(forms.ModelForm):
             'about',
             'born_date',
             'avatar',
+            'avatar_frame',
             'city',
             'vk',
             'discord',
@@ -40,6 +41,14 @@ class EditProfileForm(forms.ModelForm):
             'favourite_players',
             'tag',
         )
+
+    def __init__(self, *args, can_use_premium_features: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not can_use_premium_features:
+            avatar_frame_field = self.fields['avatar_frame']
+            tag_field = self.fields['tag']
+            avatar_frame_field.disabled = True
+            tag_field.disabled = True
 
 
 class PostForm(forms.ModelForm):

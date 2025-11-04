@@ -129,22 +129,20 @@
 
       {% partialdef postponements-events inline=True %}
         <div id="postponements-events" class="tw:card tw:bg-base-100 tw:rounded-lg">
-          <div class="tw:card-title tw:rounded-t-lg tw:p-4">
+          <div class="tw:card-title tw:rounded-t-lg tw:p-4 tw:pb-2">
             <h4 class="tw:card-title">Журнал событий ({{ postponements.paginator.count }})</h4>
           </div>
 
           <div class="comment-widgets">
             {% for postponement in postponements %}
 
-              <div class="tw:flex tw:p-3 comment-row" id="postponement{{ postponement.id }}">
+              <div class="tw:flex tw:p-3 tw:py-4 tw:gap-2.5 comment-row" id="postponement{{ postponement.id }}">
                 <div class="tw:pl-2">
                   <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
-                    <div class="tw:mr-2 tw:avatar">
-                      <div class="tw:w-[50px] tw:rounded-full">
-                        {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                          <img src="{{ avatar.url }}" alt="{{ postponement.taken_by.username }}" width="50" class="tw:rounded-full">
-                        {% endthumbnail %}
-                      </div>
+                    <div class="tw:avatar">
+                      {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                        {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.taken_by.username frame=postponement.taken_by.user_profile.avatar_frame %}
+                      {% endthumbnail %}
                     </div>
                   </a>
                 </div>
@@ -177,35 +175,32 @@
                       {{ postponement.taken_at|time:"H:i" }}
                     </span>
                   </div>
-                  <div class="comment-body">
-                    <p></p>
+                  <div class="comment-body tw:my-1.5">
                     <div id="postponement-log-entry">
                       <span>{{ postponement.match.numb_tour.number }} тур</span>
                       <br>
                       <span>{{ postponement.match.team_home }} - {{ postponement.match.team_guest }}</span>
                       <br>
-                      <p class="postponements-log-text">
+                      <span class="postponements-log-text">
                         {% if postponement.is_emergency %}экстренный{% endif %}
                         {% if postponement.teams.count > 1 %}
                           обоюдный перенос
                         {% else %}
                           перенос на команду {{ postponement.teams.all.0.title }}
                         {% endif %}
-                      </p>
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
               {% if postponement.is_cancelled %}
-                <div class="tw:flex tw:p-3 tw:pl-[7%] comment-row" id="postponement_c{{ postponement.id }}">
+                <div class="tw:flex tw:p-3 tw:py-4 tw:pl-[7%] tw:gap-2.5 comment-row" id="postponement_c{{ postponement.id }}">
                   <div class="tw:pl-2">
                     <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
-                      <div class="tw:mr-2 tw:avatar">
-                        <div class="tw:w-[50px] tw:rounded-full">
-                          {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                            <img src="{{ avatar.url }}" alt="{{ postponement.cancelled_by.username }}" width="50" class="tw:rounded-full">
-                          {% endthumbnail %}
-                        </div>
+                      <div class="tw:avatar">
+                        {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
+                          {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.cancelled_by.username frame=postponement.cancelled_by.user_profile.avatar_frame %}
+                        {% endthumbnail %}
                       </div>
                     </a>
                   </div>
@@ -238,12 +233,8 @@
                         {{ postponement.cancelled_at|time:"H:i" }}
                       </span>
                     </div>
-                    <div class="comment-body">
-                      <p></p>
-                      <p>
-                        <span>Отмена переноса</span>
-                      </p>
-                      <p></p>
+                    <div class="comment-body tw:my-1.5">
+                      <span>Отмена переноса</span>
                     </div>
                   </div>
                 </div>
