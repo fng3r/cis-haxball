@@ -20,11 +20,11 @@
 
     <div class="tw:card-body tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
       {% if players %}
-        <table class="tw:table tw:mb-0">
+        <table class="tw:table tw:table-fixed tw:mb-0">
           <tbody>
             {% for player in players %}
               <tr>
-                <td width="24px" class="tw:pl-3 tw:pr-2 tw:text-center">
+                <td width="45px" class="tw:pl-3 tw:pr-2 tw:text-center">
                   <span class="tw:text-base tw:font-semibold">{{ forloop.counter }}</span>
                 </td>
 
@@ -46,7 +46,7 @@
                   {% endif %}
                 </td>
 
-                <td width="16%" class="tw:text-center">
+                <td width="45px" class="tw:text-center tw:pl-2">
                   <span class="tw:font-semibold tw:text-base">
                     {% if stat_type == 'avg' %}
                       {{ player.count|floatformat:2 }}
