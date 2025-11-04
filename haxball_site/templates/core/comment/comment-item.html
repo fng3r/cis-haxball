@@ -84,7 +84,7 @@
           </a>
         {% endif %}
 
-        {% if user.is_superuser or comment.author == user and comment|can_delete or comment.content_object.name == user %}
+        {% if user.is_superuser or comment.author == user and comment|can_delete or comment.content_object.name_id == user.id %}
           <a :style="editingComment && {'pointer-events': 'none'}" class="tw:text-error">
             <i class="fa fa-times tw:text-error tw:hover:text-error/85"
                aria-hidden="true"
