@@ -42,6 +42,7 @@ def get_comments_for_object(model, obj_id):
     )
 
     return prefetch_recursively(
+        'content_object',
         'author__user_profile__user_icon',
         'author__user_player__team__owner',
         'author__user_player__team__captain',

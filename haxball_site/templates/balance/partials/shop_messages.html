@@ -1,0 +1,16 @@
+{% if shop_success_message %}
+  <div class="tw:alert tw:alert-success tw:shadow-lg tw:mb-3" x-data="{ visible: true }" x-show="visible" x-transition>
+    <i class="fa fa-check-circle"></i>
+    <span>
+      {{ shop_success_message }}
+      {% if shop_comment %}<a href="{{ shop_comment.get_absolute_url }}" class="tw:link" target="_blank">Перейти к комментарию</a>{% endif %}
+    </span>
+    <i class="fa fa-times tw:cursor-pointer tw:opacity-80 tw:hover:opacity-100" @click="visible = false"></i>
+  </div>
+{% elif shop_error_message %}
+  <div class="tw:alert tw:alert-error tw:shadow-lg tw:mb-3" x-data="{ visible: true }" x-show="visible" x-transition>
+    <i class="fa fa-exclamation-circle"></i>
+    <span>{{ shop_error_message }}</span>
+    <i class="fa fa-times tw:cursor-pointer tw:opacity-80 tw:hover:opacity-100" @click="visible = false"></i>
+  </div>
+{% endif %}

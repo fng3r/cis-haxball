@@ -678,6 +678,18 @@
         <div id="search-results" class="tw:absolute tw:top-full tw:left-0 tw:right-0 tw:mt-1"></div>
       </div>
 
+      <div class="tw:flex tw:items-center tw:gap-0.5">
+        <a href="{% url 'balance:shop' %}" class="tw:relative tw:btn tw:btn-ghost tw:btn-circle">
+          <i class="tw:relative fa fa-shopping-bag tw:size-5 tw:mt-1.5">
+            <div aria-label="status" class="tw:status tw:status-warning tw:absolute tw:-top-1 tw:-right-0.75"></div>
+          </i>
+        </a>
+
+        {% if user.is_authenticated %}
+          {% include "notifications/notification_dropdown.html" %}
+        {% endif %}
+      </div>
+
       <div class="tw:dropdown tw:dropdown-end">
         <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:px-1.5">
           <div class="tw:bg-base-100 tw:group-hover:border-base-content/20 tw:border-base-content/10 tw:grid tw:shrink-0 tw:grid-cols-2 tw:gap-0.5 tw:rounded-md tw:border tw:p-1 tw:transition-colors">
@@ -707,8 +719,6 @@
       </div>
 
       {% if user.is_authenticated %}
-        {% include "notifications/notification_dropdown.html" %}
-
         {% include "core/navbar/user_dropdown.html" %}
       {% else %}
         <button type="button" class="tw:btn tw:btn-primary tw:mr-1!" onclick="login_modal.showModal()">Вход</button>

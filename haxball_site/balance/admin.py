@@ -1,13 +1,15 @@
+from django import forms
 from django.contrib import admin
 from django.forms import ModelForm, ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from unfold.admin import ModelAdmin
 from unfold.contrib.filters.admin import ChoicesCheckboxFilter, RangeNumericFilter, RelatedDropdownFilter
 
 from balance.services import BalanceService
 
-from .models import Balance, Transaction
+from .models import Balance, ShopItem, ShopPurchase, Transaction
 
 
 @admin.register(Balance)
@@ -116,6 +118,45 @@ class TransactionAdmin(ModelAdmin):
     def get_queryset(self, request):
         """Оптимизация запросов"""
         return super().get_queryset(request).select_related('user', 'admin_user', 'related_user')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class ShopItemAdminForm(ModelForm):
+    class Meta:
+        model = ShopItem
+        fields = '__all__'
+
+    description = forms.CharField(
+        label='Описание', widget=CKEditorUploadingWidget(config_name='default'), required=False
+    )
+
+
+@admin.register(ShopItem)
+class ShopItemAdmin(ModelAdmin):
+    form = ShopItemAdminForm
+    list_display = ['name', 'price', 'product_type', 'position', 'is_active', 'updated_at']
+    list_editable = ['position', 'is_active']
+    list_filter = ['product_type', 'is_active']
+    search_fields = ['name', 'slug']
+    ordering = ['position', 'name']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(ShopPurchase)
+class ShopPurchaseAdmin(ModelAdmin):
+    list_display = ['user', 'item', 'amount', 'created_at']
+    list_filter = ['item__product_type']
+    search_fields = ['user__username', 'item__name']
+    ordering = ['-created_at']
+    readonly_fields = ['user', 'item', 'amount', 'transaction', 'metadata', 'created_at']
+
+    def has_add_permission(self, request):
+        return False
 
     def has_change_permission(self, request, obj=None):
         return False

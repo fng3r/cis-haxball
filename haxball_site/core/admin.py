@@ -165,7 +165,7 @@ class NewCommentAdminForm(forms.ModelForm):
 
     class Meta:
         model = NewComment
-        fields = ('author', 'body', 'created', 'edited', 'content_type', 'object_id')
+        fields = ('author', 'body', 'created', 'edited', 'content_type', 'object_id', 'purchase')
 
 
 @admin.register(NewComment)
@@ -177,6 +177,7 @@ class NewCommentAdmin(UnfoldModelAdmin):
         'created',
         'edited',
         'body',
+        'purchase',
         'content_type',
         'object_id',
         'content_object',
@@ -193,7 +194,11 @@ class NewCommentAdmin(UnfoldModelAdmin):
     form = NewCommentAdminForm
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('author', 'parent', 'parent__author', 'content_type')
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('author', 'parent', 'parent__author', 'content_type', 'purchase')
+        )
 
 
 @admin.register(LikeDislike)

@@ -21,7 +21,7 @@ from pytils.translit import slugify
 from tournament.models import Achievements, Team
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
-from .models import Category, LikeDislike, NewComment, Post, Profile, Themes, UserNicknameHistoryItem
+from .models import Category, LikeDislike, NewComment, Post, Profile, Subscription, Themes, UserNicknameHistoryItem
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments, strtobool
 
@@ -412,21 +412,91 @@ class EditProfile(DetailView, View):
 
         return 'core/profile/edit_profile.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile = context['profile']
+
+        profile_form = kwargs.pop('profile_form', None)
+        can_use_premium_features = self._can_use_premium_features(self.request.user)
+        if profile_form is None:
+            profile_form = EditProfileForm(
+                instance=profile,
+                can_use_premium_features=can_use_premium_features,
+            )
+
+        context['profile_form'] = profile_form
+        context['can_use_premium_features'] = can_use_premium_features
+        context['avatar_frame_choices'] = Profile.AvatarFrame.choices
+        context['selected_avatar_frame'] = profile_form['avatar_frame'].value() or ''
+
+        return context
+
+    def _can_use_premium_features(self, user: User) -> bool:
+        if user.is_superuser:
+            return True
+        subscriptions = Subscription.objects.by_user(user).active()
+        return subscriptions.exists()
+
     def post(self, request, pk, slug):
         profile = Profile.objects.get(slug=slug, id=pk)
-        profile_form = EditProfileForm(request.POST, instance=profile)
-        commentable = profile.commentable
-        if profile_form.is_valid():
-            if 'avatar' in request.FILES:
-                profile.avatar = request.FILES['avatar']
-            if 'background' in request.FILES:
-                profile.background = request.FILES['background']
-            if profile_form.cleaned_data['remove_bg']:
-                profile.background = None
+        self.object = profile
 
-            updated_profile = profile_form.save()
-            if commentable != updated_profile.commentable:
-                return redirect(profile.get_absolute_url() + '?commentableChanged=true')
+        user = request.user
+        can_use_premium_features = self._can_use_premium_features(user)
+        profile_form = EditProfileForm(
+            request.POST,
+            request.FILES,
+            instance=profile,
+            can_use_premium_features=can_use_premium_features,
+        )
+        commentable = profile.commentable
+
+        if not profile_form.is_valid():
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
+            return render(request, self.get_template_names(), context)
+
+        tag_value = profile_form.cleaned_data.get('tag')
+        tag_changed = tag_value is not None and tag_value != profile.tag
+        if tag_changed and not can_use_premium_features:
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
+            context['error_message'] = 'У вас нет прав для выбора тега. Необходима активная подписка.'
+            return render(request, self.get_template_names(), context)
+
+        frame_value = profile_form.cleaned_data.get('avatar_frame', Profile.AvatarFrame.NONE)
+        frame_changed = frame_value != (profile.avatar_frame or Profile.AvatarFrame.NONE)
+        if frame_changed and not can_use_premium_features:
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
+            context['error_message'] = 'У вас нет прав для выбора рамки аватара. Необходима активная подписка.'
+            return render(request, self.get_template_names(), context)
+
+        background_changed = 'background' in request.FILES
+        if background_changed and not can_use_premium_features:
+            context = self.get_context_data(
+                profile_form=profile_form,
+                can_use_premium_features=can_use_premium_features,
+            )
+            context['error_message'] = 'У вас нет прав для редактирования фона профиля. Необходима активная подписка.'
+            return render(request, self.get_template_names(), context)
+
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+        if 'background' in request.FILES:
+            profile.background = request.FILES['background']
+        if profile_form.cleaned_data.get('remove_bg'):
+            profile.background = None
+
+        updated_profile = profile_form.save()
+        if commentable != updated_profile.commentable:
+            return redirect(profile.get_absolute_url() + '?commentableChanged=true')
 
         return redirect(profile.get_absolute_url())
 
