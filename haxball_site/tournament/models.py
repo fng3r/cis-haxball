@@ -567,6 +567,9 @@ class TourNumber(models.Model):
         verbose_name = 'Тур'
         verbose_name_plural = 'Туры'
         ordering = ['league', 'stage__order', 'number', 'date_from']
+        indexes = [
+            models.Index(fields=['league', 'number']),
+        ]
 
 
 class Match(models.Model):
@@ -745,6 +748,9 @@ class Match(models.Model):
         verbose_name = 'Матч'
         verbose_name_plural = 'Матчи'
         ordering = ['league', 'stage', 'numb_tour', 'id']
+        indexes = [
+            models.Index(fields=['league', 'numb_tour']),
+        ]
 
 
 class MatchResult(models.Model):
@@ -968,7 +974,10 @@ class PlayerMatchStatistics(models.Model):
         verbose_name = 'Статистика игрока в матче'
         verbose_name_plural = 'Статистика игроков в матчах'
         unique_together = ('match', 'player')
-        indexes = [models.Index(fields=['player', 'league'])]
+        indexes = [
+            models.Index(fields=['player', 'league']),
+            models.Index(fields=['league', 'player']),
+        ]
 
 
 class Disqualification(models.Model):
@@ -1131,6 +1140,9 @@ class OtherEvents(models.Model):
     class Meta:
         verbose_name = 'Событие'
         verbose_name_plural = 'События'
+        indexes = [
+            models.Index(fields=['event', 'match']),
+        ]
 
 
 class PlayerTransfer(models.Model):
@@ -1179,6 +1191,10 @@ class PlayerTransfer(models.Model):
     class Meta:
         verbose_name = 'Трансфер'
         verbose_name_plural = 'Трансферы'
+        indexes = [
+            models.Index(fields=['trans_player', 'season_join']),
+            models.Index(fields=['to_team']),
+        ]
 
 
 class Postponement(models.Model):

@@ -650,37 +650,40 @@ def _get_top_goalscorers(league: League, tour_range: tuple = None):
 
     return (
         queryset.filter(goals_filter)
-        .annotate(count=Count('goals'), last_team_logo=get_player_last_team_logo_subquery(league))
+        .annotate(
+            count=Count('goals'),
+            last_team_logo=get_player_last_team_logo_subquery(league),
+        )
         .order_by('-count')
     )
 
 
 def _get_top_goalscorers_per_match(league: League, tour_range: tuple = None):
     queryset = Player.objects.select_related('team', 'name__user_profile')
-    goals_filter = Q(
-        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-        goals__match__league=league,
-    )
+    goals_filter = Q(goals__match__league=league)
 
     if tour_range is not None:
         min_tour, max_tour = tour_range
-        goals_filter &= Q(goals__match__numb_tour__number__gte=min_tour, goals__match__numb_tour__number__lte=max_tour)
-
-    return (
-        queryset.filter(goals_filter)
-        .annotate(
-            goals_count=Count('goals'),
-            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
-            count=Case(
-                When(matches_count__gt=0, then=Cast(F('goals_count'), FloatField()) / F('matches_count')),
-                default=Value(0),
-                output_field=FloatField(),
-            ),
-            last_team_logo=get_player_last_team_logo_subquery(league),
+        goals_filter &= Q(
+            goals__match__numb_tour__number__gte=min_tour,
+            goals__match__numb_tour__number__lte=max_tour,
         )
-        .filter(count__gt=0, matches_count__gte=3)
-        .order_by('-count')
+
+    queryset = queryset.filter(goals_filter).annotate(
+        goals_count=Count('goals'),
+        matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
     )
+
+    queryset = queryset.annotate(
+        count=Case(
+            When(matches_count__gt=0, then=Cast(F('goals_count'), FloatField()) / F('matches_count')),
+            default=Value(0),
+            output_field=FloatField(),
+        ),
+        last_team_logo=get_player_last_team_logo_subquery(league),
+    )
+
+    return queryset.filter(matches_count__gte=3, count__gt=0).order_by('-count')
 
 
 def _get_top_assistants(league: League, tour_range: tuple = None):
@@ -705,32 +708,28 @@ def _get_top_assistants(league: League, tour_range: tuple = None):
 
 def _get_top_assistants_per_match(league: League, tour_range: tuple = None):
     queryset = Player.objects.select_related('team', 'name__user_profile')
-    assists_filter = Q(
-        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-        assists__match__league=league,
-    )
+    assists_filter = Q(assists__match__league=league)
 
     if tour_range is not None:
         min_tour, max_tour = tour_range
         assists_filter &= Q(
-            assists__match__numb_tour__number__gte=min_tour, assists__match__numb_tour__number__lte=max_tour
+            assists__match__numb_tour__number__gte=min_tour,
+            assists__match__numb_tour__number__lte=max_tour,
         )
 
-    return (
-        queryset.filter(assists_filter)
-        .annotate(
-            assists_count=Count('assists'),
-            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
-            count=Case(
-                When(matches_count__gt=0, then=Cast(F('assists_count'), FloatField()) / F('matches_count')),
-                default=Value(0),
-                output_field=FloatField(),
-            ),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .filter(count__gt=0, matches_count__gte=3)
-        .order_by('-count')
+    queryset = queryset.filter(assists_filter).annotate(
+        assists_count=Count('assists'),
+        matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
     )
+    queryset = queryset.annotate(
+        count=Case(
+            When(matches_count__gt=0, then=Cast(F('assists_count'), FloatField()) / F('matches_count')),
+            default=Value(0),
+            output_field=FloatField(),
+        ),
+        last_team_logo=get_player_last_team_logo_subquery(league),
+    )
+    return queryset.filter(matches_count__gte=3, count__gt=0).order_by('-count')
 
 
 def _get_player_goals_assists_data(league: League, tour_range: tuple = None):
@@ -836,21 +835,19 @@ def _get_top_clean_sheets_per_match(league: League, tour_range: tuple = None):
         min_tour, max_tour = tour_range
         event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
 
-    return (
-        queryset.filter(event_filter)
-        .annotate(
-            cs_count=Count('event__match__league'),
-            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
-            count=Case(
-                When(matches_count__gt=0, then=Cast(F('cs_count'), FloatField()) / F('matches_count')),
-                default=Value(0),
-                output_field=FloatField(),
-            ),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .filter(matches_count__gte=3)
-        .order_by('-count')
+    queryset = queryset.filter(event_filter).annotate(
+        cs_count=Count('event__match__league'),
+        matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
     )
+    queryset = queryset.annotate(
+        count=Case(
+            When(matches_count__gt=0, then=Cast(F('cs_count'), FloatField()) / F('matches_count')),
+            default=Value(0),
+            output_field=FloatField(),
+        ),
+        last_team_logo=get_player_last_team_logo_subquery(league),
+    )
+    return queryset.filter(matches_count__gte=3, count__gt=0).order_by('-count')
 
 
 def _get_top_yellow_cards(league: League, tour_range: tuple = None):
@@ -873,30 +870,25 @@ def _get_top_yellow_cards(league: League, tour_range: tuple = None):
 
 def _get_top_yellow_cards_per_match(league: League, tour_range: tuple = None):
     queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(
-        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-        event__match__league=league,
-        event__event='YEL',
-    )
+    event_filter = Q(event__match__league=league, event__event='YEL')
 
     if tour_range is not None:
         min_tour, max_tour = tour_range
         event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
 
-    return (
-        queryset.filter(event_filter)
-        .annotate(
-            yellow_cards_count=Count('event__match__league'),
-            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
-            count=Case(
-                When(matches_count__gt=0, then=Cast(F('yellow_cards_count'), FloatField()) / F('matches_count')),
-                default=Value(0),
-                output_field=FloatField(),
-            ),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .order_by('-count')
+    queryset = queryset.filter(event_filter).annotate(
+        yellow_cards_count=Count('event__match__league'),
+        matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
     )
+    queryset = queryset.annotate(
+        count=Case(
+            When(matches_count__gt=0, then=Cast(F('yellow_cards_count'), FloatField()) / F('matches_count')),
+            default=Value(0),
+            output_field=FloatField(),
+        ),
+        last_team_logo=get_player_last_team_logo_subquery(league),
+    )
+    return queryset.filter(matches_count__gte=3, count__gt=0).order_by('-count')
 
 
 def _get_top_red_cards(league: League, tour_range: tuple = None):
@@ -919,30 +911,25 @@ def _get_top_red_cards(league: League, tour_range: tuple = None):
 
 def _get_top_red_cards_per_match(league: League, tour_range: tuple = None):
     queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(
-        Exists(PlayerMatchStatistics.objects.filter(player=OuterRef('id'), league=league)),
-        event__match__league=league,
-        event__event='RED',
-    )
+    event_filter = Q(event__match__league=league, event__event='RED')
 
     if tour_range is not None:
         min_tour, max_tour = tour_range
         event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
 
-    return (
-        queryset.filter(event_filter)
-        .annotate(
-            red_cards_count=Count('event__match__league'),
-            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
-            count=Case(
-                When(matches_count__gt=0, then=Cast(F('red_cards_count'), FloatField()) / F('matches_count')),
-                default=Value(0),
-                output_field=FloatField(),
-            ),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .order_by('-count')
+    queryset = queryset.filter(event_filter).annotate(
+        red_cards_count=Count('event__match__league'),
+        matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
     )
+    queryset = queryset.annotate(
+        count=Case(
+            When(matches_count__gt=0, then=Cast(F('red_cards_count'), FloatField()) / F('matches_count')),
+            default=Value(0),
+            output_field=FloatField(),
+        ),
+        last_team_logo=get_player_last_team_logo_subquery(league),
+    )
+    return queryset.filter(matches_count__gte=3, count__gt=0).order_by('-count')
 
 
 def get_player_last_team_logo_subquery(league: League):
