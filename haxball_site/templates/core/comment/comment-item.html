@@ -74,7 +74,7 @@
         {% if user.is_superuser or comment.author == user and comment|can_edit and not comment|exceeds_edit_limit %}
           <a :style="editingComment && {'pointer-events': 'none'}"
              @click="editingComment = true"
-             class="tw:ml-1"
+             class="tw:ml-1 tw:cursor-pointer"
              title="Редактировать"
              hx-trigger="click"
              hx-get="{% url 'core:edit_comment' comment.id %}"
@@ -85,7 +85,7 @@
         {% endif %}
 
         {% if user.is_superuser or comment.author == user and comment|can_delete or comment.content_object.name_id == user.id %}
-          <a :style="editingComment && {'pointer-events': 'none'}" class="tw:text-error">
+          <a :style="editingComment && {'pointer-events': 'none'}" class="tw:ml-0.5 tw:cursor-pointer">
             <i class="fa fa-times tw:text-error tw:hover:text-error/85"
                aria-hidden="true"
                style="font-size: 20px"
@@ -141,9 +141,9 @@
 
       <span class="action-icons">
         <a href="#addcomment"
-           class="tw:align-middle tw:text-base-content/40 tw:hover:text-[#1976d2]!"
+           class="tw:ml-2 tw:mt-1.5 tw:align-middle tw:text-base-content/40 tw:hover:text-[#1976d2]!"
            {% if user.is_authenticated %} @click="attachComment('{{ comment.id }}', '{{ comment.author.username }}')" {% else %} onclick="login_modal.showModal()" {% endif %}>
-          <i class="fa fa-reply tw:ml-2 tw:mt-1.5"></i>
+          <i class="fa fa-reply"></i>
         </a>
       </span>
     </div>
