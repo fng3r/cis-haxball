@@ -24,11 +24,3 @@
 .postponements-button:hover {
   background: #1d7a1d;
 }
-
-.postponements-log-text::first-letter {
-  text-transform: uppercase;
-}
-
-.postponement_played {
-  text-decoration: line-through;
-}

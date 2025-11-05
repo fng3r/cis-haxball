@@ -6,7 +6,7 @@
 
     <div class="tw:flex tw:flex-col tw:w-full tw:mb-0! tw:bg-base-100 tw:p-2 tw:rounded-b-lg tw:gap-4">
       {% for stream in livestreams %}
-        <div class="tw:flex tw:flex-col tw:gap-1">
+        <div class="tw:flex tw:flex-col tw:gap-1 tw:rounded-lg tw:glass">
           <a href="{{ stream.url }}"
              target="_blank"
              class="tw:block tw:hover:bg-base-300 tw:rounded-lg tw:overflow-hidden tw:transition-colors">
@@ -32,7 +32,6 @@
             </div>
           </a>
         </div>
-
       {% endfor %}
     </div>
   </div>
