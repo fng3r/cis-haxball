@@ -685,10 +685,7 @@ class Match(models.Model):
             end_date = last_postponement.ends_at
 
         start_datetime = timezone.datetime.combine(start_date, timezone.datetime.min.time())
-        # match can be postponed during 12h since tour/previous postponement end date
-        end_datetime = timezone.datetime.combine(end_date, timezone.datetime.min.time()) + timezone.timedelta(
-            days=1, hours=12
-        )
+        end_datetime = timezone.datetime.combine(end_date, timezone.datetime.min.time()) + timezone.timedelta(days=1)
 
         return start_datetime.timestamp() <= timezone.now().timestamp() <= end_datetime.timestamp()
 
