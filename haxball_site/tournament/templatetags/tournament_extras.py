@@ -415,17 +415,47 @@ def is_match_winner(team, match):
 
 
 @register.simple_tag
-def get_series_result(teams, matches):
+def get_series_result(teams, matches, stage):
+    """Return series result if all matches are played and there is a winner."""
+    if not matches:
+        return None
+
     if not all((match.is_played for match in matches)):
         return None
 
     team1, team2 = teams
+    series_score = get_series_score(team1, team2, matches, stage)
+    if series_score['team1_score'] == series_score['team2_score']:
+        return None
+
+    if series_score['team1_score'] > series_score['team2_score']:
+        winner, loser = team1, team2
+    else:
+        winner, loser = team2, team1
+
+    return {'winner': winner, 'loser': loser}
+
+
+@register.simple_tag
+def get_series_score(team1, team2, matches, stage):
+    """Calculate and return series score display based on winner_determinator."""
+    if not any(match.is_played for match in matches):
+        return None
+
     team1_series_score = 0
     team2_series_score = 0
+
     for match in matches:
+        if not match.is_played:
+            continue
+
         team1_score = team_score_in_match(team1, match)
         team2_score = team_score_in_match(team2, match)
-        winner_determinator = match.stage.winner_determinator
+
+        if team1_score is None or team2_score is None:
+            continue
+
+        winner_determinator = stage.winner_determinator
         if winner_determinator == PlayOffStage.WinnerDeterminator.GOALS:
             team1_series_score += team1_score
             team2_series_score += team2_score
@@ -435,15 +465,20 @@ def get_series_result(teams, matches):
             elif team2_score > team1_score:
                 team2_series_score += 1
 
-    if team1_series_score == team2_series_score:
-        return None
+    return {'team1_score': team1_series_score, 'team2_score': team2_series_score}
 
-    if team1_series_score > team2_series_score:
-        winner, loser = team1, team2
-    else:
-        winner, loser = team2, team1
 
-    return {'winner': winner, 'loser': loser}
+@register.filter
+def matches_by_bracket_slot(matches):
+    """Group matches by bracket_slot for playoff series display."""
+    slots = {}
+    for match in matches:
+        slot = match.bracket_slot
+        if slot not in slots:
+            slots[slot] = []
+        slots[slot].append(match)
+
+    return sorted(slots.items(), key=lambda x: x[0])
 
 
 @register.filter
