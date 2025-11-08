@@ -65,6 +65,18 @@
         {% endif %}
       </h5>
 
+      {% if series_matches|length > 1 %}
+        <div class="tw:flex tw:flex-wrap tw:justify-center tw:gap-2 tw:mt-2">
+          {% for series_match in series_matches %}
+            {% if match == series_match %}
+              <span class="tw:btn tw:btn-xs tw:btn-primary tw:btn-active">{{ forloop.counter }} матч</span>
+            {% else %}
+              <a href="{{ series_match.get_absolute_url }}" class="tw:btn tw:btn-xs tw:btn-outline">{{ forloop.counter }} матч</a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <div class="tw:flex">
 
         <div class="tw:w-5/12 tw:text-center">

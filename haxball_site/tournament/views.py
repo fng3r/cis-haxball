@@ -484,6 +484,22 @@ class MatchDetail(DetailView):
             'team_guest': self.get_latest_matches(match, match.team_guest),
         }
 
+        if match.stage.is_playoff and match.bracket_slot:
+            series_matches = (
+                Match.objects.filter(
+                    numb_tour=match.numb_tour,
+                    bracket_slot=match.bracket_slot,
+                )
+                .filter(
+                    Q(team_home=match.team_home, team_guest=match.team_guest)
+                    | Q(team_home=match.team_guest, team_guest=match.team_home)
+                )
+                .order_by('id')
+            )
+            context['series_matches'] = series_matches
+        else:
+            context['series_matches'] = []
+
         all_matches_between = Match.objects.filter(
             Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True)
             | Q(team_guest=match.team_home, team_home=match.team_guest, is_played=True)
