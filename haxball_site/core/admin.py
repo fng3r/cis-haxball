@@ -203,10 +203,18 @@ class NewCommentAdmin(UnfoldModelAdmin):
 
 @admin.register(LikeDislike)
 class LikeDisLikeAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'display_vote', 'user', 'content_type', 'object_id', 'content_object')
+    list_display = (
+        'id',
+        'display_vote',
+        'user',
+        'content_type',
+        'object_id',
+        'content_object',
+    )
     list_filter = (
-        'vote',
+        ('vote', ChoicesCheckboxFilter),
         ('user', RelatedDropdownFilter),
+        ('comments__author', RelatedDropdownFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
