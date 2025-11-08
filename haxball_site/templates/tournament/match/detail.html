@@ -268,10 +268,17 @@
                     <h5>Нарушения</h5>
                     <div class="tw:px-6 tw:text-base">
                       {% if cards|length > 0 %}
-                        <ul class="tw:text-left">
+                        <ul class="tw:text-left tw:space-y-0.5">
                           {% for card in cards %}
                             <li>
-                              {{ card.author }} ({{ card.team }}) - <b>{{ card|card_name }}</b> {{ card.card_reason }}
+                              <img src="{{ card.team.logo.url }}" alt="{{ card.team.title }}" width="22">
+                              {{ card.author.nickname }} -
+                              {% if card.event == 'YEL' %}
+                                <img src="{% static 'img/ico/yellow_card.png' %}" width="24" title="ЖК" alt="ЖК">
+                              {% else %}
+                                <img src="{% static 'img/ico/red_card.png' %}" width="24" title="КК" alt="КК">
+                              {% endif %}
+                              {{ card.card_reason }}
                             </li>
                           {% endfor %}
                         </ul>
@@ -287,10 +294,11 @@
                 <div>
                   <h5>Дисквалификации</h5>
                   <div class="tw:px-6 tw:text-base">
-                    <ul class="tw:text-left">
+                    <ul class="tw:text-left tw:space-y-0.5">
                       {% for disqualification in match.disqualifications.all %}
                         <li>
-                          {{ disqualification.player.nickname }} ({{ disqualification.team }}) дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
+                          <img src="{{ disqualification.team.logo.url }}" alt="{{ disqualification.team.title }}" width="22">
+                          {{ disqualification.player.nickname }} дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
                           Причина: {{ disqualification.reason }}
                         </li>
                       {% endfor %}

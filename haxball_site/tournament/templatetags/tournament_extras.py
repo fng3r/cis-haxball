@@ -1386,15 +1386,6 @@ def goal_time(goal: Goal):
 
 
 @register.filter
-def card_name(card: OtherEvents):
-    if card.event == OtherEvents.YELLOW_CARD:
-        return 'желтая карточка'
-    if card.event == OtherEvents.RED_CARD:
-        return 'красная карточка'
-    return ''
-
-
-@register.filter
 def get_lifted_string(disqualification: Disqualification):
     tours = disqualification.tours.all()
     lifted_tours = disqualification.lifted_tours.all()
