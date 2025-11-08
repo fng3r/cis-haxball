@@ -6,7 +6,22 @@ from typing import Iterable
 
 from django import template
 from django.contrib.auth.models import User
-from django.db.models import Case, Count, Exists, F, FloatField, OuterRef, Prefetch, Q, Subquery, Sum, Value, When
+from django.db.models import (
+    Case,
+    Count,
+    Exists,
+    F,
+    FloatField,
+    Max,
+    Min,
+    OuterRef,
+    Prefetch,
+    Q,
+    Subquery,
+    Sum,
+    Value,
+    When,
+)
 from django.db.models.functions import Cast, Coalesce
 from django.db.models.lookups import GreaterThan
 from django.utils import timezone
@@ -1584,3 +1599,32 @@ def grade_class(grade):
     if grade_lower == 'b+':
         return 'b-plus'
     return grade_lower
+
+
+@register.simple_tag
+def tournament_timeline(league):
+    """Calculate tournament timeline data: start_date, end_date, and progress percentage"""
+    tours = league.tours.all()
+    if not tours.exists():
+        return None
+
+    start_date = tours.aggregate(min_date=Min('date_from'))['min_date']
+    end_date = tours.aggregate(max_date=Max('date_to'))['max_date']
+
+    if not start_date or not end_date:
+        return None
+
+    today = timezone.now().date()
+    total_days = (end_date - start_date).days
+    if total_days == 0:
+        progress = 100 if today >= end_date else (0 if today < start_date else 50)
+    else:
+        elapsed_days = (today - start_date).days
+        progress = max(0, min(100, (elapsed_days / total_days) * 100))
+    progress = int(round(progress, 0))
+
+    return {
+        'start_date': start_date,
+        'end_date': end_date,
+        'progress': progress,
+    }

@@ -13,18 +13,45 @@
 {% block main_content %}
   {% cache 60 tournament_page league.id %}
     <div class="tw:card tw:bg-base-100 tw:rounded-lg">
-      <div class="tw:w-full tw:relative tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
-        <div class="tw:relative tw:card-title tw:py-1 tw:pr-20 tw:md:pr-0">
-          <h3 class="tw:text-center tw:flex tw:items-center tw:justify-center">
-            {% if league.logo %}<img src="{{ league.logo.url }}" width="36" height="36" class="tw:mr-2">{% endif %}
-            {{ league.title }} ({{ league.championship.short_title }})
-          </h3>
-        </div>
-        <div class="tw:absolute tw:right-4 tw:top-1/2 tw:-translate-y-1/2">
-          <button class="tw:btn tw:btn-sm tw:btn-outline" onclick="winner_archive_modal.showModal()">
-            <i class="fa fa-archive" aria-hidden="true"></i>
-            <span class="tw:hidden tw:md:inline">Архив</span>
-          </button>
+      <div class="tw:flex tw:items-center tw:gap-x-4 tw:bg-base-300 tw:rounded-t-lg tw:p-4 tw:px-6 tw:border-b tw:border-gray-300">
+        {% if league.logo %}
+          <img src="{{ league.logo.url }}" class="{% if league.championship.is_active %}tw:size-26{% else %}tw:size-20{% endif %}">
+        {% else %}
+          <img src="{% static "img/logo_try.png" %}"
+               class="{% if league.championship.is_active %}tw:size-26{% else %}tw:size-20{% endif %}">
+        {% endif %}
+        <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:items-start tw:gap-y-2">
+          <div class="tw:flex tw:items-center tw:gap-4 tw:flex-shrink-0">
+            <div class="tw:flex tw:flex-col tw:gap-y-1">
+              <h3 class="tw:text-left tw:flex tw:items-center tw:justify-start tw:font-bold tw:mb-0!">{{ league.title }}</h3>
+              <div class="tw:flex tw:items-center tw:gap-2">
+                <span class="tw:text-lg tw:text-base-content/70 tw:font-semibold">{{ league.championship.short_title }}</span>
+                <button class="tw:btn tw:btn-xs tw:btn-outline" onclick="winner_archive_modal.showModal()">
+                  <i class="fa fa-archive" aria-hidden="true"></i>
+                  <span class="tw:hidden tw:sm:inline">Архив</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {% if league.championship.is_active %}
+            {% tournament_timeline league as timeline %}
+            {% if timeline %}
+              <div class="tw:w-full tw:flex tw:flex-col tw:gap-1 tw:mt-2 tw:max-w-[500px]">
+                <div class="tw:mx-2.5 tw:relative tw:h-2 tw:bg-base-100">
+                  <div class="tw:h-full tw:bg-base-content tw:rounded-full" style="width: {{ timeline.progress }}%"></div>
+                  <div class="tw:absolute tw:left-0 tw:top-1/2 tw:-translate-y-1/2 tw:-translate-x-1/2 tw:size-5 tw:bg-base-content tw:border-3 tw:border-base-300 tw:rounded-full tw:z-10">
+                  </div>
+                  <div class="tw:absolute tw:right-0 tw:top-1/2 tw:-translate-y-1/2 tw:translate-x-1/2 tw:size-5 tw:bg-base-content tw:border-3 tw:border-base-300 tw:rounded-full tw:z-10">
+                  </div>
+                </div>
+                <div class="tw:flex tw:justify-between tw:mt-1">
+                  <span class="tw:text-sm">{{ timeline.start_date|date:"d.m" }}</span>
+                  <span class="tw:text-sm">{{ timeline.end_date|date:"d.m" }}</span>
+                </div>
+              </div>
+            {% endif %}
+          {% endif %}
         </div>
       </div>
 
