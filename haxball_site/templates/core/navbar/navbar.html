@@ -679,10 +679,8 @@
       </div>
 
       <div class="tw:flex tw:items-center tw:gap-0.5">
-        <a href="{% url 'balance:shop' %}" class="tw:relative tw:btn tw:btn-ghost tw:btn-circle">
-          <i class="tw:relative fa fa-shopping-bag tw:size-5 tw:mt-1.5">
-            <div aria-label="status" class="tw:status tw:status-warning tw:absolute tw:-top-1 tw:-right-0.75"></div>
-          </i>
+        <a href="{% url 'balance:shop' %}" class="tw:btn tw:btn-ghost tw:btn-circle">
+          <i class="fa fa-shopping-bag tw:size-5 tw:mt-1.5"></i>
         </a>
 
         {% if user.is_authenticated %}
