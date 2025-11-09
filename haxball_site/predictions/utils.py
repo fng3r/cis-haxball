@@ -75,12 +75,24 @@ def get_tournament_standings(tournament):
     for user in users_with_predictions:
         user_submissions = submissions_by_user.get(user.id, [])
         total_points = 0
+        total_correct_predictions = 0
+        total_predictions = 0
         for submission in user_submissions:
             total_points += submission.get_total_points()
+            correct_predictions, predictions = submission.get_predictions_counts()
+            total_correct_predictions += correct_predictions
+            total_predictions += predictions
+        accuracy = total_correct_predictions / total_predictions * 100 if total_predictions > 0 else 0
 
-        standings.append({'user': user, 'total_points': total_points})
+        standings.append(
+            {
+                'user': user,
+                'total_points': total_points,
+                'accuracy': accuracy,
+            }
+        )
 
-    standings.sort(key=lambda x: x['total_points'], reverse=True)
+    standings.sort(key=lambda x: (x['total_points'], x['accuracy']), reverse=True)
 
     for i, standing in enumerate(standings):
         standing['place'] = i + 1

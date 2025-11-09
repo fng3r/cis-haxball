@@ -628,6 +628,9 @@ class TournamentStageChildBase(PolymorphicChildModelAdmin, UnfoldModelAdmin):
 @admin.register(RegularStage)
 class RegularStageAdmin(TournamentStageChildBase):
     inlines = [TourInline, TeamPenaltyPointsInline]
+    conditional_fields = {
+        'round_robin_rounds': 'is_round_robin == true',
+    }
 
 
 @admin.register(GroupStage)

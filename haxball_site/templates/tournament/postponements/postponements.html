@@ -73,7 +73,7 @@
                       <td class="tw:h-20 tw:p-1 tw:border-r tw:border-neutral-200/50 tw:text-sm">
                         {% if postponement is not None %}
                           {% with match=postponement.match %}
-                            <div class="{% if postponement.match.is_played %}postponement_played{% endif %}">
+                            <div class="{% if postponement.match.is_played %}tw:line-through{% endif %}">
                               {{ match.numb_tour.number }} тур
                               <br>
                               <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.short_title }}" width="16" height="16">
@@ -176,19 +176,35 @@
                     </span>
                   </div>
                   <div class="comment-body tw:my-1.5">
-                    <div id="postponement-log-entry">
-                      <span>{{ postponement.match.numb_tour.number }} тур</span>
-                      <br>
-                      <span>{{ postponement.match.team_home }} - {{ postponement.match.team_guest }}</span>
-                      <br>
-                      <span class="postponements-log-text">
+                    <div id="postponement-log-entry" class="tw:flex tw:flex-col">
+                      <div>{{ postponement.match.numb_tour.number }} тур</div>
+                      <div class="tw:inline-flex tw:items-center tw:gap-x-1">
+                        <img src="{{ postponement.match.team_home.logo.url }}"
+                             width="20px"
+                             height="20px"
+                             title="{{ postponement.match.team_home.title }}">
+                        {{ postponement.match.team_home.title }}
+                        -
+                        {{ postponement.match.team_guest.title }}
+                        <img src="{{ postponement.match.team_guest.logo.url }}"
+                             width="20px"
+                             height="20px"
+                             title="{{ postponement.match.team_guest.title }}">
+                      </div>
+                      <div class="tw:first-letter:capitalize">
                         {% if postponement.is_emergency %}экстренный{% endif %}
                         {% if postponement.teams.count > 1 %}
                           обоюдный перенос
                         {% else %}
-                          перенос на команду {{ postponement.teams.all.0.title }}
+                          перенос на команду
+                          <div class="tw:ml-0.5 tw:inline tw:align-top">
+                            <div class="tw:inline-flex tw:items-center tw:gap-x-1">
+                              <img src="{{ postponement.teams.all.0.logo.url }}" width="20px" height="20px" title="{{ postponement.teams.all.0.title }}">
+                              {{ postponement.teams.all.0.title }}
+                            </div>
+                          </div>
                         {% endif %}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -233,9 +249,7 @@
                         {{ postponement.cancelled_at|time:"H:i" }}
                       </span>
                     </div>
-                    <div class="comment-body tw:my-1.5">
-                      <span>Отмена переноса</span>
-                    </div>
+                    <div class="comment-body tw:my-1.5">Отмена переноса</div>
                   </div>
                 </div>
 

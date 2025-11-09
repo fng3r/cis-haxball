@@ -1,31 +1,106 @@
 {% load tournament_extras %}
 
-{% partialdef tour-matches %}
-  {% for match in matches %}
-    <div class="tw:flex tw:items-center tw:text-xl tw:font-semibold tw:mb-1">
-      <div class="tw:w-4/9 tw:text-right tw:justify-center">
-        <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_home.get_absolute_url }}">
-          {{ match.team_home.title }}
-          <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" width="25" height="25" class="tw:ml-1">
-        </a>
-      </div>
-
-      <div class="tw:w-1/9 tw:px-0 tw:text-center">
-        {% if not match.is_played %}
-          <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">vs</a>
-        {% else %}
-          <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">{{ match.score_home }} : {{ match.score_guest }}</a>
-        {% endif %}
-      </div>
-
-      <div class="tw:w-4/9 tw:text-left">
-        <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_guest.get_absolute_url }}">
-          <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" width="25" height="25" class="tw:mr-1">
-          {{ match.team_guest.title }}
-        </a>
-      </div>
+{% partialdef match-row %}
+  <div class="tw:flex tw:items-center tw:font-semibold {% if text_size == 'xl' %}tw:text-xl{% else %}tw:text-base{% endif %}">
+    <div class="tw:w-4/9 tw:text-right tw:justify-center">
+      <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_home.get_absolute_url }}">
+        {{ match.team_home.title }}
+        <img src="{{ match.team_home.logo.url }}"
+             alt="{{ match.team_home.title }}"
+             width="{{ logo_size }}"
+             height="{{ logo_size }}"
+             class="tw:ml-1">
+      </a>
     </div>
-  {% endfor %}
+
+    <div class="tw:w-1/9 tw:px-0 tw:text-center">
+      {% if not match.is_played %}
+        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">vs</a>
+      {% else %}
+        <a class="tw:link tw:link-hover tw:link-primary" href="{{ match.get_absolute_url }}">{{ match.score_home }} : {{ match.score_guest }}</a>
+      {% endif %}
+    </div>
+
+    <div class="tw:w-4/9 tw:text-left">
+      <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ match.team_guest.get_absolute_url }}">
+        <img src="{{ match.team_guest.logo.url }}"
+             alt="{{ match.team_guest.title }}"
+             width="{{ logo_size }}"
+             height="{{ logo_size }}"
+             class="tw:mr-1">
+        {{ match.team_guest.title }}
+      </a>
+    </div>
+  </div>
+{% endpartialdef %}
+
+{% partialdef tour-matches %}
+  <div class="tw:flex tw:flex-col tw:gap-1">
+    {% for match in matches %}
+      {% with text_size="xl" logo_size="25" %}
+        {% partial match-row %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+{% endpartialdef %}
+
+{% partialdef tour-series %}
+  {% with slot_matches=matches|matches_by_bracket_slot %}
+    {% for slot, slot_matches_list in slot_matches %}
+      {% if slot_matches_list|length > 1 %}
+        {% with first_match=slot_matches_list|first %}
+          {% get_series_score first_match.team_home first_match.team_guest slot_matches_list stage as series_score %}
+          <div class="tw:flex tw:flex-col tw:mb-2 tw:border-l-2 tw:border-primary/50">
+            {# Series header with teams and series score #}
+            <div class="tw:flex tw:items-center tw:text-xl tw:font-semibold tw:mb-1.5">
+              <div class="tw:w-4/9 tw:text-right tw:justify-center">
+                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ first_match.team_home.get_absolute_url }}">
+                  {{ first_match.team_home.title }}
+                  <img src="{{ first_match.team_home.logo.url }}"
+                       alt="{{ first_match.team_home.title }}"
+                       width="25"
+                       height="25"
+                       class="tw:ml-1">
+                </a>
+              </div>
+
+              <div class="tw:w-1/9 tw:px-0 tw:text-center">
+                {% if series_score %}
+                  <span class="tw:font-bold">{{ series_score.team1_score }} : {{ series_score.team2_score }}</span>
+                {% else %}
+                  <span>vs</span>
+                {% endif %}
+              </div>
+
+              <div class="tw:w-4/9 tw:text-left">
+                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ first_match.team_guest.get_absolute_url }}">
+                  <img src="{{ first_match.team_guest.logo.url }}"
+                       alt="{{ first_match.team_guest.title }}"
+                       width="25"
+                       height="25"
+                       class="tw:mr-1">
+                  {{ first_match.team_guest.title }}
+                </a>
+              </div>
+            </div>
+
+            {# Individual matches in the series #}
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              {% for match in slot_matches_list %}
+                {% with text_size="base" logo_size="20" %}
+                  {% partial match-row %}
+                {% endwith %}
+              {% endfor %}
+            </div>
+          </div>
+        {% endwith %}
+      {% else %}
+        {% with matches=slot_matches_list %}
+          {% partial tour-matches %}
+        {% endwith %}
+      {% endif %}
+    {% endfor %}
+  {% endwith %}
 {% endpartialdef %}
 
 <div class="tw:flex tw:flex-col tw:gap-2 tw:py-2">
@@ -67,9 +142,15 @@
               {% endfor %}
             {% endwith %}
           {% else %}
-            {% with matches=tour.tour_matches.all %}
-              {% partial tour-matches %}
-            {% endwith %}
+            {% if stage.is_playoff %}
+              {% with matches=tour.tour_matches.all stage=stage %}
+                {% partial tour-series %}
+              {% endwith %}
+            {% else %}
+              {% with matches=tour.tour_matches.all %}
+                {% partial tour-matches %}
+              {% endwith %}
+            {% endif %}
           {% endif %}
         </div>
       {% endfor %}

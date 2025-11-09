@@ -255,7 +255,7 @@ class TournamentStage(PolymorphicModel):
 
     @property
     def is_regular(self):
-        return self.is_playoff and self.has_match_for_third_place
+        return self.type == self.StageType.REGULAR
 
     @property
     def is_group_stage(self):
@@ -298,6 +298,15 @@ class RegularStage(TournamentStage):
         'Кол-во команд, вылетающих в лигу ниже',
         choices=[(i, i) for i in range(0, 17)],
         default=2,
+    )
+    is_round_robin = models.BooleanField(
+        'Используется круговая система',
+        default=True,
+    )
+    round_robin_rounds = models.PositiveSmallIntegerField(
+        'Количество кругов',
+        default=2,
+        help_text='Количество раз, которое каждая команда играет с каждой',
     )
 
     class Meta:
@@ -558,6 +567,9 @@ class TourNumber(models.Model):
         verbose_name = 'Тур'
         verbose_name_plural = 'Туры'
         ordering = ['league', 'stage__order', 'number', 'date_from']
+        indexes = [
+            models.Index(fields=['league', 'number']),
+        ]
 
 
 class Match(models.Model):
@@ -673,10 +685,7 @@ class Match(models.Model):
             end_date = last_postponement.ends_at
 
         start_datetime = timezone.datetime.combine(start_date, timezone.datetime.min.time())
-        # match can be postponed during 12h since tour/previous postponement end date
-        end_datetime = timezone.datetime.combine(end_date, timezone.datetime.min.time()) + timezone.timedelta(
-            days=1, hours=12
-        )
+        end_datetime = timezone.datetime.combine(end_date, timezone.datetime.min.time()) + timezone.timedelta(days=1)
 
         return start_datetime.timestamp() <= timezone.now().timestamp() <= end_datetime.timestamp()
 
@@ -736,6 +745,9 @@ class Match(models.Model):
         verbose_name = 'Матч'
         verbose_name_plural = 'Матчи'
         ordering = ['league', 'stage', 'numb_tour', 'id']
+        indexes = [
+            models.Index(fields=['league', 'numb_tour']),
+        ]
 
 
 class MatchResult(models.Model):
@@ -959,7 +971,10 @@ class PlayerMatchStatistics(models.Model):
         verbose_name = 'Статистика игрока в матче'
         verbose_name_plural = 'Статистика игроков в матчах'
         unique_together = ('match', 'player')
-        indexes = [models.Index(fields=['player', 'league'])]
+        indexes = [
+            models.Index(fields=['player', 'league']),
+            models.Index(fields=['league', 'player']),
+        ]
 
 
 class Disqualification(models.Model):
@@ -1122,6 +1137,9 @@ class OtherEvents(models.Model):
     class Meta:
         verbose_name = 'Событие'
         verbose_name_plural = 'События'
+        indexes = [
+            models.Index(fields=['event', 'match']),
+        ]
 
 
 class PlayerTransfer(models.Model):
@@ -1170,6 +1188,10 @@ class PlayerTransfer(models.Model):
     class Meta:
         verbose_name = 'Трансфер'
         verbose_name_plural = 'Трансферы'
+        indexes = [
+            models.Index(fields=['trans_player', 'season_join']),
+            models.Index(fields=['to_team']),
+        ]
 
 
 class Postponement(models.Model):

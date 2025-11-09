@@ -63,6 +63,17 @@ class PredictionSubmission(models.Model):
         """Get total points for this submission"""
         return sum(prediction.get_earned_points() for prediction in self.predictions.all())
 
+    def get_predictions_counts(self):
+        """Get total and correct predictions counts for this submission"""
+        predictions = 0
+        correct_predictions = 0
+        for prediction in self.predictions.all():
+            if prediction.match.is_played:
+                predictions += 1
+                if prediction.get_earned_points() > 0:
+                    correct_predictions += 1
+        return correct_predictions, predictions
+
 
 class Prediction(models.Model):
     """Individual prediction for a match"""

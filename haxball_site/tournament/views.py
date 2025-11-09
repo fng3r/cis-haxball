@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db import models
-from django.db.models import Count, Exists, F, Max, OuterRef, Prefetch, Q, Subquery, Window
+from django.db.models import Count, Exists, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Window
 from django.db.models.functions import Coalesce, Rank
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -406,7 +406,19 @@ class LeagueDetail(DetailView):
         page = self.request.GET.get('page')
         comments_obj = get_comments_for_object(League, league.id)
         comments = get_paginated_comments(comments_obj, page)
+        comment_form = NewCommentForm()
 
+        winners = self._get_all_winners(league)
+        default_stage = self._get_default_stage(league)
+
+        context['page'] = page
+        context['comments'] = comments
+        context['comment_form'] = comment_form
+        context['winners'] = winners
+        context['default_stage'] = default_stage
+        return context
+
+    def _get_all_winners(self, league: League):
         league_filters = {}
         if league.title in ['Высшая лига', 'Единая лига']:
             league_filters = {'league__title__in': ['Высшая лига', 'Единая лига']}
@@ -420,14 +432,21 @@ class LeagueDetail(DetailView):
             .select_related('season', 'winner')
             .order_by('-season__number')
         )
-        winners_by_season = {season: list(winners) for season, winners in groupby(winners, key=lambda x: x.season)}
 
-        context['page'] = page
-        context['comments'] = comments
-        context['winners'] = winners_by_season
-        comment_form = NewCommentForm()
-        context['comment_form'] = comment_form
-        return context
+        return {season: list(winners) for season, winners in groupby(winners, key=lambda x: x.season)}
+
+    def _get_default_stage(self, league: League):
+        if league.championship.is_active:
+            now = timezone.now()
+            default_stage = (
+                league.stages.annotate(start_date=Min('tours__date_from'))
+                .filter(start_date__lt=now)
+                .order_by('-start_date', 'order')
+            ).first()
+        else:
+            default_stage = league.stages.first()
+
+        return default_stage
 
 
 class MatchDetail(DetailView):
@@ -464,6 +483,22 @@ class MatchDetail(DetailView):
             'team_home': self.get_latest_matches(match, match.team_home),
             'team_guest': self.get_latest_matches(match, match.team_guest),
         }
+
+        if match.stage.is_playoff and match.bracket_slot:
+            series_matches = (
+                Match.objects.filter(
+                    numb_tour=match.numb_tour,
+                    bracket_slot=match.bracket_slot,
+                )
+                .filter(
+                    Q(team_home=match.team_home, team_guest=match.team_guest)
+                    | Q(team_home=match.team_guest, team_guest=match.team_home)
+                )
+                .order_by('id')
+            )
+            context['series_matches'] = series_matches
+        else:
+            context['series_matches'] = []
 
         all_matches_between = Match.objects.filter(
             Q(team_guest=match.team_guest, team_home=match.team_home, is_played=True)
