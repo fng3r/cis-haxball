@@ -894,9 +894,8 @@ class MatchAdmin(UnfoldModelAdmin):
             },
         ),
         (
-            'Составы',
+            'Стартовые составы',
             {
-                'classes': ('collapse',),
                 'fields': ('team_home_start', 'team_guest_start'),
             },
         ),
