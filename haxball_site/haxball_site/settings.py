@@ -516,8 +516,12 @@ UNFOLD = {
     'SHOW_HISTORY': True,
     'SHOW_VIEW_ON_SITE': True,
     'SHOW_BACK_BUTTON': True,
+    'COMMAND': {
+        'show_history': True,
+    },
     'SIDEBAR': {
-        'show_search': False,
+        'show_search': True,
+        'command_search': True,
         'show_all_applications': False,
         'navigation': [
             {
