@@ -517,6 +517,14 @@ UNFOLD = {
     'SHOW_VIEW_ON_SITE': True,
     'SHOW_BACK_BUTTON': True,
     'COMMAND': {
+        'search_models': [
+            'core.Profile',
+            'auth.User',
+            'tournament.Team',
+            'tournament.Player',
+            'tournament.Season',
+            'tournament.League',
+        ],
         'show_history': True,
     },
     'SIDEBAR': {

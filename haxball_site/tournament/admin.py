@@ -325,6 +325,7 @@ class TeamAdmin(UnfoldModelAdmin):
 @admin.register(Season)
 class SeasonAdmin(UnfoldModelAdmin):
     list_display = ('number', 'title', 'short_title', 'is_active', 'created')
+    search_fields = ('title', 'short_title')
 
 
 @admin.register(Nation)
