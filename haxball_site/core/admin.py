@@ -231,8 +231,8 @@ class PostAdmin(UnfoldModelAdmin):
     list_display = ('id', 'title', 'author', 'views', 'category', 'created', 'updated', 'important')
     list_filter = ('created', ('author', RelatedDropdownFilter), 'important')
     list_filter_submit = True
-    search_fields = ('title', 'body')
-    search_help_text = 'Поиск по автору/заголовку поста'
+    search_fields = ('title',)
+    search_help_text = 'Поиск по названию поста'
     prepopulated_fields = {'slug': ('title',)}
     autocomplete_fields = ('author',)
     form = PostAdminForm
