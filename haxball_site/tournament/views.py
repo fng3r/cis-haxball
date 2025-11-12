@@ -620,6 +620,11 @@ class MatchDetail(DetailView):
         context['score_home_average'] = round(score_home_all / all_matches_between.count(), 2)
         context['score_guest_average'] = round(score_guest_all / all_matches_between.count(), 2)
 
+        all_h2h_matches = all_matches_between.select_related(
+            'league__championship', 'team_home', 'team_guest'
+        ).order_by('-match_date', '-id')
+        context['all_h2h_matches'] = all_h2h_matches
+
         return context
 
     def get_latest_matches(self, match: Match, team: Team):
