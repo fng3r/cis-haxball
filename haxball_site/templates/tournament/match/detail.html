@@ -94,16 +94,18 @@
         <div class="tw:col-span-2 tw:flex tw:flex-col tw:justify-between tw:h-full">
           <div class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:my-auto tw:py-4">
             {% if match.is_played %}
-              <div class="tw:flex tw:items-center tw:gap-1 tw:text-xs tw:md:text-base tw:text-base-content/70">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="tw:size-3.5 tw:md:size-4 tw:mb-0.5"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
-                </svg>
-                <span class="tw:font-mono event-time">{{ match.match_date|date:"d.m.y" }}</span>
-              </div>
+              {% if match.match_date %}
+                <div class="tw:flex tw:items-center tw:gap-1 tw:text-xs tw:md:text-base tw:text-base-content/70">
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                       class="tw:size-3.5 tw:md:size-4 tw:mb-0.5"
+                       fill="none"
+                       viewBox="0 0 24 24"
+                       stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+                  </svg>
+                  <span class="tw:font-mono event-time">{{ match.match_date|date:"d.m.y" }}</span>
+                </div>
+              {% endif %}
               <div class="tw:text-4xl tw:md:text-5xl tw:font-bold tw:whitespace-nowrap tw:mb-1">{{ match.score_home }} : {{ match.score_guest }}</div>
               {% if match.is_tech_defeat %}
                 <div class="tw:badge tw:badge-warning tw:badge-sm tw:md:badge-md tw:font-semibold tw:whitespace-nowrap tw:mt-1">
@@ -265,178 +267,7 @@
     </div>
   </div>
 
-  {# History Modal #}
-  <dialog id="history-modal" class="tw:modal">
-    <div class="tw:modal-box tw:max-w-4xl tw:max-h-[80vh] tw:overflow-y-auto">
-      <h3 class="tw:font-bold tw:text-lg tw:mb-4">История встреч</h3>
-
-      {% if no_history %}
-        <div class="tw:flex tw:justify-center tw:items-center tw:gap-2 tw:pt-4">
-          <span class="tw:text-base-content/70">Команды ранее не встречались</span>
-        </div>
-      {% else %}
-        {# Win Percentage Bar #}
-        <div class="tw:flex tw:w-full tw:rounded-lg tw:overflow-hidden tw:shadow" style="height: 45px;">
-          {% if win_home_percentage > 0 %}
-            <div class="tw:bg-success tw:text-success-content tw:flex tw:justify-center tw:items-center tw:gap-2"
-                 style="width: {{ win_home_percentage }}%">
-              <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:size-6 tw:object-contain">
-              <span class="tw:font-bold tw:text-sm">{{ win_home_percentage }}% ({{ win_home }})</span>
-            </div>
-          {% endif %}
-          {% if draws_percentage > 0 %}
-            <div class="tw:bg-gray-400 tw:text-neutral-content tw:flex tw:justify-center tw:items-center tw:gap-2"
-                 style="width: {{ draws_percentage }}%">
-              <img src="{% static 'img/ico/equals_icon.png' %}" alt="equals" class="tw:size-6 tw:object-contain">
-              <span class="tw:font-bold tw:text-sm">{{ draws_percentage }}% ({{ draws }})</span>
-            </div>
-          {% endif %}
-          {% if win_guest_percentage > 0 %}
-            <div class="tw:bg-primary tw:text-primary-content tw:flex tw:justify-center tw:items-center tw:gap-2"
-                 style="width: {{ win_guest_percentage }}%">
-              <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:size-6 tw:object-contain">
-              <span class="tw:font-bold tw:text-sm">{{ win_guest_percentage }}% ({{ win_guest }})</span>
-            </div>
-          {% endif %}
-        </div>
-
-        {# Stats Grid #}
-        <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4 tw:mt-4">
-          {# Total Matches #}
-          <div class="tw:stats tw:stats-horizontal tw:md:stats-vertical tw:bg-base-200 tw:shadow">
-            <div class="tw:stat">
-              <div class="tw:stat-title tw:text-base-content/70 tw:text-sm">Всего матчей</div>
-              <div class="tw:stat-value tw:text-warning tw:font-bold">{{ all_matches_between.count }}</div>
-            </div>
-
-            <div class="tw:stat">
-              <div class="tw:stat-title tw:text-sm">Самый результативный</div>
-              <a href="{{ the_most_score.get_absolute_url }}"
-                 class="tw:stat-value tw:link tw:link-hover tw:link-primary tw:flex tw:items-center tw:gap-2">
-                <img src="{{ the_most_score.team_home.logo.url }}"
-                     alt="{{ the_most_score.team_home.title }}"
-                     class="tw:size-7 tw:object-contain">
-                <span class="tw:font-bold">{{ the_most_score.score_home }}-{{ the_most_score.score_guest }}</span>
-                <img src="{{ the_most_score.team_guest.logo.url }}"
-                     alt="{{ the_most_score.team_guest.title }}"
-                     class="tw:size-7 tw:object-contain">
-              </a>
-              <div class="tw:stat-desc">{{ the_most_score.league }}</div>
-            </div>
-          </div>
-
-          {# Statistics Table #}
-          <div class="tw:md:col-span-2">
-            <div class="tw:card tw:bg-base-200 tw:shadow">
-              <div class="tw:card-body tw:p-4">
-                <table class="tw:table tw:table-zebra tw:text-center tw:text-sm">
-                  <thead>
-                    <tr class="tw:bg-base-300">
-                      <th class="tw:text-left"></th>
-                      <th>
-                        <div class="tw:flex tw:items-center tw:justify-center tw:gap-1">
-                          <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:size-6 tw:object-contain">
-                        </div>
-                      </th>
-                      <th>
-                        <div class="tw:flex tw:items-center tw:justify-center tw:gap-1">
-                          <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:size-6 tw:object-contain">
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td class="tw:font-semibold tw:text-left">Победы</td>
-                      <td class="tw:font-bold">{{ win_home }}</td>
-                      <td class="tw:font-bold">{{ win_guest }}</td>
-                    </tr>
-                    <tr>
-                      <td class="tw:font-semibold tw:text-left">Забитые мячи</td>
-                      <td class="tw:font-bold tw:text-success">{{ score_home_all }}</td>
-                      <td class="tw:font-bold tw:text-success">{{ score_guest_all }}</td>
-                    </tr>
-                    <tr>
-                      <td class="tw:font-semibold tw:text-left">Забитые мячи (ср. за матч)</td>
-                      <td class="tw:font-bold tw:text-primary">{{ score_home_average }}</td>
-                      <td class="tw:font-bold tw:text-primary">{{ score_guest_average }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {% if all_h2h_matches %}
-          <div class="tw:mt-4" x-data="{ showAll: false }">
-            <h5 class="tw:font-bold tw:text-base tw:mb-3">Очные матчи</h5>
-            <div class="tw:overflow-x-auto">
-              <div class="tw:grid tw:grid-cols-[max-content_max-content_auto] tw:text-sm">
-                <div class="tw:contents tw:*:first:rounded-tl tw:*:last:rounded-tr">
-                  <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Дата</div>
-                  <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Турнир</div>
-                  <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Матч</div>
-                </div>
-
-                {% for match in all_h2h_matches %}
-                  {% with is_even=forloop.counter0|divisibleby:2 %}
-                    <a href="{{ match.get_absolute_url }}"
-                       class="tw:contents tw:hover:*:bg-base-300 tw:transition-colors {% if is_even %}tw:*:bg-base-200{% endif %}"
-                       {% if forloop.counter0 >= 5 %}x-show="showAll"{% endif %}>
-                      <div class="tw:text-xs tw:px-3 tw:py-2 tw:flex tw:items-center"
-                           {% if forloop.counter0 == 4 %}x-bind:class="!showAll && 'tw:rounded-bl'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-bl'"{% endif %}>
-                        {{ match.match_date|date:"d.m.y" }}
-                      </div>
-                      <div class="tw:px-3 tw:py-2 tw:flex tw:items-center">
-                        <div class="tw:flex tw:flex-col">
-                          <span class="tw:font-semibold">{{ match.league.championship.short_title }}</span>
-                          <span class="tw:text-xs tw:text-base-content/70">{{ match.league.title }}</span>
-                        </div>
-                      </div>
-                      <div class="tw:px-3 tw:py-2 tw:flex tw:items-center tw:gap-2"
-                           {% if forloop.counter0 == 4 %}x-bind:class="!showAll && 'tw:rounded-br'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-br'"{% endif %}>
-                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:size-6 tw:object-contain">
-                        <span class="tw:font-semibold">{{ match.team_home.short_title }}</span>
-                        <span class="tw:font-bold">{{ match.score_home }} : {{ match.score_guest }}</span>
-                        <span class="tw:font-semibold">{{ match.team_guest.short_title }}</span>
-                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:size-6 tw:object-contain">
-                      </div>
-                    </a>
-                  {% endwith %}
-                {% endfor %}
-              </div>
-            </div>
-            {% if all_h2h_matches|length > 5 %}
-              <div class="tw:flex tw:justify-center tw:mt-3">
-                <span @click="showAll = !showAll"
-                      class="tw:text-base-content/80 tw:hover:text-base-content tw:cursor-pointer tw:flex tw:items-center tw:gap-1">
-                  <span x-text="showAll ? 'Скрыть' : 'Показать все матчи'"></span>
-                  <svg xmlns="http://www.w3.org/2000/svg"
-                       class="tw:size-4 tw:mt-1 tw:transition-transform"
-                       :class="showAll && 'tw:rotate-180'"
-                       fill="none"
-                       viewBox="0 0 24 24"
-                       stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </div>
-            {% endif %}
-          </div>
-        {% endif %}
-      {% endif %}
-
-      <div class="tw:modal-action">
-        <form method="dialog">
-          <button class="tw:btn">Закрыть</button>
-        </form>
-      </div>
-    </div>
-    <form method="dialog" class="tw:modal-backdrop">
-      <button>close</button>
-    </form>
-  </dialog>
+  {% include 'tournament/match/history_modal.html' %}
 {% endblock %}
 
 {% block comments %}

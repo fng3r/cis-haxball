@@ -620,10 +620,15 @@ class MatchDetail(DetailView):
         context['score_home_average'] = round(score_home_all / all_matches_between.count(), 2)
         context['score_guest_average'] = round(score_guest_all / all_matches_between.count(), 2)
 
-        all_h2h_matches = all_matches_between.select_related(
-            'league__championship', 'team_home', 'team_guest'
-        ).order_by('-match_date', '-id')
-        context['all_h2h_matches'] = all_h2h_matches
+        h2h_matches = all_matches_between.select_related('league__championship', 'team_home', 'team_guest').order_by(
+            '-match_date', '-id'
+        )
+        context['h2h_matches'] = h2h_matches
+
+        player_stats = {}
+        player_stats[match.team_home] = self.get_player_stats(match.team_home, h2h_matches)
+        player_stats[match.team_guest] = self.get_player_stats(match.team_guest, h2h_matches)
+        context['player_stats'] = player_stats
 
         return context
 
@@ -648,6 +653,44 @@ class MatchDetail(DetailView):
             .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
             .order_by('-match_date', '-numb_tour', '-id')[:5]
         )
+
+    def get_player_stats(self, team: Team, selected_matches) -> dict:
+        top_matches = (
+            team.played_matches.filter(match__in=selected_matches)
+            .values(pl=F('player__nickname'))
+            .annotate(count=Count('player'))
+            .order_by('-count')
+            .first()
+        )
+        top_goals = (
+            team.goals.filter(match__in=selected_matches)
+            .values(pl=F('author__nickname'))
+            .annotate(count=Count('author'))
+            .order_by('-count')
+            .first()
+        )
+        top_assists = (
+            team.goals.filter(match__in=selected_matches)
+            .values(pl=F('assistent__nickname'))
+            .annotate(count=Count('assistent'))
+            .order_by('-count')
+            .first()
+        )
+        top_cs = (
+            team.team_events.cs()
+            .filter(match__in=selected_matches)
+            .values(pl=F('author__nickname'))
+            .annotate(count=Count('author'))
+            .order_by('-count')
+            .first()
+        )
+
+        return {
+            'matches': top_matches or {'pl': '–', 'count': 0},
+            'goals': top_goals or {'pl': '–', 'count': 0},
+            'assists': top_assists or {'pl': '–', 'count': 0},
+            'cs': top_cs or {'pl': '–', 'count': 0},
+        }
 
 
 class PostponementFilter(FilterSet):
