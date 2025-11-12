@@ -175,13 +175,13 @@
                   {% endcomment %}
                   {% if match.league.championship.number > 14 %}
                     <h5>Нарушения</h5>
-                    <div class="tw:px-6 tw:text-base">
+                    <div class="tw:px-2 tw:text-base">
                       {% if cards|length > 0 %}
                         <ul class="tw:text-left tw:space-y-0.5">
                           {% for card in cards %}
                             <li>
                               <img src="{{ card.team.logo.url }}" alt="{{ card.team.title }}" width="22">
-                              {{ card.author.nickname }} -
+                              <span class="tw:font-semibold">{{ card.author.nickname }}</span> -
                               {% if card.event == 'YEL' %}
                                 <img src="{% static 'img/ico/yellow_card.png' %}" width="24" title="ЖК" alt="ЖК">
                               {% else %}
@@ -202,12 +202,12 @@
               {% if match.disqualifications.count > 0 %}
                 <div class="tw:text-center">
                   <h5>Дисквалификации</h5>
-                  <div class="tw:px-6 tw:text-base">
+                  <div class="tw:px-2 tw:text-base">
                     <ul class="tw:text-left tw:space-y-0.5">
                       {% for disqualification in match.disqualifications.all %}
                         <li>
                           <img src="{{ disqualification.team.logo.url }}" alt="{{ disqualification.team.title }}" width="22">
-                          {{ disqualification.player.nickname }} дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
+                          <span class="tw:font-semibold">{{ disqualification.player.nickname }}</span> дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
                           Причина: {{ disqualification.reason }}
                         </li>
                       {% endfor %}
