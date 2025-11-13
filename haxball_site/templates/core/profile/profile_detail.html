@@ -73,7 +73,7 @@
                                      x-cloak
                                      @click.outside="showNicknamesHistory = false"
                                      class="tw:relative tw:top-1">
-                                  <div class="tw:absolute tw:bg-black tw:opacity-90 tw:shadow-lg tw:z-999 tw:rounded tw:-translate-x-1/2">
+                                  <div class="tw:absolute tw:bg-black tw:opacity-90 tw:shadow-lg tw:z-999 tw:rounded tw:-translate-x-1/2 tw:w-max tw:max-w-40">
                                     {% for nickname in previous_nicknames %}
                                       <div class="tw:text-white tw:text-base tw:font-normal tw:px-2 tw:py-1 tw:border-[#7b7b7b] {% if not forloop.last %}tw:border-b{% endif %}">
                                         {{ nickname.nickname }}
