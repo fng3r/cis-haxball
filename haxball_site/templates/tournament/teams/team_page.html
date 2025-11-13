@@ -66,7 +66,7 @@
            {% if team.color_1 != '#FFFFFF' and team.color_2 != '#FFFFFF' %}style="background:linear-gradient(to right, {{ team.color_1 }}, {{ team.color_2 }})"{% endif %}>
         <div class="tw:flex">
           <div class="tw:w-1/4 tw:mb-4">
-            <img src="{{ team.logo.url }}" alt="{{ team.title }}" class="tw:size-full">
+            <img src="{{ team.logo.url }}" alt="{{ team.title }}" class="tw:size-full tw:aspect-square tw:object-contain">
           </div>
 
           <div class="tw:grow tw:relative tw:px-4">
