@@ -253,7 +253,7 @@
                       {% if not forloop.last %}|{% endif %}
                     {% endfor %}
                   </h6>
-                  <h6>Инспектор: {{ match.inspector }}</h6>
+                  <h6>Инспектор: {{ match.inspector|default:"—" }}</h6>
                   {% if match.comment %}
                     <h6>Комментарий</h6>
                     {{ match.comment|linebreaks }}
