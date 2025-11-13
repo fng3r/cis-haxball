@@ -183,7 +183,7 @@
                           {% for card in cards %}
                             <li>
                               <img src="{{ card.team.logo.url }}" alt="{{ card.team.title }}" width="22">
-                              <span class="tw:font-semibold">{{ card.author.nickname }}</span> -
+                              <a href="{{ card.author.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">{{ card.author.nickname }}</a> -
                               {% if card.event == 'YEL' %}
                                 <img src="{% static 'img/ico/yellow_card.png' %}" width="24" title="ЖК" alt="ЖК">
                               {% else %}
@@ -209,7 +209,8 @@
                       {% for disqualification in match.disqualifications.all %}
                         <li>
                           <img src="{{ disqualification.team.logo.url }}" alt="{{ disqualification.team.title }}" width="22">
-                          <span class="tw:font-semibold">{{ disqualification.player.nickname }}</span> дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
+                          <a href="{{ disqualification.player.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">{{ disqualification.player.nickname }}</a>
+                          дисквалифицирован на {{ disqualification.tours.all|join:", " }}.
                           Причина: {{ disqualification.reason }}
                         </li>
                       {% endfor %}

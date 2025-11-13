@@ -462,7 +462,8 @@ class MatchDetail(DetailView):
             'team_home_start__player_nation',
             'team_guest_start__name__user_profile',
             'team_guest_start__player_nation',
-            'disqualifications__player__team',
+            'disqualifications__team',
+            'disqualifications__player__name__user_profile',
             'disqualifications__tours__league',
         )
 
@@ -564,7 +565,7 @@ class MatchDetail(DetailView):
         time_played_by_player = {p: datetime.fromtimestamp(sec).strftime('%M:%S') for (p, sec) in time_played.items()}
         context['time_played_by_player'] = time_played_by_player
 
-        cards = match.cards().select_related('author', 'team')
+        cards = match.cards().select_related('team', 'author__name__user_profile')
         context['cards'] = cards
 
         if all_matches_between.count() == 0:
