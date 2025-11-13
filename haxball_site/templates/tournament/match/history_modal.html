@@ -152,61 +152,63 @@
       {% endif %}
 
       {% if h2h_matches %}
-        <div class="tw:mt-4" x-data="{ showAll: false }">
-          <h5 class="tw:font-bold tw:text-base tw:mb-3">Очные матчи</h5>
-          <div class="tw:overflow-x-auto">
-            <div class="tw:grid tw:grid-cols-[max-content_max-content_auto] tw:text-sm">
-              <div class="tw:contents tw:*:first:rounded-tl tw:*:last:rounded-tr">
-                <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Дата</div>
-                <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Турнир</div>
-                <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Матч</div>
-              </div>
+        {% with matches_count=h2h_matches|length %}
+          <div class="tw:mt-4" x-data="{ showAll: false }">
+            <h5 class="tw:font-bold tw:text-base tw:mb-3">Очные матчи</h5>
+            <div class="tw:overflow-x-auto">
+              <div class="tw:grid tw:grid-cols-[max-content_max-content_auto] tw:text-sm">
+                <div class="tw:contents tw:*:first:rounded-tl tw:*:last:rounded-tr">
+                  <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Дата</div>
+                  <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Турнир</div>
+                  <div class="tw:font-semibold tw:bg-base-300 tw:px-3 tw:py-2">Матч</div>
+                </div>
 
-              {% for match in h2h_matches %}
-                {% with is_even=forloop.counter0|divisibleby:2 %}
-                  <a href="{{ match.get_absolute_url }}"
-                     class="tw:contents tw:hover:*:bg-base-300 tw:transition-colors {% if is_even %}tw:*:bg-base-200{% endif %}"
-                     {% if forloop.counter0 >= 5 %}x-show="showAll"{% endif %}>
-                    <div class="tw:text-xs tw:px-3 tw:py-2 tw:flex tw:items-center"
-                         {% if forloop.counter0 == 4 %}x-bind:class="!showAll && 'tw:rounded-bl'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-bl'"{% endif %}>
-                      {{ match.match_date|date:"d.m.y" }}
-                    </div>
-                    <div class="tw:px-3 tw:py-2 tw:flex tw:items-center">
-                      <div class="tw:flex tw:flex-col">
-                        <span class="tw:font-semibold">{{ match.league.championship.short_title }}</span>
-                        <span class="tw:text-xs tw:text-base-content/70">{{ match.league.title }}</span>
+                {% for match in h2h_matches %}
+                  {% with is_even=forloop.counter0|divisibleby:2 %}
+                    <a href="{{ match.get_absolute_url }}"
+                       class="tw:contents tw:hover:*:bg-base-300 tw:transition-colors {% if is_even %}tw:*:bg-base-200{% endif %}"
+                       {% if forloop.counter0 >= 5 %}x-show="showAll"{% endif %}>
+                      <div class="tw:text-xs tw:px-3 tw:py-2 tw:flex tw:items-center"
+                           {% if forloop.counter0 == 4 or matches_count < 5 %}x-bind:class="!showAll && 'tw:rounded-bl'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-bl'"{% endif %}>
+                        {{ match.match_date|date:"d.m.y" }}
                       </div>
-                    </div>
-                    <div class="tw:px-3 tw:py-2 tw:flex tw:items-center tw:gap-2"
-                         {% if forloop.counter0 == 4 %}x-bind:class="!showAll && 'tw:rounded-br'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-br'"{% endif %}>
-                      <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:size-6 tw:object-contain">
-                      <span class="tw:font-semibold">{{ match.team_home.short_title }}</span>
-                      <span class="tw:font-bold">{{ match.score_home }} : {{ match.score_guest }}</span>
-                      <span class="tw:font-semibold">{{ match.team_guest.short_title }}</span>
-                      <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:size-6 tw:object-contain">
-                    </div>
-                  </a>
-                {% endwith %}
-              {% endfor %}
+                      <div class="tw:px-3 tw:py-2 tw:flex tw:items-center">
+                        <div class="tw:flex tw:flex-col">
+                          <span class="tw:font-semibold">{{ match.league.championship.short_title }}</span>
+                          <span class="tw:text-xs tw:text-base-content/70">{{ match.league.title }}</span>
+                        </div>
+                      </div>
+                      <div class="tw:px-3 tw:py-2 tw:flex tw:items-center tw:gap-2"
+                           {% if forloop.counter0 == 4 or matches_count < 5 %}x-bind:class="!showAll && 'tw:rounded-br'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-br'"{% endif %}>
+                        <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:size-6 tw:object-contain">
+                        <span class="tw:font-semibold">{{ match.team_home.short_title }}</span>
+                        <span class="tw:font-bold">{{ match.score_home }} : {{ match.score_guest }}</span>
+                        <span class="tw:font-semibold">{{ match.team_guest.short_title }}</span>
+                        <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:size-6 tw:object-contain">
+                      </div>
+                    </a>
+                  {% endwith %}
+                {% endfor %}
+              </div>
             </div>
+            {% if matches_count > 5 %}
+              <div class="tw:flex tw:justify-center tw:mt-3">
+                <span @click="showAll = !showAll"
+                      class="tw:text-base-content/80 tw:text-sm tw:hover:text-base-content tw:cursor-pointer tw:flex tw:items-center tw:gap-1">
+                  <span x-text="showAll ? 'Скрыть' : 'Показать все матчи'"></span>
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                       class="tw:size-4 tw:mt-0.5 tw:transition-transform"
+                       :class="showAll && 'tw:rotate-180'"
+                       fill="none"
+                       viewBox="0 0 24 24"
+                       stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </div>
+            {% endif %}
           </div>
-          {% if h2h_matches|length > 5 %}
-            <div class="tw:flex tw:justify-center tw:mt-3">
-              <span @click="showAll = !showAll"
-                    class="tw:text-base-content/80 tw:hover:text-base-content tw:cursor-pointer tw:flex tw:items-center tw:gap-1">
-                <span x-text="showAll ? 'Скрыть' : 'Показать все матчи'"></span>
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="tw:size-4 tw:mt-1 tw:transition-transform"
-                     :class="showAll && 'tw:rotate-180'"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </div>
-          {% endif %}
-        </div>
+        {% endwith %}
       {% endif %}
     {% endif %}
 
