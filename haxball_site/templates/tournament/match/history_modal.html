@@ -167,9 +167,9 @@
                   {% with is_even=forloop.counter0|divisibleby:2 %}
                     <a href="{{ match.get_absolute_url }}"
                        class="tw:contents tw:hover:*:bg-base-300 tw:transition-colors {% if is_even %}tw:*:bg-base-200{% endif %}"
-                       {% if forloop.counter0 >= 5 %}x-show="showAll"{% endif %}>
+                       {% if forloop.counter > 5 %}x-show="showAll"{% endif %}>
                       <div class="tw:text-xs tw:px-3 tw:py-2 tw:flex tw:items-center"
-                           {% if forloop.counter0 == 4 or matches_count < 5 %}x-bind:class="!showAll && 'tw:rounded-bl'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-bl'"{% endif %}>
+                           {% if forloop.counter == 5 or forloop.counter == matches_count %}x-bind:class="!showAll && 'tw:rounded-bl'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-bl'"{% endif %}>
                         {{ match.match_date|date:"d.m.y" }}
                       </div>
                       <div class="tw:px-3 tw:py-2 tw:flex tw:items-center">
@@ -179,7 +179,7 @@
                         </div>
                       </div>
                       <div class="tw:px-3 tw:py-2 tw:flex tw:items-center tw:gap-2"
-                           {% if forloop.counter0 == 4 or matches_count < 5 %}x-bind:class="!showAll && 'tw:rounded-br'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-br'"{% endif %}>
+                           {% if forloop.counter == 5 or forloop.counter == matches_count %}x-bind:class="!showAll && 'tw:rounded-br'"{% elif forloop.last %}x-bind:class="showAll && 'tw:rounded-br'"{% endif %}>
                         <img src="{{ match.team_home.logo.url }}" alt="{{ match.team_home.title }}" class="tw:size-6 tw:object-contain">
                         <span class="tw:font-semibold">{{ match.team_home.short_title }}</span>
                         <span class="tw:font-bold">{{ match.score_home }} : {{ match.score_guest }}</span>
