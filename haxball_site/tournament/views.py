@@ -462,7 +462,8 @@ class MatchDetail(DetailView):
             'team_home_start__player_nation',
             'team_guest_start__name__user_profile',
             'team_guest_start__player_nation',
-            'disqualifications__player__team',
+            'disqualifications__team',
+            'disqualifications__player__name__user_profile',
             'disqualifications__tours__league',
         )
 
@@ -564,7 +565,7 @@ class MatchDetail(DetailView):
         time_played_by_player = {p: datetime.fromtimestamp(sec).strftime('%M:%S') for (p, sec) in time_played.items()}
         context['time_played_by_player'] = time_played_by_player
 
-        cards = match.cards().select_related('author', 'team')
+        cards = match.cards().select_related('team', 'author__name__user_profile')
         context['cards'] = cards
 
         if all_matches_between.count() == 0:
@@ -620,6 +621,16 @@ class MatchDetail(DetailView):
         context['score_home_average'] = round(score_home_all / all_matches_between.count(), 2)
         context['score_guest_average'] = round(score_guest_all / all_matches_between.count(), 2)
 
+        h2h_matches = all_matches_between.select_related('league__championship', 'team_home', 'team_guest').order_by(
+            '-match_date', '-id'
+        )
+        context['h2h_matches'] = h2h_matches
+
+        player_stats = {}
+        player_stats[match.team_home] = self.get_player_stats(match.team_home, h2h_matches)
+        player_stats[match.team_guest] = self.get_player_stats(match.team_guest, h2h_matches)
+        context['player_stats'] = player_stats
+
         return context
 
     def get_latest_matches(self, match: Match, team: Team):
@@ -643,6 +654,44 @@ class MatchDetail(DetailView):
             .select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'stage', 'group', 'result')
             .order_by('-match_date', '-numb_tour', '-id')[:5]
         )
+
+    def get_player_stats(self, team: Team, selected_matches) -> dict:
+        top_matches = (
+            team.played_matches.filter(match__in=selected_matches)
+            .values(pl=F('player__nickname'))
+            .annotate(count=Count('player'))
+            .order_by('-count')
+            .first()
+        )
+        top_goals = (
+            team.goals.filter(match__in=selected_matches)
+            .values(pl=F('author__nickname'))
+            .annotate(count=Count('author'))
+            .order_by('-count')
+            .first()
+        )
+        top_assists = (
+            team.goals.filter(match__in=selected_matches)
+            .values(pl=F('assistent__nickname'))
+            .annotate(count=Count('assistent'))
+            .order_by('-count')
+            .first()
+        )
+        top_cs = (
+            team.team_events.cs()
+            .filter(match__in=selected_matches)
+            .values(pl=F('author__nickname'))
+            .annotate(count=Count('author'))
+            .order_by('-count')
+            .first()
+        )
+
+        return {
+            'matches': top_matches or {'pl': '–', 'count': 0},
+            'goals': top_goals or {'pl': '–', 'count': 0},
+            'assists': top_assists or {'pl': '–', 'count': 0},
+            'cs': top_cs or {'pl': '–', 'count': 0},
+        }
 
 
 class PostponementFilter(FilterSet):
@@ -744,14 +793,10 @@ class PostponementsList(ListView):
         slots = match.league.get_postponement_slots()
         for team in teams:
             all_postponements = team.get_postponements(match.league)
-            emergency_postponements = all_postponements.filter(is_emergency=True)
-            if all_postponements.count() + 1 > slots.common_count + slots.emergency_count or (
-                is_emergency and emergency_postponements.count() + 1 > slots.emergency_count
-            ):
+            if all_postponements.count() + 1 > slots.total_count:
                 messages.error(
                     request,
-                    f'Команда {team.title} исчерпала лимит переносов. Для покупки платного слота воспользуйтесь \
-                      соответствующей услугой, после чего свяжитесь с организаторами для оформления переноса.',
+                    f'Команда {team.title} исчерпала лимит переносов',
                 )
 
                 return self.redirect_to_postponements_page(tournament)
