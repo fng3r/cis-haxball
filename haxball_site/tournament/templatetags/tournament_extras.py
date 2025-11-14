@@ -1593,7 +1593,7 @@ def grade_class(grade):
 
 
 @register.simple_tag
-def tournament_timeline(league):
+def tournament_timeline(league: League):
     """Calculate tournament timeline data: start_date, end_date, and progress percentage"""
     tours = league.tours.all()
     if not tours.exists():
@@ -1605,14 +1605,21 @@ def tournament_timeline(league):
     if not start_date or not end_date:
         return None
 
-    today = timezone.now().date()
-    total_days = (end_date - start_date).days
-    if total_days == 0:
-        progress = 100 if today >= end_date else (0 if today < start_date else 50)
+    progress = 0
+    total_matches = league.matches_in_league.count()
+    played_matches = league.matches_in_league.filter(is_played=True).count()
+
+    if played_matches == total_matches:
+        progress = 100
     else:
-        elapsed_days = (today - start_date).days
-        progress = max(0, min(100, (elapsed_days / total_days) * 100))
-    progress = int(round(progress, 0))
+        today = timezone.now().date()
+        total_days = (end_date - start_date).days
+        if total_days == 0:
+            progress = 100 if today >= end_date else (0 if today < start_date else 50)
+        else:
+            elapsed_days = (today - start_date).days
+            progress = max(0, min(100, (elapsed_days / total_days) * 100))
+        progress = int(round(progress, 0))
 
     return {
         'start_date': start_date,
