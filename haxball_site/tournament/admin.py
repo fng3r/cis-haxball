@@ -1196,6 +1196,33 @@ class AwardNominationAdmin(UnfoldModelAdmin):
     search_fields = ('name', 'code')
 
 
+class AwardNomineeInline(UnfoldStackedInline):
+    model = AwardNominee
+    extra = 0
+    tab = True
+    fields = ('player', 'is_auto_nominated', 'nominated_at')
+    autocomplete_fields = ('player',)
+    readonly_fields = ('is_auto_nominated', 'nominated_at')
+
+
+class AwardVoterInline(UnfoldStackedInline):
+    model = AwardVoter
+    extra = 0
+    tab = True
+    fields = ('league', 'team', 'voter')
+    autocomplete_fields = ('league', 'team', 'voter')
+    readonly_fields = ()
+
+
+class AwardVoteInline(UnfoldStackedInline):
+    model = AwardVote
+    extra = 0
+    tab = True
+    fields = ('award', 'player', 'place', 'points')
+    autocomplete_fields = ('award', 'player')
+    readonly_fields = ('points',)
+
+
 @admin.register(AwardCampaign)
 class AwardCampaignAdmin(UnfoldModelAdmin):
     list_display = ('id', 'season', 'is_active', 'voting_start_date', 'voting_end_date', 'results_public_date')
@@ -1208,15 +1235,7 @@ class AwardCampaignAdmin(UnfoldModelAdmin):
     search_fields = ('season__title',)
     date_hierarchy = 'voting_start_date'
     ordering = ('-voting_start_date',)
-
-
-class AwardNomineeInline(UnfoldStackedInline):
-    model = AwardNominee
-    extra = 0
-    tab = True
-    fields = ('player', 'is_auto_nominated', 'nominated_at')
-    autocomplete_fields = ('player',)
-    readonly_fields = ('is_auto_nominated', 'nominated_at')
+    inlines = [AwardVoterInline]
 
 
 @admin.register(Award)
@@ -1263,14 +1282,15 @@ class AwardNomineeAdmin(UnfoldModelAdmin):
 
 @admin.register(AwardVoter)
 class AwardVoterAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'award', 'team', 'voter')
+    list_display = ('id', 'campaign', 'league', 'team', 'voter')
     list_filter = (
-        ('award', RelatedDropdownFilter),
+        ('campaign', RelatedDropdownFilter),
+        ('league', RelatedDropdownFilter),
         ('team', RelatedDropdownFilter),
     )
     list_filter_submit = True
-    autocomplete_fields = ('award', 'team', 'voter')
-    search_fields = ('team__title', 'voter__nickname', 'award__nomination__name')
+    autocomplete_fields = ('campaign', 'league', 'team', 'voter')
+    search_fields = ('team__title', 'voter__nickname', 'campaign__season__title', 'league__title')
     ordering = ('team__title',)
 
 
@@ -1286,6 +1306,7 @@ class AwardSubmissionAdmin(UnfoldModelAdmin):
     autocomplete_fields = ('campaign', 'league', 'team', 'voter')
     search_fields = ('team__title', 'voter__nickname', 'campaign__season__title', 'league__title')
     ordering = ('-submitted_at', 'team__title')
+    inlines = [AwardVoteInline]
 
 
 @admin.register(AwardVote)

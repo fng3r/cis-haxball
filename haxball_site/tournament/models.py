@@ -1672,12 +1672,18 @@ class AwardNominee(models.Model):
 
 
 class AwardVoter(models.Model):
-    """Represents who is eligible to vote for each award"""
+    """Represents who is eligible to vote for all awards in a tournament during campaign"""
 
-    award = models.ForeignKey(
-        'Award',
-        verbose_name='Награда',
+    campaign = models.ForeignKey(
+        'AwardCampaign',
+        verbose_name='Кампания наград',
         related_name='voters',
+        on_delete=models.CASCADE,
+    )
+    league = models.ForeignKey(
+        'League',
+        verbose_name='Турнир',
+        related_name='award_voters',
         on_delete=models.CASCADE,
     )
     team = models.ForeignKey(
@@ -1695,10 +1701,10 @@ class AwardVoter(models.Model):
     )
 
     def __str__(self):
-        return f'{self.team.title} - {self.voter.nickname} ({self.award.nomination.name})'
+        return f'{self.team.title} - {self.voter.nickname} ({self.campaign.season.title}, {self.league.title})'
 
     class Meta:
-        unique_together = [('award', 'team')]
+        unique_together = [('campaign', 'league', 'team')]
         verbose_name = 'Голосующий'
         verbose_name_plural = 'Голосующие'
 

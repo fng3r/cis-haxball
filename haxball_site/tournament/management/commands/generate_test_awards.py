@@ -189,15 +189,15 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.WARNING(f'Team {team.title} has no players, skipping voter creation'))
                     continue
 
-            # Create voter for each award
-            for award in Award.objects.filter(campaign=campaign, league=league):
-                voter, created = AwardVoter.objects.get_or_create(
-                    award=award,
-                    team=team,
-                    defaults={'voter': captain},
-                )
-                if created:
-                    voters_created += 1
+            # Create one voter per team per campaign per league (not per award)
+            voter, created = AwardVoter.objects.get_or_create(
+                campaign=campaign,
+                league=league,
+                team=team,
+                defaults={'voter': captain},
+            )
+            if created:
+                voters_created += 1
 
         # Generate random votes if requested
         submissions_created = 0
@@ -206,22 +206,13 @@ class Command(BaseCommand):
             self.stdout.write('\nGenerating random vote submissions...')
             awards = Award.objects.filter(campaign=campaign, league=league).select_related('nomination')
             # Only get eligible voters (those with an assigned voter/player)
-            voters = AwardVoter.objects.filter(award__in=awards, voter__isnull=False).select_related(
-                'team', 'voter', 'award'
+            voters = AwardVoter.objects.filter(campaign=campaign, league=league, voter__isnull=False).select_related(
+                'team', 'voter'
             )
 
-            # Group voters by team (one submission per team per campaign)
-            from collections import defaultdict
-
-            voters_by_team = defaultdict(list)
-            for voter in voters:
-                voters_by_team[voter.team].append(voter)
-
-            for team, team_voters in voters_by_team.items():
-                # Get voter (player) and league from first voter record
-                first_voter = team_voters[0]
-                voter_player = first_voter.voter
-                league = first_voter.award.league
+            for voter_record in voters:
+                team = voter_record.team
+                voter_player = voter_record.voter
 
                 # Create or get one submission for this team and campaign
                 submission, created = AwardSubmission.objects.get_or_create(
@@ -229,19 +220,22 @@ class Command(BaseCommand):
                     team=team,
                     defaults={'voter': voter_player, 'league': league, 'submitted_at': timezone.now()},
                 )
-                # Update league in case it changed
-                if submission.league != league:
+                # Update voter and league in case they changed
+                if submission.voter != voter_player or submission.league != league:
+                    submission.voter = voter_player
                     submission.league = league
-                    submission.save(update_fields=['league'])
+                    submission.save(update_fields=['voter', 'league'])
                 if created:
                     submissions_created += 1
 
                 # Delete existing votes if any
                 AwardVote.objects.filter(submission=submission).delete()
 
-                # Create votes for all awards this team can vote for
-                for voter_record in team_voters:
-                    award = voter_record.award
+                # Track own-team players selected across all awards (count selections, not unique players)
+                own_team_selections = []
+
+                # Create votes for all awards in this campaign and league
+                for award in awards:
                     nominees = list(award.nominees.all().select_related('player'))
 
                     if len(nominees) < 3:
@@ -253,9 +247,27 @@ class Command(BaseCommand):
                         )
                         continue
 
+                    # If limit of 3 own-team selections is reached, exclude own-team players from pool
+                    if len(own_team_selections) >= 3:
+                        nominees = [n for n in nominees if n.player.team != team]
+
+                    if len(nominees) < 3:
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f'Skipping {award.nomination.name} for {team.title} - '
+                                f'not enough eligible nominees after filtering ({len(nominees)} < 3)'
+                            )
+                        )
+                        continue
+
                     # Randomly select 3 different players for places 1, 2, 3
                     selected_players = random.sample(nominees, 3)
                     random.shuffle(selected_players)  # Randomize the order
+
+                    # Track own-team selections
+                    for nominee in selected_players:
+                        if nominee.player.team == team:
+                            own_team_selections.append(nominee.player)
 
                     # Create votes for this award
                     for place in [1, 2, 3]:
