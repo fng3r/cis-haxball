@@ -1313,7 +1313,7 @@ class AwardResultAdmin(UnfoldModelAdmin):
         'award',
         'player',
         'total_points',
-        'points_excluding_own_team',
+        'points_excluding_involved_teams',
         'first_place_votes',
         'second_place_votes',
         'third_place_votes',
@@ -1330,7 +1330,7 @@ class AwardResultAdmin(UnfoldModelAdmin):
     ordering = ('award', 'final_rank', '-total_points')
     readonly_fields = (
         'total_points',
-        'points_excluding_own_team',
+        'points_excluding_involved_teams',
         'first_place_votes',
         'second_place_votes',
         'third_place_votes',

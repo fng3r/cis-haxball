@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date
 
 from django.contrib.auth.models import User
@@ -1522,7 +1523,6 @@ class Award(models.Model):
 
         for nominee in nominees:
             player = nominee.player
-            player_team = player.team
 
             # Get all votes for this player in this award
             votes = AwardVote.objects.filter(
@@ -1532,11 +1532,6 @@ class Award(models.Model):
 
             # Calculate total points
             total_points = votes.aggregate(total=Sum('points'))['total'] or 0
-
-            # Calculate points excluding own team votes
-            points_excluding_own_team = (
-                votes.exclude(submission__team=player_team).aggregate(total=Sum('points'))['total'] or 0
-            )
 
             # Count votes by place
             first_place_votes = votes.filter(place=1).count()
@@ -1548,16 +1543,45 @@ class Award(models.Model):
                 award=self,
                 player=player,
                 total_points=total_points,
-                points_excluding_own_team=points_excluding_own_team,
                 first_place_votes=first_place_votes,
                 second_place_votes=second_place_votes,
                 third_place_votes=third_place_votes,
             )
 
+        # Initialize all results with None for points_excluding_involved_teams
+        AwardResult.objects.filter(award=self).update(points_excluding_involved_teams=None)
+
+        # Calculate points_excluding_involved_teams for tie-breaking
+        # Group results by total_points to identify ties
+        results_by_points = defaultdict(list)
+        all_results = AwardResult.objects.filter(award=self).select_related('player__team')
+        for result in all_results:
+            results_by_points[result.total_points].append(result)
+
+        # Only calculate for players who are actually in a tie (more than 1 player with same points)
+        for points, tied_results in results_by_points.items():
+            if len(tied_results) <= 1:
+                # No tie, skip calculation (already set to None)
+                continue
+
+            involved_teams = {result.player.team_id for result in tied_results}
+
+            for result in tied_results:
+                votes = AwardVote.objects.filter(
+                    award=self,
+                    player=result.player,
+                ).select_related('submission')
+
+                points_excluding_involved = (
+                    votes.exclude(submission__team_id__in=involved_teams).aggregate(total=Sum('points'))['total'] or 0
+                )
+                result.points_excluding_involved_teams = points_excluding_involved
+                result.save(update_fields=['points_excluding_involved_teams'])
+
         # Assign final ranks based on tie-breaking criteria
         results = AwardResult.objects.filter(award=self).order_by(
             '-total_points',
-            '-points_excluding_own_team',
+            '-points_excluding_involved_teams',
             '-first_place_votes',
             '-second_place_votes',
             '-third_place_votes',
@@ -1794,7 +1818,14 @@ class AwardResult(models.Model):
         on_delete=models.CASCADE,
     )
     total_points = models.IntegerField('Всего очков', default=0)
-    points_excluding_own_team = models.IntegerField('Очки без учета своей команды', default=0)
+    points_excluding_involved_teams = models.IntegerField(
+        'Очки без учета команд участников ничьей',
+        null=True,
+        blank=True,
+        help_text=(
+            'Используется как первый тай-брейкер: очки без учета всех команд игроков с одинаковым количеством очков.'
+        ),
+    )
     first_place_votes = models.IntegerField('Голосов за 1 место', default=0)
     second_place_votes = models.IntegerField('Голосов за 2 место', default=0)
     third_place_votes = models.IntegerField('Голосов за 3 место', default=0)
@@ -1808,7 +1839,7 @@ class AwardResult(models.Model):
         unique_together = [('award', 'player')]
         ordering = [
             '-total_points',
-            '-points_excluding_own_team',
+            '-points_excluding_involved_teams',
             '-first_place_votes',
             '-second_place_votes',
             '-third_place_votes',

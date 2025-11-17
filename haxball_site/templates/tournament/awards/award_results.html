@@ -21,7 +21,6 @@
                 <th>Место</th>
                 <th>Игрок</th>
                 <th>Очки</th>
-                <th>Очки (без своей команды)</th>
                 <th>1 место</th>
                 <th>2 место</th>
                 <th>3 место</th>
@@ -38,14 +37,13 @@
                     </div>
                   </td>
                   <td class="tw:font-semibold">{{ result.total_points }}</td>
-                  <td>{{ result.points_excluding_own_team }}</td>
                   <td>{{ result.first_place_votes }}</td>
                   <td>{{ result.second_place_votes }}</td>
                   <td>{{ result.third_place_votes }}</td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="7" class="tw:text-center">Результаты пока не рассчитаны</td>
+                  <td colspan="6" class="tw:text-center">Результаты пока не рассчитаны</td>
                 </tr>
               {% endfor %}
             </tbody>

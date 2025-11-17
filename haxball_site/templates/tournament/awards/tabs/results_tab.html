@@ -28,7 +28,10 @@
                       <th>Игрок</th>
                       <th>Команда</th>
                       <th class="tw:text-center">Очки</th>
-                      <th class="tw:text-center">Очки (без своей команды)</th>
+                      <th class="tw:text-center">
+                        <div class="tw:tooltip tw:tooltip-left"
+                             data-tip="Очки без учета голосов команд игроков, набравших одинаковое количество очков">Очки*</div>
+                      </th>
                       <th class="tw:text-center">1 место</th>
                       <th class="tw:text-center">2 место</th>
                       <th class="tw:text-center">3 место</th>
@@ -41,7 +44,7 @@
                         <td class="tw:font-semibold">{{ result.player.nickname }}</td>
                         <td>{{ result.player.team.title }}</td>
                         <td class="tw:text-center tw:font-bold tw:text-primary">{{ result.total_points }}</td>
-                        <td class="tw:text-center">{{ result.points_excluding_own_team }}</td>
+                        <td class="tw:text-center">{{ result.points_excluding_involved_teams|default:"—" }}</td>
                         <td class="tw:text-center">{{ result.first_place_votes }}</td>
                         <td class="tw:text-center">{{ result.second_place_votes }}</td>
                         <td class="tw:text-center">{{ result.third_place_votes }}</td>
