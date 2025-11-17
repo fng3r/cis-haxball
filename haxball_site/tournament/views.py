@@ -11,6 +11,7 @@ from django.db.models import Count, Exists, F, Max, Min, OuterRef, Prefetch, Q, 
 from django.db.models.functions import Coalesce, Rank
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
@@ -23,8 +24,20 @@ from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
 
 from .charts import StatCharts
-from .forms import ComparePlayersForm, CompareTeamsForm, EditTeamProfileForm, FreeAgentForm, TeamsYearlyRatingForm
+from .forms import (
+    AwardVotingForm,
+    ComparePlayersForm,
+    CompareTeamsForm,
+    EditTeamProfileForm,
+    FreeAgentForm,
+    TeamsYearlyRatingForm,
+)
 from .models import (
+    Award,
+    AwardResult,
+    AwardSubmission,
+    AwardVote,
+    AwardVoter,
     Disqualification,
     FreeAgent,
     Goal,
@@ -2371,3 +2384,374 @@ class CompareTeamsView(View):
             .annotate(c=Count('id', distinct=True))
             .values('c')
         )
+
+
+def awards_main(request, slug):
+    """Main awards page with tabs for a specific league"""
+    league = get_object_or_404(League, slug=slug)
+    # Get campaign through season
+    campaign = None
+    if league.championship:
+        campaign = league.championship.award_campaigns.filter(is_active=True).first()
+
+    # Get all awards for this league
+    awards = (
+        Award.objects.filter(league=league)
+        .select_related('nomination', 'league', 'campaign')
+        .prefetch_related('nominees__player', 'voters__team', 'voters__voter')
+        .order_by('nomination__order')
+    )
+
+    # Get voting tab HTML
+    voting_tab_html = voting_tab(request, league=league, awards=awards, initial_context=True)
+
+    context = {
+        'league': league,
+        'campaign': campaign,
+        'awards': awards,
+        'voting_tab_html': voting_tab_html,
+        'now': timezone.now(),
+    }
+
+    if request.htmx:
+        return render(request, 'tournament/awards/main.html#awards-tabs', context)
+
+    return render(request, 'tournament/awards/main.html', context)
+
+
+def voting_tab(request, slug=None, league=None, awards=None, initial_context=False):
+    """Tab for voting interface - display mode"""
+    if not league:
+        league_slug = slug or request.GET.get('league_slug') or request.resolver_match.kwargs.get('slug')
+        league = get_object_or_404(League, slug=league_slug)
+
+    if not awards:
+        awards = (
+            Award.objects.filter(league=league)
+            .select_related('nomination', 'campaign')
+            .prefetch_related('nominees__player')
+            .order_by('nomination__order')
+        )
+
+    user_player = getattr(request.user, 'user_player', None)
+    user_team = user_player.team if user_player else None
+
+    # Get existing submission if any
+    submission = None
+    votes_by_award = {}
+    if user_team and awards and user_team in league.teams.all():
+        campaign = awards[0].campaign
+        try:
+            submission = AwardSubmission.objects.prefetch_related(
+                'votes__player__team', 'votes__player__name__user_profile', 'votes__award__nomination'
+            ).get(campaign=campaign, team=user_team)
+            # Organize votes by award and place
+            for vote in submission.votes.all():
+                if vote.award.id not in votes_by_award:
+                    votes_by_award[vote.award.id] = {}
+                votes_by_award[vote.award.id][vote.place] = vote
+        except AwardSubmission.DoesNotExist:
+            pass
+
+    context = {
+        'league': league,
+        'awards': awards,
+        'user_player': user_player,
+        'user_team': user_team,
+        'submission': submission,
+        'votes_by_award': votes_by_award,
+        'now': timezone.now(),
+    }
+
+    if initial_context:
+        return render_to_string('tournament/awards/tabs/voting_tab.html', context, request=request)
+
+    return render(request, 'tournament/awards/tabs/voting_tab.html', context)
+
+
+def results_tab(request, slug):
+    """Tab for viewing award results"""
+    league = get_object_or_404(League, slug=slug)
+    awards = (
+        Award.objects.filter(league=league)
+        .select_related('nomination', 'campaign')
+        .prefetch_related('results__player', 'nominees__player')
+        .order_by('nomination__order')
+    )
+
+    now = timezone.now()
+    results_data = {}
+    campaign = None
+    results_public = False
+
+    if awards.exists():
+        first_award = awards.first()
+        campaign = first_award.campaign
+        results_public = now >= campaign.results_public_date
+
+    for award in awards:
+        results = (
+            AwardResult.objects.filter(award=award).select_related('player').order_by('final_rank', '-total_points')
+        )
+
+        # Get all votes for this award, organized by submission (voter)
+        votes = (
+            AwardVote.objects.filter(award=award)
+            .select_related('submission__team', 'submission__voter', 'player', 'player__team')
+            .order_by('submission__team__title', 'place')
+        )
+        # Group votes by submission (team/voter)
+        votes_by_submission = {}
+        for vote in votes:
+            submission_id = vote.submission.id
+            if submission_id not in votes_by_submission:
+                votes_by_submission[submission_id] = {
+                    'submission': vote.submission,
+                    'team': vote.submission.team,
+                    'voter': vote.submission.voter,
+                    'votes': [],
+                }
+            votes_by_submission[submission_id]['votes'].append(vote)
+
+        # Organize votes by place for easier template access
+        for submission_data in votes_by_submission.values():
+            votes_by_place = {1: None, 2: None, 3: None}
+            for vote in submission_data['votes']:
+                votes_by_place[vote.place] = vote
+            submission_data['votes_by_place'] = votes_by_place
+
+        # Get all eligible voters and find those who didn't vote
+        all_voters = AwardVoter.objects.filter(award=award).select_related('team', 'voter').order_by('team__title')
+        teams_with_votes = {vote.submission.team_id for vote in votes}
+        non_voting_voters = [
+            {
+                'submission': None,
+                'team': voter.team,
+                'voter': voter.voter,
+                'votes': [],
+                'votes_by_place': {1: None, 2: None, 3: None},
+            }
+            for voter in all_voters
+            if voter.team_id not in teams_with_votes
+        ]
+
+        results_data[award.id] = {
+            'award': award,
+            'results': results,
+            'votes_by_submission': votes_by_submission,
+            'non_voting_voters': non_voting_voters,
+        }
+
+    context = {
+        'league': league,
+        'awards': awards,
+        'results_data': results_data,
+        'campaign': campaign,
+        'results_public': results_public,
+        'now': now,
+    }
+
+    return render(request, 'tournament/awards/tabs/results_tab.html', context)
+
+
+def status_tab(request, slug):
+    """Tab for viewing voting status"""
+    league = get_object_or_404(League, slug=slug)
+    awards = Award.objects.filter(league=league).select_related('nomination', 'campaign').order_by('nomination__order')
+
+    now = timezone.now()
+
+    # Get voters from any award (they're the same across all awards in a campaign)
+    # Use the first award to get campaign info
+    first_award = awards.first() if awards else None
+    can_vote = False
+    campaign_ended = False
+    submissions_by_team = {}
+    if first_award:
+        campaign = first_award.campaign
+        can_vote = now >= campaign.voting_start_date and now <= campaign.voting_end_date
+        campaign_ended = now > campaign.voting_end_date
+        # Get voters from the first award (all awards share the same campaign)
+        voters = AwardVoter.objects.filter(award=first_award).select_related('team', 'voter').order_by('team__title')
+        # Get all submissions for this campaign
+        submissions = AwardSubmission.objects.filter(campaign=campaign).select_related('team', 'voter')
+        submissions_by_team = {submission.team_id: submission for submission in submissions}
+    else:
+        voters = AwardVoter.objects.none()
+
+    context = {
+        'league': league,
+        'awards': awards,
+        'voters': voters,
+        'submissions_by_team': submissions_by_team,
+        'can_vote': can_vote,
+        'campaign_ended': campaign_ended,
+        'campaign': first_award.campaign if first_award else None,
+        'now': now,
+    }
+
+    return render(request, 'tournament/awards/tabs/status_tab.html', context)
+
+
+def award_voting_edit(request, slug):
+    """View for editing votes - shows the form"""
+    league = get_object_or_404(League, slug=slug)
+
+    user_player = getattr(request.user, 'user_player', None)
+    if not user_player or not user_player.team:
+        messages.error(request, 'Вы должны быть игроком в команде для голосования')
+        return voting_tab(request, league=league)
+
+    user_team = user_player.team
+    if user_team not in league.teams.all():
+        messages.error(request, 'Ваша команда не участвует в этом турнире')
+        return voting_tab(request, league=league)
+
+    # Get all awards for this league
+    awards = (
+        Award.objects.filter(league=league)
+        .select_related('nomination', 'campaign')
+        .prefetch_related('nominees__player')
+        .order_by('nomination__order')
+    )
+
+    if not awards.exists():
+        messages.error(request, 'Для этого турнира пока нет наград')
+        return voting_tab(request, league=league)
+
+    # Ensure voter records exist and user is the designated voter
+    for award in awards:
+        voter_record, _ = AwardVoter.objects.get_or_create(award=award, team=user_team, defaults={'voter': user_player})
+        if voter_record.voter != user_player:
+            messages.error(request, 'Вы не являетесь назначенным голосующим от вашей команды')
+            return voting_tab(request, league=league, awards=awards)
+
+    # Get existing votes if submitted
+    existing_votes = {}
+    campaign = awards[0].campaign
+    try:
+        submission = AwardSubmission.objects.get(campaign=campaign, team=user_team)
+        votes = AwardVote.objects.filter(submission=submission).select_related('player', 'award__nomination')
+        for vote in votes:
+            key = f'{vote.award.nomination.code}_place_{vote.place}'
+            existing_votes[key] = vote.player.id
+    except AwardSubmission.DoesNotExist:
+        pass
+
+    form = AwardVotingForm(awards=awards, user_team=user_team, user_player=user_player, initial=existing_votes)
+
+    context = {
+        'league': league,
+        'awards': awards,
+        'form': form,
+        'user_player': user_player,
+        'user_team': user_team,
+        'now': timezone.now(),
+    }
+
+    return render(request, 'tournament/awards/tabs/voting_edit.html', context)
+
+
+class AwardVotingView(View):
+    """View for voting in season awards - handles HTMX form submission"""
+
+    def post(self, request, slug):
+        league = get_object_or_404(League, slug=slug)
+
+        user_player = getattr(request.user, 'user_player', None)
+        if not user_player or not user_player.team:
+            messages.error(request, 'Вы должны быть игроком в команде для голосования')
+            return voting_tab(request, league=league)
+
+        user_team = user_player.team
+        if user_team not in league.teams.all():
+            messages.error(request, 'Ваша команда не участвует в этом турнире')
+            return voting_tab(request, league=league)
+
+        # Get all awards for this league
+        all_awards = (
+            Award.objects.filter(league=league)
+            .select_related('nomination', 'campaign')
+            .prefetch_related('nominees__player')
+            .order_by('nomination__order')
+        )
+
+        if not all_awards.exists():
+            messages.error(request, 'Для этого турнира пока нет наград')
+            return voting_tab(request, league=league)
+
+        # Ensure voter records exist and user is the designated voter
+        for award in all_awards:
+            voter_record, _ = AwardVoter.objects.get_or_create(
+                award=award, team=user_team, defaults={'voter': user_player}
+            )
+            if voter_record.voter != user_player:
+                messages.error(request, 'Вы не являетесь назначенным голосующим от вашей команды')
+                return voting_tab(request, league=league, awards=all_awards)
+
+        form = AwardVotingForm(request.POST, awards=all_awards, user_team=user_team, user_player=user_player)
+
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Ваш голос успешно сохранен!')
+                # Return display mode on success
+                return voting_tab(request, league=league, awards=all_awards)
+            except Exception as e:
+                import traceback
+
+                traceback.print_exc()
+                messages.error(request, f'Ошибка при сохранении голоса: {str(e)}')
+
+        # Return edit form with errors
+        context = {
+            'league': league,
+            'awards': all_awards,
+            'form': form,
+            'user_player': user_player,
+            'user_team': user_team,
+            'now': timezone.now(),
+        }
+        return render(request, 'tournament/awards/tabs/voting_edit.html', context)
+
+
+class AwardResultsView(DetailView):
+    """View for displaying award results"""
+
+    model = Award
+    template_name = 'tournament/awards/award_results.html'
+    context_object_name = 'award'
+    pk_url_kwarg = 'award_id'
+
+    def get_queryset(self):
+        return Award.objects.select_related('nomination', 'league', 'campaign').prefetch_related(
+            'results__player',
+            'nominees__player',
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        award = self.object
+        now = timezone.now()
+
+        # Get results
+        results = (
+            AwardResult.objects.filter(award=award).select_related('player').order_by('final_rank', '-total_points')
+        )
+
+        # Get voting status (visible to all)
+        voters = AwardVoter.objects.filter(award=award).select_related('team', 'voter').order_by('team__title')
+
+        # Check if results are public
+        results_public = now >= award.results_public_date
+
+        context.update(
+            {
+                'results': results,
+                'voters': voters,
+                'results_public': results_public,
+                'now': now,
+            }
+        )
+
+        return context

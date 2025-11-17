@@ -1,0 +1,96 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load tournament_extras %}
+{% load utils %}
+{% load thumbnail %}
+
+<div id="voting-tab-container">
+  {% include 'alerts.html' %}
+
+  {% if not user_player %}
+    <div class="tw:alert tw:alert-info">
+      <i class="fa fa-info-circle"></i>
+      <span>Вы должны быть игроком для голосования</span>
+    </div>
+  {% elif not user_team %}
+    <div class="tw:alert tw:alert-info">
+      <i class="fa fa-info-circle"></i>
+      <span>Вы должны состоять в команде для голосования</span>
+    </div>
+  {% elif user_team not in league.teams.all %}
+    <div class="tw:alert tw:alert-warning">
+      <i class="fa fa-exclamation-triangle"></i>
+      <span>Ваша команда не участвует в этом турнире</span>
+    </div>
+  {% elif not awards %}
+    <div class="tw:alert tw:alert-info">
+      <i class="fa fa-info-circle"></i>
+      <span>Для этого турнира пока нет наград</span>
+    </div>
+  {% else %}
+    {% with campaign=awards.0.campaign %}
+      {% if now < campaign.voting_start_date %}
+        <div class="tw:alert tw:alert-info tw:mb-4">
+          <i class="fa fa-clock-o"></i>
+          <span>Голосование начнется {{ campaign.voting_start_date|date:"d.m.Y в H:i" }}</span>
+        </div>
+      {% elif now > campaign.voting_end_date %}
+        <div class="tw:alert tw:alert-warning tw:mb-4">
+          <i class="fa fa-exclamation-triangle"></i>
+          <span>Период голосования завершен</span>
+        </div>
+      {% else %}
+        <div id="voting-display-mode">
+          {% include 'tournament/awards/tabs/partials/voting_rules.html' %}
+
+          {% if submission %}
+            <div class="tw:space-y-4 tw:mb-4">
+              {% for award in awards %}
+                <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
+                  <div class="tw:card-body tw:p-4">
+                    <h3 class="tw:text-xl tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-2">{{ award.nomination.name }}</h3>
+
+                    <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
+                      {% with award_votes=votes_by_award|get:award.id %}
+                        {% with vote1=award_votes|get:1 vote2=award_votes|get:2 vote3=award_votes|get:3 %}
+                          {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote1 place=1 user_team=user_team %}
+                          {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote2 place=2 user_team=user_team %}
+                          {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote3 place=3 user_team=user_team %}
+                        {% endwith %}
+                      {% endwith %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="tw:flex tw:justify-end">
+              <button type="button"
+                      class="tw:btn tw:btn-primary"
+                      hx-get="{% url 'tournament:award_voting_edit' slug=league.slug %}"
+                      hx-target="#voting-tab-container"
+                      hx-swap="innerHTML">
+                <i class="fa fa-edit"></i>
+                Изменить голоса
+              </button>
+            </div>
+          {% else %}
+            <div class="tw:mb-4 tw:flex tw:flex-col tw:justify-center tw:max-w-sm tw:mx-auto">
+              <div class="tw:text-center tw:text-lg tw:text-base-content/90 tw:font-semibold tw:mb-3">
+                <span>Вы еще не приняли участие в голосовании</span>
+              </div>
+              <button type="button"
+                      class="tw:btn tw:btn-primary"
+                      hx-get="{% url 'tournament:award_voting_edit' slug=league.slug %}"
+                      hx-target="#voting-tab-container"
+                      hx-swap="innerHTML">
+                <i class="fa fa-check-square-o"></i>
+                Начать голосование
+              </button>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+</div>

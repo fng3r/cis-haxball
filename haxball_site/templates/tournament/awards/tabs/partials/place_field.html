@@ -1,0 +1,70 @@
+{% load tournament_extras %}
+
+{% comment %}
+  Partial for place selection field in voting form
+  
+  Parameters:
+  - place: place number (1, 2, or 3)
+  - field_name: form field name
+  - field: form field object
+  - award: award object with nominees
+  - user_team: user's team
+{% endcomment %}
+<div class="tw:flex tw:flex-col tw:gap-1">
+  <label class="tw:label">
+    <span class="tw:label-text tw:font-semibold">
+      {{ place }} место
+      {% if place == 1 %}
+        (3 очка)
+      {% elif place == 2 %}
+        (2 очка)
+      {% elif place == 3 %}
+        (1 очко)
+      {% endif %}
+    </span>
+  </label>
+  <input type="hidden"
+         name="{{ field_name }}"
+         x-model="votes['{{ field_name }}']"
+         value="{% if field.value %}{{ field.value }}{% endif %}">
+  <button type="button"
+          class="tw:btn tw:not-hover:btn-outline tw:hover:btn-primary tw:w-full tw:justify-start"
+          @click="openModal('{{ field_name }}')">
+    <span x-show="!votes['{{ field_name }}']">Выберите игрока</span>
+    <span x-show="votes['{{ field_name }}']"
+          :class="{ 'tw:text-warning/90': isOwnTeamPlayer('{{ field_name }}') }"
+          x-text="getPlayerName('{{ field_name }}')"></span>
+  </button>
+  {% if field.errors %}<div class="tw:text-error tw:text-sm tw:mt-1">{{ field.errors }}</div>{% endif %}
+</div>
+
+<dialog id="modal-{{ field_name }}" class="tw:modal">
+  <div class="tw:modal-box tw:max-w-4xl">
+    <h3 class="tw:font-bold tw:text-lg tw:mb-4">{{ award.nomination.name }} ({{ place }} место)</h3>
+    <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:gap-3 tw:max-h-[60vh] tw:overflow-y-auto">
+      {% for nominee in award.nominees.all %}
+        <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:transition-all tw:relative"
+             :class="{ 'tw:border-primary tw:bg-primary/10 tw:cursor-pointer': votes['{{ field_name }}'] == '{{ nominee.player.id }}', 'tw:bg-base-100 tw:border-base-300/50 tw:opacity-60 tw:cursor-not-allowed': isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.team.id }}', '{{ field_name }}') && votes['{{ field_name }}'] != '{{ nominee.player.id }}', 'tw:cursor-pointer': !isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.team.id }}', '{{ field_name }}') || votes['{{ field_name }}'] == '{{ nominee.player.id }}' }"
+             @click="selectPlayer('{{ field_name }}', '{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.nickname }}', '{{ nominee.player.team.title }}', '{{ nominee.player.team.id }}')">
+          <div class="tw:card-body tw:p-3">
+            <div class="tw:flex tw:items-center tw:justify-between tw:mb-1">
+              <h4 class="tw:font-semibold tw:mb-0!">{{ nominee.player.nickname }}</h4>
+              <i x-show="isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.team.id }}', '{{ field_name }}') && votes['{{ field_name }}'] != '{{ nominee.player.id }}'"
+                 class="fa fa-lock tw:text-base-content/40 tw:text-sm"
+                 x-cloak></i>
+            </div>
+            <p class="tw:text-sm">{{ nominee.player.team.title }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="tw:modal-action">
+      <form method="dialog">
+        <button class="tw:btn">Закрыть</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="tw:modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

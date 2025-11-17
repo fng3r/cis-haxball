@@ -30,6 +30,14 @@ from haxball_site.admin import UnfoldChainedSelect, UnfoldModelAdmin, UnfoldStac
 from .models import (
     AchievementCategory,
     Achievements,
+    Award,
+    AwardCampaign,
+    AwardNomination,
+    AwardNominee,
+    AwardResult,
+    AwardSubmission,
+    AwardVote,
+    AwardVoter,
     Disqualification,
     FreeAgent,
     Goal,
@@ -1178,3 +1186,154 @@ class TournamentWinnerAdmin(UnfoldModelAdmin):
                 'height': 24,
             },
         ]
+
+
+@admin.register(AwardNomination)
+class AwardNominationAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'name', 'code', 'order')
+    list_editable = ('order',)
+    ordering = ('order',)
+    search_fields = ('name', 'code')
+
+
+@admin.register(AwardCampaign)
+class AwardCampaignAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'season', 'is_active', 'voting_start_date', 'voting_end_date', 'results_public_date')
+    list_filter = (
+        'is_active',
+        ('season', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    autocomplete_fields = ('season',)
+    search_fields = ('season__title',)
+    date_hierarchy = 'voting_start_date'
+    ordering = ('-voting_start_date',)
+
+
+class AwardNomineeInline(UnfoldStackedInline):
+    model = AwardNominee
+    extra = 0
+    tab = True
+    fields = ('player', 'is_auto_nominated', 'nominated_at')
+    autocomplete_fields = ('player',)
+    readonly_fields = ('is_auto_nominated', 'nominated_at')
+
+
+@admin.register(Award)
+class AwardAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'nomination', 'league', 'campaign')
+    list_filter = (
+        ('nomination', RelatedDropdownFilter),
+        ('league', RelatedDropdownFilter),
+        ('campaign', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    autocomplete_fields = ('campaign', 'league', 'nomination')
+    search_fields = ('nomination__name', 'league__title', 'campaign__season__title')
+    ordering = ('campaign__voting_start_date', 'nomination__order')
+    inlines = [AwardNomineeInline]
+
+    actions_detail = ['auto_populate_best_player']
+
+    @action(description='Автозап. номинантов', variant=ActionVariant.PRIMARY)
+    def auto_populate_best_player(self, request, object_id):
+        award = Award.objects.get(id=object_id)
+        if award.nomination.code == AwardNomination.Code.BEST_PLAYER:
+            created = award.auto_populate_best_player_nominees()
+            messages.success(request, f'Добавлено {created} номинантов для "Игрок сезона".')
+            return redirect(reverse_lazy('admin:tournament_award_change', args=[object_id]))
+
+        messages.error(request, 'Дейтсвие доступно только для номинации "Игрок сезона".')
+        return redirect(reverse_lazy('admin:tournament_award_change', args=[object_id]))
+
+
+@admin.register(AwardNominee)
+class AwardNomineeAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'award', 'player', 'is_auto_nominated', 'nominated_at')
+    list_filter = (
+        'is_auto_nominated',
+        ('award', RelatedDropdownFilter),
+        ('player', AutocompleteSelectFilter),
+    )
+    list_filter_submit = True
+    autocomplete_fields = ('award', 'player')
+    search_fields = ('player__nickname', 'award__nomination__name', 'award__league__title')
+    ordering = ('-nominated_at',)
+
+
+@admin.register(AwardVoter)
+class AwardVoterAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'award', 'team', 'voter')
+    list_filter = (
+        ('award', RelatedDropdownFilter),
+        ('team', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    autocomplete_fields = ('award', 'team', 'voter')
+    search_fields = ('team__title', 'voter__nickname', 'award__nomination__name')
+    ordering = ('team__title',)
+
+
+@admin.register(AwardSubmission)
+class AwardSubmissionAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'campaign', 'league', 'team', 'voter', 'submitted_at')
+    list_filter = (
+        ('campaign', RelatedDropdownFilter),
+        ('league', RelatedDropdownFilter),
+        ('team', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    autocomplete_fields = ('campaign', 'league', 'team', 'voter')
+    search_fields = ('team__title', 'voter__nickname', 'campaign__season__title', 'league__title')
+    ordering = ('-submitted_at', 'team__title')
+
+
+@admin.register(AwardVote)
+class AwardVoteAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'submission', 'award', 'player', 'place', 'points')
+    list_filter = (
+        'place',
+        ('award__nomination', RelatedDropdownFilter),
+        ('player', AutocompleteSelectFilter),
+    )
+    list_filter_submit = True
+    autocomplete_fields = ('submission', 'award', 'player')
+    search_fields = (
+        'player__nickname',
+        'submission__team__title',
+        'award__nomination__name',
+    )
+    ordering = ('submission__team__title', 'award__nomination__order', 'place')
+
+
+@admin.register(AwardResult)
+class AwardResultAdmin(UnfoldModelAdmin):
+    list_display = (
+        'id',
+        'award',
+        'player',
+        'total_points',
+        'points_excluding_own_team',
+        'first_place_votes',
+        'second_place_votes',
+        'third_place_votes',
+        'final_rank',
+        'last_calculated_at',
+    )
+    list_filter = (
+        ('award', RelatedDropdownFilter),
+        ('player', AutocompleteSelectFilter),
+    )
+    list_filter_submit = True
+    autocomplete_fields = ('award', 'player')
+    search_fields = ('player__nickname', 'award__nomination__name', 'award__league__title')
+    ordering = ('award', 'final_rank', '-total_points')
+    readonly_fields = (
+        'total_points',
+        'points_excluding_own_team',
+        'first_place_votes',
+        'second_place_votes',
+        'third_place_votes',
+        'final_rank',
+        'last_calculated_at',
+    )

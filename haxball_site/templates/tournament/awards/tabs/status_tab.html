@@ -1,0 +1,89 @@
+{% load static %}
+{% load utils %}
+
+<div class="tw:space-y-6">
+  {% if not awards %}
+    <div class="tw:alert tw:alert-info">
+      <i class="fa fa-info-circle"></i>
+      <span>Для этого турнира пока нет наград</span>
+    </div>
+  {% else %}
+    <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:border tw:border-base-300">
+      <div class="tw:card-body">
+        <h3 class="tw:text-2xl tw:font-bold tw:mb-4 tw:flex tw:items-center tw:gap-2">
+          <i class="fa fa-list-ul tw:text-primary"></i>
+          Статус голосования
+        </h3>
+
+        {% if campaign %}
+          <div class="tw:mb-4 tw:flex tw:flex-wrap tw:items-center tw:gap-4">
+            <div class="tw:flex tw:items-center tw:gap-2">
+              {% if can_vote %}
+                <span class="tw:badge tw:badge-success tw:badge-lg">
+                  <i class="fa fa-check-circle"></i> Голосование открыто
+                </span>
+              {% else %}
+                <span class="tw:badge tw:badge-neutral tw:badge-lg">
+                  <i class="fa fa-times-circle"></i> Голосование закрыто
+                </span>
+              {% endif %}
+            </div>
+            <div class="tw:text-sm tw:text-base-content/70">
+              <span class="tw:font-semibold">Период:</span>
+              {{ campaign.voting_start_date|date:"d.m.Y H:i" }} — {{ campaign.voting_end_date|date:"d.m.Y H:i" }}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="tw:overflow-x-auto">
+          <table class="tw:table tw:table-zebra">
+            <thead>
+              <tr>
+                <th>Команда</th>
+                <th>Голосующий</th>
+                <th class="tw:text-center">Статус</th>
+                <th class="tw:text-center">Дата подачи</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for voter in voters %}
+                {% with submission=submissions_by_team|get_or_default:voter.team.id %}
+                  <tr>
+                    <td class="tw:font-semibold">{{ voter.team.title }}</td>
+                    <td>{{ voter.voter.nickname }}</td>
+                    <td class="tw:text-center">
+                      {% if submission %}
+                        <span class="tw:badge tw:badge-success">
+                          <i class="fa fa-check"></i> Подано
+                        </span>
+                      {% elif campaign_ended %}
+                        <span class="tw:badge tw:badge-error">
+                          <i class="fa fa-times"></i> Не подано
+                        </span>
+                      {% else %}
+                        <span class="tw:badge tw:badge-warning">
+                          <i class="fa fa-clock-o"></i> Не подано
+                        </span>
+                      {% endif %}
+                    </td>
+                    <td class="tw:text-center">
+                      {% if submission and submission.submitted_at %}
+                        {{ submission.submitted_at|date:"d.m.Y H:i" }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endwith %}
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="tw:text-center tw:text-base-content/60">Нет данных о голосующих</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>

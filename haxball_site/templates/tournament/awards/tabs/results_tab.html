@@ -1,0 +1,129 @@
+{% load static %}
+{% load tournament_extras %}
+
+<div class="tw:space-y-6">
+  {% if not awards %}
+    <div class="tw:alert tw:alert-info">
+      <i class="fa fa-info-circle"></i>
+      <span>Для этого турнира пока нет наград</span>
+    </div>
+  {% else %}
+    {% if not results_public and not user.is_superuser %}
+      <div class="tw:alert tw:alert-info">
+        <i class="fa fa-lock"></i>
+        <span>Результаты будут опубликованы {{ campaign.results_public_date|date:"d.m.Y в H:i" }}</span>
+      </div>
+    {% else %}
+      {% for award in awards %}
+        {% with data=results_data|get_item:award.id %}
+          <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:border tw:border-base-300">
+            <div class="tw:card-body">
+              <h3 class="tw:text-2xl tw:font-bold tw:mb-4">{{ award.nomination.name }}</h3>
+
+              <div class="tw:overflow-x-auto">
+                <table class="tw:table tw:table-zebra">
+                  <thead>
+                    <tr>
+                      <th class="tw:text-center">Место</th>
+                      <th>Игрок</th>
+                      <th>Команда</th>
+                      <th class="tw:text-center">Очки</th>
+                      <th class="tw:text-center">Очки (без своей команды)</th>
+                      <th class="tw:text-center">1 место</th>
+                      <th class="tw:text-center">2 место</th>
+                      <th class="tw:text-center">3 место</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for result in data.results %}
+                      <tr>
+                        <td class="tw:text-center tw:font-bold">{{ result.final_rank }}</td>
+                        <td class="tw:font-semibold">{{ result.player.nickname }}</td>
+                        <td>{{ result.player.team.title }}</td>
+                        <td class="tw:text-center tw:font-bold tw:text-primary">{{ result.total_points }}</td>
+                        <td class="tw:text-center">{{ result.points_excluding_own_team }}</td>
+                        <td class="tw:text-center">{{ result.first_place_votes }}</td>
+                        <td class="tw:text-center">{{ result.second_place_votes }}</td>
+                        <td class="tw:text-center">{{ result.third_place_votes }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              {% if data.votes_by_submission %}
+
+                <div class="tw:mt-2 tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300">
+                  <input type="checkbox" />
+                  <div class="tw:collapse-title tw:font-semibold tw:text-lg">
+                    <i class="fa fa-list"></i>
+                    Все голоса
+                  </div>
+                  <div class="tw:collapse-content">
+                    <div class="tw:overflow-x-auto">
+                      <table class="tw:table tw:table-zebra">
+                        <thead>
+                          <tr>
+                            <th>Команда</th>
+                            <th>Голосующий</th>
+                            <th class="tw:text-center">1 место</th>
+                            <th class="tw:text-center">2 место</th>
+                            <th class="tw:text-center">3 место</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for submission_data in data.votes_by_submission.values %}
+                            <tr>
+                              <td class="tw:font-semibold">{{ submission_data.team.title }}</td>
+                              <td>{{ submission_data.voter.nickname }}</td>
+                              <td class="tw:text-center">
+                                {% if submission_data.votes_by_place.1 %}
+                                  <span class="{% if submission_data.votes_by_place.1.player.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                    {{ submission_data.votes_by_place.1.player.nickname }}
+                                  </span>
+                                {% else %}
+                                  <span class="tw:text-base-content/40">—</span>
+                                {% endif %}
+                              </td>
+                              <td class="tw:text-center">
+                                {% if submission_data.votes_by_place.2 %}
+                                  <span class="{% if submission_data.votes_by_place.2.player.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                    {{ submission_data.votes_by_place.2.player.nickname }}
+                                  </span>
+                                {% else %}
+                                  <span class="tw:text-base-content/40">—</span>
+                                {% endif %}
+                              </td>
+                              <td class="tw:text-center">
+                                {% if submission_data.votes_by_place.3 %}
+                                  <span class="{% if submission_data.votes_by_place.3.player.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                    {{ submission_data.votes_by_place.3.player.nickname }}
+                                  </span>
+                                {% else %}
+                                  <span class="tw:text-base-content/40">—</span>
+                                {% endif %}
+                              </td>
+                            </tr>
+                          {% endfor %}
+                          {% for non_voter in data.non_voting_voters %}
+                            <tr class="tw:text-base-content/80">
+                              <td class="tw:font-semibold">{{ non_voter.team.title }}</td>
+                              <td>{{ non_voter.voter.nickname }}</td>
+                              <td class="tw:text-center">—</td>
+                              <td class="tw:text-center">—</td>
+                              <td class="tw:text-center">—</td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endwith %}
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+</div>
