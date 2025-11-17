@@ -160,12 +160,9 @@ class AwardVotingForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
 
-        if not self.user_team:
-            raise ValidationError('Не указана команда голосующего')
-
         now = timezone.now()
 
-        # Track players from own team across all nominations
+        # Track players from own team across all nominations (only if voter has a team)
         own_team_players = []
 
         # Validate each nomination
@@ -197,14 +194,14 @@ class AwardVotingForm(forms.Form):
             if len(set(players_list)) != 3:
                 raise ValidationError(f'Для номинации "{nomination.name}" необходимо выбрать 3 разных игроков')
 
-            # Track own team players (count selections, not unique players)
-            for _, player in selected_players:
-                if player.team == self.user_team:
-                    own_team_players.append(player)
+            if self.user_team:
+                for _, player in selected_players:
+                    if player.team == self.user_team:
+                        own_team_players.append(player)
 
         # Validate: no more than 3 selections total from own team across all nominations
         # Same player selected in multiple nominations counts multiple times
-        if len(own_team_players) > 3:
+        if self.user_team and len(own_team_players) > 3:
             raise ValidationError(
                 'Можно выбрать не более 3 игроков из своей команды во всех номинациях (с учетом повторений)'
             )
@@ -215,8 +212,6 @@ class AwardVotingForm(forms.Form):
         """Save votes to database for all awards at once"""
         if not self.awards:
             raise ValueError('Не указаны награды')
-        if not self.user_team:
-            raise ValueError('Не указана команда голосующего')
         if not self.user_player:
             raise ValueError('Не указан голосующий игрок')
 
@@ -227,18 +222,23 @@ class AwardVotingForm(forms.Form):
         campaign = self.awards[0].campaign
         league = self.awards[0].league
 
-        # Create or get one submission for the entire campaign
+        # Create or get one submission for the entire campaign (use voter for uniqueness, team can be null)
         submission, created = AwardSubmission.objects.get_or_create(
             campaign=campaign,
-            team=self.user_team,
-            defaults={'voter': self.user_player, 'league': league, 'submitted_at': now},
+            voter=self.user_player,
+            defaults={'team': self.user_team, 'league': league, 'submitted_at': now},
         )
-        # Update voter, league, and submitted_at in case they changed
-        if submission.voter != self.user_player or submission.league != league or not submission.submitted_at:
+        if (
+            submission.team != self.user_team
+            or submission.voter != self.user_player
+            or submission.league != league
+            or not submission.submitted_at
+        ):
+            submission.team = self.user_team
             submission.voter = self.user_player
             submission.league = league
             submission.submitted_at = now
-            submission.save(update_fields=['voter', 'league', 'submitted_at'])
+            submission.save(update_fields=['team', 'voter', 'league', 'submitted_at'])
 
         # Delete existing votes for this submission
         AwardVote.objects.filter(submission=submission).delete()

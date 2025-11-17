@@ -47,9 +47,9 @@
             </thead>
             <tbody>
               {% for voter in voters %}
-                {% with submission=submissions_by_team|get_or_default:voter.team.id %}
+                {% with submission=submissions_by_voter|get_or_default:voter.voter.id %}
                   <tr>
-                    <td class="tw:font-semibold">{{ voter.team.title }}</td>
+                    <td class="tw:font-semibold">{{ voter.team.title|default:"Независимый представитель" }}</td>
                     <td>{{ voter.voter.nickname }}</td>
                     <td class="tw:text-center">
                       {% if submission %}

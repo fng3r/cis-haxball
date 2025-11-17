@@ -216,7 +216,7 @@
           return true;
         }
 
-        if (teamId === this.userTeamId) {
+        if (this.userTeamId && teamId === this.userTeamId) {
           let totalSelections = 0;
           for (const count of this.selectedOwnTeamPlayers.values()) {
             totalSelections += count;

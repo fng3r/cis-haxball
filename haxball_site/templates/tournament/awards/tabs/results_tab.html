@@ -77,7 +77,7 @@
                         <tbody>
                           {% for submission_data in data.votes_by_submission.values %}
                             <tr>
-                              <td class="tw:font-semibold">{{ submission_data.team.title }}</td>
+                              <td class="tw:font-semibold">{{ submission_data.team.title|default:"Независимый представитель" }}</td>
                               <td>{{ submission_data.voter.nickname }}</td>
                               <td class="tw:text-center">
                                 {% if submission_data.votes_by_place.1 %}
@@ -110,7 +110,7 @@
                           {% endfor %}
                           {% for non_voter in data.non_voting_voters %}
                             <tr class="tw:text-base-content/80">
-                              <td class="tw:font-semibold">{{ non_voter.team.title }}</td>
+                              <td class="tw:font-semibold">{{ non_voter.team.title|default:"Независимый представитель" }}</td>
                               <td>{{ non_voter.voter.nickname }}</td>
                               <td class="tw:text-center">—</td>
                               <td class="tw:text-center">—</td>

@@ -1691,20 +1691,23 @@ class AwardVoter(models.Model):
         verbose_name='Команда',
         related_name='award_voters',
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Команда, от имени которой голосует игрок. Оставьте пустым для независимого голосующего.',
     )
     voter = models.ForeignKey(
         Player,
         verbose_name='Голосующий',
         related_name='award_voting_records',
         on_delete=models.CASCADE,
-        help_text='Игрок, который будет голосовать от имени команды',
     )
 
     def __str__(self):
-        return f'{self.team.title} - {self.voter.nickname} ({self.campaign.season.title}, {self.league.title})'
+        team_str = self.team.title if self.team else 'Независимый представитель'
+        return f'{team_str} - {self.voter.nickname} ({self.campaign.season.title}, {self.league.title})'
 
     class Meta:
-        unique_together = [('campaign', 'league', 'team')]
+        unique_together = [('campaign', 'league', 'team', 'voter')]
         verbose_name = 'Голосующий'
         verbose_name_plural = 'Голосующие'
 
@@ -1729,22 +1732,26 @@ class AwardSubmission(models.Model):
         verbose_name='Команда',
         related_name='award_submissions',
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Команда, от имени которой голосует игрок. Оставьте пустым для независимого голосующего.',
     )
     voter = models.ForeignKey(
         Player,
         verbose_name='Голосующий',
         related_name='award_submissions',
         on_delete=models.CASCADE,
-        help_text='Игрок, который голосует от имени команды',
+        help_text='Игрок, который голосует (от имени команды или независимо)',
     )
     submitted_at = models.DateTimeField('Дата подачи голосования')
 
     def __str__(self):
         submitted_status = self.submitted_at.strftime('%d.%m.%Y %H:%M') if self.submitted_at else 'не подано'
-        return f'{self.team.title} - {self.voter.nickname} ({self.campaign.season.title}) ({submitted_status})'
+        team_str = self.team.title if self.team else 'Независимый представитель'
+        return f'{team_str} - {self.voter.nickname} ({self.campaign.season.title}) ({submitted_status})'
 
     class Meta:
-        unique_together = [('campaign', 'team')]
+        unique_together = [('campaign', 'voter')]
         verbose_name = 'Отправка голосования'
         verbose_name_plural = 'Отправки голосований'
 
@@ -1798,9 +1805,8 @@ class AwardVote(models.Model):
         return self.award.nomination
 
     def __str__(self):
-        return (
-            f'{self.submission.team.title} - {self.player.nickname} ({self.place} место) - {self.award.nomination.name}'
-        )
+        team_str = self.submission.team.title if self.submission.team else 'Независимый представитель'
+        return f'{team_str} - {self.player.nickname} ({self.place} место) - {self.award.nomination.name}'
 
     class Meta:
         unique_together = [('submission', 'award', 'place')]

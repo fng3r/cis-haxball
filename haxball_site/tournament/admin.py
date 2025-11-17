@@ -1291,7 +1291,7 @@ class AwardVoterAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     autocomplete_fields = ('campaign', 'league', 'team', 'voter')
     search_fields = ('team__title', 'voter__nickname', 'campaign__season__title', 'league__title')
-    ordering = ('team__title',)
+    ordering = ('team__title', 'voter__nickname')
 
 
 @admin.register(AwardSubmission)
@@ -1305,7 +1305,7 @@ class AwardSubmissionAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     autocomplete_fields = ('campaign', 'league', 'team', 'voter')
     search_fields = ('team__title', 'voter__nickname', 'campaign__season__title', 'league__title')
-    ordering = ('-submitted_at', 'team__title')
+    ordering = ('-submitted_at', 'team__title', 'voter__nickname')
     inlines = [AwardVoteInline]
 
 
@@ -1322,9 +1322,10 @@ class AwardVoteAdmin(UnfoldModelAdmin):
     search_fields = (
         'player__nickname',
         'submission__team__title',
+        'submission__voter__nickname',
         'award__nomination__name',
     )
-    ordering = ('submission__team__title', 'award__nomination__order', 'place')
+    ordering = ('submission__team__title', 'submission__voter__nickname', 'award__nomination__order', 'place')
 
 
 @admin.register(AwardResult)
