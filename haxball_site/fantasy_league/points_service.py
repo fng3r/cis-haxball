@@ -52,10 +52,7 @@ def calculate_match_points(player, match, position, match_goals, match_cs):
     assists_count = sum(1 for goal in match_goals if goal.assistent_id == player.id)
 
     player_team = _get_player_team_for_match(player, match)
-
-    cs_count = 0
-    if player_team:
-        cs_count = sum(1 for cs in match_cs if cs.team_id == player_team.id)
+    cs_count = _count_clean_sheets(player, match, player_team, match_cs)
 
     goals_points = goals_count * POINTS_CONFIG['goals'].get(position, POINTS_CONFIG['goals']['ST'])
     assists_points = assists_count * POINTS_CONFIG['assists'].get(position, POINTS_CONFIG['assists']['ST'])
@@ -216,6 +213,29 @@ def _get_player_team_for_match(player, match):
         if participant.id == player.id:
             return participant.team
     return None
+
+
+def _count_clean_sheets(player, match, player_team, match_cs):
+    """Count clean sheets for a player, only counting those earned in halves when player was on pitch."""
+    cs_count = 0
+    if player_team:
+        intervals = _get_player_intervals(player, match)
+        for cs in match_cs:
+            if cs.team_id == player_team.id:
+                cs_time = cs.time_min * 60 + cs.time_sec
+                # Determine which half the clean sheet belongs to
+                # First half: 0-8 minutes (0-480 seconds), Second half: 8-16 minutes (480-960 seconds)
+                # Clean sheets are typically recorded at the end of a half (8:00 for first, 16:00 for second)
+                if cs_time <= 480:
+                    half_start, half_end = 0, 480  # First half
+                else:
+                    half_start, half_end = 481, 960  # Second half
+                for start, end in intervals:
+                    if start < half_end and end > half_start:
+                        cs_count += 1
+                        break
+
+    return cs_count
 
 
 def _get_player_intervals(player, match):
