@@ -49,7 +49,7 @@
                    hx-get="{% url 'tournament:awards_status_tab' slug=league.slug %}"
                    hx-target="#status-content"
                    hx-swap="innerHTML"
-                   hx-trigger="load" />
+                   hx-trigger="load, awardVotingSubmitted from:body" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-list-ul"></i>
               Статус голосования
@@ -67,7 +67,7 @@
                    hx-get="{% url 'tournament:awards_results_tab' slug=league.slug %}"
                    hx-target="#results-content"
                    hx-swap="innerHTML"
-                   hx-trigger="load" />
+                   hx-trigger="load, awardVotingSubmitted from:body" />
             <span class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-trophy"></i>
               Результаты
@@ -82,4 +82,5 @@
       {% endpartialdef %}
     </div>
   </div>
+
 {% endblock %}

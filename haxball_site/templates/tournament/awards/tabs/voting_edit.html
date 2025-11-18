@@ -11,7 +11,7 @@
           action="{% url 'tournament:award_voting' slug=league.slug %}"
           hx-post="{% url 'tournament:award_voting' slug=league.slug %}"
           hx-target="#voting-tab-container"
-          hx-swap="innerHTML"
+          hx-swap="outerHTML"
           hx-disabled-elt="button[type='submit']"
           @htmx:before-request="saving = true"
           @htmx:after-request="saving = false"

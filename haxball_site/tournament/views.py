@@ -19,6 +19,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView
 
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
+from django_htmx.http import trigger_client_event
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
@@ -2690,7 +2691,10 @@ class AwardVotingView(View):
         if form.is_valid():
             form.save()
             messages.success(request, 'Ваш голос успешно сохранен!')
-            return voting_tab(request, league=league, awards=all_awards)
+            response = voting_tab(request, league=league, awards=all_awards)
+            # Trigger HTMX event to refresh status and results tabs
+            response = trigger_client_event(response, 'awardVotingSubmitted')
+            return response
 
         context = {
             'league': league,
