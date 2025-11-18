@@ -2460,6 +2460,8 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
         except AwardVoter.DoesNotExist:
             pass
 
+    is_eligible_to_vote = AwardVoter.objects.filter(campaign=campaign, league=league, voter=user_player).exists()
+
     context = {
         'league': league,
         'awards': awards,
@@ -2467,6 +2469,7 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
         'user_team': user_team,
         'submission': submission,
         'votes_by_award': votes_by_award,
+        'is_eligible_to_vote': is_eligible_to_vote,
         'now': timezone.now(),
     }
 

@@ -7,17 +7,14 @@
 <div id="voting-tab-container" class="tw:space-y-2">
   {% include 'alerts.html' %}
 
-  {% if not user_player %}
-    <div class="tw:alert tw:alert-info">
-      <i class="fa fa-info-circle"></i>
-      <span>Вы должны быть игроком для голосования</span>
-    </div>
-  {% elif user_team and user_team not in league.teams.all %}
+  {% if not is_eligible_to_vote %}
     <div class="tw:alert tw:alert-warning">
       <i class="fa fa-exclamation-triangle"></i>
-      <span>Ваша команда не участвует в этом турнире</span>
+      <span>Вы не являетесь участником голосования</span>
     </div>
-  {% elif not awards %}
+  {% endif %}
+
+  {% if not awards %}
     <div class="tw:alert tw:alert-info">
       <i class="fa fa-info-circle"></i>
       <span>Для этого турнира пока нет наград</span>
