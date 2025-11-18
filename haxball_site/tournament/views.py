@@ -35,6 +35,7 @@ from .forms import (
 )
 from .models import (
     Award,
+    AwardCampaign,
     AwardResult,
     AwardSubmission,
     AwardVote,
@@ -2426,6 +2427,8 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
         league_slug = slug or request.GET.get('league_slug') or request.resolver_match.kwargs.get('slug')
         league = get_object_or_404(League, slug=league_slug)
 
+    campaign = get_object_or_404(AwardCampaign, season=league.championship)
+
     if not awards:
         awards = (
             Award.objects.filter(league=league)
@@ -2437,28 +2440,17 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
     user_player = getattr(request.user, 'user_player', None)
     user_team = user_player.team if user_player else None
 
-    # Get existing submission if any
     submission = None
     votes_by_award = {}
     if user_player and awards:
-        campaign = awards[0].campaign
-        league = awards[0].league
-        try:
-            voter_record = AwardVoter.objects.get(campaign=campaign, league=league, voter=user_player)
-            try:
-                submission = AwardSubmission.objects.prefetch_related(
-                    'votes__nominee__player__team',
-                    'votes__nominee__player__name__user_profile',
-                    'votes__award__nomination',
-                ).get(voter_record=voter_record)
+        voter_record = AwardVoter.objects.filter(campaign=campaign, league=league, voter=user_player).first()
+        if voter_record:
+            submission = AwardSubmission.objects.filter(voter_record=voter_record).first()
+            if submission:
                 for vote in submission.votes.all():
                     if vote.award.id not in votes_by_award:
                         votes_by_award[vote.award.id] = {}
                     votes_by_award[vote.award.id][vote.place] = vote
-            except AwardSubmission.DoesNotExist:
-                pass
-        except AwardVoter.DoesNotExist:
-            pass
 
     is_eligible_to_vote = AwardVoter.objects.filter(campaign=campaign, league=league, voter=user_player).exists()
 
