@@ -222,23 +222,25 @@ class AwardVotingForm(forms.Form):
         campaign = self.awards[0].campaign
         league = self.awards[0].league
 
-        # Create or get one submission for the entire campaign (use voter for uniqueness, team can be null)
+        # Get the voter record
+        from .models import AwardVoter
+
+        voter_record = AwardVoter.objects.get(campaign=campaign, league=league, voter=self.user_player)
+
+        # Create or get one submission for the entire campaign (use voter_record for uniqueness)
         submission, created = AwardSubmission.objects.get_or_create(
-            campaign=campaign,
-            voter=self.user_player,
-            defaults={'team': self.user_team, 'league': league, 'submitted_at': now},
+            voter_record=voter_record,
+            defaults={
+                'campaign': campaign,
+                'league': league,
+                'submitted_at': now,
+            },
         )
-        if (
-            submission.team != self.user_team
-            or submission.voter != self.user_player
-            or submission.league != league
-            or not submission.submitted_at
-        ):
-            submission.team = self.user_team
-            submission.voter = self.user_player
+        if submission.league != league or submission.campaign != campaign or not submission.submitted_at:
             submission.league = league
+            submission.campaign = campaign
             submission.submitted_at = now
-            submission.save(update_fields=['team', 'voter', 'league', 'submitted_at'])
+            submission.save(update_fields=['league', 'campaign', 'submitted_at'])
 
         # Delete existing votes for this submission
         AwardVote.objects.filter(submission=submission).delete()

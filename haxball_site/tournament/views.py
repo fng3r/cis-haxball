@@ -2441,15 +2441,20 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
     votes_by_award = {}
     if user_player and awards:
         campaign = awards[0].campaign
+        league = awards[0].league
         try:
-            submission = AwardSubmission.objects.prefetch_related(
-                'votes__player__team', 'votes__player__name__user_profile', 'votes__award__nomination'
-            ).get(campaign=campaign, voter=user_player)
-            for vote in submission.votes.all():
-                if vote.award.id not in votes_by_award:
-                    votes_by_award[vote.award.id] = {}
-                votes_by_award[vote.award.id][vote.place] = vote
-        except AwardSubmission.DoesNotExist:
+            voter_record = AwardVoter.objects.get(campaign=campaign, league=league, voter=user_player)
+            try:
+                submission = AwardSubmission.objects.prefetch_related(
+                    'votes__player__team', 'votes__player__name__user_profile', 'votes__award__nomination'
+                ).get(voter_record=voter_record)
+                for vote in submission.votes.all():
+                    if vote.award.id not in votes_by_award:
+                        votes_by_award[vote.award.id] = {}
+                    votes_by_award[vote.award.id][vote.place] = vote
+            except AwardSubmission.DoesNotExist:
+                pass
+        except AwardVoter.DoesNotExist:
             pass
 
     context = {
@@ -2493,46 +2498,45 @@ def results_tab(request, slug):
             AwardResult.objects.filter(award=award).select_related('player').order_by('final_rank', '-total_points')
         )
 
-        # Get all votes for this award, organized by submission (voter)
         votes = (
             AwardVote.objects.filter(award=award)
-            .select_related('submission__team', 'submission__voter', 'player', 'player__team')
-            .order_by('submission__team__title', 'place')
+            .select_related(
+                'submission__voter_record',
+                'submission__voter_record__team',
+                'submission__voter_record__voter',
+                'player',
+                'player__team',
+            )
+            .order_by('submission__voter_record__team__title', 'place')
         )
-        # Group votes by submission (team/voter)
         votes_by_submission = {}
         for vote in votes:
             submission_id = vote.submission.id
             if submission_id not in votes_by_submission:
                 votes_by_submission[submission_id] = {
                     'submission': vote.submission,
-                    'team': vote.submission.team,
-                    'voter': vote.submission.voter,
+                    'team': vote.submission.voter_record.team,
+                    'voter': vote.submission.voter_record.voter,
                     'votes': [],
                 }
             votes_by_submission[submission_id]['votes'].append(vote)
 
-        # Organize votes by place for easier template access
         for submission_data in votes_by_submission.values():
             votes_by_place = {1: None, 2: None, 3: None}
             for vote in submission_data['votes']:
                 votes_by_place[vote.place] = vote
             submission_data['votes_by_place'] = votes_by_place
 
-        # Get all eligible voters and find those who didn't vote
         all_voters = (
             AwardVoter.objects.filter(campaign=campaign, league=league)
             .select_related('team', 'voter')
             .order_by('team__title', 'voter__nickname')
         )
-        voters_with_votes = {vote.submission.voter_id for vote in votes}
+        voters_with_votes = {vote.submission.voter_record.voter_id for vote in votes}
         non_voting_voters = [
             {
-                'submission': None,
                 'team': voter.team,
                 'voter': voter.voter,
-                'votes': [],
-                'votes_by_place': {1: None, 2: None, 3: None},
             }
             for voter in all_voters
             if voter.voter_id not in voters_with_votes
@@ -2564,7 +2568,6 @@ def status_tab(request, slug):
 
     now = timezone.now()
 
-    # Get voters for this campaign and league
     first_award = awards.first() if awards else None
     can_vote = False
     campaign_ended = False
@@ -2573,15 +2576,15 @@ def status_tab(request, slug):
         campaign = first_award.campaign
         can_vote = now >= campaign.voting_start_date and now <= campaign.voting_end_date
         campaign_ended = now > campaign.voting_end_date
-        # Get voters for this campaign and league
         voters = (
             AwardVoter.objects.filter(campaign=campaign, league=league)
             .select_related('team', 'voter')
             .order_by('team__title', 'voter__nickname')
         )
-        # Get all submissions for this campaign
-        submissions = AwardSubmission.objects.filter(campaign=campaign).select_related('team', 'voter')
-        submissions_by_voter = {submission.voter_id: submission for submission in submissions}
+        submissions = AwardSubmission.objects.filter(campaign=campaign).select_related(
+            'voter_record', 'voter_record__voter', 'voter_record__team'
+        )
+        submissions_by_voter = {submission.voter_record.voter_id: submission for submission in submissions}
     else:
         voters = AwardVoter.objects.none()
 
@@ -2608,7 +2611,6 @@ def award_voting_edit(request, slug):
         messages.error(request, 'Вы должны быть игроком для голосования')
         return voting_tab(request, league=league)
 
-    # Get all awards for this league
     awards = (
         Award.objects.filter(league=league)
         .select_related('nomination', 'campaign')
@@ -2630,7 +2632,7 @@ def award_voting_edit(request, slug):
     user_team = voter_record.team
 
     existing_votes = {}
-    submission = AwardSubmission.objects.filter(campaign=campaign, voter=user_player).first()
+    submission = AwardSubmission.objects.filter(voter_record=voter_record).first()
     if submission:
         votes = AwardVote.objects.filter(submission=submission).select_related('player', 'award__nomination')
         for vote in votes:
@@ -2659,7 +2661,6 @@ class AwardVotingView(View):
 
         user_player = request.user.user_player
 
-        # Get all awards for this league
         all_awards = (
             Award.objects.filter(league=league)
             .select_related('nomination', 'campaign')
@@ -2683,17 +2684,10 @@ class AwardVotingView(View):
         form = AwardVotingForm(request.POST, awards=all_awards, user_team=user_team, user_player=user_player)
 
         if form.is_valid():
-            try:
-                form.save()
-                messages.success(request, 'Ваш голос успешно сохранен!')
-                return voting_tab(request, league=league, awards=all_awards)
-            except Exception as e:
-                import traceback
+            form.save()
+            messages.success(request, 'Ваш голос успешно сохранен!')
+            return voting_tab(request, league=league, awards=all_awards)
 
-                traceback.print_exc()
-                messages.error(request, f'Ошибка при сохранении голоса: {str(e)}')
-
-        # Return edit form with errors
         context = {
             'league': league,
             'awards': all_awards,
@@ -2724,19 +2718,16 @@ class AwardResultsView(DetailView):
         award = self.object
         now = timezone.now()
 
-        # Get results
         results = (
             AwardResult.objects.filter(award=award).select_related('player').order_by('final_rank', '-total_points')
         )
 
-        # Get voting status (visible to all)
         voters = (
             AwardVoter.objects.filter(campaign=award.campaign, league=award.league)
             .select_related('team', 'voter')
             .order_by('team__title', 'voter__nickname')
         )
 
-        # Check if results are public
         results_public = now >= award.results_public_date
 
         context.update(

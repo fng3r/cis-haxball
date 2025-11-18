@@ -1296,36 +1296,23 @@ class AwardVoterAdmin(UnfoldModelAdmin):
 
 @admin.register(AwardSubmission)
 class AwardSubmissionAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'campaign', 'league', 'team', 'voter', 'submitted_at')
+    list_display = ('id', 'voter_record', 'campaign', 'league', 'submitted_at')
     list_filter = (
         ('campaign', RelatedDropdownFilter),
         ('league', RelatedDropdownFilter),
-        ('team', RelatedDropdownFilter),
+        ('voter_record', RelatedDropdownFilter),
+        ('voter_record__team', RelatedDropdownFilter),
     )
     list_filter_submit = True
-    autocomplete_fields = ('campaign', 'league', 'team', 'voter')
-    search_fields = ('team__title', 'voter__nickname', 'campaign__season__title', 'league__title')
-    ordering = ('-submitted_at', 'team__title', 'voter__nickname')
-    inlines = [AwardVoteInline]
-
-
-@admin.register(AwardVote)
-class AwardVoteAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'submission', 'award', 'player', 'place', 'points')
-    list_filter = (
-        'place',
-        ('award__nomination', RelatedDropdownFilter),
-        ('player', AutocompleteSelectFilter),
-    )
-    list_filter_submit = True
-    autocomplete_fields = ('submission', 'award', 'player')
+    autocomplete_fields = ('voter_record', 'campaign', 'league')
     search_fields = (
-        'player__nickname',
-        'submission__team__title',
-        'submission__voter__nickname',
-        'award__nomination__name',
+        'voter_record__team__title',
+        'campaign__season__title',
+        'league__title',
+        'voter_record__voter__nickname',
     )
-    ordering = ('submission__team__title', 'submission__voter__nickname', 'award__nomination__order', 'place')
+    ordering = ('-submitted_at', 'voter_record__team__title', 'voter_record__voter__nickname')
+    inlines = [AwardVoteInline]
 
 
 @admin.register(AwardResult)

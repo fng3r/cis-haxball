@@ -228,20 +228,22 @@ class Command(BaseCommand):
 
             for voter_record in voters:
                 team = voter_record.team
-                voter_player = voter_record.voter
                 team_name = team.title if team else 'Независимый представитель'
 
                 # Create or get one submission for this voter and campaign
                 submission, created = AwardSubmission.objects.get_or_create(
-                    campaign=campaign,
-                    voter=voter_player,
-                    defaults={'team': team, 'league': league, 'submitted_at': timezone.now()},
+                    voter_record=voter_record,
+                    defaults={
+                        'campaign': campaign,
+                        'league': league,
+                        'submitted_at': timezone.now(),
+                    },
                 )
-                # Update team and league in case they changed
-                if submission.team != team or submission.league != league:
-                    submission.team = team
+                # Update fields in case they changed
+                if submission.league != league or submission.campaign != campaign:
                     submission.league = league
-                    submission.save(update_fields=['team', 'league'])
+                    submission.campaign = campaign
+                    submission.save(update_fields=['league', 'campaign'])
                 if created:
                     submissions_created += 1
 
