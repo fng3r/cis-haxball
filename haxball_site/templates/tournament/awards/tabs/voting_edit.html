@@ -97,13 +97,14 @@
           this.selectedPlayersByAward[awardId].clear();
         }
 
-        // Build player data map
+        // Build nominee data map
         {% for award in awards %}
           {% for nominee in award.nominees.all %}
-            this.playerData['{{ nominee.player.id }}'] = {
+            this.playerData['{{ nominee.id }}'] = {
               name: '{{ nominee.player.nickname|escapejs }}',
-              team: '{{ nominee.player.team.title|escapejs }}',
-              teamId: '{{ nominee.player.team.id }}'
+              team: '{{ nominee.team.title|escapejs }}',
+              teamId: '{{ nominee.team.id }}',
+              playerId: '{{ nominee.player.id }}'
             };
           {% endfor %}
         {% endfor %}
@@ -117,39 +118,39 @@
 
                 {% if field1.value %}
                   if (this.votes['{{ field_name_1 }}']) {
-                    const p1 = this.playerData[this.votes['{{ field_name_1 }}']];
-                    if (p1) {
-                      this.playerNames['{{ field_name_1 }}'] = `${p1.name} (${p1.team})`;
-                      this.selectedPlayersByAward['{{ award.id }}'].add(this.votes['{{ field_name_1 }}']);
-                      if (p1.teamId === this.userTeamId) {
-                        const currentCount = this.selectedOwnTeamPlayers.get(this.votes['{{ field_name_1 }}']) || 0;
-                        this.selectedOwnTeamPlayers.set(this.votes['{{ field_name_1 }}'], currentCount + 1);
+                    const n1 = this.playerData[this.votes['{{ field_name_1 }}']];
+                    if (n1) {
+                      this.playerNames['{{ field_name_1 }}'] = `${n1.name} (${n1.team})`;
+                      this.selectedPlayersByAward['{{ award.id }}'].add(n1.playerId);
+                      if (n1.teamId === this.userTeamId) {
+                        const currentCount = this.selectedOwnTeamPlayers.get(n1.playerId) || 0;
+                        this.selectedOwnTeamPlayers.set(n1.playerId, currentCount + 1);
                       }
                     }
                   }
                 {% endif %}
                 {% if field2.value %}
                   if (this.votes['{{ field_name_2 }}']) {
-                    const p2 = this.playerData[this.votes['{{ field_name_2 }}']];
-                    if (p2) {
-                      this.playerNames['{{ field_name_2 }}'] = `${p2.name} (${p2.team})`;
-                      this.selectedPlayersByAward['{{ award.id }}'].add(this.votes['{{ field_name_2 }}']);
-                      if (p2.teamId === this.userTeamId) {
-                        const currentCount = this.selectedOwnTeamPlayers.get(this.votes['{{ field_name_2 }}']) || 0;
-                        this.selectedOwnTeamPlayers.set(this.votes['{{ field_name_2 }}'], currentCount + 1);
+                    const n2 = this.playerData[this.votes['{{ field_name_2 }}']];
+                    if (n2) {
+                      this.playerNames['{{ field_name_2 }}'] = `${n2.name} (${n2.team})`;
+                      this.selectedPlayersByAward['{{ award.id }}'].add(n2.playerId);
+                      if (n2.teamId === this.userTeamId) {
+                        const currentCount = this.selectedOwnTeamPlayers.get(n2.playerId) || 0;
+                        this.selectedOwnTeamPlayers.set(n2.playerId, currentCount + 1);
                       }
                     }
                   }
                 {% endif %}
                 {% if field3.value %}
                   if (this.votes['{{ field_name_3 }}']) {
-                    const p3 = this.playerData[this.votes['{{ field_name_3 }}']];
-                    if (p3) {
-                      this.playerNames['{{ field_name_3 }}'] = `${p3.name} (${p3.team})`;
-                      this.selectedPlayersByAward['{{ award.id }}'].add(this.votes['{{ field_name_3 }}']);
-                      if (p3.teamId === this.userTeamId) {
-                        const currentCount = this.selectedOwnTeamPlayers.get(this.votes['{{ field_name_3 }}']) || 0;
-                        this.selectedOwnTeamPlayers.set(this.votes['{{ field_name_3 }}'], currentCount + 1);
+                    const n3 = this.playerData[this.votes['{{ field_name_3 }}']];
+                    if (n3) {
+                      this.playerNames['{{ field_name_3 }}'] = `${n3.name} (${n3.team})`;
+                      this.selectedPlayersByAward['{{ award.id }}'].add(n3.playerId);
+                      if (n3.teamId === this.userTeamId) {
+                        const currentCount = this.selectedOwnTeamPlayers.get(n3.playerId) || 0;
+                        this.selectedOwnTeamPlayers.set(n3.playerId, currentCount + 1);
                       }
                     }
                   }
@@ -167,30 +168,34 @@
         }
       },
 
-      selectPlayer(fieldName, awardId, playerId, playerName, teamName, teamId) {
-        // Check if player is disabled
-        if (this.isPlayerDisabled(awardId, playerId, teamId, fieldName) && this.votes[fieldName] !== playerId) {
+      selectPlayer(fieldName, awardId, nomineeId, playerName, teamName, teamId, playerId) {
+        // Check if player is disabled (use playerId for validation)
+        if (this.isPlayerDisabled(awardId, playerId, teamId, fieldName) && this.votes[fieldName] !== nomineeId) {
           return;
         }
 
-        const oldPlayerId = this.votes[fieldName];
+        const oldNomineeId = this.votes[fieldName];
 
-        // Remove old selection from tracking
-        if (oldPlayerId) {
-          this.selectedPlayersByAward[awardId].delete(oldPlayerId);
-          // Decrement count for own team player
-          if (this.playerData[oldPlayerId] && this.playerData[oldPlayerId].teamId === this.userTeamId) {
-            const count = this.selectedOwnTeamPlayers.get(oldPlayerId) || 0;
-            if (count > 1) {
-              this.selectedOwnTeamPlayers.set(oldPlayerId, count - 1);
-            } else {
-              this.selectedOwnTeamPlayers.delete(oldPlayerId);
+        // Remove old selection from tracking (use playerId from old nominee)
+        if (oldNomineeId) {
+          const oldNomineeData = this.playerData[oldNomineeId];
+          if (oldNomineeData) {
+            const oldPlayerId = oldNomineeData.playerId;
+            this.selectedPlayersByAward[awardId].delete(oldPlayerId);
+            // Decrement count for own team player
+            if (oldNomineeData.teamId === this.userTeamId) {
+              const count = this.selectedOwnTeamPlayers.get(oldPlayerId) || 0;
+              if (count > 1) {
+                this.selectedOwnTeamPlayers.set(oldPlayerId, count - 1);
+              } else {
+                this.selectedOwnTeamPlayers.delete(oldPlayerId);
+              }
             }
           }
         }
 
-        // Add new selection
-        this.votes[fieldName] = playerId;
+        // Add new selection (store nomineeId in votes, but track by playerId)
+        this.votes[fieldName] = nomineeId;
         this.playerNames[fieldName] = `${playerName} (${teamName})`;
         this.selectedPlayersByAward[awardId].add(playerId);
         // Increment count for own team players
@@ -207,9 +212,12 @@
       },
 
       isPlayerDisabled(awardId, playerId, teamId, currentFieldName) {
-        const currentPlayerId = this.votes[currentFieldName];
-        if (currentPlayerId === playerId) {
-          return false;
+        const currentNomineeId = this.votes[currentFieldName];
+        if (currentNomineeId) {
+          const currentNomineeData = this.playerData[currentNomineeId];
+          if (currentNomineeData && currentNomineeData.playerId === playerId) {
+            return false;
+          }
         }
 
         if (this.selectedPlayersByAward[awardId]?.has(playerId)) {
@@ -222,10 +230,10 @@
             totalSelections += count;
           }
 
-          const currentPlayerId = this.votes[currentFieldName];
-          if (currentPlayerId) {
-            const currentPlayer = this.playerData[currentPlayerId];
-            if (currentPlayer && currentPlayer.teamId === this.userTeamId) {
+          const currentNomineeId = this.votes[currentFieldName];
+          if (currentNomineeId) {
+            const currentNomineeData = this.playerData[currentNomineeId];
+            if (currentNomineeData && currentNomineeData.teamId === this.userTeamId) {
               return false;
             }
           }

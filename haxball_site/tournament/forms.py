@@ -139,19 +139,14 @@ class AwardVotingForm(forms.Form):
         self.user_team = user_team
         self.user_player = user_player
 
-        # Create fields for each award/nomination
         for award in self.awards:
             nomination = award.nomination
-            nominees = award.nominees.all()
-            # Get Player queryset from nominees
-            player_ids = nominees.values_list('player_id', flat=True)
-            players_queryset = Player.objects.filter(id__in=player_ids)
+            nominees_queryset = award.nominees.all()
 
-            # Create 3 fields for places 1, 2, 3
             for place in [1, 2, 3]:
                 field_name = f'{nomination.code}_place_{place}'
                 self.fields[field_name] = forms.ModelChoiceField(
-                    queryset=players_queryset,
+                    queryset=nominees_queryset,
                     required=True,
                     label=f'{nomination.name} - {place} место',
                     empty_label='Выберите игрока',
@@ -162,14 +157,11 @@ class AwardVotingForm(forms.Form):
 
         now = timezone.now()
 
-        # Track players from own team across all nominations (only if voter has a team)
         own_team_players = []
 
-        # Validate each nomination
         for award in self.awards:
             nomination = award.nomination
 
-            # Check voting period
             if not (award.voting_start_date <= now <= award.voting_end_date):
                 raise ValidationError(
                     f'Голосование для "{nomination.name}" не доступно в данный момент. '
@@ -177,30 +169,25 @@ class AwardVotingForm(forms.Form):
                     f'{award.voting_end_date.strftime("%d.%m.%Y %H:%M")}'
                 )
 
-            # Get selected players for this nomination
-            selected_players = []
+            selected_nominees = []
             for place in [1, 2, 3]:
                 field_name = f'{nomination.code}_place_{place}'
-                player = cleaned_data.get(field_name)
-                if player:
-                    selected_players.append((place, player))
+                nominee = cleaned_data.get(field_name)
+                if nominee:
+                    selected_nominees.append((place, nominee))
 
-            # Validate: exactly 3 players must be selected
-            if len(selected_players) != 3:
+            if len(selected_nominees) != 3:
                 raise ValidationError(f'Для номинации "{nomination.name}" необходимо выбрать ровно 3 игроков')
 
-            # Validate: all 3 players must be different
-            players_list = [p for _, p in selected_players]
+            players_list = [n.player for _, n in selected_nominees]
             if len(set(players_list)) != 3:
                 raise ValidationError(f'Для номинации "{nomination.name}" необходимо выбрать 3 разных игроков')
 
             if self.user_team:
-                for _, player in selected_players:
-                    if player.team == self.user_team:
-                        own_team_players.append(player)
+                for _, nominee in selected_nominees:
+                    if nominee.team == self.user_team:
+                        own_team_players.append(nominee.player)
 
-        # Validate: no more than 3 selections total from own team across all nominations
-        # Same player selected in multiple nominations counts multiple times
         if self.user_team and len(own_team_players) > 3:
             raise ValidationError(
                 'Можно выбрать не более 3 игроков из своей команды во всех номинациях (с учетом повторений)'
@@ -250,14 +237,14 @@ class AwardVotingForm(forms.Form):
             nomination = award.nomination
             for place in [1, 2, 3]:
                 field_name = f'{nomination.code}_place_{place}'
-                player = self.cleaned_data.get(field_name)
-                if player:
+                nominee = self.cleaned_data.get(field_name)
+                if nominee:
                     # Calculate points: 3 for 1st, 2 for 2nd, 1 for 3rd
                     points = 4 - place
                     vote = AwardVote(
                         submission=submission,
                         award=award,
-                        player=player,
+                        nominee=nominee,
                         place=place,
                         points=points,
                     )

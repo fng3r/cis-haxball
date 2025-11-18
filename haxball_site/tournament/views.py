@@ -2446,7 +2446,9 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
             voter_record = AwardVoter.objects.get(campaign=campaign, league=league, voter=user_player)
             try:
                 submission = AwardSubmission.objects.prefetch_related(
-                    'votes__player__team', 'votes__player__name__user_profile', 'votes__award__nomination'
+                    'votes__nominee__player__team',
+                    'votes__nominee__player__name__user_profile',
+                    'votes__award__nomination',
                 ).get(voter_record=voter_record)
                 for vote in submission.votes.all():
                     if vote.award.id not in votes_by_award:
@@ -2479,7 +2481,7 @@ def results_tab(request, slug):
     awards = (
         Award.objects.filter(league=league)
         .select_related('nomination', 'campaign')
-        .prefetch_related('results__player', 'nominees__player')
+        .prefetch_related('results__nominee__player', 'nominees__player')
         .order_by('nomination__order')
     )
 
@@ -2495,7 +2497,9 @@ def results_tab(request, slug):
 
     for award in awards:
         results = (
-            AwardResult.objects.filter(award=award).select_related('player').order_by('final_rank', '-total_points')
+            AwardResult.objects.filter(award=award)
+            .select_related('nominee__player', 'nominee__team')
+            .order_by('final_rank', '-total_points')
         )
 
         votes = (
@@ -2504,8 +2508,8 @@ def results_tab(request, slug):
                 'submission__voter_record',
                 'submission__voter_record__team',
                 'submission__voter_record__voter',
-                'player',
-                'player__team',
+                'nominee__player',
+                'nominee__team',
             )
             .order_by('submission__voter_record__team__title', 'place')
         )
@@ -2614,7 +2618,7 @@ def award_voting_edit(request, slug):
     awards = (
         Award.objects.filter(league=league)
         .select_related('nomination', 'campaign')
-        .prefetch_related('nominees__player')
+        .prefetch_related('nominees__player', 'nominees__team')
         .order_by('nomination__order')
     )
 
@@ -2634,10 +2638,10 @@ def award_voting_edit(request, slug):
     existing_votes = {}
     submission = AwardSubmission.objects.filter(voter_record=voter_record).first()
     if submission:
-        votes = AwardVote.objects.filter(submission=submission).select_related('player', 'award__nomination')
+        votes = AwardVote.objects.filter(submission=submission).select_related('nominee', 'award__nomination')
         for vote in votes:
             key = f'{vote.award.nomination.code}_place_{vote.place}'
-            existing_votes[key] = vote.player.id
+            existing_votes[key] = vote.nominee.id
 
     form = AwardVotingForm(awards=awards, user_team=user_team, user_player=user_player, initial=existing_votes)
 
@@ -2664,7 +2668,7 @@ class AwardVotingView(View):
         all_awards = (
             Award.objects.filter(league=league)
             .select_related('nomination', 'campaign')
-            .prefetch_related('nominees__player')
+            .prefetch_related('nominees__player', 'nominees__team')
             .order_by('nomination__order')
         )
 
@@ -2709,7 +2713,7 @@ class AwardResultsView(DetailView):
 
     def get_queryset(self):
         return Award.objects.select_related('nomination', 'league', 'campaign').prefetch_related(
-            'results__player',
+            'results__nominee__player',
             'nominees__player',
         )
 
@@ -2719,7 +2723,9 @@ class AwardResultsView(DetailView):
         now = timezone.now()
 
         results = (
-            AwardResult.objects.filter(award=award).select_related('player').order_by('final_rank', '-total_points')
+            AwardResult.objects.filter(award=award)
+            .select_related('nominee__player', 'nominee__team')
+            .order_by('final_rank', '-total_points')
         )
 
         voters = (

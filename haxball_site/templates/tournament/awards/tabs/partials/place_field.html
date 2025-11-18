@@ -44,16 +44,16 @@
     <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:gap-3 tw:max-h-[60vh] tw:overflow-y-auto">
       {% for nominee in award.nominees.all %}
         <div class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:transition-all tw:relative"
-             :class="{ 'tw:border-primary tw:bg-primary/10 tw:cursor-pointer': votes['{{ field_name }}'] == '{{ nominee.player.id }}', 'tw:bg-base-100 tw:border-base-300/50 tw:opacity-60 tw:cursor-not-allowed': isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.team.id }}', '{{ field_name }}') && votes['{{ field_name }}'] != '{{ nominee.player.id }}', 'tw:cursor-pointer': !isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.team.id }}', '{{ field_name }}') || votes['{{ field_name }}'] == '{{ nominee.player.id }}' }"
-             @click="selectPlayer('{{ field_name }}', '{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.nickname }}', '{{ nominee.player.team.title }}', '{{ nominee.player.team.id }}')">
+             :class="{ 'tw:border-primary tw:bg-primary/10 tw:cursor-pointer': votes['{{ field_name }}'] == '{{ nominee.id }}', 'tw:bg-base-100 tw:border-base-300/50 tw:opacity-60 tw:cursor-not-allowed': isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.team.id }}', '{{ field_name }}') && votes['{{ field_name }}'] != '{{ nominee.id }}', 'tw:cursor-pointer': !isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.team.id }}', '{{ field_name }}') || votes['{{ field_name }}'] == '{{ nominee.id }}' }"
+             @click="selectPlayer('{{ field_name }}', '{{ award.id }}', '{{ nominee.id }}', '{{ nominee.player.nickname }}', '{{ nominee.team.title }}', '{{ nominee.team.id }}', '{{ nominee.player.id }}')">
           <div class="tw:card-body tw:p-3">
             <div class="tw:flex tw:items-center tw:justify-between tw:mb-1">
               <h4 class="tw:font-semibold tw:mb-0!">{{ nominee.player.nickname }}</h4>
-              <i x-show="isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.player.team.id }}', '{{ field_name }}') && votes['{{ field_name }}'] != '{{ nominee.player.id }}'"
+              <i x-show="isPlayerDisabled('{{ award.id }}', '{{ nominee.player.id }}', '{{ nominee.team.id }}', '{{ field_name }}') && votes['{{ field_name }}'] != '{{ nominee.id }}'"
                  class="fa fa-lock tw:text-base-content/40 tw:text-sm"
                  x-cloak></i>
             </div>
-            <p class="tw:text-sm">{{ nominee.player.team.title }}</p>
+            <p class="tw:text-sm">{{ nominee.team.title }}</p>
           </div>
         </div>
       {% endfor %}

@@ -1522,12 +1522,9 @@ class Award(models.Model):
         nominees = self.nominees.all()
 
         for nominee in nominees:
-            player = nominee.player
-
-            # Get all votes for this player in this award
             votes = AwardVote.objects.filter(
                 award=self,
-                player=player,
+                nominee=nominee,
             ).select_related('submission')
 
             # Calculate total points
@@ -1541,7 +1538,7 @@ class Award(models.Model):
             # Create result record
             AwardResult.objects.create(
                 award=self,
-                player=player,
+                nominee=nominee,
                 total_points=total_points,
                 first_place_votes=first_place_votes,
                 second_place_votes=second_place_votes,
@@ -1554,22 +1551,22 @@ class Award(models.Model):
         # Calculate points_excluding_involved_teams for tie-breaking
         # Group results by total_points to identify ties
         results_by_points = defaultdict(list)
-        all_results = AwardResult.objects.filter(award=self).select_related('player__team')
+        all_results = AwardResult.objects.filter(award=self).select_related('nominee__team')
         for result in all_results:
             results_by_points[result.total_points].append(result)
 
-        # Only calculate for players who are actually in a tie (more than 1 player with same points)
+        # Only calculate for nominees who are actually in a tie (more than 1 nominee with same points)
         for points, tied_results in results_by_points.items():
             if len(tied_results) <= 1:
                 # No tie, skip calculation (already set to None)
                 continue
 
-            involved_teams = {result.player.team_id for result in tied_results}
+            involved_teams = {result.nominee.team_id for result in tied_results}
 
             for result in tied_results:
                 votes = AwardVote.objects.filter(
                     award=self,
-                    player=result.player,
+                    nominee=result.nominee,
                 ).select_related('submission')
 
                 points_excluding_involved = (
@@ -1601,37 +1598,47 @@ class Award(models.Model):
         if self.nomination.code != AwardNomination.Code.BEST_PLAYER:
             return 0
 
-        # Get all nominees from striker, defender, and goalkeeper nominations
         source_nominations = [
             AwardNomination.Code.BEST_STRIKER,
             AwardNomination.Code.BEST_DEFENDER,
             AwardNomination.Code.BEST_GOALKEEPER,
         ]
 
-        # Get all awards for these nominations in the same campaign
         source_awards = Award.objects.filter(
             campaign=self.campaign,
+            league=self.league,
             nomination__code__in=source_nominations,
         )
 
-        # Collect all unique players from these nominations
         players_to_nominate = set()
         for source_award in source_awards:
             for nominee in source_award.nominees.all():
                 players_to_nominate.add(nominee.player)
 
-        # Create nominees (mark as auto-nominated)
         created_count = 0
         for player in players_to_nominate:
             nominee, created = AwardNominee.objects.get_or_create(
-                award=self, player=player, defaults={'is_auto_nominated': True}
+                award=self, player=player, defaults={'team': player.team}
             )
             if created:
                 created_count += 1
-            elif not nominee.is_auto_nominated:
-                # Update existing nominee to mark as auto-nominated
-                nominee.is_auto_nominated = True
-                nominee.save(update_fields=['is_auto_nominated'])
+
+        return created_count
+
+    def auto_populate_best_captain_nominees(self):
+        """Auto-populate nominees for 'Best captain' from all captains of teams in the league"""
+        if self.nomination.code != AwardNomination.Code.BEST_CAPTAIN:
+            return 0
+
+        teams = self.league.teams.all()
+
+        created_count = 0
+        for team in teams:
+            nominee, created = AwardNominee.objects.get_or_create(
+                award=self, player=team.captain, defaults={'team': team}
+            )
+            if created:
+                created_count += 1
 
         return created_count
 
@@ -1650,26 +1657,24 @@ class AwardNominee(models.Model):
         related_name='nominees',
         on_delete=models.CASCADE,
     )
+    team = models.ForeignKey(
+        Team,
+        verbose_name='Команда',
+        related_name='award_nominees',
+        on_delete=models.CASCADE,
+    )
     player = models.ForeignKey(
         Player,
         verbose_name='Игрок',
         related_name='award_nominations',
         on_delete=models.CASCADE,
     )
-    nominated_at = models.DateTimeField('Номинирован', auto_now_add=True)
-    is_auto_nominated = models.BooleanField(
-        'Автоматически номинирован',
-        default=False,
-        help_text=(
-            'Отмечается, если игрок был автоматически добавлен (например, для "Игрок сезона" из других номинаций)'
-        ),
-    )
 
     def __str__(self):
-        return f'{self.player.nickname} - {self.award.nomination.name}'
+        return f'{self.player.nickname} ({self.team.title}) - {self.award.nomination.name}'
 
     class Meta:
-        unique_together = [('award', 'player')]
+        unique_together = [('award', 'team', 'player')]
         verbose_name = 'Номинант'
         verbose_name_plural = 'Номинанты'
 
@@ -1751,7 +1756,7 @@ class AwardSubmission(models.Model):
 
 
 class AwardVote(models.Model):
-    """Individual vote (player + place) for a specific award"""
+    """Individual vote (nominee + place) for a specific award"""
 
     PLACE_CHOICES = [
         (1, '1 место'),
@@ -1771,10 +1776,10 @@ class AwardVote(models.Model):
         related_name='votes',
         on_delete=models.CASCADE,
     )
-    player = models.ForeignKey(
-        Player,
-        verbose_name='Игрок',
-        related_name='award_votes_received',
+    nominee = models.ForeignKey(
+        'AwardNominee',
+        verbose_name='Номинант',
+        related_name='votes_received',
         on_delete=models.CASCADE,
     )
     place = models.PositiveSmallIntegerField('Место', choices=PLACE_CHOICES)
@@ -1784,7 +1789,6 @@ class AwardVote(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        # Auto-calculate points based on place
         if self.place == 1:
             self.points = 3
         elif self.place == 2:
@@ -1804,7 +1808,7 @@ class AwardVote(models.Model):
             if self.submission.voter_record.team
             else 'Независимый представитель'
         )
-        return f'{team_str} - {self.player.nickname} ({self.place} место) - {self.award.nomination.name}'
+        return f'{team_str} - {self.nominee.player.nickname} ({self.place} место) - {self.award.nomination.name}'
 
     class Meta:
         unique_together = [('submission', 'award', 'place')]
@@ -1813,7 +1817,7 @@ class AwardVote(models.Model):
 
 
 class AwardResult(models.Model):
-    """Calculated results for each player in each nomination"""
+    """Calculated results for each nominee in each nomination"""
 
     award = models.ForeignKey(
         'Award',
@@ -1821,10 +1825,10 @@ class AwardResult(models.Model):
         related_name='results',
         on_delete=models.CASCADE,
     )
-    player = models.ForeignKey(
-        Player,
-        verbose_name='Игрок',
-        related_name='award_results',
+    nominee = models.ForeignKey(
+        'AwardNominee',
+        verbose_name='Номинант',
+        related_name='results',
         on_delete=models.CASCADE,
     )
     total_points = models.IntegerField('Всего очков', default=0)
@@ -1843,10 +1847,10 @@ class AwardResult(models.Model):
     last_calculated_at = models.DateTimeField('Последний расчет', auto_now=True)
 
     def __str__(self):
-        return f'{self.player.nickname} - {self.award.nomination.name} ({self.total_points} очков)'
+        return f'{self.nominee.player.nickname} - {self.award.nomination.name} ({self.total_points} очков)'
 
     class Meta:
-        unique_together = [('award', 'player')]
+        unique_together = [('award', 'nominee')]
         ordering = [
             '-total_points',
             '-points_excluding_involved_teams',
@@ -1854,5 +1858,5 @@ class AwardResult(models.Model):
             '-second_place_votes',
             '-third_place_votes',
         ]
-        verbose_name = 'Результат награды'
-        verbose_name_plural = 'Результаты наград'
+        verbose_name = 'Результат голосования за награду'
+        verbose_name_plural = 'Результаты голосований за награды'

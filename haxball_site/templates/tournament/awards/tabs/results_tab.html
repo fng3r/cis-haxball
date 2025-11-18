@@ -41,8 +41,8 @@
                     {% for result in data.results %}
                       <tr>
                         <td class="tw:text-center tw:font-bold">{{ result.final_rank }}</td>
-                        <td class="tw:font-semibold">{{ result.player.nickname }}</td>
-                        <td>{{ result.player.team.title }}</td>
+                        <td class="tw:font-semibold">{{ result.nominee.player.nickname }}</td>
+                        <td>{{ result.nominee.team.title }}</td>
                         <td class="tw:text-center tw:font-bold tw:text-primary">{{ result.total_points }}</td>
                         <td class="tw:text-center">{{ result.points_excluding_involved_teams|default:"—" }}</td>
                         <td class="tw:text-center">{{ result.first_place_votes }}</td>
@@ -81,8 +81,8 @@
                               <td>{{ submission_data.voter.nickname }}</td>
                               <td class="tw:text-center">
                                 {% if submission_data.votes_by_place.1 %}
-                                  <span class="{% if submission_data.votes_by_place.1.player.team == submission_data.team %}tw:text-warning/90{% endif %}">
-                                    {{ submission_data.votes_by_place.1.player.nickname }}
+                                  <span class="{% if submission_data.votes_by_place.1.nominee.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                    {{ submission_data.votes_by_place.1.nominee.player.nickname }}
                                   </span>
                                 {% else %}
                                   <span class="tw:text-base-content/40">—</span>
@@ -90,8 +90,8 @@
                               </td>
                               <td class="tw:text-center">
                                 {% if submission_data.votes_by_place.2 %}
-                                  <span class="{% if submission_data.votes_by_place.2.player.team == submission_data.team %}tw:text-warning/90{% endif %}">
-                                    {{ submission_data.votes_by_place.2.player.nickname }}
+                                  <span class="{% if submission_data.votes_by_place.2.nominee.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                    {{ submission_data.votes_by_place.2.nominee.player.nickname }}
                                   </span>
                                 {% else %}
                                   <span class="tw:text-base-content/40">—</span>
@@ -99,8 +99,8 @@
                               </td>
                               <td class="tw:text-center">
                                 {% if submission_data.votes_by_place.3 %}
-                                  <span class="{% if submission_data.votes_by_place.3.player.team == submission_data.team %}tw:text-warning/90{% endif %}">
-                                    {{ submission_data.votes_by_place.3.player.nickname }}
+                                  <span class="{% if submission_data.votes_by_place.3.nominee.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                    {{ submission_data.votes_by_place.3.nominee.player.nickname }}
                                   </span>
                                 {% else %}
                                   <span class="tw:text-base-content/40">—</span>

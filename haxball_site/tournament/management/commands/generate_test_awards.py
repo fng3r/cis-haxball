@@ -157,7 +157,7 @@ class Command(BaseCommand):
                 nominee, created = AwardNominee.objects.get_or_create(
                     award=award,
                     player=player,
-                    defaults={'is_auto_nominated': nomination_code == AwardNomination.Code.BEST_PLAYER},
+                    defaults={'team': player.team},
                 )
                 if created:
                     nominees_created += 1
@@ -256,7 +256,7 @@ class Command(BaseCommand):
 
                 # Create votes for all awards in this campaign and league
                 for award in awards:
-                    nominees = list(award.nominees.all().select_related('player'))
+                    nominees = list(award.nominees.all().select_related('player', 'team'))
 
                     if len(nominees) < 3:
                         self.stdout.write(
@@ -270,7 +270,7 @@ class Command(BaseCommand):
                     # If limit of 3 own-team selections is reached, exclude own-team players from pool
                     # Only applies to team voters
                     if team and len(own_team_selections) >= 3:
-                        nominees = [n for n in nominees if n.player.team != team]
+                        nominees = [n for n in nominees if n.team != team]
 
                     if len(nominees) < 3:
                         self.stdout.write(
@@ -288,16 +288,16 @@ class Command(BaseCommand):
                     # Track own-team selections (only for team voters)
                     if team:
                         for nominee in selected_players:
-                            if nominee.player.team == team:
+                            if nominee.team == team:
                                 own_team_selections.append(nominee.player)
 
                     # Create votes for this award
                     for place in [1, 2, 3]:
-                        player = selected_players[place - 1].player
+                        nominee = selected_players[place - 1]
                         AwardVote.objects.create(
                             submission=submission,
                             award=award,
-                            player=player,
+                            nominee=nominee,
                             place=place,
                         )
                         votes_created += 1

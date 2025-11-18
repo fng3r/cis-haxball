@@ -1200,9 +1200,8 @@ class AwardNomineeInline(UnfoldStackedInline):
     model = AwardNominee
     extra = 0
     tab = True
-    fields = ('player', 'is_auto_nominated', 'nominated_at')
-    autocomplete_fields = ('player',)
-    readonly_fields = ('is_auto_nominated', 'nominated_at')
+    fields = ('team', 'player')
+    autocomplete_fields = ('player', 'team')
 
 
 class AwardVoterInline(UnfoldStackedInline):
@@ -1214,12 +1213,20 @@ class AwardVoterInline(UnfoldStackedInline):
     readonly_fields = ()
 
 
+class AwardInline(UnfoldStackedInline):
+    model = Award
+    extra = 0
+    tab = True
+    fields = ('league', 'nomination', 'max_nominees')
+    autocomplete_fields = ('league', 'nomination')
+
+
 class AwardVoteInline(UnfoldStackedInline):
     model = AwardVote
     extra = 0
     tab = True
-    fields = ('award', 'player', 'place', 'points')
-    autocomplete_fields = ('award', 'player')
+    fields = ('award', 'nominee', 'place', 'points')
+    autocomplete_fields = ('award', 'nominee')
     readonly_fields = ('points',)
 
 
@@ -1235,12 +1242,12 @@ class AwardCampaignAdmin(UnfoldModelAdmin):
     search_fields = ('season__title',)
     date_hierarchy = 'voting_start_date'
     ordering = ('-voting_start_date',)
-    inlines = [AwardVoterInline]
+    inlines = [AwardInline, AwardVoterInline]
 
 
 @admin.register(Award)
 class AwardAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'nomination', 'league', 'campaign')
+    list_display = ('nomination', 'league', 'campaign')
     list_filter = (
         ('nomination', RelatedDropdownFilter),
         ('league', RelatedDropdownFilter),
@@ -1252,32 +1259,35 @@ class AwardAdmin(UnfoldModelAdmin):
     ordering = ('campaign__voting_start_date', 'nomination__order')
     inlines = [AwardNomineeInline]
 
-    actions_detail = ['auto_populate_best_player']
+    actions_detail = ['auto_populate_nominees']
 
     @action(description='Автозап. номинантов', variant=ActionVariant.PRIMARY)
-    def auto_populate_best_player(self, request, object_id):
+    def auto_populate_nominees(self, request, object_id):
         award = Award.objects.get(id=object_id)
         if award.nomination.code == AwardNomination.Code.BEST_PLAYER:
             created = award.auto_populate_best_player_nominees()
-            messages.success(request, f'Добавлено {created} номинантов для "Игрок сезона".')
+            messages.success(request, f'Добавлено {created} номинантов для номинации "Игрок сезона".')
+            return redirect(reverse_lazy('admin:tournament_award_change', args=[object_id]))
+        if award.nomination.code == AwardNomination.Code.BEST_CAPTAIN:
+            created = award.auto_populate_best_captain_nominees()
+            messages.success(request, f'Добавлено {created} номинантов для номинации "Капитан сезона".')
             return redirect(reverse_lazy('admin:tournament_award_change', args=[object_id]))
 
-        messages.error(request, 'Дейтсвие доступно только для номинации "Игрок сезона".')
+        messages.error(request, 'Действие доступно только для номинаций "Игрок сезона" и "Капитан сезона".')
         return redirect(reverse_lazy('admin:tournament_award_change', args=[object_id]))
 
 
 @admin.register(AwardNominee)
 class AwardNomineeAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'award', 'player', 'is_auto_nominated', 'nominated_at')
+    list_display = ('award', 'team', 'player')
     list_filter = (
-        'is_auto_nominated',
         ('award', RelatedDropdownFilter),
+        ('team', RelatedDropdownFilter),
         ('player', AutocompleteSelectFilter),
     )
     list_filter_submit = True
-    autocomplete_fields = ('award', 'player')
-    search_fields = ('player__nickname', 'award__nomination__name', 'award__league__title')
-    ordering = ('-nominated_at',)
+    autocomplete_fields = ('award', 'player', 'team')
+    search_fields = ('player__nickname', 'award__nomination__name', 'award__league__title', 'team__title')
 
 
 @admin.register(AwardVoter)
@@ -1318,9 +1328,8 @@ class AwardSubmissionAdmin(UnfoldModelAdmin):
 @admin.register(AwardResult)
 class AwardResultAdmin(UnfoldModelAdmin):
     list_display = (
-        'id',
         'award',
-        'player',
+        'nominee',
         'total_points',
         'points_excluding_involved_teams',
         'first_place_votes',
@@ -1331,11 +1340,16 @@ class AwardResultAdmin(UnfoldModelAdmin):
     )
     list_filter = (
         ('award', RelatedDropdownFilter),
-        ('player', AutocompleteSelectFilter),
+        ('nominee', RelatedDropdownFilter),
     )
     list_filter_submit = True
-    autocomplete_fields = ('award', 'player')
-    search_fields = ('player__nickname', 'award__nomination__name', 'award__league__title')
+    autocomplete_fields = ('award', 'nominee')
+    search_fields = (
+        'nominee__player__nickname',
+        'nominee__team__title',
+        'award__nomination__name',
+        'award__league__title',
+    )
     ordering = ('award', 'final_rank', '-total_points')
     readonly_fields = (
         'total_points',
