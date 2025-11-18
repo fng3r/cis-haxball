@@ -136,5 +136,7 @@ def active_subscription_context(request):
     """
     Add active subscription to the context for all templates.
     """
-    active_subscription = Subscription.objects.by_user(request.user).active().order_by('expires_at').first()
+    active_subscription = None
+    if request.user.is_authenticated:
+        active_subscription = Subscription.objects.by_user(request.user).active().order_by('expires_at').first()
     return {'active_subscription': active_subscription}
