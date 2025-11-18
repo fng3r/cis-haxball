@@ -155,13 +155,9 @@
                         {% endfor %}
 
                         <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}"
-                           class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-                          {{ postponement.taken_by.username }}
-                          {% if postponement.taken_by.user_profile.tag %}
-                            {% include 'core/include/user_tag.html' with tag=postponement.taken_by.user_profile.tag %}
-                          {% endif %}
-                        </a>
+                           class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ postponement.taken_by.username }}</a>
 
+                        {% include 'core/include/user_tag.html' with profile=postponement.taken_by.user_profile %}
                         {% include 'core/comment/user-teams.html' with user=postponement.taken_by %}
                       </div>
                     </div>
@@ -230,13 +226,9 @@
                           {% endfor %}
 
                           <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}"
-                             class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-                            {{ postponement.cancelled_by.username }}
-                            {% if postponement.cancelled_by.user_profile.tag %}
-                              {% include 'core/include/user_tag.html' with tag=postponement.cancelled_by.user_profile.tag %}
-                            {% endif %}
-                          </a>
+                             class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ postponement.cancelled_by.username }}</a>
 
+                          {% include 'core/include/user_tag.html' with profile=postponement.cancelled_by.user_profile %}
                           {% include 'core/comment/user-teams.html' with user=postponement.cancelled_by %}
                         </div>
                       </div>

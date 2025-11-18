@@ -33,13 +33,9 @@
                 {% endfor %}
 
                 <a href="{{ reservation.author.user_profile.get_absolute_url }}"
-                   class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-                  {{ reservation.author.username }}
-                  {% if reservation.author.user_profile.tag %}
-                    {% include 'core/include/user_tag.html' with tag=reservation.author.user_profile.tag %}
-                  {% endif %}
-                </a>
+                   class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ reservation.author.username }}</a>
 
+                {% include 'core/include/user_tag.html' with profile=reservation.author.user_profile %}
                 {% include 'core/comment/user-teams.html' with user=reservation.author %}
               </div>
             </div>
@@ -107,13 +103,9 @@
                   {% endfor %}
 
                   <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}"
-                     class="tw:font-semibold tw:link tw:link-hover tw:link-primary">
-                    {{ reservation.cancelled_by.username }}
-                    {% if reservation.cancelled_by.user_profile.tag %}
-                      {% include 'core/include/user_tag.html' with tag=reservation.cancelled_by.user_profile.tag %}
-                    {% endif %}
-                  </a>
+                     class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ reservation.cancelled_by.username }}</a>
 
+                  {% include 'core/include/user_tag.html' with profile=reservation.cancelled_by.user_profile %}
                   {% include 'core/comment/user-teams.html' with user=reservation.cancelled_by %}
                 </div>
               </div>

@@ -98,6 +98,7 @@ TEMPLATES = [
                 'haxball_site.context_processors.youtube_context',
                 'haxball_site.context_processors.themes_context',
                 'haxball_site.context_processors.settings_context',
+                'haxball_site.context_processors.active_subscription_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },

@@ -5,6 +5,7 @@ from django.utils import timezone
 from notifications.models import Notification
 from online_users.models import OnlineUserActivity
 
+from core.models import Subscription
 from core.services.youtube import YoutubeService
 from haxball_site import settings
 from reservation.models import ReservationEntry
@@ -129,3 +130,11 @@ def themes_context(request):
 
 def settings_context(request):
     return {'project_settings': settings}
+
+
+def active_subscription_context(request):
+    """
+    Add active subscription to the context for all templates.
+    """
+    active_subscription = Subscription.objects.by_user(request.user).active().order_by('expires_at').first()
+    return {'active_subscription': active_subscription}
