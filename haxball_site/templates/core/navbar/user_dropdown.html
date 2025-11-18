@@ -14,7 +14,7 @@
       class="tw:menu tw:dropdown-content tw:min-w-35 tw:max-w-45 tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:p-2 tw:shadow">
     <span class="tw:mb-1.5 tw:px-1 tw:w-full tw:text-base tw:text-base-content tw:font-semibold tw:flex tw:items-center tw:gap-1.5">
       {% if active_subscription %}
-        <div class="tw:tooltip tw:tooltip-left tw:flex tw:items-center tw:flex-shrink-0 tw:before:whitespace-pre!"
+        <div class="tw:tooltip tw:tooltip-left tw:flex tw:items-center tw:flex-shrink-0"
              data-tip="Период действия подписки: {{ active_subscription.starts_at|date:'d.m.y' }} – {{ active_subscription.expires_at|date:'d.m.y' }}">
           <img src="{% static 'img/ico/premium-star.png' %}" class="tw:size-4" alt="Premium" />
         </div>
