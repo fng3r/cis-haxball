@@ -11,11 +11,17 @@
   </div>
 
   <ul tabindex="0"
-      class="tw:menu tw:dropdown-content tw:min-w-30 tw:max-w-40 tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:p-2 tw:shadow">
-    <span class="tw:mb-1 tw:px-1 tw:w-full tw:line-clamp-2 tw:break-words tw:text-base tw:text-base-content tw:font-semibold tw:pointer-events-none">
-      {{ user.username }}
+      class="tw:menu tw:dropdown-content tw:min-w-35 tw:max-w-45 tw:bg-base-100 tw:rounded-box tw:z-1 tw:mt-2! tw:p-2 tw:shadow">
+    <span class="tw:mb-1.5 tw:px-1 tw:w-full tw:text-base tw:text-base-content tw:font-semibold tw:flex tw:items-center tw:gap-1.5">
+      {% if active_subscription %}
+        <div class="tw:tooltip tw:tooltip-left tw:flex tw:items-center tw:flex-shrink-0 tw:before:whitespace-pre!"
+             data-tip="Период действия подписки: {{ active_subscription.starts_at|date:'d.m.y' }} – {{ active_subscription.expires_at|date:'d.m.y' }}">
+          <img src="{% static 'img/ico/premium-star.png' %}" class="tw:size-4" alt="Premium" />
+        </div>
+      {% endif %}
+      <span class="tw:line-clamp-2 tw:break-words tw:min-w-0 tw:flex-1">{{ user.username }}</span>
     </span>
-    <div class="tw:px-1 tw:mb-1 tw:flex tw:items-center tw:gap-1">
+    <div class="tw:px-1 tw:mb-1.5 tw:flex tw:items-center tw:gap-1">
       <img src="{% static 'img/cis-coin.png' %}" class="tw:size-4" />
       <a href="{% url 'balance:balance' %}" class="tw:link tw:link-hover tw:text-xs tw:text-base-content/80 tw:font-semibold">{{ user.balance.current_balance|intdiv:1 }} CC</a>
     </div>
