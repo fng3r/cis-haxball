@@ -30,10 +30,8 @@
 
             <a href="{{ comment.author.user_profile.get_absolute_url }}"
                class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.author.username }}</a>
-            {% if comment.author.user_profile.tag %}
-              {% include 'core/include/user_tag.html' with tag=comment.author.user_profile.tag %}
-            {% endif %}
 
+            {% include 'core/include/user_tag.html' with profile=comment.author.user_profile %}
             {% include 'core/comment/user-teams.html' with user=comment.author %}
           </div>
         </div>
@@ -50,13 +48,9 @@
               {% endfor %}
 
               <a href="{{ child_comment.parent.author.user_profile.get_absolute_url }}"
-                 class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
-                {{ child_comment.parent.author.username }}
-                {% if child_comment.parent.author.user_profile.tag %}
-                  {% include 'core/include/user_tag.html' with tag=child_comment.parent.author.user_profile.tag %}
-                {% endif %}
-              </a>
+                 class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ child_comment.parent.author.username }}</a>
 
+              {% include 'core/include/user_tag.html' with profile=child_comment.parent.author.user_profile %}
               {% include 'core/comment/user-teams.html' with user=child_comment.parent.author %}
             </div>
           </div>
@@ -84,7 +78,7 @@
           </a>
         {% endif %}
 
-        {% if user.is_superuser or comment.author == user and comment|can_delete or comment.content_object.name_id == user.id %}
+        {% if user.is_superuser or comment.author == user and comment|can_delete or user.is_authenticated and user.id == comment.content_object.name_id %}
           <a :style="editingComment && {'pointer-events': 'none'}" class="tw:ml-0.5 tw:cursor-pointer">
             <i class="fa fa-times tw:text-error tw:hover:text-error/85"
                aria-hidden="true"

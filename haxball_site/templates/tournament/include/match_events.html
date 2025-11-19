@@ -15,12 +15,14 @@
   {% endif %}
 
   {% for event in events %}
-    <div class="tw:flex tw:w-full">
-      <div class="tw:w-5/12 tw:flex tw:justify-center">{% include 'tournament/include/match_team_events.html' with team=match.team_home %}</div>
-      <div class="tw:w-2/12 tw:flex tw:justify-center">
-        <h6 class="event-time">{{ event|event_time }}</h6>
+    {% if event.team == match.team_home or event.team == match.team_guest %}
+      <div class="tw:flex tw:w-full">
+        <div class="tw:w-5/12 tw:flex tw:justify-center">{% include 'tournament/include/match_team_events.html' with team=match.team_home %}</div>
+        <div class="tw:w-2/12 tw:flex tw:justify-center">
+          <h6 class="event-time">{{ event|event_time }}</h6>
+        </div>
+        <div class="tw:w-5/12 tw:flex tw:justify-center">{% include 'tournament/include/match_team_events.html' with team=match.team_guest %}</div>
       </div>
-      <div class="tw:w-5/12 tw:flex tw:justify-center">{% include 'tournament/include/match_team_events.html' with team=match.team_guest %}</div>
-    </div>
+    {% endif %}
   {% endfor %}
 </div>

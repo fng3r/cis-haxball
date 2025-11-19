@@ -31,9 +31,7 @@
               <a href="{{ comment.author.user_profile.get_absolute_url }}"
                  class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.author.username }}</a>
 
-              {% if comment.author.user_profile.tag %}
-                {% include 'core/include/user_tag.html' with tag=comment.author.user_profile.tag %}
-              {% endif %}
+              {% include 'core/include/user_tag.html' with profile=comment.author.user_profile %}
             </div>
           </div>
 
@@ -52,9 +50,7 @@
                 <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
                    class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
 
-                {% if comment.parent.author.user_profile.tag %}
-                  {% include 'core/include/user_tag.html' with tag=comment.parent.author.user_profile.tag %}
-                {% endif %}
+                {% include 'core/include/user_tag.html' with profile=comment.parent.author.user_profile %}
               </div>
             </div>
           {% endif %}

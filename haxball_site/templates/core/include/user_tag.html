@@ -1,1 +1,11 @@
-<span class="tw:badge tw:badge-soft tw:font-semibold {% if size == 'sm' %}tw:badge-sm{% else %}tw:badge-xs{% endif %}">{{ tag }}</span>
+{% comment %}
+  Reusable user tag with optional ring based on frame or superuser.
+  Expected params:
+  - profile: user profile (required)
+{% endcomment %}
+
+{% if user.is_superuser or active_subscription %}
+  {% if profile.tag %}
+    <span class="tw:badge tw:badge-soft tw:font-semibold tw:cursor-default {% if size == 'sm' %}tw:badge-sm{% else %}tw:badge-xs{% endif %}">{{ profile.tag }}</span>
+  {% endif %}
+{% endif %}
