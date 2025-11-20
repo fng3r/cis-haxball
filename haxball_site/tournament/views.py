@@ -2686,9 +2686,8 @@ class AwardVotingView(View):
 
         if form.is_valid():
             form.save()
-            messages.success(request, 'Ваш голос успешно сохранен!')
+            messages.success(request, 'Ваши голоса успешно отправлены!')
             response = voting_tab(request, league=league, awards=all_awards)
-            # Trigger HTMX event to refresh status and results tabs
             response = trigger_client_event(response, 'awardVotingSubmitted')
             return response
 

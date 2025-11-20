@@ -13,8 +13,6 @@
           hx-target="#voting-tab-container"
           hx-swap="outerHTML"
           hx-disabled-elt="button[type='submit']"
-          @htmx:before-request="saving = true"
-          @htmx:after-request="saving = false"
           class="tw:space-y-4">
       {% csrf_token %}
 
@@ -51,12 +49,12 @@
                 hx-target="#voting-tab-container"
                 hx-swap="innerHTML"
                 hx-disabled-elt="this">Отмена</button>
-        <button type="submit" class="tw:btn tw:btn-primary" hx-disabled-elt="this">
+        <button type="submit" class="tw:btn tw:btn-primary" @click="saving = true">
           <span x-show="saving" x-cloak class="tw:flex tw:items-center tw:gap-2">
             <span class="tw:loading tw:loading-spinner tw:loading-sm"></span>
-            Сохранение...
+            Отправляем...
           </span>
-          <span x-show="!saving">Сохранить голоса</span>
+          <span x-show="!saving">Отправить голоса</span>
         </button>
       </div>
     </form>
