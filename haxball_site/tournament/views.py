@@ -2433,7 +2433,7 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
         awards = (
             Award.objects.filter(league=league)
             .select_related('nomination', 'campaign')
-            .prefetch_related('nominees__player')
+            .prefetch_related('nominees__player', 'nominees__team')
             .order_by('nomination__order')
         )
 
@@ -2455,6 +2455,7 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
     is_eligible_to_vote = AwardVoter.objects.filter(campaign=campaign, league=league, voter=user_player).exists()
 
     context = {
+        'campaign': campaign,
         'league': league,
         'awards': awards,
         'user_player': user_player,
