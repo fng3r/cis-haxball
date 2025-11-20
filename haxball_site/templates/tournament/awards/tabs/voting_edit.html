@@ -49,7 +49,9 @@
                 hx-target="#voting-tab-container"
                 hx-swap="innerHTML"
                 hx-disabled-elt="this">Отмена</button>
-        <button type="submit" class="tw:btn tw:btn-primary" @click="saving = true">
+        <button type="submit"
+                class="tw:btn tw:btn-primary"
+                {% if allow_editing %}@click="saving = true"{% else %}@click.prevent="document.getElementById('confirmation-modal').showModal()"{% endif %}>
           <span x-show="saving" x-cloak class="tw:flex tw:items-center tw:gap-2">
             <span class="tw:loading tw:loading-spinner tw:loading-sm"></span>
             Отправляем...
@@ -57,6 +59,27 @@
           <span x-show="!saving">Отправить голоса</span>
         </button>
       </div>
+
+      {% if not allow_editing %}
+        <dialog id="confirmation-modal" class="tw:modal">
+          <div class="tw:modal-box">
+            <h3 class="tw:font-bold tw:text-lg tw:mb-4!">Подтверждение</h3>
+            <div class="tw:space-y-3">
+              <p class="tw:text-base">
+                После отправки изменить голоса будет невозможно.
+                Пожалуйста, убедитесь, что вы сделали правильный выбор в каждой номинации.
+              </p>
+            </div>
+            <div class="tw:modal-action">
+              <button type="button" class="tw:btn tw:btn-ghost" @click="document.getElementById('confirmation-modal').close()">Отмена</button>
+              <button type="submit" class="tw:btn tw:btn-primary" @click="saving = true">
+                <i class="fa fa-check"></i>
+                Отправить
+              </button>
+            </div>
+          </div>
+        </dialog>
+      {% endif %}
     </form>
   </div>
 </div>

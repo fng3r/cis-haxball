@@ -23,6 +23,7 @@ from django_htmx.http import trigger_client_event
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
+from haxball_site import settings
 
 from .charts import StatCharts
 from .forms import (
@@ -2454,6 +2455,8 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
 
     is_eligible_to_vote = AwardVoter.objects.filter(campaign=campaign, league=league, voter=user_player).exists()
 
+    allow_editing = settings.ALLOW_AWARDS_VOTE_EDITING
+
     context = {
         'campaign': campaign,
         'league': league,
@@ -2463,6 +2466,7 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
         'submission': submission,
         'votes_by_award': votes_by_award,
         'is_eligible_to_vote': is_eligible_to_vote,
+        'allow_editing': allow_editing,
         'now': timezone.now(),
     }
 
@@ -2605,12 +2609,9 @@ def status_tab(request, slug):
 
 def award_voting_edit(request, slug):
     """View for editing votes - shows the form"""
-    league = get_object_or_404(League, slug=slug)
 
-    user_player = getattr(request.user, 'user_player', None)
-    if not user_player:
-        messages.error(request, 'Вы должны быть игроком для голосования')
-        return voting_tab(request, league=league)
+    league = get_object_or_404(League, slug=slug)
+    campaign = get_object_or_404(AwardCampaign, season=league.championship)
 
     awards = (
         Award.objects.filter(league=league)
@@ -2623,8 +2624,7 @@ def award_voting_edit(request, slug):
         messages.error(request, 'Для этого турнира пока нет наград')
         return voting_tab(request, league=league)
 
-    campaign = awards[0].campaign
-
+    user_player = request.user.user_player
     voter_record = AwardVoter.objects.filter(campaign=campaign, league=league, voter=user_player).first()
     if not voter_record:
         messages.error(request, 'Вы не являетесь назначенным голосующим для этого турнира')
@@ -2634,6 +2634,12 @@ def award_voting_edit(request, slug):
 
     existing_votes = {}
     submission = AwardSubmission.objects.filter(voter_record=voter_record).first()
+
+    allow_editing = settings.ALLOW_AWARDS_VOTE_EDITING
+    if submission and not allow_editing:
+        messages.error(request, 'Редактирование голосов после подачи запрещено')
+        return voting_tab(request, league=league, awards=awards)
+
     if submission:
         votes = AwardVote.objects.filter(submission=submission).select_related('nominee', 'award__nomination')
         for vote in votes:
@@ -2648,6 +2654,7 @@ def award_voting_edit(request, slug):
         'form': form,
         'user_player': user_player,
         'user_team': user_team,
+        'allow_editing': allow_editing,
         'now': timezone.now(),
     }
 
@@ -2659,8 +2666,7 @@ class AwardVotingView(View):
 
     def post(self, request, slug):
         league = get_object_or_404(League, slug=slug)
-
-        user_player = request.user.user_player
+        campaign = get_object_or_404(AwardCampaign, season=league.championship)
 
         all_awards = (
             Award.objects.filter(league=league)
@@ -2673,12 +2679,18 @@ class AwardVotingView(View):
             messages.error(request, 'Для этого турнира пока нет наград')
             return voting_tab(request, league=league)
 
-        campaign = all_awards[0].campaign
-
+        user_player = request.user.user_player
         voter_record = AwardVoter.objects.filter(campaign=campaign, league=league, voter=user_player).first()
         if not voter_record:
             messages.error(request, 'Вы не являетесь назначенным голосующим для этого турнира')
             return voting_tab(request, league=league, awards=all_awards)
+
+        submission = AwardSubmission.objects.filter(voter_record=voter_record).first()
+
+        allow_editing = settings.ALLOW_AWARDS_VOTE_EDITING
+        if submission and not allow_editing:
+            messages.error(request, 'Редактирование голосов после подачи запрещено')
+            return voting_tab(request, league=league)
 
         user_team = voter_record.team
 

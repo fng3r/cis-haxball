@@ -50,16 +50,18 @@
               {% endfor %}
             </div>
 
-            <div class="tw:flex tw:justify-end">
-              <button type="button"
-                      class="tw:btn tw:btn-primary"
-                      hx-get="{% url 'tournament:award_voting_edit' slug=league.slug %}"
-                      hx-target="#voting-tab-container"
-                      hx-swap="outerHTML">
-                <i class="fa fa-edit"></i>
-                Изменить голоса
-              </button>
-            </div>
+            {% if allow_editing %}
+              <div class="tw:flex tw:justify-end">
+                <button type="button"
+                        class="tw:btn tw:btn-primary"
+                        hx-get="{% url 'tournament:award_voting_edit' slug=league.slug %}"
+                        hx-target="#voting-tab-container"
+                        hx-swap="outerHTML">
+                  <i class="fa fa-edit"></i>
+                  Изменить голоса
+                </button>
+              </div>
+            {% endif %}
           {% else %}
             <div class="tw:my-10 tw:flex tw:flex-col tw:justify-center tw:max-w-sm tw:mx-auto">
               <div class="tw:text-center tw:text-lg tw:text-base-content/90 tw:font-semibold tw:mb-3">
