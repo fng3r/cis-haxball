@@ -34,7 +34,10 @@
               {% for award in awards %}
                 <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
                   <div class="tw:card-body tw:p-4">
-                    <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-2">{{ award.nomination.name }}</h3>
+                    <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+                      {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+                      {{ award.nomination.name }}
+                    </h3>
 
                     <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
                       {% with award_votes=votes_by_award|get:award.id %}
@@ -83,7 +86,10 @@
 
             {% for award in awards %}
               <div class="tw:not-last:mb-6">
-                <h4 class="tw:text-xl tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-2">{{ award.nomination.name }}</h4>
+                <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+                  {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+                  {{ award.nomination.name }}
+                </h4>
 
                 {% if award.nominees.exists %}
                   <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3">

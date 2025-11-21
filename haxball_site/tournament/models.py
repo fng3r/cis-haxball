@@ -1433,6 +1433,7 @@ class AwardNomination(models.Model):
     name = models.CharField('Название', max_length=100)
     code = models.CharField('Код', max_length=50, unique=True, choices=Code.choices)
     order = models.IntegerField('Порядок отображения', default=0)
+    logo = models.ImageField('Логотип', upload_to='award_nominations/', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -1715,7 +1716,7 @@ class AwardVoter(models.Model):
         return f'{team_str} - {self.voter.nickname} ({self.campaign.season.title}, {self.league.title})'
 
     class Meta:
-        unique_together = [('campaign', 'league', 'team', 'voter')]
+        unique_together = [('campaign', 'league', 'voter')]
         verbose_name = 'Голосующий'
         verbose_name_plural = 'Голосующие'
 

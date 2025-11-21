@@ -1190,7 +1190,7 @@ class TournamentWinnerAdmin(UnfoldModelAdmin):
 
 @admin.register(AwardNomination)
 class AwardNominationAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'name', 'code', 'order')
+    list_display = ('name', 'code', 'order')
     list_editable = ('order',)
     ordering = ('order',)
     search_fields = ('name', 'code')
@@ -1232,7 +1232,7 @@ class AwardVoteInline(UnfoldStackedInline):
 
 @admin.register(AwardCampaign)
 class AwardCampaignAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'season', 'is_active', 'voting_start_date', 'voting_end_date', 'results_public_date')
+    list_display = ('season', 'is_active', 'voting_start_date', 'voting_end_date', 'results_public_date')
     list_filter = (
         'is_active',
         ('season', RelatedDropdownFilter),
