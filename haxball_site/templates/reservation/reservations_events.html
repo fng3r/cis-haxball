@@ -19,7 +19,7 @@
           <a href="{{ reservation.author.user_profile.get_absolute_url }}">
             <div class="tw:avatar">
               {% thumbnail reservation.author.user_profile.avatar "50x50" crop="center" as avatar %}
-                {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=reservation.author.username frame=reservation.author.user_profile.avatar_frame %}
+                {% include 'core/include/avatar_with_frame.html' with user=reservation.author avatar_url=avatar.url size=50 alt=reservation.author.username frame=reservation.author.user_profile.avatar_frame %}
               {% endthumbnail %}
             </div>
           </a>
@@ -35,7 +35,7 @@
                 <a href="{{ reservation.author.user_profile.get_absolute_url }}"
                    class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ reservation.author.username }}</a>
 
-                {% include 'core/include/user_tag.html' with profile=reservation.author.user_profile %}
+                {% include 'core/include/user_tag.html' with user=reservation.author %}
                 {% include 'core/comment/user-teams.html' with user=reservation.author %}
               </div>
             </div>
@@ -88,7 +88,7 @@
             <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}">
               <div class="tw:avatar">
                 {% thumbnail reservation.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                  {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=reservation.cancelled_by.username frame=reservation.cancelled_by.user_profile.avatar_frame %}
+                  {% include 'core/include/avatar_with_frame.html' with user=reservation.cancelled_by avatar_url=avatar.url size=50 alt=reservation.cancelled_by.username frame=reservation.cancelled_by.user_profile.avatar_frame %}
                 {% endthumbnail %}
               </div>
             </a>
@@ -105,7 +105,7 @@
                   <a href="{{ reservation.cancelled_by.user_profile.get_absolute_url }}"
                      class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ reservation.cancelled_by.username }}</a>
 
-                  {% include 'core/include/user_tag.html' with profile=reservation.cancelled_by.user_profile %}
+                  {% include 'core/include/user_tag.html' with user=reservation.cancelled_by %}
                   {% include 'core/comment/user-teams.html' with user=reservation.cancelled_by %}
                 </div>
               </div>

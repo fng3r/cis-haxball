@@ -1,11 +1,12 @@
+{% load user_tags %}
+
 {% comment %}
   Reusable user tag with optional ring based on frame or superuser.
   Expected params:
-  - profile: user profile (required)
+  - user: User (required)
+  - size: str (optional, default 'xs')  
 {% endcomment %}
 
-{% if user.is_superuser or active_subscription %}
-  {% if profile.tag %}
-    <span class="tw:badge tw:badge-soft tw:font-semibold tw:cursor-default {% if size == 'sm' %}tw:badge-sm{% else %}tw:badge-xs{% endif %}">{{ profile.tag }}</span>
-  {% endif %}
+{% if user.user_profile.tag and user|can_use_premium_features %}
+  <span class="tw:badge tw:badge-soft tw:font-semibold tw:cursor-default {% if size == 'sm' %}tw:badge-sm{% else %}tw:badge-xs{% endif %}">{{ user.user_profile.tag }}</span>
 {% endif %}
