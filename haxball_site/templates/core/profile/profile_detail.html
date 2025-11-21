@@ -58,7 +58,7 @@
                                 <img src="{{ icon.image.url }}" class="tw:size-6 tw:mr-0" title="{{ icon.description }}">
                               {% endfor %}
                               <span class="tw:break-words" title="{{ profile.name.username }}">{{ profile.name.username|truncatechars:50 }}</span>
-                              {% include 'core/include/user_tag.html' with profile=profile %}
+                              {% include 'core/include/user_tag.html' with user=profile.name size='sm' %}
                             </span>
                             {% if previous_nicknames.count > 0 %}
                               <div class="tw:relative">

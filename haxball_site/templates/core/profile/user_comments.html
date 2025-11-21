@@ -8,7 +8,7 @@
       <a href="{{ comment.author.user_profile.get_absolute_url }}">
         <div class="tw:avatar {% if comment.author|is_online:users_online %}tw:avatar-online{% else %}tw:avatar-offline{% endif %}">
           {% thumbnail comment.author.user_profile.avatar "50x50" crop="center" as avatar %}
-            {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=comment.author.username frame=comment.author.user_profile.avatar_frame %}
+            {% include 'core/include/avatar_with_frame.html' with user=comment.author avatar_url=avatar.url size=50 alt=comment.author.username frame=comment.author.user_profile.avatar_frame %}
           {% endthumbnail %}
         </div>
       </a>
@@ -31,7 +31,7 @@
               <a href="{{ comment.author.user_profile.get_absolute_url }}"
                  class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.author.username }}</a>
 
-              {% include 'core/include/user_tag.html' with profile=comment.author.user_profile %}
+              {% include 'core/include/user_tag.html' with user=comment.author %}
             </div>
           </div>
 
@@ -50,7 +50,7 @@
                 <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
                    class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
 
-                {% include 'core/include/user_tag.html' with profile=comment.parent.author.user_profile %}
+                {% include 'core/include/user_tag.html' with user=comment.parent.author %}
               </div>
             </div>
           {% endif %}

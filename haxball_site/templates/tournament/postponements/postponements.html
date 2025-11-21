@@ -141,7 +141,7 @@
                   <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}">
                     <div class="tw:avatar">
                       {% thumbnail postponement.taken_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                        {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.taken_by.username frame=postponement.taken_by.user_profile.avatar_frame %}
+                        {% include 'core/include/avatar_with_frame.html' with user=postponement.taken_by avatar_url=avatar.url size=50 alt=postponement.taken_by.username frame=postponement.taken_by.user_profile.avatar_frame %}
                       {% endthumbnail %}
                     </div>
                   </a>
@@ -157,7 +157,7 @@
                         <a href="{{ postponement.taken_by.user_profile.get_absolute_url }}"
                            class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ postponement.taken_by.username }}</a>
 
-                        {% include 'core/include/user_tag.html' with profile=postponement.taken_by.user_profile %}
+                        {% include 'core/include/user_tag.html' with user=postponement.taken_by %}
                         {% include 'core/comment/user-teams.html' with user=postponement.taken_by %}
                       </div>
                     </div>
@@ -211,7 +211,7 @@
                     <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}">
                       <div class="tw:avatar">
                         {% thumbnail postponement.cancelled_by.user_profile.avatar "50x50" crop="center" as avatar %}
-                          {% include 'core/include/avatar_with_frame.html' with avatar_url=avatar.url size=50 alt=postponement.cancelled_by.username frame=postponement.cancelled_by.user_profile.avatar_frame %}
+                          {% include 'core/include/avatar_with_frame.html' with user=postponement.cancelled_by avatar_url=avatar.url size=50 alt=postponement.cancelled_by.username frame=postponement.cancelled_by.user_profile.avatar_frame %}
                         {% endthumbnail %}
                       </div>
                     </a>
@@ -228,7 +228,7 @@
                           <a href="{{ postponement.cancelled_by.user_profile.get_absolute_url }}"
                              class="tw:font-semibold tw:link tw:link-hover tw:link-primary">{{ postponement.cancelled_by.username }}</a>
 
-                          {% include 'core/include/user_tag.html' with profile=postponement.cancelled_by.user_profile %}
+                          {% include 'core/include/user_tag.html' with user=postponement.cancelled_by %}
                           {% include 'core/comment/user-teams.html' with user=postponement.cancelled_by %}
                         </div>
                       </div>
