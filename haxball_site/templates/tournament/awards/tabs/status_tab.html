@@ -45,15 +45,17 @@
                     <td>{{ voter.voter.nickname }}</td>
                     <td class="tw:text-center">
                       {% if submission %}
-                        <span class="tw:badge tw:badge-success">
+                        <button type="button"
+                                class="tw:badge tw:badge-success tw:cursor-pointer"
+                                onclick="document.getElementById('votes-modal-{{ submission.id }}').showModal()">
                           <i class="fa fa-check"></i> Подано
-                        </span>
+                        </button>
                       {% elif campaign.is_voting_ended %}
-                        <span class="tw:badge tw:badge-error">
+                        <span class="tw:badge tw:badge-error tw:cursor-default">
                           <i class="fa fa-times"></i> Не подано
                         </span>
                       {% else %}
-                        <span class="tw:badge tw:badge-warning">
+                        <span class="tw:badge tw:badge-warning tw:cursor-default">
                           <i class="fa fa-clock-o"></i> Не подано
                         </span>
                       {% endif %}
@@ -77,5 +79,52 @@
         </div>
       </div>
     </div>
+
+    {% for voter in voters %}
+      {% with submission=submissions_by_voter|get_or_default:voter.voter.id %}
+        {% if submission %}
+          <dialog id="votes-modal-{{ submission.id }}" class="tw:modal">
+            <div class="tw:modal-box tw:max-w-5xl">
+              <h3 class="tw:font-bold tw:text-lg tw:mb-4!">
+                Голосование — {{ voter.voter.nickname }} ({{ voter.team.title|default:"Независимый представитель" }})
+              </h3>
+
+              {% if campaign.is_results_public or user.is_superuser %}
+                <div class="tw:space-y-4">
+                  {% for award in awards %}
+                    {% with submission_votes=votes_by_submission|get:submission.id|get:award.id %}
+                      <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
+                        <div class="tw:card-body tw:p-4">
+                          <h4 class="tw:text-xl tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+                            {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+                            {{ award.nomination.name }}
+                          </h4>
+
+                          <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
+                            {% with vote1=submission_votes|get:1 vote2=submission_votes|get:2 vote3=submission_votes|get:3 %}
+                              {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote1 place=1 user_team=voter.team %}
+                              {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote2 place=2 user_team=voter.team %}
+                              {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote3 place=3 user_team=voter.team %}
+                            {% endwith %}
+                          </div>
+                        </div>
+                      </div>
+                    {% endwith %}
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="tw:alert tw:alert-info">
+                  <i class="fa fa-lock"></i>
+                  <span>Просмотр голосов будет доступен после публикации результатов ({{ campaign.results_public_date|date:"d.m.Y в H:i" }})</span>
+                </div>
+              {% endif %}
+            </div>
+            <form method="dialog" class="tw:modal-backdrop">
+              <button>close</button>
+            </form>
+          </dialog>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
   {% endif %}
 </div>

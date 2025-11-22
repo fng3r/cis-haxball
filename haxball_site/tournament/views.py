@@ -2397,7 +2397,7 @@ def awards_main(request, slug):
     awards = (
         Award.objects.filter(league=league)
         .select_related('nomination', 'league', 'campaign')
-        .prefetch_related('nominees__player')
+        .prefetch_related('nominees__player', 'nominees__team')
         .order_by('nomination__order')
     )
 
@@ -2443,7 +2443,13 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
         if voter_record:
             submission = AwardSubmission.objects.filter(voter_record=voter_record).first()
             if submission:
-                for vote in submission.votes.all():
+                votes = submission.votes.select_related(
+                    'submission',
+                    'award__nomination',
+                    'nominee__player__name__user_profile',
+                    'nominee__team',
+                ).order_by('award__nomination__order', 'place')
+                for vote in votes:
                     if vote.award.id not in votes_by_award:
                         votes_by_award[vote.award.id] = {}
                     votes_by_award[vote.award.id][vote.place] = vote
@@ -2558,6 +2564,7 @@ def status_tab(request, slug):
     awards = Award.objects.filter(league=league).select_related('nomination', 'campaign').order_by('nomination__order')
 
     submissions_by_voter = {}
+    votes_by_submission = {}
     if awards.exists():
         voters = (
             AwardVoter.objects.filter(campaign=campaign, league=league)
@@ -2568,6 +2575,26 @@ def status_tab(request, slug):
             'voter_record', 'voter_record__voter', 'voter_record__team'
         )
         submissions_by_voter = {submission.voter_record.voter_id: submission for submission in submissions}
+
+        if submissions.exists():
+            votes = (
+                AwardVote.objects.filter(submission__in=submissions)
+                .select_related(
+                    'submission',
+                    'award__nomination',
+                    'nominee__player__name__user_profile',
+                    'nominee__team',
+                )
+                .order_by('award__nomination__order', 'place')
+            )
+            for vote in votes:
+                submission_id = vote.submission.id
+                if submission_id not in votes_by_submission:
+                    votes_by_submission[submission_id] = {}
+                award_id = vote.award.id
+                if award_id not in votes_by_submission[submission_id]:
+                    votes_by_submission[submission_id][award_id] = {}
+                votes_by_submission[submission_id][award_id][vote.place] = vote
     else:
         voters = AwardVoter.objects.none()
 
@@ -2577,6 +2604,7 @@ def status_tab(request, slug):
         'awards': awards,
         'voters': voters,
         'submissions_by_voter': submissions_by_voter,
+        'votes_by_submission': votes_by_submission,
     }
 
     return render(request, 'tournament/awards/tabs/status_tab.html', context)
