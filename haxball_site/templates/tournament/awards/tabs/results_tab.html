@@ -8,10 +8,12 @@
       <span>Для этого турнира пока нет наград</span>
     </div>
   {% else %}
-    {% if not results_public and not user.is_superuser %}
-      <div class="tw:alert tw:alert-info">
-        <i class="fa fa-lock"></i>
-        <span>Результаты будут опубликованы {{ campaign.results_public_date|date:"d.m.Y в H:i" }}</span>
+    {% if not campaign.is_results_public and not user.is_superuser %}
+      <div class="tw:my-10 tw:flex tw:justify-center">
+        <div class="tw:p-8 tw:max-w-sm tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-lg tw:text-center tw:text-base-content/60">
+          <i class="fa fa-lock tw:text-2xl!"></i>
+          <span>Результаты будут доступны по наступлении даты публикации</span>
+        </div>
       </div>
     {% else %}
       {% for award in awards %}

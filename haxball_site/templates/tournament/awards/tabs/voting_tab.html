@@ -42,59 +42,60 @@
       <span>Для этого турнира пока нет наград</span>
     </div>
   {% else %}
-    {% if now < campaign.voting_start_date %}
-      <div class="tw:alert tw:alert-info tw:mb-4">
-        <i class="fa fa-clock-o"></i>
-        <span>Голосование начнется {{ campaign.voting_start_date|date:"d.m.Y в H:i" }}</span>
-      </div>
-    {% elif now > campaign.voting_end_date %}
-      <div class="tw:alert tw:alert-warning tw:mb-4">
-        <i class="fa fa-exclamation-triangle"></i>
-        <span>Период голосования завершен</span>
-      </div>
-    {% else %}
-      <div id="voting-display-mode">
-        {% include 'tournament/awards/tabs/partials/voting_rules.html' %}
+    <div id="voting-display-mode">
+      {% include 'tournament/awards/tabs/partials/voting_rules.html' %}
 
-        {% if is_eligible_to_vote %}
-          {% if submission %}
-            <div class="tw:text-3xl tw:font-semibold tw:mb-2.5!">Ваши голоса</div>
-            <div class="tw:space-y-4 tw:mb-4">
-              {% for award in awards %}
-                <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
-                  <div class="tw:card-body tw:p-4">
-                    <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
-                      {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
-                      {{ award.nomination.name }}
-                    </h3>
+      {% if campaign.is_voting_ended %}
+        <div class="tw:alert tw:alert-warning tw:mb-4">
+          <span>Период голосования завершен</span>
+        </div>
+      {% elif not campaign.is_voting_active %}
+        <div class="tw:alert tw:alert-info tw:mb-4">
+          <i class="fa fa-clock-o"></i>
+          <span>Голосование начнется {{ campaign.voting_start_date|date:"d.m.Y в H:i" }}</span>
+        </div>
+      {% endif %}
 
-                    <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
-                      {% with award_votes=votes_by_award|get:award.id %}
-                        {% with vote1=award_votes|get:1 vote2=award_votes|get:2 vote3=award_votes|get:3 %}
-                          {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote1 place=1 user_team=user_team %}
-                          {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote2 place=2 user_team=user_team %}
-                          {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote3 place=3 user_team=user_team %}
-                        {% endwith %}
+      {% if is_eligible_to_vote %}
+        {% if submission %}
+          <div class="tw:text-3xl tw:font-semibold tw:mb-2.5!">Ваши голоса</div>
+          <div class="tw:space-y-4 tw:mb-4">
+            {% for award in awards %}
+              <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
+                <div class="tw:card-body tw:p-4">
+                  <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+                    {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+                    {{ award.nomination.name }}
+                  </h3>
+
+                  <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
+                    {% with award_votes=votes_by_award|get:award.id %}
+                      {% with vote1=award_votes|get:1 vote2=award_votes|get:2 vote3=award_votes|get:3 %}
+                        {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote1 place=1 user_team=user_team %}
+                        {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote2 place=2 user_team=user_team %}
+                        {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote3 place=3 user_team=user_team %}
                       {% endwith %}
-                    </div>
+                    {% endwith %}
                   </div>
                 </div>
-              {% endfor %}
-            </div>
-
-            {% if allow_editing %}
-              <div class="tw:flex tw:justify-end">
-                <button type="button"
-                        class="tw:btn tw:btn-primary"
-                        hx-get="{% url 'tournament:award_voting_edit' slug=league.slug %}"
-                        hx-target="#voting-tab-container"
-                        hx-swap="outerHTML">
-                  <i class="fa fa-edit"></i>
-                  Изменить голоса
-                </button>
               </div>
-            {% endif %}
-          {% else %}
+            {% endfor %}
+          </div>
+
+          {% if allow_editing and campaign.is_voting_active %}
+            <div class="tw:flex tw:justify-end">
+              <button type="button"
+                      class="tw:btn tw:btn-primary"
+                      hx-get="{% url 'tournament:award_voting_edit' slug=league.slug %}"
+                      hx-target="#voting-tab-container"
+                      hx-swap="outerHTML">
+                <i class="fa fa-edit"></i>
+                Изменить голоса
+              </button>
+            </div>
+          {% endif %}
+        {% else %}
+          {% if campaign.is_voting_active %}
             <div class="tw:my-10 tw:flex tw:flex-col tw:justify-center tw:max-w-sm tw:mx-auto">
               <div class="tw:text-center tw:text-lg tw:text-base-content/90 tw:font-semibold tw:mb-3">
                 <span>Вы еще не приняли участие в голосовании</span>
@@ -108,21 +109,21 @@
                 Начать голосование
               </button>
             </div>
-
-            {% with awards=awards %}
-              {% partial nominations-list %}
-            {% endwith %}
           {% endif %}
-        {% else %}
-          <div class="tw:space-y-6">
-            <div class="tw:mb-4 tw:alert tw:alert-warning">Вы не являетесь участником голосования, но можете ознакомиться с номинантами</div>
 
-            {% with awards=awards %}
-              {% partial nominations-list %}
-            {% endwith %}
-          </div>
+          {% with awards=awards %}
+            {% partial nominations-list %}
+          {% endwith %}
         {% endif %}
-      </div>
-    {% endif %}
+      {% else %}
+        <div class="tw:space-y-6">
+          <div class="tw:mb-4 tw:alert tw:alert-warning">Вы не являетесь участником голосования, но можете ознакомиться с номинантами</div>
+
+          {% with awards=awards %}
+            {% partial nominations-list %}
+          {% endwith %}
+        </div>
+      {% endif %}
+    </div>
   {% endif %}
 </div>

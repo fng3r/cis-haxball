@@ -1232,11 +1232,8 @@ class AwardVoteInline(UnfoldStackedInline):
 
 @admin.register(AwardCampaign)
 class AwardCampaignAdmin(UnfoldModelAdmin):
-    list_display = ('season', 'is_active', 'voting_start_date', 'voting_end_date', 'results_public_date')
-    list_filter = (
-        'is_active',
-        ('season', RelatedDropdownFilter),
-    )
+    list_display = ('season', 'voting_start_date', 'voting_end_date', 'results_public_date')
+    list_filter = (('season', RelatedDropdownFilter),)
     list_filter_submit = True
     autocomplete_fields = ('season',)
     search_fields = ('season__title',)

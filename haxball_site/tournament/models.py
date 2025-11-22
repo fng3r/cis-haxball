@@ -1456,7 +1456,24 @@ class AwardCampaign(models.Model):
     voting_start_date = models.DateTimeField('Дата начала голосования')
     voting_end_date = models.DateTimeField('Дата окончания голосования')
     results_public_date = models.DateTimeField('Дата публикации результатов')
-    is_active = models.BooleanField('Активна', default=True)
+
+    @property
+    def is_voting_active(self):
+        """Check if voting period is currently active"""
+        now = timezone.now()
+        return self.voting_start_date <= now <= self.voting_end_date
+
+    @property
+    def is_voting_ended(self):
+        """Check if voting period has ended"""
+        now = timezone.now()
+        return self.voting_end_date < now
+
+    @property
+    def is_results_public(self):
+        """Check if results are currently public"""
+        now = timezone.now()
+        return self.results_public_date <= now
 
     def __str__(self):
         return f'Награды сезона - {self.season.title}'

@@ -2392,12 +2392,8 @@ class CompareTeamsView(View):
 def awards_main(request, slug):
     """Main awards page with tabs for a specific league"""
     league = get_object_or_404(League, slug=slug)
-    # Get campaign through season
-    campaign = None
-    if league.championship:
-        campaign = league.championship.award_campaigns.filter(is_active=True).first()
+    campaign = get_object_or_404(AwardCampaign, season=league.championship)
 
-    # Get all awards for this league
     awards = (
         Award.objects.filter(league=league)
         .select_related('nomination', 'league', 'campaign')
@@ -2405,7 +2401,6 @@ def awards_main(request, slug):
         .order_by('nomination__order')
     )
 
-    # Get voting tab HTML
     voting_tab_html = voting_tab(request, league=league, awards=awards, initial_context=True)
 
     context = {
@@ -2467,7 +2462,6 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
         'votes_by_award': votes_by_award,
         'is_eligible_to_vote': is_eligible_to_vote,
         'allow_editing': allow_editing,
-        'now': timezone.now(),
     }
 
     if initial_context:
@@ -2479,6 +2473,7 @@ def voting_tab(request, slug=None, league=None, awards=None, initial_context=Fal
 def results_tab(request, slug):
     """Tab for viewing award results"""
     league = get_object_or_404(League, slug=slug)
+    campaign = get_object_or_404(AwardCampaign, season=league.championship)
     awards = (
         Award.objects.filter(league=league)
         .select_related('nomination', 'campaign')
@@ -2486,15 +2481,7 @@ def results_tab(request, slug):
         .order_by('nomination__order')
     )
 
-    now = timezone.now()
     results_data = {}
-    campaign = None
-    results_public = False
-
-    if awards.exists():
-        first_award = awards.first()
-        campaign = first_award.campaign
-        results_public = now >= campaign.results_public_date
 
     for award in awards:
         results = (
@@ -2559,8 +2546,6 @@ def results_tab(request, slug):
         'awards': awards,
         'results_data': results_data,
         'campaign': campaign,
-        'results_public': results_public,
-        'now': now,
     }
 
     return render(request, 'tournament/awards/tabs/results_tab.html', context)
@@ -2569,18 +2554,11 @@ def results_tab(request, slug):
 def status_tab(request, slug):
     """Tab for viewing voting status"""
     league = get_object_or_404(League, slug=slug)
+    campaign = get_object_or_404(AwardCampaign, season=league.championship)
     awards = Award.objects.filter(league=league).select_related('nomination', 'campaign').order_by('nomination__order')
 
-    now = timezone.now()
-
-    first_award = awards.first() if awards else None
-    can_vote = False
-    campaign_ended = False
     submissions_by_voter = {}
-    if first_award:
-        campaign = first_award.campaign
-        can_vote = now >= campaign.voting_start_date and now <= campaign.voting_end_date
-        campaign_ended = now > campaign.voting_end_date
+    if awards.exists():
         voters = (
             AwardVoter.objects.filter(campaign=campaign, league=league)
             .select_related('team', 'voter')
@@ -2595,13 +2573,10 @@ def status_tab(request, slug):
 
     context = {
         'league': league,
+        'campaign': campaign,
         'awards': awards,
         'voters': voters,
         'submissions_by_voter': submissions_by_voter,
-        'can_vote': can_vote,
-        'campaign_ended': campaign_ended,
-        'campaign': first_award.campaign if first_award else None,
-        'now': now,
     }
 
     return render(request, 'tournament/awards/tabs/status_tab.html', context)
@@ -2655,7 +2630,6 @@ def award_voting_edit(request, slug):
         'user_player': user_player,
         'user_team': user_team,
         'allow_editing': allow_editing,
-        'now': timezone.now(),
     }
 
     return render(request, 'tournament/awards/tabs/voting_edit.html', context)
@@ -2709,51 +2683,5 @@ class AwardVotingView(View):
             'form': form,
             'user_player': user_player,
             'user_team': user_team,
-            'now': timezone.now(),
         }
         return render(request, 'tournament/awards/tabs/voting_edit.html', context)
-
-
-class AwardResultsView(DetailView):
-    """View for displaying award results"""
-
-    model = Award
-    template_name = 'tournament/awards/award_results.html'
-    context_object_name = 'award'
-    pk_url_kwarg = 'award_id'
-
-    def get_queryset(self):
-        return Award.objects.select_related('nomination', 'league', 'campaign').prefetch_related(
-            'results__nominee__player',
-            'nominees__player',
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        award = self.object
-        now = timezone.now()
-
-        results = (
-            AwardResult.objects.filter(award=award)
-            .select_related('nominee__player', 'nominee__team')
-            .order_by('final_rank', '-total_points')
-        )
-
-        voters = (
-            AwardVoter.objects.filter(campaign=award.campaign, league=award.league)
-            .select_related('team', 'voter')
-            .order_by('team__title', 'voter__nickname')
-        )
-
-        results_public = now >= award.results_public_date
-
-        context.update(
-            {
-                'results': results,
-                'voters': voters,
-                'results_public': results_public,
-                'now': now,
-            }
-        )
-
-        return context

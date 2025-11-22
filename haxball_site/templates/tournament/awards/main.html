@@ -19,12 +19,12 @@
             <div class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-calendar-check-o tw:text-primary"></i>
               <span class="tw:font-semibold">Голосование:</span>
-              <span>{{ campaign.voting_start_date|date:"d.m.Y H:i" }} — {{ campaign.voting_end_date|date:"d.m.Y H:i" }}</span>
+              <span>{{ campaign.voting_start_date|date:"d.m.y H:i" }} — {{ campaign.voting_end_date|date:"d.m.y H:i" }}</span>
             </div>
             <div class="tw:flex tw:items-center tw:gap-2">
               <i class="fa fa-trophy tw:text-warning"></i>
               <span class="tw:font-semibold">Публикация результатов:</span>
-              <span>{{ campaign.results_public_date|date:"d.m.Y H:i" }}</span>
+              <span>{{ campaign.results_public_date|date:"d.m.y H:i" }}</span>
             </div>
           </div>
         </div>
