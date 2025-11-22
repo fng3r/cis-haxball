@@ -4,6 +4,35 @@
 {% load utils %}
 {% load thumbnail %}
 
+{% partialdef nominations-list %}
+  {% for award in awards %}
+    <div class="tw:not-last:mb-6">
+      <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+        {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+        {{ award.nomination.name }}
+      </h4>
+
+      {% if award.nominees.exists %}
+        <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3">
+          {% for nominee in award.nominees.all %}
+            <div class="tw:flex tw:items-center tw:gap-3 tw:p-3 tw:bg-base-200 tw:rounded tw:border tw:border-base-300">
+              <div class="tw:flex-1 tw:flex tw:flex-col tw:gap-0.5">
+                <div class="tw:text-lg tw:font-semibold">{{ nominee.player.nickname }}</div>
+                <div class="tw:flex tw:items-center tw:gap-1">
+                  <img src="{{ nominee.team.logo.url }}" alt="{{ nominee.team.title }}" class="tw:size-5 tw:object-contain">
+                  <div class="tw:text-base tw:text-base-content/70">{{ nominee.team.title }}</div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="tw:text-base-content/60 tw:text-sm">Номинанты еще не определены</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endpartialdef %}
+
 <div id="voting-tab-container" class="tw:space-y-2">
   {% include 'alerts.html' %}
 
@@ -79,37 +108,18 @@
                 Начать голосование
               </button>
             </div>
+
+            {% with awards=awards %}
+              {% partial nominations-list %}
+            {% endwith %}
           {% endif %}
         {% else %}
           <div class="tw:space-y-6">
             <div class="tw:mb-4 tw:alert tw:alert-warning">Вы не являетесь участником голосования, но можете ознакомиться с номинантами</div>
 
-            {% for award in awards %}
-              <div class="tw:not-last:mb-6">
-                <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
-                  {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
-                  {{ award.nomination.name }}
-                </h4>
-
-                {% if award.nominees.exists %}
-                  <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3">
-                    {% for nominee in award.nominees.all %}
-                      <div class="tw:flex tw:items-center tw:gap-3 tw:p-3 tw:bg-base-200 tw:rounded tw:border tw:border-base-300">
-                        <div class="tw:flex-1 tw:flex tw:flex-col tw:gap-0.5">
-                          <div class="tw:text-lg tw:font-semibold">{{ nominee.player.nickname }}</div>
-                          <div class="tw:flex tw:items-center tw:gap-1">
-                            <img src="{{ nominee.team.logo.url }}" alt="{{ nominee.team.title }}" class="tw:size-5 tw:object-contain">
-                            <div class="tw:text-base tw:text-base-content/70">{{ nominee.team.title }}</div>
-                          </div>
-                        </div>
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% else %}
-                  <div class="tw:text-base-content/60 tw:text-sm">Номинанты еще не определены</div>
-                {% endif %}
-              </div>
-            {% endfor %}
+            {% with awards=awards %}
+              {% partial nominations-list %}
+            {% endwith %}
           </div>
         {% endif %}
       </div>
