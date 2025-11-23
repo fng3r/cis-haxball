@@ -11,16 +11,16 @@
     <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:border tw:border-base-300">
       <div class="tw:card-body">
         <h3 class="tw:text-2xl tw:font-bold tw:mb-4 tw:flex tw:items-center tw:gap-2">
-          <i class="fa fa-list-ul tw:text-primary"></i>
+          <i class="tw:mt-1 fa fa-list-ul tw:text-primary"></i>
           Статус голосования
 
           <div class="tw:flex tw:items-center tw:gap-2 tw:mt-1">
             {% if campaign.is_voting_active %}
-              <span class="tw:badge tw:badge-success">
+              <span class="tw:mt-1 tw:badge tw:badge-sm tw:badge-success">
                 <i class="fa fa-check-circle tw:mt-0.5"></i> Голосование открыто
               </span>
             {% else %}
-              <span class="tw:badge tw:badge-neutral">
+              <span class="tw:mt-1 tw:badge tw:badge-sm tw:badge-neutral">
                 <i class="fa fa-times-circle tw:mt-0.5"></i> Голосование закрыто
               </span>
             {% endif %}
