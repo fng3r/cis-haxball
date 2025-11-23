@@ -232,6 +232,7 @@ SHOW_USER_TEAM_ICONS = config('APP_SHOW_USER_TEAM_ICONS', cast=bool, default=Tru
 
 SHOW_PLAYERS_RATING_BANNER = config('APP_SHOW_PLAYERS_RATING_BANNER', cast=bool, default=False)
 SHOW_FREE_AGENTS_BANNER = config('APP_SHOW_FREE_AGENTS_BANNER', cast=bool, default=False)
+SHOW_AWARDS_BANNER = config('APP_SHOW_AWARDS_BANNER', cast=bool, default=False)
 
 ALLOW_AWARDS_VOTE_EDITING = config('APP_ALLOW_AWARDS_VOTE_EDITING', cast=bool, default=False)
 

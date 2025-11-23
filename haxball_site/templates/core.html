@@ -22,6 +22,10 @@
 
       {% include 'core/include/banners/tg_banner.html' %}
 
+      {% if project_settings.SHOW_AWARDS_BANNER %}
+        {% include 'core/include/banners/awards_banner.html' %}
+      {% endif %}
+
       {% include 'core/include/banners/activities_banner.html' %}
 
       {% if project_settings.SHOW_FREE_AGENTS_BANNER %}
