@@ -2571,7 +2571,7 @@ def status_tab(request, slug):
             .select_related('team', 'voter')
             .order_by('team__title', 'voter__nickname')
         )
-        submissions = AwardSubmission.objects.filter(campaign=campaign).select_related(
+        submissions = AwardSubmission.objects.filter(campaign=campaign, league=league).select_related(
             'voter_record', 'voter_record__voter', 'voter_record__team'
         )
         submissions_by_voter = {submission.voter_record.voter_id: submission for submission in submissions}
