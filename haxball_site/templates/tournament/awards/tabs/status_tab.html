@@ -84,7 +84,7 @@
       {% with submission=submissions_by_voter|get_or_default:voter.voter.id %}
         {% if submission %}
           <dialog id="votes-modal-{{ submission.id }}" class="tw:modal">
-            <div class="tw:modal-box tw:max-w-5xl">
+            <div class="tw:modal-box tw:max-w-5xl tw:max-h-[90vh]">
               <h3 class="tw:font-bold tw:text-lg tw:mb-4!">
                 Голосование — {{ voter.voter.nickname }} ({{ voter.team.title|default:"Независимый представитель" }})
               </h3>

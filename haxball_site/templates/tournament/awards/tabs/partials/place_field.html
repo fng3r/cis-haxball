@@ -39,7 +39,7 @@
 </div>
 
 <dialog id="modal-{{ field_name }}" class="tw:modal">
-  <div class="tw:modal-box tw:max-w-4xl">
+  <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
     <h3 class="tw:font-bold tw:text-lg tw:mb-4!">{{ award.nomination.name }} ({{ place }} место)</h3>
     <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:gap-3 tw:max-h-[60vh] tw:overflow-y-auto">
       {% for nominee in award.nominees.all %}
