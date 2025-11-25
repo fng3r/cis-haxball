@@ -71,9 +71,9 @@
                   <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
                     {% with award_votes=votes_by_award|get:award.id %}
                       {% with vote1=award_votes|get:1 vote2=award_votes|get:2 vote3=award_votes|get:3 %}
-                        {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote1 place=1 user_team=user_team %}
-                        {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote2 place=2 user_team=user_team %}
-                        {% include 'tournament/awards/tabs/partials/vote_display.html' with vote=vote3 place=3 user_team=user_team %}
+                        {% include 'tournament/awards/tabs/partials/nominee_display.html' with nominee=vote1.nominee rank=vote1.place points=vote1.points %}
+                        {% include 'tournament/awards/tabs/partials/nominee_display.html' with nominee=vote2.nominee rank=vote2.place points=vote2.points %}
+                        {% include 'tournament/awards/tabs/partials/nominee_display.html' with nominee=vote3.nominee rank=vote3.place points=vote3.points %}
                       {% endwith %}
                     {% endwith %}
                   </div>

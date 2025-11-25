@@ -2487,13 +2487,13 @@ def results_tab(request, slug):
         .order_by('nomination__order')
     )
 
-    results_data = {}
+    results_by_award = {}
 
     for award in awards:
         results = (
             AwardResult.objects.filter(award=award)
-            .select_related('nominee__player', 'nominee__team')
-            .order_by('final_rank', '-total_points')
+            .select_related('nominee__player__name__user_profile', 'nominee__team')
+            .order_by('final_rank')
         )
 
         votes = (
@@ -2540,7 +2540,7 @@ def results_tab(request, slug):
             if voter.voter_id not in voters_with_votes
         ]
 
-        results_data[award.id] = {
+        results_by_award[award.id] = {
             'award': award,
             'results': results,
             'votes_by_submission': votes_by_submission,
@@ -2550,7 +2550,7 @@ def results_tab(request, slug):
     context = {
         'league': league,
         'awards': awards,
-        'results_data': results_data,
+        'results_by_award': results_by_award,
         'campaign': campaign,
     }
 
