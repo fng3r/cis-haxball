@@ -38,7 +38,7 @@
         </div>
       </div>
 
-      <div class="tw:space-y-4" x-show="selectedMode === 'simple'" x-cloak>
+      <div class="tw:space-y-4" x-show="selectedMode === 'simple'" x-cloak x-transition.duration.200ms>
         {% for award in awards %}
           {% with award_results=results_by_award|get_item:award.id %}
             <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
@@ -60,7 +60,7 @@
         {% endfor %}
       </div>
 
-      <div class="tw:space-y-6" x-show="selectedMode === 'detailed'">
+      <div class="tw:space-y-6" x-show="selectedMode === 'detailed'" x-cloak x-transition.duration.200ms>
         {% for award in awards %}
           {% with award_results=results_by_award|get_item:award.id %}
             <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:border tw:border-base-300">
