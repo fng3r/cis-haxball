@@ -117,7 +117,9 @@
         {% endif %}
       {% else %}
         <div class="tw:space-y-6">
-          <div class="tw:mb-4 tw:alert tw:alert-warning">Вы не являетесь участником голосования, но можете ознакомиться с номинантами</div>
+          {% if not campaign.is_voting_ended %}
+            <div class="tw:mb-4 tw:alert tw:alert-warning">Вы не являетесь участником голосования, но можете ознакомиться с номинантами</div>
+          {% endif %}
 
           {% with awards=awards %}
             {% partial nominations-list %}
