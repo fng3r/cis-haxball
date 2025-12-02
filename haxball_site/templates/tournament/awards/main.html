@@ -1,0 +1,86 @@
+{% extends "core.html" %}
+
+{% load static %}
+
+{% block title %}Награды — {{ league.title }} — CIS-HAXBALL{% endblock %}
+
+{% block main_content %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+    <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-gray-300">
+      <div class="tw:card-title tw:py-1">
+        <h3 class="tw:text-center">Награды — {{ league.title }}</h3>
+      </div>
+    </div>
+
+    <div class="tw:card-body tw:p-0">
+      {% if campaign %}
+        <div class="tw:px-4 tw:py-2 tw:bg-base-200 tw:border-b tw:border-gray-200">
+          <div class="tw:flex tw:flex-wrap tw:gap-4 tw:text-sm">
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <i class="fa fa-calendar-check-o tw:text-primary"></i>
+              <span class="tw:font-semibold">Голосование:</span>
+              <span>{{ campaign.voting_start_date|date:"d.m.y H:i" }} — {{ campaign.voting_end_date|date:"d.m.y H:i" }}</span>
+            </div>
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <i class="fa fa-trophy tw:text-warning"></i>
+              <span class="tw:font-semibold">Публикация результатов:</span>
+              <span>{{ campaign.results_public_date|date:"d.m.y H:i" }}</span>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% partialdef awards-tabs inline=True %}
+        <div id="awards-tabs"
+             class="tw:tabs tw:tabs-border tw:[:has(#awards-tabs.htmx-request)_&]:opacity-50 tw:[:has(#awards-tabs.htmx-request)_&]:transition-opacity"
+             role="tablist">
+          <label class="tw:tab" role="tab">
+            <input type="radio" name="awards-tabs" checked />
+            <span class="tw:flex tw:items-center tw:gap-2">
+              <i class="fa fa-check-square-o"></i>
+              Голосование
+            </span>
+          </label>
+          <div id="voting-content" class="tw:tab-content tw:p-4" role="tabpanel">{{ voting_tab_html|safe }}</div>
+
+          <label class="tw:tab" role="tab">
+            <input type="radio"
+                   name="awards-tabs"
+                   hx-get="{% url 'tournament:awards_status_tab' slug=league.slug %}"
+                   hx-target="#status-content"
+                   hx-swap="innerHTML"
+                   hx-trigger="load, awardVotingSubmitted from:body" />
+            <span class="tw:flex tw:items-center tw:gap-2">
+              <i class="fa fa-list-ul"></i>
+              Статус голосования
+            </span>
+          </label>
+          <div id="status-content" class="tw:tab-content tw:p-4" role="tabpanel">
+            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+            </div>
+          </div>
+
+          <label class="tw:tab" role="tab">
+            <input type="radio"
+                   name="awards-tabs"
+                   hx-get="{% url 'tournament:awards_results_tab' slug=league.slug %}"
+                   hx-target="#results-content"
+                   hx-swap="innerHTML"
+                   hx-trigger="load, awardVotingSubmitted from:body" />
+            <span class="tw:flex tw:items-center tw:gap-2">
+              <i class="fa fa-trophy"></i>
+              Результаты
+            </span>
+          </label>
+          <div id="results-content" class="tw:tab-content tw:p-4" role="tabpanel">
+            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+            </div>
+          </div>
+        </div>
+      {% endpartialdef %}
+    </div>
+  </div>
+
+{% endblock %}

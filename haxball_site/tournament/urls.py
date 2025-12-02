@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    AwardVotingView,
     CardsList,
     ComparePlayersView,
     CompareTeamsView,
@@ -18,6 +19,8 @@ from .views import (
     TeamsRatingView,
     TeamsYearlyRatingView,
     TransfersList,
+    award_voting_edit,
+    awards_main,
     cancel_postponement,
     hall_of_fame,
     player_detailed_statistics,
@@ -25,11 +28,14 @@ from .views import (
     players_hall_of_fame,
     players_top_by_stat,
     remove_free_agent_entry,
+    results_tab,
+    status_tab,
     team_squad_statistics,
     team_statistics,
     team_statistics_charts,
     teams_hall_of_fame,
     update_free_agent_entry,
+    voting_tab,
 )
 
 app_name = 'tournament'
@@ -64,4 +70,11 @@ urlpatterns = [
     path('team_stats/<int:pk>', team_statistics, name='team_stats'),
     path('team_stats/<int:pk>/players', team_squad_statistics, name='team_squad_stats'),
     path('team_stats/<int:pk>/charts', team_statistics_charts, name='team_stats_charts'),
+    # Awards
+    path('<slug:slug>/awards', awards_main, name='awards_main'),
+    path('<slug:slug>/awards/voting', voting_tab, name='awards_voting_tab'),
+    path('<slug:slug>/awards/voting/edit', award_voting_edit, name='award_voting_edit'),
+    path('<slug:slug>/awards/results', results_tab, name='awards_results_tab'),
+    path('<slug:slug>/awards/status', status_tab, name='awards_status_tab'),
+    path('<slug:slug>/awards/vote', AwardVotingView.as_view(), name='award_voting'),
 ]

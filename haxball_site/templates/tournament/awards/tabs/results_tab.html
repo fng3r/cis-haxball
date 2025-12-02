@@ -1,0 +1,183 @@
+{% load static %}
+{% load tournament_extras %}
+{% load utils %}
+
+<div x-data="{ selectedMode: 'detailed' }">
+  {% if not awards %}
+    <div class="tw:alert tw:alert-info">
+      <i class="fa fa-info-circle"></i>
+      <span>Для этого турнира пока нет наград</span>
+    </div>
+  {% else %}
+    {% if not campaign.is_results_public and not user.is_superuser %}
+      <div class="tw:my-10 tw:flex tw:justify-center">
+        <div class="tw:p-8 tw:max-w-sm tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-lg tw:text-center tw:text-base-content/60">
+          <i class="fa fa-lock tw:text-2xl!"></i>
+          <span>Результаты будут доступны по наступлении даты публикации</span>
+        </div>
+      </div>
+    {% else %}
+      <div class="tw:flex tw:justify-end tw:mb-4">
+        <div class="tw:join tw:join-horizontal">
+          <button type="button"
+                  class="tw:btn tw:btn-primary tw:btn-sm tw:join-item"
+                  x-data="{ displayMode: 'detailed' }"
+                  :class="{ 'tw:btn-primary': selectedMode === displayMode }"
+                  @click="selectedMode = displayMode"
+                  title="Подробный вид">
+            <i class="fa fa-table"></i>
+          </button>
+          <button type="button"
+                  class="tw:btn tw:btn-sm tw:join-item"
+                  x-data="{ displayMode: 'simple' }"
+                  :class="{ 'tw:btn-primary': selectedMode === displayMode }"
+                  @click="selectedMode = displayMode"
+                  title="Упрощенный вид">
+            <i class="fa fa-th-list"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="tw:space-y-4" x-show="selectedMode === 'simple'" x-cloak x-transition.duration.200ms>
+        {% for award in awards %}
+          {% with award_results=results_by_award|get_item:award.id %}
+            <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
+              <div class="tw:card-body tw:p-4">
+                <h4 class="tw:text-xl tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+                  {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+                  {{ award.nomination.name }}
+                </h4>
+
+                <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
+
+                  {% for result in award_results.results|slice:":3" %}
+                    {% include 'tournament/awards/tabs/partials/nominee_display.html' with nominee=result.nominee rank=result.final_rank points=result.total_points %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endwith %}
+        {% endfor %}
+      </div>
+
+      <div class="tw:space-y-6" x-show="selectedMode === 'detailed'" x-cloak x-transition.duration.200ms>
+        {% for award in awards %}
+          {% with award_results=results_by_award|get_item:award.id %}
+            <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:border tw:border-base-300">
+              <div class="tw:card-body">
+                <h3 class="tw:text-2xl tw:font-bold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+                  {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+                  {{ award.nomination.name }}
+                </h3>
+
+                <div class="tw:overflow-x-auto">
+                  <table class="tw:table tw:table-zebra">
+                    <thead>
+                      <tr>
+                        <th class="tw:text-center">Место</th>
+                        <th>Игрок</th>
+                        <th>Команда</th>
+                        <th class="tw:text-center">Очки</th>
+                        <th class="tw:text-center">
+                          <div class="tw:tooltip tw:tooltip-left"
+                               data-tip="Очки без учета голосов команд игроков, набравших одинаковое количество очков">Очки*</div>
+                        </th>
+                        <th class="tw:text-center">1 место</th>
+                        <th class="tw:text-center">2 место</th>
+                        <th class="tw:text-center">3 место</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for result in award_results.results %}
+                        <tr>
+                          <td class="tw:text-center tw:font-bold">{{ result.final_rank }}</td>
+                          <td class="tw:font-semibold">{{ result.nominee.player.nickname }}</td>
+                          <td>{{ result.nominee.team.title }}</td>
+                          <td class="tw:text-center tw:font-bold tw:text-primary">{{ result.total_points }}</td>
+                          <td class="tw:text-center">{{ result.points_excluding_involved_teams|default:"—" }}</td>
+                          <td class="tw:text-center">{{ result.first_place_votes }}</td>
+                          <td class="tw:text-center">{{ result.second_place_votes }}</td>
+                          <td class="tw:text-center">{{ result.third_place_votes }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+
+                {% if award_results.votes_by_submission %}
+
+                  <div class="tw:mt-2 tw:collapse tw:collapse-arrow tw:bg-base-200 tw:border tw:border-base-300">
+                    <input type="checkbox" />
+                    <div class="tw:collapse-title tw:font-semibold tw:text-lg">
+                      <i class="fa fa-list"></i>
+                      Все голоса
+                    </div>
+                    <div class="tw:collapse-content">
+                      <div class="tw:overflow-x-auto">
+                        <table class="tw:table tw:table-zebra">
+                          <thead>
+                            <tr>
+                              <th>Команда</th>
+                              <th>Голосующий</th>
+                              <th class="tw:text-center">1 место</th>
+                              <th class="tw:text-center">2 место</th>
+                              <th class="tw:text-center">3 место</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for submission_data in award_results.votes_by_submission.values %}
+                              <tr>
+                                <td class="tw:font-semibold">{{ submission_data.team.title|default:"Независимый представитель" }}</td>
+                                <td>{{ submission_data.voter.nickname }}</td>
+                                <td class="tw:text-center">
+                                  {% if submission_data.votes_by_place.1 %}
+                                    <span class="{% if submission_data.votes_by_place.1.nominee.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                      {{ submission_data.votes_by_place.1.nominee.player.nickname }}
+                                    </span>
+                                  {% else %}
+                                    <span class="tw:text-base-content/40">—</span>
+                                  {% endif %}
+                                </td>
+                                <td class="tw:text-center">
+                                  {% if submission_data.votes_by_place.2 %}
+                                    <span class="{% if submission_data.votes_by_place.2.nominee.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                      {{ submission_data.votes_by_place.2.nominee.player.nickname }}
+                                    </span>
+                                  {% else %}
+                                    <span class="tw:text-base-content/40">—</span>
+                                  {% endif %}
+                                </td>
+                                <td class="tw:text-center">
+                                  {% if submission_data.votes_by_place.3 %}
+                                    <span class="{% if submission_data.votes_by_place.3.nominee.team == submission_data.team %}tw:text-warning/90{% endif %}">
+                                      {{ submission_data.votes_by_place.3.nominee.player.nickname }}
+                                    </span>
+                                  {% else %}
+                                    <span class="tw:text-base-content/40">—</span>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                            {% endfor %}
+                            {% for non_voter in award_results.non_voting_voters %}
+                              <tr class="tw:text-base-content/80">
+                                <td class="tw:font-semibold">{{ non_voter.team.title|default:"Независимый представитель" }}</td>
+                                <td>{{ non_voter.voter.nickname }}</td>
+                                <td class="tw:text-center">—</td>
+                                <td class="tw:text-center">—</td>
+                                <td class="tw:text-center">—</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endif %}
+</div>

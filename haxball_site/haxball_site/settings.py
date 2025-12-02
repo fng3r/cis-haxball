@@ -98,7 +98,6 @@ TEMPLATES = [
                 'haxball_site.context_processors.youtube_context',
                 'haxball_site.context_processors.themes_context',
                 'haxball_site.context_processors.settings_context',
-                'haxball_site.context_processors.active_subscription_context',
             ],
             'builtins': ['template_partials.templatetags.partials'],
         },
@@ -233,6 +232,9 @@ SHOW_USER_TEAM_ICONS = config('APP_SHOW_USER_TEAM_ICONS', cast=bool, default=Tru
 
 SHOW_PLAYERS_RATING_BANNER = config('APP_SHOW_PLAYERS_RATING_BANNER', cast=bool, default=False)
 SHOW_FREE_AGENTS_BANNER = config('APP_SHOW_FREE_AGENTS_BANNER', cast=bool, default=False)
+SHOW_AWARDS_BANNER = config('APP_SHOW_AWARDS_BANNER', cast=bool, default=False)
+
+ALLOW_AWARDS_VOTE_EDITING = config('APP_ALLOW_AWARDS_VOTE_EDITING', cast=bool, default=False)
 
 ACTIVITIES_CURRENT_TOUR = config('APP_ACTIVITIES_CURRENT_TOUR', cast=int, default=1)
 ACTIVITIES_BADGE_LABEL = config('APP_ACTIVITIES_BADGE_LABEL')

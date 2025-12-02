@@ -1,0 +1,29 @@
+{% load static %}
+
+<div class="tw:card tw:bg-base-100 tw:rounded-lg">
+  <div class="tw:p-4">
+    <div class="tw:flex tw:items-center tw:gap-2 tw:font-bold">
+      <h5 class="tw:text-lg tw:mb-2!">Голосование</h5>
+    </div>
+
+    <div class="tw:flex tw:flex-col tw:gap-0">
+      <a href="{% url 'tournament:awards_main' slug='s15-premier-league' %}"
+         class="tw:justify-start tw:items-center tw:btn tw:btn-primary tw:btn-ghost tw:btn-sm tw:flex-nowrap tw:pr-0!">
+        <i class="fa fa-chevron-right tw:text-[8px]!"></i>
+        <span class="tw:truncate">Высшая лига</span>
+      </a>
+
+      <a href="{% url 'tournament:awards_main' slug='s15-first-league' %}"
+         class="tw:justify-start tw:items-center tw:btn tw:btn-primary tw:btn-ghost tw:btn-sm tw:flex-nowrap tw:pr-0!">
+        <i class="fa fa-chevron-right tw:text-[8px]!"></i>
+        <span class="tw:truncate">Первая лига</span>
+      </a>
+
+      <a href="{% url 'tournament:awards_main' slug='s15-second-league' %}"
+         class="tw:justify-start tw:items-center tw:btn tw:btn-primary tw:btn-ghost tw:btn-sm tw:flex-nowrap tw:pr-0!">
+        <i class="fa fa-chevron-right tw:text-[8px]!"></i>
+        <span class="tw:truncate">Вторая лига</span>
+      </a>
+    </div>
+  </div>
+</div>

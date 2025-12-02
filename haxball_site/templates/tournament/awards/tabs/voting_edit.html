@@ -1,0 +1,301 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load tournament_extras %}
+{% load utils %}
+
+<div id="voting-tab-container">
+  <div id="voting-edit-mode" x-data="awardVoting()" x-init="init()">
+    {% include 'tournament/awards/tabs/partials/voting_rules.html' %}
+
+    <form method="post"
+          action="{% url 'tournament:award_voting' slug=league.slug %}"
+          hx-post="{% url 'tournament:award_voting' slug=league.slug %}"
+          hx-target="#voting-tab-container"
+          hx-swap="outerHTML"
+          hx-disabled-elt="button[type='submit']"
+          class="tw:space-y-4">
+      {% csrf_token %}
+
+      {% for award in awards %}
+        {% with code=award.nomination.code %}
+          {% with field_name_1=code|add:"_place_1" field_name_2=code|add:"_place_2" field_name_3=code|add:"_place_3" %}
+            {% with field1=form|get:field_name_1 field2=form|get:field_name_2 field3=form|get:field_name_3 %}
+              <div class="tw:card tw:bg-base-200 tw:shadow-md tw:border tw:border-base-300">
+                <div class="tw:card-body tw:p-4">
+                  <h3 class="tw:text-2xl! tw:font-semibold tw:mb-4 tw:flex tw:items-center tw:gap-1.5">
+                    {% if award.nomination.logo %}<img src="{{ award.nomination.logo.url }}" alt="{{ award.nomination.name }}" class="tw:size-9">{% endif %}
+                    {{ award.nomination.name }}
+                  </h3>
+
+                  <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-3 tw:gap-4">
+                    {% include 'tournament/awards/tabs/partials/place_field.html' with place=1 field_name=field_name_1 field=field1 award=award user_team=user_team %}
+                    {% include 'tournament/awards/tabs/partials/place_field.html' with place=2 field_name=field_name_2 field=field2 award=award user_team=user_team %}
+                    {% include 'tournament/awards/tabs/partials/place_field.html' with place=3 field_name=field_name_3 field=field3 award=award user_team=user_team %}
+                  </div>
+                </div>
+              </div>
+            {% endwith %}
+          {% endwith %}
+        {% endwith %}
+      {% endfor %}
+
+      {% if form.non_field_errors %}
+        <div class="tw:alert tw:alert-error">
+          {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="tw:flex tw:justify-end tw:gap-2">
+        <button type="button"
+                class="tw:btn tw:btn-ghost"
+                hx-get="{% url 'tournament:awards_voting_tab' slug=league.slug %}"
+                hx-target="#voting-tab-container"
+                hx-swap="innerHTML"
+                hx-disabled-elt="this">Отмена</button>
+        <button type="submit"
+                class="tw:btn tw:btn-primary"
+                {% if allow_editing %}@click="saving = true"{% else %}@click.prevent="document.getElementById('confirmation-modal').showModal()"{% endif %}>
+          <span x-show="saving" x-cloak class="tw:flex tw:items-center tw:gap-2">
+            <span class="tw:loading tw:loading-spinner tw:loading-sm"></span>
+            Отправляем...
+          </span>
+          <span x-show="!saving">Отправить голоса</span>
+        </button>
+      </div>
+
+      {% if not allow_editing %}
+        <dialog id="confirmation-modal" class="tw:modal">
+          <div class="tw:modal-box">
+            <h3 class="tw:font-bold tw:text-lg tw:mb-4!">Подтверждение</h3>
+            <div class="tw:space-y-3">
+              <p class="tw:text-base">
+                После отправки изменить голоса будет невозможно.
+                Пожалуйста, убедитесь, что вы сделали правильный выбор в каждой номинации.
+              </p>
+            </div>
+            <div class="tw:modal-action">
+              <button type="button" class="tw:btn tw:btn-ghost" @click="document.getElementById('confirmation-modal').close()">Отмена</button>
+              <button type="submit" class="tw:btn tw:btn-primary" @click="saving = true">
+                <i class="fa fa-check"></i>
+                Отправить
+              </button>
+            </div>
+          </div>
+        </dialog>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<script>
+  function awardVoting() {
+    // Initialize votes object with form values before Alpine binds
+    const initialVotes = {};
+    {% for award in awards %}
+      {% with code=award.nomination.code %}
+        {% with field_name_1=code|add:"_place_1" field_name_2=code|add:"_place_2" field_name_3=code|add:"_place_3" %}
+          {% with field1=form|get:field_name_1 field2=form|get:field_name_2 field3=form|get:field_name_3 %}
+            {% if field1.value %}initialVotes['{{ field_name_1 }}'] = '{{ field1.value }}';{% endif %}
+            {% if field2.value %}initialVotes['{{ field_name_2 }}'] = '{{ field2.value }}';{% endif %}
+            {% if field3.value %}initialVotes['{{ field_name_3 }}'] = '{{ field3.value }}';{% endif %}
+          {% endwith %}
+        {% endwith %}
+      {% endwith %}
+    {% endfor %}
+
+    return {
+      votes: initialVotes,
+      playerNames: {},
+      playerData: {},
+      selectedPlayersByAward: {},
+      // Map tracks count of selections per own-team player (playerId -> count)
+      // Same player selected in multiple nominations counts multiple times
+      selectedOwnTeamPlayers: new Map(),
+      userTeamId: {% if user_team %}'{{ user_team.id }}'{% else %}null{% endif %},
+      saving: false,
+
+      init() {
+        // Reset tracking maps to avoid double-counting on reinitialization
+        this.selectedOwnTeamPlayers.clear();
+        for (const awardId in this.selectedPlayersByAward) {
+          this.selectedPlayersByAward[awardId].clear();
+        }
+
+        // Build nominee data map
+        {% for award in awards %}
+          {% for nominee in award.nominees.all %}
+            this.playerData['{{ nominee.id }}'] = {
+              name: '{{ nominee.player.nickname|escapejs }}',
+              team: '{{ nominee.team.title|escapejs }}',
+              teamId: '{{ nominee.team.id }}',
+              playerId: '{{ nominee.player.id }}'
+            };
+          {% endfor %}
+        {% endfor %}
+
+        // Initialize player names and tracking from existing votes
+        {% for award in awards %}
+          {% with code=award.nomination.code %}
+            {% with field_name_1=code|add:"_place_1" field_name_2=code|add:"_place_2" field_name_3=code|add:"_place_3" %}
+              {% with field1=form|get:field_name_1 field2=form|get:field_name_2 field3=form|get:field_name_3 %}
+                this.selectedPlayersByAward['{{ award.id }}'] = new Set();
+
+                {% if field1.value %}
+                  if (this.votes['{{ field_name_1 }}']) {
+                    const n1 = this.playerData[this.votes['{{ field_name_1 }}']];
+                    if (n1) {
+                      this.playerNames['{{ field_name_1 }}'] = `${n1.name} (${n1.team})`;
+                      this.selectedPlayersByAward['{{ award.id }}'].add(n1.playerId);
+                      if (n1.teamId === this.userTeamId) {
+                        const currentCount = this.selectedOwnTeamPlayers.get(n1.playerId) || 0;
+                        this.selectedOwnTeamPlayers.set(n1.playerId, currentCount + 1);
+                      }
+                    }
+                  }
+                {% endif %}
+                {% if field2.value %}
+                  if (this.votes['{{ field_name_2 }}']) {
+                    const n2 = this.playerData[this.votes['{{ field_name_2 }}']];
+                    if (n2) {
+                      this.playerNames['{{ field_name_2 }}'] = `${n2.name} (${n2.team})`;
+                      this.selectedPlayersByAward['{{ award.id }}'].add(n2.playerId);
+                      if (n2.teamId === this.userTeamId) {
+                        const currentCount = this.selectedOwnTeamPlayers.get(n2.playerId) || 0;
+                        this.selectedOwnTeamPlayers.set(n2.playerId, currentCount + 1);
+                      }
+                    }
+                  }
+                {% endif %}
+                {% if field3.value %}
+                  if (this.votes['{{ field_name_3 }}']) {
+                    const n3 = this.playerData[this.votes['{{ field_name_3 }}']];
+                    if (n3) {
+                      this.playerNames['{{ field_name_3 }}'] = `${n3.name} (${n3.team})`;
+                      this.selectedPlayersByAward['{{ award.id }}'].add(n3.playerId);
+                      if (n3.teamId === this.userTeamId) {
+                        const currentCount = this.selectedOwnTeamPlayers.get(n3.playerId) || 0;
+                        this.selectedOwnTeamPlayers.set(n3.playerId, currentCount + 1);
+                      }
+                    }
+                  }
+                {% endif %}
+              {% endwith %}
+            {% endwith %}
+          {% endwith %}
+        {% endfor %}
+      },
+
+      openModal(fieldName) {
+        const modal = document.getElementById(`modal-${fieldName}`);
+        if (modal) {
+          modal.showModal();
+        }
+      },
+
+      selectPlayer(fieldName, awardId, nomineeId, playerName, teamName, teamId, playerId) {
+        // Check if player is disabled (use playerId for validation)
+        if (this.isPlayerDisabled(awardId, playerId, teamId, fieldName) && this.votes[fieldName] !== nomineeId) {
+          return;
+        }
+
+        const oldNomineeId = this.votes[fieldName];
+
+        // Remove old selection from tracking (use playerId from old nominee)
+        if (oldNomineeId) {
+          const oldNomineeData = this.playerData[oldNomineeId];
+          if (oldNomineeData) {
+            const oldPlayerId = oldNomineeData.playerId;
+            this.selectedPlayersByAward[awardId].delete(oldPlayerId);
+            // Decrement count for own team player
+            if (oldNomineeData.teamId === this.userTeamId) {
+              const count = this.selectedOwnTeamPlayers.get(oldPlayerId) || 0;
+              if (count > 1) {
+                this.selectedOwnTeamPlayers.set(oldPlayerId, count - 1);
+              } else {
+                this.selectedOwnTeamPlayers.delete(oldPlayerId);
+              }
+            }
+          }
+        }
+
+        // Add new selection (store nomineeId in votes, but track by playerId)
+        this.votes[fieldName] = nomineeId;
+        this.playerNames[fieldName] = `${playerName} (${teamName})`;
+        this.selectedPlayersByAward[awardId].add(playerId);
+        // Increment count for own team players
+        if (teamId === this.userTeamId) {
+          const count = this.selectedOwnTeamPlayers.get(playerId) || 0;
+          this.selectedOwnTeamPlayers.set(playerId, count + 1);
+        }
+
+        // Close modal
+        const modal = document.getElementById(`modal-${fieldName}`);
+        if (modal) {
+          modal.close();
+        }
+      },
+
+      isPlayerDisabled(awardId, playerId, teamId, currentFieldName) {
+        const currentNomineeId = this.votes[currentFieldName];
+        if (currentNomineeId) {
+          const currentNomineeData = this.playerData[currentNomineeId];
+          if (currentNomineeData && currentNomineeData.playerId === playerId) {
+            return false;
+          }
+        }
+
+        if (this.selectedPlayersByAward[awardId]?.has(playerId)) {
+          return true;
+        }
+
+        if (this.userTeamId && teamId === this.userTeamId) {
+          let totalSelections = 0;
+          for (const count of this.selectedOwnTeamPlayers.values()) {
+            totalSelections += count;
+          }
+
+          const currentNomineeId = this.votes[currentFieldName];
+          if (currentNomineeId) {
+            const currentNomineeData = this.playerData[currentNomineeId];
+            if (currentNomineeData && currentNomineeData.teamId === this.userTeamId) {
+              return false;
+            }
+          }
+
+          if (totalSelections + 1 > 3) {
+            return true;
+          }
+        }
+
+        return false;
+      },
+
+      getPlayerName(fieldName) {
+        return this.playerNames[fieldName] || 'Выберите игрока';
+      },
+
+      isOwnTeamPlayer(fieldName) {
+        const playerId = this.votes[fieldName];
+        if (!playerId || !this.userTeamId) {
+          return false;
+        }
+        const player = this.playerData[playerId];
+        return player && player.teamId === this.userTeamId;
+      }
+    }
+  }
+
+  // Make function globally available
+  window.awardVoting = awardVoting;
+
+  // Reinitialize Alpine after HTMX swap
+  document.body.addEventListener('htmx:afterSwap', function(event) {
+    if (event.detail.target && event.detail.target.id === 'voting-tab-container') {
+      const editMode = event.detail.target.querySelector('#voting-edit-mode');
+      if (editMode && window.Alpine) {
+        // Reinitialize Alpine on the swapped content
+        window.Alpine.initTree(editMode);
+      }
+    }
+  });
+</script>

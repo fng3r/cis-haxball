@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date
 
 from django.contrib.auth.models import User
@@ -1416,3 +1417,464 @@ class PlayerRating(models.Model):
         ordering = ['-version__number', '-rating_points', '-raw_rating_points']
         verbose_name = 'Рейтинг игрока'
         verbose_name_plural = 'Рейтинг игроков'
+
+
+class AwardNomination(models.Model):
+    """Catalog of award nomination categories (e.g., Best striker, Best defender)"""
+
+    class Code(models.TextChoices):
+        BEST_STRIKER = 'BEST_STRIKER', 'Нападающий сезона'
+        BEST_DEFENDER = 'BEST_DEFENDER', 'Опорник сезона'
+        BEST_GOALKEEPER = 'BEST_GOALKEEPER', 'Вратарь сезона'
+        BEST_PLAYER = 'BEST_PLAYER', 'Игрок сезона'
+        BEST_CAPTAIN = 'BEST_CAPTAIN', 'Капитан сезона'
+        BREAKTHROUGH = 'BREAKTHROUGH', 'Прорыв сезона'
+
+    name = models.CharField('Название', max_length=100)
+    code = models.CharField('Код', max_length=50, unique=True, choices=Code.choices)
+    order = models.IntegerField('Порядок отображения', default=0)
+    logo = models.ImageField('Логотип', upload_to='award_nominations/', null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = 'Номинация награды'
+        verbose_name_plural = 'Номинации наград'
+
+
+class AwardCampaign(models.Model):
+    """Container for all awards in a season with shared voting dates"""
+
+    season = models.ForeignKey(
+        Season,
+        verbose_name='Сезон',
+        related_name='award_campaigns',
+        on_delete=models.CASCADE,
+    )
+    voting_start_date = models.DateTimeField('Дата начала голосования')
+    voting_end_date = models.DateTimeField('Дата окончания голосования')
+    results_public_date = models.DateTimeField('Дата публикации результатов')
+
+    @property
+    def is_voting_active(self):
+        """Check if voting period is currently active"""
+        now = timezone.now()
+        return self.voting_start_date <= now <= self.voting_end_date
+
+    @property
+    def is_voting_ended(self):
+        """Check if voting period has ended"""
+        now = timezone.now()
+        return self.voting_end_date < now
+
+    @property
+    def is_results_public(self):
+        """Check if results are currently public"""
+        now = timezone.now()
+        return self.results_public_date <= now
+
+    def __str__(self):
+        return f'Награды сезона - {self.season.title}'
+
+    class Meta:
+        verbose_name = 'Кампания наград'
+        verbose_name_plural = 'Кампании наград'
+
+
+class Award(models.Model):
+    """Links award nominations to specific tournaments/leagues"""
+
+    campaign = models.ForeignKey(
+        AwardCampaign,
+        verbose_name='Кампания наград',
+        related_name='awards',
+        on_delete=models.CASCADE,
+    )
+    league = models.ForeignKey(
+        League,
+        verbose_name='Турнир',
+        related_name='awards',
+        on_delete=models.CASCADE,
+    )
+    nomination = models.ForeignKey(
+        AwardNomination,
+        verbose_name='Номинация',
+        related_name='awards',
+        on_delete=models.CASCADE,
+    )
+    max_nominees = models.PositiveSmallIntegerField(
+        'Максимальное количество номинантов',
+        null=True,
+        blank=True,
+        help_text='Оставьте пустым, если ограничения нет',
+    )
+
+    @property
+    def voting_start_date(self):
+        """Convenience property to access voting_start_date through campaign"""
+        return self.campaign.voting_start_date
+
+    @property
+    def voting_end_date(self):
+        """Convenience property to access voting_end_date through campaign"""
+        return self.campaign.voting_end_date
+
+    @property
+    def results_public_date(self):
+        """Convenience property to access results_public_date through campaign"""
+        return self.campaign.results_public_date
+
+    def __str__(self):
+        return f'{self.nomination.name} ({self.league.title}. {self.campaign.season.title})'
+
+    def recalculate_results(self):
+        """Calculate and update AwardResult records for all nominees"""
+        from django.db.models import Sum
+
+        # Delete existing results
+        AwardResult.objects.filter(award=self).delete()
+
+        # Get all nominees for this award
+        nominees = self.nominees.all()
+
+        for nominee in nominees:
+            votes = AwardVote.objects.filter(
+                award=self,
+                nominee=nominee,
+            ).select_related('submission')
+
+            # Calculate total points
+            total_points = votes.aggregate(total=Sum('points'))['total'] or 0
+
+            # Count votes by place
+            first_place_votes = votes.filter(place=1).count()
+            second_place_votes = votes.filter(place=2).count()
+            third_place_votes = votes.filter(place=3).count()
+
+            # Create result record
+            AwardResult.objects.create(
+                award=self,
+                nominee=nominee,
+                total_points=total_points,
+                first_place_votes=first_place_votes,
+                second_place_votes=second_place_votes,
+                third_place_votes=third_place_votes,
+            )
+
+        # Initialize all results with None for points_excluding_involved_teams
+        AwardResult.objects.filter(award=self).update(points_excluding_involved_teams=None)
+
+        # Calculate points_excluding_involved_teams for tie-breaking
+        # Group results by total_points to identify ties
+        results_by_points = defaultdict(list)
+        all_results = AwardResult.objects.filter(award=self).select_related('nominee__team')
+        for result in all_results:
+            results_by_points[result.total_points].append(result)
+
+        # Only calculate for nominees who are actually in a tie (more than 1 nominee with same points)
+        for points, tied_results in results_by_points.items():
+            if len(tied_results) <= 1:
+                # No tie, skip calculation (already set to None)
+                continue
+
+            involved_teams = {result.nominee.team_id for result in tied_results}
+
+            for result in tied_results:
+                votes = AwardVote.objects.filter(
+                    award=self,
+                    nominee=result.nominee,
+                ).select_related('submission')
+
+                points_excluding_involved = (
+                    votes.exclude(submission__voter_record__team_id__in=involved_teams).aggregate(total=Sum('points'))[
+                        'total'
+                    ]
+                    or 0
+                )
+                result.points_excluding_involved_teams = points_excluding_involved
+                result.save(update_fields=['points_excluding_involved_teams'])
+
+        # Assign final ranks based on tie-breaking criteria
+        results = AwardResult.objects.filter(award=self).order_by(
+            '-total_points',
+            '-points_excluding_involved_teams',
+            '-first_place_votes',
+            '-second_place_votes',
+            '-third_place_votes',
+        )
+
+        rank = 1
+        for result in results:
+            result.final_rank = rank
+            result.save(update_fields=['final_rank'])
+            rank += 1
+
+    def auto_populate_best_player_nominees(self):
+        """Auto-populate nominees for 'Best player' from all nominees of striker/defender/goalkeeper nominations"""
+        if self.nomination.code != AwardNomination.Code.BEST_PLAYER:
+            return 0
+
+        source_nominations = [
+            AwardNomination.Code.BEST_STRIKER,
+            AwardNomination.Code.BEST_DEFENDER,
+            AwardNomination.Code.BEST_GOALKEEPER,
+        ]
+
+        source_awards = Award.objects.filter(
+            campaign=self.campaign,
+            league=self.league,
+            nomination__code__in=source_nominations,
+        )
+
+        players_to_nominate = set()
+        for source_award in source_awards:
+            for nominee in source_award.nominees.all():
+                players_to_nominate.add(nominee.player)
+
+        created_count = 0
+        for player in players_to_nominate:
+            nominee, created = AwardNominee.objects.get_or_create(
+                award=self, player=player, defaults={'team': player.team}
+            )
+            if created:
+                created_count += 1
+
+        return created_count
+
+    def auto_populate_best_captain_nominees(self):
+        """Auto-populate nominees for 'Best captain' from all captains of teams in the league"""
+        if self.nomination.code != AwardNomination.Code.BEST_CAPTAIN:
+            return 0
+
+        teams = self.league.teams.all()
+
+        created_count = 0
+        for team in teams:
+            nominee, created = AwardNominee.objects.get_or_create(
+                award=self, player=team.captain, defaults={'team': team}
+            )
+            if created:
+                created_count += 1
+
+        return created_count
+
+    class Meta:
+        unique_together = [('campaign', 'league', 'nomination')]
+        verbose_name = 'Награда'
+        verbose_name_plural = 'Награды'
+
+
+class AwardNominee(models.Model):
+    """Players nominated for a specific award"""
+
+    award = models.ForeignKey(
+        'Award',
+        verbose_name='Награда',
+        related_name='nominees',
+        on_delete=models.CASCADE,
+    )
+    team = models.ForeignKey(
+        Team,
+        verbose_name='Команда',
+        related_name='award_nominees',
+        on_delete=models.CASCADE,
+    )
+    player = models.ForeignKey(
+        Player,
+        verbose_name='Игрок',
+        related_name='award_nominations',
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return f'{self.player.nickname} ({self.team.title}) - {self.award.nomination.name}'
+
+    class Meta:
+        unique_together = [('award', 'team', 'player')]
+        verbose_name = 'Номинант'
+        verbose_name_plural = 'Номинанты'
+
+
+class AwardVoter(models.Model):
+    """Represents who is eligible to vote for all awards in a tournament during campaign"""
+
+    campaign = models.ForeignKey(
+        'AwardCampaign',
+        verbose_name='Кампания наград',
+        related_name='voters',
+        on_delete=models.CASCADE,
+    )
+    league = models.ForeignKey(
+        'League',
+        verbose_name='Турнир',
+        related_name='award_voters',
+        on_delete=models.CASCADE,
+    )
+    team = models.ForeignKey(
+        Team,
+        verbose_name='Команда',
+        related_name='award_voters',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Команда, от имени которой голосует игрок. Оставьте пустым для независимого голосующего.',
+    )
+    voter = models.ForeignKey(
+        Player,
+        verbose_name='Голосующий',
+        related_name='award_voting_records',
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        team_str = self.team.title if self.team else 'Независимый представитель'
+        return f'{team_str} - {self.voter.nickname} ({self.campaign.season.title}, {self.league.title})'
+
+    class Meta:
+        unique_together = [('campaign', 'league', 'voter')]
+        verbose_name = 'Голосующий'
+        verbose_name_plural = 'Голосующие'
+
+
+class AwardSubmission(models.Model):
+    """Represents a complete voting submission for a campaign from a specific voter"""
+
+    campaign = models.ForeignKey(
+        'AwardCampaign',
+        verbose_name='Кампания наград',
+        related_name='submissions',
+        on_delete=models.CASCADE,
+    )
+    league = models.ForeignKey(
+        'League',
+        verbose_name='Турнир',
+        related_name='award_submissions',
+        on_delete=models.CASCADE,
+    )
+    voter_record = models.ForeignKey(
+        'AwardVoter',
+        verbose_name='Голосующий',
+        related_name='submissions',
+        on_delete=models.CASCADE,
+        help_text='Запись о голосующем, от имени которого подается голосование',
+    )
+    submitted_at = models.DateTimeField('Дата подачи голосования')
+
+    def __str__(self):
+        submission_time = self.submitted_at.strftime('%d.%m.%Y %H:%M')
+        team_str = self.voter_record.team.title if self.voter_record.team else 'Независимый представитель'
+        return f'{team_str} - {self.voter_record.voter.nickname} ({self.campaign.season.title}) ({submission_time})'
+
+    class Meta:
+        unique_together = [('voter_record',)]
+        verbose_name = 'Отправка голосования'
+        verbose_name_plural = 'Отправки голосований'
+
+
+class AwardVote(models.Model):
+    """Individual vote (nominee + place) for a specific award"""
+
+    PLACE_CHOICES = [
+        (1, '1 место'),
+        (2, '2 место'),
+        (3, '3 место'),
+    ]
+
+    submission = models.ForeignKey(
+        'AwardSubmission',
+        verbose_name='Отправка голосования',
+        related_name='votes',
+        on_delete=models.CASCADE,
+    )
+    award = models.ForeignKey(
+        'Award',
+        verbose_name='Награда',
+        related_name='votes',
+        on_delete=models.CASCADE,
+    )
+    nominee = models.ForeignKey(
+        'AwardNominee',
+        verbose_name='Номинант',
+        related_name='votes_received',
+        on_delete=models.CASCADE,
+    )
+    place = models.PositiveSmallIntegerField('Место', choices=PLACE_CHOICES)
+    points = models.PositiveSmallIntegerField(
+        'Очки',
+        help_text='Автоматически: 3 за 1 место, 2 за 2 место, 1 за 3 место',
+    )
+
+    def save(self, *args, **kwargs):
+        if self.place == 1:
+            self.points = 3
+        elif self.place == 2:
+            self.points = 2
+        elif self.place == 3:
+            self.points = 1
+        super().save(*args, **kwargs)
+
+    @property
+    def nomination(self):
+        """Convenience property to access nomination through award"""
+        return self.award.nomination
+
+    def __str__(self):
+        team_str = (
+            self.submission.voter_record.team.title
+            if self.submission.voter_record.team
+            else 'Независимый представитель'
+        )
+        return f'{team_str} - {self.nominee.player.nickname} ({self.place} место) - {self.award.nomination.name}'
+
+    class Meta:
+        unique_together = [('submission', 'award', 'place')]
+        verbose_name = 'Голос'
+        verbose_name_plural = 'Голоса'
+
+
+class AwardResult(models.Model):
+    """Calculated results for each nominee in each nomination"""
+
+    award = models.ForeignKey(
+        'Award',
+        verbose_name='Награда',
+        related_name='results',
+        on_delete=models.CASCADE,
+    )
+    nominee = models.ForeignKey(
+        'AwardNominee',
+        verbose_name='Номинант',
+        related_name='results',
+        on_delete=models.CASCADE,
+    )
+    total_points = models.IntegerField('Всего очков', default=0)
+    points_excluding_involved_teams = models.IntegerField(
+        'Очки без учета команд участников ничьей',
+        null=True,
+        blank=True,
+        help_text=(
+            'Используется как первый тай-брейкер: очки без учета всех команд игроков с одинаковым количеством очков.'
+        ),
+    )
+    first_place_votes = models.IntegerField('Голосов за 1 место', default=0)
+    second_place_votes = models.IntegerField('Голосов за 2 место', default=0)
+    third_place_votes = models.IntegerField('Голосов за 3 место', default=0)
+    final_rank = models.PositiveSmallIntegerField('Финальное место', null=True, blank=True)
+    last_calculated_at = models.DateTimeField('Последний расчет', auto_now=True)
+
+    def __str__(self):
+        return f'{self.nominee.player.nickname} - {self.award.nomination.name} ({self.total_points} очков)'
+
+    class Meta:
+        unique_together = [('award', 'nominee')]
+        ordering = [
+            '-total_points',
+            '-points_excluding_involved_teams',
+            '-first_place_votes',
+            '-second_place_votes',
+            '-third_place_votes',
+        ]
+        verbose_name = 'Результат голосования за награду'
+        verbose_name_plural = 'Результаты голосований за награды'
