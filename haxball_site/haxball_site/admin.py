@@ -12,8 +12,9 @@ from django_celery_beat.models import (
     PeriodicTask,
     SolarSchedule,
 )
+from django_celery_results.admin import GroupResultAdmin as BaseGroupResultAdmin
 from django_celery_results.admin import TaskResultAdmin as BaseTaskResultAdmin
-from django_celery_results.models import TaskResult
+from django_celery_results.models import GroupResult, TaskResult
 from smart_selects.db_fields import ChainedForeignKey
 from smart_selects.widgets import ChainedSelect
 from unfold import admin as unfold_admin
@@ -115,8 +116,14 @@ class ClockedScheduleAdmin(BaseClockedScheduleAdmin, UnfoldModelAdmin):
 
 
 admin.site.unregister(TaskResult)
+admin.site.unregister(GroupResult)
 
 
 @admin.register(TaskResult)
 class TaskResultAdmin(BaseTaskResultAdmin, UnfoldModelAdmin):
+    pass
+
+
+@admin.register(GroupResult)
+class GroupResultAdmin(BaseGroupResultAdmin, UnfoldModelAdmin):
     pass
