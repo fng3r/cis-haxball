@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.humanize',
+    'django_celery_beat',
+    'django_celery_results',
     'oauth2_provider',
     'allauth',
     'allauth.account',
@@ -614,3 +616,15 @@ OAUTH2_PROVIDER = {
     'ROTATE_REFRESH_TOKEN': True,
     'PKCE_REQUIRED': False,
 }
+
+# Celery Configuration
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True
+CELERY_WORKER_SEND_TASK_EVENTS = True
+
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
