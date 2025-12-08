@@ -15,10 +15,11 @@
     <div class="tw:card tw:bg-base-100 tw:rounded-lg">
       <div class="tw:flex tw:items-center tw:gap-x-4 tw:bg-base-300 tw:rounded-t-lg tw:p-4 tw:px-6 tw:border-b tw:border-gray-300">
         {% if league.logo %}
-          <img src="{{ league.logo.url }}" class="{% if league.championship.is_active %}tw:size-26{% else %}tw:size-20{% endif %}">
+          <img src="{{ league.logo.url }}"
+               class="tw:bg-white tw:rounded-box tw:p-2 {% if league.championship.is_active %}tw:size-26{% else %}tw:size-20{% endif %}">
         {% else %}
           <img src="{% static "img/logo_try.png" %}"
-               class="{% if league.championship.is_active %}tw:size-26{% else %}tw:size-20{% endif %}">
+               class="tw:bg-white tw:rounded-box tw:p-2 {% if league.championship.is_active %}tw:size-26{% else %}tw:size-20{% endif %}">
         {% endif %}
         <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:items-start tw:gap-y-2">
           <div class="tw:flex tw:items-center tw:gap-4 tw:flex-shrink-0">
