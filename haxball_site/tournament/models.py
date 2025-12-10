@@ -312,6 +312,7 @@ class RegularStage(TournamentStage):
 
     class Meta:
         verbose_name = 'Регулярка'
+        verbose_name_plural = 'Регулярки'
 
 
 class GroupStage(TournamentStage):
@@ -331,6 +332,7 @@ class GroupStage(TournamentStage):
 
     class Meta:
         verbose_name = 'Групповой этап'
+        verbose_name_plural = 'Групповые этапы'
 
 
 class Group(models.Model):
@@ -383,6 +385,7 @@ class PlayOffStage(TournamentStage):
 
     class Meta:
         verbose_name = 'Плей-офф'
+        verbose_name_plural = 'Плей-офф'
 
 
 class PlayoffBracketSlotStub(models.Model):
