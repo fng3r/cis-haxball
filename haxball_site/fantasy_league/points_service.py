@@ -46,12 +46,12 @@ POINTS_CONFIG = {
 }
 
 
-def calculate_match_points(player, match, position, match_goals, match_cs):
+def calculate_match_points(player, match, position, match_goals, match_cs, match_player_teams):
     """Calculate fantasy points for a player in a specific match with detailed breakdown"""
     goals_count = sum(1 for goal in match_goals if goal.author_id == player.id)
     assists_count = sum(1 for goal in match_goals if goal.assistent_id == player.id)
 
-    player_team = _get_player_team_for_match(player, match)
+    player_team = _get_player_team_for_match(player, match, match_player_teams)
     cs_count = _count_clean_sheets(player, match, player_team, match_cs)
 
     goals_points = goals_count * POINTS_CONFIG['goals'].get(position, POINTS_CONFIG['goals']['ST'])
@@ -68,7 +68,9 @@ def calculate_match_points(player, match, position, match_goals, match_cs):
     else:
         playtime_points = 0
 
-    conceded_goals_count = _get_player_conceded_goals_count(player, match, match_goals, seconds_played)
+    conceded_goals_count = _get_player_conceded_goals_count(
+        player, match, match_goals, seconds_played, match_player_teams
+    )
     conceded_points = _get_conceded_goals_penalty(position, conceded_goals_count)
 
     total_points = goals_points + assists_points + cs_points + playtime_points + conceded_points
@@ -83,9 +85,9 @@ def calculate_match_points(player, match, position, match_goals, match_cs):
     }
 
 
-def calculate_total_points(player, match, position, match_goals, match_cs):
+def calculate_total_points(player, match, position, match_goals, match_cs, match_player_teams):
     """Calculate total fantasy points for a player in a match (without breakdown)"""
-    result = calculate_match_points(player, match, position, match_goals, match_cs)
+    result = calculate_match_points(player, match, position, match_goals, match_cs, match_player_teams)
     return result['total']
 
 
@@ -95,6 +97,7 @@ def calculate_submission_total_points(submission, preloaded_data):
     match_participants = preloaded_data.get('match_participants')
     match_goals = preloaded_data.get('match_goals')
     match_cs = preloaded_data.get('match_cs')
+    match_player_teams = preloaded_data.get('match_player_teams')
 
     total_points = 0
     tour_matches = [match for match in tour_matches if match.numb_tour_id == submission.tour_id]
@@ -109,6 +112,7 @@ def calculate_submission_total_points(submission, preloaded_data):
                     squad_player.position,
                     match_goals.get(match.id, []),
                     match_cs.get(match.id, []),
+                    match_player_teams,
                 )
                 points = match_points['total']
 
@@ -152,6 +156,7 @@ def calculate_player_breakdown(submission, squad_player, preloaded_data):
     match_participants = preloaded_data.get('match_participants')
     match_goals = preloaded_data.get('match_goals')
     match_cs = preloaded_data.get('match_cs')
+    match_player_teams = preloaded_data.get('match_player_teams')
 
     player = squad_player.player
 
@@ -168,7 +173,12 @@ def calculate_player_breakdown(submission, squad_player, preloaded_data):
     for match in tour_matches:
         if player.id in match_participants.get(match.id):
             match_points = calculate_match_points(
-                player, match, squad_player.position, match_goals.get(match.id, []), match_cs.get(match.id, [])
+                player,
+                match,
+                squad_player.position,
+                match_goals.get(match.id, []),
+                match_cs.get(match.id, []),
+                match_player_teams,
             )
             break
 
@@ -207,12 +217,10 @@ def calculate_player_breakdown(submission, squad_player, preloaded_data):
     }
 
 
-def _get_player_team_for_match(player, match):
-    """Get player's team for the given match from starts/substitutions."""
-    for participant in match.match_participants.all():
-        if participant.id == player.id:
-            return participant.team
-    return None
+def _get_player_team_for_match(player, match, match_player_teams):
+    """Get player's team for the given match from PlayerMatchStatistics."""
+    key = (match.id, player.id)
+    return match_player_teams.get(key)
 
 
 def _count_clean_sheets(player, match, player_team, match_cs):
@@ -287,10 +295,10 @@ def _get_player_playtime(player, match):
     return seconds_played
 
 
-def _get_player_conceded_goals_count(player, match, match_goals, seconds_played):
+def _get_player_conceded_goals_count(player, match, match_goals, seconds_played, match_player_teams):
     """Get number of conceded goals for a player in a match"""
     conceded_goals_count = 0
-    player_team = _get_player_team_for_match(player, match)
+    player_team = _get_player_team_for_match(player, match, match_player_teams)
     if seconds_played > 0 and player_team is not None:
         intervals = _get_player_intervals(player, match)
         if intervals:
