@@ -197,6 +197,7 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
     selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
 
     user_predictions = {}
+    is_tournament_ended = False
     if selected_tournament:
         tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
@@ -216,9 +217,12 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
             else:
                 user_predictions[tour.id] = {'submission': None, 'match_predictions': {}}
 
+        is_tournament_ended = all(tour.is_ended for tour in tours)
+
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
+        'is_tournament_ended': is_tournament_ended,
         'user_predictions': user_predictions,
         'user': request.user,
     }

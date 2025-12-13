@@ -13,12 +13,12 @@
       {% if not selected_tournament %}
         <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</div>
       {% else %}
-        <div x-data="{ showAllTours: false }"
+        <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }"
              class="tw:[#make-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#make-predictions-content:has(.htmx-request)_&]:transition-opacity">
           <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
             <div class="tw:text-xl tw:font-semibold">{{ selected_tournament.league.title }}</div>
 
-            {% if selected_tournament.league.tours.count > 0 %}
+            {% if selected_tournament.league.tours.count > 0 and not is_tournament_ended %}
               <label class="tw:label tw:text-base-content/80">
                 Все туры
                 <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm">
