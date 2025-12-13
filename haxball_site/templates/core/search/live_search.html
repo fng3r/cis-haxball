@@ -1,0 +1,32 @@
+<div class="tw:relative tw:min-w-45 tw:max-w-60 tw:mr-1">
+  <form method="get" action="{% url 'core:search' %}" class="tw:relative tw:[&:has(:is(input):focus)_kbd]:hidden">
+    <label class="tw:input tw:input-bordered tw:w-full">
+      <svg class="tw:w-3.5 tw:opacity-75 tw:[:has(#search-indicator.htmx-request)_&]:opacity-0"
+           xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 24 24">
+        <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </g>
+      </svg>
+      <span id="search-indicator"
+            class="htmx-indicator tw:loading tw:loading-spinner tw:absolute tw:top-1/2 tw:left-2.5 tw:-translate-y-1/2 tw:w-3.5"></span>
+      <input type="search"
+             name="q"
+             placeholder="Поиск"
+             aria-label="Search"
+             autocomplete="off"
+             hx-get="{% url 'core:search' %}"
+             hx-trigger="input changed delay:300ms"
+             hx-target="#search-results"
+             hx-swap="innerHTML"
+             hx-indicator="#search-indicator"
+             id="search-input" />
+    </label>
+    <div id="search-kbd" class="tw:absolute tw:top-1/2 tw:right-3 tw:-translate-y-1/2 tw:pointer-events-none">
+      <kbd class="tw:kbd tw:kbd-sm">Ctrl</kbd>
+      <kbd class="tw:kbd tw:kbd-sm">I</kbd>
+    </div>
+  </form>
+  <div id="search-results" class="tw:absolute tw:top-full tw:left-0 tw:right-0 tw:mt-1"></div>
+</div>

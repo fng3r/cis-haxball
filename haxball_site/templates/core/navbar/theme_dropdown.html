@@ -1,0 +1,27 @@
+<div class="tw:dropdown tw:dropdown-end">
+  <div tabindex="0" role="button" class="tw:btn tw:btn-ghost tw:px-1.5">
+    <div class="tw:bg-base-100 tw:group-hover:border-base-content/20 tw:border-base-content/10 tw:grid tw:shrink-0 tw:grid-cols-2 tw:gap-0.5 tw:rounded-md tw:border tw:p-1 tw:transition-colors">
+      <div class="tw:bg-base-content tw:size-1 tw:rounded-full"></div>
+      <div class="tw:bg-primary tw:size-1 tw:rounded-full"></div>
+      <div class="tw:bg-secondary tw:size-1 tw:rounded-full"></div>
+      <div class="tw:bg-accent tw:size-1 tw:rounded-full"></div>
+    </div>
+    <i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+  </div>
+  <ul tabindex="0"
+      class="tw:h-100! tw:overflow-y-auto tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:w-45 tw:p-2 tw:shadow-2xl">
+    <li class="tw:menu-title">Тема</li>
+    {% for theme in themes %}
+      <li>
+        <div class="tw:relative tw:flex tw:items-center tw:justify-between tw:gap-1">
+          <input type="radio"
+                 name="theme-dropdown"
+                 aria-label="{{ theme.label }}"
+                 value="{{ theme.value }}"
+                 class="theme-controller tw:flex-grow tw:btn tw:btn-ghost tw:btn-sm tw:justify-start tw:peer" />
+          <i class="fa fa-check tw:absolute tw:right-2 tw:size-4! tw:opacity-0 tw:peer-checked:opacity-100" aria-hidden="true"></i>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
