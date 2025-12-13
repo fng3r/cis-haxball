@@ -48,6 +48,23 @@
                         </div>
                       {% endif %}
                       <span class="tw:font-medium">{{ standing.user.username }}</span>
+
+                      {% if standing.place == 1 %}
+                        <span class="tw:ml-0.5 tw:badge tw:badge-sm tw:badge-primary tw:px-1.5 tw:gap-0.75">
+                          250
+                          <img src="{% static 'img/cis-coin.png' %}" alt="CIS Coin" class="tw:size-4">
+                        </span>
+                      {% elif standing.place == 2 %}
+                        <span class="tw:ml-0.5 tw:badge tw:badge-sm tw:badge-primary tw:px-1.5 tw:gap-0.75">
+                          150
+                          <img src="{% static 'img/cis-coin.png' %}" alt="CIS Coin" class="tw:size-4">
+                        </span>
+                      {% elif standing.place == 3 %}
+                        <span class="tw:ml-0.5 tw:badge tw:badge-sm tw:badge-primary tw:px-1.5 tw:gap-0.75">
+                          100
+                          <img src="{% static 'img/cis-coin.png' %}" alt="CIS Coin" class="tw:size-4">
+                        </span>
+                      {% endif %}
                     </div>
                   </th>
                   {% for tour in selected_tournament.league.tours.all %}
