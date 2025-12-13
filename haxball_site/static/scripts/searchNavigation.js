@@ -48,12 +48,18 @@ function handleSearchKeydown(event) {
 
 function hideSearchResults() {
     setTimeout(() => {
-        const resultsContainer = document.getElementById('search-results');
-        if (resultsContainer) {
-          resultsContainer.innerHTML = '';
-          currentSearchIndex = -1;
+        const resultsContainer = $('#search-results');
+        if (resultsContainer.length) {
+          resultsContainer.hide();
         }
     }, 150);
+}
+
+function showSearchResults() {
+    const resultsContainer = $('#search-results');
+    if (resultsContainer.length) {
+      resultsContainer.show();
+    }
 }
 
 function highlightResult(index) {
@@ -70,7 +76,6 @@ function highlightResult(index) {
     // If it's the first result (index 0), scroll to the category header to show the title
     if (index === 0) {
       const categoryHeader = currentLink.closest('.category-container').querySelector('.category-header');
-      console.log(categoryHeader || 'no category header');
       if (categoryHeader) {
         categoryHeader.scrollIntoView({ block: 'nearest' });
       } else {
@@ -124,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('search-input');
   if (searchInput) {
     searchInput.addEventListener('blur', hideSearchResults);
+    searchInput.addEventListener('focus', showSearchResults);
     searchInput.addEventListener('keydown', handleSearchKeydown);
   }
 }); 
