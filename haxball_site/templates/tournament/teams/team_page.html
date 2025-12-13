@@ -222,7 +222,7 @@
             <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
               {% if team.achievements.count %}
                 {% for season, achievements in team|team_achievements_by_season %}
-                  <div class="team_achievements tw:py-1">
+                  <div class="team_achievements tw:py-1 tw:text-base-content/80">
                     <div class="team_achievements-season">{{ season.title }}</div>
                     <div class="team_achievements-medals">
                       {% for achievement in achievements %}

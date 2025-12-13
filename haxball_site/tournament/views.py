@@ -459,6 +459,8 @@ class LeagueDetail(DetailView):
                 .filter(start_date__lt=now)
                 .order_by('-start_date', 'order')
             ).first()
+            if not default_stage:
+                default_stage = league.stages.first()
         else:
             default_stage = league.stages.first()
 

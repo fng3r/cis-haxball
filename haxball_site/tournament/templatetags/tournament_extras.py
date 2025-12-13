@@ -1608,11 +1608,13 @@ def tournament_timeline(league: League):
     progress = 0
     total_matches = league.matches_in_league.count()
     played_matches = league.matches_in_league.filter(is_played=True).count()
+    today = timezone.now().date()
 
-    if played_matches == total_matches:
+    if today < start_date:
+        progress = 0
+    elif played_matches == total_matches:
         progress = 100
     else:
-        today = timezone.now().date()
         total_days = (end_date - start_date).days
         if total_days == 0:
             progress = 100 if today >= end_date else (0 if today < start_date else 50)

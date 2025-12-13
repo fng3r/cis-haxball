@@ -552,25 +552,69 @@ class VotesView(View):
 def search_result(request):
     query = request.GET.get('q')
     if not query:
-        profile_list = Profile.objects.none()
-        team_list = Team.objects.none()
-        post_list = Post.objects.none()
+        all_profiles = Profile.objects.none()
+        all_teams = Team.objects.none()
+        all_posts = Post.objects.none()
     else:
-        profile_list = Profile.objects.filter(name__username__icontains=query)
-        team_list = Team.objects.filter(title__icontains=query)
-        post_list = Post.objects.filter(title__icontains=query)
+        all_profiles = Profile.objects.filter(name__username__icontains=query)
+        all_teams = Team.objects.filter(title__icontains=query)
+        all_posts = Post.objects.filter(title__icontains=query)
 
     if request.htmx:
+        # Calculate how many items to show for each category
+        # Rule 1: Show up to 5 of each type when available (guaranteed)
+        # Rule 2: Fill remaining slots up to 15 total with priority: profiles, teams, posts
+        max_total = 15
+        initial_per_type = 5
+
+        profiles_count = all_profiles.count()
+        teams_count = all_teams.count()
+        posts_count = all_posts.count()
+
+        profiles_to_show = min(initial_per_type, profiles_count)
+        teams_to_show = min(initial_per_type, teams_count)
+        posts_to_show = min(initial_per_type, posts_count)
+
+        total_shown = profiles_to_show + teams_to_show + posts_to_show
+        remaining = max_total - total_shown
+
+        if remaining > 0:
+            additional_profiles = min(remaining, profiles_count - profiles_to_show)
+            profiles_to_show += additional_profiles
+            remaining -= additional_profiles
+
+        if remaining > 0:
+            additional_teams = min(remaining, teams_count - teams_to_show)
+            teams_to_show += additional_teams
+            remaining -= additional_teams
+
+        if remaining > 0:
+            additional_posts = min(remaining, posts_count - posts_to_show)
+            posts_to_show += additional_posts
+            remaining -= additional_posts
+
+        profiles = all_profiles[:profiles_to_show]
+        teams = all_teams[:teams_to_show]
+        posts = all_posts[:posts_to_show]
+
         return render(
             request,
             'core/search/live_search_dropdown.html',
-            {'profiles': profile_list, 'teams': team_list, 'posts': post_list, 'query': query},
+            {
+                'profiles': profiles,
+                'teams': teams,
+                'posts': posts,
+                'profiles_count': profiles_count,
+                'teams_count': teams_count,
+                'posts_count': posts_count,
+                'query': query,
+            },
         )
 
     return render(
         request,
         'core/search/search_result.html',
-        {'profiles': profile_list, 'teams': team_list, 'posts': post_list},
+        {'profiles': all_profiles, 'teams': all_teams, 'posts': all_posts},
     )
 
 

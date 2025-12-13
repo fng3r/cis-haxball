@@ -4,9 +4,9 @@
   {% if items %}
     <div class="category-container tw:border-b tw:border-base-300 tw:p-1">
       <div class="category-header tw:px-3 tw:py-2 tw:font-semibold tw:text-sm tw:text-base-content/60 tw:pointer-events-none">
-        {{ items_type }} ({{ items.count }})
+        {{ items_type }} ({{ items_total_count }})
       </div>
-      {% for item in items|slice:":5" %}
+      {% for item in items %}
         <a href="{{ item.get_absolute_url }}" class="tw:block tw:px-3 tw:py-2 tw:rounded tw:transition-colors">
           {% if items_type == 'Пользователи' %}
             <div class="tw:flex tw:items-center tw:gap-2">
@@ -33,21 +33,20 @@
 <div class="tw:absolute tw:top-full tw:left-0 tw:right-0 tw:bg-base-100 tw:border tw:border-base-300 tw:rounded-lg tw:shadow-lg tw:z-50 tw:max-h-120 tw:overflow-y-auto">
   {% if query %}
     {% if profiles or teams or posts %}
-      {% with items=profiles items_type='Пользователи' %}
+      {% with items=profiles items_type='Пользователи' items_total_count=profiles_count %}
         {% partial search_result_items %}
       {% endwith %}
 
-      {% with items=teams items_type='Команды' %}
+      {% with items=teams items_type='Команды' items_total_count=teams_count %}
         {% partial search_result_items %}
       {% endwith %}
 
-      {% with items=posts items_type='Посты' %}
+      {% with items=posts items_type='Посты' items_total_count=posts_count %}
         {% partial search_result_items %}
       {% endwith %}
 
-      <!-- View All Results Link - Only show when some results are hidden -->
-      {% if profiles.count > 5 or teams.count > 5 or posts.count > 5 %}
-        <a href="{% url 'core:filter' %}?q={{ query }}"
+      {% if profiles_count > profiles|length or teams_count > teams|length or posts_count > posts|length %}
+        <a href="{% url 'core:search' %}?q={{ query }}"
            class="tw:block tw:p-2 tw:text-center tw:text-sm tw:text-primary tw:font-medium tw:transition-colors">Показать все результаты</a>
       {% endif %}
     {% else %}

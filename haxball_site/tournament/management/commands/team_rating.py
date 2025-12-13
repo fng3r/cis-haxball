@@ -49,9 +49,7 @@ class Command(BaseCommand):
 
             ordered_rating = [(k, v) for k, v in sorted(overall_rating.items(), key=lambda item: item[1], reverse=True)]
 
-            rating_version = TeamRatingVersion(
-                number=version, date=timezone.localdate(), related_season=Season.objects.get(number=season.number)
-            )
+            rating_version = TeamRatingVersion(number=version, date=timezone.localdate(), related_season=source_season)
             rating_version.save()
             for rank, entry in enumerate(ordered_rating, 1):
                 TeamRating(version=rating_version, rank=rank, team=entry[0], total_points=entry[1]).save()
