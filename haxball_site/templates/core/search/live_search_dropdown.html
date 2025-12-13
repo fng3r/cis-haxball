@@ -46,7 +46,7 @@
       {% endwith %}
 
       {% if profiles_count > profiles|length or teams_count > teams|length or posts_count > posts|length %}
-        <a href="{% url 'core:filter' %}?q={{ query }}"
+        <a href="{% url 'core:search' %}?q={{ query }}"
            class="tw:block tw:p-2 tw:text-center tw:text-sm tw:text-primary tw:font-medium tw:transition-colors">Показать все результаты</a>
       {% endif %}
     {% else %}

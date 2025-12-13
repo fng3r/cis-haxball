@@ -649,7 +649,7 @@
 
     <div class="tw:flex tw:items-center tw:gap-2">
       <div class="tw:relative tw:min-w-45 tw:max-w-60 tw:mr-2">
-        <form method="get" action="{% url 'core:filter' %}" class="tw:relative tw:[&:has(:is(input):focus)_kbd]:hidden">
+        <form method="get" action="{% url 'core:search' %}" class="tw:relative tw:[&:has(:is(input):focus)_kbd]:hidden">
           <label class="tw:input tw:input-bordered tw:w-full">
             <svg class="tw:w-3.5 tw:opacity-75 tw:[:has(#search-indicator.htmx-request)_&]:opacity-0"
                  xmlns="http://www.w3.org/2000/svg"
@@ -666,7 +666,7 @@
                    placeholder="Поиск"
                    aria-label="Search"
                    autocomplete="off"
-                   hx-get="{% url 'core:filter' %}"
+                   hx-get="{% url 'core:search' %}"
                    hx-trigger="input changed delay:300ms"
                    hx-target="#search-results"
                    hx-swap="innerHTML"

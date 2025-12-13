@@ -14,7 +14,7 @@ urlpatterns = [
     path('anime/', views.anime_view, name='anime'),
     #  Путь к фасткапам
     path('fastcups/', views.FastcupView.as_view(), name='fastcups'),
-    path('filter/', views.search_result, name='filter'),
+    path('search/', views.search_result, name='search'),
     #  Путь к турнирам
     path('tournaments/', views.TournamentsView.as_view(), name='tournaments'),
     #  Путь к админам
