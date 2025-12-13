@@ -647,7 +647,7 @@
       </nav>
     </div>
 
-    <div class="tw:flex tw:items-center tw:gap-2">
+    <div class="tw:flex tw:items-center tw:gap-3">
       {% include "core/search/live_search.html" %}
 
       <div class="tw:flex tw:items-center tw:gap-0.5">
@@ -658,9 +658,9 @@
         {% if user.is_authenticated %}
           {% include "notifications/notification_dropdown.html" %}
         {% endif %}
-      </div>
 
-      {% include "core/navbar/theme_dropdown.html" %}
+        {% include "core/navbar/theme_dropdown.html" %}
+      </div>
 
       {% if user.is_authenticated %}
         {% include "core/navbar/user_dropdown.html" %}
