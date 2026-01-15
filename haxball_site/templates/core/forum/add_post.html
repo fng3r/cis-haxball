@@ -6,7 +6,7 @@
 {% block postlist %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
     {% if user.is_authenticated %}
-      <div class="tw:card-body tw:p-4">
+      <div class="tw:card-body tw:gap-0 tw:p-4">
         <h3 class="tw:text-center tw:mb-0">
           <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>
           {% if form.instance.id is not None %}
@@ -17,13 +17,30 @@
         </h3>
         <div class="tw:divider tw:my-0!"></div>
 
-        <form method="POST" class="tw:flex tw:flex-col tw:gap-2">
+        <form method="POST" enctype="multipart/form-data" class="tw:flex tw:flex-col tw:gap-2">
           {% csrf_token %}
           {{ form.media }}
 
           <fieldset class="tw:fieldset">
             <legend class="tw:fieldset-legend tw:text-sm">Название</legend>
             {{ form.title|add_class:'tw:input tw:input-sm' }}
+          </fieldset>
+
+          <fieldset class="tw:fieldset">
+            <legend class="tw:fieldset-legend tw:text-sm">Краткое описание</legend>
+            {{ form.description|add_class:'tw:textarea tw:textarea-sm tw:textarea-bordered' }}
+            {% if form.description.help_text %}<p class="tw:label tw:mb-0!">{{ form.description.help_text }}</p>{% endif %}
+          </fieldset>
+
+          <fieldset class="tw:fieldset">
+            <legend class="tw:fieldset-legend tw:text-sm">Обложка для превью</legend>
+            <input type="file" name="preview_cover" accept="image/*" class="tw:file-input tw:file-input-sm" id="id_preview_cover">
+            {% if form.instance.preview_cover %}
+              <div class="tw:mt-2">
+                <p class="tw:text-xs tw:text-base-content/60 tw:mb-1">Текущая обложка:</p>
+                <img src="{{ form.instance.preview_cover.url }}" alt="Preview cover" class="tw:max-w-xs tw:rounded-lg">
+              </div>
+            {% endif %}
           </fieldset>
 
           <fieldset class="tw:fieldset tw:w-full">

@@ -53,7 +53,13 @@ class EditProfileForm(forms.ModelForm):
 
 class PostForm(forms.ModelForm):
     body = forms.CharField(label='Пост', widget=CKEditorUploadingWidget(config_name='default'))
+    description = forms.CharField(
+        label='Краткое описание',
+        widget=forms.Textarea(attrs={'rows': 3, 'maxlength': 150}),
+        required=False,
+        help_text='Краткое описание содержимого поста для превью (максимум 150 символов)',
+    )
 
     class Meta:
         model = Post
-        fields = ('title', 'body')
+        fields = ('title', 'body', 'description', 'preview_cover')

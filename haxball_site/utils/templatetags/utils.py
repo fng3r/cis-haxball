@@ -1,4 +1,5 @@
 from django import template
+from django.utils.timesince import timesince
 
 from haxball_site import settings
 
@@ -29,3 +30,17 @@ def get_or_default(d: dict, key, default=None):
 @register.filter
 def contains(collection, item):
     return item in collection
+
+
+@register.filter(name='nbsp2space', is_safe=True)
+def nbsp2space(value: str) -> str:
+    return value.replace('&nbsp;', ' ')
+
+
+@register.filter
+def timesince_single_unit(value):
+    if not value:
+        return ''
+    result = timesince(value)
+
+    return result.split(',')[0]

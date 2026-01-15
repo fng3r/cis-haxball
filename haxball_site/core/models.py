@@ -243,6 +243,16 @@ class Post(models.Model):
     )
     author = models.ForeignKey(User, verbose_name='Автор', on_delete=models.CASCADE, related_name='blog_posts')
     slug = models.SlugField(max_length=250)
+    description = models.TextField(
+        'Краткое описание', max_length=150, blank=True, help_text='Краткое описание содержимого поста для превью'
+    )
+    preview_cover = models.ImageField(
+        'Обложка для превью',
+        upload_to='posts_covers/',
+        blank=True,
+        null=True,
+        default='posts_covers/default.png',
+    )
     body = models.TextField('Текст поста')
     publish = models.DateTimeField('Время публикации', default=timezone.now)
     created = models.DateTimeField('Создано', auto_now_add=True)

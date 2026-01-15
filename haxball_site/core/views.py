@@ -40,7 +40,7 @@ class HomeView(View):
                 '-important',
                 '-publish',
             )
-        )[:5]
+        )[:6]
         user_posts = (
             Post.objects.users_posts()
             .select_related(*selects)
@@ -48,7 +48,7 @@ class HomeView(View):
             .order_by(
                 '-publish',
             )
-        )[:5]
+        )[:6]
         context = {
             'posts': posts,
             'user_posts': user_posts,
@@ -60,7 +60,7 @@ class HomeView(View):
 class AllPostView(ListView):
     queryset = Post.objects.official().order_by('-publish')
     context_object_name = 'posts'
-    paginate_by = 7
+    paginate_by = 6
     template_name = 'core/post/all_posts_list.html'
 
     def get_context_data(self, **kwargs):
@@ -72,7 +72,7 @@ class AllPostView(ListView):
 class AllUsersPostsView(ListView):
     queryset = Post.objects.users_posts().order_by('-publish')
     context_object_name = 'posts'
-    paginate_by = 7
+    paginate_by = 6
     template_name = 'core/post/all_posts_list.html'
 
     def get_context_data(self, **kwargs):
@@ -132,7 +132,7 @@ class CategoryListView(DetailView):
 def post_new(request, slug):
     category = Category.objects.get(slug=slug)
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
@@ -149,7 +149,7 @@ def post_new(request, slug):
 def post_edit(request, slug, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.method == 'POST':
-        form = PostForm(request.POST, instance=post)
+        form = PostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
             post = form.save(commit=False)
             post.save()
