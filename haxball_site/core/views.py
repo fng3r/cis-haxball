@@ -88,7 +88,7 @@ class LivesView(ListView):
         category = None
     queryset = Post.objects.filter(category=category)
     context_object_name = 'posts'
-    paginate_by = 7
+    paginate_by = 6
     template_name = 'core/lives/lives_list.html'
 
 
@@ -169,7 +169,7 @@ class FastcupView(ListView):
         category = None
     queryset = Post.objects.filter(category=category).order_by('-created')
     context_object_name = 'posts'
-    paginate_by = 7
+    paginate_by = 6
     template_name = 'core/fastcups/fastcups_list.html'
 
 
@@ -197,7 +197,7 @@ class TournamentsView(ListView):
         category = None
     queryset = Post.objects.filter(category=category)
     context_object_name = 'posts'
-    paginate_by = 7
+    paginate_by = 6
     template_name = 'core/tournaments/tournaments_list.html'
 
 
