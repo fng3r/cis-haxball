@@ -1,13 +1,17 @@
-<div class="tw:card tw:bg-base-100 tw:rounded-lg">
+<div class="tw:card tw:bg-base-100 tw:rounded-lg tw:shadow-sm tw:border tw:border-base-200">
+  <div class="tw:px-4 tw:py-3 tw:bg-base-200 tw:rounded-t-lg tw:border-b tw:border-base-300">
+    <h5 class="tw:text-sm tw:font-semibold tw:text-base-content/90 tw:flex tw:items-center tw:gap-2 tw:mb-0!">
+      <i class="fa fa-star tw:text-primary" aria-hidden="true"></i>
+      Рейтинг игроков
+      <span class="tw:badge tw:badge-xs tw:badge-warning">NEW</span>
+    </h5>
+  </div>
   <div class="tw:p-4">
-    <div class="tw:flex tw:items-center tw:gap-1 tw:font-bold">
-      <h5 class="tw:text-lg tw:mb-1.5!">Рейтинг игроков</h5>
-      <div class="tw:badge tw:badge-xs tw:badge-warning">NEW</div>
-    </div>
-    <p class="tw:text-sm tw:mb-4">
-      <a href="{% url 'core:post_detail' '1032' 'player-rating-2025-2' %}" class="tw:link">Опубликован</a> свежий рейтинг игроков. Ознакомьтесь с актуальной версией!
+    <p class="tw:text-sm tw:text-base-content/70 tw:mb-4">
+      <a href="{% url 'core:post_detail' '1032' 'player-rating-2025-2' %}" class="tw:link tw:link-primary">Опубликован</a> свежий рейтинг игроков. Ознакомьтесь с актуальной версией!
     </p>
-    <a href="{% url 'tournament:players_rating' %}" class="tw:btn tw:btn-primary tw:btn-soft tw:btn-sm tw:w-full">
+    <a href="{% url 'tournament:players_rating' %}" class="tw:btn tw:btn-primary tw:btn-sm tw:w-full">
+      <i class="fa fa-arrow-right tw:mr-1"></i>
       Перейти к рейтингу
     </a>
   </div>
