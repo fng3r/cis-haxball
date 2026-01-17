@@ -2,37 +2,59 @@
 
 {% load static %}
 {% load user_tags %}
+{% load utils %}
 
 {% block title %}Форум — CIS-HAXBALL{% endblock %}
 {% block main_content %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
-    <div class="tw:card-body tw:rounded-t-lg tw:gap-3 tw:py-4">
-      {% for theme in forum_themes %}
-        <div class="tw:flex tw:flex-col">
-          <h3 class="tw:text-center">{{ theme.title }}</h3>
-          <div class="tw:divider tw:my-0!"></div>
+    <div class="tw:card-body tw:rounded-t-lg tw:gap-0 tw:py-4">
+      <h3 class="tw:text-center tw:mb-0">
+        <i class="fa fa-list-alt tw:text-primary tw:mr-1" aria-hidden="true"></i>Форум
+      </h3>
 
-          {% for subtheme in theme.category_in_theme.all %}
-            <div class="tw:mx-1 tw:my-2 tw:rounded-xl tw:border tw:border-neutral-300">
-              <div class="tw:flex tw:justify-between tw:py-2 tw:px-4">
-                <div class="tw:inline-block">
-                  <h5 class="tw:text-lg">
-                    <a href="{{ subtheme.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary">{{ subtheme.title }}</a>
-                  </h5>
-                  <div class="tw:text-base tw:text-base-content/70 tw:font-semibold">{{ subtheme.description }}</div>
-                </div>
-                <div class="tw:inline-block tw:min-w-1/6">
-                  <div class="tw:text-right tw:font-semibold">
-                    <i class="fa fa-bars tw:text-primary" aria-hidden="true"></i> Статей: {{ subtheme.posts_in_category.count }}
-                  </div>
-                  <div class="tw:text-base-content/70 tw:text-sm tw:mt-2 tw:text-right tw:font-semibold">{% forum_last_activity subtheme %}</div>
-                </div>
-              </div>
+      <div class="tw:divider tw:mt-0 tw:mb-1"></div>
+
+      <div class="tw:space-y-4">
+        {% for theme in forum_themes %}
+          <div class="tw:space-y-3">
+            <h4 class="tw:text-base tw:font-semibold tw:text-base-content/80 tw:px-1">{{ theme.title }}</h4>
+
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:lg:grid-cols-3 tw:gap-3">
+              {% for subtheme in theme.category_in_theme.all %}
+                <article class="tw:relative tw:flex tw:flex-col tw:overflow-hidden tw:rounded-lg tw:bg-base-200 tw:border tw:border-base-300 tw:shadow-md tw:h-full tw:transition-all tw:duration-300 tw:hover:shadow-lg tw:hover:-translate-y-1">
+                  <a href="{{ subtheme.get_absolute_url }}" class="tw:flex-1 tw:flex tw:flex-col tw:no-underline tw:text-inherit tw:group">
+                    <div class="tw:flex-1 tw:flex tw:flex-col tw:p-3 tw:bg-base-200 tw:gap-2">
+                      {# Header with icon #}
+                      <div class="tw:flex tw:items-center tw:gap-2 tw:mb-1">
+                        <div class="tw:flex tw:items-center tw:justify-center tw:size-7 tw:rounded-full tw:bg-primary/20 tw:text-primary tw:flex-shrink-0">
+                          <i class="fa fa-folder-open tw:text-sm" aria-hidden="true"></i>
+                        </div>
+                        <h5 class="tw:text-sm tw:font-bold tw:text-base-content tw:line-clamp-2 tw:leading-snug tw:mb-0!">{{ subtheme.title }}</h5>
+                      </div>
+
+                      {% if subtheme.description %}
+                        <p class="tw:text-xs tw:text-base-content/70 tw:leading-relaxed tw:mb-0!">{{ subtheme.description }}</p>
+                      {% endif %}
+
+                      <div class="tw:mt-auto">
+                        <div class="tw:divider tw:h-2 tw:mt-0 tw:mb-1"></div>
+                        {# Metrics #}
+                        <div class="tw:flex tw:items-center tw:justify-between">
+                          <div class="tw:flex tw:items-center tw:gap-1 tw:text-[11px] tw:text-base-content/50">
+                            <i class="fa fa-bars" aria-hidden="true"></i>
+                            <span>{{ subtheme.posts_in_category.count }} {{ subtheme.posts_in_category.count|ru_pluralize:'статья,статьи,статей' }}</span>
+                          </div>
+                          <div class="tw:text-[10px] tw:text-base-content/40">{% forum_last_activity subtheme %}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              {% endfor %}
             </div>
-          {% endfor %}
-        </div>
-
-      {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
 {% endblock %}

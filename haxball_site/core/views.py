@@ -97,7 +97,7 @@ def anime_view(request):
 
 
 class ForumView(ListView):
-    queryset = Themes.objects.all()
+    queryset = Themes.objects.all().prefetch_related('category_in_theme')
     context_object_name = 'forum_themes'
     template_name = 'core/forum/forum_main.html'
 

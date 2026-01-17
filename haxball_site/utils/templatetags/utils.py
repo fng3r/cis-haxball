@@ -44,3 +44,18 @@ def timesince_single_unit(value):
     result = timesince(value)
 
     return result.split(',')[0]
+
+
+@register.filter
+def ru_pluralize(value, variants):
+    variants = variants.split(',')
+    value = abs(int(value))
+
+    if value % 10 == 1 and value % 100 != 11:
+        variant = 0
+    elif 2 <= value % 10 <= 4 and not (12 <= value % 100 <= 14):
+        variant = 1
+    else:
+        variant = 2
+
+    return variants[variant]
