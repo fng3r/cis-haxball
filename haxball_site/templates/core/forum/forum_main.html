@@ -40,11 +40,11 @@
                         <div class="tw:divider tw:h-2 tw:mt-0 tw:mb-1"></div>
                         {# Metrics #}
                         <div class="tw:flex tw:items-center tw:justify-between">
-                          <div class="tw:flex tw:items-center tw:gap-1 tw:text-[11px] tw:text-base-content/50">
+                          <div class="tw:flex tw:items-center tw:gap-1 tw:text-xs tw:text-base-content/50">
                             <i class="fa fa-bars" aria-hidden="true"></i>
                             <span>{{ subtheme.posts_in_category.count }} {{ subtheme.posts_in_category.count|ru_pluralize:'статья,статьи,статей' }}</span>
                           </div>
-                          <div class="tw:text-[10px] tw:text-base-content/40">{% forum_last_activity subtheme %}</div>
+                          <div class="tw:text-xs tw:text-base-content/40">{% forum_last_activity subtheme %}</div>
                         </div>
                       </div>
                     </div>
