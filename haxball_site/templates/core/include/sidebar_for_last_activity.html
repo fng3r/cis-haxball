@@ -45,7 +45,13 @@
           </span>
           <div class="tw:flex tw:flex-col tw:min-w-0 tw:flex-grow">
             <span class="tw:truncate tw:text-sm tw:font-medium tw:group-hover:text-primary tw:transition-colors"
-                  title="{{ comment.content_object }}">{{ comment.content_object }}</span>
+                  title="{{ comment.content_object }}">
+              {% if comment.content_type.model == 'post' %}
+                {{ comment.content_object.title }}
+              {% else %}
+                {{ comment.content_object }}
+              {% endif %}
+            </span>
             <span class="tw:text-xs tw:text-base-content/60 tw:truncate">
               {% blocktranslate with date=comment.created|naturalday:'j b.'|capfirst time=comment.created|time author=comment.author %}
                 {{ date }} в {{ time }} · {{ author }}
