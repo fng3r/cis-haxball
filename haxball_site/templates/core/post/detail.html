@@ -69,19 +69,19 @@
           {% endif %}
         </h4>
 
-        <small class="tw:flex tw:items-center tw:gap-x-1 tw:text-base-content/70">
-          <div class="tw:flex tw:items-center">
-            <img src="{% static "img/ico/calendar_1.png" %}" height="21" width="21">
+        <small class="tw:flex tw:items-center tw:gap-x-1.25 tw:text-base-content/70">
+          <span>
+            <i class="fa fa-calendar tw:text-primary" aria-hidden="true"></i>
             {{ post.publish|date:"SHORT_DATE_FORMAT" }}
-          </div>
-          <div class="tw:flex tw:items-center tw:gap-x-0.5">
-            <img src="{% static "img/ico/clock_1.png" %}" height="19" width="19">
+          </span>
+          <span>
+            <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
             {{ post.publish|time:"H:i" }}
-          </div>
-          <div class="tw:flex tw:items-center tw:gap-x-0.5">
-            <img src="{% static "img/ico/user_1.png" %}" height="19" width="19">
+          </span>
+          <span>
+            <i class="fa fa-user tw:text-primary" aria-hidden="true"></i>
             <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ post.author.user_profile.get_absolute_url }}">{{ post.author }}</a>
-          </div>
+          </span>
         </small>
       </div>
     </div>
