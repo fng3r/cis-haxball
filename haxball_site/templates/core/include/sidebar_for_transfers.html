@@ -3,66 +3,110 @@
 {% load thumbnail %}
 
 {% cache 60 transfers_sidebar %}
-  <div class="tw:card tw:border tw:border-gray-100 tw:rounded-t-lg tw:rounded-b-none">
-    <div class="tw:card-title tw:justify-center tw:rounded-t-lg tw:border-b tw:border-gray-100 tw:p-2 tw:bg-card-header tw:text-card-header">
-      <span class="tw:mb-0 tw:text-lg tw:text-center">Последние трансферы</span>
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:shadow-sm tw:border tw:border-base-200">
+    <div class="tw:px-4 tw:py-3 tw:bg-base-200 tw:rounded-t-lg tw:border-b tw:border-base-300">
+      <h5 class="tw:text-sm tw:font-semibold tw:text-base-content/90 tw:flex tw:items-center tw:gap-2 tw:mb-0!">
+        <i class="fa fa-exchange tw:text-primary" aria-hidden="true"></i>
+        Трансферы
+      </h5>
     </div>
 
-    <div class="tw:flex tw:flex-col tw:w-full tw:mb-0! tw:bg-base-100">
+    <div class="tw:flex tw:flex-col tw:divide-y tw:divide-base-300">
       {% for transfer in transfers %}
-        <div class="tw:px-2 tw:flex tw:flex-wrap tw:justify-center tw:items-center tw:py-2 tw:not-last:border-b tw:not-last:border-gray-300">
-          <div class="tw:avatar tw:mr-4">
-            <div class="tw:w-[50px] tw:h-[50px] tw:rounded-full">
-              <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
-                {% thumbnail transfer.trans_player.name.user_profile.avatar "50x50" crop="center" as avatar %}
-                  <img src="{{ avatar.url }}" alt="{{ transfer.trans_player.nickname }}" title="{{ transfer.trans_player }}">
-                {% endthumbnail %}
-              </a>
-            </div>
+        <div class="tw:grid tw:grid-cols-[auto_1fr] tw:gap-x-3 tw:gap-y-1.5 tw:p-2 tw:px-3">
+          {# Row 1, Col 1: Date #}
+          <div class="tw:row-start-1 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:self-center">
+            <span class="tw:text-xl tw:font-bold tw:text-base-content/90 tw:leading-none">{{ transfer.date_join|date:"d" }}</span>
+            <span class="tw:text-[10px] tw:font-semibold tw:text-base-content/70 tw:uppercase tw:leading-tight">{{ transfer.date_join|date:"M" }}</span>
           </div>
 
-          <div class="tw:flex tw:justify-center tw:items-center">
-            <div class="tw:avatar tw:mr-2">
-              <div class="tw:w-[55px]">
-                {% if transfer.from_team %}
-                  <a href="{{ transfer.from_team.get_absolute_url }}">
-                    <img src="{{ transfer.from_team.logo.url }}"
-                         class="tw:rounded-lg"
-                         alt="{{ transfer.from_team.title }}"
-                         title="{{ transfer.from_team.title }}">
-                  </a>
-                {% else %}
-                  <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2" alt="СА" width="55" title="Свободный агент">
-                {% endif %}
-              </div>
-            </div>
+          {# Row 1, Col 2: Player #}
+          <div class="tw:row-start-1 tw:flex tw:items-center tw:gap-2 tw:min-w-0 tw:self-center tw:mb-1 tw:group">
+            <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}">
+              {% thumbnail transfer.trans_player.name.user_profile.avatar "32x32" crop="center" as avatar %}
+                <div class="tw:avatar">
+                  <div class="tw:w-6 tw:rounded-full tw:ring-1 tw:ring-base-300">
+                    <img src="{{ avatar.url }}" alt="{{ transfer.trans_player.nickname }}" title="{{ transfer.trans_player }}" class="tw:block">
+                  </div>
+                </div>
+              {% endthumbnail %}
+            </a>
+            <a href="{{ transfer.trans_player.name.user_profile.get_absolute_url }}"
+               class="tw:text-base tw:font-semibold tw:text-base-content tw:truncate tw:group-hover:text-primary tw:transition-colors"
+               title="{{ transfer.trans_player }}">{{ transfer.trans_player.nickname }}</a>
+          </div>
 
-            <i class="fa fa-long-arrow-right"></i>
+          {# Row 2, Col 1: Arrow left icon #}
+          <div class="tw:row-start-2 tw:flex tw:items-center tw:justify-center tw:self-center">
+            <i class="fa fa-long-arrow-left tw:text-error"></i>
+          </div>
 
-            <div class="tw:avatar tw:ml-2">
-              <div class="tw:w-[55px]">
-                {% if transfer.to_team %}
-                  <a href="{{ transfer.to_team.get_absolute_url }}">
-                    <img src="{{ transfer.to_team.logo.url }}"
-                         class="tw:rounded-lg"
-                         alt="{{ transfer.to_team.title }}"
-                         title="{{ transfer.to_team.title }}">
-                  </a>
-                {% else %}
-                  <img src="{% static 'img/ico/free.png' %}" class="tw:mr-2" alt="СА" width="55" title="Свободный агент">
-                {% endif %}
-              </div>
+          {# Row 2, Col 2: From team #}
+          <div class="tw:row-start-2 tw:flex tw:items-center tw:gap-2 tw:min-w-0 tw:self-center tw:group">
+            <div class="tw:size-6 tw:shrink-0">
+              {% if transfer.from_team %}
+                <a href="{{ transfer.from_team.get_absolute_url }}">
+                  <img src="{{ transfer.from_team.logo.url }}"
+                       class="tw:block tw:w-full tw:h-full tw:object-contain"
+                       alt="{{ transfer.from_team.title }}"
+                       title="{{ transfer.from_team.title }}">
+                </a>
+              {% else %}
+                <img src="{% static 'img/ico/free_agent.png' %}"
+                     class="tw:block tw:w-full tw:h-full tw:object-contain"
+                     alt="СА"
+                     title="Свободный агент">
+              {% endif %}
             </div>
+            {% if transfer.from_team %}
+              <a href="{{ transfer.from_team.get_absolute_url }}"
+                 class="tw:text-sm tw:text-base-content/80 tw:truncate tw:group-hover:text-primary tw:transition-colors"
+                 title="{{ transfer.from_team.title }}">{{ transfer.from_team.title }}</a>
+            {% else %}
+              <span class="tw:text-sm tw:text-base-content/80 tw:truncate">Свободный агент</span>
+            {% endif %}
+          </div>
+
+          {# Row 3, Col 1: Arrow right icon #}
+          <div class="tw:row-start-3 tw:flex tw:items-center tw:justify-center tw:self-center">
+            <i class="fa fa-long-arrow-right tw:text-success"></i>
+          </div>
+
+          {# Row 3, Col 2: To team #}
+          <div class="tw:row-start-3 tw:flex tw:items-center tw:gap-2 tw:min-w-0 tw:self-center tw:group">
+            <div class="tw:size-6 tw:shrink-0">
+              {% if transfer.to_team %}
+                <a href="{{ transfer.to_team.get_absolute_url }}">
+                  <img src="{{ transfer.to_team.logo.url }}"
+                       class="tw:block tw:w-full tw:h-full tw:object-contain"
+                       alt="{{ transfer.to_team.title }}"
+                       title="{{ transfer.to_team.title }}">
+                </a>
+              {% else %}
+                <img src="{% static 'img/ico/free_agent.png' %}"
+                     class="tw:block tw:w-full tw:h-full tw:object-contain"
+                     alt="СА"
+                     title="Свободный агент">
+              {% endif %}
+            </div>
+            {% if transfer.to_team %}
+              <a href="{{ transfer.to_team.get_absolute_url }}"
+                 class="tw:text-sm tw:text-base-content/80 tw:truncate tw:group-hover:text-primary tw:transition-colors"
+                 title="{{ transfer.to_team.title }}">{{ transfer.to_team.title }}</a>
+            {% else %}
+              <span class="tw:text-sm tw:text-base-content/80 tw:truncate">Свободный агент</span>
+            {% endif %}
           </div>
         </div>
       {% empty %}
-        <div class="tw:p-4 tw:py-8 tw:flex tw:justify-center tw:items-center">
-          <div class="tw:text-center tw:text-base-content/70">Нет актуальных трансферов</div>
-        </div>
+        <div class="tw:p-6 tw:text-center tw:text-sm tw:text-base-content/50">Нет актуальных трансферов</div>
       {% endfor %}
     </div>
 
-    <a class="tw:btn-link-block tw:justify-center tw:font-medium tw:bg-transfers-button tw:hover:bg-transfers-button-hover tw:text-transfers-button"
-       href="{% url 'tournament:transfers' %}">Все трансферы</a>
+    <a href="{% url 'tournament:transfers' %}"
+       class="tw:flex tw:items-center tw:justify-center tw:gap-1 tw:px-4 tw:py-2.5 tw:text-sm tw:font-medium tw:hover:text-primary tw:rounded-b-lg tw:border-t tw:border-base-300 tw:hover:bg-base-200 tw:transition-transform tw:active:translate-y-[0.5px]">
+      Все трансферы
+      <i class="fa fa-arrow-right tw:ml-1 tw:text-xs!"></i>
+    </a>
   </div>
 {% endcache %}

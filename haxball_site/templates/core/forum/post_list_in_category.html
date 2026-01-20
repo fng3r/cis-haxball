@@ -14,16 +14,21 @@
       <h3 class="tw:text-center tw:mb-0">
         <i class="fa fa-list-alt tw:text-primary tw:mr-1.5" aria-hidden="true"></i>{{ category }}
       </h3>
-      {% if user.is_authenticated and not category.is_official %}
-        <a href="{% url 'core:new_post' category.slug %}" class="tw:link tw:text-lg">
-          <i class="fa fa-pencil tw:text-warning tw:mr-1" aria-hidden="true"></i>Создать пост
-        </a>
-      {% endif %}
-      <div class="tw:divider tw:my-0!"></div>
+      <div class="tw:divider tw:mt-0 tw:mb-1"></div>
 
-      {% for post in posts %}
-        {% include "core/include/post_in_list.html" with post=post %}
-      {% endfor %}
+      {% if user.is_authenticated and not category.is_official %}
+        <div class="tw:mb-3 tw:flex tw:justify-end">
+          <a href="{% url 'core:new_post' category.slug %}" class="tw:btn tw:btn-sm tw:btn-primary">
+            <i class="fa fa-plus" aria-hidden="true"></i>Создать пост
+          </a>
+        </div>
+      {% endif %}
+
+      <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3">
+        {% for post in posts %}
+          {% include "core/include/post_in_list.html" with post=post %}
+        {% endfor %}
+      </div>
     </div>
 
     {% include "core/include/pagination.html" with page=posts %}

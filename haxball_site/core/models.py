@@ -43,7 +43,6 @@ class LikeDislikeManager(models.Manager):
         return LikeDislikeQuerySet(self.model, using=self._db)
 
 
-# Модель для лайк-дизлайк системы
 class LikeDislike(models.Model):
     LIKE = 1
     DISLIKE = -1
@@ -77,7 +76,6 @@ class LikeDislike(models.Model):
         verbose_name_plural = 'Лайки/дизлайки'
 
 
-# Огромный раздел форума в котором категории создаются админами
 class Themes(models.Model):
     title = models.CharField('Тема', max_length=256)
 
@@ -89,9 +87,6 @@ class Themes(models.Model):
         verbose_name_plural = 'Разделы форума'
 
 
-# Модель для категории поста(Новость, Фасткап, Регламент, Турнир, Трансляция, Архив, общение...)
-# Это также секции форума, в которых можно публиковать посты, поэтому доступно описание, если тема
-# неофицальная, ставим ис-оффишл НОУ и пишем описание, привязываем к теме форума
 class Category(models.Model):
     title = models.CharField('Категория', max_length=256)
     slug = models.SlugField(max_length=250, unique=True)
@@ -230,7 +225,6 @@ class PostQuerySet(models.QuerySet):
         return self.filter(category__theme__title__in=['Общение', 'Про хаксбол'])
 
 
-# Модель для поста
 class Post(models.Model):
     title = models.CharField('Заголовок', max_length=256)
     category = models.ForeignKey(
@@ -243,6 +237,16 @@ class Post(models.Model):
     )
     author = models.ForeignKey(User, verbose_name='Автор', on_delete=models.CASCADE, related_name='blog_posts')
     slug = models.SlugField(max_length=250)
+    description = models.TextField(
+        'Краткое описание', max_length=150, blank=True, help_text='Краткое описание содержимого поста для превью'
+    )
+    preview_cover = models.ImageField(
+        'Обложка для превью',
+        upload_to='posts_covers/',
+        blank=True,
+        null=True,
+        default='posts_covers/default.png',
+    )
     body = models.TextField('Текст поста')
     publish = models.DateTimeField('Время публикации', default=timezone.now)
     created = models.DateTimeField('Создано', auto_now_add=True)
@@ -282,7 +286,6 @@ def bfs(root):
     return visited
 
 
-# Модель ip-адресов пользователя
 class IPAdress(models.Model):
     name = models.ForeignKey(
         User, verbose_name='Пользователь', related_name='user_ips', on_delete=models.SET_NULL, null=True
@@ -314,7 +317,6 @@ class UserActivity(models.Model):
         verbose_name_plural = 'Пользовательская активность'
 
 
-# Модель для профиля пользователя
 class Profile(models.Model):
     name = models.OneToOneField(
         User, verbose_name='Пользователь', on_delete=models.CASCADE, related_name='user_profile'

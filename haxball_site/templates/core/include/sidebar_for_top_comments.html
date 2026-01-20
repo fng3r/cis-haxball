@@ -6,35 +6,38 @@
     <div class="carousel-inner">
       {% for period in comments_by_period %}
         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-          <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
-            <div class="tw:card-title tw:justify-between tw:p-2 tw:rounded-t-lg tw:bg-card-header tw:text-card-header">
-              <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="prev">
-                <i class="fa fa-arrow-circle-left tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
+          <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:shadow-sm tw:border tw:border-base-200">
+            <div class="tw:px-2 tw:py-3 tw:bg-base-200 tw:rounded-t-lg tw:border-b tw:border-base-300 tw:flex tw:items-center tw:justify-between">
+              <a href="#top-comments-carousel"
+                 role="button"
+                 data-slide="prev"
+                 class="tw:flex tw:items-center tw:justify-center tw:mt-1 tw:size-7 tw:rounded tw:hover:bg-base-200 tw:transition-colors tw:text-base-content/50 tw:hover:text-base-content">
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
               </a>
-              <span class="tw:mb-0 tw:inline tw:text-2xl!">
-                <i class="fa fa-thumbs-o-up tw:text-success tw:mr-1" aria-hidden="true"></i>{{ period.title }}
-              </span>
-              <a class="tw:inline tw:text-primary-content" href="#top-comments-carousel" role="button" data-slide="next">
-                <i class="fa fa-arrow-circle-right tw:h-full tw:text-3xl! tw:text-card-controls" aria-hidden="true"></i>
+              <h5 class="tw:text-sm tw:font-semibold tw:text-base-content/90 tw:flex tw:items-center tw:gap-2 tw:mb-0!">
+                <i class="fa fa-thumbs-up tw:text-success" aria-hidden="true"></i>
+                {{ period.title }}
+              </h5>
+              <a href="#top-comments-carousel"
+                 role="button"
+                 data-slide="next"
+                 class="tw:flex tw:items-center tw:justify-center tw:mt-1 tw:size-7 tw:rounded tw:hover:bg-base-200 tw:transition-colors tw:text-base-content/50 tw:hover:text-base-content">
+                <i class="fa fa-chevron-right" aria-hidden="true"></i>
               </a>
             </div>
             {% if period.comments %}
-              <div class="tw:w-full tw:space-y-2 tw:px-1.5 tw:py-2">
+              <div class="tw:px-1.5 tw:py-2 tw:space-y-1.5">
                 {% for comment in period.comments %}
                   <a href="{{ comment.get_absolute_url }}"
                      title="от {{ comment.author }} в {{ comment.content_object }}"
-                     class="tw:rounded-lg tw:hover:bg-base-300 tw:w-full tw:p-2 tw:flex tw:items-center tw:gap-2 tw:active:translate-y-[0.5px]">
-                    <div class="tw:flex tw:items-center tw:gap-2 tw:min-w-0 tw:flex-grow">
-                      <span class="tw:badge tw:badge-success tw:font-bold tw:flex-shrink-0">{{ comment.likes_count }}</span>
-                      <span class="tw:truncate tw:text-base tw:font-medium">{{ comment.body|striptags|safe|default:"*Медиа-контент*" }}</span>
-                    </div>
+                     class="tw:flex tw:items-center tw:gap-2.5 tw:p-2 tw:rounded-lg tw:hover:bg-base-200 tw:active:translate-y-[0.5px] tw:transition-transform tw:group">
+                    <span class="tw:badge tw:badge-sm tw:badge-success tw:font-semibold tw:shrink-0">{{ comment.likes_count }}</span>
+                    <span class="tw:truncate tw:text-sm tw:font-medium tw:group-hover:text-primary tw:transition-colors">{{ comment.body|striptags|safe|default:"*Медиа-контент*" }}</span>
                   </a>
                 {% endfor %}
               </div>
             {% else %}
-              <div class="tw:w-full tw:p-4 tw:text-center">
-                <span class="tw:text-sm tw:opacity-60">Нет комментариев</span>
-              </div>
+              <div class="tw:p-6 tw:text-center tw:text-sm tw:text-base-content/50">Нет комментариев</div>
             {% endif %}
           </div>
         </div>

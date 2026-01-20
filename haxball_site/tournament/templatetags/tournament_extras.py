@@ -1472,21 +1472,6 @@ def get_user_teams(user: User):
 
 
 @register.filter
-def ru_pluralize(value, variants):
-    variants = variants.split(',')
-    value = abs(int(value))
-
-    if value % 10 == 1 and value % 100 != 11:
-        variant = 0
-    elif 2 <= value % 10 <= 4 and not (12 <= value % 100 <= 14):
-        variant = 1
-    else:
-        variant = 2
-
-    return variants[variant]
-
-
-@register.filter
 def previous_rating_rank(team, previous_rating):
     if team not in previous_rating:
         return None

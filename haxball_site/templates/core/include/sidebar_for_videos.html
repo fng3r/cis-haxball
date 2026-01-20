@@ -1,31 +1,37 @@
 {% if featured_videos|length > 0 %}
-  <div class="tw:card tw:border tw:border-gray-100 tw:rounded-lg">
-    <div class="tw:card-title tw:justify-center tw:rounded-t-lg tw:border-b tw:border-gray-100 tw:p-2 tw:bg-card-header tw:text-card-header">
-      <span class="tw:mb-0 tw:text-lg tw:text-center">Видео</span>
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:shadow-sm tw:border tw:border-base-200">
+    <div class="tw:px-4 tw:py-3 tw:bg-base-200 tw:rounded-t-lg tw:border-b tw:border-base-300">
+      <h5 class="tw:text-sm tw:font-semibold tw:text-base-content/90 tw:flex tw:items-center tw:gap-2 tw:mb-0!">
+        <i class="fa fa-play-circle tw:text-primary" aria-hidden="true"></i>
+        Видео
+      </h5>
     </div>
 
-    <div class="tw:flex tw:flex-col tw:w-full tw:mb-0! tw:bg-base-100 tw:p-2 tw:rounded-b-lg tw:gap-2.5">
+    <div class="tw:flex tw:flex-col tw:p-2 tw:gap-3">
       {% for video in featured_videos %}
-        <div class="tw:flex tw:flex-col tw:gap-1 tw:rounded-lg tw:glass tw:hover:bg-base-300 tw:transition-colors">
-          <a href="{{ video.url }}" target="_blank" class="tw:block tw:rounded-lg tw:overflow-hidden">
-            <div class="tw:flex tw:justify-center tw:relative">
-              <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="tw:w-full tw:rounded">
-              <div class="tw:absolute tw:bottom-2 tw:right-2 tw:bg-black/60 tw:text-white tw:px-1 tw:rounded-sm tw:text-sm tw:select-none">
-                {{ video.duration.formatted }}
+        <a href="{{ video.url }}"
+           target="_blank"
+           class="tw:block tw:rounded-lg tw:overflow-hidden tw:glass tw:hover:bg-base-300 tw:transition-colors"
+           style="box-shadow: 0 0 0 1px oklch(100% 0 0/7%) inset, 0 0 0 2px #0000000d">
+          <div class="tw:relative">
+            <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="tw:w-full tw:aspect-video tw:object-cover">
+            <div class="tw:absolute tw:bottom-2 tw:right-2 tw:bg-black/70 tw:text-white tw:px-1.5 tw:py-0.5 tw:rounded tw:text-xs tw:select-none">
+              {{ video.duration.formatted }}
+            </div>
+            {% if video.view_count %}
+              <div class="tw:absolute tw:top-2 tw:right-2 tw:bg-black/70 tw:text-white tw:px-1.5 tw:py-0.5 tw:rounded tw:text-xs tw:select-none">
+                <i class="fa fa-eye tw:mr-1"></i>{{ video.view_count }}
               </div>
-              {% if video.view_count %}
-                <div class="tw:absolute tw:top-2 tw:right-2 tw:bg-black/60 tw:text-white tw:px-1 tw:rounded-sm tw:text-sm tw:select-none">
-                  <i class="fa fa-eye"></i> {{ video.view_count }}
-                </div>
-              {% endif %}
+            {% endif %}
+          </div>
+          <div class="tw:flex tw:flex-col tw:gap-1 tw:p-2 tw:pt-1">
+            <div class="tw:font-medium tw:text-sm tw:line-clamp-2" title="{{ video.title }}">{{ video.title }}</div>
+            <div class="tw:flex tw:items-center tw:justify-between tw:text-xs tw:text-base-content/60">
+              <span class="tw:line-clamp-1" title="{{ video.channel_title }}">{{ video.channel_title }}</span>
+              <span class="tw:shrink-0 tw:select-none">{{ video.published_at|date }}</span>
             </div>
-            <div class="tw:px-2 tw:pt-1 tw:pb-2 tw:flex tw:flex-col tw:justify-center tw:items-start">
-              <span class="tw:font-semibold tw:line-clamp-2" title="{{ video.title }}">{{ video.title }}</span>
-              <span class="tw:text-base-content/70 tw:text-sm tw:line-clamp-1" title="{{ video.channel_title }}">{{ video.channel_title }}</span>
-              <span class="tw:text-base-content/70 tw:text-sm tw:self-end tw:select-none">{{ video.published_at|date }}</span>
-            </div>
-          </a>
-        </div>
+          </div>
+        </a>
       {% endfor %}
     </div>
   </div>
