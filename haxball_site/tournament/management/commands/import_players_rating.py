@@ -7,9 +7,24 @@ from core.models import UserNicknameHistoryItem
 
 from ...models import Player, PlayerRating, PlayerRatingVersion
 
+DEFAULT_REASON = PlayerRating.RatingUpdateReason.EXPERT_REVIEW
+VALID_REASONS = {r.value: r for r in PlayerRating.RatingUpdateReason}
+
+
+def parse_reason(raw: str) -> PlayerRating.RatingUpdateReason:
+    """Parse reason from CSV column; default to expert_review if missing or invalid."""
+    if not raw or not raw.strip():
+        return DEFAULT_REASON
+    key = raw.strip().lower()
+    return VALID_REASONS.get(key, DEFAULT_REASON)
+
 
 class Command(BaseCommand):
-    help = 'Import players rating from csv file'
+    help = (
+        'Import players rating from csv file. '
+        'CSV: nickname, raw_points, points, grade [, reason]. '
+        'Reason column is optional; default is expert_review. Values: expert_review, inactivity_decrease, frozen.'
+    )
 
     def add_arguments(self, parser):
         parser.add_argument('filename', type=str, help='path to .csv file')
@@ -19,6 +34,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options) -> str | None:
         filename = options['filename']
         version = options['version']
+        dry_run = options['dry_run']
 
         if not version:
             last_version = PlayerRatingVersion.objects.order_by('-number').first()
@@ -37,7 +53,13 @@ class Command(BaseCommand):
         with open(filename, 'r') as file:
             reader = csv.reader(file.readlines())
             for row in reader:
-                nickname, raw_points, points, grade = row
+                if len(row) < 4:
+                    self.stderr.write(f'ERROR: Row has {len(row)} columns, need at least 4: {row}')
+                    raise SystemExit(1)
+                nickname, raw_points, points, grade = row[0], row[1], row[2], row[3]
+                reason_raw = row[4] if len(row) > 4 else ''
+                reason = parse_reason(reason_raw)
+
                 if raw_points == '':
                     raw_rating = None
                 else:
@@ -56,13 +78,16 @@ class Command(BaseCommand):
                 if not player:
                     self.stdout.write(f'WARN: Player {nickname} not found', self.style.WARNING)
                 else:
-                    PlayerRating.objects.create(
-                        version=rating_version,
-                        player=player,
-                        raw_rating_points=raw_rating,
-                        rating_points=rating,
-                        grade=grade,
-                    )
+                    if not dry_run:
+                        PlayerRating.objects.create(
+                            version=rating_version,
+                            player=player,
+                            raw_rating_points=raw_rating,
+                            rating_points=rating,
+                            grade=grade,
+                            rating_update_reason=reason,
+                        )
                     rows_count += 1
 
-        self.stdout.write(f'{rows_count} entries was imported from file {filename}', self.style.SUCCESS)
+        dry_run_prefix = '[DRY RUN] ' if dry_run else ''
+        self.stdout.write(f'{dry_run_prefix}{rows_count} entries was imported from file {filename}', self.style.SUCCESS)

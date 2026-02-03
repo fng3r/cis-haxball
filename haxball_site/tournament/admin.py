@@ -1149,12 +1149,13 @@ class PlayerRatingVersionAdmin(UnfoldModelAdmin):
 
 @admin.register(PlayerRating)
 class PlayerRatingAdmin(UnfoldModelAdmin):
-    list_display = ('player', 'rating_points', 'grade', 'version')
+    list_display = ('player', 'rating_points', 'grade', 'rating_update_reason', 'version')
     list_filter = (
         ('version', RelatedDropdownFilter),
         ('player', RelatedDropdownFilter),
         ('player__team', RelatedDropdownFilter),
         ('grade', ChoicesCheckboxFilter),
+        ('rating_update_reason', ChoicesCheckboxFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
