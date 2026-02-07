@@ -6,7 +6,7 @@
 
 <table class="tw:table tw:table-auto tw:table-pin-rows">
   <thead class="tw:py-2">
-    <tr class="tw:bg-base-300 tw:*:bg-base-300 tw:*:not-last:border-r tw:*:border-b tw:*:border-neutral-200">
+    <tr class="tw:bg-base-300 tw:*:bg-base-300">
       <th scope="col" class=""></th>
       <th scope="col" class="tw:text-left!">Игрок</th>
       <th scope="col" class="tw:text-center!">Рейтинг</th>
@@ -14,13 +14,14 @@
         <th scope="col" class="tw:text-center!">Изм. рейтинга</th>
         <th scope="col" class="tw:text-center!">Изм. уровня</th>
       {% endif %}
+      <th scope="col" class="tw:text-center! tw:w-12">Статус</th>
     </tr>
   </thead>
 
   <tbody class="tw:text-center">
     {% for item in rating_items %}
       {% with rating_entry=item.rating_entry prev=item.prev %}
-        <tr class="tw:row-hover tw:*:not-last:border-r tw:*:border-b tw:*:border-neutral-200"
+        <tr class="tw:row-hover"
           {# djlint:off #}
             x-data="{ nickname: '{{ rating_entry.player.nickname|escapejs }}', gradeChanged: {{ prev.grade_changed|yesno:'true,false' }} }"
             x-show="(search === '' || nickname.toLowerCase().includes(search.toLowerCase())) &&
@@ -100,6 +101,51 @@
               </td>
             {% endif %}
           {% endif %}
+          <td class="tw:text-center">
+            {% if rating_entry.rating_update_status == 'expert_review' %}
+              <span class="tw:tooltip tw:tooltip-left" data-tip="Рейтинг пересмотрен экспертами">
+                <svg class="tw:inline-block tw:w-5 tw:h-5 tw:text-info"
+                     xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                  <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                  <path d="m9 14 2 2 4-4" />
+                </svg>
+              </span>
+            {% elif rating_entry.rating_update_status == 'inactivity_decrease' %}
+              <span class="tw:tooltip tw:tooltip-left" data-tip="Рейтинг снижен ввиду неактивности">
+                <svg class="tw:inline-block tw:w-6 tw:h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" aria-hidden="true">
+                  <g class="tw:text-error" fill="currentColor">
+                    <path d="M169.4 470.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 370.8 224 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 306.7L54.6 265.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
+                  </g>
+                  <g class="tw:text-warning" stroke="currentColor" stroke-width="50" stroke-linecap="round">
+                    <path d="M450 20v140M350 20v140" />
+                  </g>
+                </svg>
+              </span>
+            {% elif rating_entry.rating_update_status == 'frozen' %}
+              <span class="tw:tooltip tw:tooltip-left" data-tip="Рейтинг заморожен">
+                <svg class="tw:inline-block tw:w-5 tw:h-5 tw:text-base-content/50"
+                     xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     aria-hidden="true">
+                  <rect width="14" height="10" x="5" y="11" rx="2" ry="2" />
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                </svg>
+              </span>
+            {% endif %}
+          </td>
         </tr>
       {% endwith %}
     {% endfor %}

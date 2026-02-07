@@ -7,23 +7,23 @@ from core.models import UserNicknameHistoryItem
 
 from ...models import Player, PlayerRating, PlayerRatingVersion
 
-DEFAULT_REASON = PlayerRating.RatingUpdateReason.EXPERT_REVIEW
-VALID_REASONS = {r.value: r for r in PlayerRating.RatingUpdateReason}
+DEFAULT_STATUS = PlayerRating.RatingUpdateStatus.EXPERT_REVIEW
+VALID_STATUSES = {r.value: r for r in PlayerRating.RatingUpdateStatus}
 
 
-def parse_reason(raw: str) -> PlayerRating.RatingUpdateReason:
-    """Parse reason from CSV column; default to expert_review if missing or invalid."""
+def parse_status(raw: str) -> PlayerRating.RatingUpdateStatus:
+    """Parse status from CSV column; default to expert_review if missing or invalid."""
     if not raw or not raw.strip():
-        return DEFAULT_REASON
+        return DEFAULT_STATUS
     key = raw.strip().lower()
-    return VALID_REASONS.get(key, DEFAULT_REASON)
+    return VALID_STATUSES.get(key, DEFAULT_STATUS)
 
 
 class Command(BaseCommand):
     help = (
         'Import players rating from csv file. '
-        'CSV: nickname, raw_points, points, grade [, reason]. '
-        'Reason column is optional; default is expert_review. Values: expert_review, inactivity_decrease, frozen.'
+        'CSV: nickname, raw_points, points, grade [, status]. '
+        'Status column is optional; default is expert_review. Values: expert_review, inactivity_decrease, frozen.'
     )
 
     def add_arguments(self, parser):
@@ -57,8 +57,8 @@ class Command(BaseCommand):
                     self.stderr.write(f'ERROR: Row has {len(row)} columns, need at least 4: {row}')
                     raise SystemExit(1)
                 nickname, raw_points, points, grade = row[0], row[1], row[2], row[3]
-                reason_raw = row[4] if len(row) > 4 else ''
-                reason = parse_reason(reason_raw)
+                status_raw = row[4] if len(row) > 4 else ''
+                status = parse_status(status_raw)
 
                 if raw_points == '':
                     raw_rating = None
@@ -85,7 +85,7 @@ class Command(BaseCommand):
                             raw_rating_points=raw_rating,
                             rating_points=rating,
                             grade=grade,
-                            rating_update_reason=reason,
+                            rating_update_status=status,
                         )
                     rows_count += 1
 
