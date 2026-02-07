@@ -20,7 +20,7 @@
       <div class="tw:tab-content">
         <div id="rating-tab-content" role="tabpanel" aria-labelledby="rating-tab">
           <div class="tw:flex tw:flex-col tw:gap-y-2.5 tw:px-1 tw:py-2"
-               x-data="{ search: '', onlyNewPlayers: false, selectedGrade: '', gradeChangedFilter: null }">
+               x-data="{ search: '', onlyNewPlayers: false, onlyActivePlayers: false, selectedGrade: '', gradeChangedFilter: null }">
             <form id="filter-form"
                   class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:pl-1"
                   hx-get="{% url 'tournament:players_rating' %}"
@@ -90,6 +90,14 @@
                   <label class="tw:label tw:text-base-content tw:font-medium">
                     <input id="show-selected-season-teams-only" class="tw:toggle" type="checkbox" x-model="onlyNewPlayers" />
                     Только новые игроки в рейтинге
+                  </label>
+
+                  <label class="tw:label tw:text-base-content tw:font-medium tw:flex tw:items-center tw:gap-1">
+                    <input class="tw:toggle" type="checkbox" x-model="onlyActivePlayers" />
+                    Только
+                    <span class="tw:tooltip tw:tooltip-right tw:underline tw:decoration-dotted tw:cursor-help"
+                          data-tip="Игроки, сыгравшие хотя бы один матч за отчётный период">активные</span>
+                    игроки
                   </label>
                 </div>
               </div>

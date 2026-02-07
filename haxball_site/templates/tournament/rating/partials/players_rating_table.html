@@ -23,9 +23,15 @@
       {% with rating_entry=item.rating_entry prev=item.prev %}
         <tr class="tw:row-hover"
           {# djlint:off #}
-            x-data="{ nickname: '{{ rating_entry.player.nickname|escapejs }}', gradeChanged: {{ prev.grade_changed|yesno:'true,false' }} }"
+            x-data="{
+                    nickname: '{{ rating_entry.player.nickname|escapejs }}',
+                    gradeChanged: {{ prev.grade_changed|yesno:'true,false' }},
+                    isNew: {{ item.is_new|yesno:'true,false' }},
+                    isActive: {% if rating_entry.rating_update_status == 'expert_review' %}true{% else %}false{% endif %}
+                    }"
             x-show="(search === '' || nickname.toLowerCase().includes(search.toLowerCase())) &&
-                    (!onlyNewPlayers || {{ item.is_new|yesno:'true,false' }}) &&
+                    (!onlyNewPlayers || isNew) &&
+                    (!onlyActivePlayers || isActive) &&
                     (!selectedGrade || selectedGrade === '{{ rating_entry.grade }}') &&
                     (gradeChangedFilter === null || gradeChangedFilter === gradeChanged)"
         >
