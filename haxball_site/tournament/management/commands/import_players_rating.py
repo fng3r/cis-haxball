@@ -8,11 +8,11 @@ from core.models import UserNicknameHistoryItem
 from ...models import Player, PlayerRating, PlayerRatingVersion
 
 DEFAULT_STATUS = PlayerRating.RatingUpdateStatus.EXPERT_REVIEW
-VALID_STATUSES = {r.value: r for r in PlayerRating.RatingUpdateStatus}
+VALID_STATUSES = {s.value: s for s in PlayerRating.RatingUpdateStatus}
 
 
-def parse_status(raw: str) -> PlayerRating.RatingUpdateStatus:
-    """Parse status from CSV column; default to expert_review if missing or invalid."""
+def parse_status(raw: str) -> str:
+    """Parse rating_update_status from CSV; default to expert_review if missing or invalid."""
     if not raw or not raw.strip():
         return DEFAULT_STATUS
     key = raw.strip().lower()
@@ -22,8 +22,8 @@ def parse_status(raw: str) -> PlayerRating.RatingUpdateStatus:
 class Command(BaseCommand):
     help = (
         'Import players rating from csv file. '
-        'CSV: nickname, raw_points, points, grade [, status]. '
-        'Status column is optional; default is expert_review. Values: expert_review, inactivity_decrease, frozen.'
+        'CSV: nickname, raw_points, points, grade [, rating_update_status]. '
+        'Optional last column: expert_review, inactivity_decrease, frozen (default: expert_review).'
     )
 
     def add_arguments(self, parser):
@@ -34,7 +34,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options) -> str | None:
         filename = options['filename']
         version = options['version']
-        dry_run = options['dry_run']
+        dry_run = options.get('dry_run', False)
 
         if not version:
             last_version = PlayerRatingVersion.objects.order_by('-number').first()
@@ -50,7 +50,7 @@ class Command(BaseCommand):
             return
 
         rows_count = 0
-        with open(filename, 'r') as file:
+        with open(filename, 'r', encoding='utf-8') as file:
             reader = csv.reader(file.readlines())
             for row in reader:
                 if len(row) < 4:
@@ -89,5 +89,4 @@ class Command(BaseCommand):
                         )
                     rows_count += 1
 
-        dry_run_prefix = '[DRY RUN] ' if dry_run else ''
-        self.stdout.write(f'{dry_run_prefix}{rows_count} entries was imported from file {filename}', self.style.SUCCESS)
+        self.stdout.write(f'{rows_count} entries was imported from file {filename}', self.style.SUCCESS)
