@@ -7,9 +7,24 @@ from core.models import UserNicknameHistoryItem
 
 from ...models import Player, PlayerRating, PlayerRatingVersion
 
+DEFAULT_STATUS = PlayerRating.RatingUpdateStatus.EXPERT_REVIEW
+VALID_STATUSES = {s.value: s for s in PlayerRating.RatingUpdateStatus}
+
+
+def parse_status(raw: str) -> str:
+    """Parse rating_update_status from CSV; default to expert_review if missing or invalid."""
+    if not raw or not raw.strip():
+        return DEFAULT_STATUS
+    key = raw.strip().lower()
+    return VALID_STATUSES.get(key, DEFAULT_STATUS)
+
 
 class Command(BaseCommand):
-    help = 'Import players rating from csv file'
+    help = (
+        'Import players rating from csv file. '
+        'CSV: nickname, raw_points, points, grade [, rating_update_status]. '
+        'Optional last column: expert_review, inactivity_decrease, frozen (default: expert_review).'
+    )
 
     def add_arguments(self, parser):
         parser.add_argument('filename', type=str, help='path to .csv file')
@@ -19,6 +34,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options) -> str | None:
         filename = options['filename']
         version = options['version']
+        dry_run = options.get('dry_run', False)
 
         if not version:
             last_version = PlayerRatingVersion.objects.order_by('-number').first()
@@ -34,10 +50,16 @@ class Command(BaseCommand):
             return
 
         rows_count = 0
-        with open(filename, 'r') as file:
+        with open(filename, 'r', encoding='utf-8') as file:
             reader = csv.reader(file.readlines())
             for row in reader:
-                nickname, raw_points, points, grade = row
+                if len(row) < 4:
+                    self.stderr.write(f'ERROR: Row has {len(row)} columns, need at least 4: {row}')
+                    raise SystemExit(1)
+                nickname, raw_points, points, grade = row[0], row[1], row[2], row[3]
+                status_raw = row[4] if len(row) > 4 else ''
+                status = parse_status(status_raw)
+
                 if raw_points == '':
                     raw_rating = None
                 else:
@@ -56,13 +78,15 @@ class Command(BaseCommand):
                 if not player:
                     self.stdout.write(f'WARN: Player {nickname} not found', self.style.WARNING)
                 else:
-                    PlayerRating.objects.create(
-                        version=rating_version,
-                        player=player,
-                        raw_rating_points=raw_rating,
-                        rating_points=rating,
-                        grade=grade,
-                    )
+                    if not dry_run:
+                        PlayerRating.objects.create(
+                            version=rating_version,
+                            player=player,
+                            raw_rating_points=raw_rating,
+                            rating_points=rating,
+                            grade=grade,
+                            rating_update_status=status,
+                        )
                     rows_count += 1
 
         self.stdout.write(f'{rows_count} entries was imported from file {filename}', self.style.SUCCESS)

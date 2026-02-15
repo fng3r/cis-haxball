@@ -1407,11 +1407,25 @@ class PlayerRating(models.Model):
         D = 'D', 'D'
         E = 'E', 'E'
 
+    class RatingUpdateStatus(models.TextChoices):
+        """Why this rating was set: expert re-evaluation, inactivity decrease, or frozen after 1+ year inactivity."""
+
+        EXPERT_REVIEW = 'expert_review', 'Пересмотрен экспертами'
+        INACTIVITY_DECREASE = 'inactivity_decrease', 'Снижение за неактивность'
+        FROZEN = 'frozen', 'Заморожен (не играл больше года)'
+
     version = models.ForeignKey(PlayerRatingVersion, verbose_name='Версия рейтинга', on_delete=models.CASCADE)
     player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE)
     raw_rating_points = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     rating_points = models.PositiveSmallIntegerField('Рейтинг')
     grade = models.CharField(verbose_name='Грейд', max_length=2, choices=Grade.choices)
+    rating_update_status = models.CharField(
+        verbose_name='Тип обновления рейтинга',
+        max_length=20,
+        choices=RatingUpdateStatus.choices,
+        default=RatingUpdateStatus.EXPERT_REVIEW,
+        help_text='Пересмотрен экспертами, снижен за неактивность или заморожен после года+ неактивности.',
+    )
 
     def __str__(self):
         return f'{self.player.nickname} ({self.grade}: {self.rating_points})'
