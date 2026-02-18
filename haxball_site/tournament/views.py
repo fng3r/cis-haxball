@@ -46,6 +46,8 @@ from .models import (
     Goal,
     League,
     Match,
+    MatchReplayStats,
+    MatchReplayStatsStatus,
     MatchResult,
     Nation,
     OtherEvents,
@@ -473,16 +475,25 @@ class MatchDetail(DetailView):
     template_name = 'tournament/match/detail.html'
 
     def get_queryset(self):
-        return Match.objects.select_related(
-            'team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector'
-        ).prefetch_related(
-            'team_home_start__name__user_profile',
-            'team_home_start__player_nation',
-            'team_guest_start__name__user_profile',
-            'team_guest_start__player_nation',
-            'disqualifications__team',
-            'disqualifications__player__name__user_profile',
-            'disqualifications__tours__league',
+        return (
+            Match.objects.select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector')
+            .prefetch_related(
+                'team_home_start__name__user_profile',
+                'team_home_start__player_nation',
+                'team_guest_start__name__user_profile',
+                'team_guest_start__player_nation',
+                'disqualifications__team',
+                'disqualifications__player__name__user_profile',
+                'disqualifications__tours__league',
+                Prefetch(
+                    'replay_stats',
+                    queryset=MatchReplayStats.objects.prefetch_related(
+                        'players__player__name__user_profile',
+                        'players__team',
+                    ),
+                ),
+            )
+            .select_related('replay_stats_status')
         )
 
     def get_context_data(self, **kwargs):
@@ -585,6 +596,96 @@ class MatchDetail(DetailView):
 
         cards = match.cards().select_related('team', 'author__name__user_profile')
         context['cards'] = cards
+
+        # Replay-based advanced stats (Haxball Analyzer)
+        replay_status = getattr(match, 'replay_stats_status', None)
+        context['replay_stats_status'] = replay_status
+        if replay_status and replay_status.status == MatchReplayStatsStatus.Status.SUCCESS:
+            parts = list(match.replay_stats.all())
+            poss_red = sum(p.poss_red for p in parts)
+            poss_blue = sum(p.poss_blue for p in parts)
+            poss_total = poss_red + poss_blue
+            if poss_total:
+                poss_red_pct = round(100 * poss_red / poss_total)
+                poss_blue_pct = round(100 * poss_blue / poss_total)
+            else:
+                poss_red_pct = poss_blue_pct = 0
+            agg_team = {
+                'score_red': sum(p.score_red for p in parts),
+                'score_blue': sum(p.score_blue for p in parts),
+                'poss_red': poss_red,
+                'poss_blue': poss_blue,
+                'poss_red_pct': poss_red_pct,
+                'poss_blue_pct': poss_blue_pct,
+                'shots_red': sum(p.shots_red for p in parts),
+                'shots_blue': sum(p.shots_blue for p in parts),
+                'shots_total_red': sum(p.shots_total_red for p in parts),
+                'shots_total_blue': sum(p.shots_total_blue for p in parts),
+            }
+            # Aggregate players by (player_id or (nick, team_id)); sum metrics, average rating
+            # Skip zero playtime and "*" (own goal) placeholder
+            player_agg = {}
+            for part in parts:
+                for mp in part.players.all():
+                    if mp.played_ticks == 0 or (mp.nick or '').strip() == '*':
+                        continue
+                    key = (mp.player_id,) if mp.player_id else (mp.nick, mp.team_id)
+                    if key not in player_agg:
+                        player_agg[key] = {
+                            'player': mp.player,
+                            'nick': mp.nick,
+                            'team_obj': mp.team,
+                            'goals': 0,
+                            'assists': 0,
+                            'played_ticks': 0,
+                            'rating_sum': 0.0,
+                            'rating_count': 0,
+                            'shots_total': 0,
+                            'shots_on_target': 0,
+                            'passes_completed': 0,
+                            'pass_attempts': 0,
+                            'touches': 0,
+                            'saves': 0,
+                            'clearances': 0,
+                            'interceptions': 0,
+                            'duel_wins': 0,
+                            'duel_losses': 0,
+                        }
+                    a = player_agg[key]
+                    a['goals'] += mp.goals
+                    a['assists'] += mp.assists
+                    a['played_ticks'] += mp.played_ticks
+                    if mp.rating is not None:
+                        a['rating_sum'] += mp.rating
+                        a['rating_count'] += 1
+                    a['shots_total'] += mp.shots_total
+                    a['shots_on_target'] += mp.shots_on_target
+                    a['passes_completed'] += mp.passes_completed
+                    a['pass_attempts'] += mp.pass_attempts
+                    a['touches'] += mp.touches
+                    a['saves'] += mp.saves
+                    a['clearances'] += mp.clearances
+                    a['interceptions'] += mp.interceptions
+                    a['duel_wins'] += mp.duel_wins
+                    a['duel_losses'] += mp.duel_losses
+            aggregated_players = []
+            for key, a in player_agg.items():
+                a['rating'] = (a['rating_sum'] / a['rating_count']) if a['rating_count'] else None
+                aggregated_players.append(a)
+            # Home team first, then guest
+            team_home_id = match.team_home_id
+
+            def _player_sort_key(a):
+                is_home = a.get('team_obj') and a['team_obj'].id == team_home_id
+                return (0 if is_home else 1, a.get('nick') or '')
+
+            aggregated_players.sort(key=_player_sort_key)
+            context['match_replay_stats_aggregated'] = {
+                'team': agg_team,
+                'players': aggregated_players,
+            }
+        else:
+            context['match_replay_stats_aggregated'] = None
 
         if all_matches_between.count() == 0:
             context['no_history'] = True

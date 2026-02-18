@@ -45,6 +45,9 @@ from .models import (
     GroupStage,
     League,
     Match,
+    MatchReplayStats,
+    MatchReplayStatsPlayer,
+    MatchReplayStatsStatus,
     MatchResult,
     Nation,
     OtherEvents,
@@ -955,6 +958,65 @@ class MatchAdmin(UnfoldModelAdmin):
                 'inspector',
             )
         )
+
+
+@admin.register(MatchReplayStatsStatus)
+class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
+    list_display = ('match', 'status', 'fetched_at', 'error_message')
+    list_filter = ('status',)
+    search_fields = ('match__id',)
+    ordering = ('-fetched_at',)
+    readonly_fields = ('match', 'fetched_at')
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(MatchReplayStats)
+class MatchReplayStatsAdmin(UnfoldModelAdmin):
+    list_display = (
+        'match',
+        'replay_url',
+        'analyzer_replay_id',
+        'match_index',
+        'score_red',
+        'score_blue',
+        'minutes',
+        'poss_red',
+        'poss_blue',
+    )
+    list_filter = (('match__league', RelatedDropdownFilter),)
+    search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
+    ordering = ('match_id', 'replay_url', 'match_index')
+    raw_id_fields = ('match',)
+    readonly_fields = ('replay_url', 'analyzer_replay_id', 'match_index', 'raw_stats_json')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('match', 'match__team_home', 'match__team_guest')
+
+
+@admin.register(MatchReplayStatsPlayer)
+class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
+    list_display = (
+        'replay_stats',
+        'player',
+        'nick',
+        'team',
+        'goals',
+        'assists',
+        'played_ticks',
+        'rating',
+        'shots_total',
+        'passes_completed',
+        'pass_attempts',
+    )
+    list_filter = (('team', RelatedDropdownFilter), ('replay_stats__match', RelatedDropdownFilter))
+    search_fields = ('nick', 'player__nickname')
+    ordering = ('replay_stats', 'team', 'nick')
+    raw_id_fields = ('replay_stats', 'player', 'team')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('replay_stats__match', 'player', 'team')
 
 
 @admin.register(Goal)

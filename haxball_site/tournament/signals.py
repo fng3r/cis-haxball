@@ -1,7 +1,8 @@
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import AwardSubmission, AwardVote
+from .models import AwardSubmission, AwardVote, Match, MatchReplayStatsStatus
+from .tasks import fetch_match_replay_stats
 
 
 @receiver(post_save, sender=AwardVote)
@@ -34,3 +35,22 @@ def award_submission_deleted(sender, instance, **kwargs):
     awards = Award.objects.filter(campaign=instance.campaign)
     for award in awards:
         award.recalculate_results()
+
+
+@receiver(post_save, sender=Match)
+def schedule_fetch_match_replay_stats(sender, instance, **kwargs):
+    """When Match.replays changes, set status to pending and schedule Celery task to fetch stats."""
+    if not instance.tracker.has_changed('replays'):
+        return
+    if not instance.replays:
+        return
+    status, _ = MatchReplayStatsStatus.objects.get_or_create(
+        match=instance,
+        defaults={'status': MatchReplayStatsStatus.Status.PENDING},
+    )
+    status.status = MatchReplayStatsStatus.Status.PENDING
+    status.error_message = ''
+    status.fetched_at = None
+    status.save(update_fields=['status', 'error_message', 'fetched_at'])
+
+    fetch_match_replay_stats.delay(instance.pk)

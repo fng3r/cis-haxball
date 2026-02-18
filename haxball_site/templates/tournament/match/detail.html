@@ -145,7 +145,7 @@
         <div class="tw:tabs tw:tabs-lift tw:justify-center tw:mt-4" role="tablist">
           <input type="radio"
                  name="match-tabs"
-                 class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!"
+                 class="tw:tab tw:font-semibold tw:border-neutral-200! {% if match_replay_stats_aggregated %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
                  aria-label="Общая сводка"
                  checked />
           <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
@@ -222,7 +222,90 @@
           </div>
 
           {% if match.is_played %}
-            <input type="radio" name="match-tabs" class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!" aria-label="Протокол" />
+            {% if match_replay_stats_aggregated %}
+              <input type="radio" name="match-tabs" class="tw:tab tw:w-1/4 tw:font-semibold tw:border-neutral-200!" aria-label="Статистика" />
+              <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+                <div id="match-replay-stats" role="tabpanel" aria-label="Статистика реплея">
+                  {% with agg=match_replay_stats_aggregated %}
+                    <div class="tw:flex tw:flex-col tw:gap-4">
+                      <div class="tw:flex tw:justify-around tw:flex-wrap tw:gap-4 tw:text-center">
+                        <div>
+                          <div class="tw:text-sm tw:text-base-content/70">Владение</div>
+                          <div class="tw:font-mono">{{ agg.team.poss_red_pct }}% — {{ agg.team.poss_blue_pct }}%</div>
+                        </div>
+                        <div>
+                          <div class="tw:text-sm tw:text-base-content/70">Удары (в створ)</div>
+                          <div class="tw:font-mono">
+                            {{ agg.team.shots_total_red }} ({{ agg.team.shots_red }}) — {{ agg.team.shots_total_blue }} ({{ agg.team.shots_blue }})
+                          </div>
+                        </div>
+                        <div>
+                          <div class="tw:text-sm tw:text-base-content/70">Счёт по реплею</div>
+                          <div class="tw:font-mono">{{ agg.team.score_red }} : {{ agg.team.score_blue }}</div>
+                        </div>
+                      </div>
+                      <div class="tw:overflow-x-auto">
+                        <table class="tw:table tw:table-zebra tw:min-w-full">
+                          <thead>
+                            <tr>
+                              <th>Игрок</th>
+                              <th>Г</th>
+                              <th>П</th>
+                              <th>Рейтинг</th>
+                              <th>Удары</th>
+                              <th>Передачи</th>
+                              <th>Касания</th>
+                              <th>Сейвы</th>
+                              <th>Отборы</th>
+                              <th>Дуэли</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for p in agg.players %}
+                              <tr>
+                                <td class="tw:flex tw:items-center tw:gap-2">
+                                  {% if p.team_obj %}
+                                    <img src="{{ p.team_obj.logo.url }}"
+                                         alt="{{ p.team_obj.title }}"
+                                         class="tw:w-6 tw:h-6 tw:object-contain"
+                                         width="24"
+                                         height="24">
+                                  {% endif %}
+                                  {% if p.player %}
+                                    <a class="tw:link tw:link-hover" href="{% url 'tournament:player_stats' p.player.pk %}">{{ p.player.nickname }}</a>
+                                  {% else %}
+                                    {{ p.nick }}
+                                  {% endif %}
+                                </td>
+                                <td>{{ p.goals }}</td>
+                                <td>{{ p.assists }}</td>
+                                <td>
+                                  {% if p.rating %}
+                                    {{ p.rating|floatformat:2 }}
+                                  {% else %}
+                                    —
+                                  {% endif %}
+                                </td>
+                                <td>{{ p.shots_total }} ({{ p.shots_on_target }})</td>
+                                <td>{{ p.passes_completed }}/{{ p.pass_attempts }}</td>
+                                <td>{{ p.touches }}</td>
+                                <td>{{ p.saves }}</td>
+                                <td>{{ p.clearances }}+{{ p.interceptions }}</td>
+                                <td>{{ p.duel_wins }}/{{ p.duel_losses }}</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  {% endwith %}
+                </div>
+              </div>
+            {% endif %}
+            <input type="radio"
+                   name="match-tabs"
+                   class="tw:tab tw:font-semibold tw:border-neutral-200! {% if match_replay_stats_aggregated %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
+                   aria-label="Протокол" />
             <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
               <div id="match-details" role="tabpanel" aria-labelledby="match-details-tab">
                 {% with events_by_time=match|events_sorted %}
@@ -242,7 +325,10 @@
               </div>
             </div>
 
-            <input type="radio" name="match-tabs" class="tw:tab tw:w-1/3 tw:font-semibold tw:border-neutral-200!" aria-label="Информация" />
+            <input type="radio"
+                   name="match-tabs"
+                   class="tw:tab tw:font-semibold tw:border-neutral-200! {% if match_replay_stats_aggregated %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
+                   aria-label="Информация" />
             <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
               <div id="match-info" role="tabpanel" aria-labelledby="match-info-tab">
                 <div class="tw:flex tw:flex-col tw:items-center">
