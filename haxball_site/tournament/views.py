@@ -684,6 +684,41 @@ class MatchDetail(DetailView):
                 return (0 if is_home else 1, a.get('nick') or '')
 
             aggregated_players.sort(key=_player_sort_key)
+            # Per-part player stats (for Total / by-part toggle in Players tab)
+            parts_players = []
+            for i, part in enumerate(parts):
+                part_player_list = []
+                for mp in part.players.all():
+                    if mp.played_ticks == 0 or (mp.nick or '').strip() == '*':
+                        continue
+                    pass_attempts = mp.pass_attempts or 0
+                    part_player_list.append(
+                        {
+                            'player': mp.player,
+                            'nick': mp.nick,
+                            'team_obj': mp.team,
+                            'goals': mp.goals,
+                            'assists': mp.assists,
+                            'shots_total': mp.shots_total,
+                            'shots_on_target': mp.shots_on_target,
+                            'passes_completed': mp.passes_completed,
+                            'pass_attempts': pass_attempts,
+                            'pass_accuracy': (
+                                round(100 * mp.passes_completed / pass_attempts, 1) if pass_attempts else None
+                            ),
+                            'touches': mp.touches,
+                            'saves': mp.saves,
+                            'rating': mp.rating,
+                        }
+                    )
+                part_player_list.sort(key=_player_sort_key)
+                parts_players.append(
+                    {
+                        'index': i + 1,
+                        'part_label': part.get_part_label_display(),
+                        'players': part_player_list,
+                    }
+                )
             # Per-part team stats for H2H; use stored red_is_home to map replay red/blue → home/guest
             team_home_id = match.team_home_id
             team_guest_id = match.team_guest_id
@@ -745,6 +780,7 @@ class MatchDetail(DetailView):
                 'team': agg_team,
                 'parts_summary': parts_summary,
                 'players': aggregated_players,
+                'parts_players': parts_players,
             }
         else:
             context['match_replay_stats_aggregated'] = None
