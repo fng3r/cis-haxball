@@ -1,0 +1,135 @@
+{% load tournament_extras %}
+
+{# Expects: stats (object with poss_home, poss_guest, poss_home_pct, poss_guest_pct, shots_total_home/blue, shots_home/blue, passes_home/blue, kicks_home/blue, saves_home/blue) #}
+{% stats_percentage stats.poss_home stats.poss_guest as pct %}
+<div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
+  <div class="tw:flex">
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start">{{ stats.poss_home_pct }}%</div>
+    <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
+      <span class="tw:text-center tw:text-xl tw:font-semibold">Владение</span>
+    </div>
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end">{{ stats.poss_guest_pct }}%</div>
+  </div>
+  <div class="tw:flex tw:h-2 {% if pct.0 == 0 and pct.1 == 0 %}tw:bg-secondary{% endif %}">
+    <div class="tw:bg-error"
+         style="width: {{ pct.0 }}%;
+                height: 10px;
+                {% if pct.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);
+                {% endif %}"></div>
+    <div class="tw:bg-primary"
+         style="width: {{ pct.1 }}%;
+                height: 10px;
+                {% if pct.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);
+                {% endif %}"></div>
+  </div>
+</div>
+{% stats_percentage stats.shots_total_home stats.shots_total_guest as pct %}
+<div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
+  <div class="tw:flex">
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start">{{ stats.shots_total_home }}</div>
+    <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
+      <span class="tw:text-center tw:text-xl tw:font-semibold">Удары</span>
+    </div>
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end">{{ stats.shots_total_guest }}</div>
+  </div>
+  <div class="tw:flex tw:h-2 {% if pct.0 == 0 and pct.1 == 0 %}tw:bg-secondary{% endif %}">
+    <div class="tw:bg-error"
+         style="width: {{ pct.0 }}%;
+                height: 10px;
+                {% if pct.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);
+                {% endif %}"></div>
+    <div class="tw:bg-primary"
+         style="width: {{ pct.1 }}%;
+                height: 10px;
+                {% if pct.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);
+                {% endif %}"></div>
+  </div>
+</div>
+{% stats_percentage stats.shots_home stats.shots_guest as pct %}
+<div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
+  <div class="tw:flex">
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start">{{ stats.shots_home }}</div>
+    <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
+      <span class="tw:text-center tw:text-xl tw:font-semibold">Удары в створ</span>
+    </div>
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end">{{ stats.shots_guest }}</div>
+  </div>
+  <div class="tw:flex tw:h-2 {% if pct.0 == 0 and pct.1 == 0 %}tw:bg-secondary{% endif %}">
+    <div class="tw:bg-error"
+         style="width: {{ pct.0 }}%;
+                height: 10px;
+                {% if pct.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);
+                {% endif %}"></div>
+    <div class="tw:bg-primary"
+         style="width: {{ pct.1 }}%;
+                height: 10px;
+                {% if pct.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);
+                {% endif %}"></div>
+  </div>
+</div>
+{% stats_percentage stats.passes_home stats.passes_guest as pct %}
+<div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
+  <div class="tw:flex">
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start">{{ stats.passes_home }}</div>
+    <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
+      <span class="tw:text-center tw:text-xl tw:font-semibold">Передачи</span>
+    </div>
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end">{{ stats.passes_guest }}</div>
+  </div>
+  <div class="tw:flex tw:h-2 {% if pct.0 == 0 and pct.1 == 0 %}tw:bg-secondary{% endif %}">
+    <div class="tw:bg-error"
+         style="width: {{ pct.0 }}%;
+                height: 10px;
+                {% if pct.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);
+                {% endif %}"></div>
+    <div class="tw:bg-primary"
+         style="width: {{ pct.1 }}%;
+                height: 10px;
+                {% if pct.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);
+                {% endif %}"></div>
+  </div>
+</div>
+{% stats_percentage stats.kicks_home stats.kicks_guest as pct %}
+<div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
+  <div class="tw:flex">
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start">{{ stats.kicks_home }}</div>
+    <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
+      <span class="tw:text-center tw:text-xl tw:font-semibold">Удары по мячу</span>
+    </div>
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end">{{ stats.kicks_guest }}</div>
+  </div>
+  <div class="tw:flex tw:h-2 {% if pct.0 == 0 and pct.1 == 0 %}tw:bg-secondary{% endif %}">
+    <div class="tw:bg-error"
+         style="width: {{ pct.0 }}%;
+                height: 10px;
+                {% if pct.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);
+                {% endif %}"></div>
+    <div class="tw:bg-primary"
+         style="width: {{ pct.1 }}%;
+                height: 10px;
+                {% if pct.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);
+                {% endif %}"></div>
+  </div>
+</div>
+{% stats_percentage stats.saves_home stats.saves_guest as pct %}
+<div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
+  <div class="tw:flex">
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start">{{ stats.saves_home }}</div>
+    <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
+      <span class="tw:text-center tw:text-xl tw:font-semibold">Сейвы</span>
+    </div>
+    <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end">{{ stats.saves_guest }}</div>
+  </div>
+  <div class="tw:flex tw:h-2 {% if pct.0 == 0 and pct.1 == 0 %}tw:bg-secondary{% endif %}">
+    <div class="tw:bg-error"
+         style="width: {{ pct.0 }}%;
+                height: 10px;
+                {% if pct.1 > 0 %}clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);
+                {% endif %}"></div>
+    <div class="tw:bg-primary"
+         style="width: {{ pct.1 }}%;
+                height: 10px;
+                {% if pct.0 > 0 %}clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);
+                {% endif %}"></div>
+  </div>
+</div>

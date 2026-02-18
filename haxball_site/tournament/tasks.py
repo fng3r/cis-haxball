@@ -16,17 +16,15 @@ from tournament.replay_stats_client import (
 )
 
 
-def _resolve_player(match, nick: str, team: str):
+def _resolve_player(match, nick: str, team: str, red_is_home: bool):
     """
-    Resolve replay nick+team to our Player. Red -> team_home, blue -> team_guest.
+    Resolve replay nick+team to our Player using stored mapping (red_is_home).
     Prefer players in team_home_start / team_guest_start.
     """
-    if team == 'red':
-        team_obj = match.team_home
-        start_players = list(match.team_home_start.all())
-    else:
-        team_obj = match.team_guest
-        start_players = list(match.team_guest_start.all())
+    team_obj = match.team_home if (team == 'red') == red_is_home else match.team_guest
+    start_players = (
+        list(match.team_home_start.all()) if team_obj.id == match.team_home_id else list(match.team_guest_start.all())
+    )
     nick_normalized = (nick or '').strip()
     if not nick_normalized:
         return None
@@ -36,7 +34,16 @@ def _resolve_player(match, nick: str, team: str):
     return Player.objects.filter(team=team_obj, nickname__iexact=nick_normalized).first()
 
 
-def _create_replay_stats_from_part(match, replay_url: str, analyzer_replay_id: str, match_index: int, stats_obj: dict):
+def _create_replay_stats_from_part(
+    match,
+    replay_url: str,
+    analyzer_replay_id: str,
+    part_order: int,
+    match_index: int,
+    part_label: str,
+    red_is_home: bool,
+    stats_obj: dict,
+):
     """Create one MatchReplayStats and related MatchReplayStatsPlayer from one API stats object."""
     # Team totals and meta
     red_team_nicks = stats_obj.get('redTeam') or []
@@ -48,7 +55,10 @@ def _create_replay_stats_from_part(match, replay_url: str, analyzer_replay_id: s
         match=match,
         replay_url=replay_url,
         analyzer_replay_id=analyzer_replay_id,
+        part_order=part_order,
         match_index=match_index,
+        part_label=part_label,
+        red_is_home=red_is_home,
         score_red=int(stats_obj.get('scoreRed') or 0),
         score_blue=int(stats_obj.get('scoreBlue') or 0),
         red_team_name=(stats_obj.get('redTeamName') or '')[:255],
@@ -74,7 +84,7 @@ def _create_replay_stats_from_part(match, replay_url: str, analyzer_replay_id: s
     )
 
     # Per-player (skip zero playtime and "*" own-goal placeholder)
-    players_data = stats_obj.get('player') or stats_obj.get('players') or []
+    players_data = stats_obj.get('players') or []
     for p in players_data:
         nick = (p.get('nick') or p.get('name') or '').strip()[:150]
         if nick == '*' or not nick:
@@ -92,8 +102,8 @@ def _create_replay_stats_from_part(match, replay_url: str, analyzer_replay_id: s
             except (TypeError, ValueError):
                 rating = None
 
-        player = _resolve_player(match, nick, team_key) if nick and team_key else None
-        team_obj = match.team_home if team_key == 'red' else (match.team_guest if team_key == 'blue' else None)
+        player = _resolve_player(match, nick, team_key, red_is_home) if nick and team_key else None
+        team_obj = part.get_match_team_for_replay_side(team_key)
 
         MatchReplayStatsPlayer.objects.create(
             replay_stats=part,
@@ -161,6 +171,7 @@ def fetch_match_replay_stats(match_id: int):
     MatchReplayStats.objects.filter(match=match).exclude(replay_url__in=current_replay_urls).delete()
 
     created_count = 0
+    existing_count = MatchReplayStats.objects.filter(match=match).count()
     for url in match.replays or []:
         if not is_powtorki_url(url):
             continue
@@ -173,7 +184,16 @@ def fetch_match_replay_stats(match_id: int):
         except Exception:
             continue
         for idx, stats_obj in enumerate(stats_list):
-            _create_replay_stats_from_part(match, url, analyzer_id, idx, stats_obj)
+            part_order = existing_count + created_count
+            part_label = (
+                MatchReplayStats.PartLabel.FIRST_HALF
+                if part_order == 0
+                else (
+                    MatchReplayStats.PartLabel.SECOND_HALF if part_order == 1 else MatchReplayStats.PartLabel.EXTRA_TIME
+                )
+            )
+            red_is_home = True
+            _create_replay_stats_from_part(match, url, analyzer_id, part_order, idx, part_label, red_is_home, stats_obj)
             created_count += 1
 
     # Update status

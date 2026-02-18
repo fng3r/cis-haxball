@@ -602,25 +602,26 @@ class MatchDetail(DetailView):
         context['replay_stats_status'] = replay_status
         if replay_status and replay_status.status == MatchReplayStatsStatus.Status.SUCCESS:
             parts = list(match.replay_stats.all())
-            poss_red = sum(p.poss_red for p in parts)
-            poss_blue = sum(p.poss_blue for p in parts)
-            poss_total = poss_red + poss_blue
+            # Map replay red/blue to home/guest using stored red_is_home per part
+            poss_home = sum(p.home_guest(p.poss_red, p.poss_blue)[0] for p in parts)
+            poss_guest = sum(p.home_guest(p.poss_red, p.poss_blue)[1] for p in parts)
+            poss_total = poss_home + poss_guest
             if poss_total:
-                poss_red_pct = round(100 * poss_red / poss_total)
-                poss_blue_pct = round(100 * poss_blue / poss_total)
+                poss_home_pct = round(100 * poss_home / poss_total)
+                poss_guest_pct = round(100 * poss_guest / poss_total)
             else:
-                poss_red_pct = poss_blue_pct = 0
+                poss_home_pct = poss_guest_pct = 0
             agg_team = {
-                'score_red': sum(p.score_red for p in parts),
-                'score_blue': sum(p.score_blue for p in parts),
-                'poss_red': poss_red,
-                'poss_blue': poss_blue,
-                'poss_red_pct': poss_red_pct,
-                'poss_blue_pct': poss_blue_pct,
-                'shots_red': sum(p.shots_red for p in parts),
-                'shots_blue': sum(p.shots_blue for p in parts),
-                'shots_total_red': sum(p.shots_total_red for p in parts),
-                'shots_total_blue': sum(p.shots_total_blue for p in parts),
+                'score_home': sum(p.home_guest(p.score_red, p.score_blue)[0] for p in parts),
+                'score_guest': sum(p.home_guest(p.score_red, p.score_blue)[1] for p in parts),
+                'poss_home': poss_home,
+                'poss_guest': poss_guest,
+                'poss_home_pct': poss_home_pct,
+                'poss_guest_pct': poss_guest_pct,
+                'shots_home': sum(p.home_guest(p.shots_red, p.shots_blue)[0] for p in parts),
+                'shots_guest': sum(p.home_guest(p.shots_red, p.shots_blue)[1] for p in parts),
+                'shots_total_home': sum(p.home_guest(p.shots_total_red, p.shots_total_blue)[0] for p in parts),
+                'shots_total_guest': sum(p.home_guest(p.shots_total_red, p.shots_total_blue)[1] for p in parts),
             }
             # Aggregate players by (player_id or (nick, team_id)); sum metrics, average rating
             # Skip zero playtime and "*" (own goal) placeholder
@@ -671,6 +672,9 @@ class MatchDetail(DetailView):
             aggregated_players = []
             for key, a in player_agg.items():
                 a['rating'] = (a['rating_sum'] / a['rating_count']) if a['rating_count'] else None
+                a['pass_accuracy'] = (
+                    round(100 * a['passes_completed'] / a['pass_attempts'], 1) if a['pass_attempts'] else None
+                )
                 aggregated_players.append(a)
             # Home team first, then guest
             team_home_id = match.team_home_id
@@ -680,8 +684,66 @@ class MatchDetail(DetailView):
                 return (0 if is_home else 1, a.get('nick') or '')
 
             aggregated_players.sort(key=_player_sort_key)
+            # Per-part team stats for H2H; use stored red_is_home to map replay red/blue → home/guest
+            team_home_id = match.team_home_id
+            team_guest_id = match.team_guest_id
+            parts_summary = []
+            for i, p in enumerate(parts):
+                poss_home, poss_guest = p.home_guest(p.poss_red, p.poss_blue)
+                pt = poss_home + poss_guest
+                if pt:
+                    poss_home_pct = round(100 * poss_home / pt)
+                    poss_guest_pct = round(100 * poss_guest / pt)
+                else:
+                    poss_home_pct = poss_guest_pct = 0
+                passes_home = passes_guest = saves_home = saves_guest = 0
+                for mp in p.players.all():
+                    if mp.team_id == team_home_id:
+                        passes_home += mp.passes_completed
+                        saves_home += mp.saves
+                    elif mp.team_id == team_guest_id:
+                        passes_guest += mp.passes_completed
+                        saves_guest += mp.saves
+                kicks_list = (p.raw_stats_json or {}).get('kicks') or []
+                kicks_replay_red = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'red')
+                kicks_replay_blue = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'blue')
+                kicks_home, kicks_guest = p.home_guest(kicks_replay_red, kicks_replay_blue)
+                score_home, score_guest = p.home_guest(p.score_red, p.score_blue)
+                shots_home, shots_guest = p.home_guest(p.shots_red, p.shots_blue)
+                shots_total_home, shots_total_guest = p.home_guest(p.shots_total_red, p.shots_total_blue)
+                parts_summary.append(
+                    {
+                        'index': i + 1,
+                        'part_label': p.get_part_label_display(),
+                        'score_home': score_home,
+                        'score_guest': score_guest,
+                        'poss_home': poss_home,
+                        'poss_guest': poss_guest,
+                        'poss_home_pct': poss_home_pct,
+                        'poss_guest_pct': poss_guest_pct,
+                        'shots_home': shots_home,
+                        'shots_guest': shots_guest,
+                        'shots_total_home': shots_total_home,
+                        'shots_total_guest': shots_total_guest,
+                        'passes_home': passes_home,
+                        'passes_guest': passes_guest,
+                        'kicks_home': kicks_home,
+                        'kicks_guest': kicks_guest,
+                        'saves_home': saves_home,
+                        'saves_guest': saves_guest,
+                        'minutes': p.minutes,
+                    }
+                )
+            # Totals for passes, kicks, saves (shots already in agg_team)
+            agg_team['passes_home'] = sum(ps['passes_home'] for ps in parts_summary)
+            agg_team['passes_guest'] = sum(ps['passes_guest'] for ps in parts_summary)
+            agg_team['kicks_home'] = sum(ps['kicks_home'] for ps in parts_summary)
+            agg_team['kicks_guest'] = sum(ps['kicks_guest'] for ps in parts_summary)
+            agg_team['saves_home'] = sum(ps['saves_home'] for ps in parts_summary)
+            agg_team['saves_guest'] = sum(ps['saves_guest'] for ps in parts_summary)
             context['match_replay_stats_aggregated'] = {
                 'team': agg_team,
+                'parts_summary': parts_summary,
                 'players': aggregated_players,
             }
         else:

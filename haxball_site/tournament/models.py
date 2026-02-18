@@ -857,6 +857,11 @@ class MatchReplayStatsStatus(models.Model):
 class MatchReplayStats(models.Model):
     """One row per API 'match' (part) — one replay can yield multiple parts (e.g. halves)."""
 
+    class PartLabel(models.TextChoices):
+        FIRST_HALF = '1H', '1 тайм'
+        SECOND_HALF = '2H', '2 тайм'
+        EXTRA_TIME = 'ET', 'Доп. время'
+
     match = models.ForeignKey(
         Match,
         verbose_name='Матч',
@@ -869,10 +874,26 @@ class MatchReplayStats(models.Model):
         max_length=32,
         help_text='ID, возвращённый Haxball Analyzer после загрузки',
     )
+    part_order = models.PositiveSmallIntegerField(
+        'Порядок части',
+        default=0,
+        help_text='Глобальный порядок части в матче (все реплеи): 0=1-й тайм, 1=2-й тайм, 2+=доп. время',
+    )
     match_index = models.PositiveSmallIntegerField(
         'Индекс матча в реплее',
         default=0,
         help_text='Порядковый номер в stats[] ответа API',
+    )
+    part_label = models.CharField(
+        'Часть матча',
+        max_length=2,
+        choices=PartLabel.choices,
+        default=PartLabel.FIRST_HALF,
+    )
+    red_is_home = models.BooleanField(
+        'Красные = хозяева',
+        default=True,
+        help_text='True: красные в реплее = team_home. False: синие в реплее = team_home.',
     )
 
     # Scores and teams
@@ -922,7 +943,17 @@ class MatchReplayStats(models.Model):
     class Meta:
         verbose_name = 'Статистика матча (реплеи)'
         verbose_name_plural = 'Статистика матчей (реплеи)'
-        ordering = ['replay_url', 'match_index']
+        ordering = ['part_order']
+
+    def get_match_team_for_replay_side(self, replay_side: str):
+        """Return match team (team_home or team_guest) for replay side 'red' or 'blue'."""
+        if (replay_side or '').lower() == 'red':
+            return self.match.team_home if self.red_is_home else self.match.team_guest
+        return self.match.team_guest if self.red_is_home else self.match.team_home
+
+    def home_guest(self, red_val, blue_val):
+        """Return (home_value, guest_value) for display, from replay red/blue values."""
+        return (red_val, blue_val) if self.red_is_home else (blue_val, red_val)
 
     def __str__(self):
         return (

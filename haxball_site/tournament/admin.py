@@ -976,6 +976,9 @@ class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
 class MatchReplayStatsAdmin(UnfoldModelAdmin):
     list_display = (
         'match',
+        'part_label',
+        'part_order',
+        'red_is_home',
         'replay_url',
         'analyzer_replay_id',
         'match_index',
@@ -987,9 +990,9 @@ class MatchReplayStatsAdmin(UnfoldModelAdmin):
     )
     list_filter = (('match__league', RelatedDropdownFilter),)
     search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
-    ordering = ('match_id', 'replay_url', 'match_index')
+    ordering = ('match_id', 'part_order')
     raw_id_fields = ('match',)
-    readonly_fields = ('replay_url', 'analyzer_replay_id', 'match_index', 'raw_stats_json')
+    readonly_fields = ('replay_url', 'analyzer_replay_id', 'part_order', 'match_index', 'raw_stats_json')
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('match', 'match__team_home', 'match__team_guest')

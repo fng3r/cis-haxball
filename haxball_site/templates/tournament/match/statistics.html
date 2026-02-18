@@ -1,0 +1,94 @@
+{% with agg=match_replay_stats_aggregated %}
+  {# Inner tabs: Teams | Players #}
+  <div class="tw:tabs tw:tabs-border tw:mb-4" role="tablist">
+    <input type="radio" name="replay-stats-inner-tabs" class="tw:tab tw:tab-sm" aria-label="Команды" checked>
+    <div class="tw:tab-content tw:bg-base-100 tw:pt-4 tw:px-1 tw:w-full" role="tabpanel">
+      {# Teams H2H tab: compare_teams-style stat rows, toggle Total / Part via Alpine #}
+      <div class="tw:flex tw:flex-col tw:gap-4" x-data="{ view: 'total' }">
+        <div class="tw:flex tw:gap-1">
+          <button type="button"
+                  class="tw:btn tw:btn-ghost tw:btn-sm"
+                  :class="{ 'tw:btn-active': view === 'total' }"
+                  @click="view = 'total'">Итого</button>
+          {% for part in agg.parts_summary %}
+            <button type="button"
+                    class="tw:btn tw:btn-ghost tw:btn-sm"
+                    :class="{ 'tw:btn-active': view === {{ part.index }} }"
+                    @click="view = {{ part.index }}">{{ part.part_label }}</button>
+          {% endfor %}
+        </div>
+        {# Total stats (shown when "Итого" selected) #}
+        <div class="tw:flex tw:flex-col tw:gap-1 tw:px-2" x-show="view === 'total'" x-cloak>
+          {% include "tournament/match/teams_h2h_stats.html" with stats=agg.team %}
+        </div>
+        {# Per-part stats: one card per part, same H2H UI as total #}
+        {% for part in agg.parts_summary %}
+          <div class="tw:flex tw:flex-col tw:gap-1 tw:px-2" x-show="view === {{ part.index }}" x-cloak>
+            {% include "tournament/match/teams_h2h_stats.html" with stats=part %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <input type="radio" name="replay-stats-inner-tabs" class="tw:tab tw:tab-sm" aria-label="Игроки">
+    <div class="tw:tab-content tw:bg-base-100 tw:pt-3 tw:w-full" role="tabpanel">
+      {# Players tab #}
+      <div class="tw:overflow-x-auto">
+        <table class="tw:table tw:table-zebra tw:min-w-full">
+          <thead>
+            <tr>
+              <th>Игрок</th>
+              <th>Г</th>
+              <th>П</th>
+              <th>Удары</th>
+              <th>Передачи</th>
+              <th>Передачи (%)</th>
+              <th>Касания</th>
+              <th>Сейвы</th>
+              <th>Рейтинг</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in agg.players %}
+              <tr>
+                <td class="tw:flex tw:items-center tw:gap-2">
+                  {% if p.team_obj %}
+                    <img src="{{ p.team_obj.logo.url }}"
+                         alt="{{ p.team_obj.title }}"
+                         class="tw:w-6 tw:h-6 tw:object-contain"
+                         width="24"
+                         height="24">
+                  {% endif %}
+                  {% if p.player %}
+                    <a class="tw:link tw:link-hover" href="{% url 'tournament:player_stats' p.player.pk %}">{{ p.player.nickname }}</a>
+                  {% else %}
+                    {{ p.nick }}
+                  {% endif %}
+                </td>
+                <td>{{ p.goals }}</td>
+                <td>{{ p.assists }}</td>
+                <td>{{ p.shots_total }} ({{ p.shots_on_target }})</td>
+                <td>{{ p.passes_completed }}/{{ p.pass_attempts }}</td>
+                <td>
+                  {% if p.pass_accuracy is not None %}
+                    {{ p.pass_accuracy }}%
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>{{ p.touches }}</td>
+                <td>{{ p.saves }}</td>
+                <td>
+                  {% if p.rating %}
+                    {{ p.rating|floatformat:2 }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endwith %}
