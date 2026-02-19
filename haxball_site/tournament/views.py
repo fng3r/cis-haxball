@@ -684,6 +684,34 @@ class MatchDetail(DetailView):
                 return (0 if is_home else 1, a.get('nick') or '')
 
             aggregated_players.sort(key=_player_sort_key)
+            team_home_id = match.team_home_id
+            team_guest_id = match.team_guest_id
+
+            def _player_dict_serializable(a, i):
+                r = a.get('rating')
+                return {
+                    'i': i,
+                    'name': (a.get('player') and a['player'].nickname) or a.get('nick') or '—',
+                    'goals': a.get('goals', 0),
+                    'assists': a.get('assists', 0),
+                    'shots_total': a.get('shots_total', 0),
+                    'shots_on_target': a.get('shots_on_target', 0),
+                    'passes_completed': a.get('passes_completed', 0),
+                    'pass_accuracy': a.get('pass_accuracy'),
+                    'touches': a.get('touches', 0),
+                    'saves': a.get('saves', 0),
+                    'rating': round(float(r), 2) if r is not None else None,
+                }
+
+            home_players = [a for a in aggregated_players if a.get('team_obj') and a['team_obj'].id == team_home_id]
+            guest_players = [a for a in aggregated_players if a.get('team_obj') and a['team_obj'].id == team_guest_id]
+            players_comparison_data = {
+                'total': {
+                    'home': [_player_dict_serializable(a, i) for i, a in enumerate(home_players)],
+                    'guest': [_player_dict_serializable(a, i) for i, a in enumerate(guest_players)],
+                },
+                'parts': [],
+            }
             # Per-part player stats (for Total / by-part toggle in Players tab)
             parts_players = []
             for i, part in enumerate(parts):
@@ -708,10 +736,20 @@ class MatchDetail(DetailView):
                             ),
                             'touches': mp.touches,
                             'saves': mp.saves,
-                            'rating': mp.rating,
+                            'rating': round(mp.rating, 2) if mp.rating is not None else None,
                         }
                     )
                 part_player_list.sort(key=_player_sort_key)
+                ph = [a for a in part_player_list if a.get('team_obj') and a['team_obj'].id == team_home_id]
+                pg = [a for a in part_player_list if a.get('team_obj') and a['team_obj'].id == team_guest_id]
+                players_comparison_data['parts'].append(
+                    {
+                        'index': i + 1,
+                        'part_label': part.part_label,
+                        'home': [_player_dict_serializable(a, j) for j, a in enumerate(ph)],
+                        'guest': [_player_dict_serializable(a, j) for j, a in enumerate(pg)],
+                    }
+                )
                 parts_players.append(
                     {
                         'index': i + 1,
@@ -781,6 +819,9 @@ class MatchDetail(DetailView):
                 'parts_summary': parts_summary,
                 'players': aggregated_players,
                 'parts_players': parts_players,
+                'home_players': home_players,
+                'guest_players': guest_players,
+                'players_comparison_data': players_comparison_data,
             }
         else:
             context['match_replay_stats_aggregated'] = None
