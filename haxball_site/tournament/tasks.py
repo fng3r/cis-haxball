@@ -184,6 +184,9 @@ def fetch_match_replay_stats(match_id: int):
         except Exception:
             continue
         for idx, stats_obj in enumerate(stats_list):
+            part_minutes = int(stats_obj.get('minutes') or 0)
+            if part_minutes < 1:
+                continue
             part_order = existing_count + created_count
             part_label = (
                 MatchReplayStats.PartLabel.FIRST_HALF
