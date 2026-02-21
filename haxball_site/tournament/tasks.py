@@ -1,13 +1,21 @@
 """
 Celery tasks for tournament app. fetch_match_replay_stats: pull replays from Powtorki,
-upload to Haxball Analyzer, fetch stats, store in MatchReplayStats / MatchReplayStatsPlayer.
+upload to Haxball Analyzer, store raw response in MatchReplay; rebuild MatchReplayStats
+and MatchReplayStatsPlayer from raw every run.
 """
 
 from django.utils import timezone
 
 from celery import shared_task
 
-from tournament.models import Match, MatchReplayStats, MatchReplayStatsPlayer, MatchReplayStatsStatus, Player
+from tournament.models import (
+    Match,
+    MatchReplay,
+    MatchReplayStats,
+    MatchReplayStatsPlayer,
+    MatchReplayStatsStatus,
+    Player,
+)
 from tournament.replay_stats_client import (
     download_powtorki_replay,
     fetch_analyzer_stats,
@@ -35,34 +43,30 @@ def _resolve_player(match, nick: str, team: str, red_is_home: bool):
 
 
 def _create_replay_stats_from_part(
-    match,
-    replay_url: str,
-    analyzer_replay_id: str,
+    match_replay: MatchReplay,
     part_order: int,
-    match_index: int,
     part_label: str,
     red_is_home: bool,
     stats_obj: dict,
 ):
     """Create one MatchReplayStats and related MatchReplayStatsPlayer from one API stats object."""
-    # Team totals and meta
+    match = match_replay.match
     red_team_nicks = stats_obj.get('redTeam') or []
     blue_team_nicks = stats_obj.get('blueTeam') or []
     player_ratings = stats_obj.get('playerRatings') or {}
     mvp_nick = (player_ratings.get('mvpNick') or '').strip()
+    kicks_list = stats_obj.get('kicks') or []
+    kicks_red = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'red')
+    kicks_blue = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'blue')
 
     part = MatchReplayStats.objects.create(
         match=match,
-        replay_url=replay_url,
-        analyzer_replay_id=analyzer_replay_id,
+        match_replay=match_replay,
         part_order=part_order,
-        match_index=match_index,
         part_label=part_label,
         red_is_home=red_is_home,
         score_red=int(stats_obj.get('scoreRed') or 0),
         score_blue=int(stats_obj.get('scoreBlue') or 0),
-        red_team_name=(stats_obj.get('redTeamName') or '')[:255],
-        blue_team_name=(stats_obj.get('blueTeamName') or '')[:255],
         game_ticks=int(stats_obj.get('gameTicks') or 0),
         minutes=int(stats_obj.get('minutes') or 0),
         poss_red=int(stats_obj.get('possRed') or 0),
@@ -73,14 +77,12 @@ def _create_replay_stats_from_part(
         shots_off_target_blue=int(stats_obj.get('shotsOffTargetBlue') or 0),
         shots_total_red=int(stats_obj.get('shotsTotalRed') or 0),
         shots_total_blue=int(stats_obj.get('shotsTotalBlue') or 0),
+        kicks_red=kicks_red,
+        kicks_blue=kicks_blue,
         stadium_name=(stats_obj.get('stadiumName') or '')[:255],
-        space_mode=bool(stats_obj.get('spaceMode')),
-        real_soccer_mode=bool(stats_obj.get('realSoccerMode')),
-        is_ffl_seven_aside=bool(stats_obj.get('isFflSevenAside')),
         red_team_nicks=[str(n)[:150] for n in red_team_nicks],
         blue_team_nicks=[str(n)[:150] for n in blue_team_nicks],
         mvp_nick=mvp_nick[:150] if mvp_nick else '',
-        raw_stats_json=stats_obj,
     )
 
     # Per-player (skip zero playtime and "*" own-goal placeholder)
@@ -127,7 +129,6 @@ def _create_replay_stats_from_part(
             duel_wins=int(metrics.get('duelWins') or 0),
             duel_losses=int(metrics.get('duelLosses') or 0),
             xg=_float_or_none(metrics.get('xg')),
-            raw_metrics_json=metrics,
         )
     return part
 
@@ -167,36 +168,52 @@ def fetch_match_replay_stats(match_id: int):
     status.status = MatchReplayStatsStatus.Status.PENDING
     status.save(update_fields=['status'])
 
-    # Remove stats for replays no longer in match.replays
-    MatchReplayStats.objects.filter(match=match).exclude(replay_url__in=current_replay_urls).delete()
+    # Remove replays no longer in match.replays (CASCADE deletes their MatchReplayStats)
+    MatchReplay.objects.filter(match=match).exclude(replay_url__in=current_replay_urls).delete()
 
-    created_count = 0
-    existing_count = MatchReplayStats.objects.filter(match=match).count()
     for url in match.replays or []:
         if not is_powtorki_url(url):
             continue
-        if MatchReplayStats.objects.filter(match=match, replay_url=url).exists():
-            continue
-        try:
-            data = download_powtorki_replay(url)
-            analyzer_id = upload_replay_to_analyzer(data)
-            stats_list = fetch_analyzer_stats(analyzer_id)
-        except Exception:
-            continue
-        for idx, stats_obj in enumerate(stats_list):
-            part_minutes = int(stats_obj.get('minutes') or 0)
-            if part_minutes < 1:
+        match_replay = MatchReplay.objects.filter(match=match, replay_url=url).first()
+        if match_replay and match_replay.raw_stats_json:
+            stats_list = list(match_replay.raw_stats_json)
+        else:
+            try:
+                replay_file = download_powtorki_replay(url)
+                analyzer_id = upload_replay_to_analyzer(replay_file)
+                stats_list = fetch_analyzer_stats(analyzer_id)
+            except Exception:
                 continue
-            part_order = existing_count + created_count
-            part_label = (
-                MatchReplayStats.PartLabel.FIRST_HALF
-                if part_order == 0
-                else (
-                    MatchReplayStats.PartLabel.SECOND_HALF if part_order == 1 else MatchReplayStats.PartLabel.EXTRA_TIME
-                )
+            match_replay, _ = MatchReplay.objects.update_or_create(
+                match=match,
+                replay_url=url,
+                defaults={
+                    'analyzer_replay_id': analyzer_id,
+                    'raw_stats_json': stats_list,
+                    'fetched_at': timezone.now(),
+                },
             )
+        # Rebuild preprocessed parts from raw (every time task runs)
+        MatchReplayStats.objects.filter(match_replay=match_replay).delete()
+        created_count = 0
+        existing_count = MatchReplayStats.objects.filter(match=match).count()
+        for idx, stats_obj in enumerate(stats_list):
+            played_minutes = stats_obj.get('minutes')
+            score_red = stats_obj.get('scoreRed')
+            score_blue = stats_obj.get('scoreBlue')
+            if played_minutes < 1 and (score_red == 0 and score_blue == 0):
+                continue
+
+            part_order = existing_count + created_count
+            match part_order:
+                case 0:
+                    part_label = MatchReplayStats.PartLabel.FIRST_HALF
+                case 1:
+                    part_label = MatchReplayStats.PartLabel.SECOND_HALF
+                case _:
+                    part_label = MatchReplayStats.PartLabel.EXTRA_TIME
             red_is_home = True
-            _create_replay_stats_from_part(match, url, analyzer_id, part_order, idx, part_label, red_is_home, stats_obj)
+            _create_replay_stats_from_part(match_replay, part_order, part_label, red_is_home, stats_obj)
             created_count += 1
 
     # Update status

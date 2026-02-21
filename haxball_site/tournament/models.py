@@ -854,8 +854,46 @@ class MatchReplayStatsStatus(models.Model):
         verbose_name_plural = 'Статусы загрузки статистики реплеев'
 
 
+class MatchReplay(models.Model):
+    """
+    One per replay URL in a match. Stores fetch metadata and raw analyzer response.
+    """
+
+    match = models.ForeignKey(
+        Match,
+        verbose_name='Матч',
+        related_name='match_replays',
+        on_delete=models.CASCADE,
+    )
+    replay_url = models.URLField('URL реплея', max_length=512)
+    analyzer_replay_id = models.CharField(
+        'ID реплея в анализаторе',
+        max_length=32,
+        blank=True,
+        help_text='ID, возвращённый Haxball Analyzer после загрузки',
+    )
+    raw_stats_json = models.JSONField(
+        'Сырой ответ API (stats)',
+        default=list,
+        blank=True,
+        help_text='Массив частей матча из ответа /stats/<id>.json',
+    )
+    fetched_at = models.DateTimeField('Время загрузки', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Реплей матча'
+        verbose_name_plural = 'Реплеи матчей'
+        ordering = ['match_id', 'replay_url']
+        constraints = [
+            models.UniqueConstraint(fields=['match', 'replay_url'], name='tournament_matchreplay_match_url_unique'),
+        ]
+
+    def __str__(self):
+        return f'{self.replay_url}'
+
+
 class MatchReplayStats(models.Model):
-    """One row per API 'match' (part) — one replay can yield multiple parts (e.g. halves)."""
+    """Stats for specific replay part."""
 
     class PartLabel(models.TextChoices):
         FIRST_HALF = '1H', '1 тайм'
@@ -868,21 +906,16 @@ class MatchReplayStats(models.Model):
         related_name='replay_stats',
         on_delete=models.CASCADE,
     )
-    replay_url = models.URLField('URL реплея', max_length=512)
-    analyzer_replay_id = models.CharField(
-        'ID реплея в анализаторе',
-        max_length=32,
-        help_text='ID, возвращённый Haxball Analyzer после загрузки',
+    match_replay = models.ForeignKey(
+        MatchReplay,
+        verbose_name='Реплей',
+        related_name='parts',
+        on_delete=models.CASCADE,
     )
     part_order = models.PositiveSmallIntegerField(
         'Порядок части',
         default=0,
-        help_text='Глобальный порядок части в матче (все реплеи): 0=1-й тайм, 1=2-й тайм, 2+=доп. время',
-    )
-    match_index = models.PositiveSmallIntegerField(
-        'Индекс матча в реплее',
-        default=0,
-        help_text='Порядковый номер в stats[] ответа API',
+        help_text='Глобальный порядок части в матче (среди всех реплеев)',
     )
     part_label = models.CharField(
         'Часть матча',
@@ -899,28 +932,25 @@ class MatchReplayStats(models.Model):
     # Scores and teams
     score_red = models.IntegerField('Голы красных', default=0)
     score_blue = models.IntegerField('Голы синих', default=0)
-    red_team_name = models.CharField('Название команды красных', max_length=255, blank=True)
-    blue_team_name = models.CharField('Название команды синих', max_length=255, blank=True)
 
     # Match duration
     game_ticks = models.IntegerField('Тики игры', default=0)
     minutes = models.IntegerField('Минуты', default=0)
 
     # Possession and shots
-    poss_red = models.IntegerField('Владение красные', default=0)
-    poss_blue = models.IntegerField('Владение синие', default=0)
-    shots_red = models.IntegerField('Удары красные', default=0)
-    shots_blue = models.IntegerField('Удары синие', default=0)
-    shots_off_target_red = models.IntegerField('Мимо красные', default=0)
-    shots_off_target_blue = models.IntegerField('Мимо синие', default=0)
-    shots_total_red = models.IntegerField('Всего ударов красные', default=0)
-    shots_total_blue = models.IntegerField('Всего ударов синие', default=0)
+    poss_red = models.IntegerField('Владение (красные)', default=0)
+    poss_blue = models.IntegerField('Владение (синие)', default=0)
+    shots_red = models.IntegerField('Удары (красные)', default=0)
+    shots_blue = models.IntegerField('Удары (синие)', default=0)
+    shots_off_target_red = models.IntegerField('Мимо (красные)', default=0)
+    shots_off_target_blue = models.IntegerField('Мимо (синие)', default=0)
+    shots_total_red = models.IntegerField('Всего ударов (красные)', default=0)
+    shots_total_blue = models.IntegerField('Всего ударов (синие)', default=0)
+    kicks_red = models.IntegerField('Удары по мячу красные', default=0)
+    kicks_blue = models.IntegerField('Удары по мячу (синие)', default=0)
 
     # Stadium and mode
     stadium_name = models.CharField('Название стадиона', max_length=255, blank=True)
-    space_mode = models.BooleanField('Космический режим', default=False)
-    real_soccer_mode = models.BooleanField('Реальный футбол', default=False)
-    is_ffl_seven_aside = models.BooleanField('FFL 7 на 7', default=False)
 
     # Team nicks (from API redTeam / blueTeam)
     red_team_nicks = ArrayField(
@@ -936,9 +966,6 @@ class MatchReplayStats(models.Model):
         blank=True,
     )
     mvp_nick = models.CharField('MVP (ник)', max_length=150, blank=True)
-
-    # Full API response for this part (for debugging / extra fields)
-    raw_stats_json = models.JSONField('Сырой JSON статистики', default=dict, blank=True)
 
     class Meta:
         verbose_name = 'Статистика матча (реплеи)'
@@ -958,7 +985,7 @@ class MatchReplayStats(models.Model):
     def __str__(self):
         return (
             f'{self.match.team_home.short_title} - {self.match.team_guest.short_title}'
-            + f' — {self.match.numb_tour} [#{self.match_index}]'
+            + f' — {self.match.numb_tour} ({self.get_part_label_display()})'
         )
 
 
@@ -975,7 +1002,7 @@ class MatchReplayStatsPlayer(models.Model):
         Player,
         verbose_name='Игрок',
         related_name='replay_stats_entries',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         help_text='Сопоставлен по нику (красные=хозяева, синие=гости)',
@@ -991,7 +1018,6 @@ class MatchReplayStatsPlayer(models.Model):
         help_text='Хозяева (красные) или гости (синие) по реплею',
     )
 
-    # Core metrics (from API player.metrics / player.rating)
     goals = models.IntegerField('Голы', default=0)
     assists = models.IntegerField('Голевые передачи', default=0)
     played_ticks = models.IntegerField('Сыграно тиков', default=0)
@@ -1012,8 +1038,6 @@ class MatchReplayStatsPlayer(models.Model):
     duel_wins = models.IntegerField('Дуэли выиграно', default=0)
     duel_losses = models.IntegerField('Дуэли проиграно', default=0)
     xg = models.FloatField('xG', null=True, blank=True)
-
-    raw_metrics_json = models.JSONField('Сырые метрики', default=dict, blank=True)
 
     class Meta:
         verbose_name = 'Статистика игрока (реплеи)'

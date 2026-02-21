@@ -602,227 +602,9 @@ class MatchDetail(DetailView):
         context['replay_stats_status'] = replay_status
         if replay_status and replay_status.status == MatchReplayStatsStatus.Status.SUCCESS:
             parts = list(match.replay_stats.all())
-            # Map replay red/blue to home/guest using stored red_is_home per part
-            poss_home = sum(p.home_guest(p.poss_red, p.poss_blue)[0] for p in parts)
-            poss_guest = sum(p.home_guest(p.poss_red, p.poss_blue)[1] for p in parts)
-            poss_total = poss_home + poss_guest
-            if poss_total:
-                poss_home_pct = round(100 * poss_home / poss_total)
-                poss_guest_pct = round(100 * poss_guest / poss_total)
-            else:
-                poss_home_pct = poss_guest_pct = 0
-            agg_team = {
-                'score_home': sum(p.home_guest(p.score_red, p.score_blue)[0] for p in parts),
-                'score_guest': sum(p.home_guest(p.score_red, p.score_blue)[1] for p in parts),
-                'poss_home': poss_home,
-                'poss_guest': poss_guest,
-                'poss_home_pct': poss_home_pct,
-                'poss_guest_pct': poss_guest_pct,
-                'shots_home': sum(p.home_guest(p.shots_red, p.shots_blue)[0] for p in parts),
-                'shots_guest': sum(p.home_guest(p.shots_red, p.shots_blue)[1] for p in parts),
-                'shots_total_home': sum(p.home_guest(p.shots_total_red, p.shots_total_blue)[0] for p in parts),
-                'shots_total_guest': sum(p.home_guest(p.shots_total_red, p.shots_total_blue)[1] for p in parts),
-            }
-            # Aggregate players by (player_id or (nick, team_id)); sum metrics, average rating
-            # Skip zero playtime and "*" (own goal) placeholder
-            player_agg = {}
-            for part in parts:
-                for mp in part.players.all():
-                    if mp.played_ticks == 0 or (mp.nick or '').strip() == '*':
-                        continue
-                    key = (mp.player_id,) if mp.player_id else (mp.nick, mp.team_id)
-                    if key not in player_agg:
-                        player_agg[key] = {
-                            'player': mp.player,
-                            'nick': mp.nick,
-                            'team_obj': mp.team,
-                            'goals': 0,
-                            'assists': 0,
-                            'played_ticks': 0,
-                            'rating_sum': 0.0,
-                            'rating_count': 0,
-                            'shots_total': 0,
-                            'shots_on_target': 0,
-                            'passes_completed': 0,
-                            'pass_attempts': 0,
-                            'touches': 0,
-                            'saves': 0,
-                            'clearances': 0,
-                            'interceptions': 0,
-                            'duel_wins': 0,
-                            'duel_losses': 0,
-                        }
-                    a = player_agg[key]
-                    a['goals'] += mp.goals
-                    a['assists'] += mp.assists
-                    a['played_ticks'] += mp.played_ticks
-                    if mp.rating is not None:
-                        a['rating_sum'] += mp.rating
-                        a['rating_count'] += 1
-                    a['shots_total'] += mp.shots_total
-                    a['shots_on_target'] += mp.shots_on_target
-                    a['passes_completed'] += mp.passes_completed
-                    a['pass_attempts'] += mp.pass_attempts
-                    a['touches'] += mp.touches
-                    a['saves'] += mp.saves
-                    a['clearances'] += mp.clearances
-                    a['interceptions'] += mp.interceptions
-                    a['duel_wins'] += mp.duel_wins
-                    a['duel_losses'] += mp.duel_losses
-            aggregated_players = []
-            for key, a in player_agg.items():
-                a['rating'] = (a['rating_sum'] / a['rating_count']) if a['rating_count'] else None
-                a['pass_accuracy'] = (
-                    round(100 * a['passes_completed'] / a['pass_attempts'], 1) if a['pass_attempts'] else None
-                )
-                aggregated_players.append(a)
-            # Home team first, then guest
-            team_home_id = match.team_home_id
-
-            def _player_sort_key(a):
-                is_home = a.get('team_obj') and a['team_obj'].id == team_home_id
-                return (0 if is_home else 1, a.get('nick') or '')
-
-            aggregated_players.sort(key=_player_sort_key)
-            team_home_id = match.team_home_id
-            team_guest_id = match.team_guest_id
-
-            def _player_dict_serializable(a, i):
-                r = a.get('rating')
-                return {
-                    'i': i,
-                    'name': (a.get('player') and a['player'].nickname) or a.get('nick') or '—',
-                    'goals': a.get('goals', 0),
-                    'assists': a.get('assists', 0),
-                    'shots_total': a.get('shots_total', 0),
-                    'shots_on_target': a.get('shots_on_target', 0),
-                    'passes_completed': a.get('passes_completed', 0),
-                    'pass_accuracy': a.get('pass_accuracy'),
-                    'touches': a.get('touches', 0),
-                    'saves': a.get('saves', 0),
-                    'rating': round(float(r), 2) if r is not None else None,
-                }
-
-            home_players = [a for a in aggregated_players if a.get('team_obj') and a['team_obj'].id == team_home_id]
-            guest_players = [a for a in aggregated_players if a.get('team_obj') and a['team_obj'].id == team_guest_id]
-            players_comparison_data = {
-                'total': {
-                    'home': [_player_dict_serializable(a, i) for i, a in enumerate(home_players)],
-                    'guest': [_player_dict_serializable(a, i) for i, a in enumerate(guest_players)],
-                },
-                'parts': [],
-            }
-            # Per-part player stats (for Total / by-part toggle in Players tab)
-            parts_players = []
-            for i, part in enumerate(parts):
-                part_player_list = []
-                for mp in part.players.all():
-                    if mp.played_ticks == 0 or (mp.nick or '').strip() == '*':
-                        continue
-                    pass_attempts = mp.pass_attempts or 0
-                    part_player_list.append(
-                        {
-                            'player': mp.player,
-                            'nick': mp.nick,
-                            'team_obj': mp.team,
-                            'goals': mp.goals,
-                            'assists': mp.assists,
-                            'shots_total': mp.shots_total,
-                            'shots_on_target': mp.shots_on_target,
-                            'passes_completed': mp.passes_completed,
-                            'pass_attempts': pass_attempts,
-                            'pass_accuracy': (
-                                round(100 * mp.passes_completed / pass_attempts, 1) if pass_attempts else None
-                            ),
-                            'touches': mp.touches,
-                            'saves': mp.saves,
-                            'rating': round(mp.rating, 2) if mp.rating is not None else None,
-                        }
-                    )
-                part_player_list.sort(key=_player_sort_key)
-                ph = [a for a in part_player_list if a.get('team_obj') and a['team_obj'].id == team_home_id]
-                pg = [a for a in part_player_list if a.get('team_obj') and a['team_obj'].id == team_guest_id]
-                players_comparison_data['parts'].append(
-                    {
-                        'index': i + 1,
-                        'part_label': part.part_label,
-                        'home': [_player_dict_serializable(a, j) for j, a in enumerate(ph)],
-                        'guest': [_player_dict_serializable(a, j) for j, a in enumerate(pg)],
-                    }
-                )
-                parts_players.append(
-                    {
-                        'index': i + 1,
-                        'part_label': part.get_part_label_display(),
-                        'players': part_player_list,
-                    }
-                )
-            # Per-part team stats for H2H; use stored red_is_home to map replay red/blue → home/guest
-            team_home_id = match.team_home_id
-            team_guest_id = match.team_guest_id
-            parts_summary = []
-            for i, p in enumerate(parts):
-                poss_home, poss_guest = p.home_guest(p.poss_red, p.poss_blue)
-                pt = poss_home + poss_guest
-                if pt:
-                    poss_home_pct = round(100 * poss_home / pt)
-                    poss_guest_pct = round(100 * poss_guest / pt)
-                else:
-                    poss_home_pct = poss_guest_pct = 0
-                passes_home = passes_guest = saves_home = saves_guest = 0
-                for mp in p.players.all():
-                    if mp.team_id == team_home_id:
-                        passes_home += mp.passes_completed
-                        saves_home += mp.saves
-                    elif mp.team_id == team_guest_id:
-                        passes_guest += mp.passes_completed
-                        saves_guest += mp.saves
-                kicks_list = (p.raw_stats_json or {}).get('kicks') or []
-                kicks_replay_red = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'red')
-                kicks_replay_blue = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'blue')
-                kicks_home, kicks_guest = p.home_guest(kicks_replay_red, kicks_replay_blue)
-                score_home, score_guest = p.home_guest(p.score_red, p.score_blue)
-                shots_home, shots_guest = p.home_guest(p.shots_red, p.shots_blue)
-                shots_total_home, shots_total_guest = p.home_guest(p.shots_total_red, p.shots_total_blue)
-                parts_summary.append(
-                    {
-                        'index': i + 1,
-                        'part_label': p.get_part_label_display(),
-                        'score_home': score_home,
-                        'score_guest': score_guest,
-                        'poss_home': poss_home,
-                        'poss_guest': poss_guest,
-                        'poss_home_pct': poss_home_pct,
-                        'poss_guest_pct': poss_guest_pct,
-                        'shots_home': shots_home,
-                        'shots_guest': shots_guest,
-                        'shots_total_home': shots_total_home,
-                        'shots_total_guest': shots_total_guest,
-                        'passes_home': passes_home,
-                        'passes_guest': passes_guest,
-                        'kicks_home': kicks_home,
-                        'kicks_guest': kicks_guest,
-                        'saves_home': saves_home,
-                        'saves_guest': saves_guest,
-                        'minutes': p.minutes,
-                    }
-                )
-            # Totals for passes, kicks, saves (shots already in agg_team)
-            agg_team['passes_home'] = sum(ps['passes_home'] for ps in parts_summary)
-            agg_team['passes_guest'] = sum(ps['passes_guest'] for ps in parts_summary)
-            agg_team['kicks_home'] = sum(ps['kicks_home'] for ps in parts_summary)
-            agg_team['kicks_guest'] = sum(ps['kicks_guest'] for ps in parts_summary)
-            agg_team['saves_home'] = sum(ps['saves_home'] for ps in parts_summary)
-            agg_team['saves_guest'] = sum(ps['saves_guest'] for ps in parts_summary)
-            context['match_replay_stats_aggregated'] = {
-                'team': agg_team,
-                'parts_summary': parts_summary,
-                'players': aggregated_players,
-                'parts_players': parts_players,
-                'home_players': home_players,
-                'guest_players': guest_players,
-                'players_comparison_data': players_comparison_data,
-            }
+            teams_stats = self.get_replay_teams_stats(match, parts)
+            players_stats = self.get_replay_players_stats(match, parts)
+            context['match_replay_stats_aggregated'] = {**teams_stats, **players_stats}
         else:
             context['match_replay_stats_aggregated'] = None
 
@@ -949,6 +731,223 @@ class MatchDetail(DetailView):
             'goals': top_goals or {'pl': '–', 'count': 0},
             'assists': top_assists or {'pl': '–', 'count': 0},
             'cs': top_cs or {'pl': '–', 'count': 0},
+        }
+
+    def get_replay_teams_stats(self, match, parts):
+        """Build team-level replay stats: agg_team (totals) and parts_summary (per-part)."""
+        poss_home = sum(p.home_guest(p.poss_red, p.poss_blue)[0] for p in parts)
+        poss_guest = sum(p.home_guest(p.poss_red, p.poss_blue)[1] for p in parts)
+        poss_total = poss_home + poss_guest
+        if poss_total:
+            poss_home_pct = round(100 * poss_home / poss_total)
+            poss_guest_pct = round(100 * poss_guest / poss_total)
+        else:
+            poss_home_pct = poss_guest_pct = 0
+        agg_team = {
+            'score_home': sum(p.home_guest(p.score_red, p.score_blue)[0] for p in parts),
+            'score_guest': sum(p.home_guest(p.score_red, p.score_blue)[1] for p in parts),
+            'poss_home': poss_home,
+            'poss_guest': poss_guest,
+            'poss_home_pct': poss_home_pct,
+            'poss_guest_pct': poss_guest_pct,
+            'shots_home': sum(p.home_guest(p.shots_red, p.shots_blue)[0] for p in parts),
+            'shots_guest': sum(p.home_guest(p.shots_red, p.shots_blue)[1] for p in parts),
+            'shots_total_home': sum(p.home_guest(p.shots_total_red, p.shots_total_blue)[0] for p in parts),
+            'shots_total_guest': sum(p.home_guest(p.shots_total_red, p.shots_total_blue)[1] for p in parts),
+        }
+        team_home_id = match.team_home_id
+        team_guest_id = match.team_guest_id
+        parts_summary = []
+        for i, p in enumerate(parts):
+            poss_home, poss_guest = p.home_guest(p.poss_red, p.poss_blue)
+            pt = poss_home + poss_guest
+            if pt:
+                poss_home_pct = round(100 * poss_home / pt)
+                poss_guest_pct = round(100 * poss_guest / pt)
+            else:
+                poss_home_pct = poss_guest_pct = 0
+            passes_home = passes_guest = saves_home = saves_guest = 0
+            for mp in p.players.all():
+                if mp.team_id == team_home_id:
+                    passes_home += mp.passes_completed
+                    saves_home += mp.saves
+                elif mp.team_id == team_guest_id:
+                    passes_guest += mp.passes_completed
+                    saves_guest += mp.saves
+            score_home, score_guest = p.home_guest(p.score_red, p.score_blue)
+            shots_home, shots_guest = p.home_guest(p.shots_red, p.shots_blue)
+            shots_total_home, shots_total_guest = p.home_guest(p.shots_total_red, p.shots_total_blue)
+            kicks_home, kicks_guest = p.home_guest(p.kicks_red, p.kicks_blue)
+            parts_summary.append(
+                {
+                    'index': p.part_order + 1,
+                    'part_label': p.get_part_label_display(),
+                    'score_home': score_home,
+                    'score_guest': score_guest,
+                    'poss_home': poss_home,
+                    'poss_guest': poss_guest,
+                    'poss_home_pct': poss_home_pct,
+                    'poss_guest_pct': poss_guest_pct,
+                    'shots_home': shots_home,
+                    'shots_guest': shots_guest,
+                    'shots_total_home': shots_total_home,
+                    'shots_total_guest': shots_total_guest,
+                    'passes_home': passes_home,
+                    'passes_guest': passes_guest,
+                    'kicks_home': kicks_home,
+                    'kicks_guest': kicks_guest,
+                    'saves_home': saves_home,
+                    'saves_guest': saves_guest,
+                    'minutes': p.minutes,
+                }
+            )
+        agg_team['passes_home'] = sum(ps['passes_home'] for ps in parts_summary)
+        agg_team['passes_guest'] = sum(ps['passes_guest'] for ps in parts_summary)
+        agg_team['kicks_home'] = sum(ps['kicks_home'] for ps in parts_summary)
+        agg_team['kicks_guest'] = sum(ps['kicks_guest'] for ps in parts_summary)
+        agg_team['saves_home'] = sum(ps['saves_home'] for ps in parts_summary)
+        agg_team['saves_guest'] = sum(ps['saves_guest'] for ps in parts_summary)
+        return {'team': agg_team, 'parts_summary': parts_summary}
+
+    def get_replay_players_stats(self, match, parts):
+        """Build player-level replay stats: aggregated list, per-part lists, comparison data."""
+        team_home_id = match.team_home_id
+        team_guest_id = match.team_guest_id
+
+        def _player_sort_key(a):
+            is_home = a.get('team_obj') and a['team_obj'].id == team_home_id
+            return (0 if is_home else 1, a.get('nick') or '')
+
+        def _player_dict_serializable(player, i):
+            r = player.get('rating')
+            return {
+                'i': i,
+                'name': (player.get('player') and player['player'].nickname) or player.get('nick') or '—',
+                'goals': player.get('goals', 0),
+                'assists': player.get('assists', 0),
+                'shots_total': player.get('shots_total', 0),
+                'shots_on_target': player.get('shots_on_target', 0),
+                'passes_completed': player.get('passes_completed', 0),
+                'pass_accuracy': player.get('pass_accuracy'),
+                'touches': player.get('touches', 0),
+                'saves': player.get('saves', 0),
+                'rating': round(float(r), 2) if r is not None else None,
+            }
+
+        player_agg = {}
+        for part in parts:
+            for mp in part.players.all():
+                if mp.played_ticks == 0 or (mp.nick or '').strip() == '*':
+                    continue
+                key = (mp.player_id,) if mp.player_id else (mp.nick, mp.team_id)
+                if key not in player_agg:
+                    player_agg[key] = {
+                        'player': mp.player,
+                        'nick': mp.nick,
+                        'team_obj': mp.team,
+                        'goals': 0,
+                        'assists': 0,
+                        'played_ticks': 0,
+                        'rating_sum': 0.0,
+                        'rating_count': 0,
+                        'shots_total': 0,
+                        'shots_on_target': 0,
+                        'passes_completed': 0,
+                        'pass_attempts': 0,
+                        'touches': 0,
+                        'saves': 0,
+                        'clearances': 0,
+                        'interceptions': 0,
+                        'duel_wins': 0,
+                        'duel_losses': 0,
+                    }
+                stats = player_agg[key]
+                stats['goals'] += mp.goals
+                stats['assists'] += mp.assists
+                stats['played_ticks'] += mp.played_ticks
+                if mp.rating is not None:
+                    stats['rating_sum'] += mp.rating
+                    stats['rating_count'] += 1
+                stats['shots_total'] += mp.shots_total
+                stats['shots_on_target'] += mp.shots_on_target
+                stats['passes_completed'] += mp.passes_completed
+                stats['pass_attempts'] += mp.pass_attempts
+                stats['touches'] += mp.touches
+                stats['saves'] += mp.saves
+                stats['clearances'] += mp.clearances
+                stats['interceptions'] += mp.interceptions
+                stats['duel_wins'] += mp.duel_wins
+                stats['duel_losses'] += mp.duel_losses
+        aggregated_players = []
+        for key, stats in player_agg.items():
+            stats['rating'] = (stats['rating_sum'] / stats['rating_count']) if stats['rating_count'] else None
+            stats['pass_accuracy'] = (
+                round(100 * stats['passes_completed'] / stats['pass_attempts'], 1) if stats['pass_attempts'] else None
+            )
+            aggregated_players.append(stats)
+        aggregated_players.sort(key=_player_sort_key)
+
+        home_players = [a for a in aggregated_players if a.get('team_obj') and a['team_obj'].id == team_home_id]
+        guest_players = [a for a in aggregated_players if a.get('team_obj') and a['team_obj'].id == team_guest_id]
+        players_comparison_data = {
+            'total': {
+                'home': [_player_dict_serializable(a, i) for i, a in enumerate(home_players)],
+                'guest': [_player_dict_serializable(a, i) for i, a in enumerate(guest_players)],
+            },
+            'parts': [],
+        }
+
+        parts_players = []
+        for i, part in enumerate(parts):
+            part_player_list = []
+            for mp in part.players.all():
+                if mp.played_ticks == 0 or (mp.nick or '').strip() == '*':
+                    continue
+                pass_attempts = mp.pass_attempts or 0
+                part_player_list.append(
+                    {
+                        'player': mp.player,
+                        'nick': mp.nick,
+                        'team_obj': mp.team,
+                        'goals': mp.goals,
+                        'assists': mp.assists,
+                        'played_ticks': mp.played_ticks,
+                        'shots_total': mp.shots_total,
+                        'shots_on_target': mp.shots_on_target,
+                        'passes_completed': mp.passes_completed,
+                        'pass_attempts': pass_attempts,
+                        'pass_accuracy': (
+                            round(100 * mp.passes_completed / pass_attempts, 1) if pass_attempts else None
+                        ),
+                        'touches': mp.touches,
+                        'saves': mp.saves,
+                        'rating': round(mp.rating, 2) if mp.rating is not None else None,
+                    }
+                )
+            part_player_list.sort(key=_player_sort_key)
+            ph = [pl for pl in part_player_list if pl.get('team_obj') and pl['team_obj'].id == team_home_id]
+            pg = [pl for pl in part_player_list if pl.get('team_obj') and pl['team_obj'].id == team_guest_id]
+            players_comparison_data['parts'].append(
+                {
+                    'index': i + 1,
+                    'part_label': part.part_label,
+                    'home': [_player_dict_serializable(pl, j) for j, pl in enumerate(ph)],
+                    'guest': [_player_dict_serializable(pl, j) for j, pl in enumerate(pg)],
+                }
+            )
+            parts_players.append(
+                {
+                    'index': i + 1,
+                    'part_label': part.get_part_label_display(),
+                    'players': part_player_list,
+                }
+            )
+        return {
+            'players': aggregated_players,
+            'parts_players': parts_players,
+            'home_players': home_players,
+            'guest_players': guest_players,
+            'players_comparison_data': players_comparison_data,
         }
 
 

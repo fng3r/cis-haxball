@@ -1,0 +1,223 @@
+{# Players tab: view mode = table | player comparison (pick one from each team, then H2H) #}
+<div class="tw:flex tw:flex-col tw:gap-3"
+  {# djlint:off #}
+     x-data="{
+             selectedMode: 'table',
+             selectedHome: null,
+             selectedGuest: null,
+             selectedHomeName: '',
+             selectedGuestName: '',
+             comparisonData: null,
+             statRows: [
+             { key: 'goals', label: 'Голы' },
+             { key: 'assists', label: 'Голевые передачи' },
+             { key: 'shots_total', label: 'Удары' },
+             { key: 'shots_on_target', label: 'Удары в створ' },
+             { key: 'passes_completed', label: 'Передачи' },
+             { key: 'pass_accuracy', label: 'Передачи (%)' },
+             { key: 'touches', label: 'Касания' },
+             { key: 'saves', label: 'Сейвы' },
+             { key: 'rating', label: 'Рейтинг' }
+             ],
+             pct(a, b) { const x = Number(a) || 0, y = Number(b) || 0; const t = x + y; return t ? Math.round(100 * x / t) : 50; },
+             init() {
+             const el = document.getElementById('players-comparison-data');
+             if (el) this.comparisonData = JSON.parse(el.textContent);
+             if (this.comparisonData?.total?.home?.length) this.selectedHomeName = this.comparisonData.total.home[0].name;
+             if (this.comparisonData?.total?.guest?.length) this.selectedGuestName = this.comparisonData.total.guest[0].name;
+             this.$nextTick(() => this.syncSelection());
+             },
+             syncSelection() {
+             const hi = this.currentHome.findIndex(p => p.name === this.selectedHomeName);
+             const gi = this.currentGuest.findIndex(p => p.name === this.selectedGuestName);
+             this.selectedHome = hi >= 0 ? hi : null; this.selectedGuest = gi >= 0 ? gi : null;
+             },
+             get currentHome() { if (!this.comparisonData) return []; return this.view === 'total' ? this.comparisonData.total.home : (this.comparisonData.parts.find(p => p.index === this.view)?.home || []); },
+             get currentGuest() { if (!this.comparisonData) return []; return this.view === 'total' ? this.comparisonData.total.guest : (this.comparisonData.parts.find(p => p.index === this.view)?.guest || []); },
+             get homePlayer() { return this.selectedHome !== null ? this.currentHome[this.selectedHome] : null; },
+             get guestPlayer() { return this.selectedGuest !== null ? this.currentGuest[this.selectedGuest] : null; },
+             val(p, key) { if (!p) return '—'; const v = p[key]; if (v === null || v === undefined) return '—'; if (key === 'pass_accuracy') return v + '%'; return v; }
+             }"
+     x-init="init()">
+  {# djlint:on #}
+  <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3">
+    <div class="tw:flex tw:gap-1">
+      <button type="button"
+              class="tw:btn tw:btn-ghost tw:btn-sm"
+              :class="{ 'tw:btn-active': view === 'total' }"
+              @click="view = 'total'; selectedMode === 'comparison' && $nextTick(() => syncSelection())">Матч</button>
+      {% for part_data in agg.parts_players %}
+        <button type="button"
+                class="tw:btn tw:btn-ghost tw:btn-sm"
+                :class="{ 'tw:btn-active': view === {{ part_data.index }} }"
+                @click="view = {{ part_data.index }}; selectedMode === 'comparison' && $nextTick(() => syncSelection())">
+          {{ part_data.part_label }}
+        </button>
+      {% endfor %}
+    </div>
+    <div class="tw:join tw:join-horizontal">
+      <button type="button"
+              class="tw:btn tw:btn-sm tw:join-item"
+              :class="{ 'tw:btn-primary': selectedMode === 'table' }"
+              @click="selectedMode = 'table'"
+              title="Таблица">
+        <i class="fa fa-table"></i>
+      </button>
+      <button type="button"
+              class="tw:btn tw:btn-sm tw:join-item"
+              :class="{ 'tw:btn-primary': selectedMode === 'comparison' }"
+              @click="selectedMode = 'comparison'"
+              title="Сравнение игроков">
+        <i class="fa fa-user"></i><i class="fa fa-exchange tw:mx-0.5"></i><i class="fa fa-user"></i>
+      </button>
+    </div>
+  </div>
+
+  {# Table mode: table #}
+  <div x-show="selectedMode === 'table'" x-cloak class="tw:flex tw:flex-col tw:gap-2">
+    <div class="tw:overflow-x-auto">
+      <table class="tw:table tw:table-zebra tw:min-w-full">
+        <thead>
+          <tr>
+            <th>Игрок</th>
+            <th>Г</th>
+            <th>П</th>
+            <th>Удары</th>
+            <th>Передачи</th>
+            <th>Передачи (%)</th>
+            <th>Касания</th>
+            <th>Сейвы</th>
+            <th>Рейтинг</th>
+          </tr>
+        </thead>
+        <tbody x-show="view === 'total'" x-cloak>
+          {% for p in agg.players %}
+            <tr>
+              <td class="tw:flex tw:items-center tw:gap-2">
+                {% if p.team_obj %}
+                  <img src="{{ p.team_obj.logo.url }}"
+                       alt="{{ p.team_obj.title }}"
+                       class="tw:w-6 tw:h-6 tw:object-contain"
+                       width="24"
+                       height="24">
+                {% endif %}
+                {% if p.player %}
+                  <a class="tw:link tw:link-hover" href="{% url 'tournament:player_stats' p.player.pk %}">{{ p.player.nickname }}</a>
+                {% else %}
+                  {{ p.nick }}
+                {% endif %}
+              </td>
+              <td>{{ p.goals }}</td>
+              <td>{{ p.assists }}</td>
+              <td>{{ p.shots_total }} ({{ p.shots_on_target }})</td>
+              <td>{{ p.passes_completed }}</td>
+              <td>
+                {% if p.pass_accuracy is not None %}
+                  {{ p.pass_accuracy }}%
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>{{ p.touches }}</td>
+              <td>{{ p.saves }}</td>
+              <td>
+                {% if p.rating %}
+                  {{ p.rating|floatformat:2 }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        {% for part_data in agg.parts_players %}
+          <tbody x-show="view === {{ part_data.index }}" x-cloak>
+            {% for p in part_data.players %}
+              <tr>
+                <td class="tw:flex tw:items-center tw:gap-2">
+                  {% if p.team_obj %}
+                    <img src="{{ p.team_obj.logo.url }}"
+                         alt="{{ p.team_obj.title }}"
+                         class="tw:w-6 tw:h-6 tw:object-contain"
+                         width="24"
+                         height="24">
+                  {% endif %}
+                  {% if p.player %}
+                    <a class="tw:link tw:link-hover" href="{% url 'tournament:player_stats' p.player.pk %}">{{ p.player.nickname }}</a>
+                  {% else %}
+                    {{ p.nick }}
+                  {% endif %}
+                </td>
+                <td>{{ p.goals }}</td>
+                <td>{{ p.assists }}</td>
+                <td>{{ p.shots_total }} ({{ p.shots_on_target }})</td>
+                <td>{{ p.passes_completed }}</td>
+                <td>
+                  {% if p.pass_accuracy is not None %}
+                    {{ p.pass_accuracy }}%
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>{{ p.touches }}</td>
+                <td>{{ p.saves }}</td>
+                <td>
+                  {% if p.rating %}
+                    {{ p.rating|floatformat:2 }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  {# Comparison mode: pick home player, pick guest player, then H2H rows #}
+  <div x-show="selectedMode === 'comparison'" x-cloak class="tw:flex tw:flex-col tw:gap-3">
+    <div class="tw:flex tw:gap-4 tw:flex-wrap">
+      <div class="tw:flex-1 tw:min-w-[140px]">
+        <p class="tw:font-semibold tw:mb-1">{{ match.team_home.title }}</p>
+        <select class="tw:select tw:select-bordered tw:select-sm tw:w-full" x-model="selectedHomeName" @change="syncSelection()">
+          <option value="" :selected="!selectedHomeName" disabled>Выберите игрока</option>
+          <template x-for="(p, idx) in currentHome" :key="'h'+idx">
+            <option :value="p.name" :selected="selectedHomeName === p.name" x-text="p.name"></option>
+          </template>
+        </select>
+      </div>
+      <div class="tw:flex-1 tw:min-w-[140px]">
+        <p class="tw:font-semibold tw:mb-1">{{ match.team_guest.title }}</p>
+        <select class="tw:select tw:select-bordered tw:select-sm tw:w-full" x-model="selectedGuestName" @change="syncSelection()">
+          <option value="" :selected="!selectedGuestName" disabled>Выберите игрока</option>
+          <template x-for="(p, idx) in currentGuest" :key="'g'+idx">
+            <option :value="p.name" :selected="selectedGuestName === p.name" x-text="p.name"></option>
+          </template>
+        </select>
+      </div>
+    </div>
+    <div x-show="homePlayer && guestPlayer" x-cloak class="tw:flex tw:flex-col tw:gap-1 tw:px-2 tw:py-2">
+      <template x-for="row in statRows" :key="row.key">
+        <div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
+          <div class="tw:flex">
+            <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start" x-text="val(homePlayer, row.key)"></div>
+            <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
+              <span class="tw:text-center tw:text-xl tw:font-semibold" x-text="row.label"></span>
+            </div>
+            <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end" x-text="val(guestPlayer, row.key)"></div>
+          </div>
+          <div class="tw:flex tw:h-2 tw:bg-secondary">
+            <div class="tw:bg-error"
+                 :style="'width: ' + pct(Number(homePlayer && homePlayer[row.key]) || 0, Number(guestPlayer && guestPlayer[row.key]) || 0) + '%; height: 10px;'">
+            </div>
+            <div class="tw:bg-primary"
+                 :style="'width: ' + (100 - pct(Number(homePlayer && homePlayer[row.key]) || 0, Number(guestPlayer && guestPlayer[row.key]) || 0)) + '%; height: 10px;'">
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>

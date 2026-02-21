@@ -45,6 +45,7 @@ from .models import (
     GroupStage,
     League,
     Match,
+    MatchReplay,
     MatchReplayStats,
     MatchReplayStatsPlayer,
     MatchReplayStatsStatus,
@@ -972,16 +973,24 @@ class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
         return False
 
 
+@admin.register(MatchReplay)
+class MatchReplayAdmin(UnfoldModelAdmin):
+    list_display = ('match', 'replay_url', 'analyzer_replay_id', 'fetched_at')
+    list_filter = (('match__league', RelatedDropdownFilter),)
+    search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
+    ordering = ('match_id', 'replay_url')
+    raw_id_fields = ('match',)
+    readonly_fields = ('replay_url', 'analyzer_replay_id', 'raw_stats_json', 'fetched_at')
+
+
 @admin.register(MatchReplayStats)
 class MatchReplayStatsAdmin(UnfoldModelAdmin):
     list_display = (
         'match',
+        'match_replay',
         'part_label',
         'part_order',
         'red_is_home',
-        'replay_url',
-        'analyzer_replay_id',
-        'match_index',
         'score_red',
         'score_blue',
         'minutes',
@@ -989,13 +998,17 @@ class MatchReplayStatsAdmin(UnfoldModelAdmin):
         'poss_blue',
     )
     list_filter = (('match__league', RelatedDropdownFilter),)
-    search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
+    search_fields = ('match__id', 'match_replay__replay_url', 'match_replay__analyzer_replay_id')
     ordering = ('match_id', 'part_order')
-    raw_id_fields = ('match',)
-    readonly_fields = ('replay_url', 'analyzer_replay_id', 'part_order', 'match_index', 'raw_stats_json')
+    raw_id_fields = ('match', 'match_replay')
+    readonly_fields = ('match_replay', 'part_order')
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('match', 'match__team_home', 'match__team_guest')
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('match', 'match__team_home', 'match__team_guest', 'match_replay')
+        )
 
 
 @admin.register(MatchReplayStatsPlayer)
