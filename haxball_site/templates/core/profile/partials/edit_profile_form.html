@@ -13,15 +13,52 @@
       </div>
     {% endif %}
 
-    <form x-data="{ tag: '{{ profile.tag|default_if_none:'' }}', frame: '{{ selected_avatar_frame|default:'' }}', frameClasses: { yellow: 'tw:ring-yellow-400', orange: 'tw:ring-orange-400', blue: 'tw:ring-blue-500', violet: 'tw:ring-violet-500', rose: 'tw:ring-rose-500' } }"
-          method="post"
-          enctype="multipart/form-data"
-          hx-post="{% url 'core:edit_profile' profile.slug profile.id %}"
-          hx-trigger="submit"
-          hx-target="#edit-profile-form-container"
-          hx-swap="outerHTML"
-          hx-push-url="true"
-          hx-disabled-elt="find button">
+    <form
+      {# djlint:off #}
+      x-data="{
+              tag: '{{ profile.tag|default_if_none:'' }}',
+              frame: '{{ selected_avatar_frame|default:'' }}',
+              frameClasses: { yellow: 'tw:ring-yellow-400', orange: 'tw:ring-orange-400', blue: 'tw:ring-blue-500', violet: 'tw:ring-violet-500', rose: 'tw:ring-rose-500' },
+              selectedAchievements: [],
+              toggleAchievement(achievementId, event) {
+              const index = this.selectedAchievements.indexOf(achievementId);
+              if (index > -1) {
+              this.selectedAchievements.splice(index, 1);
+              } else {
+              if (this.selectedAchievements.length >= 5) {
+              return;
+              }
+              this.selectedAchievements.push(achievementId);
+              }
+              },
+              isAchievementSelected(achievementId) { return this.selectedAchievements.includes(achievementId); },
+              isLimitReached() { return this.selectedAchievements.length >= 5; },
+              isAchievementDisabled(achievementId) { return this.isLimitReached() && !this.isAchievementSelected(achievementId); },
+              getSelectedCount() { return this.selectedAchievements.length; }
+              }"
+      x-init="selectedAchievements =
+              {% if profile.favorite_achievements.all %}
+                [
+                {% for achievement in profile.favorite_achievements.all %}
+                  {{ achievement.id }}
+                  {% if not forloop.last %},{% endif %}
+
+                {% endfor %}
+                ]
+              {% else %}
+                []
+              {% endif %}
+             "
+      method="post"
+      enctype="multipart/form-data"
+      hx-post="{% url 'core:edit_profile' profile.slug profile.id %}"
+      hx-trigger="submit"
+      hx-target="#edit-profile-form-container"
+      hx-swap="outerHTML"
+      hx-push-url="true"
+      hx-disabled-elt="find button"
+      {# djlint:on #}
+    >
 
       <div class="tw:card user-card-full">
         <div class="tw:flex">
@@ -253,6 +290,45 @@
                     <textarea class="tw:textarea tw:w-full tw:text-base!" rows="2" name="favourite_players">{{ profile.favourite_players }}</textarea>
                   </fieldset>
                 </div>
+
+                {% if profile.name.user_player %}
+                  <div class="tw:my-2">
+                    <fieldset class="tw:fieldset">
+                      <legend class="tw:fieldset-legend tw:text-lg! tw:flex tw:items-center tw:gap-2">
+                        <span>Избранные достижения</span>
+                        <div class="tw:tooltip" data-tip="Выберите до 5 достижений для отображения в комментариях">
+                          <i class="fa fa-info-circle tw:text-sm!" aria-hidden="true"></i>
+                        </div>
+                      </legend>
+                      {% if profile_form.favorite_achievements.field.queryset.exists %}
+                        <div class="tw:max-h-[450px] tw:overflow-y-auto">
+                          <div class="tw:grid tw:grid-cols-2 tw:md:grid-cols-3 tw:lg:grid-cols-4 tw:gap-3">
+                            {% for achievement in profile_form.favorite_achievements.field.queryset %}
+                              <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:p-2 tw:rounded-lg tw:border tw:border-base-300 tw:bg-base-200/70 tw:transition tw:select-none"
+                                   :class="{ 'tw:border-primary tw:bg-primary/10 tw:shadow-inner': isAchievementSelected({{ achievement.id }}), 'tw:opacity-50 tw:cursor-not-allowed': isAchievementDisabled({{ achievement.id }}), 'tw:cursor-pointer tw:hover:border-primary/60': !isAchievementDisabled({{ achievement.id }}) }"
+                                   @click="!isAchievementDisabled({{ achievement.id }}) && toggleAchievement({{ achievement.id }}, $event)">
+                                <template x-if="isAchievementSelected({{ achievement.id }})">
+                                  <input type="hidden" name="favorite_achievements" :value="{{ achievement.id }}">
+                                </template>
+                                <img src="{{ achievement.image.url }}"
+                                     alt="{{ achievement.title }}"
+                                     class="tw:w-16 tw:h-16 tw:object-contain"
+                                     title="{{ achievement.description }}">
+                                <span class="tw:text-xs tw:text-center tw:font-semibold"
+                                      :class="isAchievementDisabled({{ achievement.id }}) ? 'tw:text-base-content/50' : ''">{{ achievement.title }}</span>
+                              </div>
+                            {% endfor %}
+                          </div>
+                        </div>
+                        <div class="tw:text-xs tw:text-base-content/60 tw:my-1">
+                          Выбрано: <span x-text="getSelectedCount()"></span>/5
+                        </div>
+                      {% else %}
+                        <p class="tw:text-sm tw:text-base-content/60">У вас пока нет достижений для выбора</p>
+                      {% endif %}
+                    </fieldset>
+                  </div>
+                {% endif %}
               </div>
             </div>
           </div>

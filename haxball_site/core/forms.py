@@ -1,6 +1,9 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
+
+from tournament.models import Achievements
 
 from .models import NewComment, Post, Profile
 
@@ -40,7 +43,11 @@ class EditProfileForm(forms.ModelForm):
             'favourite_teams',
             'favourite_players',
             'tag',
+            'favorite_achievements',
         )
+        widgets = {
+            'favorite_achievements': forms.CheckboxSelectMultiple(),
+        }
 
     def __init__(self, *args, can_use_premium_features: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,6 +56,20 @@ class EditProfileForm(forms.ModelForm):
             tag_field = self.fields['tag']
             avatar_frame_field.disabled = True
             tag_field.disabled = True
+
+        # Filter achievements to only show those the user has earned
+        if self.instance and self.instance.name:
+            user_achievements = Achievements.objects.filter(player__name=self.instance.name).select_related('category')
+            self.fields['favorite_achievements'].queryset = user_achievements
+            self.fields['favorite_achievements'].help_text = 'Выберите до 5 достижений для отображения в комментариях'
+        else:
+            self.fields['favorite_achievements'].queryset = Achievements.objects.none()
+
+    def clean_favorite_achievements(self):
+        achievements = self.cleaned_data.get('favorite_achievements')
+        if achievements and len(achievements) > 5:
+            raise ValidationError('Можно выбрать не более 5 достижений.')
+        return achievements
 
 
 class PostForm(forms.ModelForm):
