@@ -1,0 +1,23 @@
+{% load user_tags %}
+
+{% if user.user_profile.favorite_achievements.exists %}
+  <span class="tw:inline-flex tw:gap-1 tw:items-center tw:mr-2">
+    {% for achievement in user.user_profile.favorite_achievements.all|slice:":5" %}
+      <img src="{{ achievement.image.url }}"
+           alt="{{ achievement.title }}"
+           width="24"
+           height="24"
+           class="tw:object-contain"
+           title="{{ achievement.description }}">
+    {% endfor %}
+    {% if user.user_player %}
+      {% with total_ach=user.user_player.achievements.count %}
+        {% with displayed=user.user_profile.favorite_achievements.count %}
+          {% if total_ach > displayed %}
+            <span class="tw:text-base-content/70 tw:text-sm" title="Ещё достижений: {{ total_ach|subtract:displayed }}">+{{ total_ach|subtract:displayed }}</span>
+          {% endif %}
+        {% endwith %}
+      {% endwith %}
+    {% endif %}
+  </span>
+{% endif %}

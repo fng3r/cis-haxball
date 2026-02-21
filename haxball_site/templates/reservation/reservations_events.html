@@ -39,6 +39,7 @@
                 {% include 'core/comment/user-teams.html' with user=reservation.author %}
               </div>
             </div>
+            {% include 'core/include/favorite_achievements.html' with user=reservation.author %}
           </div>
 
           <div class="tw:inline-flex tw:items-center">
@@ -109,6 +110,7 @@
                   {% include 'core/comment/user-teams.html' with user=reservation.cancelled_by %}
                 </div>
               </div>
+              {% include 'core/include/favorite_achievements.html' with user=reservation.cancelled_by %}
             </div>
             <div class="tw:inline-flex tw:items-center">
               <span class="tw:text-base-content/70 tw:text-xs">

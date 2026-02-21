@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.admin import SiteAdmin as BaseSiteAdmin
 from django.contrib.sites.models import Site
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils.html import escape, mark_safe
 
 from allauth.account.admin import EmailAddressAdmin as BaseEmailAddressAdmin
@@ -27,6 +27,7 @@ from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationFo
 from unfold.widgets import UnfoldAdminFileFieldWidget
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline
+from tournament.models import Achievements
 
 from .models import (
     Category,
@@ -244,9 +245,21 @@ class ProfileAdmin(UnfoldModelAdmin):
     list_display = ('id', 'name', 'slug', 'can_comment', 'can_vote', 'views', 'karma', 'background')
     list_filter = (('id', SingleNumericFilter), ('name', RelatedDropdownFilter), 'can_comment', 'can_vote')
     list_filter_submit = True
+    filter_horizontal = ('favorite_achievements',)
     search_fields = ('name__username',)
     search_help_text = 'Поиск по имени пользователя'
     list_editable = ('can_comment', 'can_vote')
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'favorite_achievements':
+            kwargs['queryset'] = Achievements.objects.none()
+            resolved = resolve(request.path_info)
+            if 'object_id' in resolved.kwargs:
+                profile = Profile.objects.filter(pk=resolved.kwargs['object_id']).first()
+                if profile and hasattr(profile.name, 'user_player'):
+                    kwargs['queryset'] = Achievements.objects.filter(player=profile.name.user_player)
+
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 @admin.register(Themes)

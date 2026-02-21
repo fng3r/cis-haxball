@@ -357,6 +357,13 @@ class Profile(models.Model):
     can_comment = models.BooleanField('Может комментировать', default=True)
     invisibility_enabled = models.BooleanField('Режим невидимки', default=False)
     invisibility_activated_at = models.DateTimeField('Время активации режима невидимки', null=True, blank=True)
+    favorite_achievements = models.ManyToManyField(
+        'tournament.Achievements',
+        verbose_name='Избранные достижения',
+        related_name='favorited_by_profiles',
+        blank=True,
+        help_text='Можно выбрать до 5 достижений для отображения в комментариях',
+    )
 
     @staticmethod
     @receiver(post_save, sender=User)

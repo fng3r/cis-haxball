@@ -161,6 +161,7 @@
                         {% include 'core/comment/user-teams.html' with user=postponement.taken_by %}
                       </div>
                     </div>
+                    {% include 'core/include/favorite_achievements.html' with user=postponement.taken_by %}
                   </div>
 
                   <div class="tw:inline-flex tw:items-center">
@@ -232,6 +233,7 @@
                           {% include 'core/comment/user-teams.html' with user=postponement.cancelled_by %}
                         </div>
                       </div>
+                      {% include 'core/include/favorite_achievements.html' with user=postponement.cancelled_by %}
                     </div>
                     <div class="tw:inline-flex tw:items-center">
                       <span class="tw:text-base-content/70 tw:text-xs">

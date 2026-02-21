@@ -367,6 +367,8 @@ def get_comment(request, pk):
         NewComment.objects.select_related('author__user_profile')
         .prefetch_related(
             'author__user_profile__user_icon',
+            'author__user_profile__favorite_achievements',
+            'author__user_player__achievements',
             prefetch_likes,
             prefetch_dislikes,
         )
@@ -625,6 +627,8 @@ class UserCommentsView(View):
             NewComment.objects.select_related('author__user_profile', 'content_type')
             .prefetch_related(
                 'author__user_profile__user_icon',
+                'author__user_profile__favorite_achievements',
+                'author__user_player__achievements',
                 'votes',
             )
             .filter(author__id=user_id)
