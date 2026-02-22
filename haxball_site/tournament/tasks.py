@@ -24,22 +24,12 @@ from tournament.replay_stats_client import (
 )
 
 
-def _resolve_player(match, nick: str, team: str, red_is_home: bool):
-    """
-    Resolve replay nick+team to our Player using stored mapping (red_is_home).
-    Prefer players in team_home_start / team_guest_start.
-    """
-    team_obj = match.team_home if (team == 'red') == red_is_home else match.team_guest
-    start_players = (
-        list(match.team_home_start.all()) if team_obj.id == match.team_home_id else list(match.team_guest_start.all())
-    )
-    nick_normalized = (nick or '').strip()
-    if not nick_normalized:
-        return None
-    for p in start_players:
-        if (p.nickname or '').strip().lower() == nick_normalized.lower():
-            return p
-    return Player.objects.filter(team=team_obj, nickname__iexact=nick_normalized).first()
+def _resolve_player(match, nick: str):
+    """Resolve player on replay to Player model."""
+    player = match.match_participants.filter(nickname__iexact=nick).first()
+    if not player:
+        player = Player.objects.filter(nickname__iexact=nick).first()
+    return player
 
 
 def _create_replay_stats_from_part(
@@ -47,17 +37,16 @@ def _create_replay_stats_from_part(
     part_order: int,
     part_label: str,
     red_is_home: bool,
-    stats_obj: dict,
+    stats: dict,
 ):
     """Create one MatchReplayStats and related MatchReplayStatsPlayer from one API stats object."""
     match = match_replay.match
-    red_team_nicks = stats_obj.get('redTeam') or []
-    blue_team_nicks = stats_obj.get('blueTeam') or []
-    player_ratings = stats_obj.get('playerRatings') or {}
-    mvp_nick = (player_ratings.get('mvpNick') or '').strip()
-    kicks_list = stats_obj.get('kicks') or []
-    kicks_red = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'red')
-    kicks_blue = sum(1 for k in kicks_list if (k.get('team') or '').lower() == 'blue')
+    red_team_nicks = stats.get('redTeam', [])
+    blue_team_nicks = stats.get('blueTeam', [])
+    player_ratings = stats.get('playerRatings', {})
+    kicks_list = stats.get('kicks', [])
+    kicks_red = sum(1 for k in kicks_list if k.get('team', '').lower() == 'red')
+    kicks_blue = sum(1 for k in kicks_list if k.get('team', '').lower() == 'blue')
 
     part = MatchReplayStats.objects.create(
         match=match,
@@ -65,46 +54,42 @@ def _create_replay_stats_from_part(
         part_order=part_order,
         part_label=part_label,
         red_is_home=red_is_home,
-        score_red=int(stats_obj.get('scoreRed') or 0),
-        score_blue=int(stats_obj.get('scoreBlue') or 0),
-        game_ticks=int(stats_obj.get('gameTicks') or 0),
-        minutes=int(stats_obj.get('minutes') or 0),
-        poss_red=int(stats_obj.get('possRed') or 0),
-        poss_blue=int(stats_obj.get('possBlue') or 0),
-        shots_red=int(stats_obj.get('shotsRed') or 0),
-        shots_blue=int(stats_obj.get('shotsBlue') or 0),
-        shots_off_target_red=int(stats_obj.get('shotsOffTargetRed') or 0),
-        shots_off_target_blue=int(stats_obj.get('shotsOffTargetBlue') or 0),
-        shots_total_red=int(stats_obj.get('shotsTotalRed') or 0),
-        shots_total_blue=int(stats_obj.get('shotsTotalBlue') or 0),
+        score_red=stats.get('scoreRed', 0),
+        score_blue=stats.get('scoreBlue', 0),
+        game_ticks=stats.get('gameTicks', 0),
+        minutes=stats.get('minutes', 0),
+        poss_red=stats.get('possRed', 0),
+        poss_blue=stats.get('possBlue', 0),
+        shots_red=stats.get('shotsRed', 0),
+        shots_blue=stats.get('shotsBlue', 0),
+        shots_off_target_red=stats.get('shotsOffTargetRed', 0),
+        shots_off_target_blue=stats.get('shotsOffTargetBlue', 0),
+        shots_total_red=stats.get('shotsTotalRed', 0),
+        shots_total_blue=stats.get('shotsTotalBlue', 0),
         kicks_red=kicks_red,
         kicks_blue=kicks_blue,
-        stadium_name=(stats_obj.get('stadiumName') or '')[:255],
-        red_team_nicks=[str(n)[:150] for n in red_team_nicks],
-        blue_team_nicks=[str(n)[:150] for n in blue_team_nicks],
-        mvp_nick=mvp_nick[:150] if mvp_nick else '',
+        stadium_name=stats.get('stadiumName', ''),
+        red_team_nicks=[n.strip() for n in red_team_nicks],
+        blue_team_nicks=[n.strip() for n in blue_team_nicks],
+        mvp_nick=player_ratings.get('mvpNick', '').strip(),
     )
 
-    # Per-player (skip zero playtime and "*" own-goal placeholder)
-    players_data = stats_obj.get('players') or []
+    # Per-player (skip zero playtime and '* (own goal)' fake players)
+    players_data = stats.get('players', [])
     for p in players_data:
-        nick = (p.get('nick') or p.get('name') or '').strip()[:150]
-        if nick == '*' or not nick:
+        nick = p.get('nick', '').strip()
+        if not nick or '(own goal)' in nick:
             continue
-        team_key = (p.get('team') or '')[:10]
         metrics = p.get('metrics') or {}
         played_ticks = int(metrics.get('playedTicks') or p.get('playedTicks') or 0)
         if played_ticks == 0:
             continue
-        rating_obj = p.get('rating') or {}
-        rating = rating_obj.get('rating')
-        if rating is not None:
-            try:
-                rating = float(rating)
-            except (TypeError, ValueError):
-                rating = None
 
-        player = _resolve_player(match, nick, team_key, red_is_home) if nick and team_key else None
+        rating_obj = p.get('rating') or {}
+        rating = _float_or_none(rating_obj.get('rating'))
+
+        team_key = p.get('team')
+        player = _resolve_player(match, nick)
         team_obj = part.get_match_team_for_replay_side(team_key)
 
         MatchReplayStatsPlayer.objects.create(
@@ -112,22 +97,22 @@ def _create_replay_stats_from_part(
             player=player,
             nick=nick,
             team=team_obj,
-            goals=int(metrics.get('goals') or 0),
-            assists=int(metrics.get('assists') or 0),
+            goals=metrics.get('goals', 0),
+            assists=metrics.get('assists', 0),
             played_ticks=played_ticks,
             rating=rating,
-            shots_total=int(metrics.get('shotsTotal') or 0),
-            shots_on_target=int(metrics.get('shotsOnTarget') or 0),
-            shots_off_target=int(metrics.get('shotsOffTarget') or 0),
-            passes_completed=int(metrics.get('passesCompleted') or 0),
-            pass_attempts=int(metrics.get('passAttempts') or 0),
+            shots_total=metrics.get('shotsTotal', 0),
+            shots_on_target=metrics.get('shotsOnTarget', 0),
+            shots_off_target=metrics.get('shotsOffTarget', 0),
+            passes_completed=metrics.get('passesCompleted', 0),
+            pass_attempts=metrics.get('passAttempts', 0),
             pass_completion_rate=_float_or_none(metrics.get('passCompletionRate')),
-            touches=int(metrics.get('touches') or 0),
-            saves=int(metrics.get('saves') or 0),
-            clearances=int(metrics.get('clearances') or 0),
-            interceptions=int(metrics.get('interceptions') or 0),
-            duel_wins=int(metrics.get('duelWins') or 0),
-            duel_losses=int(metrics.get('duelLosses') or 0),
+            touches=metrics.get('touches', 0),
+            saves=metrics.get('saves', 0),
+            clearances=metrics.get('clearances', 0),
+            interceptions=metrics.get('interceptions', 0),
+            duel_wins=metrics.get('duelWins', 0),
+            duel_losses=metrics.get('duelLosses', 0),
             xg=_float_or_none(metrics.get('xg')),
         )
     return part
@@ -171,6 +156,7 @@ def fetch_match_replay_stats(match_id: int):
     # Remove replays no longer in match.replays (CASCADE deletes their MatchReplayStats)
     MatchReplay.objects.filter(match=match).exclude(replay_url__in=current_replay_urls).delete()
 
+    total_created_count = 0
     for url in match.replays or []:
         if not is_powtorki_url(url):
             continue
@@ -180,8 +166,11 @@ def fetch_match_replay_stats(match_id: int):
         else:
             try:
                 replay_file = download_powtorki_replay(url)
+                print(f'[match_id={match_id}] Downloaded replay file from {url}')
                 analyzer_id = upload_replay_to_analyzer(replay_file)
+                print(f'[match_id={match_id}] Uploaded replay file to analyzer, analyzer_id: {analyzer_id}')
                 stats_list = fetch_analyzer_stats(analyzer_id)
+                print(f'[match_id={match_id}] Fetched stats from analyzer')
             except Exception:
                 continue
             match_replay, _ = MatchReplay.objects.update_or_create(
@@ -195,9 +184,9 @@ def fetch_match_replay_stats(match_id: int):
             )
         # Rebuild preprocessed parts from raw (every time task runs)
         MatchReplayStats.objects.filter(match_replay=match_replay).delete()
-        created_count = 0
         existing_count = MatchReplayStats.objects.filter(match=match).count()
-        for idx, stats_obj in enumerate(stats_list):
+        created_count = 0
+        for stats_obj in stats_list:
             played_minutes = stats_obj.get('minutes')
             score_red = stats_obj.get('scoreRed')
             score_blue = stats_obj.get('scoreBlue')
@@ -215,12 +204,12 @@ def fetch_match_replay_stats(match_id: int):
             red_is_home = True
             _create_replay_stats_from_part(match_replay, part_order, part_label, red_is_home, stats_obj)
             created_count += 1
+            total_created_count += 1
 
-    # Update status
     has_any = MatchReplayStats.objects.filter(match=match).exists()
     status.status = MatchReplayStatsStatus.Status.SUCCESS if has_any else MatchReplayStatsStatus.Status.FAILED
     status.fetched_at = timezone.now()
     status.error_message = '' if has_any else 'No Powtorki replays or all fetches failed'
     status.save(update_fields=['status', 'fetched_at', 'error_message'])
 
-    return {'match_id': match_id, 'created_parts': created_count, 'status': status.status}
+    return {'match_id': match_id, 'created_parts': total_created_count, 'status': status.status}
