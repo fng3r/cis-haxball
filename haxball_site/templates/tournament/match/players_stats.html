@@ -1,44 +1,59 @@
 {# Players tab: view mode = table | player comparison (pick one from each team, then H2H) #}
 <div class="tw:flex tw:flex-col tw:gap-3"
   {# djlint:off #}
-     x-data="{
-             selectedMode: 'table',
-             selectedHome: null,
-             selectedGuest: null,
-             selectedHomeName: '',
-             selectedGuestName: '',
-             comparisonData: null,
-             statRows: [
-             { key: 'goals', label: 'Голы' },
-             { key: 'assists', label: 'Голевые передачи' },
-             { key: 'shots_total', label: 'Удары' },
-             { key: 'shots_on_target', label: 'Удары в створ' },
-             { key: 'passes_completed', label: 'Передачи' },
-             { key: 'pass_accuracy', label: 'Передачи (%)' },
-             { key: 'touches', label: 'Касания' },
-             { key: 'saves', label: 'Сейвы' },
-             { key: 'rating', label: 'Рейтинг' }
-             ],
-             pct(a, b) { const x = Number(a) || 0, y = Number(b) || 0; const t = x + y; return t ? Math.round(100 * x / t) : 50; },
-             init() {
-             const el = document.getElementById('players-comparison-data');
-             if (el) this.comparisonData = JSON.parse(el.textContent);
-             if (this.comparisonData?.total?.home?.length) this.selectedHomeName = this.comparisonData.total.home[0].name;
-             if (this.comparisonData?.total?.guest?.length) this.selectedGuestName = this.comparisonData.total.guest[0].name;
-             this.$nextTick(() => this.syncSelection());
-             },
-             syncSelection() {
-             const hi = this.currentHome.findIndex(p => p.name === this.selectedHomeName);
-             const gi = this.currentGuest.findIndex(p => p.name === this.selectedGuestName);
-             this.selectedHome = hi >= 0 ? hi : null; this.selectedGuest = gi >= 0 ? gi : null;
-             },
-             get currentHome() { if (!this.comparisonData) return []; return this.view === 'total' ? this.comparisonData.total.home : (this.comparisonData.parts.find(p => p.index === this.view)?.home || []); },
-             get currentGuest() { if (!this.comparisonData) return []; return this.view === 'total' ? this.comparisonData.total.guest : (this.comparisonData.parts.find(p => p.index === this.view)?.guest || []); },
-             get homePlayer() { return this.selectedHome !== null ? this.currentHome[this.selectedHome] : null; },
-             get guestPlayer() { return this.selectedGuest !== null ? this.currentGuest[this.selectedGuest] : null; },
-             val(p, key) { if (!p) return '—'; const v = p[key]; if (v === null || v === undefined) return '—'; if (key === 'pass_accuracy') return v + '%'; return v; }
-             }"
-     x-init="init()">
+      x-data="{
+                selectedMode: 'table',
+                selectedHome: null,
+                selectedGuest: null,
+                selectedHomeName: '',
+                selectedGuestName: '',
+                comparisonData: null,
+                statRows: [
+                  { key: 'goals', label: 'Голы' },
+                  { key: 'assists', label: 'Голевые передачи' },
+                  { key: 'shots_total', label: 'Удары' },
+                  { key: 'shots_on_target', label: 'Удары в створ' },
+                  { key: 'passes_completed', label: 'Передачи' },
+                  { key: 'pass_accuracy', label: 'Передачи (%)' },
+                  { key: 'touches', label: 'Касания' },
+                  { key: 'saves', label: 'Сейвы' },
+                  { key: 'rating', label: 'Рейтинг' }
+                ],
+                pct(a, b) { const x = Number(a) || 0, y = Number(b) || 0; const t = x + y; return t ? Math.round(100 * x / t) : 50; },
+                init() {
+                  const el = document.getElementById('players-comparison-data');
+                  if (el) this.comparisonData = JSON.parse(el.textContent);
+                  if (this.comparisonData?.total?.home?.length) this.selectedHomeName = this.comparisonData.total.home[0].name;
+                  if (this.comparisonData?.total?.guest?.length) this.selectedGuestName = this.comparisonData.total.guest[0].name;
+                  this.$nextTick(() => this.syncSelection());
+                },
+                syncSelection() {
+                  const hi = this.currentHome.findIndex(p => p.name === this.selectedHomeName);
+                  const gi = this.currentGuest.findIndex(p => p.name === this.selectedGuestName);
+                  this.selectedHome = hi >= 0 ? hi : null; this.selectedGuest = gi >= 0 ? gi : null;
+                },
+                get currentHome() {
+                  if (!this.comparisonData) return [];
+                  return this.view === 'total'
+                    ? this.comparisonData.total.home
+                    : (this.comparisonData.parts.find(p => p.index === this.view)?.home || []);
+                },
+                get currentGuest() {
+                  if (!this.comparisonData) return [];
+                  return this.view === 'total'
+                    ? this.comparisonData.total.guest
+                    : (this.comparisonData.parts.find(p => p.index === this.view)?.guest || []);
+                },
+                get homePlayer() { return this.selectedHome !== null ? this.currentHome[this.selectedHome] : null; },
+                get guestPlayer() { return this.selectedGuest !== null ? this.currentGuest[this.selectedGuest] : null; },
+                val(p, key) {
+                  if (!p) return '—'; const v = p[key];
+                  if (v === null || v === undefined) return '—';
+                  if (key === 'pass_accuracy') return v + '%';
+                  return v;
+                }
+              }"
+      x-init="init()">
   {# djlint:on #}
   <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3">
     <div class="tw:flex tw:gap-1">
