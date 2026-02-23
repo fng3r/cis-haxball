@@ -975,7 +975,7 @@ class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
 
 @admin.register(MatchReplay)
 class MatchReplayAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'replay_url', 'analyzer_replay_id', 'fetched_at')
+    list_display = ('match_id', 'match', 'replay_url', 'analyzer_replay_id', 'fetched_at')
     list_filter = (('match__league', RelatedDropdownFilter),)
     search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
     ordering = ('match_id', 'replay_url')

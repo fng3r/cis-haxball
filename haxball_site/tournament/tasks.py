@@ -162,13 +162,16 @@ def fetch_match_replay_stats(match_id: int):
             continue
         match_replay = MatchReplay.objects.filter(match=match, replay_url=url).first()
         if match_replay and match_replay.raw_stats_json:
+            print(f'[match_id={match_id}] Replay analyzer stats already exists')
             stats_list = list(match_replay.raw_stats_json)
         else:
             try:
                 replay_file = download_powtorki_replay(url)
                 print(f'[match_id={match_id}] Downloaded replay file from {url}')
                 analyzer_id = upload_replay_to_analyzer(replay_file)
-                print(f'[match_id={match_id}] Uploaded replay file to analyzer, analyzer_id: {analyzer_id}')
+                print(
+                    f'[match_id={match_id}] Uploaded replay file to analyzer, analyzer_id: {analyzer_id} (analyzer url: http://replay.hax.ma/?replayId={analyzer_id})'
+                )
                 stats_list = fetch_analyzer_stats(analyzer_id)
                 print(f'[match_id={match_id}] Fetched stats from analyzer')
             except Exception:
