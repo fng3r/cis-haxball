@@ -3,7 +3,7 @@
 
 {% with content_type=object|content_type %}
   <form id="addcomment"
-        class="tw:text-center"
+        class="tw:p-1"
         hx-post="{% url 'core:add_comment' content_type.pk object.id %}"
         hx-trigger="submit"
         hx-target="#comments-container"
@@ -16,7 +16,7 @@
     <input type="hidden" name="parent" id="parent-id" :value="parentComment?.id">
 
     <template x-if="parentComment !== null">
-      <div class="tw:text-left tw:px-1 tw:font-semibold">
+      <div class="tw:text-left tw:font-semibold tw:mb-1">
         Ответить на
         <a :href="`#r${parentComment.id}`" class="tw:link">комментарий</a>
         <span x-text="parentComment.author"></span>
@@ -25,9 +25,9 @@
       </div>
     </template>
 
-    <div class="tw:mt-2 tw:mb-1 tw:ml-1">{{ comment_form.body }}</div>
+    <div class="tw:[&_.word-count]:text-sm">{{ comment_form.body }}</div>
 
-    <div class="tw:flex tw:justify-end tw:mt-auto tw:mb-1 tw:mr-2">
+    <div class="tw:flex tw:justify-end tw:mt-auto">
       <img class="htmx-indicator tw:mr-2 tw:w-6" src="{% static 'img/svg-loaders/bars.svg' %}">
       <button type="submit" class="tw:btn tw:btn-primary">Отправить</button>
     </div>

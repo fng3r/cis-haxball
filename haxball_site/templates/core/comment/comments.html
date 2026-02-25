@@ -18,7 +18,7 @@
   {% partialdef comment-form-container inline=True %}
     {% with content_type=object|content_type %}
       <div id="comment-form-container"
-           class="tw:card tw:bg-base-100 tw:rounded-lg tw:py-2 tw:px-1"
+           class="tw:card tw:bg-base-100 tw:rounded-lg tw:p-2"
            x-data="{commentable: '{{ object.commentable }}' === 'True' }"
            @commentable-changed.window="commentable = $event.detail.commentable">
 
