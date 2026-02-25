@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'fantasy_league.apps.FantasyLeagueConfig',
     'balance.apps.BalanceConfig',
     'ckeditor',
+    'django_ckeditor_5',
     'django_summernote',
     'ckeditor_uploader',
     'sorl.thumbnail',
@@ -409,6 +410,186 @@ CKEDITOR_CONFIGS = {
                 'outputTemplate': '<a href="{link}" data-mentioned-user-id="{id}" class="tw:mention">@{username}</a>',
             },
         ],
+    },
+}
+
+CKEDITOR_5_FILE_UPLOAD_PERMISSION = 'authenticated'
+CKEDITOR_5_UPLOAD_FILE_TYPES = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'mp4', 'webm', 'ogg']
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'language': 'ru',
+        'height': 420,
+        'toolbar': {
+            'items': [
+                'sourceEditing',
+                'findAndReplace',
+                '|',
+                'undo',
+                'redo',
+                '|',
+                'showBlocks',
+                'fullScreen',
+                '-',
+                'heading',
+                '|',
+                'bold',
+                'italic',
+                'underline',
+                'strikethrough',
+                '|',
+                'fontSize',
+                'fontColor',
+                'fontBackgroundColor',
+                'highlight',
+                'removeFormat',
+                '|',
+                'outdent',
+                'indent',
+                'alignment',
+                '-',
+                'bulletedList',
+                'numberedList',
+                'todoList',
+                '|',
+                'linkinsertImage',
+                'mediaEmbed',
+                'insertTable',
+                'horizontalLine',
+                'specialCharacters',
+                'emoji',
+                'htmlEmbed',
+                'codeBlock',
+                'blockQuote',
+            ],
+            # Let CKEditor collapse overflowing buttons into dropdown instead of overflowing layout.
+            'shouldNotGroupWhenFull': True,
+        },
+        'style': {
+            'definitions': [
+                {'name': 'Spoiler container', 'element': 'div', 'classes': ['spoiler']},
+                {'name': 'Spoiler title', 'element': 'div', 'classes': ['spoiler-title']},
+                {'name': 'Spoiler content', 'element': 'div', 'classes': ['spoiler-content']},
+            ]
+        },
+        'image': {'toolbar': ['imageTextAlternative', '|', 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side']},
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
+        },
+        'mediaEmbed': {'previewsInData': True},
+        'htmlEmbed': {'showPreviews': True},
+        # Keep CKEditor4-era content intact during migration; cleanup happens in a later phase.
+        'htmlSupport': {
+            'allow': [
+                {'name': '/.*/', 'attributes': True, 'classes': True, 'styles': True},
+            ],
+            'disallow': [
+                {'name': 'script'},
+            ],
+        },
+        # CKEditor 5 mentions config shape (https://ckeditor.com/docs/ckeditor5/latest/features/mentions.html#configuration).
+        # django-ckeditor-5>=0.2.20 supports callback:functionName values in JSON config.
+        'mention': {
+            'dropdownLimit': 15,
+            'feeds': [
+                {
+                    'marker': '@',
+                    'minimumCharacters': 1,
+                    'feed': 'callback:fetchMentions',
+                    'itemRenderer': 'callback:renderMentionItem',
+                },
+            ],
+        },
+    },
+    'comment': {
+        'language': 'ru',
+        'height': 220,
+        'placeholder': 'Введите текст комментария...',
+        'toolbar': {
+            'items': [
+                'bold',
+                'italic',
+                'underline',
+                'strikethrough',
+                'link',
+                '|',
+                'bulletedList',
+                'numberedList',
+                'insertImage',
+                'mediaEmbed',
+                'specialCharacters',
+                'emoji',
+                '|',
+                'undo',
+                'redo',
+            ],
+            'shouldNotGroupWhenFull': False,
+        },
+        'link': {
+            'addTargetToExternalLinks': True,
+            'decorators': {
+                'openInNewTab': {
+                    'mode': 'manual',
+                    'label': 'Открыть в новой вкладке',
+                    'attributes': {'target': '_blank', 'rel': 'noopener noreferrer'},
+                }
+            },
+            'toolbar': ['linkPreview', '|', 'editLink', 'linkProperties', 'unlink'],
+        },
+        'image': {
+            'resizeUnit': '%',
+            'resizeOptions': [
+                {'name': 'resizeImage:original'},
+                {'name': 'resizeImage:25', 'value': '25'},
+                {'name': 'resizeImage:50', 'value': '50'},
+                {'name': 'resizeImage:75', 'value': '75'},
+            ],
+            'toolbar': [
+                'imageTextAlternative',
+                '|',
+                'resizeImage',
+                '|',
+                'imageStyle:alignLeft',
+                'imageStyle:alignRight',
+                'imageStyle:alignCenter',
+                'imageStyle:alignBlockLeft',
+                'imageStyle:alignBlockRight',
+                '|',
+            ],
+            'styles': {
+                'options': [
+                    'inline',
+                    'alignLeft',
+                    'alignRight',
+                    'alignCenter',
+                    'alignBlockLeft',
+                    'alignBlockRight',
+                    'block',
+                    'side',
+                ],
+            },
+        },
+        'mediaEmbed': {'previewsInData': True},
+        'htmlSupport': {
+            'allow': [
+                {'name': '/.*/', 'attributes': True, 'classes': True, 'styles': True},
+            ],
+            'disallow': [
+                {'name': 'script'},
+            ],
+        },
+        # CKEditor 5 mentions config shape (https://ckeditor.com/docs/ckeditor5/latest/features/mentions.html#configuration).
+        # django-ckeditor-5>=0.2.20 supports callback:functionName values in JSON config.
+        'mention': {
+            'dropdownLimit': 15,
+            'feeds': [
+                {
+                    'marker': '@',
+                    'minimumCharacters': 1,
+                    'feed': 'callback:fetchMentions',
+                    'itemRenderer': 'callback:renderMentionItem',
+                },
+            ],
+        },
     },
 }
 

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 from tournament.models import Achievements
 
@@ -9,7 +9,7 @@ from .models import NewComment, Post, Profile
 
 
 class NewCommentForm(forms.ModelForm):
-    body = forms.CharField(label='Комментарий', widget=CKEditorUploadingWidget(config_name='comment'), required=True)
+    body = forms.CharField(label='Комментарий', widget=CKEditor5Widget(config_name='comment'), required=True)
 
     class Meta:
         model = NewComment
@@ -17,7 +17,7 @@ class NewCommentForm(forms.ModelForm):
 
 
 class EditCommentForm(forms.ModelForm):
-    edit_body = forms.CharField(label='Пост', widget=CKEditorUploadingWidget(config_name='comment'), required=True)
+    edit_body = forms.CharField(label='Пост', widget=CKEditor5Widget(config_name='comment'), required=True)
 
     class Meta:
         model = NewComment
@@ -73,7 +73,7 @@ class EditProfileForm(forms.ModelForm):
 
 
 class PostForm(forms.ModelForm):
-    body = forms.CharField(label='Пост', widget=CKEditorUploadingWidget(config_name='default'))
+    body = forms.CharField(label='Пост', widget=CKEditor5Widget(config_name='default'))
     description = forms.CharField(
         label='Краткое описание',
         widget=forms.Textarea(attrs={'rows': 3, 'maxlength': 150}),

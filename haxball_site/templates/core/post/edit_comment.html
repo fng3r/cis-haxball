@@ -26,9 +26,7 @@
           <button type="submit"
                   class="tw:btn tw:btn-primary"
                   @click="editingComment = false"
-                  hx-post="{% url 'core:edit_comment' comment.id %}"
-                  hx-on::config-request="event.detail.parameters['edit_body'] = CKEDITOR.instances['id_edit_body'].getData();"
-                  hx-on::before-request="document.getElementById('cke_id_edit_body').style.filter = 'blur(1px)';">Отправить</button>
+                  hx-post="{% url 'core:edit_comment' comment.id %}">Отправить</button>
         </div>
       </form>
     </div>

@@ -67,20 +67,80 @@
       }
     </style>
 
-    {% comment %} Enhanced mentions styling for CKEditor {% endcomment %}
-    <link rel="stylesheet" type="text/css" href="{% static "core/css/mentions.css" %}">
+    {% comment %} CKEditor frontend compatibility styles {% endcomment %}
+    <link rel="stylesheet" type="text/css" href="{% static "ckeditor5/css/content.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "ckeditor5/css/mentions.css" %}">
 
     {% block styles %}{% endblock %}
 
     <script type="text/javascript" src="{% static "jquery/jquery-3.5.1.min.js" %}"></script>
     <script defer type="text/javascript" src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
     <script defer type="text/javascript" src="{% static "htmx/htmx.min.js" %}"></script>
+    <script>
+      window.fetchMentions = function(queryText) {
+        if (!queryText || !queryText.trim()) {
+          return Promise.resolve([]);
+        }
+
+        return fetch('/api/users/search?query=' + encodeURIComponent(queryText), {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin'
+        })
+          .then(function(response) {
+            if (!response.ok) {
+              return [];
+            }
+            return response.json();
+          })
+          .then(function(items) {
+            if (!Array.isArray(items)) {
+              return [];
+            }
+            return items.map(function(item) {
+              const mentionId = '@' + item.username;
+              return {
+                id: mentionId,
+                text: mentionId,
+                username: item.username,
+                userId: item.id,
+                link: item.link,
+                avatar: item.avatar
+              };
+            });
+          })
+          .catch(function() {
+            return [];
+          });
+      };
+
+      window.renderMentionItem = function(item) {
+        console.log('renderMentionItem', item);
+        const container = document.createElement('span');
+        container.className = 'tw:flex tw:items-center tw:gap-x-2';
+
+        if (item.avatar) {
+          const avatar = document.createElement('img');
+          avatar.src = item.avatar;
+          avatar.className = 'tw:size-6! tw:rounded-full';
+          avatar.alt = '';
+          container.appendChild(avatar);
+        }
+
+        const label = document.createElement('span');
+        label.className = 'tw:text-black/80 tw:truncate';
+        label.textContent = item.username || item.id || '';
+        container.appendChild(label);
+
+        return container;
+      };
+    </script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js"></script>
     <script defer src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script type="text/javascript" src="{% static "scripts/searchNavigation.js" %}"></script>
+    <script defer type="text/javascript" src="{% static "ckeditor5/js/extensions.js" %}"></script>
 
     {% block scripts %}{% endblock %}
   </head>

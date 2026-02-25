@@ -205,6 +205,7 @@ dependencies = [
     { name = "django-celery-beat" },
     { name = "django-celery-results" },
     { name = "django-ckeditor" },
+    { name = "django-ckeditor-5" },
     { name = "django-colorfield" },
     { name = "django-debug-toolbar" },
     { name = "django-extensions" },
@@ -287,6 +288,7 @@ requires-dist = [
     { name = "django-celery-beat", specifier = "==2.7.0" },
     { name = "django-celery-results", specifier = "==2.6.0" },
     { name = "django-ckeditor", specifier = "==6.7.1" },
+    { name = "django-ckeditor-5", git = "https://github.com/fng3r/django-ckeditor-5.git?rev=more-plugins" },
     { name = "django-colorfield", specifier = "==0.3.2" },
     { name = "django-debug-toolbar", specifier = "==4.4.6" },
     { name = "django-extensions", specifier = "==3.2.3" },
@@ -557,6 +559,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d5/64/8d465c32de704e766fa3e85f0205825ba7db7497b0c1440b5160b31ae4c1/django-ckeditor-6.7.1.tar.gz", hash = "sha256:7144f9ead662306266c728912487313b3b87ba2abf9dbb82c447f662ce25d1f7", size = 1725957 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/69/b7/0b3f6ff07c0635152da129532ce0a305e7d3239a15e2a1fc710904d5e3b6/django_ckeditor-6.7.1-py3-none-any.whl", hash = "sha256:55b5f9ce3af47e3c8a8ed37d42be8439da2a664d6e571c2247c1db5c96459dd7", size = 2454834 },
+]
+
+[[package]]
+name = "django-ckeditor-5"
+version = "0.2.20"
+source = { git = "https://github.com/fng3r/django-ckeditor-5.git?rev=more-plugins#84ccc595431a375a0fcbc508a3a5f163cb2709f8" }
+dependencies = [
+    { name = "django" },
+    { name = "pillow" },
 ]
 
 [[package]]

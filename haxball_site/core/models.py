@@ -118,6 +118,7 @@ class NewComment(models.Model):
     content_object = GenericForeignKey()
     author = models.ForeignKey(User, verbose_name='Автор', related_name='comments_by_user', on_delete=models.CASCADE)
     body = models.TextField('Текст комментария')
+    body_ck4_backup = models.TextField('CKEditor4 backup', blank=True, null=True, editable=False)
     created = models.DateTimeField('Создан', default=timezone.now)
     edited = models.DateTimeField('Изменен', blank=True, null=True)
     parent = models.ForeignKey(
@@ -248,6 +249,7 @@ class Post(models.Model):
         default='posts_covers/default.png',
     )
     body = models.TextField('Текст поста')
+    body_ck4_backup = models.TextField('CKEditor4 backup', blank=True, null=True, editable=False)
     publish = models.DateTimeField('Время публикации', default=timezone.now)
     created = models.DateTimeField('Создано', auto_now_add=True)
     updated = models.DateTimeField('Изменено', auto_now=True)

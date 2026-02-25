@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.forms import ModelForm, ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from django_ckeditor_5.widgets import CKEditor5Widget
 from unfold.admin import ModelAdmin
 from unfold.contrib.filters.admin import ChoicesCheckboxFilter, RangeNumericFilter, RelatedDropdownFilter
 
@@ -131,9 +131,7 @@ class ShopItemAdminForm(ModelForm):
         model = ShopItem
         fields = '__all__'
 
-    description = forms.CharField(
-        label='Описание', widget=CKEditorUploadingWidget(config_name='default'), required=False
-    )
+    description = forms.CharField(label='Описание', widget=CKEditor5Widget(config_name='default'), required=False)
 
 
 @admin.register(ShopItem)

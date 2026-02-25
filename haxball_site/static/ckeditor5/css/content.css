@@ -1,0 +1,232 @@
+/* CKEditor5 frontend output compatibility (without using .ck-content wrapper). */
+
+:where(.ck-editor) {
+  a {
+    color: var(--color-primary);
+  }
+}
+
+:where(.post-body, .comment-body) figure.image {
+  clear: both;
+  display: table;
+  max-width: 100%;
+}
+
+:where(.post-body, .comment-body) figure.image > img {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+:where(.post-body, .comment-body) figure.image.image-style-align-left {
+  float: left;
+  margin-left: 0;
+  margin-right: 1rem;
+}
+
+:where(.post-body, .comment-body) figure.image.image-style-align-right {
+  float: right;
+  margin-left: 1rem;
+  margin-right: 0;
+}
+
+:where(.post-body, .comment-body) figure.image.image-style-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+:where(.post-body, .comment-body) figure.image.image-style-block-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+:where(.post-body, .comment-body) figure.image.image-style-block-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+:where(.post-body, .comment-body) figure.image.image-style-side {
+  clear: none;
+  float: right;
+  margin-left: 1rem;
+  margin-right: 0;
+  max-width: 50%;
+}
+
+/* Defensive support for additional style names used by some CKEditor builds/configs. */
+:where(.post-body, .comment-body) figure.image.image-style-inline {
+  clear: none;
+  display: inline-block;
+  margin: 0 1rem 1rem 0;
+}
+
+:where(.post-body, .comment-body) figure.image.image-style-block {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* CKEditor5 table output compatibility. */
+:where(.post-body, .comment-body) table.table.ck-table-resized,
+:where(.post-body, .comment-body) figure.table .ck-table-resized {
+  table-layout: fixed;
+}
+
+:where(.post-body, .comment-body) figure.table.table-style-align-left,
+:where(.post-body, .comment-body) table.table.table-style-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+:where(.post-body, .comment-body) figure.table.table-style-align-center,
+:where(.post-body, .comment-body) table.table.table-style-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+:where(.post-body, .comment-body) figure.table.table-style-align-right,
+:where(.post-body, .comment-body) table.table.table-style-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+:where(.post-body, .comment-body) figure.table.table-style-block-align-left,
+:where(.post-body, .comment-body) table.table.table-style-block-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+:where(.post-body, .comment-body) figure.table.table-style-block-align-right,
+:where(.post-body, .comment-body) table.table.table-style-block-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+:where(.post-body, .comment-body) figure.table.layout-table,
+:where(.post-body, .comment-body) table.table.layout-table {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+/* CKEditor5 text helper classes (font size, highlight, list marker helpers). */
+:where(.post-body, .comment-body) {
+  --ck-content-font-size-tiny: 0.7em;
+  --ck-content-font-size-small: 0.85em;
+  --ck-content-font-size-big: 1.4em;
+  --ck-content-font-size-huge: 1.8em;
+  --ck-content-list-marker-color: currentColor;
+  --ck-content-list-marker-font-family: inherit;
+  --ck-content-list-marker-font-size: 1em;
+  --ck-content-highlight-marker-yellow: #fdfd77;
+  --ck-content-highlight-marker-green: #62f962;
+  --ck-content-highlight-marker-pink: #fc7899;
+  --ck-content-highlight-marker-blue: #72ccfd;
+  --ck-content-highlight-pen-red: #e71313;
+  --ck-content-highlight-pen-green: #128a00;
+}
+
+:where(.post-body, .comment-body) .text-tiny {
+  font-size: var(--ck-content-font-size-tiny);
+}
+
+:where(.post-body, .comment-body) .text-small {
+  font-size: var(--ck-content-font-size-small);
+}
+
+:where(.post-body, .comment-body) .text-big {
+  font-size: var(--ck-content-font-size-big);
+}
+
+:where(.post-body, .comment-body) .text-huge {
+  font-size: var(--ck-content-font-size-huge);
+}
+
+:where(.post-body, .comment-body) .marker-yellow {
+  background-color: var(--ck-content-highlight-marker-yellow);
+}
+
+:where(.post-body, .comment-body) .marker-green {
+  background-color: var(--ck-content-highlight-marker-green);
+}
+
+:where(.post-body, .comment-body) .marker-pink {
+  background-color: var(--ck-content-highlight-marker-pink);
+}
+
+:where(.post-body, .comment-body) .marker-blue {
+  background-color: var(--ck-content-highlight-marker-blue);
+}
+
+:where(.post-body, .comment-body) .pen-red {
+  background-color: transparent;
+  color: var(--ck-content-highlight-pen-red);
+}
+
+:where(.post-body, .comment-body) .pen-green {
+  background-color: transparent;
+  color: var(--ck-content-highlight-pen-green);
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-bold::marker {
+  font-weight: 700;
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-italic::marker {
+  font-style: italic;
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-color::marker {
+  color: var(--ck-content-list-marker-color);
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-font-family::marker {
+  font-family: var(--ck-content-list-marker-font-family);
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-font-size::marker {
+  font-size: var(--ck-content-list-marker-font-size);
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-font-size-tiny::marker {
+  font-size: var(--ck-content-font-size-tiny);
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-font-size-small::marker {
+  font-size: var(--ck-content-font-size-small);
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-font-size-big::marker {
+  font-size: var(--ck-content-font-size-big);
+}
+
+:where(.post-body, .comment-body) li.ck-list-marker-font-size-huge::marker {
+  font-size: var(--ck-content-font-size-huge);
+}
+
+/* CKEditor5 embed/media output compatibility. */
+:where(.post-body, .comment-body) figure.media {
+  clear: both;
+  display: block;
+  margin: 1rem auto;
+  max-width: 100%;
+}
+
+:where(.post-body, .comment-body) figure.media > oembed,
+:where(.post-body, .comment-body) figure.media > div[data-oembed-url] {
+  display: block;
+  max-width: 100%;
+}
+
+/* Responsive iframe embeds (e.g., YouTube, VK, etc.). */
+:where(.post-body, .comment-body) figure.media iframe {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+/* Legacy/variant markup where embed is wrapped in a div. */
+:where(.post-body, .comment-body) .media,
+:where(.post-body, .comment-body) .media > iframe {
+  max-width: 100%;
+}

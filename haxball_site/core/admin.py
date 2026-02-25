@@ -10,7 +10,7 @@ from django.utils.html import escape, mark_safe
 
 from allauth.account.admin import EmailAddressAdmin as BaseEmailAddressAdmin
 from allauth.account.models import EmailAddress
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from django_ckeditor_5.widgets import CKEditor5Widget
 from django_summernote.admin import AttachmentAdmin as BaseAttachmentAdmin
 from django_summernote.models import Attachment
 from online_users.models import OnlineUserActivity
@@ -104,7 +104,7 @@ class GroupAdmin(BaseGroupAdmin, UnfoldModelAdmin):
 
 
 class PostAdminForm(forms.ModelForm):
-    body = forms.CharField(label='Пост', widget=CKEditorUploadingWidget(config_name='default'))
+    body = forms.CharField(label='Пост', widget=CKEditor5Widget(config_name='default'))
 
     class Meta:
         model = Post
@@ -162,7 +162,7 @@ class CommentHistoryItemAdmin(UnfoldModelAdmin):
 
 
 class NewCommentAdminForm(forms.ModelForm):
-    body = forms.CharField(label='Комментарий', widget=CKEditorUploadingWidget(config_name='default'))
+    body = forms.CharField(label='Комментарий', widget=CKEditor5Widget(config_name='default'))
 
     class Meta:
         model = NewComment
@@ -193,6 +193,7 @@ class NewCommentAdmin(UnfoldModelAdmin):
     search_help_text = 'Поиск по автору/тексту комментария'
     inlines = [CommentHistoryItemInline]
     form = NewCommentAdminForm
+    readonly_fields = ('body_ck4_backup',)
 
     def get_queryset(self, request):
         return (
@@ -238,6 +239,7 @@ class PostAdmin(UnfoldModelAdmin):
     autocomplete_fields = ('author',)
     form = PostAdminForm
     list_editable = ('important',)
+    readonly_fields = ('body_ck4_backup',)
 
 
 @admin.register(Profile)
