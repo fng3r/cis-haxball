@@ -76,7 +76,7 @@ dependencies = [
     "celery[redis]==5.4.0",
     "django-celery-beat==2.7.0",
     "django-celery-results==2.6.0",
-    "django-ckeditor-5 @ git+https://github.com/fng3r/django-ckeditor-5.git@more-plugins",
+    "django-ckeditor-5 @ git+https://github.com/fng3r/django-ckeditor-5.git@2f346d8a78760dd7fa69cd7b07bac3404482cb99",
 ]
 
 [tool.uv]

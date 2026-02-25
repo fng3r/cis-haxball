@@ -288,7 +288,7 @@ requires-dist = [
     { name = "django-celery-beat", specifier = "==2.7.0" },
     { name = "django-celery-results", specifier = "==2.6.0" },
     { name = "django-ckeditor", specifier = "==6.7.1" },
-    { name = "django-ckeditor-5", git = "https://github.com/fng3r/django-ckeditor-5.git?rev=more-plugins" },
+    { name = "django-ckeditor-5", git = "https://github.com/fng3r/django-ckeditor-5.git?rev=2f346d8a78760dd7fa69cd7b07bac3404482cb99" },
     { name = "django-colorfield", specifier = "==0.3.2" },
     { name = "django-debug-toolbar", specifier = "==4.4.6" },
     { name = "django-extensions", specifier = "==3.2.3" },
@@ -564,7 +564,7 @@ wheels = [
 [[package]]
 name = "django-ckeditor-5"
 version = "0.2.20"
-source = { git = "https://github.com/fng3r/django-ckeditor-5.git?rev=more-plugins#84ccc595431a375a0fcbc508a3a5f163cb2709f8" }
+source = { git = "https://github.com/fng3r/django-ckeditor-5.git?rev=2f346d8a78760dd7fa69cd7b07bac3404482cb99#2f346d8a78760dd7fa69cd7b07bac3404482cb99" }
 dependencies = [
     { name = "django" },
     { name = "pillow" },

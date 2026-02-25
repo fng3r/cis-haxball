@@ -428,7 +428,6 @@ CKEDITOR_5_CONFIGS = {
                 'redo',
                 '|',
                 'showBlocks',
-                'fullScreen',
                 '-',
                 'heading',
                 '|',
@@ -451,7 +450,8 @@ CKEDITOR_5_CONFIGS = {
                 'numberedList',
                 'todoList',
                 '|',
-                'linkinsertImage',
+                'link',
+                'insertImage',
                 'mediaEmbed',
                 'insertTable',
                 'horizontalLine',
@@ -460,18 +460,44 @@ CKEDITOR_5_CONFIGS = {
                 'htmlEmbed',
                 'codeBlock',
                 'blockQuote',
+                'spoiler',
             ],
             # Let CKEditor collapse overflowing buttons into dropdown instead of overflowing layout.
             'shouldNotGroupWhenFull': True,
         },
-        'style': {
-            'definitions': [
-                {'name': 'Spoiler container', 'element': 'div', 'classes': ['spoiler']},
-                {'name': 'Spoiler title', 'element': 'div', 'classes': ['spoiler-title']},
-                {'name': 'Spoiler content', 'element': 'div', 'classes': ['spoiler-content']},
-            ]
+        'image': {
+            'resizeUnit': '%',
+            'resizeOptions': [
+                {'name': 'resizeImage:original'},
+                {'name': 'resizeImage:25', 'value': '25'},
+                {'name': 'resizeImage:50', 'value': '50'},
+                {'name': 'resizeImage:75', 'value': '75'},
+            ],
+            'toolbar': [
+                'imageTextAlternative',
+                '|',
+                'resizeImage',
+                '|',
+                'imageStyle:alignLeft',
+                'imageStyle:alignRight',
+                'imageStyle:alignCenter',
+                'imageStyle:alignBlockLeft',
+                'imageStyle:alignBlockRight',
+                '|',
+            ],
+            'styles': {
+                'options': [
+                    'inline',
+                    'alignLeft',
+                    'alignRight',
+                    'alignCenter',
+                    'alignBlockLeft',
+                    'alignBlockRight',
+                    'block',
+                    'side',
+                ],
+            },
         },
-        'image': {'toolbar': ['imageTextAlternative', '|', 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side']},
         'table': {
             'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
         },
