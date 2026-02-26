@@ -2,10 +2,10 @@
 {% load widget_tweaks %}
 
 <div class="tw:w-full tw:space-y-2">
-  <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
+  <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:pb-3">
     <form id="preseason-tournament-selector"
           class="tw:flex tw:flex-col tw:gap-1"
-          hx-get="{% url 'predictions:preseason' %}?tournament={{ selected_tournament.pk }}&only_tabs=true"
+          hx-get="{% url 'predictions:preseason' %}?only_tabs=true"
           hx-trigger="change"
           hx-target="#preseason-tabs"
           hx-swap="outerHTML">
