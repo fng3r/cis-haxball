@@ -3,8 +3,8 @@
         'light',
         'dark',
         'bumblebee',
-        'emerald',
         'retro',
+        'cyberpunk',
         'halloween',
         'garden',
         'forest',
@@ -35,25 +35,25 @@
 
         return savedTheme;
     }
-    
-    function setTheme(theme) {
-        document.body.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-    
+
+    function setSelectedThemeInput(theme) {
         const radio = document.querySelector(`input[name="theme-dropdown"][value="${theme}"]`);
         if (radio) {
             radio.checked = true;
         }
     }
     
+    function setTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        setSelectedThemeInput(theme)
+    }
+    
     const theme = getStoredTheme();
     setTheme(theme);
     
     document.addEventListener('DOMContentLoaded', function() {
-        const radio = document.querySelector(`input[name="theme-dropdown"][value="${theme}"]`);
-        if (radio) {
-            radio.checked = true;
-        }
+        setSelectedThemeInput(theme);
 
         const themeInputs = document.querySelectorAll('input[name="theme-dropdown"]');
         themeInputs.forEach(input => {
