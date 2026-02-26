@@ -1,8 +1,8 @@
 <div class="tw:w-full tw:space-y-2">
-  <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
+  <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:pb-3">
     <form id="predictions-contest-tournament-selector"
           class="tw:flex tw:flex-col tw:gap-1"
-          hx-get="{% url 'predictions:predictions_contest' %}?tournament={{ tournament.pk }}"
+          hx-get="{% url 'predictions:predictions_contest' %}"
           hx-trigger="change"
           hx-target="#predictions-contest-tabs"
           hx-swap="outerHTML">
@@ -14,7 +14,7 @@
                  value="{{ tournament.pk }}"
                  aria-label="{{ tournament.league.title }}"
                  class="tw:btn tw:btn-sm"
-                 {% if selected_tournament and selected_tournament.pk == tournament.pk %}checked{% endif %}>
+                 {% if selected_tournament.pk == tournament.pk %}checked{% endif %}>
         {% empty %}
           <span class="tw:text-base-content/70">Нет доступных турниров</span>
         {% endfor %}
@@ -39,7 +39,7 @@
         </span>
       </label>
       {# djlint:off#}
-      <div id="make-predictions-content" class="tw:tab-content tw:p-2" role="tabpanel">
+      <div id="make-predictions-content" class="tw:tab-content tw:py-2" role="tabpanel">
         {{ make_predictions_tab_html|safe }}
       </div>
       {# djlint:on #}
@@ -55,7 +55,7 @@
           Все прогнозы
         </span>
       </label>
-      <div id="view-predictions-content" class="tw:tab-content tw:p-2" role="tabpanel">
+      <div id="view-predictions-content" class="tw:tab-content tw:py-2" role="tabpanel">
         <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
           <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
         </div>
@@ -72,7 +72,7 @@
           Турнирная таблица
         </span>
       </label>
-      <div id="standings-content" class="tw:tab-content tw:p-2" role="tabpanel">
+      <div id="standings-content" class="tw:tab-content tw:py-2" role="tabpanel">
         <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
           <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
         </div>
@@ -89,21 +89,21 @@
           Награды
         </span>
       </label>
-      <div id="rewards-content" class="tw:tab-content tw:p-2" role="tabpanel">
+      <div id="rewards-content" class="tw:tab-content tw:py-2" role="tabpanel">
         <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
           <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
         </div>
       </div>
     </div>
   {% endpartialdef %}
-
-  <dialog id="rules_modal" class="tw:modal">
-    <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
-      <h3 class="tw:font-bold tw:text-lg tw:mb-0!">Правила турнира прогнозистов</h3>
-      <div class="tw:overflow-y-auto">{% include 'predictions/contest/rules.html' %}</div>
-    </div>
-    <form method="dialog" class="tw:modal-backdrop">
-      <button>close</button>
-    </form>
-  </dialog>
 </div>
+
+<dialog id="rules_modal" class="tw:modal">
+  <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
+    <h3 class="tw:font-bold tw:text-lg tw:mb-0!">Правила турнира прогнозистов</h3>
+    <div class="tw:overflow-y-auto">{% include 'predictions/contest/rules.html' %}</div>
+  </div>
+  <form method="dialog" class="tw:modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
