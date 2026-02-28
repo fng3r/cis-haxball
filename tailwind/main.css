@@ -29,67 +29,67 @@
 
 @plugin "daisyui/theme" {
   name: "dark";
-  --bg-body: oklch(0.277078 0 0 / 0.99); /* tw:bg-base-300 */
+  --bg-body: oklch(0.16 0.015 255);
 }
 
 @plugin "daisyui/theme" {
   name: "bumblebee";
-  --bg-body: oklch(0.97 0.02 89.2); /* tw:bg-yellow-100 */
+  --bg-body: oklch(0.95 0.01 89.1);
 }
 
 @plugin "daisyui/theme" {
   name: "emerald";
-  --bg-body: oklch(0.97 0.02 156.8); /* tw:bg-emerald-50 */
+  --bg-body: oklch(0.91 0.02 166.37 / 0.25);
 }
 
 @plugin "daisyui/theme" {
   name: "corporate";
-  --bg-body: oklch(0.97 0.02 233.8); /* tw:bg-blue-50 */
+  --bg-body: oklch(0.97 0.02 233.8);
 }
 
 @plugin "daisyui/theme" {
   name: "synthwave";
-  --bg-body: oklch(0.3 0.15 296.8); /* tw:bg-violet-950 */
+  --bg-body: oklch(0.3 0.15 296.8);
 }
 
 @plugin "daisyui/theme" {
   name: "retro";
-  --bg-body: oklch(0.97 0.02 63.3); /* tw:bg-orange-50 */
+  --bg-body: oklch(0.97 0.02 63.3);
 }
 
 @plugin "daisyui/theme" {
   name: "cyberpunk";
-  --bg-body: oklch(0.97 0.02 89.2); /* tw:bg-yellow-50 */
+  --bg-body: oklch(0.88 0.08 95);
 }
 
 @plugin "daisyui/theme" {
   name: "valentine";
-  --bg-body: oklch(0.85 0.12 332.8); /* tw:bg-pink-300 */
+  --bg-body: oklch(0.85 0.12 332.8);
 }
 
 @plugin "daisyui/theme" {
   name: "halloween";
-  --bg-body: oklch(0.26 0 0); /* tw:bg-neutral-800 */
+  --bg-body: oklch(0.18 0.01 69.28);
 }
 
 @plugin "daisyui/theme" {
   name: "garden";
-  --bg-body: oklch(0.97 0.02 332.8); /* tw:bg-pink-50 */
+  --bg-body: oklch(0.88 0.02 20.08);
 }
 
 @plugin "daisyui/theme" {
   name: "forest";
-  --bg-body: oklch(0.277078 0 0 / 0.9); /* tw:bg-base-300/90 */
+  --bg-body: oklch(0.15 0.006 150);
 }
 
 @plugin "daisyui/theme" {
   name: "aqua";
-  --bg-body: oklch(0.93 0 0 / 0.9); /* tw:bg-base-200/90 */
+  --bg-body: oklch(0.93 0 0 / 0.9);
 }
 
 @plugin "daisyui/theme" {
   name: "lofi";
-  --bg-body: oklch(0.87 0 0); /* tw:bg-gray-200 */
+  --bg-body: oklch(0.87 0 0);
 }
 
 @plugin "daisyui/theme" {
@@ -99,72 +99,72 @@
 
 @plugin "daisyui/theme" {
   name: "fantasy";
-  --bg-body: oklch(0.93 0.07 296.8 / 0.7); /* tw:bg-purple-100/70 */
+  --bg-body: oklch(0.93 0.07 296.8 / 0.7);
 }
 
 @plugin "daisyui/theme" {
   name: "black";
-  --bg-body: oklch(0.277078 0 0 / 0.95); /* tw:bg-base-300/95 */
+  --bg-body: oklch(0.277078 0 0 / 0.95);
 }
 
 @plugin "daisyui/theme" {
   name: "luxury";
-  --bg-body: oklch(0.277078 0 0 / 0.9); /* tw:bg-base-300/90 */
+  --bg-body: oklch(0.18 0.007 70);
 }
 
 @plugin "daisyui/theme" {
   name: "dracula";
-  --bg-body: oklch(0.277078 0 0 / 0.9); /* tw:bg-base-300/90 */
+  --bg-body: oklch(0.18 0.022 300);
 }
 
 @plugin "daisyui/theme" {
   name: "autumn";
-  --bg-body: oklch(0.97 0.02 63.3); /* tw:bg-orange-50 */
+  --bg-body: oklch(0.97 0.02 63.3);
 }
 
 @plugin "daisyui/theme" {
   name: "business";
-  --bg-body: oklch(0.277078 0 0 / 0.9); /* tw:bg-base-300/90 */
+  --bg-body: oklch(0.277078 0 0 / 0.9);
 }
 
 @plugin "daisyui/theme" {
   name: "lemonade";
-  --bg-body: oklch(0.277078 0 0 / 0.8); /* tw:bg-base-300/80 */
+  --bg-body: oklch(0.277078 0 0 / 0.8);
 }
 
 @plugin "daisyui/theme" {
   name: "acid";
-  --bg-body: oklch(0.93 0.07 332.8); /* tw:bg-pink-100 */
+  --bg-body: oklch(0.93 0.07 332.8);
 }
 
 @plugin "daisyui/theme" {
   name: "night";
-  --bg-body: oklch(0.277078 0 0 / 0.9); /* tw:bg-base-300/90 */
+  --bg-body: oklch(0.13 0.015 255);
 }
 
 @plugin "daisyui/theme" {
   name: "coffee";
-  --bg-body: oklch(0.277078 0 0 / 0.85); /* tw:bg-base-300/85 */
+  --bg-body: oklch(0.16 0.02 20);
 }
 
 @plugin "daisyui/theme" {
   name: "winter";
-  --bg-body: oklch(0.89 0.07 233.8 / 0.5); /* tw:bg-blue-200/50 */
+  --bg-body: oklch(0.89 0.07 233.8 / 0.5);
 }
 
 @plugin "daisyui/theme" {
   name: "dim";
-  --bg-body: oklch(0.26 0 0 / 0.9); /* tw:bg-gray-800/90 */
+  --bg-body: oklch(0.24 0.015 255);
 }
 
 @plugin "daisyui/theme" {
   name: "nord";
-  --bg-body: oklch(0.97 0.02 233.8); /* tw:bg-blue-50 */
+  --bg-body: oklch(0.97 0.02 233.8);
 }
 
 @plugin "daisyui/theme" {
   name: "sunset";
-  --bg-body: oklch(0.277078 0 0 / 0.9); /* tw:bg-base-300/90 */
+  --bg-body: oklch(0.16 0.018 300);
 }
 
 @plugin "daisyui/theme" {
