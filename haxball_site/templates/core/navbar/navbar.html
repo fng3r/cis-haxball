@@ -6,22 +6,7 @@
   <li class="tw:menu-title tw:text-base-content/70 tw:-ml-1">Турниры</li>
 
   <li>
-    <a href="{% url 'tournament:league' 'finals-25' %}">Итоговый турнир</a>
-  </li>
-  <li>
-    <a href="{% url 'tournament:league' 's15-premier-league' %}">Высшая лига</a>
-  </li>
-  <li>
-    <a href="{% url 'tournament:league' 's15-first-league' %}">Первая лига</a>
-  </li>
-  <li>
-    <a href="{% url 'tournament:league' 's15-second-league' %}">Вторая лига</a>
-  </li>
-  <li>
-    <a href="{% url 'tournament:league' 's15-league-cup' %}">Кубок лиги</a>
-  </li>
-  <li>
-    <a href="{% url 'tournament:league' 's15-russian-cup' %}">Кубок России</a>
+    <a href="{% url 'tournament:league' 's16-premier-league' %}">Высшая лига</a>
   </li>
 
   <div class="tw:divider tw:my-0"></div>
@@ -395,6 +380,36 @@
 
   <li>
     <a href="{% url 'tournament:league' 'champions-league-s5' %}">ЛЧ #5</a>
+  </li>
+
+  <li>
+    <div class="tw:dropdown tw:dropdown-right">
+      <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
+        ЧР #15<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
+      </div>
+      <ul tabindex="0"
+          class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+        <li>
+          <a href="{% url 'tournament:league' 's15-premier-league' %}">Высшая лига</a>
+        </li>
+        <li>
+          <a href="{% url 'tournament:league' 's15-first-league' %}">Первая лига</a>
+        </li>
+        <li>
+          <a href="{% url 'tournament:league' 's15-second-league' %}">Вторая лига</a>
+        </li>
+        <li>
+          <a href="{% url 'tournament:league' 's15-league-cup' %}">Кубок лиги</a>
+        </li>
+        <li>
+          <a href="{% url 'tournament:league' 's15-russian-cup' %}">Кубок России</a>
+        </li>
+      </ul>
+    </div>
+  </li>
+
+  <li>
+    <a href="{% url 'tournament:league' 'finals-25' %}">ИТ'25</a>
   </li>
 {% endpartialdef %}
 
