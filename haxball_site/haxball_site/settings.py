@@ -628,3 +628,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+REACTIONS_REGISTRY_URL = config(
+    'REACTIONS_REGISTRY_URL', default='https://raw.githubusercontent.com/github/gemoji/master/db/emoji.json'
+)
+REACTIONS_PICKER_LIMIT = config('REACTIONS_PICKER_LIMIT', cast=int, default=10)

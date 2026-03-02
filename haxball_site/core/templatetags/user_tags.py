@@ -13,6 +13,7 @@ from haxball_site import settings
 from tournament.models import League, PlayerTransfer, Team
 
 from ..models import NewComment, Post, Subscription
+from ..services.reactions import build_reactions_context
 
 register = template.Library()
 
@@ -320,3 +321,22 @@ def show_last_transfers():
     )
 
     return {'transfers': last_transfers}
+
+
+@register.inclusion_tag('core/include/reactions/widget.html', takes_context=True)
+def render_reactions(context, obj, object_type: str):
+    request = context['request']
+
+    can_react = False
+    if request.user.is_authenticated:
+        can_react = request.user.user_profile
+
+    data = {
+        'object_type': object_type,
+        'object_id': obj.id,
+        'can_react': can_react,
+        'picker_limit': settings.REACTIONS_PICKER_LIMIT,
+        'user': request.user,
+    }
+    data.update(build_reactions_context(obj, request.user, request=request))
+    return data

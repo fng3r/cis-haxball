@@ -1,0 +1,55 @@
+{% url 'core:reactions' object_type object_id as reactions_url %}
+
+<div id="reactions-{{ object_type }}-{{ object_id }}"
+     class="tw:inline-flex tw:items-center tw:gap-1.5 tw:flex-wrap"
+     data-reactions-root
+     data-reactions-url="{{ reactions_url }}"
+     data-can-react="{% if can_react %}1{% else %}0{% endif %}">
+  {% if reaction_chips %}
+    <div class="tw:flex tw:items-center tw:flex-wrap tw:gap-1.5">
+      {% for chip in reaction_chips %}
+        <button type="button"
+                class="tw:btn tw:btn-xs tw:btn-soft tw:min-h-7 tw:h-7 tw:px-2.5 tw:rounded-full tw:gap-1 {% if chip.selected %}tw:border tw:border-primary tw:text-primary/80 tw:bg-primary/12{% endif %}"
+                title="{{ chip.label }}"
+                {% if can_react %} hx-post="{{ reactions_url }}" hx-vals='{"reaction_type": "{{ chip.id }}"}' hx-target="#reactions-{{ object_type }}-{{ object_id }}" hx-swap="outerHTML" {% elif user.is_authenticated %} onclick="alert('Вам ограничен доступ к реакциям!')" {% else %} onclick="login_modal.showModal()" {% endif %}>
+          <span class="tw:text-sm">{{ chip.emoji }}</span>
+          <span class="tw:text-[11px] tw:font-semibold">{{ chip.count }}</span>
+        </button>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="tw:dropdown tw:dropdown-top tw:dropdown-end">
+    <label tabindex="0"
+           data-reactions-toggle
+           class="tw:btn tw:btn-xs tw:btn-soft tw:h-7 tw:min-h-7 tw:rounded-full tw:px-1.5"
+           title="Добавить реакцию">
+      <svg viewBox="0 0 32 32" aria-hidden="true" class="tw:size-6">
+        <circle cx="13" cy="15" r="9" fill="currentColor" opacity="0.2"></circle>
+        <circle cx="10.2" cy="13" r="1.1" fill="currentColor"></circle>
+        <circle cx="15.8" cy="13" r="1.1" fill="currentColor"></circle>
+        <path d="M9.6 17.2c.9 1.5 2.2 2.2 3.4 2.2s2.5-.7 3.4-2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+        <circle cx="22.5" cy="21.5" r="6.5"></circle>
+        <path d="M22.5 18.8v5.4M19.8 21.5h5.4" stroke="white" stroke-width="1.9" stroke-linecap="round"></path>
+      </svg>
+    </label>
+
+    <div tabindex="0" class="tw:dropdown-content tw:z-30 tw:card tw:bg-base-100 tw:border tw:border-base-300 tw:shadow-xl tw:w-[352px] tw:mt-2">
+      <div class="tw:card-body tw:p-3 tw:gap-2">
+        <div class="tw:text-xs tw:font-semibold tw:uppercase tw:tracking-wide tw:text-base-content/60">Добавить реакцию</div>
+
+        {% if can_react %}
+          <div data-emoji-mart class="tw:min-h-[420px] tw:flex tw:items-center tw:justify-center tw:text-sm tw:text-base-content/60">
+            Загрузка EmojiMart...
+          </div>
+        {% elif user.is_authenticated %}
+          <div class="tw:text-sm tw:text-base-content/70">Вам ограничен доступ к реакциям.</div>
+        {% else %}
+          <div class="tw:text-sm tw:text-base-content/70">
+            <a class="tw:link tw:link-primary" href="#" onclick="login_modal.showModal()">Войдите</a>, чтобы добавить реакцию.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

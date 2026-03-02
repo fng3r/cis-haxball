@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -21,11 +22,29 @@ from pytils.translit import slugify
 from tournament.models import Achievements, Team
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
-from .models import Category, LikeDislike, NewComment, Post, Profile, Subscription, Themes, UserNicknameHistoryItem
+from .models import (
+    Category,
+    LikeDislike,
+    NewComment,
+    Post,
+    Profile,
+    Reaction,
+    ReactionType,
+    Subscription,
+    Themes,
+    UserNicknameHistoryItem,
+)
+from .services.reactions import build_reactions_context
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments, strtobool
 
 logger = logging.getLogger('haxball_site')
+
+REACTIONABLE_MODELS = {
+    'post': Post,
+    'comment': NewComment,
+    'profile': Profile,
+}
 
 
 class HomeView(View):
@@ -549,6 +568,78 @@ class VotesView(View):
             ),
             content_type='application/json',
         )
+
+
+class ReactionWidgetView(View):
+    def _get_object(self, object_type: str, object_id: int):
+        model = REACTIONABLE_MODELS.get(object_type)
+        if model is None:
+            return None
+
+        return model.objects.filter(pk=object_id).first()
+
+    def _can_react(self, request) -> bool:
+        if not request.user.is_authenticated:
+            return False
+
+        profile = getattr(request.user, 'user_profile', None)
+        if profile is None:
+            return False
+
+        return profile.can_vote
+
+    def _render_widget(self, request, object_type: str, obj):
+        context = {
+            'object_type': object_type,
+            'object_id': obj.id,
+            'can_react': self._can_react(request),
+            'picker_limit': settings.REACTIONS_PICKER_LIMIT,
+        }
+        context.update(build_reactions_context(obj, request.user))
+        return render(request, 'core/include/reactions/widget.html', context)
+
+    def get(self, request, object_type: str, object_id: int):
+        obj = self._get_object(object_type, object_id)
+        if obj is None:
+            return HttpResponse(status=404)
+
+        return self._render_widget(request, object_type, obj)
+
+    def post(self, request, object_type: str, object_id: int):
+        obj = self._get_object(object_type, object_id)
+        if obj is None:
+            return HttpResponse(status=404)
+
+        if not self._can_react(request):
+            return HttpResponse(status=403)
+
+        reaction_type_id = request.POST.get('reaction_type')
+        if not reaction_type_id:
+            return HttpResponse(status=400)
+
+        reaction_type = ReactionType.objects.filter(pk=reaction_type_id, is_active=True).first()
+        if reaction_type is None:
+            return HttpResponse(status=404)
+
+        content_type = ContentType.objects.get_for_model(obj)
+        reaction = Reaction.objects.filter(
+            content_type=content_type,
+            object_id=obj.id,
+            user=request.user,
+            reaction_type=reaction_type,
+        ).first()
+
+        if reaction:
+            reaction.delete()
+        else:
+            Reaction.objects.create(
+                content_type=content_type,
+                object_id=obj.id,
+                user=request.user,
+                reaction_type=reaction_type,
+            )
+
+        return self._render_widget(request, object_type, obj)
 
 
 def search_result(request):

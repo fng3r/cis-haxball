@@ -37,6 +37,8 @@ from .models import (
     NewComment,
     Post,
     Profile,
+    Reaction,
+    ReactionType,
     Subscription,
     Themes,
     UserActivity,
@@ -225,6 +227,24 @@ class LikeDisLikeAdmin(UnfoldModelAdmin):
     @display(description='Голос', label={LikeDislike.LIKE: 'success', LikeDislike.DISLIKE: 'danger'})
     def display_vote(self, model):
         return model.vote, model.get_vote_display()
+
+
+@admin.register(ReactionType)
+class ReactionTypeAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'emoji', 'label', 'category', 'code', 'sort_order', 'is_active')
+    list_filter = ('is_active',)
+    list_editable = ('sort_order', 'is_active')
+    search_fields = ('code', 'label', 'category', 'emoji')
+    search_help_text = 'Поиск по коду/названию/эмодзи'
+
+
+@admin.register(Reaction)
+class ReactionAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'reaction_type', 'user', 'content_type', 'object_id', 'content_object', 'updated')
+    list_filter = (('reaction_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter), 'content_type')
+    list_filter_submit = True
+    search_fields = ('user__username', 'reaction_type__code', 'reaction_type__label')
+    search_help_text = 'Поиск по пользователю или типу реакции'
 
 
 @admin.register(Post)
