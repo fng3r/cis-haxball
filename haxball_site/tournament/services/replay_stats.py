@@ -11,6 +11,7 @@ class PlayerRow(TypedDict):
     goals: int
     assists: int
     played_ticks: int
+    playtime: str
     shots_total: int
     shots_on_target: int
     passes_completed: int
@@ -70,6 +71,13 @@ def _pass_accuracy(passes_completed: int, pass_attempts: int) -> float | None:
     if not pass_attempts:
         return None
     return round(100 * passes_completed / pass_attempts, 1)
+
+
+def _format_playtime(played_ticks: int) -> str:
+    # Haxball Analyzer exposes playedTicks in game ticks (60 ticks ~= 1 second).
+    total_seconds = max(0, round((played_ticks or 0) / 60))
+    minutes, seconds = divmod(total_seconds, 60)
+    return f'{minutes:02d}:{seconds:02d}'
 
 
 def _analyzer_url(analyzer_replay_id: str) -> str:
@@ -335,6 +343,7 @@ class MatchReplayStatsAggregator:
             'goals': goals,
             'assists': assists,
             'played_ticks': played_ticks,
+            'playtime': _format_playtime(played_ticks),
             'shots_total': shots_total,
             'shots_on_target': shots_on_target,
             'passes_completed': passes_completed,
