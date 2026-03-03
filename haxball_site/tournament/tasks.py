@@ -7,6 +7,7 @@ and MatchReplayStatsPlayer from raw every run.
 import logging
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from celery import shared_task
@@ -31,9 +32,11 @@ logger = logging.getLogger(__name__)
 
 def _resolve_player(match, nick: str):
     """Resolve player on replay to Player model."""
-    player = match.match_participants.filter(nickname__iexact=nick).first()
+    lookup = Q(nickname__iexact=nick) | Q(name__previous_nicknames__nickname__iexact=nick)
+    player = match.match_participants.filter(lookup).distinct().first()
     if not player:
-        player = Player.objects.filter(nickname__iexact=nick).first()
+        player = Player.objects.filter(lookup).distinct().first()
+
     return player
 
 

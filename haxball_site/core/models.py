@@ -400,7 +400,9 @@ class UserIcon(models.Model):
 
 
 class UserNicknameHistoryItem(models.Model):
-    user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, verbose_name='Пользователь', on_delete=models.CASCADE, related_query_name='previous_nicknames'
+    )
     nickname = models.CharField(verbose_name='Никнейм', max_length=50)
     edited = models.DateTimeField('Дата смены', default=timezone.now)
 
