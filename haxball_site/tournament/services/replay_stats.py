@@ -70,10 +70,6 @@ def _pass_accuracy(passes_completed: int, pass_attempts: int) -> float | None:
     return round(100 * passes_completed / pass_attempts, 1)
 
 
-def _is_valid_player_stat(entry) -> bool:
-    return entry.played_ticks > 0 and (entry.nick or '').strip() != '*'
-
-
 @dataclass(slots=True)
 class MatchReplayStatsAggregator:
     match: Match
@@ -178,9 +174,6 @@ class MatchReplayStatsAggregator:
 
         for part in self.parts:
             for player_stat in part.players.all():
-                if not _is_valid_player_stat(player_stat):
-                    continue
-
                 key = (player_stat.player_id,) if player_stat.player_id else (player_stat.nick, player_stat.team_id)
                 if key not in player_aggregate:
                     player_aggregate[key] = {
@@ -261,9 +254,6 @@ class MatchReplayStatsAggregator:
             part_index = part.part_order + 1
             part_players: list[PlayerRow] = []
             for player_stat in part.players.all():
-                if not _is_valid_player_stat(player_stat):
-                    continue
-
                 part_players.append(
                     self._player_row(
                         player=player_stat.player,

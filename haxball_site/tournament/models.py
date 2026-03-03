@@ -830,6 +830,7 @@ class MatchReplayStatsStatus(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Ожидание'
         SUCCESS = 'success', 'Успешно'
+        PARTIAL = 'partial', 'Частично'
         FAILED = 'failed', 'Ошибка'
 
     match = models.OneToOneField(

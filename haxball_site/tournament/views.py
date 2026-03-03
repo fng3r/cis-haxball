@@ -601,7 +601,10 @@ class MatchDetail(DetailView):
         # Replay-based advanced stats (Haxball Analyzer)
         replay_status = getattr(match, 'replay_stats_status', None)
         context['replay_stats_status'] = replay_status
-        if replay_status and replay_status.status == MatchReplayStatsStatus.Status.SUCCESS:
+        if replay_status and replay_status.status in {
+            MatchReplayStatsStatus.Status.SUCCESS,
+            MatchReplayStatsStatus.Status.PARTIAL,
+        }:
             parts = list(match.replay_stats.all())
             context['match_replay_stats_aggregated'] = MatchReplayStatsAggregator(match=match, parts=parts).build()
         else:

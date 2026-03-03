@@ -1020,6 +1020,7 @@ class MatchReplayStatsAdmin(UnfoldModelAdmin):
 @admin.register(MatchReplayStatsPlayer)
 class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
     list_display = (
+        'match_id',
         'replay_stats',
         'player',
         'nick',
@@ -1036,6 +1037,11 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
     search_fields = ('nick', 'player__nickname')
     ordering = ('replay_stats', 'team', 'nick')
     raw_id_fields = ('replay_stats', 'player', 'team')
+    list_filter_submit = True
+
+    @display(description='ID матча')
+    def match_id(self, model):
+        return model.replay_stats.match_id
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('replay_stats__match', 'player', 'team')

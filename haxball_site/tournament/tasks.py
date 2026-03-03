@@ -6,6 +6,7 @@ and MatchReplayStatsPlayer from raw every run.
 
 import logging
 
+from django.db import transaction
 from django.utils import timezone
 
 from celery import shared_task
@@ -85,9 +86,10 @@ def _create_replay_stats_from_part(
         if not nick or '(own goal)' in nick:
             continue
         metrics = p.get('metrics') or {}
-        played_ticks = int(metrics.get('playedTicks') or p.get('playedTicks') or 0)
-        if played_ticks == 0:
+        samples_count = metrics.get('samples') or 0
+        if samples_count <= 0:
             continue
+        played_ticks = metrics.get('playedTicks') or p.get('playedTicks') or 0
 
         rating_obj = p.get('rating') or {}
         rating = _float_or_none(rating_obj.get('rating'))
@@ -172,25 +174,23 @@ def fetch_match_replay_stats(match_id: int):
     # Remove replays no longer in match.replays (CASCADE deletes their MatchReplayStats)
     MatchReplay.objects.filter(match=match).exclude(replay_url__in=current_replay_urls).delete()
 
-    total_created_count = 0
-    failed_replays: list[tuple[str, str]] = []
+    replay_payloads = []
+    failed_replays = []
+
     for url in match.replays or []:
         if not is_powtorki_url(url):
             continue
         match_replay = MatchReplay.objects.filter(match=match, replay_url=url).first()
         if match_replay and match_replay.raw_stats_json:
-            print(f'[match_id={match_id}] Replay analyzer stats already exists')
             stats_list = list(match_replay.raw_stats_json)
         else:
             try:
                 replay_file = download_powtorki_replay(url)
-                print(f'[match_id={match_id}] Downloaded replay file from {url}')
+                logger.info('[match_id=%s] Downloaded replay file from %s', match_id, url)
                 analyzer_id = upload_replay_to_analyzer(replay_file)
-                print(
-                    f'[match_id={match_id}] Uploaded replay file to analyzer, analyzer_id: {analyzer_id} (analyzer url: http://replay.hax.ma/?replayId={analyzer_id})'
-                )
+                logger.info('[match_id=%s] Uploaded replay to analyzer id=%s', match_id, analyzer_id)
                 stats_list = fetch_analyzer_stats(analyzer_id)
-                print(f'[match_id={match_id}] Fetched stats from analyzer')
+                logger.info('[match_id=%s] Fetched analyzer stats id=%s', match_id, analyzer_id)
             except Exception as exc:
                 logger.exception('[match_id=%s] Failed to fetch replay stats for %s', match_id, url)
                 failed_replays.append((url, f'{type(exc).__name__}: {exc}'))
@@ -204,32 +204,42 @@ def fetch_match_replay_stats(match_id: int):
                     'fetched_at': timezone.now(),
                 },
             )
-        # Rebuild preprocessed parts from raw (every time task runs)
-        MatchReplayStats.objects.filter(match_replay=match_replay).delete()
-        existing_count = MatchReplayStats.objects.filter(match=match).count()
-        created_count = 0
-        for stats_obj in stats_list:
-            played_minutes = stats_obj.get('minutes')
-            score_red = stats_obj.get('scoreRed')
-            score_blue = stats_obj.get('scoreBlue')
-            if played_minutes < 1 and (score_red == 0 and score_blue == 0):
-                continue
+        replay_payloads.append((match_replay, stats_list))
 
-            part_order = existing_count + created_count
-            match part_order:
-                case 0:
-                    part_label = MatchReplayStats.PartLabel.FIRST_HALF
-                case 1:
-                    part_label = MatchReplayStats.PartLabel.SECOND_HALF
-                case _:
-                    part_label = MatchReplayStats.PartLabel.EXTRA_TIME
-            red_is_home = True
-            _create_replay_stats_from_part(match_replay, part_order, part_label, red_is_home, stats_obj)
-            created_count += 1
-            total_created_count += 1
+    total_created_count = 0
+    with transaction.atomic():
+        # Full rebuild: clear all derived replay stats for the match first.
+        MatchReplayStatsPlayer.objects.filter(replay_stats__match=match).delete()
+        MatchReplayStats.objects.filter(match=match).delete()
 
-    has_any = MatchReplayStats.objects.filter(match=match).exists()
-    status.status = MatchReplayStatsStatus.Status.SUCCESS if has_any else MatchReplayStatsStatus.Status.FAILED
+        part_order = 0
+        for match_replay, stats_list in replay_payloads:
+            for stats_obj in stats_list:
+                played_minutes = stats_obj.get('minutes')
+                score_red = stats_obj.get('scoreRed')
+                score_blue = stats_obj.get('scoreBlue')
+                if played_minutes < 1 and (score_red == 0 and score_blue == 0):
+                    continue
+                match part_order:
+                    case 0:
+                        part_label = MatchReplayStats.PartLabel.FIRST_HALF
+                    case 1:
+                        part_label = MatchReplayStats.PartLabel.SECOND_HALF
+                    case _:
+                        part_label = MatchReplayStats.PartLabel.EXTRA_TIME
+                red_is_home = True
+                _create_replay_stats_from_part(match_replay, part_order, part_label, red_is_home, stats_obj)
+                part_order += 1
+                total_created_count += 1
+
+    has_any = total_created_count > 0
+    if has_any and failed_replays:
+        final_status = MatchReplayStatsStatus.Status.PARTIAL
+    elif has_any:
+        final_status = MatchReplayStatsStatus.Status.SUCCESS
+    else:
+        final_status = MatchReplayStatsStatus.Status.FAILED
+    status.status = final_status
     status.fetched_at = timezone.now()
     status.error_message = _build_error_message(failed_replays, has_any)
     if not status.error_message and not has_any:
