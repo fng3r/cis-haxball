@@ -4,6 +4,8 @@ upload to Haxball Analyzer, store raw response in MatchReplay; rebuild MatchRepl
 and MatchReplayStatsPlayer from raw every run.
 """
 
+import logging
+
 from django.utils import timezone
 
 from celery import shared_task
@@ -22,6 +24,8 @@ from tournament.replay_stats_client import (
     is_powtorki_url,
     upload_replay_to_analyzer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_player(match, nick: str):
@@ -127,6 +131,18 @@ def _float_or_none(x):
         return None
 
 
+def _build_error_message(failed_replays: list[tuple[str, str]], has_any_stats: bool) -> str:
+    if not failed_replays:
+        return ''
+
+    prefix = 'Partial failures' if has_any_stats else 'Replay stats fetch failed'
+    details = '; '.join(f'{url}: {error}' for url, error in failed_replays)
+    max_len = 3000
+    if len(details) > max_len:
+        details = f'{details[:max_len]}...'
+    return f'{prefix}. {details}'
+
+
 @shared_task
 def fetch_match_replay_stats(match_id: int):
     """
@@ -157,6 +173,7 @@ def fetch_match_replay_stats(match_id: int):
     MatchReplay.objects.filter(match=match).exclude(replay_url__in=current_replay_urls).delete()
 
     total_created_count = 0
+    failed_replays: list[tuple[str, str]] = []
     for url in match.replays or []:
         if not is_powtorki_url(url):
             continue
@@ -174,7 +191,9 @@ def fetch_match_replay_stats(match_id: int):
                 )
                 stats_list = fetch_analyzer_stats(analyzer_id)
                 print(f'[match_id={match_id}] Fetched stats from analyzer')
-            except Exception:
+            except Exception as exc:
+                logger.exception('[match_id=%s] Failed to fetch replay stats for %s', match_id, url)
+                failed_replays.append((url, f'{type(exc).__name__}: {exc}'))
                 continue
             match_replay, _ = MatchReplay.objects.update_or_create(
                 match=match,
@@ -212,7 +231,9 @@ def fetch_match_replay_stats(match_id: int):
     has_any = MatchReplayStats.objects.filter(match=match).exists()
     status.status = MatchReplayStatsStatus.Status.SUCCESS if has_any else MatchReplayStatsStatus.Status.FAILED
     status.fetched_at = timezone.now()
-    status.error_message = '' if has_any else 'No Powtorki replays or all fetches failed'
+    status.error_message = _build_error_message(failed_replays, has_any)
+    if not status.error_message and not has_any:
+        status.error_message = 'No Powtorki replays found or all replay parts were filtered out'
     status.save(update_fields=['status', 'fetched_at', 'error_message'])
 
     return {'match_id': match_id, 'created_parts': total_created_count, 'status': status.status}
