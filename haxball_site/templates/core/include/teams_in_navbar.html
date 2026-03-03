@@ -1,7 +1,7 @@
 {% load thumbnail %}
 
 {% partialdef team-list-item %}
-  <div class="tw:flex tw:justify-start tw:gap-x-1">
+  <div class="tw:flex tw:justify-start tw:gap-x-1.5">
     {% thumbnail team.logo "25x25" format="PNG" as im %}
       <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1 tw:size-6">
     {% endthumbnail %}
@@ -15,14 +15,14 @@
     <div class="tw:ml-1 tw:mb-2">
       <h5 class="tw:text-center">{{ league.title }}</h5>
 
-      <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-3 tw:justify-start tw:gap-y-2">
+      <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-3 tw:justify-start tw:gap-x-3 tw:gap-y-2">
         {% for team in league.teams.all %}
           {% partial team-list-item %}
         {% endfor %}
       </div>
     </div>
   {% empty %}
-    <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-3 tw:justify-start tw:gap-y-2">
+    <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-3 tw:justify-start tw:gap-x-3 tw:gap-y-2">
       {% for team in all_teams %}
         {% partial team-list-item %}
       {% endfor %}

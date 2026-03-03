@@ -278,7 +278,7 @@ class PlayerTransferAdmin(UnfoldModelAdmin):
         return super().get_queryset(request).select_related('trans_player', 'from_team', 'to_team', 'season_join')
 
 
-class PlayerInline(UnfoldTabularInline):
+class TeamPlayerInline(UnfoldTabularInline):
     model = Player
     tab = True
     fields = ('nickname', 'positions', 'team', 'player_nation')
@@ -298,14 +298,20 @@ class TeamAdmin(UnfoldModelAdmin):
     list_display = (
         'display_title',
         'owner',
+        'captain',
+        'captain_assistant',
         'date_found',
     )
-    list_filter = (('owner', RelatedDropdownFilter),)
+    list_filter = (
+        ('owner', RelatedDropdownFilter),
+        ('captain', RelatedDropdownFilter),
+        ('captain_assistant', RelatedDropdownFilter),
+    )
     list_filter_submit = True
     list_filter_sheet = False
     show_facets = False
     search_fields = ('title', 'short_title')
-    inlines = [PlayerInline, TeamAchievementsInline]
+    inlines = [TeamPlayerInline, TeamAchievementsInline]
     ordering = ['-date_found', '-id']
 
     @display(description='Команда', header=True)

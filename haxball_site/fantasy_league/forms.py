@@ -1,7 +1,7 @@
 from django import forms
 from django.db.models import Case, IntegerField, OuterRef, Subquery, Value, When
 
-from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
+from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, Season, TourNumber
 
 from .models import BoosterType, FantasyTournament, SquadSubmission
 from .utils import (
@@ -13,15 +13,37 @@ from .utils import (
 )
 
 
+class SeasonFilterForm(forms.Form):
+    """Form for filtering seasons."""
+
+    season = forms.ModelChoiceField(
+        queryset=Season.objects.none(),
+        empty_label=None,
+        required=False,
+        label='Сезон',
+    )
+
+    def __init__(self, available_seasons, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['season'].queryset = available_seasons
+
+
 class TournamentFilterForm(forms.Form):
     """Form for filtering tournaments"""
 
     tournament = forms.ModelChoiceField(
-        queryset=FantasyTournament.objects.filter(is_active=True).order_by('league__priority'),
+        queryset=FantasyTournament.objects.none(),
         empty_label=None,
         required=False,
         label='Турнир',
     )
+
+    def __init__(self, *args, season: Season | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        queryset = FantasyTournament.objects.all()
+        if season is not None:
+            queryset = queryset.filter(league__championship=season)
+        self.fields['tournament'].queryset = queryset.order_by('league__priority')
 
 
 class UserFilterForm(forms.Form):

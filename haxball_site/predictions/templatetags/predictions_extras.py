@@ -52,6 +52,8 @@ def is_tour_actual(tour):
 @register.filter
 def hours_until_start(tournament):
     first_tour = tournament.tours.order_by('number').first()
+    if not first_tour:
+        return None
     start_date = timezone.make_aware(timezone.datetime.combine(first_tour.date_from, time(18, 0)))
     delta = start_date - timezone.localtime()
 

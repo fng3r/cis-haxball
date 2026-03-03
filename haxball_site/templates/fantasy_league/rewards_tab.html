@@ -4,98 +4,102 @@
 
 <div class="tw:space-y-4">
   {% if selected_tournament %}
-    <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
-          hx-get="{% url 'fantasy_league:rewards_tab' %}?tournament={{ selected_tournament.pk }}"
-          hx-target="#rewards-content"
-          hx-swap="innerHTML"
-          hx-trigger="change">
-      <div class="tw:flex tw:flex-col tw:gap-1">
-        <label class="tw:label tw:text-base-content tw:font-bold">Тур</label>
-        {{ tour_form.tour|add_class:"tw:select" }}
-      </div>
-    </form>
-
-    <div class="tw:[#rewards-content:has(.htmx-request)_&]:opacity-50 tw:[#rewards-content:has(.htmx-request)_&]:transition-opacity">
-      {% if tour_rewards_data %}
-        <div class="tw:flex tw:justify-between tw:items-center tw:mb-3">
-          <div class="tw:flex tw:items-center tw:gap-2">
-            <h4 class="tw:text-lg tw:font-semibold">{{ tour_rewards_data.tour.number }} тур</h4>
-            {% if tour_rewards_data.tour.is_started %}
-              <div class="tw:badge tw:badge-neutral">
-                {% if tour_rewards_data.tour.is_actual %}
-                  Не завершен
-                {% else %}
-                  Завершен
-                {% endif %}
-              </div>
-            {% endif %}
-          </div>
-          <button class="tw:btn tw:btn-outline tw:btn-sm" onclick="rewards_modal.showModal()">
-            <i class="fa fa-info-circle"></i> Распределение наград
-          </button>
+    {% if not selected_tour %}
+      <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Этот турнир ещё не стартовал</div>
+    {% else %}
+      <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
+            hx-get="{% url 'fantasy_league:rewards_tab' %}?tournament={{ selected_tournament.pk }}"
+            hx-target="#rewards-content"
+            hx-swap="innerHTML"
+            hx-trigger="change">
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <label class="tw:label tw:text-base-content tw:font-bold">Тур</label>
+          {{ tour_form.tour|add_class:"tw:select" }}
         </div>
+      </form>
 
-        {% if tour_rewards_data.rewards.total_participants > 0 %}
-          <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4 tw:mb-4">
-            <div class="tw:stat tw:bg-primary tw:text-primary-content tw:rounded-box">
-              <div class="tw:stat-title tw:text-base tw:text-primary-content/75">Участники</div>
-              <div class="tw:stat-value tw:text-primary-content">{{ tour_rewards_data.rewards.total_participants }}</div>
+      <div class="tw:[#rewards-content:has(.htmx-request)_&]:opacity-50 tw:[#rewards-content:has(.htmx-request)_&]:transition-opacity">
+        {% if tour_rewards_data %}
+          <div class="tw:flex tw:justify-between tw:items-center tw:mb-3">
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <h4 class="tw:text-lg tw:font-semibold">{{ tour_rewards_data.tour.number }} тур</h4>
+              {% if tour_rewards_data.tour.is_started %}
+                <div class="tw:badge tw:badge-neutral">
+                  {% if tour_rewards_data.tour.is_actual %}
+                    Не завершен
+                  {% else %}
+                    Завершен
+                  {% endif %}
+                </div>
+              {% endif %}
             </div>
-            <div class="tw:stat tw:bg-secondary tw:text-secondary-content tw:rounded-box">
-              <div class="tw:stat-title tw:text-base tw:text-secondary-content/75">Призовой фонд</div>
-              <div class="tw:stat-value tw:text-secondary-content tw:flex tw:items-center tw:gap-1">
-                <img src="{% static 'img/cis-coin.png' %}" alt="CC" class="tw:size-8 tw:mt-0.75">
-                {{ tour_rewards_data.rewards.total_prize_pool }} CC
-              </div>
-            </div>
+            <button class="tw:btn tw:btn-outline tw:btn-sm" onclick="rewards_modal.showModal()">
+              <i class="fa fa-info-circle"></i> Распределение наград
+            </button>
           </div>
 
-          {% if tour_rewards_data.rewards.user_rewards %}
-            <div class="tw:overflow-x-auto">
-              <table class="tw:table tw:table-zebra tw:table-sm">
-                <thead>
-                  <tr>
-                    <th class="tw:text-center tw:w-5">#</th>
-                    <th>Участник</th>
-                    <th class="tw:text-center">Очки</th>
-                    <th class="tw:text-center">Награды</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for reward in tour_rewards_data.rewards.user_rewards %}
-                    <tr>
-                      <td class="tw:text-center tw:font-bold">{{ forloop.counter }}</td>
-                      <td>
-                        <div class="tw:flex tw:items-center tw:gap-2">
-                          {% if reward.user.user_profile.avatar %}
-                            <img src="{{ reward.user.user_profile.avatar.url }}" alt="{{ reward.user.username }}" class="tw:w-6 tw:h-6 tw:rounded-full">
-                          {% endif %}
-                          <span>{{ reward.user.username }}</span>
-                        </div>
-                      </td>
-                      <td class="tw:text-center tw:font-bold">
-                        {{ reward.points }} (
-                        {% if tour_rewards_data.rewards.total_prize_pool > 0 %}
-                          {{ reward.reward_amount|mul:100|div:tour_rewards_data.rewards.total_prize_pool|floatformat:1 }}%
-                        {% else %}
-                          0%
-                        {% endif %}
-                        )
-                      </td>
-                      <td class="tw:text-center tw:font-bold tw:text-success">{{ reward.reward_amount }} CC</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+          {% if tour_rewards_data.rewards.total_participants > 0 %}
+            <div class="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-4 tw:mb-4">
+              <div class="tw:stat tw:bg-primary tw:text-primary-content tw:rounded-box">
+                <div class="tw:stat-title tw:text-base tw:text-primary-content/75">Участники</div>
+                <div class="tw:stat-value tw:text-primary-content">{{ tour_rewards_data.rewards.total_participants }}</div>
+              </div>
+              <div class="tw:stat tw:bg-secondary tw:text-secondary-content tw:rounded-box">
+                <div class="tw:stat-title tw:text-base tw:text-secondary-content/75">Призовой фонд</div>
+                <div class="tw:stat-value tw:text-secondary-content tw:flex tw:items-center tw:gap-1">
+                  <img src="{% static 'img/cis-coin.png' %}" alt="CC" class="tw:size-8 tw:mt-0.75">
+                  {{ tour_rewards_data.rewards.total_prize_pool }} CC
+                </div>
+              </div>
             </div>
+
+            {% if tour_rewards_data.rewards.user_rewards %}
+              <div class="tw:overflow-x-auto">
+                <table class="tw:table tw:table-zebra tw:table-sm">
+                  <thead>
+                    <tr>
+                      <th class="tw:text-center tw:w-5">#</th>
+                      <th>Участник</th>
+                      <th class="tw:text-center">Очки</th>
+                      <th class="tw:text-center">Награды</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for reward in tour_rewards_data.rewards.user_rewards %}
+                      <tr>
+                        <td class="tw:text-center tw:font-bold">{{ forloop.counter }}</td>
+                        <td>
+                          <div class="tw:flex tw:items-center tw:gap-2">
+                            {% if reward.user.user_profile.avatar %}
+                              <img src="{{ reward.user.user_profile.avatar.url }}" alt="{{ reward.user.username }}" class="tw:w-6 tw:h-6 tw:rounded-full">
+                            {% endif %}
+                            <span>{{ reward.user.username }}</span>
+                          </div>
+                        </td>
+                        <td class="tw:text-center tw:font-bold">
+                          {{ reward.points }} (
+                          {% if tour_rewards_data.rewards.total_prize_pool > 0 %}
+                            {{ reward.reward_amount|mul:100|div:tour_rewards_data.rewards.total_prize_pool|floatformat:1 }}%
+                          {% else %}
+                            0%
+                          {% endif %}
+                          )
+                        </td>
+                        <td class="tw:text-center tw:font-bold tw:text-success">{{ reward.reward_amount }} CC</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="tw:text-center tw:text-base-content/70 tw:py-4">Нет участников в этом туре</div>
+            {% endif %}
           {% else %}
             <div class="tw:text-center tw:text-base-content/70 tw:py-4">Нет участников в этом туре</div>
           {% endif %}
-        {% else %}
-          <div class="tw:text-center tw:text-base-content/70 tw:py-4">Нет участников в этом туре</div>
         {% endif %}
-      {% endif %}
-    </div>
+      </div>
+    {% endif %}
   {% else %}
     <div class="tw:text-center tw:text-base-content/70 tw:py-8">Данная секция будет доступна после запуска турниров</div>
   {% endif %}

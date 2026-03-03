@@ -91,9 +91,6 @@ class Team(models.Model):
     date_found = models.DateField('Дата основания', default=timezone.now)
     short_title = models.CharField('Сокращение', help_text='До 5 символов', max_length=5)
     logo = models.ImageField('Логотип', upload_to='team_logos/', default='team_logos/default.png')
-    color_1 = ColorField(default='#FFFFFF', verbose_name='Цвет 1')
-    color_2 = ColorField(default='#FFFFFF', verbose_name='Цвет 2')
-    color_table = ColorField(default='#FFFFFF', verbose_name='Цвет Таблички')
     owner = models.ForeignKey(
         User, verbose_name='Владелец', null=True, on_delete=models.SET_NULL, related_name='owned_teams'
     )
@@ -105,7 +102,9 @@ class Team(models.Model):
     )
     office_link = models.URLField('Офис', blank=True)
     roster_slots = models.PositiveSmallIntegerField('Количество слотов', null=False, default=9)
-    rating = models.SmallIntegerField('Рейтинг команды', blank=True, null=True)
+    color_1 = ColorField(default='#FFFFFF', verbose_name='Цвет 1')
+    color_2 = ColorField(default='#FFFFFF', verbose_name='Цвет 2')
+    color_table = ColorField(default='#FFFFFF', verbose_name='Цвет Таблички')
 
     def get_absolute_url(self):
         return reverse('tournament:team_detail', args=[self.slug])

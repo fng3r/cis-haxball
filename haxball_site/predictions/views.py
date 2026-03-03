@@ -13,9 +13,14 @@ from django.views.decorators.http import require_POST
 from django_htmx.http import trigger_client_event
 
 from fantasy_league.forms import TourFilterForm
-from tournament.models import TourNumber
+from tournament.models import Season, TourNumber
 
-from .forms import PreseasonPredictionsTournamentFilterForm, TournamentFilterForm, UserFilterForm
+from .forms import (
+    PreseasonPredictionsTournamentFilterForm,
+    SeasonFilterForm,
+    TournamentFilterForm,
+    UserFilterForm,
+)
 from .models import (
     Prediction,
     PredictionsContestTournament,
@@ -31,21 +36,56 @@ from .utils import (
 )
 
 
-def get_default_tournament():
-    return PredictionsContestTournament.objects.filter(is_active=True).select_related('league').first()
+def resolve_selected_season(request):
+    """Return (selected_season, season_form) for predictions contests."""
+    seasons = (
+        Season.objects.filter(tournaments_in_season__predictions_contest_tournament__isnull=False)
+        .distinct()
+        .order_by('-number')
+    )
+
+    selected_season = None
+    season_id = request.GET.get('season')
+    if season_id:
+        selected_season = seasons.filter(pk=season_id).first()
+    if selected_season is None and seasons.exists():
+        selected_season = seasons.filter(is_active=True).first() or seasons.first()
+
+    season_form = SeasonFilterForm(
+        seasons,
+        initial={'season': selected_season.pk if selected_season else None},
+    )
+
+    return selected_season, season_form
 
 
-def get_default_preseason_tournament():
-    return PreseasonPredictionsTournament.objects.select_related('league').first()
+def get_default_tournament(season: Season | None = None):
+    """Return default predictions tournament, optionally scoped to a season (prefer active)."""
+    queryset = PredictionsContestTournament.objects.select_related('league__championship')
+    if season is not None:
+        queryset = queryset.filter(league__championship=season)
+
+    return queryset.order_by('league__priority').first()
 
 
-def resolve_selected_tournament(request, selected_tournament=None):
+def get_default_preseason_tournament(season: Season | None = None):
+    """Return default preseason predictions tournament, optionally scoped to a season (prefer active)."""
+    queryset = PreseasonPredictionsTournament.objects.select_related('league__championship')
+    if season is not None:
+        queryset = queryset.filter(league__championship=season)
+
+    return queryset.order_by('league__priority').first()
+
+
+def resolve_selected_tournament(request, selected_tournament=None, season: Season | None = None):
     """Resolve selected tournament from GET or provided value.
 
     Ensures the tournament is enriched with league and prefetches tours for later use.
     """
-    default_tournament = get_default_tournament()
-    if not selected_tournament:
+    default_tournament = get_default_tournament(season=season)
+
+    # If explicit tournament object provided, just re-fetch it with prefetches.
+    if selected_tournament is None:
         if request.GET.get('tournament'):
             selected_tournament = PredictionsContestTournament.objects.filter(pk=request.GET.get('tournament')).first()
         elif default_tournament:
@@ -65,7 +105,8 @@ def resolve_selected_tournament(request, selected_tournament=None):
         )
 
     tournament_form = TournamentFilterForm(
-        initial={'tournament': selected_tournament.pk if selected_tournament else None}
+        initial={'tournament': selected_tournament.pk if selected_tournament else None},
+        season=season,
     )
 
     return selected_tournament, tournament_form
@@ -101,12 +142,12 @@ def resolve_selected_tour(request, selected_tournament):
     return tour, tour_form
 
 
-def resolve_selected_preseason_tournament(request, selected_tournament=None):
+def resolve_selected_preseason_tournament(request, selected_tournament=None, season: Season | None = None):
     """Resolve selected preseason tournament from GET or provided value.
 
     Ensures the tournament is enriched with league and prefetches teams for later use.
     """
-    default_tournament = get_default_preseason_tournament()
+    default_tournament = get_default_preseason_tournament(season)
     if not selected_tournament:
         if request.GET.get('tournament'):
             selected_tournament = PreseasonPredictionsTournament.objects.filter(
@@ -126,7 +167,8 @@ def resolve_selected_preseason_tournament(request, selected_tournament=None):
         )
 
     tournament_form = PreseasonPredictionsTournamentFilterForm(
-        initial={'tournament': selected_tournament.pk if selected_tournament else None}
+        initial={'tournament': selected_tournament.pk if selected_tournament else None},
+        season=season,
     )
 
     return selected_tournament, tournament_form
@@ -143,8 +185,10 @@ def get_users_with_predictions(tournament=None):
 
 def predictions_main(request):
     """Main predictions page with three tabs"""
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
-    selected_preseason_tournament, _ = resolve_selected_preseason_tournament(request)
+    # Seasons are only used to influence the initial/default tournament selection.
+    selected_season, season_form = resolve_selected_season(request)
+    selected_tournament, tournament_form = resolve_selected_tournament(request, season=selected_season)
+    selected_preseason_tournament, _ = resolve_selected_preseason_tournament(request, season=selected_season)
     selected_user = None
 
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
@@ -156,6 +200,8 @@ def predictions_main(request):
     )
 
     context = {
+        'season_form': season_form,
+        'selected_season': selected_season,
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
@@ -194,6 +240,7 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
             request=request,
         )
 
+    # Keep tournament consistent with current season selection
     selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
 
     user_predictions = {}
@@ -439,7 +486,8 @@ def edit_predictions(request, tour_id):
 
 
 def preseason(request):
-    selected_tournament, tournament_form = resolve_selected_preseason_tournament(request)
+    selected_season, _ = resolve_selected_season(request)
+    selected_tournament, tournament_form = resolve_selected_preseason_tournament(request, season=selected_season)
     context = {
         'selected_tournament': selected_tournament,
         'tournament_form': tournament_form,

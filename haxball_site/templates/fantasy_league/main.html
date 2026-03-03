@@ -13,33 +13,52 @@
       </div>
     </div>
 
-    <div class="tw:card-body tw:p-1" x-data="{}">
-      <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
-        <form id="tournament_selector" class="tw:flex tw:flex-col tw:gap-2">
-          <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
-          <div class="tw:flex tw:flex-wrap tw:gap-2">
-            {% for tournament in tournament_form.tournament.field.queryset %}
-              <input type="radio"
-                     name="tournament"
-                     value="{{ tournament.pk }}"
-                     aria-label="{{ tournament.league.title }}"
-                     class="tw:btn tw:btn-sm"
-                     hx-get="{% url 'fantasy_league:main' %}?tournament={{ tournament.pk }}"
-                     hx-target="#fantasy-main-tabs"
-                     hx-swap="outerHTML"
-                     {% if selected_tournament and selected_tournament.pk == tournament.pk %}checked{% endif %}>
-            {% endfor %}
-          </div>
-        </form>
+    <div class="tw:card-body tw:p-3" x-data="{}">
+      <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:pb-3">
+        <div class="tw:flex tw:flex-col tw:gap-3">
+          {% if season_form %}
+            <form method="get" action="{% url 'fantasy_league:main' %}" class="tw:flex tw:flex-col tw:gap-1">
+              <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите сезон</label>
+              <div class="tw:flex tw:flex-wrap tw:gap-2">
+                {% for season in season_form.season.field.queryset %}
+                  <button type="submit"
+                          name="season"
+                          value="{{ season.pk }}"
+                          class="tw:btn tw:btn-sm {% if selected_season.pk == season.pk %}tw:btn-primary{% endif %}">
+                    {{ season.short_title|default:season.title }}
+                  </button>
+                {% endfor %}
+              </div>
+            </form>
+          {% endif %}
 
-        {# djlint:off #}
-        <div x-data="{
+          <form id="tournament_selector" class="tw:flex tw:flex-col tw:gap-2">
+            <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
+            <div class="tw:flex tw:flex-wrap tw:gap-2">
+              {% for tournament in tournament_form.tournament.field.queryset %}
+                <input type="radio"
+                       name="tournament"
+                       value="{{ tournament.pk }}"
+                       aria-label="{{ tournament.league.title }}"
+                       class="tw:btn tw:btn-sm"
+                       hx-get="{% url 'fantasy_league:main' %}"
+                       hx-target="#fantasy-main-tabs"
+                       hx-swap="outerHTML"
+                       {% if selected_tournament.pk == tournament.pk %}checked{% endif %}>
+              {% endfor %}
+            </div>
+          </form>
+        </div>
+
+        <div class="tw:self-end"
+          {# djlint:off #}
+             x-data="{
                      lastSeenRulesVersion: JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0,
                      latestRulesVersion: 2,
                      updateLastSeenVersion() { localStorage.setItem('fantasy.lastSeenRulesVersion', this.latestRulesVersion); },
-                     }">
-        {# djlint:on #}
-
+                     }"
+        >
+          {# djlint:on #}
           <button class="tw:btn tw:btn-outline tw:btn-sm tw:self-end" onclick="rules_modal.showModal()">
             <i class="fa fa-book"></i> Правила
             <span x-show="lastSeenRulesVersion < latestRulesVersion" x-cloak class="tw:status tw:status-warning"></span>
@@ -76,7 +95,7 @@
               Мой состав
             </span>
           </label>
-          <div id="make-squad-content" class="tw:tab-content tw:p-2" role="tabpanel">{{ make_squad_tab_html|safe }}</div>
+          <div id="make-squad-content" class="tw:tab-content tw:py-2" role="tabpanel">{{ make_squad_tab_html|safe }}</div>
 
           <label class="tw:tab" role="tab">
             <input type="radio"
@@ -89,7 +108,7 @@
               Все составы
             </span>
           </label>
-          <div id="view-squads-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="view-squads-content" class="tw:tab-content tw:py-2" role="tabpanel">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
               <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
             </div>
@@ -106,7 +125,7 @@
               Топ-составы
             </span>
           </label>
-          <div id="top-squads-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="top-squads-content" class="tw:tab-content tw:py-2" role="tabpanel">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
               <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
             </div>
@@ -123,7 +142,7 @@
               Турнирная таблица
             </span>
           </label>
-          <div id="standings-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="standings-content" class="tw:tab-content tw:py-2" role="tabpanel">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
               <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
             </div>
@@ -140,7 +159,7 @@
               Статистика игроков
             </span>
           </label>
-          <div id="statistics-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="statistics-content" class="tw:tab-content tw:py-2" role="tabpanel">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
               <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
             </div>
@@ -157,7 +176,7 @@
               Награды
             </span>
           </label>
-          <div id="rewards-content" class="tw:tab-content tw:p-2" role="tabpanel">
+          <div id="rewards-content" class="tw:tab-content tw:py-2" role="tabpanel">
             <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
               <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
             </div>
