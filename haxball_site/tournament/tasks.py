@@ -20,7 +20,7 @@ from tournament.models import (
     Player,
 )
 from tournament.replay_stats_client import (
-    download_powtorki_replay,
+    download_replay,
     fetch_analyzer_stats,
     is_powtorki_url,
     upload_replay_to_analyzer,
@@ -185,7 +185,11 @@ def fetch_match_replay_stats(match_id: int):
             stats_list = list(match_replay.raw_stats_json)
         else:
             try:
-                replay_file = download_powtorki_replay(url)
+                replay_file = download_replay(url)
+                if replay_file is None:
+                    logger.warning('[match_id=%s] Unsupported replay source for %s', match_id, url)
+                    failed_replays.append((url, 'Unsupported replay source'))
+                    continue
                 logger.info('[match_id=%s] Downloaded replay file from %s', match_id, url)
                 analyzer_id = upload_replay_to_analyzer(replay_file)
                 logger.info('[match_id=%s] Uploaded replay to analyzer id=%s', match_id, analyzer_id)
