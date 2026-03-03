@@ -488,7 +488,7 @@ class MatchDetail(DetailView):
                 'disqualifications__tours__league',
                 Prefetch(
                     'replay_stats',
-                    queryset=MatchReplayStats.objects.prefetch_related(
+                    queryset=MatchReplayStats.objects.select_related('match_replay').prefetch_related(
                         'players__player__name__user_profile',
                         'players__team',
                     ),

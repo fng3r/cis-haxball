@@ -50,6 +50,8 @@ class TeamPartSummary(TeamStatsBase):
     index: int
     part_label: str
     minutes: int
+    analyzer_replay_id: str
+    analyzer_url: str
 
 
 class TeamPayload(TypedDict):
@@ -68,6 +70,12 @@ def _pass_accuracy(passes_completed: int, pass_attempts: int) -> float | None:
     if not pass_attempts:
         return None
     return round(100 * passes_completed / pass_attempts, 1)
+
+
+def _analyzer_url(analyzer_replay_id: str) -> str:
+    if not analyzer_replay_id:
+        return ''
+    return f'https://replay.hax.ma/?replayId={analyzer_replay_id}'
 
 
 @dataclass(slots=True)
@@ -143,6 +151,8 @@ class MatchReplayStatsAggregator:
                 'saves_home': saves_home,
                 'saves_guest': saves_guest,
                 'minutes': part.minutes,
+                'analyzer_replay_id': part.match_replay.analyzer_replay_id,
+                'analyzer_url': _analyzer_url(part.match_replay.analyzer_replay_id),
             }
             parts_summary.append(part_summary)
 
