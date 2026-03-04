@@ -969,7 +969,7 @@ class MatchAdmin(UnfoldModelAdmin):
 
 @admin.register(MatchReplayStatsStatus)
 class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'status', 'fetched_at', 'error_message')
+    list_display = ('match_id', 'status', 'fetched_at', 'error_message')
     list_filter = ('status',)
     search_fields = ('match__id',)
     ordering = ('-fetched_at',)
@@ -981,17 +981,18 @@ class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
 
 @admin.register(MatchReplay)
 class MatchReplayAdmin(UnfoldModelAdmin):
-    list_display = ('match_id', 'match', 'replay_url', 'analyzer_replay_id', 'fetched_at')
-    list_filter = (('match__league', RelatedDropdownFilter),)
+    list_display = ('match_id', 'match', 'status', 'replay_url', 'analyzer_replay_id', 'fetched_at')
+    list_filter = (('match__league', RelatedDropdownFilter), 'status')
     search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
     ordering = ('match_id', 'replay_url')
     raw_id_fields = ('match',)
-    readonly_fields = ('replay_url', 'analyzer_replay_id', 'raw_stats_json', 'fetched_at')
+    readonly_fields = ('replay_url', 'analyzer_replay_id', 'status', 'error_message', 'raw_stats_json', 'fetched_at')
 
 
 @admin.register(MatchReplayStats)
 class MatchReplayStatsAdmin(UnfoldModelAdmin):
     list_display = (
+        'match_id',
         'match',
         'match_replay',
         'part_label',

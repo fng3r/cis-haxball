@@ -161,3 +161,23 @@ def fetch_analyzer_stats(replay_id: str) -> dict:
             resp.raise_for_status()
         time.sleep(STATS_POLL_INTERVAL)
     raise TimeoutError(f'Stats for {replay_id} not ready within {STATS_POLL_MAX_WAIT}s')
+
+
+def fetch_analyzer_stats_once(replay_id: str) -> dict | None:
+    """
+    Single attempt GET /stats/<replay_id>.json.
+    Returns stats list on 200.
+    Returns None when stats are not ready yet (404).
+    Raises on other HTTP/network errors.
+    """
+    url = f'{ANALYZER_BASE}/stats/{replay_id}.json'
+    resp = requests.get(url, timeout=10)
+    if resp.status_code == 200:
+        data = resp.json()
+        return data.get('stats')
+    if resp.status_code == 404:
+        return None
+
+    resp.raise_for_status()
+
+    return None

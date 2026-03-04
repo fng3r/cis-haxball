@@ -859,6 +859,12 @@ class MatchReplay(models.Model):
     One per replay URL in a match. Stores fetch metadata and raw analyzer response.
     """
 
+    class ReplayStatus(models.TextChoices):
+        PENDING = 'pending', 'Ожидание загрузки'
+        AWAITING_STATS = 'awaiting_stats', 'Ожидание статистики'
+        READY = 'ready', 'Готово'
+        FAILED = 'failed', 'Ошибка'
+
     match = models.ForeignKey(
         Match,
         verbose_name='Матч',
@@ -878,6 +884,13 @@ class MatchReplay(models.Model):
         blank=True,
         help_text='Массив частей матча из ответа /stats/<id>.json',
     )
+    status = models.CharField(
+        'Статус',
+        max_length=24,
+        choices=ReplayStatus.choices,
+        default=ReplayStatus.PENDING,
+    )
+    error_message = models.TextField('Сообщение об ошибке', blank=True)
     fetched_at = models.DateTimeField('Время загрузки', null=True, blank=True)
 
     class Meta:

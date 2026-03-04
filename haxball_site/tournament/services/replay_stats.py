@@ -51,13 +51,19 @@ class TeamPartSummary(TeamStatsBase):
     index: int
     part_label: str
     minutes: int
-    analyzer_replay_id: str
+    analyzer_replay_id: str | None
     analyzer_url: str
+
+
+class ReplayLink(TypedDict):
+    analyzer_url: str
+    label: str
 
 
 class TeamPayload(TypedDict):
     team: TeamStatsBase
     parts_summary: list[TeamPartSummary]
+    replay_links: list[ReplayLink]
 
 
 def _pct(left: int, right: int) -> tuple[int, int]:
@@ -80,7 +86,7 @@ def _format_playtime(played_ticks: int) -> str:
     return f'{minutes:02d}:{seconds:02d}'
 
 
-def _analyzer_url(analyzer_replay_id: str) -> str:
+def _analyzer_url(analyzer_replay_id: str | None) -> str:
     if not analyzer_replay_id:
         return ''
     return f'https://replay.hax.ma/?replayId={analyzer_replay_id}'
@@ -183,7 +189,27 @@ class MatchReplayStatsAggregator:
         aggregate['poss_home_pct'] = poss_home_pct
         aggregate['poss_guest_pct'] = poss_guest_pct
 
-        return {'team': aggregate, 'parts_summary': parts_summary}
+        replay_groups: dict[str, dict] = {}
+        for part in parts_summary:
+            analyzer_url = part['analyzer_url']
+            if not analyzer_url:
+                continue
+            key = part['analyzer_replay_id'] or analyzer_url
+            if key not in replay_groups:
+                replay_groups[key] = {'analyzer_url': analyzer_url, 'parts': []}
+            replay_groups[key]['parts'].append(part['part_label'])
+
+        replay_links: list[ReplayLink] = []
+        single_replay = len(replay_groups) == 1
+        for group in replay_groups.values():
+            replay_links.append(
+                {
+                    'analyzer_url': group['analyzer_url'],
+                    'label': 'Матч' if single_replay else ' • '.join(group['parts']),
+                }
+            )
+
+        return {'team': aggregate, 'parts_summary': parts_summary, 'replay_links': replay_links}
 
     def _build_players_stats(self) -> dict:
         team_home_id = self.match.team_home_id
