@@ -20,6 +20,7 @@ class PlayerRow(TypedDict):
     touches: int
     saves: int
     rating: float | None
+    is_mvp: bool
 
 
 class PlayersPartPayload(TypedDict):
@@ -227,8 +228,8 @@ class MatchReplayStatsAggregator:
                         'goals': 0,
                         'assists': 0,
                         'played_ticks': 0,
-                        'rating_sum': 0.0,
-                        'rating_count': 0,
+                        'rating_weighted_sum': 0.0,
+                        'rating_weights_sum': 0,
                         'shots_total': 0,
                         'shots_on_target': 0,
                         'passes_completed': 0,
@@ -245,9 +246,9 @@ class MatchReplayStatsAggregator:
                 acc['goals'] += player_stat.goals
                 acc['assists'] += player_stat.assists
                 acc['played_ticks'] += player_stat.played_ticks
-                if player_stat.rating is not None:
-                    acc['rating_sum'] += player_stat.rating
-                    acc['rating_count'] += 1
+                if player_stat.rating is not None and player_stat.played_ticks > 0:
+                    acc['rating_weighted_sum'] += player_stat.rating * player_stat.played_ticks
+                    acc['rating_weights_sum'] += player_stat.played_ticks
                 acc['shots_total'] += player_stat.shots_total
                 acc['shots_on_target'] += player_stat.shots_on_target
                 acc['passes_completed'] += player_stat.passes_completed
@@ -261,7 +262,7 @@ class MatchReplayStatsAggregator:
 
         aggregated_players: list[PlayerRow] = []
         for acc in player_aggregate.values():
-            rating = (acc['rating_sum'] / acc['rating_count']) if acc['rating_count'] else None
+            rating = (acc['rating_weighted_sum'] / acc['rating_weights_sum']) if acc['rating_weights_sum'] else None
             aggregated_players.append(
                 self._player_row(
                     player=acc.get('player'),
@@ -279,6 +280,12 @@ class MatchReplayStatsAggregator:
                     rating=rating,
                 )
             )
+
+        rated_players = [p for p in aggregated_players if p.get('rating') is not None]
+        if rated_players:
+            max_rating = max(p['rating'] for p in rated_players)
+            for player in aggregated_players:
+                player['is_mvp'] = player.get('rating') == max_rating
 
         aggregated_players.sort(key=lambda item: self._player_sort_key(item, team_home_id))
 
@@ -361,6 +368,7 @@ class MatchReplayStatsAggregator:
         touches: int,
         saves: int,
         rating: float | None,
+        is_mvp: bool = False,
     ) -> PlayerRow:
         return {
             'player': player,
@@ -378,6 +386,7 @@ class MatchReplayStatsAggregator:
             'touches': touches,
             'saves': saves,
             'rating': round(rating, 2) if rating is not None else None,
+            'is_mvp': is_mvp,
         }
 
     @staticmethod

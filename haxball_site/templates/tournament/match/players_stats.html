@@ -125,7 +125,7 @@
             <th>Передачи (%)</th>
             <th>Касания</th>
             <th>Сейвы</th>
-            <th>Рейтинг</th>
+            <th class="tw:text-center">Рейтинг</th>
           </tr>
         </thead>
         <tbody x-show="view === 'total'" x-cloak>
@@ -159,9 +159,12 @@
               </td>
               <td>{{ p.touches }}</td>
               <td>{{ p.saves }}</td>
-              <td>
+              <td class="tw:text-center">
                 {% if p.rating %}
-                  {{ p.rating|floatformat:2 }}
+                  <span class="tw:badge tw:badge-sm tw:badge-primary tw:gap-1 tw:font-semibold">
+                    {{ p.rating|floatformat:2 }}
+                    {% if p.is_mvp %}<i class="fa fa-star" aria-hidden="true"></i>{% endif %}
+                  </span>
                 {% else %}
                   —
                 {% endif %}
@@ -207,7 +210,7 @@
                 <td>{{ p.saves }}</td>
                 <td>
                   {% if p.rating %}
-                    {{ p.rating|floatformat:2 }}
+                    <span class="tw:badge tw:badge-sm tw:badge-primary tw:font-semibold">{{ p.rating|floatformat:2 }}</span>
                   {% else %}
                     —
                   {% endif %}
