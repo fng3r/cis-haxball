@@ -145,10 +145,10 @@
         <div class="tw:tabs tw:tabs-lift tw:justify-center tw:mt-4" role="tablist">
           <input type="radio"
                  name="match-tabs"
-                 class="tw:tab tw:font-semibold tw:border-neutral-200! {% if match_replay_stats_aggregated %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
+                 class="tw:tab tw:font-semibold tw:border-neutral-200! {% if replay_stats_status %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
                  aria-label="Общая сводка"
                  checked />
-          <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+          <div class="tw:tab-content tw:bg-base-100 tw:pt-4" role="tabpanel">
             <div id="match-recap" role="tabpanel" aria-labelledby="match-recap-tab" class="tw:flex tw:flex-col tw:gap-3">
               {% if match.is_played %}
                 {% if match.team_home_start.count > 0 or match.team_guest_start.count > 0 %}
@@ -222,17 +222,17 @@
           </div>
 
           {% if match.is_played %}
-            {% if match_replay_stats_aggregated %}
+            {% if replay_stats_status %}
               <input type="radio" name="match-tabs" class="tw:tab tw:w-1/4 tw:font-semibold tw:border-neutral-200!" aria-label="Статистика" />
-              <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+              <div class="tw:tab-content tw:bg-base-100 tw:pt-4" role="tabpanel">
                 <div id="match-replay-stats" role="tabpanel" aria-label="Статистика реплея">{% include 'tournament/match/statistics.html' %}</div>
               </div>
             {% endif %}
             <input type="radio"
                    name="match-tabs"
-                   class="tw:tab tw:font-semibold tw:border-neutral-200! {% if match_replay_stats_aggregated %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
+                   class="tw:tab tw:font-semibold tw:border-neutral-200! {% if replay_stats_status %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
                    aria-label="Протокол" />
-            <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+            <div class="tw:tab-content tw:bg-base-100 tw:pt-4" role="tabpanel">
               <div id="match-details" role="tabpanel" aria-labelledby="match-details-tab">
                 {% with events_by_time=match|events_sorted %}
                   <div class="tw:flex tw:flex-col tw:gap-2 tw:text-center">
@@ -253,9 +253,9 @@
 
             <input type="radio"
                    name="match-tabs"
-                   class="tw:tab tw:font-semibold tw:border-neutral-200! {% if match_replay_stats_aggregated %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
+                   class="tw:tab tw:font-semibold tw:border-neutral-200! {% if replay_stats_status %}tw:w-1/4{% else %}tw:w-1/3{% endif %}"
                    aria-label="Информация" />
-            <div class="tw:tab-content tw:bg-base-100 tw:pt-2" role="tabpanel">
+            <div class="tw:tab-content tw:bg-base-100 tw:pt-4" role="tabpanel">
               <div id="match-info" role="tabpanel" aria-labelledby="match-info-tab">
                 <div class="tw:flex tw:flex-col tw:items-center">
                   <h6>
