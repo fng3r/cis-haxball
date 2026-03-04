@@ -37,14 +37,71 @@ SUPPORTED_PLAYER_POSITIONS = {
 }
 
 
-def _resolve_player(match, nick: str):
+def _resolve_player(match, nick: str, cache: dict[str, Player | None] | None = None):
     """Resolve player on replay to Player model."""
+    key = nick
+    if cache is not None and key in cache:
+        return cache[key]
+
     lookup = Q(nickname__iexact=nick) | Q(name__previous_nicknames__nickname__iexact=nick)
     player = match.match_participants.filter(lookup).distinct().first()
     if not player:
         player = Player.objects.filter(lookup).distinct().first()
 
+    if cache is not None:
+        cache[key] = player
     return player
+
+
+def _infer_red_is_home(
+    match: Match,
+    stats: dict,
+    participant_team_by_player_id: dict[int, int],
+    player_cache: dict[str, Player | None],
+) -> bool:
+    """
+    Infer replay side mapping by resolved players:
+    - if known home player appears on blue, it's evidence red_is_home=False
+    - if known guest player appears on red, it's evidence red_is_home=False
+    Opposite combinations are evidence for red_is_home=True.
+    """
+    votes_true = 0
+    votes_false = 0
+
+    for p in stats.get('players', []):
+        side = (p.get('team') or '').strip().lower()
+        if side not in {'red', 'blue'}:
+            continue
+
+        nick = (p.get('nick') or '').strip()
+        if not nick or '(own goal)' in nick:
+            continue
+
+        player = _resolve_player(match, nick, cache=player_cache)
+        if not player:
+            continue
+
+        match_team_id = participant_team_by_player_id.get(player.id)
+        if match_team_id not in {match.team_home_id, match.team_guest_id}:
+            continue
+
+        metrics = p.get('metrics') or {}
+        weight = metrics.get('playedTicks')
+        if weight <= 0:
+            weight = 1
+
+        is_home_player = match_team_id == match.team_home_id
+        is_red_side = side == 'red'
+        supports_true = (is_home_player and is_red_side) or (not is_home_player and not is_red_side)
+
+        if supports_true:
+            votes_true += weight
+        else:
+            votes_false += weight
+
+    if votes_true == 0 and votes_false == 0:
+        return True
+    return votes_true >= votes_false
 
 
 def _create_replay_stats_from_part(
@@ -53,6 +110,7 @@ def _create_replay_stats_from_part(
     part_label: str,
     red_is_home: bool,
     stats: dict,
+    player_cache: dict[str, Player | None] | None = None,
 ):
     """Create one MatchReplayStats and related MatchReplayStatsPlayer from one API stats object."""
     match = match_replay.match
@@ -106,7 +164,7 @@ def _create_replay_stats_from_part(
         samples_count = metrics.get('samples') or 0
         if samples_count <= 0:
             continue
-        played_ticks = metrics.get('playedTicks') or p.get('playedTicks') or 0
+        played_ticks = metrics.get('playedTicks')
         raw_position = (metrics.get('position') or '').strip().upper()
         position = raw_position if raw_position in SUPPORTED_PLAYER_POSITIONS else None
 
@@ -114,7 +172,7 @@ def _create_replay_stats_from_part(
         rating = _float_or_none(rating_obj.get('rating'))
 
         team_key = p.get('team')
-        player = _resolve_player(match, nick)
+        player = _resolve_player(match, nick, cache=player_cache)
         team_obj = part.get_match_team_for_replay_side(team_key)
 
         MatchReplayStatsPlayer.objects.create(
@@ -203,6 +261,11 @@ def _rebuild_match_replay_stats(match: Match) -> int:
             replay_payloads.append((replay, list(replay.raw_stats_json)))
 
     total_created_count = 0
+    participant_team_by_player_id = dict(
+        match.match_participants.through.objects.filter(match=match).values_list('player_id', 'team_id')
+    )
+    player_cache: dict[str, Player | None] = {}
+
     with transaction.atomic():
         MatchReplayStatsPlayer.objects.filter(replay_stats__match=match).delete()
         MatchReplayStats.objects.filter(match=match).delete()
@@ -222,8 +285,15 @@ def _rebuild_match_replay_stats(match: Match) -> int:
                         part_label = MatchReplayStats.PartLabel.SECOND_HALF
                     case _:
                         part_label = MatchReplayStats.PartLabel.EXTRA_TIME
-                red_is_home = True
-                _create_replay_stats_from_part(match_replay, part_order, part_label, red_is_home, stats_obj)
+                red_is_home = _infer_red_is_home(match, stats_obj, participant_team_by_player_id, player_cache)
+                _create_replay_stats_from_part(
+                    match_replay,
+                    part_order,
+                    part_label,
+                    red_is_home,
+                    stats_obj,
+                    player_cache=player_cache,
+                )
                 part_order += 1
                 total_created_count += 1
 
