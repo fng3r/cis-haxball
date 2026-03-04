@@ -48,6 +48,14 @@ class TeamStatsBase(TypedDict):
     kicks_guest: int
     saves_home: int
     saves_guest: int
+    thirds_home: int
+    thirds_mid: int
+    thirds_guest: int
+    thirds_home_pct: int
+    thirds_mid_pct: int
+    thirds_guest_pct: int
+    duration_label: str
+    stadium_name: str
 
 
 class TeamPartSummary(TeamStatsBase):
@@ -82,9 +90,25 @@ def _pass_accuracy(passes_completed: int, pass_attempts: int) -> float | None:
     return round(100 * passes_completed / pass_attempts, 1)
 
 
+def _pct3(left: int, middle: int, right: int) -> tuple[int, int, int]:
+    total = left + middle + right
+    if not total:
+        return 0, 0, 0
+    left_pct = round(100 * left / total)
+    middle_pct = round(100 * middle / total)
+    right_pct = 100 - left_pct - middle_pct
+    return left_pct, middle_pct, right_pct
+
+
 def _format_playtime(played_ticks: int) -> str:
     # Haxball Analyzer exposes playedTicks in game ticks (60 ticks ~= 1 second).
     total_seconds = max(0, round((played_ticks or 0) / 60))
+    minutes, seconds = divmod(total_seconds, 60)
+    return f'{minutes:02d}:{seconds:02d}'
+
+
+def _format_duration_ticks(game_ticks: int) -> str:
+    total_seconds = max(0, round((game_ticks or 0) / 60))
     minutes, seconds = divmod(total_seconds, 60)
     return f'{minutes:02d}:{seconds:02d}'
 
@@ -136,10 +160,20 @@ class MatchReplayStatsAggregator:
             'kicks_guest': 0,
             'saves_home': 0,
             'saves_guest': 0,
+            'thirds_home': 0,
+            'thirds_mid': 0,
+            'thirds_guest': 0,
+            'thirds_home_pct': 0,
+            'thirds_mid_pct': 0,
+            'thirds_guest_pct': 0,
+            'duration_label': '00:00',
+            'stadium_name': '—',
         }
         parts_summary: list[TeamPartSummary] = []
         team_home_id = self.match.team_home_id
         team_guest_id = self.match.team_guest_id
+        total_game_ticks = 0
+        stadium_names: set[str] = set()
 
         for part in self.parts:
             score_home, score_guest = part.home_guest(part.score_red, part.score_blue)
@@ -147,7 +181,12 @@ class MatchReplayStatsAggregator:
             shots_home, shots_guest = part.home_guest(part.shots_red, part.shots_blue)
             shots_total_home, shots_total_guest = part.home_guest(part.shots_total_red, part.shots_total_blue)
             kicks_home, kicks_guest = part.home_guest(part.kicks_red, part.kicks_blue)
+            thirds_home, thirds_guest = part.home_guest(part.thirds_red, part.thirds_blue)
+            thirds_mid = part.thirds_mid
             poss_home_pct, poss_guest_pct = _pct(poss_home, poss_guest)
+            thirds_home_pct, thirds_mid_pct, thirds_guest_pct = _pct3(thirds_home, thirds_mid, thirds_guest)
+            duration_label = _format_duration_ticks(part.game_ticks)
+            stadium_name = (part.stadium_name or '').strip() or '—'
 
             passes_home = passes_guest = saves_home = saves_guest = 0
             for player_stat in part.players.all():
@@ -177,6 +216,14 @@ class MatchReplayStatsAggregator:
                 'kicks_guest': kicks_guest,
                 'saves_home': saves_home,
                 'saves_guest': saves_guest,
+                'thirds_home': thirds_home,
+                'thirds_mid': thirds_mid,
+                'thirds_guest': thirds_guest,
+                'thirds_home_pct': thirds_home_pct,
+                'thirds_mid_pct': thirds_mid_pct,
+                'thirds_guest_pct': thirds_guest_pct,
+                'duration_label': duration_label,
+                'stadium_name': stadium_name,
                 'minutes': part.minutes,
                 'analyzer_replay_id': part.match_replay.analyzer_replay_id,
                 'analyzer_url': _analyzer_url(part.match_replay.analyzer_replay_id),
@@ -197,10 +244,29 @@ class MatchReplayStatsAggregator:
             aggregate['kicks_guest'] += kicks_guest
             aggregate['saves_home'] += saves_home
             aggregate['saves_guest'] += saves_guest
+            aggregate['thirds_home'] += thirds_home
+            aggregate['thirds_mid'] += thirds_mid
+            aggregate['thirds_guest'] += thirds_guest
+            total_game_ticks += part.game_ticks or 0
+            if part.stadium_name:
+                stadium_names.add(part.stadium_name.strip())
 
         poss_home_pct, poss_guest_pct = _pct(aggregate['poss_home'], aggregate['poss_guest'])
         aggregate['poss_home_pct'] = poss_home_pct
         aggregate['poss_guest_pct'] = poss_guest_pct
+        thirds_home_pct, thirds_mid_pct, thirds_guest_pct = _pct3(
+            aggregate['thirds_home'],
+            aggregate['thirds_mid'],
+            aggregate['thirds_guest'],
+        )
+        aggregate['thirds_home_pct'] = thirds_home_pct
+        aggregate['thirds_mid_pct'] = thirds_mid_pct
+        aggregate['thirds_guest_pct'] = thirds_guest_pct
+        aggregate['duration_label'] = _format_duration_ticks(total_game_ticks)
+        if len(stadium_names) == 1:
+            aggregate['stadium_name'] = next(iter(stadium_names))
+        elif len(stadium_names) > 1:
+            aggregate['stadium_name'] = ' / '.join(sorted(stadium_names))
 
         replay_groups: dict[str, dict] = {}
         for part in parts_summary:

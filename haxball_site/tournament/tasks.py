@@ -62,6 +62,10 @@ def _create_replay_stats_from_part(
     kicks_list = stats.get('kicks', [])
     kicks_red = sum(1 for k in kicks_list if k.get('team', '').lower() == 'red')
     kicks_blue = sum(1 for k in kicks_list if k.get('team', '').lower() == 'blue')
+    thirds = stats.get('thirds') or []
+    thirds_red = int(thirds[0]) if len(thirds) > 0 and thirds[0] is not None else 0
+    thirds_mid = int(thirds[1]) if len(thirds) > 1 and thirds[1] is not None else 0
+    thirds_blue = int(thirds[2]) if len(thirds) > 2 and thirds[2] is not None else 0
 
     part = MatchReplayStats.objects.create(
         match=match,
@@ -83,6 +87,9 @@ def _create_replay_stats_from_part(
         shots_total_blue=stats.get('shotsTotalBlue', 0),
         kicks_red=kicks_red,
         kicks_blue=kicks_blue,
+        thirds_red=thirds_red,
+        thirds_mid=thirds_mid,
+        thirds_blue=thirds_blue,
         stadium_name=stats.get('stadiumName', ''),
         red_team_nicks=[n.strip() for n in red_team_nicks],
         blue_team_nicks=[n.strip() for n in blue_team_nicks],
@@ -102,7 +109,6 @@ def _create_replay_stats_from_part(
         played_ticks = metrics.get('playedTicks') or p.get('playedTicks') or 0
         raw_position = (metrics.get('position') or '').strip().upper()
         position = raw_position if raw_position in SUPPORTED_PLAYER_POSITIONS else None
-        print(f'{raw_position} -> {position}')
 
         rating_obj = p.get('rating') or {}
         rating = _float_or_none(rating_obj.get('rating'))

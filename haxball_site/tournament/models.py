@@ -961,6 +961,9 @@ class MatchReplayStats(models.Model):
     shots_total_blue = models.IntegerField('Всего ударов (синие)', default=0)
     kicks_red = models.IntegerField('Удары по мячу красные', default=0)
     kicks_blue = models.IntegerField('Удары по мячу (синие)', default=0)
+    thirds_red = models.IntegerField('Тики в трети красных', default=0)
+    thirds_mid = models.IntegerField('Тики в центре', default=0)
+    thirds_blue = models.IntegerField('Тики в трети синих', default=0)
 
     # Stadium and mode
     stadium_name = models.CharField('Название стадиона', max_length=255, blank=True)
