@@ -1005,6 +1005,12 @@ class MatchReplayStats(models.Model):
 class MatchReplayStatsPlayer(models.Model):
     """Per-player stats for one part (one MatchReplayStats)."""
 
+    class Position(models.TextChoices):
+        GK = 'GK', 'GK'
+        DM = 'DM', 'DM'
+        AM = 'AM', 'AM'
+        ST = 'ST', 'ST'
+
     replay_stats = models.ForeignKey(
         MatchReplayStats,
         verbose_name='Статистика части',
@@ -1034,6 +1040,13 @@ class MatchReplayStatsPlayer(models.Model):
     goals = models.IntegerField('Голы', default=0)
     assists = models.IntegerField('Голевые передачи', default=0)
     played_ticks = models.IntegerField('Сыграно тиков', default=0)
+    position = models.CharField(
+        'Позиция',
+        max_length=2,
+        choices=Position.choices,
+        null=True,
+        blank=True,
+    )
     rating = models.FloatField('Рейтинг', null=True, blank=True)
 
     shots_total = models.IntegerField('Ударов всего', default=0)

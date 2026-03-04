@@ -10,6 +10,8 @@ class PlayerRow(TypedDict):
     team_obj: object | None
     goals: int
     assists: int
+    position: str | None
+    position_label: str | None
     played_ticks: int
     playtime: str
     shots_total: int
@@ -91,6 +93,16 @@ def _analyzer_url(analyzer_replay_id: str | None) -> str:
     if not analyzer_replay_id:
         return ''
     return f'https://replay.hax.ma/?replayId={analyzer_replay_id}'
+
+
+def _position_label(position: str | None) -> str | None:
+    if position == 'GK':
+        return 'ГК'
+    if position == 'DM':
+        return 'ОП'
+    if position in {'AM', 'ST'}:
+        return 'НАП'
+    return None
 
 
 @dataclass(slots=True)
@@ -227,6 +239,7 @@ class MatchReplayStatsAggregator:
                         'team_obj': player_stat.team,
                         'goals': 0,
                         'assists': 0,
+                        'position_ticks': {},
                         'played_ticks': 0,
                         'rating_weighted_sum': 0.0,
                         'rating_weights_sum': 0,
@@ -246,6 +259,11 @@ class MatchReplayStatsAggregator:
                 acc['goals'] += player_stat.goals
                 acc['assists'] += player_stat.assists
                 acc['played_ticks'] += player_stat.played_ticks
+                if player_stat.position and player_stat.played_ticks > 0:
+                    position_ticks = acc['position_ticks']
+                    position_ticks[player_stat.position] = (
+                        position_ticks.get(player_stat.position, 0) + player_stat.played_ticks
+                    )
                 if player_stat.rating is not None and player_stat.played_ticks > 0:
                     acc['rating_weighted_sum'] += player_stat.rating * player_stat.played_ticks
                     acc['rating_weights_sum'] += player_stat.played_ticks
@@ -263,6 +281,12 @@ class MatchReplayStatsAggregator:
         aggregated_players: list[PlayerRow] = []
         for acc in player_aggregate.values():
             rating = (acc['rating_weighted_sum'] / acc['rating_weights_sum']) if acc['rating_weights_sum'] else None
+            dominant_position = None
+            if acc['position_ticks']:
+                dominant_position = max(
+                    acc['position_ticks'].items(),
+                    key=lambda item: (item[1], 1 if item[0] == 'GK' else 0, 1 if item[0] == 'DM' else 0),
+                )[0]
             aggregated_players.append(
                 self._player_row(
                     player=acc.get('player'),
@@ -270,6 +294,7 @@ class MatchReplayStatsAggregator:
                     team_obj=acc.get('team_obj'),
                     goals=acc.get('goals', 0),
                     assists=acc.get('assists', 0),
+                    position=dominant_position,
                     played_ticks=acc.get('played_ticks', 0),
                     shots_total=acc.get('shots_total', 0),
                     shots_on_target=acc.get('shots_on_target', 0),
@@ -312,6 +337,7 @@ class MatchReplayStatsAggregator:
                         team_obj=player_stat.team,
                         goals=player_stat.goals,
                         assists=player_stat.assists,
+                        position=player_stat.position,
                         played_ticks=player_stat.played_ticks,
                         shots_total=player_stat.shots_total,
                         shots_on_target=player_stat.shots_on_target,
@@ -360,6 +386,7 @@ class MatchReplayStatsAggregator:
         team_obj,
         goals: int,
         assists: int,
+        position: str | None,
         played_ticks: int,
         shots_total: int,
         shots_on_target: int,
@@ -376,6 +403,8 @@ class MatchReplayStatsAggregator:
             'team_obj': team_obj,
             'goals': goals,
             'assists': assists,
+            'position': position,
+            'position_label': _position_label(position),
             'played_ticks': played_ticks,
             'playtime': _format_playtime(played_ticks),
             'shots_total': shots_total,

@@ -29,6 +29,12 @@ from tournament.replay_stats_client import (
 )
 
 logger = logging.getLogger(__name__)
+SUPPORTED_PLAYER_POSITIONS = {
+    MatchReplayStatsPlayer.Position.GK,
+    MatchReplayStatsPlayer.Position.DM,
+    MatchReplayStatsPlayer.Position.AM,
+    MatchReplayStatsPlayer.Position.ST,
+}
 
 
 def _resolve_player(match, nick: str):
@@ -94,6 +100,9 @@ def _create_replay_stats_from_part(
         if samples_count <= 0:
             continue
         played_ticks = metrics.get('playedTicks') or p.get('playedTicks') or 0
+        raw_position = (metrics.get('position') or '').strip().upper()
+        position = raw_position if raw_position in SUPPORTED_PLAYER_POSITIONS else None
+        print(f'{raw_position} -> {position}')
 
         rating_obj = p.get('rating') or {}
         rating = _float_or_none(rating_obj.get('rating'))
@@ -110,6 +119,7 @@ def _create_replay_stats_from_part(
             goals=metrics.get('goals', 0),
             assists=metrics.get('assists', 0),
             played_ticks=played_ticks,
+            position=position,
             rating=rating,
             shots_total=metrics.get('shotsTotal', 0),
             shots_on_target=metrics.get('shotsOnTarget', 0),
