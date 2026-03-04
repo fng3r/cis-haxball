@@ -20,6 +20,13 @@
                   { key: 'rating', label: 'Рейтинг' }
                 ],
                 pct(a, b) { const x = Number(a) || 0, y = Number(b) || 0; const t = x + y; return t ? Math.round(100 * x / t) : 50; },
+                barPct(key) {
+                  return this.pct(Number(this.homePlayer && this.homePlayer[key]) || 0, Number(this.guestPlayer && this.guestPlayer[key]) || 0);
+                },
+                hasSlant(key) {
+                  const p = this.barPct(key);
+                  return p > 0 && p < 100;
+                },
                 init() {
                   const el = document.getElementById('players-comparison-data');
                   if (el) this.comparisonData = JSON.parse(el.textContent);
@@ -230,14 +237,14 @@
             </div>
             <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end" x-text="val(guestPlayer, row.key)"></div>
           </div>
-          <div class="tw:flex tw:h-2 tw:bg-secondary">
-            <div class="tw:bg-error"
-                 :style="'width: ' + pct(Number(homePlayer && homePlayer[row.key]) || 0, Number(guestPlayer && guestPlayer[row.key]) || 0) + '%; height: 10px;'">
-            </div>
-            <div class="tw:bg-primary"
-                 :style="'width: ' + (100 - pct(Number(homePlayer && homePlayer[row.key]) || 0, Number(guestPlayer && guestPlayer[row.key]) || 0)) + '%; height: 10px;'">
-            </div>
-          </div>
+              <div class="tw:flex tw:h-2">
+                <div class="tw:bg-error"
+                 :style="'width: ' + barPct(row.key) + '%; height: 10px;' + (hasSlant(row.key) ? ' clip-path: polygon(0 0, 100% 0, calc(100% - 5px) 100%, 0% 100%);' : '')">
+                </div>
+                <div class="tw:bg-primary"
+                 :style="'width: ' + (100 - barPct(row.key)) + '%; height: 10px;' + (hasSlant(row.key) ? ' clip-path: polygon(5px 0, 100% 0, 100% 100%, 0% 100%);' : '')">
+                </div>
+              </div>
         </div>
       </template>
     </div>
