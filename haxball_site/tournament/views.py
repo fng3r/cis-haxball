@@ -477,7 +477,9 @@ class MatchDetail(DetailView):
 
     def get_queryset(self):
         return (
-            Match.objects.select_related('team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector')
+            Match.objects.select_related(
+                'team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector__user_profile'
+            )
             .prefetch_related(
                 'team_home_start__name__user_profile',
                 'team_home_start__player_nation',
