@@ -125,13 +125,7 @@ class PlayerCost(models.Model):
     """Custom player cost for a specific season"""
 
     player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE, related_name='fantasy_costs')
-    season = models.ForeignKey(
-        Season,
-        verbose_name='Сезон',
-        on_delete=models.CASCADE,
-        related_name='fantasy_costs',
-        default=21,
-    )
+    season = models.ForeignKey(Season, verbose_name='Сезон', on_delete=models.CASCADE, related_name='fantasy_costs')
     cost = models.DecimalField('Стоимость', max_digits=4, decimal_places=1, help_text='Стоимость игрока в миллионах')
 
     class Meta:
