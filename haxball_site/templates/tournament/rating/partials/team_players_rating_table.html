@@ -6,22 +6,22 @@
   <table class="tw:table tw:table-auto tw:table-pin-rows">
     <thead class="tw:py-2">
       <tr class="tw:bg-base-300">
-        <th scope="col" class="tw:bg-base-300 tw:border-r tw:border-neutral-200"></th>
-        <th scope="col" class="tw:text-left! tw:bg-base-300 tw:border-r tw:border-neutral-200">Команда</th>
-        <th scope="col" class="tw:bg-base-300 tw:text-center! tw:border-r tw:border-neutral-200">Топ-4 (ср.)</th>
-        <th scope="col" class="tw:bg-base-300 tw:text-center! tw:border-r tw:border-neutral-200">Топ-5 (ср.)</th>
+        <th scope="col" class="tw:bg-base-300"></th>
+        <th scope="col" class="tw:text-left! tw:bg-base-300">Команда</th>
+        <th scope="col" class="tw:bg-base-300 tw:text-center!">Топ-4 (ср.)</th>
+        <th scope="col" class="tw:bg-base-300 tw:text-center!">Топ-5 (ср.)</th>
         <th scope="col" class="tw:bg-base-300 tw:text-center!">Все игроки (ср.)</th>
       </tr>
     </thead>
 
     <tbody class="tw:text-center">
       {% for team_data in team_players_rating %}
-        <tr class="rating-row tw:row-hover tw:border-b tw:border-neutral-200">
-          <td class="tw:px-2 tw:border-r tw:border-neutral-200">
+        <tr class="rating-row tw:row-hover">
+          <td class="tw:px-2">
             <div class="tw:flex tw:justify-center tw:text-lg tw:font-semibold">{{ forloop.counter }}</div>
           </td>
 
-          <td class="tw:pr-1 tw:border-r tw:border-neutral-200" style="min-width: 300px;">
+          <td class="tw:pr-1" style="min-width: 300px;">
             <div class="tw:flex tw:flex-col tw:justify-center tw:gap-y-1">
               <div class="tw:flex tw:items-center tw:gap-x-2 tw:pl-2">
                 <img src="{{ team_data.team.logo.url }}" alt="{{ team_data.team.title }}" class="tw:size-6">
@@ -32,29 +32,28 @@
                 <span x-text="expandedTeams['{{ team_data.team.id }}'] ? 'Скрыть игроков' : 'Показать игроков'"></span>
               </button>
             </div>
-          </div>
-        </td>
+          </td>
 
-        <td class="tw:border-r tw:border-neutral-200">
-          <div class="tw:flex tw:justify-center">
-            <span class="tw:badge tw:badge-soft tw:badge-lg tw:font-semibold">{{ team_data.top4_avg|floatformat:1|default:'N/A' }}</span>
-          </div>
-        </td>
+          <td>
+            <div class="tw:flex tw:justify-center">
+              <span class="tw:badge tw:badge-soft tw:badge-lg tw:font-semibold">{{ team_data.top4_avg|floatformat:1|default:'N/A' }}</span>
+            </div>
+          </td>
 
-        <td class="tw:border-r tw:border-neutral-200">
-          <div class="tw:flex tw:justify-center">
-            <span class="tw:badge tw:badge-soft tw:badge-lg tw:font-semibold">{{ team_data.top5_avg|floatformat:1|default:'N/A' }}</span>
-          </div>
-        </td>
+          <td>
+            <div class="tw:flex tw:justify-center">
+              <span class="tw:badge tw:badge-soft tw:badge-lg tw:font-semibold">{{ team_data.top5_avg|floatformat:1|default:'N/A' }}</span>
+            </div>
+          </td>
 
-        <td>
-          <div class="tw:flex tw:justify-center">
-            <span class="tw:badge tw:badge-soft tw:badge-lg tw:font-semibold">{{ team_data.all_avg|floatformat:1|default:'N/A' }}</span>
-          </div>
-        </td>
+          <td>
+            <div class="tw:flex tw:justify-center">
+              <span class="tw:badge tw:badge-soft tw:badge-lg tw:font-semibold">{{ team_data.all_avg|floatformat:1|default:'N/A' }}</span>
+            </div>
+          </td>
         </tr>
 
-      <!-- Expandable player details row -->
+        <!-- Expandable player details row -->
         <tr x-show="expandedTeams['{{ team_data.team.id }}']" class="tw:bg-base-200">
           <td></td>
           <td colspan="4" class="tw:p-4">
