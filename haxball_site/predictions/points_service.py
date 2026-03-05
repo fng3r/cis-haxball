@@ -83,7 +83,9 @@ def is_prediction_result_supported(prediction):
 
 def get_teams_actual_positions(league):
     """Return mapping {team_id: actual_position} using current league table."""
-    table = get_league_table(league)
+    stages = list(league.stages.all())
+    stage = stages[0] if stages else None
+    table = get_league_table(league, stage)
     has_played_matches = any(row[1] > 0 for row in table)
     if not has_played_matches:
         return {}
