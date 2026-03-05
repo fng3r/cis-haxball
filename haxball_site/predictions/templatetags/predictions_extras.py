@@ -5,6 +5,7 @@ from django import template
 from django.utils import timezone
 
 from .. import utils
+from ..points_service import is_prediction_correct
 
 register = template.Library()
 
@@ -58,3 +59,8 @@ def hours_until_start(tournament):
     delta = start_date - timezone.localtime()
 
     return max(0, ceil(delta.total_seconds() / 3600))
+
+
+@register.filter
+def prediction_is_correct(prediction):
+    return is_prediction_correct(prediction)

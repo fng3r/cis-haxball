@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from .models import PredictionSubmission
+from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
 
 
 def is_tour_open_for_predictions(tour):
@@ -34,23 +35,26 @@ def get_user_tour_points(user, tour, tournament):
     """Get total points for a user in a specific tour"""
     submission = (
         PredictionSubmission.objects.filter(user=user, tour=tour, tournament=tournament)
+        .select_related('tournament')
         .prefetch_related('predictions__match__result')
         .first()
     )
     if submission:
-        return submission.get_total_points()
+        return calculate_submission_total_points(submission)
     return None
 
 
 def get_user_tournament_total_points(user, tournament):
     """Get total points for a user in a tournament"""
-    submissions = PredictionSubmission.objects.filter(user=user, tournament=tournament).prefetch_related(
-        'predictions__match__result'
+    submissions = (
+        PredictionSubmission.objects.filter(user=user, tournament=tournament)
+        .select_related('tournament')
+        .prefetch_related('predictions__match__result')
     )
 
     total_points = 0
     for submission in submissions:
-        total_points += submission.get_total_points()
+        total_points += calculate_submission_total_points(submission)
 
     return total_points
 
@@ -61,8 +65,10 @@ def get_tournament_standings(tournament):
         User.objects.filter(prediction_submissions__tournament=tournament).select_related('user_profile').distinct()
     )
 
-    all_submissions = PredictionSubmission.objects.filter(tournament=tournament).prefetch_related(
-        'predictions__match__result'
+    all_submissions = (
+        PredictionSubmission.objects.filter(tournament=tournament)
+        .select_related('tournament')
+        .prefetch_related('predictions__match__result')
     )
 
     submissions_by_user = {}
@@ -78,8 +84,8 @@ def get_tournament_standings(tournament):
         total_correct_predictions = 0
         total_predictions = 0
         for submission in user_submissions:
-            total_points += submission.get_total_points()
-            correct_predictions, predictions = submission.get_predictions_counts()
+            total_points += calculate_submission_total_points(submission)
+            correct_predictions, predictions = calculate_submission_predictions_counts(submission)
             total_correct_predictions += correct_predictions
             total_predictions += predictions
         accuracy = total_correct_predictions / total_predictions * 100 if total_predictions > 0 else 0
@@ -102,8 +108,10 @@ def get_tournament_standings(tournament):
 
 def calculate_tour_rewards(tour, tournament):
     """Calculate rewards distribution for a specific tour in predictions"""
-    submissions = PredictionSubmission.objects.filter(tour=tour, tournament=tournament).prefetch_related(
-        'predictions__match__result', 'user__user_profile'
+    submissions = (
+        PredictionSubmission.objects.filter(tour=tour, tournament=tournament)
+        .select_related('tournament')
+        .prefetch_related('predictions__match__result', 'user__user_profile')
     )
 
     if not submissions.exists():
@@ -114,7 +122,7 @@ def calculate_tour_rewards(tour, tournament):
 
     user_points = []
     for submission in submissions:
-        points = submission.get_total_points()
+        points = calculate_submission_total_points(submission)
         user_points.append({'user': submission.user, 'points': points})
 
     total_points = sum(up['points'] for up in user_points if up['points'] >= 0)

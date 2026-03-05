@@ -70,14 +70,14 @@
                   {% for tour in selected_tournament.league.tours.all %}
                     <td class="tw:text-center">
                       {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
-                        <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id }}</span>
+                        <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id|floatformat:1 }}</span>
                       {% else %}
                         <span class="tw:text-base-content/50">-</span>
                       {% endif %}
                     </td>
                   {% endfor %}
                   <td class="tw:text-center tw:font-bold">{{ standing.accuracy|floatformat:1 }}%</td>
-                  <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points }}</th>
+                  <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points|floatformat:1 }}</th>
                 </tr>
               {% endfor %}
             </tbody>

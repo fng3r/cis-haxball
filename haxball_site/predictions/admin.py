@@ -23,8 +23,19 @@ class PredictionInline(UnfoldTabularInline):
 
 @admin.register(PredictionsContestTournament)
 class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
-    list_display = ['league', 'is_active']
-    list_editable = ['is_active']
+    list_display = [
+        'league',
+        'is_active',
+        'points_for_win_prediction',
+        'points_for_draw_prediction',
+        'special_match_points_delta',
+    ]
+    list_editable = [
+        'is_active',
+        'points_for_win_prediction',
+        'points_for_draw_prediction',
+        'special_match_points_delta',
+    ]
     list_filter = ['is_active']
     list_filter_sheet = False
     search_fields = ['league__title']

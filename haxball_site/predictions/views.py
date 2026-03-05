@@ -29,6 +29,7 @@ from .models import (
     PreseasonPredictionsTournament,
     PreseasonPredictionSubmission,
 )
+from .points_service import calculate_submission_total_points
 from .utils import (
     calculate_tour_rewards,
     get_tournament_standings,
@@ -250,9 +251,11 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
         )
 
-        submissions = PredictionSubmission.objects.filter(
-            user=request.user, tournament=selected_tournament
-        ).prefetch_related('predictions__match__result')
+        submissions = (
+            PredictionSubmission.objects.filter(user=request.user, tournament=selected_tournament)
+            .select_related('tournament')
+            .prefetch_related('predictions__match__result')
+        )
 
         submissions_lookup = {sub.tour_id: sub for sub in submissions}
 
@@ -317,10 +320,14 @@ def view_predictions_tab(request):
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
         )
 
-        submissions = PredictionSubmission.objects.filter(
-            user=selected_user, tournament=selected_tournament
-        ).prefetch_related(
-            'predictions__match__result__winner', 'predictions__match__team_home', 'predictions__match__team_guest'
+        submissions = (
+            PredictionSubmission.objects.filter(user=selected_user, tournament=selected_tournament)
+            .select_related('tournament')
+            .prefetch_related(
+                'predictions__match__result__winner',
+                'predictions__match__team_home',
+                'predictions__match__team_guest',
+            )
         )
 
         submissions_lookup = {sub.tour_id: sub for sub in submissions}
@@ -355,8 +362,10 @@ def standings_tab(request):
 
         tours = TourNumber.objects.filter(league=selected_tournament.league)
 
-        all_submissions = PredictionSubmission.objects.filter(tournament=selected_tournament).prefetch_related(
-            'predictions__match__result'
+        all_submissions = (
+            PredictionSubmission.objects.filter(tournament=selected_tournament)
+            .select_related('tournament')
+            .prefetch_related('predictions__match__result')
         )
 
         submissions_lookup = {}
@@ -370,7 +379,7 @@ def standings_tab(request):
             for tour in tours:
                 submission = submissions_lookup.get((user.id, tour.id))
                 if submission:
-                    tour_points[user.id][tour.id] = submission.get_total_points()
+                    tour_points[user.id][tour.id] = calculate_submission_total_points(submission)
                 else:
                     tour_points[user.id][tour.id] = None
 
@@ -399,6 +408,7 @@ def tour_card(request, tour_id):
     if prediction_tournament:
         submission = (
             PredictionSubmission.objects.filter(user=request.user, tour=tour, tournament=prediction_tournament)
+            .select_related('tournament')
             .prefetch_related(
                 'predictions__match__result', 'predictions__match__team_home', 'predictions__match__team_guest'
             )
