@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 from tournament.models import League, Match, Team, TourNumber
 
@@ -35,7 +36,11 @@ class PreseasonPredictionsTournament(models.Model):
     league = models.OneToOneField(
         League, verbose_name='Турнир', on_delete=models.CASCADE, related_name='preseason_predictions_tournament'
     )
-    is_active = models.BooleanField('Сбор прогнозов открыт', default=True)
+    locked_at = models.DateTimeField('Дата закрытия сбора прогнозов')
+
+    @property
+    def is_active(self):
+        return timezone.localtime() < self.locked_at
 
     def __str__(self):
         return f'{self.league.title}'

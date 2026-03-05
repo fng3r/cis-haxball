@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from unfold.admin import display
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
@@ -55,12 +56,15 @@ class PredictionSubmissionAdmin(UnfoldModelAdmin):
 
 @admin.register(PreseasonPredictionsTournament)
 class PreseasonPredictionsTournamentAdmin(UnfoldModelAdmin):
-    list_display = ['league', 'is_active']
-    list_editable = ['is_active']
-    list_filter = ['is_active']
+    list_display = ['league', 'locked_at', 'display_is_active']
+    list_filter = ['locked_at']
     list_filter_sheet = False
     search_fields = ['league__title']
     ordering = ['-id']
+
+    @display(description='Сбор прогнозов открыт', boolean=True)
+    def display_is_active(self, model):
+        return model.is_active
 
 
 class PreseasonPredictionItemInline(UnfoldTabularInline):

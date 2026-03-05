@@ -1,4 +1,3 @@
-from datetime import time
 from math import ceil
 
 from django import template
@@ -52,12 +51,9 @@ def is_tour_actual(tour):
 
 @register.filter
 def hours_until_start(tournament):
-    first_tour = tournament.tours.order_by('number').first()
-    if not first_tour:
+    if tournament is None:
         return None
-    start_date = timezone.make_aware(timezone.datetime.combine(first_tour.date_from, time(18, 0)))
-    delta = start_date - timezone.localtime()
-
+    delta = tournament.locked_at - timezone.now()
     return max(0, ceil(delta.total_seconds() / 3600))
 
 
