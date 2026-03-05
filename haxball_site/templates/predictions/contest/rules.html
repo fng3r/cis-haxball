@@ -14,10 +14,28 @@
       <li>
         В каждом туре можно выбрать до 2 "особых" матчей:
         <ul style="list-style-type: circle;">
-          <li>За правильный прогноз в таком матче дополнительно начисляется 1 очко</li>
-          <li>За неправильный прогноз в таком матче отнимается 1 очко</li>
+          <li>За правильный прогноз в таком матче дополнительно начисляется 0.5 очков</li>
+          <li>За неправильный прогноз в таком матче отнимается 0.5 очков</li>
         </ul>
       </li>
     </ul>
   </span>
+
+  <div class="tw:divider"></div>
+
+  <h5 id="rules-updates" class="tw:mb-4!" x-intersect="if (isRulesModalOpen) updateLastSeenVersion()">История изменений</h5>
+
+  <div x-data="{version: 1}" class="tw:pl-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h6 class="tw:mb-0!">v2.0 (05.03.26)</h6>
+      <span x-show="lastSeenRulesVersion < version" class="tw:status tw:status-warning"></span>
+    </div>
+    <p>
+      <ul>
+        <li>
+          Изменен бонус/штраф для прогнозов на "особые" матчи: <span class="tw:font-semibold">1 → 0.5</span>.
+        </li>
+      </ul>
+    </p>
+  </div>
 </div>
