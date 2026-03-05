@@ -18,7 +18,7 @@ class PredictionsContestTournament(models.Model):
         'Очки за верный прогноз ничьей', default=3, max_digits=5, decimal_places=2
     )
     special_match_points_delta = models.DecimalField(
-        'Бонус/штраф за особый прогноз', default=1, max_digits=5, decimal_places=2
+        'Бонус/штраф за особый прогноз', default=0.5, max_digits=5, decimal_places=2
     )
 
     def __str__(self):
