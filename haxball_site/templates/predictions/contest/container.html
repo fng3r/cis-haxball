@@ -1,5 +1,5 @@
 <div class="tw:w-full tw:space-y-2">
-  <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:pb-3">
+  <div class="tw:flex tw:items-center tw:justify-between">
     <form id="predictions-contest-tournament-selector"
           class="tw:flex tw:flex-col tw:gap-1"
           hx-get="{% url 'predictions:predictions_contest' %}"
@@ -25,6 +25,8 @@
       <i class="fa fa-book"></i> Правила
     </button>
   </div>
+
+  <div class="tw:divider tw:my-0"></div>
 
   {% partialdef predictions-contest-tabs inline=True %}
     {# Predictions contest tabs #}

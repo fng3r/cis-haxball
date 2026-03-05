@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 
 <div class="tw:w-full tw:space-y-2">
-  <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:pb-3">
+  <div class="tw:flex tw:items-center tw:justify-between">
     <form id="preseason-tournament-selector"
           class="tw:flex tw:flex-col tw:gap-1"
           hx-get="{% url 'predictions:preseason' %}?only_tabs=true"
@@ -24,6 +24,8 @@
       </div>
     </form>
   </div>
+
+  <div class="tw:divider tw:my-0"></div>
 
   {% if not selected_tournament %}
     <div class="tw:alert tw:alert-warning tw:mb-4">
