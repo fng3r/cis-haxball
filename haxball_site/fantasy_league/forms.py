@@ -214,6 +214,8 @@ class SquadSubmissionForm(forms.Form):
         if len(set(primary_players)) != 4:
             raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
 
+        self.validate_main_squad_team_diversity(primary_players)
+
         all_players = primary_players + filled_bench
         if len(set(all_players)) != 6:
             raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
@@ -316,6 +318,14 @@ class SquadSubmissionForm(forms.Form):
         transfers_in = len(selected_ids - prev_ids)
         if transfers_in > 4:
             raise forms.ValidationError(f'Превышен лимит трансферов: {transfers_in}/4')
+
+    def validate_main_squad_team_diversity(self, primary_players):
+        """Ensure main squad contains players from at least 3 different teams."""
+        unique_team_ids = {p.team_id for p in primary_players if p and p.team_id}
+        if len(unique_team_ids) < 3:
+            raise forms.ValidationError(
+                'Основной состав должен быть представлен игроками как минимум из 3 разных команд'
+            )
 
     def validate_players_availability(self, players):
         """Ensure all selected players are available in the current league"""
