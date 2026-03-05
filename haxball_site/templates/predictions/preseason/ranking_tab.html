@@ -1,0 +1,137 @@
+{% load static %}
+
+<div class="tw:space-y-2">
+  {% if not selected_tournament %}
+    <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турнира</div>
+  {% else %}
+    <div class="tw:flex tw:items-center tw:justify-between">
+      <h4 class="tw:text-lg tw:font-semibold">Рейтинг предсезонных прогнозов</h4>
+      <button class="tw:btn tw:btn-secondary tw:btn-sm" onclick="preseason_ranking_rules_modal.showModal()">Правила</button>
+    </div>
+
+    {% if not has_played_matches %}
+      <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Рейтинг появится после первых сыгранных матчей турнира.</div>
+    {% elif not ranking_rows %}
+      <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Пока нет отправленных прогнозов</div>
+    {% else %}
+      <div class="tw:overflow-x-auto">
+        <table class="tw:table" x-data="{ expandedRow: null }">
+          <thead>
+            <tr>
+              <th class="tw:w-20 tw:text-right">#</th>
+              <th>Пользователь</th>
+              <th class="tw:text-right">Очки</th>
+              <th class="tw:text-right">Точных</th>
+              <th class="tw:text-right">Рядом (±1)</th>
+              <th class="tw:text-right">Обновлен</th>
+            </tr>
+          </thead>
+          {% for row in ranking_rows %}
+            <tbody x-data="{rowIndex: {{ forloop.counter }}}">
+              <tr class="tw:hover:bg-base-200 tw:cursor-pointer" @click="expandedRow = (expandedRow === rowIndex ? null : rowIndex)">
+                <td class="tw:text-center">
+                  <div class="tw:flex tw:items-center tw:gap-2 tw:justify-between">
+                    <i class="tw:font-thin! tw:text-sm!"
+                       :class="expandedRow === rowIndex ? 'fa fa-chevron-down' : 'fa fa-chevron-right'"
+                       aria-hidden="true"></i>
+                    <span>{{ row.place }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="tw:flex tw:items-center tw:gap-2">
+                    {% if row.user.user_profile.avatar %}
+                      <div class="tw:w-7 tw:h-7 tw:rounded-full tw:bg-cover tw:bg-center"
+                           style="background-image: url({{ row.user.user_profile.avatar.url }})"></div>
+                    {% else %}
+                      <div class="tw:w-7 tw:h-7 tw:rounded-full tw:bg-base-300 tw:flex tw:items-center tw:justify-center">
+                        <i class="fa fa-user tw:text-xs"></i>
+                      </div>
+                    {% endif %}
+                    <span class="tw:font-semibold">{{ row.user.username }}</span>
+                  </div>
+                </td>
+                <td class="tw:text-right">{{ row.total_points }}</td>
+                <td class="tw:text-right">{{ row.exact_hits }}</td>
+                <td class="tw:text-right">{{ row.near_hits }}</td>
+                <td class="tw:text-right">{{ row.updated|date:"d.m.Y H:i" }}</td>
+              </tr>
+              <tr x-show="expandedRow === rowIndex">
+                <td colspan="6">
+                  <div class="tw:bg-base-200 tw:rounded-box tw:p-3">
+                    <table class="tw:table tw:table-zebra tw:table-sm">
+                      <thead>
+                        <tr>
+                          <th>Команда</th>
+                          <th class="tw:text-right">Прогноз</th>
+                          <th class="tw:text-right">Факт</th>
+                          <th class="tw:text-right">
+                            Δ<sub>pos</sub>
+                          </th>
+                          <th class="tw:text-right">Очки</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in row.items %}
+                          <tr>
+                            <td>
+                              <div class="tw:flex tw:items-center tw:gap-2">
+                                {% if item.team.logo %}
+                                  <img src="{{ item.team.logo.url }}" alt="{{ item.team.short_title }}" class="tw:w-5 tw:h-5 tw:rounded" />
+                                {% endif %}
+                                <span>{{ item.team.title }}</span>
+                              </div>
+                            </td>
+                            <td class="tw:text-right">{{ item.predicted_position }}</td>
+                            <td class="tw:text-right">{{ item.actual_position }}</td>
+                            <td class="tw:text-right">{{ item.delta }}</td>
+                            <td class="tw:text-right">{{ item.points }}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          {% endfor %}
+        </table>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  <dialog id="preseason_ranking_rules_modal" class="tw:modal">
+    <div class="tw:modal-box tw:max-w-2xl">
+      <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила рейтинга</h3>
+      <div class="tw:space-y-3 tw:text-sm">
+        <p>Для каждого участника считаются очки за каждую команду отдельно.</p>
+        <p>
+          Базовая формула:
+          <span class="tw:font-semibold">N - Δ<sub>pos</sub></span>.
+        </p>
+        <ul class="tw:list-disc tw:list-inside tw:space-y-1">
+          <li>
+            <span class="tw:font-semibold">N = {{ teams_count }}</span>
+          </li>
+          <li>
+            <span class="tw:font-semibold">Δ<sub>pos</sub> = |фактическая позиция - прогнозируемая позиция|</span>
+          </li>
+        </ul>
+        <p>
+          Если позиция угадана точно (дельта = 0), участник получает {{ teams_count }} очков за команду.
+          Чем дальше прогноз от фактической позиции, тем меньше очков.
+        </p>
+        <div class="tw:divider tw:my-1"></div>
+        <p class="tw:font-semibold">Порядок тай-брейков:</p>
+        <ol class="tw:list-decimal tw:list-inside tw:space-y-1">
+          <li>Больше общих очков</li>
+          <li>Больше точных попаданий</li>
+          <li>Больше близких попаданий (дельта ≤ 1)</li>
+          <li>Наиболее ранее время последнего обновления прогноза</li>
+        </ol>
+      </div>
+    </div>
+    <form method="dialog" class="tw:modal-backdrop">
+      <button>Закрыть</button>
+    </form>
+  </dialog>
+</div>

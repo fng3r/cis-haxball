@@ -29,7 +29,11 @@ from .models import (
     PreseasonPredictionsTournament,
     PreseasonPredictionSubmission,
 )
-from .points_service import calculate_submission_total_points
+from .points_service import (
+    calculate_preseason_submission_points,
+    calculate_submission_total_points,
+    get_teams_actual_positions,
+)
 from .utils import (
     calculate_tour_rewards,
     get_tournament_standings,
@@ -589,6 +593,62 @@ def preseason_results_tab(request):
     return render(request, 'predictions/preseason/results_tab.html', context)
 
 
+def preseason_ranking_tab(request):
+    selected_tournament, _ = resolve_selected_preseason_tournament(request)
+    ranking_rows = []
+    actual_positions = {}
+    teams_count = 0
+    has_played_matches = False
+
+    if selected_tournament:
+        league = selected_tournament.league
+        teams_count = league.teams.count()
+        actual_positions = get_teams_actual_positions(league)
+
+        if actual_positions:
+            has_played_matches = True
+            submissions = (
+                PreseasonPredictionSubmission.objects.filter(tournament=selected_tournament)
+                .select_related('user__user_profile')
+                .prefetch_related('items__team')
+            )
+
+            for submission in submissions:
+                total_points, exact_hits, near_hits, items = calculate_preseason_submission_points(
+                    submission, actual_positions, teams_count
+                )
+                ranking_rows.append(
+                    {
+                        'user': submission.user,
+                        'total_points': total_points,
+                        'exact_hits': exact_hits,
+                        'near_hits': near_hits,
+                        'updated': submission.updated,
+                        'items': items,
+                    }
+                )
+
+            ranking_rows.sort(
+                key=lambda row: (
+                    -row['total_points'],
+                    -row['exact_hits'],
+                    -row['near_hits'],
+                    row['updated'],
+                )
+            )
+            for i, row in enumerate(ranking_rows):
+                row['place'] = i + 1
+
+    context = {
+        'selected_tournament': selected_tournament,
+        'ranking_rows': ranking_rows,
+        'actual_positions': actual_positions,
+        'teams_count': teams_count,
+        'has_played_matches': has_played_matches,
+    }
+    return render(request, 'predictions/preseason/ranking_tab.html', context)
+
+
 @login_required
 @require_POST
 @transaction.atomic
@@ -598,13 +658,13 @@ def preseason_save(request):
 
     order = request.POST.get('order')
     if not order:
-        return preseason_my_tab(request)
+        return preseason_my_tab(request, selected_tournament)
 
     team_ids = [int(x) for x in order.split(',') if x.strip()]
     league_team_ids = set(selected_tournament.league.teams.values_list('id', flat=True))
     if not set(team_ids).issubset(league_team_ids):
         messages.error(request, 'Содержатся команды вне выбранного турнира.')
-        return preseason_my_tab(request)
+        return preseason_my_tab(request, selected_tournament)
 
     submission, _ = PreseasonPredictionSubmission.objects.get_or_create(
         user=request.user, tournament=selected_tournament

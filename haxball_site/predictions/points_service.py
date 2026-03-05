@@ -1,7 +1,9 @@
 from decimal import Decimal
 
-from predictions.models import Prediction
 from tournament.models import MatchResult
+from tournament.templatetags.tournament_extras import get_league_table
+
+from .models import Prediction
 
 
 def calculate_submission_total_points(submission):
@@ -77,3 +79,43 @@ def is_prediction_result_supported(prediction):
     if not prediction.match.is_played:
         return False
     return _match_result_to_prediction_result(prediction.match.result.value) is not None
+
+
+def get_teams_actual_positions(league):
+    """Return mapping {team_id: actual_position} using current league table."""
+    table = get_league_table(league)
+    has_played_matches = any(row[1] > 0 for row in table)
+    if not has_played_matches:
+        return {}
+    return {row[0].id: idx + 1 for idx, row in enumerate(table)}
+
+
+def calculate_preseason_submission_points(submission, actual_positions, teams_count):
+    """Calculate total preseason points for one submission using N - |actual - predicted|."""
+    total_points = 0
+    exact_hits = 0
+    near_hits = 0
+    items = []
+    for item in submission.items.all().order_by('position'):
+        actual_position = actual_positions.get(item.team_id)
+        if actual_position is None:
+            continue
+
+        delta = abs(actual_position - item.position)
+        points = teams_count - delta
+        total_points += points
+        if delta == 0:
+            exact_hits += 1
+        if delta <= 1:
+            near_hits += 1
+        items.append(
+            {
+                'team': item.team,
+                'predicted_position': item.position,
+                'actual_position': actual_position,
+                'delta': delta,
+                'points': points,
+            }
+        )
+
+    return total_points, exact_hits, near_hits, items
