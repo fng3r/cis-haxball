@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from tournament.models import League, Player, Team, TourNumber
+from tournament.models import League, Player, Season, Team, TourNumber
 
 
 class FantasyTournament(models.Model):
@@ -122,15 +122,23 @@ class SquadSubmission(models.Model):
 
 
 class PlayerCost(models.Model):
-    """Custom cost for a player across all fantasy tournaments"""
+    """Custom player cost for a specific season"""
 
-    player = models.OneToOneField(Player, verbose_name='Игрок', on_delete=models.CASCADE, related_name='fantasy_cost')
+    player = models.ForeignKey(Player, verbose_name='Игрок', on_delete=models.CASCADE, related_name='fantasy_costs')
+    season = models.ForeignKey(
+        Season,
+        verbose_name='Сезон',
+        on_delete=models.CASCADE,
+        related_name='fantasy_costs',
+        default=21,
+    )
     cost = models.DecimalField('Стоимость', max_digits=4, decimal_places=1, help_text='Стоимость игрока в миллионах')
 
     class Meta:
         verbose_name = 'Стоимость игрока'
         verbose_name_plural = 'Стоимости игроков'
         ordering = ['player__nickname']
+        unique_together = [('player', 'season')]
 
     def __str__(self):
-        return f'{self.player.nickname} - {self.cost}M'
+        return f'{self.player.nickname} ({self.season}) - {self.cost}M'
