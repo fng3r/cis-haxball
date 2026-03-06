@@ -120,15 +120,9 @@
         <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
         {{ comment.created|time:"H:i" }}
         {% if comment.edited %}
-          {% if comment.edited.date == comment.created.date %}
-            <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5"
-               aria-hidden="true"
-               data-comment-edit-title='изм. {{ comment.edited|time:"H:i" }}'></i>
-          {% else %}
-            <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5"
-               aria-hidden="true"
-               data-comment-edit-title='изм. {{ comment.edited|date:"d.m.y" }} {{ comment.edited|time:"H:i" }}'></i>
-          {% endif %}
+          <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5 tw:after:content-[''] tw:after:transition-all tw:after:duration-700 tw:hover:after:ml-2 tw:hover:after:px-1 tw:hover:after:py-0.5 tw:hover:after:inline-block tw:hover:after:content-[attr(data-comment-edit-title)] tw:hover:after:bg-[color-mix(in_oklab,var(--color-base-200)_75%,var(--color-primary))] tw:hover:after:border tw:hover:after:border-base-200 tw:hover:after:rounded-sm tw:hover:after:text-base-content"
+             aria-hidden="true"
+             data-comment-edit-title="изм.{% if comment.edited.date != comment.created.date %} {{ comment.edited|date:"d.m.y" }}{% endif %} {{ comment.edited|time:'H:i' }}"></i>
         {% endif %}
       </span>
 
