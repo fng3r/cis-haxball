@@ -11,9 +11,9 @@
     </h5>
 
     <form class="tw:space-y-4"
-          hx-post="{% url 'fantasy_league:edit_squad' tour.id %}"
-          hx-target="#tour-{{ tour.id }}-content"
-          hx-swap="outerHTML"
+      hx-post="{% url 'fantasy_league:edit_squad' tour.id %}"
+      hx-target="#tour-{{ tour.id }}-content"
+      hx-swap="outerHTML"
       {# djlint:off #}
           x-data="{
                   initialBudgetLimit: parseCost('{{ budget_limit }}'),
@@ -22,6 +22,7 @@
                   teamSize: 6,
                   selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
                   previousPlayerIds: {{ previous_player_ids }},
+                  previousUnavailablePlayerIds: {{ previous_unavailable_player_ids }},
                   availableBoosters: {{ form.available_boosters }},
                   selectedBooster: {% if form.used_booster.value %}'{{ form.used_booster.value }}'{% else %}null{% endif %},
                   selected: {},
@@ -52,19 +53,27 @@
                   get selectedPlayersCount() { return this.currentSelectedIds().length; },
                   canBeEdited: {{ can_be_edited|yesno:'true,false' }},
                   get isFormValid() { return this.selectedPlayersCount === this.teamSize && this.budgetUsed <= this.budgetLimit && this.benchPlayersCount() <= 2 && this.transfersUsed <= this.transfersLimit && !this.hasUnavailablePlayers() && !this.hasPlayersWithChangedPositions() && this.selectedCaptain !== null; },
+                  getEffectiveTransfersUsed() {
+                  const prev = new Set(this.previousPlayerIds);
+                  const selectedIds = this.currentSelectedIds();
+                  const rawTransfersIn = selectedIds.filter(id => !prev.has(id)).length;
+                  const selectedSet = new Set(selectedIds);
+                  const freeUnavailableReplacements = this.previousUnavailablePlayerIds.filter(id => !selectedSet.has(id)).length;
+                  return Math.max(0, rawTransfersIn - freeUnavailableReplacements);
+                  },
                   transfersCount() {
                   if (this.previousPlayerIds.length === 0) {
                   return 0;
                   }
-                  const prev = new Set(this.previousPlayerIds);
-                  return this.currentSelectedIds().filter(id => !prev.has(id)).length;
+                  return this.getEffectiveTransfersUsed();
                   },
                   updateTransfers() {
                   if (this.previousPlayerIds.length === 0) {
+                  this.transfersUsed = 0;
+                  this.freeTransfersUsed = 0;
                   return;
                   }
-                  const prev = new Set(this.previousPlayerIds);
-                  this.transfersUsed = this.currentSelectedIds().filter(id => !prev.has(id)).length;
+                  this.transfersUsed = this.getEffectiveTransfersUsed();
                   this.freeTransfersUsed = Math.min(this.transfersUsed, this.freeTransfersLimit);
                   },
                   updateUsedBudget() {
@@ -96,30 +105,30 @@
                   fmt(v) { return v.toFixed(1); }
                   }"
       {# djlint:on #}
-          x-init="
-                  {% get_positions as positions %}
-                  {% for position in positions %}
-                    {% with player=form.initial|get_or_default:position %}
-                      {% if player %}
-                        {% with player_with_changed_position=players_with_changed_positions|get_or_default:player.id %}
-                          selected['{{ position }}'] = {
-                          id: {{ player.id|default:'null' }},
-                          nickname: '{{ player.nickname|escapejs }}',
-                          cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-                          teamLogo: '{{ player.team.logo.url }}',
-                          isUnavailable: {{ form.available_player_ids|contains:player.id|yesno:'false,true' }},
-                          isPositionChanged: {{ player_with_changed_position|yesno:'true,false' }},
-                          changedPositions: {prev: '{{ player_with_changed_position.prev_position }}', current: '{{ player_with_changed_position.current_position }}'}
-                          },
-                        {% endwith %}
-                      {% else %}
-                        selected['{{ position }}'] = null,
-                      {% endif %}
-                    {% endwith %}
-                  {% endfor %}
-                  updateUsedBudget();
-                  updateTransfers();
-                 ">
+      x-init="
+      {% get_positions as positions %}
+      {% for position in positions %}
+        {% with player=form.initial|get_or_default:position %}
+          {% if player %}
+            {% with player_with_changed_position=players_with_changed_positions|get_or_default:player.id %}
+              selected['{{ position }}'] = {
+              id: {{ player.id|default:'null' }},
+              nickname: '{{ player.nickname|escapejs }}',
+              cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+              teamLogo: '{{ player.team.logo.url }}',
+              isUnavailable: {{ form.available_player_ids|contains:player.id|yesno:'false,true' }},
+              isPositionChanged: {{ player_with_changed_position|yesno:'true,false' }},
+              changedPositions: {prev: '{{ player_with_changed_position.prev_position }}', current: '{{ player_with_changed_position.current_position }}'}
+              },
+            {% endwith %}
+          {% else %}
+            selected['{{ position }}'] = null,
+          {% endif %}
+        {% endwith %}
+      {% endfor %}
+      updateUsedBudget();
+      updateTransfers();
+      ">
       {% csrf_token %}
       <input type="hidden" name="captain_player_id" :value="selectedCaptain" />
       <input type="hidden" name="used_booster" :value="selectedBooster" />

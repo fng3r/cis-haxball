@@ -10,11 +10,11 @@ class Command(BaseCommand):
     help = 'Generate schedule using round-robin algorythm'
 
     tour_dates = {
-        1: (datetime.date(2025, 2, 12), datetime.date(2025, 2, 14)),
-        2: (datetime.date(2025, 2, 16), datetime.date(2025, 2, 18)),
-        3: (datetime.date(2025, 2, 19), datetime.date(2025, 2, 21)),
-        4: (datetime.date(2025, 2, 23), datetime.date(2025, 2, 25)),
-        5: (datetime.date(2025, 2, 26), datetime.date(2025, 2, 28)),
+        1: (datetime.date(2026, 3, 7), datetime.date(2026, 3, 9)),
+        2: (datetime.date(2026, 3, 8), datetime.date(2026, 3, 19)),
+        3: (datetime.date(2026, 3, 19), datetime.date(2026, 3, 21)),
+        4: (datetime.date(2026, 3, 23), datetime.date(2026, 3, 25)),
+        5: (datetime.date(2026, 3, 26), datetime.date(2026, 3, 28)),
         6: (datetime.date(2025, 3, 2), datetime.date(2025, 3, 4)),
         7: (datetime.date(2025, 3, 5), datetime.date(2025, 3, 7)),
         8: (datetime.date(2025, 3, 9), datetime.date(2025, 3, 11)),

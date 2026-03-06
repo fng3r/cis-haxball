@@ -237,21 +237,15 @@ class SquadSubmissionForm(forms.Form):
 
     def get_main_squad_players(self):
         """Get list of main squad players from cleaned data"""
-        if not self.is_valid():
-            return []
-
         return [
-            self.cleaned_data['main_squad_gk'],
-            self.cleaned_data['main_squad_dm'],
-            self.cleaned_data['main_squad_st1'],
-            self.cleaned_data['main_squad_st2'],
+            self.cleaned_data.get('main_squad_gk'),
+            self.cleaned_data.get('main_squad_dm'),
+            self.cleaned_data.get('main_squad_st1'),
+            self.cleaned_data.get('main_squad_st2'),
         ]
 
     def get_bench_players(self):
         """Get list of bench players from cleaned data (2 items)"""
-        if not self.is_valid():
-            return []
-
         bench = [
             self.cleaned_data.get('bench_gk'),
             self.cleaned_data.get('bench_dm'),
@@ -310,14 +304,26 @@ class SquadSubmissionForm(forms.Form):
         if booster in [BoosterType.JOKER, BoosterType.LIMITLESS]:
             return
 
+        effective_transfers_in = self.get_effective_transfers_in(players)
+        if effective_transfers_in > 4:
+            raise forms.ValidationError(f'Превышен лимит трансферов: {effective_transfers_in}/4')
+
+    def get_effective_transfers_in(self, players):
+        """
+        Calculate transfers in that count toward transfer limits.
+        Replacing players that became unavailable in league is free.
+        """
         if not self.previous_player_ids:
-            return
+            return 0
 
         selected_ids = {p.id for p in players if p}
         prev_ids = set(self.previous_player_ids)
-        transfers_in = len(selected_ids - prev_ids)
-        if transfers_in > 4:
-            raise forms.ValidationError(f'Превышен лимит трансферов: {transfers_in}/4')
+        raw_transfers_in = len(selected_ids - prev_ids)
+
+        prev_unavailable_ids = {player_id for player_id in prev_ids if player_id not in self.available_player_ids}
+        replaced_unavailable_count = len(prev_unavailable_ids - selected_ids)
+
+        return max(0, raw_transfers_in - replaced_unavailable_count)
 
     def validate_main_squad_team_diversity(self, primary_players):
         """Ensure main squad contains players from at least 3 different teams."""
