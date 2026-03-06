@@ -101,7 +101,7 @@
 
   <dialog id="preseason_ranking_rules_modal" class="tw:modal">
     <div class="tw:modal-box tw:max-w-2xl">
-      <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила рейтинга</h3>
+      <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила расчета очков</h3>
       <div class="tw:space-y-3 tw:text-sm">
         <p>Для каждого участника считаются очки за каждую команду отдельно.</p>
         <p>
@@ -110,7 +110,7 @@
         </p>
         <ul class="tw:list-disc tw:list-inside tw:space-y-1">
           <li>
-            <span class="tw:font-semibold">N = {{ teams_count }}</span>
+            <span class="tw:font-semibold">N = {{ teams_count }} (общее кол-во команд в турнире)</span>
           </li>
           <li>
             <span class="tw:font-semibold">Δ<sub>pos</sub> = |фактическая позиция - прогнозируемая позиция|</span>
@@ -120,10 +120,12 @@
           Если позиция угадана точно (дельта = 0), участник получает {{ teams_count }} очков за команду.
           Чем дальше прогноз от фактической позиции, тем меньше очков.
         </p>
+        <p class="tw:mb-2!">Итоговое количество очков расчитывается как сумма очков, набранных за каждую команду</p>
+
         <div class="tw:divider tw:my-1"></div>
-        <p class="tw:font-semibold">Порядок тай-брейков:</p>
+
+        <p class="tw:font-semibold">Порядок тай-брейков при равном кол-ве очков:</p>
         <ol class="tw:list-decimal tw:list-inside tw:space-y-1">
-          <li>Больше общих очков</li>
           <li>Больше точных попаданий</li>
           <li>Больше близких попаданий (дельта ≤ 1)</li>
           <li>Наиболее ранее время последнего обновления прогноза</li>
