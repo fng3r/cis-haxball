@@ -286,13 +286,17 @@ class SquadSubmissionForm(forms.Form):
             raise forms.ValidationError(f'Превышен общий бюджет команды: {total_cost:.1f}M > {budget_limit}M')
 
     def validate_team_limitations(self, players):
-        """Ensure no more than 2 players from the same team in provided list."""
+        """Ensure team distribution constraints for whole squad."""
         from collections import Counter
 
         team_counts = Counter()
         for p in players:
             if p and p.team:
                 team_counts[p.team] += 1
+
+        if len(team_counts) < 4:
+            raise forms.ValidationError('Состав должен быть представлен игроками как минимум из 4 разных команд')
+
         for team, count in team_counts.items():
             if count > 2:
                 raise forms.ValidationError(f'Состав содержит более 2 игроков из одной команды ({team.title})')
