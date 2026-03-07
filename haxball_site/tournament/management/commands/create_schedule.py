@@ -1,7 +1,9 @@
 import datetime
+import json
 import random
+from pathlib import Path
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from ...models import GroupStage, League, Match, RegularStage, TourNumber
 
@@ -9,61 +11,77 @@ from ...models import GroupStage, League, Match, RegularStage, TourNumber
 class Command(BaseCommand):
     help = 'Generate schedule using round-robin algorythm'
 
-    tour_dates = {
-        1: (datetime.date(2026, 3, 7), datetime.date(2026, 3, 9)),
-        2: (datetime.date(2026, 3, 8), datetime.date(2026, 3, 19)),
-        3: (datetime.date(2026, 3, 19), datetime.date(2026, 3, 21)),
-        4: (datetime.date(2026, 3, 23), datetime.date(2026, 3, 25)),
-        5: (datetime.date(2026, 3, 26), datetime.date(2026, 3, 28)),
-        6: (datetime.date(2025, 3, 2), datetime.date(2025, 3, 4)),
-        7: (datetime.date(2025, 3, 5), datetime.date(2025, 3, 7)),
-        8: (datetime.date(2025, 3, 9), datetime.date(2025, 3, 11)),
-        9: (datetime.date(2025, 3, 12), datetime.date(2025, 3, 14)),
-        10: (datetime.date(2025, 3, 19), datetime.date(2025, 3, 21)),
-        11: (datetime.date(2025, 3, 23), datetime.date(2025, 3, 25)),
-        12: (datetime.date(2025, 3, 26), datetime.date(2025, 3, 28)),
-        13: (datetime.date(2025, 3, 30), datetime.date(2025, 4, 1)),
-        14: (datetime.date(2025, 4, 2), datetime.date(2025, 4, 4)),
-        15: (datetime.date(2025, 4, 6), datetime.date(2025, 4, 8)),
-        16: (datetime.date(2025, 4, 8), datetime.date(2025, 4, 10)),
-        17: (datetime.date(2025, 4, 12), datetime.date(2025, 4, 14)),
-        18: (datetime.date(2025, 4, 15), datetime.date(2025, 4, 17)),
-        # 19: (datetime.date(2025, 4, 27), datetime.date(2025, 4, 29)),
-        # 20: (datetime.date(2025, 4, 30), datetime.date(2025, 4, 1)),
-        # 21: (datetime.date(2025, 4, 3), datetime.date(2025, 4, 5)),
-        # 22: (datetime.date(2025, 4, 6), datetime.date(2025, 4, 8)),
-    }
-
     def add_arguments(self, parser):
         parser.add_argument('tournament', type=str)
-        parser.add_argument('-s', '--stage', type=str)
+        parser.add_argument('-s', '--stage', type=str, required=True)
         parser.add_argument('-r', dest='has_return_matches', action='store_true')
+        parser.add_argument(
+            '--schedule',
+            type=str,
+            required=True,
+            help='JSON with tour dates or path to a .json file. Format: {"1": ["2026-03-07", "2026-03-09"]}',
+        )
 
     def handle(self, *args, **options):
         has_return_matches = options['has_return_matches']
         tournament_title = options['tournament']
         stage_type = options['stage']
+        tour_dates = self.parse_tour_dates(options['schedule'])
         league = League.objects.get(title=tournament_title, championship__is_active=True)
         stage = league.stages.filter(type=stage_type).first()
 
         print(league.title)
         if stage is None:
-            teams = list(league.teams.all())
-            self.generate_schedule(league, teams, has_return_matches)
+            raise CommandError('Stage not found')
+
+        if isinstance(stage, RegularStage):
+            teams = list(stage.teams.all())
+            self.generate_schedule(league, teams, has_return_matches, stage, tour_dates=tour_dates)
+        elif isinstance(stage, GroupStage):
+            for group in stage.groups.all():
+                teams = list(group.teams.all())
+                self.generate_schedule(league, teams, has_return_matches, stage, group, tour_dates=tour_dates)
         else:
-            if isinstance(stage, RegularStage):
-                teams = list(stage.teams.all())
-                self.generate_schedule(league, teams, has_return_matches, stage)
-            elif isinstance(stage, GroupStage):
-                for group in stage.groups.all():
-                    teams = list(group.teams.all())
-                    self.generate_schedule(league, teams, has_return_matches, stage, group)
-            else:
-                raise Exception('Unknown stage type')
+            raise CommandError('Unknown stage type')
 
         print('Генерация расписания завершена')
 
-    def generate_schedule(self, league, teams, has_return_matches, stage=None, group=None):
+    def parse_tour_dates(self, raw_schedule):
+        if Path(raw_schedule).is_file():
+            with open(raw_schedule, encoding='utf-8') as schedule_file:
+                raw_schedule = schedule_file.read()
+
+        try:
+            schedule = json.loads(raw_schedule)
+        except json.JSONDecodeError as exc:
+            raise CommandError(f'Invalid schedule JSON: {exc}') from exc
+
+        if not isinstance(schedule, dict):
+            raise CommandError('Schedule must be a JSON object: {"1": ["YYYY-MM-DD", "YYYY-MM-DD"]}')
+
+        parsed_schedule = {}
+        for tour_number_raw, dates in schedule.items():
+            try:
+                tour_number = int(tour_number_raw)
+            except (TypeError, ValueError) as exc:
+                raise CommandError(f'Invalid tour number "{tour_number_raw}" in schedule') from exc
+
+            if not isinstance(dates, list) or len(dates) != 2:
+                raise CommandError(f'Invalid date range for tour {tour_number}: expected ["YYYY-MM-DD", "YYYY-MM-DD"]')
+
+            try:
+                date_from = datetime.date.fromisoformat(dates[0])
+                date_to = datetime.date.fromisoformat(dates[1])
+            except ValueError as exc:
+                raise CommandError(f'Invalid date format for tour {tour_number}: use YYYY-MM-DD') from exc
+
+            parsed_schedule[tour_number] = (date_from, date_to)
+
+        return parsed_schedule
+
+    def generate_schedule(self, league, teams, has_return_matches, stage=None, group=None, tour_dates=None):
+        if tour_dates is None:
+            raise CommandError('Schedule is required')
         # add dummy team when number of teams is odd
         if len(teams) % 2 == 1:
             teams.append(None)
@@ -86,7 +104,10 @@ class Command(BaseCommand):
 
         for i in range(1, n):
             tour_number = i
-            tour_start_date, tour_end_date = self.tour_dates[i]
+            try:
+                tour_start_date, tour_end_date = tour_dates[i]
+            except KeyError as exc:
+                raise CommandError(f'Missing schedule for tour {i}') from exc
             tour = TourNumber.objects.create(
                 number=tour_number,
                 league=league,
@@ -96,7 +117,10 @@ class Command(BaseCommand):
             )
             if has_return_matches:
                 reversed_tour_number = n + i - 1
-                tour_start_date, tour_end_date = self.tour_dates[reversed_tour_number]
+                try:
+                    tour_start_date, tour_end_date = tour_dates[reversed_tour_number]
+                except KeyError as exc:
+                    raise CommandError(f'Missing schedule for return tour {reversed_tour_number}') from exc
                 reversed_tour = TourNumber.objects.create(
                     number=reversed_tour_number,
                     league=league,
