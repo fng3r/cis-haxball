@@ -4,6 +4,7 @@ from typing import Self
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Max, Sum
 from django.db.models.signals import post_save, pre_save
@@ -79,18 +80,21 @@ class LikeDislike(models.Model):
 class ReactionType(models.Model):
     code = models.SlugField('Код реакции', max_length=64, unique=True)
     emoji = models.CharField('Эмодзи', max_length=16)
-    label = models.CharField('Название', max_length=64)
-    category = models.CharField('Категория', max_length=64, default='Other')
-    sort_order = models.PositiveSmallIntegerField('Порядок', default=0)
-    is_active = models.BooleanField('Активна', default=True)
+    name = models.CharField('Название', max_length=64)
+    shortcodes = models.CharField('Шорткоды', max_length=255, blank=True, default='')
+    keywords = ArrayField(
+        base_field=models.CharField(max_length=64),
+        verbose_name='Ключевые слова',
+        default=list,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = 'Тип реакции'
         verbose_name_plural = 'Типы реакций'
-        ordering = ('sort_order', 'id')
 
     def __str__(self):
-        return f'{self.emoji} {self.label}'
+        return f'{self.emoji} {self.name}'
 
 
 class Reaction(models.Model):

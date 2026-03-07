@@ -335,7 +335,6 @@ def render_reactions(context, obj, object_type: str):
         'object_type': object_type,
         'object_id': obj.id,
         'can_react': can_react,
-        'picker_limit': settings.REACTIONS_PICKER_LIMIT,
         'user': request.user,
     }
     data.update(build_reactions_context(obj, request.user, request=request))

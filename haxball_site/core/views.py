@@ -1,8 +1,8 @@
 import json
 import logging
+import re
 from datetime import datetime
 
-from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -571,6 +571,8 @@ class VotesView(View):
 
 
 class ReactionWidgetView(View):
+    REACTION_NAME_MAX_LENGTH = 64
+
     def _get_object(self, object_type: str, object_id: int):
         model = REACTIONABLE_MODELS.get(object_type)
         if model is None:
@@ -593,7 +595,6 @@ class ReactionWidgetView(View):
             'object_type': object_type,
             'object_id': obj.id,
             'can_react': self._can_react(request),
-            'picker_limit': settings.REACTIONS_PICKER_LIMIT,
         }
         context.update(build_reactions_context(obj, request.user))
         return render(request, 'core/include/reactions/widget.html', context)
@@ -614,12 +615,34 @@ class ReactionWidgetView(View):
             return HttpResponse(status=403)
 
         reaction_type_id = request.POST.get('reaction_type')
-        if not reaction_type_id:
-            return HttpResponse(status=400)
+        reaction_type = None
+        if reaction_type_id:
+            reaction_type = ReactionType.objects.filter(pk=reaction_type_id).first()
 
-        reaction_type = ReactionType.objects.filter(pk=reaction_type_id, is_active=True).first()
         if reaction_type is None:
-            return HttpResponse(status=404)
+            emoji_id = request.POST.get('emoji_id')
+            emoji_native = request.POST.get('emoji_native')
+            emoji_name = request.POST.get('emoji_name')
+            emoji_shortcodes = request.POST.get('emoji_shortcodes')
+            emoji_keywords_raw = request.POST.get('emoji_keywords')
+
+            if not emoji_id and not emoji_native:
+                return HttpResponse(status=400)
+
+            raw_code = emoji_id or emoji_name or emoji_native
+            normalized_code = re.sub(r'[^a-z0-9_-]+', '_', raw_code.lower()).strip('_')
+            if not normalized_code:
+                normalized_code = f'emoji_{abs(hash(raw_code))}'[: self.REACTION_CODE_MAX_LENGTH]
+
+            reaction_type, _ = ReactionType.objects.update_or_create(
+                code=normalized_code,
+                defaults={
+                    'emoji': emoji_native or '❓',
+                    'name': (emoji_name or normalized_code)[: self.REACTION_NAME_MAX_LENGTH],
+                    'shortcodes': emoji_shortcodes,
+                    'keywords': self._extract_keywords(emoji_keywords_raw),
+                },
+            )
 
         content_type = ContentType.objects.get_for_model(obj)
         reaction = Reaction.objects.filter(
@@ -640,6 +663,20 @@ class ReactionWidgetView(View):
             )
 
         return self._render_widget(request, object_type, obj)
+
+    def _extract_keywords(self, keywords_raw: str) -> list[str]:
+        if not keywords_raw:
+            return []
+
+        try:
+            payload = json.loads(keywords_raw)
+        except json.JSONDecodeError:
+            payload = [keywords_raw]
+
+        if not isinstance(payload, list):
+            return []
+
+        return payload
 
 
 def search_result(request):

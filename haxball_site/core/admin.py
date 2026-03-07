@@ -231,10 +231,14 @@ class LikeDisLikeAdmin(UnfoldModelAdmin):
 
 @admin.register(ReactionType)
 class ReactionTypeAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'emoji', 'label', 'category', 'code', 'sort_order', 'is_active')
-    list_filter = ('is_active',)
-    list_editable = ('sort_order', 'is_active')
-    search_fields = ('code', 'label', 'category', 'emoji')
+    list_display = (
+        'id',
+        'emoji',
+        'code',
+        'name',
+        'shortcodes',
+    )
+    search_fields = ('code', 'name', 'shortcodes', 'emoji')
     search_help_text = 'Поиск по коду/названию/эмодзи'
 
 
@@ -243,7 +247,7 @@ class ReactionAdmin(UnfoldModelAdmin):
     list_display = ('id', 'reaction_type', 'user', 'content_type', 'object_id', 'content_object', 'updated')
     list_filter = (('reaction_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter), 'content_type')
     list_filter_submit = True
-    search_fields = ('user__username', 'reaction_type__code', 'reaction_type__label')
+    search_fields = ('user__username', 'reaction_type__code', 'reaction_type__name')
     search_help_text = 'Поиск по пользователю или типу реакции'
 
 

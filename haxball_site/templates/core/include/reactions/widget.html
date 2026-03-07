@@ -12,44 +12,119 @@
                 class="tw:btn tw:btn-xs tw:btn-soft tw:min-h-7 tw:h-7 tw:px-2.5 tw:rounded-full tw:gap-1 {% if chip.selected %}tw:border tw:border-primary tw:text-primary/80 tw:bg-primary/12{% endif %}"
                 title="{{ chip.label }}"
                 {% if can_react %} hx-post="{{ reactions_url }}" hx-vals='{"reaction_type": "{{ chip.id }}"}' hx-target="#reactions-{{ object_type }}-{{ object_id }}" hx-swap="outerHTML" {% elif user.is_authenticated %} onclick="alert('Вам ограничен доступ к реакциям!')" {% else %} onclick="login_modal.showModal()" {% endif %}>
-          <span class="tw:text-sm">{{ chip.emoji }}</span>
-          <span class="tw:text-[11px] tw:font-semibold">{{ chip.count }}</span>
+          <span class="tw:text-base">{{ chip.emoji }}</span>
+          <span class="tw:text-base tw:font-semibold">{{ chip.count }}</span>
         </button>
       {% endfor %}
     </div>
   {% endif %}
 
-  <div class="tw:dropdown tw:dropdown-top tw:dropdown-end">
-    <label tabindex="0"
-           data-reactions-toggle
-           class="tw:btn tw:btn-xs tw:btn-soft tw:h-7 tw:min-h-7 tw:rounded-full tw:px-1.5"
-           title="Добавить реакцию">
+  <div class="tw:relative">
+    <button type="button"
+            data-reactions-toggle
+            class="tw:btn tw:btn-xs tw:btn-soft tw:h-7 tw:min-h-7 tw:rounded-full tw:px-1.5"
+            title="Добавить реакцию"
+            aria-expanded="false"
+            style="anchor-name: --reactions-anchor-{{ object_type }}-{{ object_id }}"
+            {% if can_react %}popovertarget="reactions-popover-{{ object_type }}-{{ object_id }}" popovertargetaction="toggle"{% endif %}
+            {% if not can_react %}{% if user.is_authenticated %}onclick="alert('Вам ограничен доступ к реакциям!')" {% else %}onclick="login_modal.showModal()" {% endif %}
+            {% endif %}>
       <svg viewBox="0 0 32 32" aria-hidden="true" class="tw:size-6">
         <circle cx="13" cy="15" r="9" fill="currentColor" opacity="0.2"></circle>
         <circle cx="10.2" cy="13" r="1.1" fill="currentColor"></circle>
         <circle cx="15.8" cy="13" r="1.1" fill="currentColor"></circle>
-        <path d="M9.6 17.2c.9 1.5 2.2 2.2 3.4 2.2s2.5-.7 3.4-2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+        <path d="M9.6 17.2c.9 1.5 2.2 2.2 3.4 2.2s2.5-.7 3.4-2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        </path>
         <circle cx="22.5" cy="21.5" r="6.5"></circle>
         <path d="M22.5 18.8v5.4M19.8 21.5h5.4" stroke="white" stroke-width="1.9" stroke-linecap="round"></path>
       </svg>
-    </label>
+    </button>
 
-    <div tabindex="0" class="tw:dropdown-content tw:z-30 tw:card tw:bg-base-100 tw:border tw:border-base-300 tw:shadow-xl tw:w-[352px] tw:mt-2">
-      <div class="tw:card-body tw:p-3 tw:gap-2">
-        <div class="tw:text-xs tw:font-semibold tw:uppercase tw:tracking-wide tw:text-base-content/60">Добавить реакцию</div>
-
-        {% if can_react %}
-          <div data-emoji-mart class="tw:min-h-[420px] tw:flex tw:items-center tw:justify-center tw:text-sm tw:text-base-content/60">
-            Загрузка EmojiMart...
-          </div>
-        {% elif user.is_authenticated %}
-          <div class="tw:text-sm tw:text-base-content/70">Вам ограничен доступ к реакциям.</div>
-        {% else %}
-          <div class="tw:text-sm tw:text-base-content/70">
-            <a class="tw:link tw:link-primary" href="#" onclick="login_modal.showModal()">Войдите</a>, чтобы добавить реакцию.
-          </div>
-        {% endif %}
-      </div>
+    <div id="reactions-popover-{{ object_type }}-{{ object_id }}"
+         popover="auto"
+         data-reactions-popover
+         class="tw:m-0 tw:mb-2 tw:p-0 tw:border-0 tw:bg-transparent tw:shadow-none tw:overflow-visible"
+         style="position: fixed;
+                inset: auto;
+                position-anchor: --reactions-anchor-{{ object_type }}-{{ object_id }};
+                bottom: anchor(top);
+                right: anchor(right)">
+      <div data-emoji-mart></div>
     </div>
   </div>
+
 </div>
+
+<script>
+  (function () {
+    const root = document.getElementById('reactions-{{ object_type }}-{{ object_id }}');
+    if (!root) {
+      return;
+    }
+
+    const canReact = root.dataset.canReact === '1';
+    if (!canReact) {
+      return;
+    }
+
+    const toggle = root.querySelector('[data-reactions-toggle]');
+    const popover = root.querySelector('[data-reactions-popover]');
+    const mount = root.querySelector('[data-emoji-mart]');
+    if (!toggle || !popover || !mount) {
+      return;
+    }
+
+    const initPicker = function () {
+      if (root.dataset.reactionsInitialized === '1') {
+        return;
+      }
+      root.dataset.reactionsInitialized = '1';
+
+      const Picker = window.EmojiMart && window.EmojiMart.Picker;
+      if (!Picker) {
+        root.dataset.reactionsInitialized = '0';
+        mount.textContent = 'Не удалось загрузить EmojiMart';
+        return;
+      }
+
+      const picker = new EmojiMart.Picker({
+        locale: 'ru',
+        previewPosition: 'none',
+        searchPosition: 'sticky',
+        theme: 'auto',
+        perLine: 8,
+        maxFrequentRows: 2,
+        onEmojiSelect: function (emoji) {
+          if (typeof popover.hidePopover === 'function') {
+            popover.hidePopover();
+          }
+
+          window.htmx.ajax('POST', root.dataset.reactionsUrl, {
+            target: '#' + root.id,
+            swap: 'outerHTML',
+            values: {
+              emoji_id: emoji.id,
+              emoji_native: emoji.native,
+              emoji_name: emoji.name,
+              emoji_shortcodes: emoji.shortcodes,
+              emoji_keywords: JSON.stringify(Array.isArray(emoji.keywords) ? emoji.keywords : []),
+            },
+          });
+        },
+      });
+
+      mount.innerHTML = '';
+      mount.appendChild(picker);
+    };
+
+    popover.addEventListener('beforetoggle', function (event) {
+      if (event.newState === 'open') {
+        initPicker();
+      }
+    });
+
+    popover.addEventListener('toggle', function (event) {
+      toggle.setAttribute('aria-expanded', event.newState === 'open' ? 'true' : 'false');
+    });
+  })();
+</script>
