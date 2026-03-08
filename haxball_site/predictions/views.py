@@ -583,12 +583,15 @@ def _aggregate_preseason_results(tournament: PreseasonPredictionsTournament):
 def preseason_results_tab(request):
     selected_tournament, _ = resolve_selected_preseason_tournament(request)
     results = []
+    submissions_count = 0
     if selected_tournament:
         results = _aggregate_preseason_results(selected_tournament)
+        submissions_count = PreseasonPredictionSubmission.objects.filter(tournament=selected_tournament).count()
 
     context = {
         'selected_tournament': selected_tournament,
         'results': results,
+        'submissions_count': submissions_count,
     }
     return render(request, 'predictions/preseason/results_tab.html', context)
 
