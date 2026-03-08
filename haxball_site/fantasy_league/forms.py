@@ -214,6 +214,10 @@ class SquadSubmissionForm(forms.Form):
         if len(set(primary_players)) != 4:
             raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
 
+        self.validate_main_st_players_team_diversity(
+            cleaned_data.get('main_squad_st1'),
+            cleaned_data.get('main_squad_st2'),
+        )
         self.validate_main_squad_team_diversity(primary_players)
 
         all_players = primary_players + filled_bench
@@ -336,6 +340,11 @@ class SquadSubmissionForm(forms.Form):
             raise forms.ValidationError(
                 'Основной состав должен быть представлен игроками как минимум из 3 разных команд'
             )
+
+    def validate_main_st_players_team_diversity(self, main_st1, main_st2):
+        """Ensure ST players in main squad belong to different teams."""
+        if main_st1 and main_st2 and main_st1.team_id == main_st2.team_id:
+            raise forms.ValidationError('Нападающие основного состава должны быть из разных команд')
 
     def validate_players_availability(self, players):
         """Ensure all selected players are available in the current league"""
