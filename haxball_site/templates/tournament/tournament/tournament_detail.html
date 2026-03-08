@@ -13,26 +13,36 @@
 {% block main_content %}
   {% cache 60 tournament_page league.id %}
     <div class="tw:card tw:bg-base-100 tw:rounded-lg">
-      <div class="tw:flex tw:items-center tw:gap-x-4 tw:bg-base-300 tw:rounded-t-lg tw:border-b tw:border-gray-300 tw:p-4 {% if league.championship.is_active %}tw:px-6{% endif %}">
-        {% if league.logo %}
-          <img src="{{ league.logo.url }}"
-               class="tw:bg-white tw:rounded-box tw:p-2 {% if league.championship.is_active %}tw:size-28{% else %}tw:size-20{% endif %}">
-        {% else %}
-          <img src="{% static "img/logo_try.png" %}"
-               class="tw:bg-white tw:rounded-box tw:p-2 {% if league.championship.is_active %}tw:size-28{% else %}tw:size-20{% endif %}">
-        {% endif %}
+      <div class="tw:flex tw:items-stretch tw:gap-x-4 tw:bg-base-300/50 tw:rounded-t-lg tw:border-b tw:border-gray-300 tw:p-4">
+        <div class="tw:flex tw:items-center tw:py-1 tw:flex-shrink-0">
+          {% if league.logo %}
+            <img src="{{ league.logo.url }}"
+                 class="tw:bg-white tw:rounded-box tw:p-2 tw:shadow-lg tw:h-full tw:w-auto {% if league.championship.is_active %}tw:max-h-34{% else %}tw:max-h-24{% endif %}">
+          {% else %}
+            <img src="{% static "img/logo_try.png" %}"
+                 class="tw:bg-white tw:rounded-box tw:p-2 tw:shadow-lg tw:h-full tw:w-auto {% if league.championship.is_active %}tw:max-h-34{% else %}tw:max-h-24{% endif %}">
+          {% endif %}
+        </div>
         <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:items-start tw:gap-y-2">
-          <div class="tw:flex tw:items-center tw:gap-4 tw:flex-shrink-0">
-            <div class="tw:flex tw:flex-col tw:gap-y-1">
-              <h3 class="tw:text-left tw:flex tw:items-center tw:justify-start tw:font-bold tw:mb-0!">{{ league.title }}</h3>
-              <div class="tw:flex tw:items-center tw:gap-2">
-                <span class="tw:text-lg tw:text-base-content/70 tw:font-semibold">{{ league.championship.short_title }}</span>
-                <button class="tw:btn tw:btn-xs tw:btn-outline" onclick="winner_archive_modal.showModal()">
-                  <i class="fa fa-archive" aria-hidden="true"></i>
-                  <span class="tw:hidden tw:sm:inline">Архив</span>
-                </button>
-              </div>
+          <div class="tw:flex tw:flex-col tw:gap-y-1">
+            <h3 class="tw:text-left tw:flex tw:items-center tw:justify-start tw:font-bold tw:mb-0!">{{ league.title }}</h3>
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <span class="tw:text-lg tw:text-base-content/70 tw:font-semibold">{{ league.championship.short_title }}</span>
+              <button class="tw:btn tw:btn-xs tw:btn-outline" onclick="winner_archive_modal.showModal()">
+                <i class="fa fa-archive" aria-hidden="true"></i>
+                <span class="tw:hidden tw:sm:inline">Архив</span>
+              </button>
             </div>
+            {% if quick_links %}
+              <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:text-sm tw:mt-1">
+                {% for quick_link in quick_links %}
+                  <a href="{{ quick_link.url }}"
+                     class="tw:btn tw:badge tw:badge-soft tw:font-semibold tw:hover:[background-color:color-mix(in_oklab,var(--badge-color,var(--color-base-content))_8%,var(--color-base-200))]">
+                    {{ quick_link.label }}
+                  </a>
+                {% endfor %}
+              </div>
+            {% endif %}
           </div>
 
           {% if league.championship.is_active %}
