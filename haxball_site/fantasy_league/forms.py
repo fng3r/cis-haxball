@@ -137,19 +137,15 @@ class SquadSubmissionForm(forms.Form):
         self.available_player_ids = get_available_players_in_league(self.tournament)
         self.available_boosters = []
 
-        if user and tour:
-            total_tours = tournament.tours.count()
-            if tour.number != 1 and tour.number != (total_tours / 2 + 1):
-                used_booster_types = SquadSubmission.objects.filter(
-                    user=user,
-                    tournament=tournament.fantasy_tournament,
-                    tour__number__lt=tour.number,
-                    used_booster__isnull=False,
-                ).values_list('used_booster', flat=True)
+        if user and tour and not self.is_first_user_submission_in_current_half():
+            used_booster_types = SquadSubmission.objects.filter(
+                user=user,
+                tournament=tournament.fantasy_tournament,
+                tour__number__lt=tour.number,
+                used_booster__isnull=False,
+            ).values_list('used_booster', flat=True)
 
-                self.available_boosters = [
-                    booster for booster in BoosterType.values if booster not in used_booster_types
-                ]
+            self.available_boosters = [booster for booster in BoosterType.values if booster not in used_booster_types]
 
         team_filter = {'team__in': tournament.teams.all()}
 
@@ -367,9 +363,8 @@ class SquadSubmissionForm(forms.Form):
         if not booster or not self.user or not self.tour:
             return
 
-        total_tours = self.tournament.tours.count()
-        if self.tour.number == 1 or self.tour.number == (total_tours / 2 + 1):
-            raise forms.ValidationError('Бустеры не могут быть использованы в текущем туре')
+        if self.is_first_user_submission_in_current_half():
+            raise forms.ValidationError('Бустеры не могут быть использованы при первой отправке состава в круге')
 
         previous_usage = SquadSubmission.objects.filter(
             user=self.user,
@@ -384,3 +379,27 @@ class SquadSubmissionForm(forms.Form):
                 f'Бустер "{booster_name}" уже был использован в этом турнире. '
                 f'Каждый тип бустера можно использовать только один раз за турнир.'
             )
+
+    def get_second_half_start_number(self):
+        """Return first tour number of second half."""
+        return self.tournament.tours.count() // 2 + 1
+
+    def get_current_half_start_number(self):
+        """Return start tour number of the half for current tour."""
+        second_half_start = self.get_second_half_start_number()
+        return 1 if self.tour.number < second_half_start else second_half_start
+
+    def is_first_user_submission_in_current_half(self):
+        """Check if current submission is user's first submission in this half."""
+        if not self.user or not self.tour:
+            return False
+
+        half_start = self.get_current_half_start_number()
+        has_previous_submissions_in_half = SquadSubmission.objects.filter(
+            user=self.user,
+            tournament=self.tournament.fantasy_tournament,
+            tour__number__gte=half_start,
+            tour__number__lt=self.tour.number,
+        ).exists()
+
+        return not has_previous_submissions_in_half
