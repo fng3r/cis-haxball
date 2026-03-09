@@ -15,120 +15,150 @@
       hx-target="#tour-{{ tour.id }}-content"
       hx-swap="outerHTML"
       {# djlint:off #}
-          x-data="{
-                  initialBudgetLimit: parseCost('{{ budget_limit }}'),
-                  get budgetLimit() { return this.selectedBooster === 'limitless' ? Infinity : this.initialBudgetLimit; },
-                  budgetUsed: 0,
-                  teamSize: 6,
-                  selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
-                  previousPlayerIds: {{ previous_player_ids }},
-                  previousUnavailablePlayerIds: {{ previous_unavailable_player_ids }},
-                  availableBoosters: {{ form.available_boosters }},
-                  selectedBooster: {% if form.used_booster.value %}'{{ form.used_booster.value }}'{% else %}null{% endif %},
-                  selected: {},
-                  get unavailablePlayersCount() {
-                  return Object.values(this.selected).filter(player => player?.isUnavailable).length;
-                  },
-                  hasUnavailablePlayers() {
-                  return Object.values(this.selected).some(player => player?.isUnavailable);
-                  },
-                  get playersWithChangedPositionsCount() {
-                  return Object.values(this.selected).filter(player => player?.isPositionChanged).length;
-                  },
-                  hasPlayersWithChangedPositions() {
-                  return Object.values(this.selected).some(player => player?.isPositionChanged);
-                  },
-                  initialFreeTransfersLimit: 2,
-                  get freeTransfersLimit() { return this.selectedBooster === 'limitless' || this.selectedBooster === 'joker' ? Infinity : this.initialFreeTransfersLimit; },
-                  initialTransfersLimit: 4,
-                  get transfersLimit() { return this.selectedBooster === 'limitless' || this.selectedBooster === 'joker' ? Infinity : this.initialTransfersLimit; },
-                  freeTransfersUsed: 0,
-                  transfersUsed: 0,
-                  transfersPenaltyPoints: 0,
-                  get penalizedTransfersCount() { return Math.max(0, this.transfersUsed - this.freeTransfersUsed); },
-                  get transfersPenaltyPoints() { return -15 * this.penalizedTransfersCount; },
-                  isMainSquadPlayer(position) { return ['main_squad_gk', 'main_squad_dm', 'main_squad_st1', 'main_squad_st2'].includes(position); },
-                  benchPlayersCount() { return ['bench_gk', 'bench_dm', 'bench_st'].filter(pos => !!this.selected[pos]).length; },
-                  currentSelectedIds() { return Object.values(this.selected).filter(Boolean).map(p => p.id); },
-                  get selectedPlayersCount() { return this.currentSelectedIds().length; },
-                  canBeEdited: {{ can_be_edited|yesno:'true,false' }},
-                  get isFormValid() { return this.selectedPlayersCount === this.teamSize && this.budgetUsed <= this.budgetLimit && this.benchPlayersCount() <= 2 && this.transfersUsed <= this.transfersLimit && !this.hasUnavailablePlayers() && !this.hasPlayersWithChangedPositions() && this.selectedCaptain !== null; },
-                  getEffectiveTransfersUsed() {
-                  const prev = new Set(this.previousPlayerIds);
-                  const selectedIds = this.currentSelectedIds();
-                  const rawTransfersIn = selectedIds.filter(id => !prev.has(id)).length;
-                  const selectedSet = new Set(selectedIds);
-                  const freeUnavailableReplacements = this.previousUnavailablePlayerIds.filter(id => !selectedSet.has(id)).length;
-                  return Math.max(0, rawTransfersIn - freeUnavailableReplacements);
-                  },
-                  transfersCount() {
-                  if (this.previousPlayerIds.length === 0) {
-                  return 0;
-                  }
-                  return this.getEffectiveTransfersUsed();
-                  },
-                  updateTransfers() {
-                  if (this.previousPlayerIds.length === 0) {
-                  this.transfersUsed = 0;
-                  this.freeTransfersUsed = 0;
-                  return;
-                  }
-                  this.transfersUsed = this.getEffectiveTransfersUsed();
-                  this.freeTransfersUsed = Math.min(this.transfersUsed, this.freeTransfersLimit);
-                  },
-                  updateUsedBudget() {
-                  const mainPositions = ['main_squad_gk', 'main_squad_dm', 'main_squad_st1', 'main_squad_st2'];
-                  const benchPositions = ['bench_gk', 'bench_dm', 'bench_st'];
-                  const mainUsed = mainPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
-                  const benchUsed = benchPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
-                  this.budgetUsed = mainUsed + benchUsed;
-                  },
-                  handlePick(position, id, nickname, cost, teamLogo) {
-                  const previousPlayerId = this.selected[position]?.id;
-                  this.selected[position] = { id, nickname, cost, teamLogo, isUnavailable: false, isPositionChanged: false, changedPositions: {prev: '', current: ''} };
-                  if (this.isMainSquadPlayer(position) && this.selectedCaptain === previousPlayerId) {
-                  this.selectedCaptain = id;
-                  }
-                  this.updateUsedBudget();
-                  this.updateTransfers();
-                  },
-                  swap(positionA, positionB) {
-                  const swappedOutPlayer = this.selected[positionA];
-                  const swappedInPlayer = this.selected[positionB];
-                  this.selected[positionA] = swappedInPlayer;
-                  this.selected[positionB] = swappedOutPlayer;
-                  if (this.selectedCaptain === swappedOutPlayer.id) {
-                  this.selectedCaptain = swappedInPlayer.id;
-                  }
-                  this.updateUsedBudget();
-                  },
-                  fmt(v) { return v.toFixed(1); }
-                  }"
-      {# djlint:on #}
+      x-data="{
+        initialBudgetLimit: parseCost('{{ budget_limit }}'),
+        get budgetLimit() { return this.selectedBooster === 'limitless' ? Infinity : this.initialBudgetLimit; },
+        budgetUsed: 0,
+        teamSize: 6,
+        selectedCaptain: {{ form.captain_player_id.value|default:"null" }},
+        previousPlayerIds: {{ previous_player_ids }},
+        previousUnavailablePlayerIds: {{ previous_unavailable_player_ids }},
+        availableBoosters: {{ form.available_boosters }},
+        selectedBooster: {% if form.used_booster.value %}'{{ form.used_booster.value }}'{% else %}null{% endif %},
+        selected: {},
+
+        get unavailablePlayersCount() {
+          return Object.values(this.selected).filter(player => player?.isUnavailable).length;
+        },
+
+        hasUnavailablePlayers() {
+          return Object.values(this.selected).some(player => player?.isUnavailable);
+        },
+
+        get playersWithChangedPositionsCount() {
+          return Object.values(this.selected).filter(player => player?.isPositionChanged).length;
+        },
+
+        hasPlayersWithChangedPositions() {
+          return Object.values(this.selected).some(player => player?.isPositionChanged);
+        },
+
+        initialFreeTransfersLimit: 2,
+        get freeTransfersLimit() {
+          return this.selectedBooster === 'limitless' || this.selectedBooster === 'joker' ? Infinity : this.initialFreeTransfersLimit;
+        },
+        
+        initialTransfersLimit: 4,
+        get transfersLimit() {
+          return this.selectedBooster === 'limitless' || this.selectedBooster === 'joker' ? Infinity : this.initialTransfersLimit;
+        },
+
+        freeTransfersUsed: 0,
+        transfersUsed: 0,
+        transfersPenaltyPoints: 0,
+
+        get penalizedTransfersCount() { return Math.max(0, this.transfersUsed - this.freeTransfersUsed); },
+
+        get transfersPenaltyPoints() { return -15 * this.penalizedTransfersCount; },
+
+        isMainSquadPlayer(position) { return ['main_squad_gk', 'main_squad_dm', 'main_squad_st1', 'main_squad_st2'].includes(position); },
+
+        benchPlayersCount() { return ['bench_gk', 'bench_dm', 'bench_st'].filter(pos => !!this.selected[pos]).length; },
+
+        currentSelectedIds() { return Object.values(this.selected).filter(Boolean).map(p => p.id); },
+
+        get selectedPlayersCount() { return this.currentSelectedIds().length; },
+
+        canBeEdited: {{ can_be_edited|yesno:'true,false' }},
+
+        get isFormValid() {
+          return this.selectedPlayersCount === this.teamSize && this.budgetUsed <= this.budgetLimit && this.benchPlayersCount() <= 2 && this.transfersUsed <= this.transfersLimit && !this.hasUnavailablePlayers() && !this.hasPlayersWithChangedPositions() && this.selectedCaptain !== null;
+        },
+
+        getEffectiveTransfersUsed() {
+          const prev = new Set(this.previousPlayerIds);
+          const selectedIds = this.currentSelectedIds();
+          const rawTransfersIn = selectedIds.filter(id => !prev.has(id)).length;
+          const selectedSet = new Set(selectedIds);
+          const freeUnavailableReplacements = this.previousUnavailablePlayerIds.filter(id => !selectedSet.has(id)).length;
+          return Math.max(0, rawTransfersIn - freeUnavailableReplacements);
+        },
+
+        transfersCount() {
+          if (this.previousPlayerIds.length === 0) {
+            return 0;
+          }
+          return this.getEffectiveTransfersUsed();
+        },
+
+        updateTransfers() {
+          if (this.previousPlayerIds.length === 0) {
+            this.transfersUsed = 0;
+            this.freeTransfersUsed = 0;
+            return;
+          }
+          this.transfersUsed = this.getEffectiveTransfersUsed();
+          this.freeTransfersUsed = Math.min(this.transfersUsed, this.freeTransfersLimit);
+        },
+
+        updateUsedBudget() {
+          const mainPositions = ['main_squad_gk', 'main_squad_dm', 'main_squad_st1', 'main_squad_st2'];
+          const benchPositions = ['bench_gk', 'bench_dm', 'bench_st'];
+          const mainUsed = mainPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
+          const benchUsed = benchPositions.reduce((sum, position) => sum + (this.selected[position]?.cost || 0), 0);
+          this.budgetUsed = mainUsed + benchUsed;
+        },
+
+        handlePick(position, id, nickname, cost, teamLogo) {
+          const previousPlayerId = this.selected[position]?.id;
+          this.selected[position] = { id, nickname, cost, teamLogo, isUnavailable: false, isPositionChanged: false, changedPositions: {prev: '', current: ''} };
+          if (this.isMainSquadPlayer(position) && this.selectedCaptain === previousPlayerId) {
+            this.selectedCaptain = id;
+          }
+          this.updateUsedBudget();
+          this.updateTransfers();
+        },
+
+        swap(positionA, positionB) {
+          const swappedOutPlayer = this.selected[positionA];
+          const swappedInPlayer = this.selected[positionB];
+          this.selected[positionA] = swappedInPlayer;
+          this.selected[positionB] = swappedOutPlayer;
+          if (this.selectedCaptain === swappedOutPlayer.id) {
+            this.selectedCaptain = swappedInPlayer.id;
+          }
+          this.updateUsedBudget();
+        },
+        fmt(v) { return v.toFixed(1); }
+      }"
       x-init="
-      {% get_positions as positions %}
-      {% for position in positions %}
-        {% with player=form.initial|get_or_default:position %}
-          {% if player %}
-            {% with player_with_changed_position=players_with_changed_positions|get_or_default:player.id %}
-              selected['{{ position }}'] = {
-              id: {{ player.id|default:'null' }},
-              nickname: '{{ player.nickname|escapejs }}',
-              cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
-              teamLogo: '{{ player.team.logo.url }}',
-              isUnavailable: {{ form.available_player_ids|contains:player.id|yesno:'false,true' }},
-              isPositionChanged: {{ player_with_changed_position|yesno:'true,false' }},
-              changedPositions: {prev: '{{ player_with_changed_position.prev_position }}', current: '{{ player_with_changed_position.current_position }}'}
-              },
-            {% endwith %}
-          {% else %}
-            selected['{{ position }}'] = null,
-          {% endif %}
-        {% endwith %}
-      {% endfor %}
-      updateUsedBudget();
-      updateTransfers();
-      ">
+        {% get_positions as positions %}
+        {% for position in positions %}
+          {% with player=form.initial|get_or_default:position %}
+            {% if player %}
+              {% with player_with_changed_position=players_with_changed_positions|get_or_default:player.id %}
+                selected['{{ position }}'] = {
+                  id: {{ player.id|default:'null' }},
+                  nickname: '{{ player.nickname|escapejs }}',
+                  cost: parseCost('{{ form.player_costs|get_or_default:player.id|default:'0' }}'),
+                  teamLogo: '{{ player.team.logo.url }}',
+                  isUnavailable: {{ form.available_player_ids|contains:player.id|yesno:'false,true' }},
+                  isPositionChanged: {{ player_with_changed_position|yesno:'true,false' }},
+                  changedPositions: {prev: '{{ player_with_changed_position.prev_position }}', current: '{{ player_with_changed_position.current_position }}'}
+                },
+              {% endwith %}
+            {% else %}
+              selected['{{ position }}'] = null,
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+        
+        updateUsedBudget();
+        updateTransfers();
+      "
+    >
+      {# djlint:on #}
+
       {% csrf_token %}
       <input type="hidden" name="captain_player_id" :value="selectedCaptain" />
       <input type="hidden" name="used_booster" :value="selectedBooster" />
