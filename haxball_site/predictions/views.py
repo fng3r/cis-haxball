@@ -138,6 +138,8 @@ def resolve_selected_tour(request, selected_tournament):
             )
             if latest_submitted_tour:
                 initial_tour = tour_qs.filter(number=latest_submitted_tour['number']).first()
+            else:
+                initial_tour = tour_qs.first()
         tour = initial_tour
         tour_form = TourFilterForm(
             initial={'tour': initial_tour.pk if initial_tour else None},
