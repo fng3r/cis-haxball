@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
@@ -620,6 +620,7 @@ class Match(models.Model):
     )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
+    duration = models.DurationField('Длительность матча', default=timedelta(minutes=16))
     replays = ArrayField(models.URLField(), verbose_name='Ссылки на реплеи', default=list, blank=True)
     inspector = models.ForeignKey(
         User,

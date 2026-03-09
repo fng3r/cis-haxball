@@ -544,6 +544,26 @@ class MatchDetail(DetailView):
             .select_related('replay_stats_status')
         )
 
+    def get_time_played_by_player(self, match: Match) -> dict[int, str]:
+        time_played = defaultdict(int)
+        full_match_time = int(match.duration.total_seconds())
+        start_players = match.team_home_start.all() | match.team_guest_start.all()
+
+        for player in start_players:
+            time_played[player.id] = full_match_time
+
+        for substitution in match.match_substitutions.all():
+            player_in = substitution.player_in.id
+            player_out = substitution.player_out.id
+            time_until_match_end = int(
+                full_match_time
+                - timedelta(minutes=substitution.time_min, seconds=substitution.time_sec).total_seconds()
+            )
+            time_played[player_in] += time_until_match_end
+            time_played[player_out] -= time_until_match_end
+
+        return {player_id: datetime.fromtimestamp(sec).strftime('%M:%S') for player_id, sec in time_played.items()}
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         match: Match = context['match']
@@ -623,24 +643,7 @@ class MatchDetail(DetailView):
         clean_sheets_by_player = {d['author']: d['cs'] for d in clean_sheets}
         context['clean_sheets_by_player'] = clean_sheets_by_player
 
-        time_played = defaultdict(int)
-        substitutions = match.match_substitutions.all()
-        full_match_time = int(timedelta(minutes=16, seconds=0).total_seconds())
-        start_players = match.team_home_start.all() | match.team_guest_start.all()
-        for player in start_players:
-            time_played[player.id] = full_match_time
-
-        for substitution in substitutions:
-            player_in = substitution.player_in.id
-            player_out = substitution.player_out.id
-            time_until_match_end = int(
-                full_match_time
-                - timedelta(minutes=substitution.time_min, seconds=substitution.time_sec).total_seconds()
-            )
-            time_played[player_in] += time_until_match_end
-            time_played[player_out] -= time_until_match_end
-        time_played_by_player = {p: datetime.fromtimestamp(sec).strftime('%M:%S') for (p, sec) in time_played.items()}
-        context['time_played_by_player'] = time_played_by_player
+        context['time_played_by_player'] = self.get_time_played_by_player(match)
 
         cards = match.cards().select_related('team', 'author__name__user_profile')
         context['cards'] = cards

@@ -886,6 +886,7 @@ class MatchAdmin(UnfoldModelAdmin):
         ('inspector', RelatedDropdownFilter),
         'is_played',
         ('result__value', ChoicesCheckboxFilter),
+        ('id', SingleNumericFilter),
     )
     list_filter_submit = True
     list_fullwidth = True
@@ -907,8 +908,8 @@ class MatchAdmin(UnfoldModelAdmin):
             {
                 'fields': (
                     ('is_played',),
-                    ('match_date', 'inspector'),
-                    ('replays',),
+                    ('match_date', 'duration'),
+                    ('replays', 'inspector'),
                 )
             },
         ),
