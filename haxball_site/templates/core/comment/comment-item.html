@@ -43,15 +43,20 @@
 
           <div class="tw:m-0 tw:flex tw:ml-2 tw:font-semibold">
             <div class="tw:flex tw:gap-1 tw:items-center">
-              {% for icon in comment.parent.author.user_profile.user_icon.all %}
-                <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-              {% endfor %}
+              {% if comment.parent.author == comment.author %}
+                <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
+                   class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
+              {% else %}
+                {% for icon in comment.parent.author.user_profile.user_icon.all %}
+                  <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                {% endfor %}
 
-              <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
-                 class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
+                <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
+                   class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
 
-              {% include 'core/include/user_tag.html' with user=comment.parent.author %}
-              {% include 'core/comment/user-teams.html' with user=comment.parent.author %}
+                {% include 'core/include/user_tag.html' with user=comment.parent.author %}
+                {% include 'core/comment/user-teams.html' with user=comment.parent.author %}
+              {% endif %}
             </div>
           </div>
         {% endif %}
@@ -114,16 +119,17 @@
         {{ comment.created|date:"d.m.y" }}
         <i class="fa fa-clock-o tw:text-primary" aria-hidden="true"></i>
         {{ comment.created|time:"H:i" }}
+        {% now "Y-m-d" as today %}
         {% if comment.edited %}
-          {% if comment.edited.date == comment.created.date %}
-            <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5"
-               aria-hidden="true"
-               data-comment-edit-title='изм. {{ comment.edited|time:"H:i" }}'></i>
-          {% else %}
-            <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5"
-               aria-hidden="true"
-               data-comment-edit-title='изм. {{ comment.edited|date:"d.m.y" }} {{ comment.edited|time:"H:i" }}'></i>
-          {% endif %}
+          {# djlint:off #}
+          <i class="fa fa-pencil tw:hover:text-warning tw:ml-0.5 tw:after:content-[attr(data-comment-edit-title)] tw:after:pointer-events-none tw:after:align-middle
+                    tw:after:inline-block tw:after:overflow-hidden tw:after:whitespace-nowrap tw:after:max-w-0 tw:after:opacity-0 tw:after:ml-0 tw:after:px-0 tw:after:py-0.5
+                    tw:after:translate-x-[-4px] tw:after:bg-[color-mix(in_oklab,var(--color-base-200)_75%,var(--color-primary))] tw:after:border tw:after:border-base-200
+                    tw:after:rounded-sm tw:after:text-base-content tw:after:transition-all tw:after:duration-200 tw:after:ease-in tw:hover:after:max-w-[14rem]
+                    tw:hover:after:opacity-100 tw:hover:after:ml-2 tw:hover:after:px-1 tw:hover:after:translate-x-0 tw:hover:after:duration-700 tw:hover:after:ease-out"
+             aria-hidden="true"
+             data-comment-edit-title="изм.{% if comment.edited|date:'Y-m-d' != today %} {{ comment.edited|date:'d.m.y' }}{% endif %} {{ comment.edited|time:'H:i' }}"></i>
+          {# djlint:on #}
         {% endif %}
       </span>
 

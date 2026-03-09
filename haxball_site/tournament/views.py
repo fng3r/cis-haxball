@@ -23,7 +23,9 @@ from django_htmx.http import trigger_client_event
 
 from core.forms import NewCommentForm
 from core.utils import get_comments_for_object, get_paginated_comments
+from fantasy_league.models import FantasyTournament
 from haxball_site import settings
+from predictions.models import PredictionsContestTournament
 
 from .charts import StatCharts
 from .forms import (
@@ -429,13 +431,56 @@ class LeagueDetail(DetailView):
 
         winners = self._get_all_winners(league)
         default_stage = self._get_default_stage(league)
+        quick_links = self._get_quick_links(league)
 
         context['page'] = page
         context['comments'] = comments
         context['comment_form'] = comment_form
         context['winners'] = winners
         context['default_stage'] = default_stage
+        context['quick_links'] = quick_links
         return context
+
+    def _get_quick_links(self, league: League):
+        quick_links = []
+
+        fantasy_tournament = FantasyTournament.objects.filter(league=league).first()
+        if fantasy_tournament:
+            quick_links.append(
+                {
+                    'label': 'Fantasy League',
+                    'url': (
+                        f'{reverse("fantasy_league:main")}'
+                        f'?season={league.championship_id}&tournament={fantasy_tournament.id}'
+                    ),
+                }
+            )
+
+        predictions_tournament = PredictionsContestTournament.objects.filter(league=league).first()
+        if predictions_tournament:
+            quick_links.append(
+                {
+                    'label': 'Прогнозы',
+                    'url': (
+                        f'{reverse("predictions:main")}'
+                        f'?season={league.championship_id}&tournament={predictions_tournament.id}'
+                    ),
+                }
+            )
+
+        has_awards = (
+            AwardCampaign.objects.filter(season=league.championship).exists()
+            and Award.objects.filter(league=league).exists()
+        )
+        if has_awards:
+            quick_links.append(
+                {
+                    'label': 'Награды',
+                    'url': reverse('tournament:awards_main', kwargs={'slug': league.slug}),
+                }
+            )
+
+        return quick_links
 
     def _get_all_winners(self, league: League):
         league_filters = {}

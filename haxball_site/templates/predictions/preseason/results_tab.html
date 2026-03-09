@@ -4,12 +4,17 @@
   {% if not selected_tournament %}
     <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турнира</div>
   {% else %}
-    {% if results %}
-      <div class="tw:flex tw:items-center tw:justify-between">
+    <div class="tw:flex tw:items-center tw:justify-between">
+      <div class="tw:flex tw:items-center tw:gap-2">
         <h4 class="tw:text-lg tw:font-semibold">Средняя позиция команд</h4>
-        <button class="tw:btn tw:btn-secondary tw:btn-sm" onclick="detailed_stats_modal.showModal()">Подробная статистика</button>
+        <span class="tw:badge tw:badge-soft tw:badge-sm">Всего прогнозов: {{ submissions_count }}</span>
       </div>
+      {% if results %}
+        <button class="tw:btn tw:btn-secondary tw:btn-sm" onclick="detailed_stats_modal.showModal()">Подробная статистика</button>
+      {% endif %}
+    </div>
 
+    {% if results %}
       <div class="tw:flex">
         <ul class="tw:list tw:w-120">
           {% for row in results %}

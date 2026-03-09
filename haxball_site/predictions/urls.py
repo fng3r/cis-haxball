@@ -17,5 +17,6 @@ urlpatterns = [
     path('preseason/', views.preseason, name='preseason'),
     path('preseason/my/', views.preseason_my_tab, name='preseason_my_tab'),
     path('preseason/results/', views.preseason_results_tab, name='preseason_results_tab'),
+    path('preseason/ranking/', views.preseason_ranking_tab, name='preseason_ranking_tab'),
     path('preseason/save/', views.preseason_save, name='preseason_save'),
 ]

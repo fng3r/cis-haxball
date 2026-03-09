@@ -18,6 +18,7 @@ from .models import BoosterType, FantasyTournament, SquadPlayer, SquadSubmission
 from .points_service import calculate_submission_total_points
 from .utils import (
     calculate_tour_rewards,
+    get_available_players_in_league,
     get_blocking_tours,
     get_league_budget_limit,
     get_player_fantasy_stats,
@@ -104,6 +105,8 @@ def resolve_selected_tour(request, selected_tournament):
             )
             if latest_submitted_tour:
                 initial_tour = tour_qs.filter(number=latest_submitted_tour['number']).first()
+            else:
+                initial_tour = tour_qs.first()
         tour = initial_tour
         tour_form = TourFilterForm(
             initial={'tour': initial_tour.pk if initial_tour else None},
@@ -415,9 +418,14 @@ def edit_squad(request, tour_id):
 
     prev_player_ids = []
     players_with_changed_positions = {}
+    prev_unavailable_player_ids = []
     if base_submission:
         prev_player_ids = [sp.player_id for sp in base_submission.squad_players.all()]
         players_with_changed_positions = get_players_with_changed_positions(base_submission)
+        available_player_ids = get_available_players_in_league(tour.league)
+        prev_unavailable_player_ids = [
+            player_id for player_id in prev_player_ids if player_id not in available_player_ids
+        ]
 
     submission = SquadSubmission.objects.filter(
         user=request.user,
@@ -485,9 +493,7 @@ def edit_squad(request, tour_id):
                 if captain_player_id:
                     submission.captain_player = Player.objects.filter(pk=captain_player_id).first()
 
-                selected_ids = {p.id for p in form.get_main_squad_players() + form.get_bench_players() if p}
-                prev_ids = set(prev_player_ids)
-                transfers_in = len(selected_ids - prev_ids) if prev_ids else 0
+                transfers_in = form.get_effective_transfers_in(form.get_main_squad_players() + form.get_bench_players())
 
                 booster = form.cleaned_data.get('used_booster')
                 if booster in [BoosterType.JOKER, BoosterType.LIMITLESS]:
@@ -545,6 +551,7 @@ def edit_squad(request, tour_id):
                 'submission': submission,
                 'budget_limit': budget_limit,
                 'previous_player_ids': prev_player_ids,
+                'previous_unavailable_player_ids': prev_unavailable_player_ids,
                 'unavailable_players': unavailable_players,
                 'players_with_changed_positions': players_with_changed_positions,
                 'can_be_edited': can_be_edited,
@@ -612,6 +619,7 @@ def edit_squad(request, tour_id):
         'submission': submission,
         'budget_limit': budget_limit,
         'previous_player_ids': prev_player_ids,
+        'previous_unavailable_player_ids': prev_unavailable_player_ids,
         'unavailable_players': unavailable_players,
         'players_with_changed_positions': players_with_changed_positions,
         'can_be_edited': can_be_edited,
