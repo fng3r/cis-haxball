@@ -71,7 +71,7 @@
                                     </span>
                                     {% if match.is_played %}
                                       <span class="tw:ml-1">
-                                        {% if prediction.get_earned_points > 0 %}
+                                        {% if prediction|prediction_is_correct %}
                                           <span class="tw:text-success">✓</span>
                                         {% else %}
                                           <span class="tw:text-error">✗</span>

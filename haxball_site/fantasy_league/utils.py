@@ -336,7 +336,7 @@ def get_league_budget_limit(league):
     return BUDGET_LIMITS.get(league.title)
 
 
-def calculate_player_cost(player_rating, player):
+def calculate_player_cost(player_rating, player, season):
     """Calculate player cost in millions based on rating, custom cost, or default"""
     if player_rating:
         grade = player_rating.grade
@@ -357,7 +357,7 @@ def calculate_player_cost(player_rating, player):
 
         return round(cost, 1)
 
-    custom_cost = PlayerCost.objects.filter(player=player).first()
+    custom_cost = PlayerCost.objects.filter(player=player, season=season).first()
     if custom_cost:
         return float(custom_cost.cost)
 
@@ -366,6 +366,7 @@ def calculate_player_cost(player_rating, player):
 
 def get_players_costs(league):
     """Return {player_id: cost} for players in the given league's teams."""
+    season = league.championship
     latest_rating_version = PlayerRatingVersion.objects.order_by('-number').first()
     league_player_ids = list(Player.objects.filter(team__in=league.teams.all()).values_list('id', flat=True))
     ratings = PlayerRating.objects.filter(player_id__in=league_player_ids, version=latest_rating_version)
@@ -375,7 +376,7 @@ def get_players_costs(league):
     for pid in league_player_ids:
         player = Player.objects.get(id=pid)
         player_rating = player_rating_map.get(pid)
-        costs[pid] = calculate_player_cost(player_rating, player)
+        costs[pid] = calculate_player_cost(player_rating, player, season)
 
     return costs
 

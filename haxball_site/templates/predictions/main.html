@@ -61,14 +61,16 @@
                  hx-trigger="load" />
           <span class="tw:flex tw:items-center tw:gap-2">
             Прогнозы на сезон
-            {% with hours_until_start=selected_tournament.league|hours_until_start %}
-              {% if hours_until_start <= 0 %}
-                <i class="fa fa-lock" aria-hidden="true"></i>
-              {% elif hours_until_start < 48 %}
-                <div class="tw:badge tw:badge-warning tw:badge-soft tw:gap-1">
-                  <i class="fa fa-clock-o" aria-hidden="true"></i>
-                  {{ hours_until_start }} ч.
-                </div>
+            {% with hours_until_start=selected_preseason_tournament|hours_until_start %}
+              {% if hours_until_start != None %}
+                {% if hours_until_start <= 0 %}
+                  <i class="fa fa-lock" aria-hidden="true"></i>
+                {% elif hours_until_start < 72 %}
+                  <div class="tw:badge tw:badge-warning tw:badge-soft tw:gap-1">
+                    <i class="fa fa-clock-o" aria-hidden="true"></i>
+                    {{ hours_until_start }} ч.
+                  </div>
+                {% endif %}
               {% endif %}
             {% endwith %}
           </span>

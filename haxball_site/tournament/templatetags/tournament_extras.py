@@ -1350,7 +1350,11 @@ def teams_in_navbar():
     if leagues:
         return {'leagues': leagues}
 
-    all_teams = Team.objects.filter(leagues__championship__is_active=True).order_by('title')
+    all_teams = Team.objects.filter(leagues__championship__is_active=True)
+    if not all_teams.exists():
+        all_teams = Team.objects.annotate(players_count=Count('players_in_team')).filter(players_count__gt=0)
+    all_teams = all_teams.order_by('title')
+
     return {'leagues': leagues, 'all_teams': all_teams}
 
 
