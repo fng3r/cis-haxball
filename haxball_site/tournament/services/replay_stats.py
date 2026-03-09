@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TypedDict
 
 from tournament.models import Match, MatchReplayStats
@@ -133,9 +133,28 @@ def _position_label(position: str | None) -> str | None:
 class MatchReplayStatsAggregator:
     match: Match
     parts: list[MatchReplayStats]
+    part_display_labels: dict[int, str] = field(init=False)
 
     def __post_init__(self):
         self.parts = sorted(self.parts, key=lambda part: part.part_order)
+        self.part_display_labels = self._build_part_display_labels()
+
+    def _build_part_display_labels(self) -> dict[int, str]:
+        base_labels = [part.get_part_label_display() for part in self.parts]
+        label_totals: dict[str, int] = {}
+        for label in base_labels:
+            label_totals[label] = label_totals.get(label, 0) + 1
+
+        label_seen: dict[str, int] = {}
+        display_labels: dict[int, str] = {}
+        for part, base_label in zip(self.parts, base_labels, strict=False):
+            label_seen[base_label] = label_seen.get(base_label, 0) + 1
+            if label_totals[base_label] > 1:
+                display_labels[part.id] = f'{base_label} [{label_seen[base_label]}]'
+            else:
+                display_labels[part.id] = base_label
+
+        return display_labels
 
     def build(self) -> dict:
         teams = self._build_teams_stats()
@@ -199,7 +218,7 @@ class MatchReplayStatsAggregator:
 
             part_summary: TeamPartSummary = {
                 'index': part.part_order + 1,
-                'part_label': part.get_part_label_display(),
+                'part_label': self.part_display_labels[part.id],
                 'score_home': score_home,
                 'score_guest': score_guest,
                 'poss_home': poss_home,
@@ -422,13 +441,13 @@ class MatchReplayStatsAggregator:
             players_comparison_data['parts'].append(
                 {
                     'index': part_index,
-                    'part_label': part.part_label,
+                    'part_label': self.part_display_labels[part.id],
                     'home': [self._comparison_player_dict(player, j) for j, player in enumerate(home_part_players)],
                     'guest': [self._comparison_player_dict(player, j) for j, player in enumerate(guest_part_players)],
                 }
             )
             parts_players.append(
-                {'index': part_index, 'part_label': part.get_part_label_display(), 'players': part_players}
+                {'index': part_index, 'part_label': self.part_display_labels[part.id], 'players': part_players}
             )
 
         return {
