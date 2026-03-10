@@ -1031,6 +1031,7 @@ class MatchReplayStatsPlayer(models.Model):
         help_text='Сопоставлен по нику (красные=хозяева, синие=гости)',
     )
     nick = models.CharField('Ник в реплее', max_length=150)
+    avatar = models.CharField('Аватар', max_length=2, null=True, blank=True)
     team = models.ForeignKey(
         Team,
         verbose_name='Команда',

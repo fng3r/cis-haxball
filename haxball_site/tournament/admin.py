@@ -983,7 +983,8 @@ class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
 @admin.register(MatchReplay)
 class MatchReplayAdmin(UnfoldModelAdmin):
     list_display = ('match_id', 'match', 'status', 'replay_url', 'analyzer_replay_id', 'fetched_at')
-    list_filter = (('match__league', RelatedDropdownFilter), 'status')
+    list_filter = (('match__league', RelatedDropdownFilter), 'status', ('match__id', SingleNumericFilter))
+    list_filter_submit = True
     search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
     ordering = ('match_id', 'replay_url')
     raw_id_fields = ('match',)
@@ -1005,7 +1006,8 @@ class MatchReplayStatsAdmin(UnfoldModelAdmin):
         'poss_red',
         'poss_blue',
     )
-    list_filter = (('match__league', RelatedDropdownFilter),)
+    list_filter = (('match__league', RelatedDropdownFilter), ('match__id', SingleNumericFilter))
+    list_filter_submit = True
     search_fields = ('match__id', 'match_replay__replay_url', 'match_replay__analyzer_replay_id')
     ordering = ('match_id', 'part_order')
     raw_id_fields = ('match', 'match_replay')
@@ -1027,6 +1029,7 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
         'player',
         'nick',
         'team',
+        'avatar',
         'goals',
         'assists',
         'played_ticks',
@@ -1035,7 +1038,7 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
         'passes_completed',
         'pass_attempts',
     )
-    list_filter = (('team', RelatedDropdownFilter), ('replay_stats__match', RelatedDropdownFilter))
+    list_filter = (('team', RelatedDropdownFilter), ('replay_stats__match__id', SingleNumericFilter))
     search_fields = ('nick', 'player__nickname')
     ordering = ('replay_stats', 'team', 'nick')
     raw_id_fields = ('replay_stats', 'player', 'team')

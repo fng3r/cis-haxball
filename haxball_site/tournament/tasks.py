@@ -160,6 +160,7 @@ def _create_replay_stats_from_part(
         nick = p.get('nick', '').strip()
         if not nick or '(own goal)' in nick:
             continue
+        avatar = p.get('avatar')
         metrics = p.get('metrics') or {}
         samples_count = metrics.get('samples') or 0
         if samples_count <= 0:
@@ -179,6 +180,7 @@ def _create_replay_stats_from_part(
             replay_stats=part,
             player=player,
             nick=nick,
+            avatar=avatar,
             team=team_obj,
             goals=metrics.get('goals', 0),
             assists=metrics.get('assists', 0),
