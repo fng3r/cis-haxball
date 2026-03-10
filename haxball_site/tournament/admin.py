@@ -970,11 +970,23 @@ class MatchAdmin(UnfoldModelAdmin):
 
 @admin.register(MatchReplayStatsStatus)
 class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
-    list_display = ('match_id', 'status', 'fetched_at', 'error_message')
+    list_display = ('match_id', 'display_status', 'fetched_at', 'error_message')
     list_filter = ('status',)
     search_fields = ('match__id',)
     ordering = ('-fetched_at',)
     readonly_fields = ('match', 'fetched_at')
+
+    @display(
+        description='Статус',
+        label={
+            MatchReplayStatsStatus.Status.PENDING: 'warning',
+            MatchReplayStatsStatus.Status.PARTIAL: 'warning',
+            MatchReplayStatsStatus.Status.SUCCESS: 'success',
+            MatchReplayStatsStatus.Status.FAILED: 'danger',
+        },
+    )
+    def display_status(self, obj):
+        return obj.status, obj.get_status_display()
 
     def has_add_permission(self, request):
         return False
@@ -982,13 +994,25 @@ class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
 
 @admin.register(MatchReplay)
 class MatchReplayAdmin(UnfoldModelAdmin):
-    list_display = ('match_id', 'match', 'status', 'replay_url', 'analyzer_replay_id', 'fetched_at')
+    list_display = ('match_id', 'match', 'display_status', 'replay_url', 'analyzer_replay_id', 'fetched_at')
     list_filter = (('match__league', RelatedDropdownFilter), 'status', ('match__id', SingleNumericFilter))
     list_filter_submit = True
     search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
     ordering = ('match_id', 'replay_url')
     raw_id_fields = ('match',)
     readonly_fields = ('replay_url', 'analyzer_replay_id', 'status', 'error_message', 'raw_stats_json', 'fetched_at')
+
+    @display(
+        description='Статус',
+        label={
+            MatchReplay.ReplayStatus.PENDING: 'warning',
+            MatchReplay.ReplayStatus.AWAITING_STATS: 'warning',
+            MatchReplay.ReplayStatus.READY: 'success',
+            MatchReplay.ReplayStatus.FAILED: 'danger',
+        },
+    )
+    def display_status(self, obj):
+        return obj.status, obj.get_status_display()
 
 
 @admin.register(MatchReplayStats)
