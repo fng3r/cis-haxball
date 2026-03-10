@@ -6,12 +6,14 @@ and MatchReplayStatsPlayer from raw every run.
 
 import logging
 
+from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.utils import timezone
 
 from celery import shared_task
 
+from core.models import UserNicknameHistoryItem
 from tournament.models import (
     Match,
     MatchReplay,
@@ -37,6 +39,50 @@ SUPPORTED_PLAYER_POSITIONS = {
 }
 
 
+def _matches_nickname(player: Player, normalized_nick: str) -> bool:
+    if player.nickname and player.nickname.casefold() == normalized_nick:
+        return True
+
+    if player.name_id is None:
+        return False
+
+    history_items = getattr(player.name, 'prefetched_previous_nicknames', ())
+    for history_item in history_items:
+        history_nick = (history_item.nickname or '').strip()
+        if history_nick.casefold() == normalized_nick:
+            return True
+
+    return False
+
+
+def _resolve_player_app_side(match: Match, nick: str) -> Player | None:
+    normalized_nick = nick.casefold()
+    previous_nicknames_prefetch = Prefetch(
+        'name__usernicknamehistoryitem_set',
+        queryset=UserNicknameHistoryItem.objects.only('user_id', 'nickname'),
+        to_attr='prefetched_previous_nicknames',
+    )
+
+    participants = match.match_participants.select_related('name').prefetch_related(previous_nicknames_prefetch)
+    for player in participants:
+        if _matches_nickname(player, normalized_nick):
+            return player
+
+    users_with_history = User.objects.prefetch_related(
+        Prefetch(
+            'usernicknamehistoryitem_set',
+            queryset=UserNicknameHistoryItem.objects.only('user_id', 'nickname'),
+            to_attr='prefetched_previous_nicknames',
+        )
+    )
+    players = Player.objects.select_related('name').prefetch_related(Prefetch('name', queryset=users_with_history))
+    for player in players.iterator():
+        if _matches_nickname(player, normalized_nick):
+            return player
+
+    return None
+
+
 def _resolve_player(match, nick: str, cache: dict[str, Player | None] | None = None):
     """Resolve player on replay to Player model."""
     key = nick
@@ -47,6 +93,8 @@ def _resolve_player(match, nick: str, cache: dict[str, Player | None] | None = N
     player = match.match_participants.filter(lookup).distinct().first()
     if not player:
         player = Player.objects.filter(lookup).distinct().first()
+    if not player:
+        player = _resolve_player_app_side(match, nick)
 
     if cache is not None:
         cache[key] = player
