@@ -129,6 +129,16 @@ def _position_label(position: str | None) -> str | None:
     return None
 
 
+def _position_sort_order(position: str | None) -> int:
+    if position == 'GK':
+        return 0
+    if position == 'DM':
+        return 1
+    if position in {'AM', 'ST'}:
+        return 2
+    return 3
+
+
 @dataclass(slots=True)
 class MatchReplayStatsAggregator:
     match: Match
@@ -461,7 +471,11 @@ class MatchReplayStatsAggregator:
     @staticmethod
     def _player_sort_key(player: dict, team_home_id: int) -> tuple:
         is_home = player.get('team_obj') and player['team_obj'].id == team_home_id
-        return (0 if is_home else 1, player.get('nick') or '')
+        return (
+            0 if is_home else 1,
+            _position_sort_order(player.get('position')),
+            (player.get('nick') or '').casefold(),
+        )
 
     @staticmethod
     def _player_row(
