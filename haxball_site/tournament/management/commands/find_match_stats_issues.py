@@ -58,3 +58,9 @@ class Command(BaseCommand):
         for match_id in sorted(matches_to_players):
             players = ', '.join(sorted(matches_to_players[match_id]))
             self.stdout.write(f'{match_id}: {players}')
+
+        total_matches = len(matches_to_players)
+        if mode == 'zero-playtime':
+            self.stdout.write(f'Total matches with zero-playtime players: {total_matches}')
+        else:
+            self.stdout.write(f'Total matches with missing player relation: {total_matches}')
