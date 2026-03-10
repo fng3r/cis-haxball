@@ -10,14 +10,13 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 
-# Config (could be moved to Django settings)
 POWTORKI_BASE = 'https://replay.thehax.pl'
 SAVIOLA_BASE = 'https://hax.saviola.de'
 ANALYZER_BASE = 'https://replay.hax.ma'
-DOWNLOAD_TIMEOUT = 60
-UPLOAD_TIMEOUT = 120
+DOWNLOAD_TIMEOUT = 20
+UPLOAD_TIMEOUT = 20
 STATS_POLL_INTERVAL = 3
-STATS_POLL_MAX_WAIT = 60
+STATS_POLL_MAX_WAIT = 15
 
 
 def is_powtorki_url(url: str) -> bool:
