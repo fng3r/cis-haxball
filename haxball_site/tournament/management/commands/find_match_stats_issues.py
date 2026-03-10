@@ -22,10 +22,17 @@ class Command(BaseCommand):
             default=None,
             help='Optional list of match IDs to limit the scan',
         )
+        parser.add_argument(
+            '--season',
+            type=int,
+            default=None,
+            help='Optional season number to limit matches by league championship season',
+        )
 
     def handle(self, *args, **options):
         mode = options.get('mode')
         match_ids = options.get('match_ids')
+        season = options.get('season')
 
         if mode == 'zero-playtime':
             target_qs = MatchReplayStatsPlayer.objects.filter(played_ticks=0)
@@ -37,6 +44,8 @@ class Command(BaseCommand):
         target_qs = target_qs.select_related('replay_stats__match')
         if match_ids:
             target_qs = target_qs.filter(replay_stats__match_id__in=match_ids)
+        if season is not None:
+            target_qs = target_qs.filter(replay_stats__match__league__championship__number=season)
 
         matches_to_players: dict[int, set[str]] = defaultdict(set)
         for entry in target_qs.order_by('replay_stats__match_id', 'nick'):
