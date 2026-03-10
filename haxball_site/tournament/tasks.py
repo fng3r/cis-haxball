@@ -76,7 +76,7 @@ def _resolve_player_app_side(match: Match, nick: str) -> Player | None:
         )
     )
     players = Player.objects.select_related('name').prefetch_related(Prefetch('name', queryset=users_with_history))
-    for player in players.iterator():
+    for player in players.iterator(chunk_size=1000):
         if _matches_nickname(player, normalized_nick):
             return player
 
