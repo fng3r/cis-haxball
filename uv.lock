@@ -303,7 +303,7 @@ requires-dist = [
     { name = "django-smart-selects", specifier = "==1.7.2" },
     { name = "django-summernote", specifier = "==0.8.20.0" },
     { name = "django-template-partials", specifier = "==24.4" },
-    { name = "django-unfold", specifier = "==0.72.0" },
+    { name = "django-unfold", specifier = "==0.83.1" },
     { name = "django-vite", specifier = "==3.1.0" },
     { name = "django-widget-tweaks", specifier = "==1.5.0" },
     { name = "google-api-python-client", specifier = "==2.164.0" },
@@ -761,14 +761,14 @@ wheels = [
 
 [[package]]
 name = "django-unfold"
-version = "0.72.0"
+version = "0.83.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/55/e6/045b68207d8b4b395623d39d803e6566ea2c110e56665e3ff6bda07de6aa/django_unfold-0.72.0.tar.gz", hash = "sha256:43a0e8a4383037a24b73666c9f721faef12bd500c4628b4fc39d0dafd2e9c0a2", size = 1102339 }
+sdist = { url = "https://files.pythonhosted.org/packages/7c/66/5ddc3a921a6b4540b3bb319faa9a0a097efb5c2b86e4386ddffd349ec248/django_unfold-0.83.1.tar.gz", hash = "sha256:af3f9710496d172f0079343d1ba3128528da6d8ef4a57b070efcfc6456d8ed2b", size = 1111682 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/dd/6cdb80d5d377f2bdf3b39b639025bb8655b96fac08aa3673ae1e4b3e3384/django_unfold-0.72.0-py3-none-any.whl", hash = "sha256:61448ad42ff7a33c7ad66d14071b24224bb476038a14a1bbe719a774db496e34", size = 1215396 },
+    { url = "https://files.pythonhosted.org/packages/78/fb/f3822627068f99de66989e3f2bdb9cf0eaafa50cbe49615011c74de41706/django_unfold-0.83.1-py3-none-any.whl", hash = "sha256:233cca8f7d9d173518597ce4dbafb0167f3075b556d7fb2b97e44217a1c6ba0f", size = 1227058 },
 ]
 
 [[package]]
