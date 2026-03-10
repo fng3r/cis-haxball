@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -42,7 +43,5 @@ def schedule_fetch_match_replay_stats(sender, instance, **kwargs):
     """When Match.replays changes, schedule Celery task to fetch stats."""
     if not instance.tracker.has_changed('replays'):
         return
-    if not instance.replays:
-        return
 
-    fetch_match_replay_stats.delay(instance.pk)
+    transaction.on_commit(lambda: fetch_match_replay_stats.delay(instance.pk))
