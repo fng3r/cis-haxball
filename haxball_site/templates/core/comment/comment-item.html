@@ -164,7 +164,7 @@
     {% endif %}
     <div class="comment-body tw:mt-1.5 tw:prose tw:max-w-none tw:text-base-content tw:prose-img:my-2">{{ comment.body|safe }}</div>
     {% if comment_reactions.has_reactions %}
-      <div class="tw:mt-2">
+      <div class="tw:my-2">
         {% include 'core/include/reactions/widget.html' with comment_id=comment.id can_react=comment_reactions.can_react user=user reaction_chips=comment_reactions.reaction_chips has_reactions=comment_reactions.has_reactions %}
       </div>
     {% endif %}
