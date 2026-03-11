@@ -566,6 +566,8 @@ class VotesView(View):
 
 class ReactionWidgetView(View):
     REACTION_NAME_MAX_LENGTH = 64
+    REGULAR_REACTIONS_LIMIT = 1
+    PREMIUM_REACTIONS_LIMIT = 3
 
     def _get_object(self, object_type: str, object_id: int):
         if object_type != 'comment':
@@ -582,6 +584,15 @@ class ReactionWidgetView(View):
             return False
 
         return profile.can_vote
+
+    def _get_reactions_limit(self, user: User):
+        if user.is_superuser:
+            return None
+
+        if Subscription.objects.by_user(user).active().exists():
+            return self.PREMIUM_REACTIONS_LIMIT
+
+        return self.REGULAR_REACTIONS_LIMIT
 
     def _render_widget(self, request, obj):
         context = {
@@ -633,8 +644,6 @@ class ReactionWidgetView(View):
 
             raw_code = emoji_id or emoji_name or emoji_native
             normalized_code = re.sub(r'[^a-z0-9_-]+', '_', raw_code.lower()).strip('_')
-            if not normalized_code:
-                normalized_code = f'emoji_{abs(hash(raw_code))}'[: self.REACTION_CODE_MAX_LENGTH]
 
             reaction_type, _ = ReactionType.objects.update_or_create(
                 code=normalized_code,
@@ -657,6 +666,18 @@ class ReactionWidgetView(View):
         if reaction:
             reaction.delete()
         else:
+            reactions_limit = self._get_reactions_limit(request.user)
+            if reactions_limit is not None:
+                user_reactions = Reaction.objects.filter(
+                    content_type=content_type,
+                    object_id=obj.id,
+                    user=request.user,
+                ).order_by('-created', '-id')
+                if user_reactions.count() >= reactions_limit:
+                    latest_reaction = user_reactions.first()
+                    if latest_reaction is not None:
+                        latest_reaction.delete()
+
             Reaction.objects.create(
                 content_type=content_type,
                 object_id=obj.id,
