@@ -45,6 +45,7 @@ def build_reactions_context(obj, user, *, request=None) -> dict[str, Any]:
     if not reaction_type_ids:
         result = {
             'reaction_chips': [],
+            'has_reactions': False,
         }
         object_contexts[object_cache_key] = result
         return result
@@ -88,6 +89,7 @@ def build_reactions_context(obj, user, *, request=None) -> dict[str, Any]:
 
     result = {
         'reaction_chips': chips,
+        'has_reactions': bool(chips),
     }
     object_contexts[object_cache_key] = result
     return result

@@ -40,12 +40,6 @@ from .utils import get_comments_for_object, get_paginated_comments, strtobool
 
 logger = logging.getLogger('haxball_site')
 
-REACTIONABLE_MODELS = {
-    'post': Post,
-    'comment': NewComment,
-    'profile': Profile,
-}
-
 
 class HomeView(View):
     def get(self, request):
@@ -574,11 +568,10 @@ class ReactionWidgetView(View):
     REACTION_NAME_MAX_LENGTH = 64
 
     def _get_object(self, object_type: str, object_id: int):
-        model = REACTIONABLE_MODELS.get(object_type)
-        if model is None:
+        if object_type != 'comment':
             return None
 
-        return model.objects.filter(pk=object_id).first()
+        return NewComment.objects.filter(pk=object_id).first()
 
     def _can_react(self, request) -> bool:
         if not request.user.is_authenticated:
@@ -590,21 +583,30 @@ class ReactionWidgetView(View):
 
         return profile.can_vote
 
-    def _render_widget(self, request, object_type: str, obj):
+    def _render_widget(self, request, obj):
         context = {
-            'object_type': object_type,
-            'object_id': obj.id,
+            'comment_id': obj.id,
             'can_react': self._can_react(request),
         }
         context.update(build_reactions_context(obj, request.user))
         return render(request, 'core/include/reactions/widget.html', context)
+
+    def _render_comment_item(self, request, comment):
+        return render(
+            request,
+            'core/comment/comment-item.html',
+            {
+                'comment': comment,
+                'object': comment.content_object,
+            },
+        )
 
     def get(self, request, object_type: str, object_id: int):
         obj = self._get_object(object_type, object_id)
         if obj is None:
             return HttpResponse(status=404)
 
-        return self._render_widget(request, object_type, obj)
+        return self._render_widget(request, obj)
 
     def post(self, request, object_type: str, object_id: int):
         obj = self._get_object(object_type, object_id)
@@ -662,7 +664,10 @@ class ReactionWidgetView(View):
                 reaction_type=reaction_type,
             )
 
-        return self._render_widget(request, object_type, obj)
+        if request.POST.get('render_comment') == '1':
+            return self._render_comment_item(request, obj)
+
+        return self._render_widget(request, obj)
 
     def _extract_keywords(self, keywords_raw: str) -> list[str]:
         if not keywords_raw:

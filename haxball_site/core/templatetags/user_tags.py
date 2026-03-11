@@ -323,8 +323,8 @@ def show_last_transfers():
     return {'transfers': last_transfers}
 
 
-@register.inclusion_tag('core/include/reactions/widget.html', takes_context=True)
-def render_reactions(context, obj, object_type: str):
+@register.simple_tag(takes_context=True)
+def get_reactions_context(context, obj):
     request = context['request']
 
     can_react = False
@@ -332,8 +332,6 @@ def render_reactions(context, obj, object_type: str):
         can_react = request.user.user_profile
 
     data = {
-        'object_type': object_type,
-        'object_id': obj.id,
         'can_react': can_react,
         'user': request.user,
     }

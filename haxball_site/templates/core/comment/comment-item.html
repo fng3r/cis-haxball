@@ -3,7 +3,7 @@
 {% load tournament_extras %}
 {% load thumbnail %}
 
-<div class="tw:flex tw:p-4 tw:gap-2.5 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}"
+<div class="tw:flex tw:group tw:p-4 tw:gap-2.5 comment-row {% if not comment.is_parent %} tw:pl-[7%]! {% endif %}"
      id="r{{ comment.id }}">
   <div class="tw:flex tw:flex-col tw:items-center tw:gap-1.5 tw:pl-2">
     <a href="{{ comment.author.user_profile.get_absolute_url }}">
@@ -20,6 +20,7 @@
   </div>
 
   <div class="comment-text tw:w-full">
+    {% get_reactions_context comment as comment_reactions %}
     <div class="tw:flex tw:justify-between">
       <div class="tw:inline-flex tw:items-center">
         <div class="tw:m-0 tw:flex tw:items-center">
@@ -135,12 +136,17 @@
 
       {% include 'core/include/like_dislike_comment.html' with comment=comment %}
 
-      <span class="action-icons">
+      <span class="action-icons tw:inline-flex tw:items-center">
         <a href="#addcomment"
            class="tw:ml-2 tw:mt-1.5 tw:align-middle tw:text-base-content/40 tw:hover:text-[#1976d2]!"
            {% if user.is_authenticated %} @click="attachComment('{{ comment.id }}', '{{ comment.author.username }}')" {% else %} onclick="login_modal.showModal()" {% endif %}>
           <i class="fa fa-reply"></i>
         </a>
+        {% if not comment_reactions.has_reactions %}
+          <span class="tw:ml-2 tw:mt-1 tw:opacity-0 tw:pointer-events-none tw:transition-opacity tw:duration-150 tw:group-hover:opacity-100 tw:group-hover:pointer-events-auto tw:group-focus-within:opacity-100 tw:group-focus-within:pointer-events-auto">
+            {% include 'core/include/reactions/widget.html' with comment_id=comment.id can_react=comment_reactions.can_react user=user reaction_chips=comment_reactions.reaction_chips has_reactions=comment_reactions.has_reactions %}
+          </span>
+        {% endif %}
       </span>
     </div>
     {% if comment.purchase %}
@@ -157,7 +163,11 @@
       </div>
     {% endif %}
     <div class="comment-body tw:mt-1.5 tw:prose tw:max-w-none tw:text-base-content tw:prose-img:my-2">{{ comment.body|safe }}</div>
-    <div class="tw:mt-2">{% render_reactions comment 'comment' %}</div>
+    {% if comment_reactions.has_reactions %}
+      <div class="tw:mt-2">
+        {% include 'core/include/reactions/widget.html' with comment_id=comment.id can_react=comment_reactions.can_react user=user reaction_chips=comment_reactions.reaction_chips has_reactions=comment_reactions.has_reactions %}
+      </div>
+    {% endif %}
 
     <div class="comment-footer" x-data="{showReplies: true}">
       {% if comment.is_parent and comment.childs_count > 2 %}
