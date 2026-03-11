@@ -1,8 +1,10 @@
 import random
+from datetime import time
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from predictions.models import (
     PreseasonPredictionItem,
@@ -107,8 +109,13 @@ class Command(BaseCommand):
         self.stdout.write(f'Found {len(teams)} teams in league: {tournament.title}')
 
         # Create preseason prediction tournament
+        first_tour = tournament.tours.order_by('number').first()
+        if first_tour:
+            close_at = timezone.make_aware(timezone.datetime.combine(first_tour.date_from, time(18, 0)))
+        else:
+            close_at = timezone.localtime() + timezone.timedelta(days=7)
         preseason_tournament, created = PreseasonPredictionsTournament.objects.get_or_create(
-            league=tournament, defaults={'is_active': True}
+            league=tournament, defaults={'locked_at': close_at}
         )
 
         # Select users for preseason predictions

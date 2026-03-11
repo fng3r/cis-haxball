@@ -11,13 +11,14 @@ from django.views.decorators.http import require_POST
 
 from django_htmx.http import trigger_client_event
 
-from tournament.models import Player, TourNumber
+from tournament.models import Player, Season, TourNumber
 
-from .forms import SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
+from .forms import SeasonFilterForm, SquadSubmissionForm, TourFilterForm, TournamentFilterForm, UserFilterForm
 from .models import BoosterType, FantasyTournament, SquadPlayer, SquadSubmission
 from .points_service import calculate_submission_total_points
 from .utils import (
     calculate_tour_rewards,
+    get_available_players_in_league,
     get_blocking_tours,
     get_league_budget_limit,
     get_player_fantasy_stats,
@@ -29,22 +30,41 @@ from .utils import (
 )
 
 
-def get_default_tournament():
-    return (
-        FantasyTournament.objects.filter(is_active=True)
-        .select_related('league', 'league__championship')
-        .order_by('league__priority')
-        .first()
+def resolve_selected_season(request):
+    """Return (selected_season, season_form) for fantasy tournaments."""
+    seasons = (
+        Season.objects.filter(tournaments_in_season__fantasy_tournament__isnull=False).distinct().order_by('-number')
     )
 
+    selected_season = None
+    season_id = request.GET.get('season')
+    if season_id:
+        selected_season = seasons.filter(pk=season_id).first()
+    if selected_season is None and seasons.exists():
+        selected_season = seasons.filter(is_active=True).first() or seasons.first()
 
-def resolve_selected_tournament(request, selected_tournament=None):
-    """Resolve selected tournament from GET or provided value and return (tournament, TournamentFilterForm).
+    season_form = SeasonFilterForm(
+        seasons,
+        initial={'season': selected_season.pk if selected_season else None},
+    )
 
-    Ensures the tournament is enriched with league and prefetches tours for later use.
-    """
-    default_tournament = get_default_tournament()
-    if not selected_tournament:
+    return selected_season, season_form
+
+
+def get_default_tournament(season: Season | None = None):
+    """Return default fantasy tournament, optionally scoped to a season (prefer active)."""
+    queryset = FantasyTournament.objects.select_related('league__championship')
+    if season is not None:
+        queryset = queryset.filter(league__championship=season)
+
+    return queryset.order_by('league__priority').first()
+
+
+def resolve_selected_tournament(request, selected_tournament=None, season: Season | None = None):
+    """Resolve selected tournament from GET or provided value and return (tournament, TournamentFilterForm)."""
+    default_tournament = get_default_tournament(season=season)
+
+    if selected_tournament is None:
         if request.GET.get('tournament'):
             selected_tournament = FantasyTournament.objects.filter(pk=request.GET.get('tournament')).first()
         elif default_tournament:
@@ -59,7 +79,8 @@ def resolve_selected_tournament(request, selected_tournament=None):
         )
 
     tournament_form = TournamentFilterForm(
-        initial={'tournament': selected_tournament.pk if selected_tournament else None}
+        initial={'tournament': selected_tournament.pk if selected_tournament else None},
+        season=season,
     )
 
     return selected_tournament, tournament_form
@@ -84,6 +105,8 @@ def resolve_selected_tour(request, selected_tournament):
             )
             if latest_submitted_tour:
                 initial_tour = tour_qs.filter(number=latest_submitted_tour['number']).first()
+            else:
+                initial_tour = tour_qs.first()
         tour = initial_tour
         tour_form = TourFilterForm(
             initial={'tour': initial_tour.pk if initial_tour else None},
@@ -106,9 +129,11 @@ def get_users_with_submissions(tournament=None):
 
 def fantasy_main(request):
     """Main fantasy league page with four tabs"""
-    selected_tournament = None
     selected_user = None
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
+
+    selected_season, season_form = resolve_selected_season(request)
+    selected_tournament, tournament_form = resolve_selected_tournament(request, season=selected_season)
+
     user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
 
     active_tournaments = FantasyTournament.objects.filter(is_active=True)
@@ -116,6 +141,8 @@ def fantasy_main(request):
     make_squad_tab_html = make_squad_tab(request, initial_context=True, selected_tournament=selected_tournament)
 
     context = {
+        'season_form': season_form,
+        'selected_season': selected_season,
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
@@ -132,7 +159,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
     if not request.user.is_authenticated:
         return render_to_string('fantasy_league/make_squad_tab.html', {'user': request.user}, request=request)
 
-    selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
+    selected_tournament, _ = resolve_selected_tournament(request, selected_tournament)
 
     user_squads = {}
     is_tournament_ended = False
@@ -184,7 +211,6 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
         is_tournament_ended = all(tour.is_ended for tour in tours)
 
     context = {
-        'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'is_tournament_ended': is_tournament_ended,
         'user_squads': user_squads,
@@ -198,7 +224,7 @@ def make_squad_tab(request, initial_context=False, selected_tournament=None):
 
 def view_squads_tab(request):
     """Tab for viewing other users' squad submissions"""
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_tournament(request)
     users_with_submissions = get_users_with_submissions(selected_tournament)
 
     user_id = request.GET.get('user')
@@ -213,7 +239,6 @@ def view_squads_tab(request):
             request,
             'fantasy_league/view_squads_tab.html',
             {
-                'tournament_form': tournament_form,
                 'user_form': UserFilterForm(),
                 'selected_tournament': selected_tournament,
                 'selected_user': selected_user,
@@ -245,7 +270,6 @@ def view_squads_tab(request):
             squads_data[tour.id] = submission
 
     context = {
-        'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
@@ -258,7 +282,7 @@ def view_squads_tab(request):
 
 def top_squads_tab(request):
     """Tab for viewing top-3 squad submissions per tour"""
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_tournament(request)
     selected_tour, tour_form = resolve_selected_tour(request, selected_tournament)
 
     top_submissions = []
@@ -281,7 +305,6 @@ def top_squads_tab(request):
             )[:3]
 
     context = {
-        'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'selected_tour': selected_tour,
         'tour_form': tour_form,
@@ -294,14 +317,13 @@ def top_squads_tab(request):
 
 def standings_tab(request):
     """Tab for tournament standings"""
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_tournament(request)
 
     standings = []
     if selected_tournament:
         standings = get_tournament_standings(selected_tournament)
 
     context = {
-        'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'standings': standings,
     }
@@ -311,14 +333,13 @@ def standings_tab(request):
 
 def statistics_tab(request):
     """Tab for player statistics"""
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_tournament(request)
 
     player_stats = []
     if selected_tournament:
         player_stats = get_player_fantasy_stats(selected_tournament)
 
     context = {
-        'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'player_stats': player_stats,
     }
@@ -397,9 +418,14 @@ def edit_squad(request, tour_id):
 
     prev_player_ids = []
     players_with_changed_positions = {}
+    prev_unavailable_player_ids = []
     if base_submission:
         prev_player_ids = [sp.player_id for sp in base_submission.squad_players.all()]
         players_with_changed_positions = get_players_with_changed_positions(base_submission)
+        available_player_ids = get_available_players_in_league(tour.league)
+        prev_unavailable_player_ids = [
+            player_id for player_id in prev_player_ids if player_id not in available_player_ids
+        ]
 
     submission = SquadSubmission.objects.filter(
         user=request.user,
@@ -467,9 +493,7 @@ def edit_squad(request, tour_id):
                 if captain_player_id:
                     submission.captain_player = Player.objects.filter(pk=captain_player_id).first()
 
-                selected_ids = {p.id for p in form.get_main_squad_players() + form.get_bench_players() if p}
-                prev_ids = set(prev_player_ids)
-                transfers_in = len(selected_ids - prev_ids) if prev_ids else 0
+                transfers_in = form.get_effective_transfers_in(form.get_main_squad_players() + form.get_bench_players())
 
                 booster = form.cleaned_data.get('used_booster')
                 if booster in [BoosterType.JOKER, BoosterType.LIMITLESS]:
@@ -527,6 +551,7 @@ def edit_squad(request, tour_id):
                 'submission': submission,
                 'budget_limit': budget_limit,
                 'previous_player_ids': prev_player_ids,
+                'previous_unavailable_player_ids': prev_unavailable_player_ids,
                 'unavailable_players': unavailable_players,
                 'players_with_changed_positions': players_with_changed_positions,
                 'can_be_edited': can_be_edited,
@@ -594,6 +619,7 @@ def edit_squad(request, tour_id):
         'submission': submission,
         'budget_limit': budget_limit,
         'previous_player_ids': prev_player_ids,
+        'previous_unavailable_player_ids': prev_unavailable_player_ids,
         'unavailable_players': unavailable_players,
         'players_with_changed_positions': players_with_changed_positions,
         'can_be_edited': can_be_edited,
@@ -635,7 +661,7 @@ def delete_squad(request, tour_id):
 
 def rewards_tab(request):
     """Tab for displaying rewards distribution"""
-    selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tournament, _ = resolve_selected_tournament(request)
     selected_tour, tour_form = resolve_selected_tour(request, selected_tournament)
 
     tour_rewards_data = {}
@@ -644,7 +670,6 @@ def rewards_tab(request):
         tour_rewards_data = {'tour': selected_tour, 'rewards': rewards_data}
 
     context = {
-        'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
         'tour_form': tour_form,
         'selected_tour': selected_tour,

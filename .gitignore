@@ -123,3 +123,5 @@ haxball_site/.site_cache
 tailwind/node_modules
 haxball_site/static/manifest.json
 haxball_site/static/tailwind
+
+.logs

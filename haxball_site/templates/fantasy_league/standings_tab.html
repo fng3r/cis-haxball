@@ -10,7 +10,13 @@
   </div>
 {% else %}
   <div class="tw:[#standings-content:has(.htmx-request)_&]:opacity-50 tw:[#standings-content:has(.htmx-request)_&]:transition-opacity">
-    <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
+    <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+      <h5 class="tw:text-md tw:font-semibold">{{ selected_tournament.league.title }}</h5>
+      <span class="tw:badge tw:badge-sm tw:badge-soft tw:font-semibold">
+        <i class="fa fa-users"></i>
+        Участники: {{ standings|length }}
+      </span>
+    </div>
 
     {% if standings %}
       <div class="tw:overflow-auto tw:max-h-[950px]">

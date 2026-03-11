@@ -1,7 +1,7 @@
 from django import forms
 from django.db.models import Case, IntegerField, OuterRef, Subquery, Value, When
 
-from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, TourNumber
+from tournament.models import League, Player, PlayerRating, PlayerRatingVersion, Season, TourNumber
 
 from .models import BoosterType, FantasyTournament, SquadSubmission
 from .utils import (
@@ -13,15 +13,37 @@ from .utils import (
 )
 
 
+class SeasonFilterForm(forms.Form):
+    """Form for filtering seasons."""
+
+    season = forms.ModelChoiceField(
+        queryset=Season.objects.none(),
+        empty_label=None,
+        required=False,
+        label='Сезон',
+    )
+
+    def __init__(self, available_seasons, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['season'].queryset = available_seasons
+
+
 class TournamentFilterForm(forms.Form):
     """Form for filtering tournaments"""
 
     tournament = forms.ModelChoiceField(
-        queryset=FantasyTournament.objects.filter(is_active=True).order_by('league__priority'),
+        queryset=FantasyTournament.objects.none(),
         empty_label=None,
         required=False,
         label='Турнир',
     )
+
+    def __init__(self, *args, season: Season | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        queryset = FantasyTournament.objects.all()
+        if season is not None:
+            queryset = queryset.filter(league__championship=season)
+        self.fields['tournament'].queryset = queryset.order_by('league__priority')
 
 
 class UserFilterForm(forms.Form):
@@ -115,19 +137,15 @@ class SquadSubmissionForm(forms.Form):
         self.available_player_ids = get_available_players_in_league(self.tournament)
         self.available_boosters = []
 
-        if user and tour:
-            total_tours = tournament.tours.count()
-            if tour.number != 1 and tour.number != (total_tours / 2 + 1):
-                used_booster_types = SquadSubmission.objects.filter(
-                    user=user,
-                    tournament=tournament.fantasy_tournament,
-                    tour__number__lt=tour.number,
-                    used_booster__isnull=False,
-                ).values_list('used_booster', flat=True)
+        if user and tour and not self.is_first_user_submission_in_current_half():
+            used_booster_types = SquadSubmission.objects.filter(
+                user=user,
+                tournament=tournament.fantasy_tournament,
+                tour__number__lt=tour.number,
+                used_booster__isnull=False,
+            ).values_list('used_booster', flat=True)
 
-                self.available_boosters = [
-                    booster for booster in BoosterType.values if booster not in used_booster_types
-                ]
+            self.available_boosters = [booster for booster in BoosterType.values if booster not in used_booster_types]
 
         team_filter = {'team__in': tournament.teams.all()}
 
@@ -192,6 +210,12 @@ class SquadSubmissionForm(forms.Form):
         if len(set(primary_players)) != 4:
             raise forms.ValidationError('В основном составе не может быть дублирующихся игроков')
 
+        self.validate_main_st_players_team_diversity(
+            cleaned_data.get('main_squad_st1'),
+            cleaned_data.get('main_squad_st2'),
+        )
+        self.validate_main_squad_team_diversity(primary_players)
+
         all_players = primary_players + filled_bench
         if len(set(all_players)) != 6:
             raise forms.ValidationError('Каждый игрок может быть выбран только один раз')
@@ -213,21 +237,15 @@ class SquadSubmissionForm(forms.Form):
 
     def get_main_squad_players(self):
         """Get list of main squad players from cleaned data"""
-        if not self.is_valid():
-            return []
-
         return [
-            self.cleaned_data['main_squad_gk'],
-            self.cleaned_data['main_squad_dm'],
-            self.cleaned_data['main_squad_st1'],
-            self.cleaned_data['main_squad_st2'],
+            self.cleaned_data.get('main_squad_gk'),
+            self.cleaned_data.get('main_squad_dm'),
+            self.cleaned_data.get('main_squad_st1'),
+            self.cleaned_data.get('main_squad_st2'),
         ]
 
     def get_bench_players(self):
         """Get list of bench players from cleaned data (2 items)"""
-        if not self.is_valid():
-            return []
-
         bench = [
             self.cleaned_data.get('bench_gk'),
             self.cleaned_data.get('bench_dm'),
@@ -268,13 +286,17 @@ class SquadSubmissionForm(forms.Form):
             raise forms.ValidationError(f'Превышен общий бюджет команды: {total_cost:.1f}M > {budget_limit}M')
 
     def validate_team_limitations(self, players):
-        """Ensure no more than 2 players from the same team in provided list."""
+        """Ensure team distribution constraints for whole squad."""
         from collections import Counter
 
         team_counts = Counter()
         for p in players:
             if p and p.team:
                 team_counts[p.team] += 1
+
+        if len(team_counts) < 4:
+            raise forms.ValidationError('Состав должен быть представлен игроками как минимум из 4 разных команд')
+
         for team, count in team_counts.items():
             if count > 2:
                 raise forms.ValidationError(f'Состав содержит более 2 игроков из одной команды ({team.title})')
@@ -286,14 +308,39 @@ class SquadSubmissionForm(forms.Form):
         if booster in [BoosterType.JOKER, BoosterType.LIMITLESS]:
             return
 
+        effective_transfers_in = self.get_effective_transfers_in(players)
+        if effective_transfers_in > 4:
+            raise forms.ValidationError(f'Превышен лимит трансферов: {effective_transfers_in}/4')
+
+    def get_effective_transfers_in(self, players):
+        """
+        Calculate transfers in that count toward transfer limits.
+        Replacing players that became unavailable in league is free.
+        """
         if not self.previous_player_ids:
-            return
+            return 0
 
         selected_ids = {p.id for p in players if p}
         prev_ids = set(self.previous_player_ids)
-        transfers_in = len(selected_ids - prev_ids)
-        if transfers_in > 4:
-            raise forms.ValidationError(f'Превышен лимит трансферов: {transfers_in}/4')
+        raw_transfers_in = len(selected_ids - prev_ids)
+
+        prev_unavailable_ids = {player_id for player_id in prev_ids if player_id not in self.available_player_ids}
+        replaced_unavailable_count = len(prev_unavailable_ids - selected_ids)
+
+        return max(0, raw_transfers_in - replaced_unavailable_count)
+
+    def validate_main_squad_team_diversity(self, primary_players):
+        """Ensure main squad contains players from at least 3 different teams."""
+        unique_team_ids = {p.team_id for p in primary_players if p and p.team_id}
+        if len(unique_team_ids) < 3:
+            raise forms.ValidationError(
+                'Основной состав должен быть представлен игроками как минимум из 3 разных команд'
+            )
+
+    def validate_main_st_players_team_diversity(self, main_st1, main_st2):
+        """Ensure ST players in main squad belong to different teams."""
+        if main_st1 and main_st2 and main_st1.team_id == main_st2.team_id:
+            raise forms.ValidationError('Нападающие основного состава должны быть из разных команд')
 
     def validate_players_availability(self, players):
         """Ensure all selected players are available in the current league"""
@@ -316,9 +363,8 @@ class SquadSubmissionForm(forms.Form):
         if not booster or not self.user or not self.tour:
             return
 
-        total_tours = self.tournament.tours.count()
-        if self.tour.number == 1 or self.tour.number == (total_tours / 2 + 1):
-            raise forms.ValidationError('Бустеры не могут быть использованы в текущем туре')
+        if self.is_first_user_submission_in_current_half():
+            raise forms.ValidationError('Бустеры не могут быть использованы при первой отправке состава в круге')
 
         previous_usage = SquadSubmission.objects.filter(
             user=self.user,
@@ -333,3 +379,27 @@ class SquadSubmissionForm(forms.Form):
                 f'Бустер "{booster_name}" уже был использован в этом турнире. '
                 f'Каждый тип бустера можно использовать только один раз за турнир.'
             )
+
+    def get_second_half_start_number(self):
+        """Return first tour number of second half."""
+        return self.tournament.tours.count() // 2 + 1
+
+    def get_current_half_start_number(self):
+        """Return start tour number of the half for current tour."""
+        second_half_start = self.get_second_half_start_number()
+        return 1 if self.tour.number < second_half_start else second_half_start
+
+    def is_first_user_submission_in_current_half(self):
+        """Check if current submission is user's first submission in this half."""
+        if not self.user or not self.tour:
+            return False
+
+        half_start = self.get_current_half_start_number()
+        has_previous_submissions_in_half = SquadSubmission.objects.filter(
+            user=self.user,
+            tournament=self.tournament.fantasy_tournament,
+            tour__number__gte=half_start,
+            tour__number__lt=self.tour.number,
+        ).exists()
+
+        return not has_previous_submissions_in_half

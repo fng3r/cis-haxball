@@ -14,9 +14,28 @@
       </div>
     </div>
 
-    <div class="tw:card-body tw:p-0">
+    <div class="tw:card-body tw:p-3">
+      {% if season_form %}
+        <div class="tw:flex tw:items-center tw:justify-between tw:pb-2">
+          <form method="get" action="{% url 'predictions:main' %}" class="tw:flex tw:flex-col tw:gap-1">
+            <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите сезон</label>
+            <div class="tw:flex tw:flex-wrap tw:gap-2">
+              {% for season in season_form.season.field.queryset %}
+                <button type="submit"
+                        name="season"
+                        value="{{ season.pk }}"
+                        class="tw:btn tw:btn-sm {% if selected_season and selected_season.pk == season.pk %}tw:btn-primary{% endif %}">
+                  {{ season.short_title|default:season.title }}
+                </button>
+              {% empty %}
+                <span class="tw:text-base-content/70">Нет доступных сезонов</span>
+              {% endfor %}
+            </div>
+          </form>
+        </div>
+      {% endif %}
       {# Top-level Tabs #}
-      <div class="tw:tabs tw:tabs-box tw:bg-base-100 tw:shadow-none" role="tablist">
+      <div class="tw:tabs tw:tabs-box tw:bg-base-100 tw:shadow-none tw:p-0" role="tablist">
         <label class="tw:tab tw:has-[input:checked]:bg-base-300 tw:flex-1"
                id="predictions-contest-tab"
                role="tab"
@@ -26,7 +45,7 @@
           <span class="tw:flex tw:items-center tw:gap-2">Турнир прогнозистов</span>
         </label>
         <div id="predictions-contest-content"
-             class="tw:tab-content tw:px-1 tw:py-2"
+             class="tw:tab-content tw:pt-2"
              role="tabpanel"
              aria-labelledby="predictions-contest-tab">{% include 'predictions/contest/container.html' %}</div>
 
@@ -37,25 +56,27 @@
                aria-controls="preseason-predictions-content">
           <input type="radio"
                  name="predictions-tabs"
-                 hx-get="{% url 'predictions:preseason' %}?tournament={{ selected_preseason_tournament.pk }}"
+                 hx-get="{% url 'predictions:preseason' %}?season={{ selected_season.pk }}&tournament={{ selected_preseason_tournament.pk }}"
                  hx-target="#preseason-predictions-content"
                  hx-trigger="load" />
           <span class="tw:flex tw:items-center tw:gap-2">
             Прогнозы на сезон
-            {% with hours_until_start=selected_tournament.league|hours_until_start %}
-              {% if hours_until_start <= 0 %}
-                <i class="fa fa-lock" aria-hidden="true"></i>
-              {% elif hours_until_start < 48 %}
-                <div class="tw:badge tw:badge-warning tw:badge-soft tw:gap-1">
-                  <i class="fa fa-clock-o" aria-hidden="true"></i>
-                  {{ hours_until_start }} ч.
-                </div>
+            {% with hours_until_start=selected_preseason_tournament|hours_until_start %}
+              {% if hours_until_start != None %}
+                {% if hours_until_start <= 0 %}
+                  <i class="fa fa-lock" aria-hidden="true"></i>
+                {% elif hours_until_start < 72 %}
+                  <div class="tw:badge tw:badge-warning tw:badge-soft tw:gap-1">
+                    <i class="fa fa-clock-o" aria-hidden="true"></i>
+                    {{ hours_until_start }} ч.
+                  </div>
+                {% endif %}
               {% endif %}
             {% endwith %}
           </span>
         </label>
         <div id="preseason-predictions-content"
-             class="tw:tab-content tw:px-1 tw:py-2"
+             class="tw:tab-content tw:pt-2"
              role="tabpanel"
              aria-labelledby="preseason-predictions-tab">
           <div class="tw:flex tw:justify-center tw:items-center tw:py-8">

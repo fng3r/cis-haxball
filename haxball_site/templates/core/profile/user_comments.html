@@ -42,15 +42,21 @@
 
             <div class="tw:m-0 tw:flex tw:ml-2 tw:font-semibold">
               <div class="tw:flex tw:gap-1 tw:items-center">
-                {% for icon in comment.parent.author.user_profile.user_icon.all %}
-                  <div class="tw:align-middle">
-                    <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
-                  </div>
-                {% endfor %}
-                <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
-                   class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
+                {% if comment.parent.author == comment.author %}
+                  <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
+                     class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
+                {% else %}
+                  {% for icon in comment.parent.author.user_profile.user_icon.all %}
+                    <div class="tw:align-middle">
+                      <img src="{{ icon.image.url }}" width="16px" height="16px" title="{{ icon.description }}">
+                    </div>
+                  {% endfor %}
 
-                {% include 'core/include/user_tag.html' with user=comment.parent.author %}
+                  <a href="{{ comment.parent.author.user_profile.get_absolute_url }}"
+                     class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ comment.parent.author.username }}</a>
+
+                  {% include 'core/include/user_tag.html' with user=comment.parent.author %}
+                {% endif %}
               </div>
             </div>
           {% endif %}

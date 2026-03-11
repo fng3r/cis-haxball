@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
-from tournament.models import League, Match, MatchResult, Team, TourNumber
+from tournament.models import League, Match, Team, TourNumber
 
 
 class PredictionsContestTournament(models.Model):
@@ -11,6 +12,15 @@ class PredictionsContestTournament(models.Model):
         League, verbose_name='Турнир', on_delete=models.CASCADE, related_name='predictions_contest_tournament'
     )
     is_active = models.BooleanField('Активен для прогнозов', default=True)
+    points_for_win_prediction = models.DecimalField(
+        'Очки за верный прогноз победителя', default=1, max_digits=5, decimal_places=2
+    )
+    points_for_draw_prediction = models.DecimalField(
+        'Очки за верный прогноз ничьей', default=3, max_digits=5, decimal_places=2
+    )
+    special_match_points_delta = models.DecimalField(
+        'Бонус/штраф за особый прогноз', default=0.5, max_digits=5, decimal_places=2
+    )
 
     def __str__(self):
         return f'{self.league.title}'
@@ -26,7 +36,11 @@ class PreseasonPredictionsTournament(models.Model):
     league = models.OneToOneField(
         League, verbose_name='Турнир', on_delete=models.CASCADE, related_name='preseason_predictions_tournament'
     )
-    is_active = models.BooleanField('Сбор прогнозов открыт', default=True)
+    locked_at = models.DateTimeField('Дата закрытия сбора прогнозов')
+
+    @property
+    def is_active(self):
+        return timezone.localtime() < self.locked_at
 
     def __str__(self):
         return f'{self.league.title}'
@@ -59,21 +73,6 @@ class PredictionSubmission(models.Model):
     def __str__(self):
         return f'Прогнозы {self.user.username} для {self.tour}'
 
-    def get_total_points(self):
-        """Get total points for this submission"""
-        return sum(prediction.get_earned_points() for prediction in self.predictions.all())
-
-    def get_predictions_counts(self):
-        """Get total and correct predictions counts for this submission"""
-        predictions = 0
-        correct_predictions = 0
-        for prediction in self.predictions.all():
-            if prediction.match.is_played:
-                predictions += 1
-                if prediction.get_earned_points() > 0:
-                    correct_predictions += 1
-        return correct_predictions, predictions
-
 
 class Prediction(models.Model):
     """Individual prediction for a match"""
@@ -97,35 +96,6 @@ class Prediction(models.Model):
 
     def __str__(self):
         return f'{self.submission.user.username}: {self.match} - {self.get_predicted_result_display()}'
-
-    def get_earned_points(self):
-        """Calculate points based on match result and prediction"""
-        if not self.match.is_played:
-            return 0
-
-        match_result = self.match.result.value
-        if match_result in [MatchResult.HOME_WIN, MatchResult.HOME_DEF_WIN]:
-            match_result_for_prediction = self.Result.HOME_WIN
-        elif match_result in [MatchResult.AWAY_WIN, MatchResult.AWAY_DEF_WIN]:
-            match_result_for_prediction = self.Result.AWAY_WIN
-        elif match_result == MatchResult.DRAW:
-            match_result_for_prediction = self.Result.DRAW
-        else:
-            return 0
-
-        base_points = 0
-        if self.predicted_result == match_result_for_prediction:
-            if self.predicted_result == self.Result.DRAW:
-                base_points = 3
-            else:
-                base_points = 1
-
-        if self.is_special:
-            if self.predicted_result == match_result_for_prediction:
-                base_points += 1
-            else:
-                base_points -= 1
-        return base_points
 
 
 class PreseasonPredictionSubmission(models.Model):

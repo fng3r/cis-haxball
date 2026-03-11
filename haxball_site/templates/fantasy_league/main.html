@@ -13,157 +13,180 @@
       </div>
     </div>
 
-    <div class="tw:card-body tw:p-1" x-data="{}">
-      <div class="tw:flex tw:items-center tw:justify-between tw:border-b tw:border-gray-200 tw:p-2 tw:pb-3">
-        <form id="tournament_selector" class="tw:flex tw:flex-col tw:gap-2">
-          <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
-          <div class="tw:flex tw:flex-wrap tw:gap-2">
-            {% for tournament in tournament_form.tournament.field.queryset %}
-              <input type="radio"
-                     name="tournament"
-                     value="{{ tournament.pk }}"
-                     aria-label="{{ tournament.league.title }}"
-                     class="tw:btn tw:btn-sm"
-                     hx-get="{% url 'fantasy_league:main' %}?tournament={{ tournament.pk }}"
-                     hx-target="#fantasy-main-tabs"
-                     hx-swap="outerHTML"
-                     {% if selected_tournament and selected_tournament.pk == tournament.pk %}checked{% endif %}>
-            {% endfor %}
-          </div>
-        </form>
+    <div class="tw:card-body tw:p-3 tw:gap-1" x-data="{}">
+      <div class="tw:full tw:space-y-2">
+        <div class="tw:flex tw:items-center tw:justify-between">
+          <div class="tw:flex tw:flex-col tw:gap-3">
+            {% if season_form %}
+              <form method="get" action="{% url 'fantasy_league:main' %}" class="tw:flex tw:flex-col tw:gap-1">
+                <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите сезон</label>
+                <div class="tw:flex tw:flex-wrap tw:gap-2">
+                  {% for season in season_form.season.field.queryset %}
+                    <button type="submit"
+                            name="season"
+                            value="{{ season.pk }}"
+                            class="tw:btn tw:btn-sm {% if selected_season.pk == season.pk %}tw:btn-primary{% endif %}">
+                      {{ season.short_title|default:season.title }}
+                    </button>
+                  {% endfor %}
+                </div>
+              </form>
+            {% endif %}
 
-        {# djlint:off #}
-        <div x-data="{
-                     lastSeenRulesVersion: JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0,
-                     latestRulesVersion: 2,
-                     updateLastSeenVersion() { localStorage.setItem('fantasy.lastSeenRulesVersion', this.latestRulesVersion); },
-                     }">
-        {# djlint:on #}
-
-          <button class="tw:btn tw:btn-outline tw:btn-sm tw:self-end" onclick="rules_modal.showModal()">
-            <i class="fa fa-book"></i> Правила
-            <span x-show="lastSeenRulesVersion < latestRulesVersion" x-cloak class="tw:status tw:status-warning"></span>
-          </button>
-
-          <dialog id="rules_modal"
-                  class="tw:modal"
-                  @close="lastSeenRulesVersion = JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0">
-            <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
-              <div class="tw:flex tw:gap-3 tw:items-center">
-                <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила</h3>
-                <span class="tw:text-base tw:text-base-content/70 tw:pb-1">
-                  (<a href="#rules-updates" class="tw:link tw:font-semibold">К изменениям</a>
-                  <i class="fa fa-arrow-down tw:text-sm! tw:mt-1" aria-hidden="true"></i>)
-                </span>
+            <form id="tournament_selector" class="tw:flex tw:flex-col tw:gap-2">
+              <label class="tw:label tw:text-base-content tw:font-bold tw:px-0">Выберите турнир</label>
+              <div class="tw:flex tw:flex-wrap tw:gap-2">
+                {% for tournament in tournament_form.tournament.field.queryset %}
+                  <input type="radio"
+                         name="tournament"
+                         value="{{ tournament.pk }}"
+                         aria-label="{{ tournament.league.title }}"
+                         class="tw:btn tw:btn-sm"
+                         hx-get="{% url 'fantasy_league:main' %}"
+                         hx-target="#fantasy-main-tabs"
+                         hx-swap="outerHTML"
+                         {% if selected_tournament.pk == tournament.pk %}checked{% endif %}>
+                {% endfor %}
               </div>
-              <div class="tw:overflow-y-auto">{% include 'fantasy_league/partials/rules.html' %}</div>
-            </div>
-            <form method="dialog" class="tw:modal-backdrop">
-              <button>close</button>
             </form>
-          </dialog>
+          </div>
+
+          <div class="tw:self-end"
+            {# djlint:off #}
+               x-data="{
+                          lastSeenRulesVersion: JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0,
+                          latestRulesVersion: 3,
+                          updateLastSeenVersion() { localStorage.setItem('fantasy.lastSeenRulesVersion', this.latestRulesVersion); },
+                       }"
+          >
+            {# djlint:on #}
+            <button class="tw:btn tw:btn-outline tw:btn-sm tw:self-end" onclick="rules_modal.showModal()">
+              <i class="fa fa-book"></i> Правила
+              <span x-show="lastSeenRulesVersion < latestRulesVersion" x-cloak class="tw:status tw:status-warning"></span>
+            </button>
+
+            <dialog id="rules_modal"
+                    class="tw:modal"
+                    @close="lastSeenRulesVersion = JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0">
+              <div class="tw:modal-box tw:max-w-4xl tw:max-h-[90vh]">
+                <div class="tw:flex tw:gap-3 tw:items-center">
+                  <h3 class="tw:font-bold tw:text-lg tw:mb-4">Правила</h3>
+                  <span class="tw:text-base tw:text-base-content/70 tw:pb-1">
+                    (<a href="#rules-updates" class="tw:link tw:font-semibold">К изменениям</a>
+                    <i class="fa fa-arrow-down tw:text-sm! tw:mt-1" aria-hidden="true"></i>)
+                  </span>
+                </div>
+                <div class="tw:overflow-y-auto">{% include 'fantasy_league/partials/rules.html' %}</div>
+              </div>
+              <form method="dialog" class="tw:modal-backdrop">
+                <button>close</button>
+              </form>
+            </dialog>
+          </div>
         </div>
+
+        <div class="tw:divider tw:my-0"></div>
+
+        {% partialdef tabs inline=True %}
+          <div id="fantasy-main-tabs"
+               class="tw:tabs tw:tabs-border tw:[:has(#tournament\_selector_input.htmx-request)_&]:opacity-50 tw:[:has(#tournament\_selector_input.htmx-request)_&]:transition-opacity"
+               role="tablist">
+            <label class="tw:tab" role="tab">
+              <input type="radio" name="fantasy-tabs" checked />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-users"></i>
+                Мой состав
+              </span>
+            </label>
+            <div id="make-squad-content" class="tw:tab-content tw:py-2" role="tabpanel">{{ make_squad_tab_html|safe }}</div>
+
+            <label class="tw:tab" role="tab">
+              <input type="radio"
+                     name="fantasy-tabs"
+                     hx-get="{% url 'fantasy_league:view_squads_tab' %}?tournament={{ selected_tournament.pk }}"
+                     hx-target="#view-squads-content"
+                     hx-trigger="load" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-th-list"></i>
+                Все составы
+              </span>
+            </label>
+            <div id="view-squads-content" class="tw:tab-content tw:py-2" role="tabpanel">
+              <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+                <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+              </div>
+            </div>
+
+            <label class="tw:tab" role="tab">
+              <input type="radio"
+                     name="fantasy-tabs"
+                     hx-get="{% url 'fantasy_league:top_squads_tab' %}?tournament={{ selected_tournament.pk }}"
+                     hx-target="#top-squads-content"
+                     hx-trigger="load" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-star"></i>
+                Топ-составы
+              </span>
+            </label>
+            <div id="top-squads-content" class="tw:tab-content tw:py-2" role="tabpanel">
+              <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+                <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+              </div>
+            </div>
+
+            <label class="tw:tab" role="tab">
+              <input type="radio"
+                     name="fantasy-tabs"
+                     hx-get="{% url 'fantasy_league:standings_tab' %}?tournament={{ selected_tournament.pk }}"
+                     hx-target="#standings-content"
+                     hx-trigger="load" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-trophy"></i>
+                Турнирная таблица
+              </span>
+            </label>
+            <div id="standings-content" class="tw:tab-content tw:py-2" role="tabpanel">
+              <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+                <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+              </div>
+            </div>
+
+            <label class="tw:tab" role="tab">
+              <input type="radio"
+                     name="fantasy-tabs"
+                     hx-get="{% url 'fantasy_league:statistics_tab' %}?tournament={{ selected_tournament.pk }}"
+                     hx-target="#statistics-content"
+                     hx-trigger="load" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-bar-chart"></i>
+                Статистика игроков
+              </span>
+            </label>
+            <div id="statistics-content" class="tw:tab-content tw:py-2" role="tabpanel">
+              <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+                <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+              </div>
+            </div>
+
+            <label class="tw:tab" role="tab">
+              <input type="radio"
+                     name="fantasy-tabs"
+                     hx-get="{% url 'fantasy_league:rewards_tab' %}?tournament={{ selected_tournament.pk }}"
+                     hx-target="#rewards-content"
+                     hx-trigger="load" />
+              <span class="tw:flex tw:items-center tw:gap-2">
+                <i class="fa fa-money"></i>
+                Награды
+              </span>
+            </label>
+            <div id="rewards-content" class="tw:tab-content tw:py-2" role="tabpanel">
+              <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
+                <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
+              </div>
+            </div>
+          </div>
+        {% endpartialdef %}
       </div>
-
-      {% partialdef tabs inline=True %}
-        <div id="fantasy-main-tabs"
-             class="tw:tabs tw:tabs-border tw:[:has(#tournament\_selector_input.htmx-request)_&]:opacity-50 tw:[:has(#tournament\_selector_input.htmx-request)_&]:transition-opacity"
-             role="tablist">
-          <label class="tw:tab" role="tab">
-            <input type="radio" name="fantasy-tabs" checked />
-            <span class="tw:flex tw:items-center tw:gap-2">
-              <i class="fa fa-users"></i>
-              Мой состав
-            </span>
-          </label>
-          <div id="make-squad-content" class="tw:tab-content tw:p-2" role="tabpanel">{{ make_squad_tab_html|safe }}</div>
-
-          <label class="tw:tab" role="tab">
-            <input type="radio"
-                   name="fantasy-tabs"
-                   hx-get="{% url 'fantasy_league:view_squads_tab' %}?tournament={{ selected_tournament.pk }}"
-                   hx-target="#view-squads-content"
-                   hx-trigger="load" />
-            <span class="tw:flex tw:items-center tw:gap-2">
-              <i class="fa fa-th-list"></i>
-              Все составы
-            </span>
-          </label>
-          <div id="view-squads-content" class="tw:tab-content tw:p-2" role="tabpanel">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
-          </div>
-
-          <label class="tw:tab" role="tab">
-            <input type="radio"
-                   name="fantasy-tabs"
-                   hx-get="{% url 'fantasy_league:top_squads_tab' %}?tournament={{ selected_tournament.pk }}"
-                   hx-target="#top-squads-content"
-                   hx-trigger="load" />
-            <span class="tw:flex tw:items-center tw:gap-2">
-              <i class="fa fa-star"></i>
-              Топ-составы
-            </span>
-          </label>
-          <div id="top-squads-content" class="tw:tab-content tw:p-2" role="tabpanel">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
-          </div>
-
-          <label class="tw:tab" role="tab">
-            <input type="radio"
-                   name="fantasy-tabs"
-                   hx-get="{% url 'fantasy_league:standings_tab' %}?tournament={{ selected_tournament.pk }}"
-                   hx-target="#standings-content"
-                   hx-trigger="load" />
-            <span class="tw:flex tw:items-center tw:gap-2">
-              <i class="fa fa-trophy"></i>
-              Турнирная таблица
-            </span>
-          </label>
-          <div id="standings-content" class="tw:tab-content tw:p-2" role="tabpanel">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
-          </div>
-
-          <label class="tw:tab" role="tab">
-            <input type="radio"
-                   name="fantasy-tabs"
-                   hx-get="{% url 'fantasy_league:statistics_tab' %}?tournament={{ selected_tournament.pk }}"
-                   hx-target="#statistics-content"
-                   hx-trigger="load" />
-            <span class="tw:flex tw:items-center tw:gap-2">
-              <i class="fa fa-bar-chart"></i>
-              Статистика игроков
-            </span>
-          </label>
-          <div id="statistics-content" class="tw:tab-content tw:p-2" role="tabpanel">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
-          </div>
-
-          <label class="tw:tab" role="tab">
-            <input type="radio"
-                   name="fantasy-tabs"
-                   hx-get="{% url 'fantasy_league:rewards_tab' %}?tournament={{ selected_tournament.pk }}"
-                   hx-target="#rewards-content"
-                   hx-trigger="load" />
-            <span class="tw:flex tw:items-center tw:gap-2">
-              <i class="fa fa-money"></i>
-              Награды
-            </span>
-          </label>
-          <div id="rewards-content" class="tw:tab-content tw:p-2" role="tabpanel">
-            <div class="tw:flex tw:justify-center tw:items-center tw:py-8">
-              <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
-            </div>
-          </div>
-        </div>
-      {% endpartialdef %}
     </div>
   </div>
 {% endblock %}
