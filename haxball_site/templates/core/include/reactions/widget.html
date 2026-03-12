@@ -1,3 +1,5 @@
+{% load static %}
+
 {% url 'core:reactions' 'comment' comment_id as reactions_url %}
 
 <div id="reactions-comment-{{ comment_id }}"
@@ -5,6 +7,7 @@
      data-reactions-root
      data-reactions-url="{{ reactions_url }}"
      data-can-react="{% if can_react %}1{% else %}0{% endif %}"
+     data-comment-id="{{ comment_id }}"
      data-comment-target="#r{{ comment_id }}">
   {% if reaction_chips %}
     <div class="tw:flex tw:items-center tw:flex-wrap tw:gap-1.5">
@@ -20,113 +23,23 @@
     </div>
   {% endif %}
 
-  <div class="tw:relative">
-    <button type="button"
-            data-reactions-toggle
-            class="tw:btn tw:btn-xs tw:btn-soft tw:h-7 tw:min-h-7 tw:rounded-full tw:px-1.5"
-            title="Добавить реакцию"
-            aria-expanded="false"
-            style="anchor-name: --reactions-anchor-comment-{{ comment_id }}"
-            {% if can_react %}popovertarget="reactions-popover-comment-{{ comment_id }}" popovertargetaction="toggle"{% endif %}
-            {% if not can_react %}{% if user.is_authenticated %}onclick="alert('Вам ограничен доступ к реакциям!')" {% else %}onclick="login_modal.showModal()" {% endif %}
-            {% endif %}>
-      <svg viewBox="0 0 32 32" aria-hidden="true" class="tw:size-6">
-        <circle cx="13" cy="15" r="9" fill="currentColor" opacity="0.2"></circle>
-        <circle cx="10.2" cy="13" r="1.1" fill="currentColor"></circle>
-        <circle cx="15.8" cy="13" r="1.1" fill="currentColor"></circle>
-        <path d="M9.6 17.2c.9 1.5 2.2 2.2 3.4 2.2s2.5-.7 3.4-2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-        </path>
-        <circle cx="22.5" cy="21.5" r="6.5"></circle>
-        <path d="M22.5 18.8v5.4M19.8 21.5h5.4" stroke="white" stroke-width="1.9" stroke-linecap="round"></path>
-      </svg>
-    </button>
-
-    <div id="reactions-popover-comment-{{ comment_id }}"
-         popover="auto"
-         data-reactions-popover
-         class="tw:m-0 tw:ml-2 tw:p-0 tw:border-0 tw:bg-transparent tw:shadow-none tw:overflow-visible"
-         style="position: fixed;
-                inset: auto;
-                position-anchor: --reactions-anchor-comment-{{ comment_id }};
-                top: anchor(top);
-                left: anchor(right)">
-      <div data-emoji-mart></div>
-    </div>
-  </div>
+  <button type="button"
+          data-reactions-toggle
+          class="tw:btn tw:btn-xs tw:btn-soft tw:h-7 tw:min-h-7 tw:rounded-full tw:px-1.5"
+          title="Добавить реакцию"
+          aria-expanded="false"
+          style="anchor-name: --reactions-anchor-comment-{{ comment_id }}"
+          {% if not can_react %}{% if user.is_authenticated %}onclick="alert('Вам ограничен доступ к реакциям!')" {% else %}onclick="login_modal.showModal()" {% endif %}
+          {% endif %}>
+    <svg viewBox="0 0 32 32" aria-hidden="true" class="tw:size-6">
+      <circle cx="13" cy="15" r="9" fill="currentColor" opacity="0.2"></circle>
+      <circle cx="10.2" cy="13" r="1.1" fill="currentColor"></circle>
+      <circle cx="15.8" cy="13" r="1.1" fill="currentColor"></circle>
+      <path d="M9.6 17.2c.9 1.5 2.2 2.2 3.4 2.2s2.5-.7 3.4-2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      </path>
+      <circle cx="22.5" cy="21.5" r="6.5"></circle>
+      <path d="M22.5 18.8v5.4M19.8 21.5h5.4" stroke="white" stroke-width="1.9" stroke-linecap="round"></path>
+    </svg>
+  </button>
 
 </div>
-
-<script>
-  (function () {
-    const root = document.getElementById('reactions-comment-{{ comment_id }}');
-    if (!root) {
-      return;
-    }
-
-    const canReact = root.dataset.canReact === '1';
-    if (!canReact) {
-      return;
-    }
-
-    const toggle = root.querySelector('[data-reactions-toggle]');
-    const popover = root.querySelector('[data-reactions-popover]');
-    const mount = root.querySelector('[data-emoji-mart]');
-    if (!toggle || !popover || !mount) {
-      return;
-    }
-
-    const initPicker = function () {
-      if (root.dataset.reactionsInitialized === '1') {
-        return;
-      }
-      root.dataset.reactionsInitialized = '1';
-
-      const Picker = window.EmojiMart && window.EmojiMart.Picker;
-      if (!Picker) {
-        root.dataset.reactionsInitialized = '0';
-        mount.textContent = 'Не удалось загрузить EmojiMart';
-        return;
-      }
-
-      const picker = new EmojiMart.Picker({
-        locale: 'ru',
-        previewPosition: 'none',
-        searchPosition: 'sticky',
-        theme: 'auto',
-        perLine: 8,
-        maxFrequentRows: 2,
-        onEmojiSelect: function (emoji) {
-          if (typeof popover.hidePopover === 'function') {
-            popover.hidePopover();
-          }
-
-          window.htmx.ajax('POST', root.dataset.reactionsUrl, {
-            target: root.dataset.commentTarget || ('#' + root.id),
-            swap: 'outerHTML',
-            values: {
-              emoji_id: emoji.id,
-              emoji_native: emoji.native,
-              emoji_name: emoji.name,
-              emoji_shortcodes: emoji.shortcodes,
-              emoji_keywords: JSON.stringify(Array.isArray(emoji.keywords) ? emoji.keywords : []),
-              render_comment: root.dataset.commentTarget ? '1' : '',
-            },
-          });
-        },
-      });
-
-      mount.innerHTML = '';
-      mount.appendChild(picker);
-    };
-
-    popover.addEventListener('beforetoggle', function (event) {
-      if (event.newState === 'open') {
-        initPicker();
-      }
-    });
-
-    popover.addEventListener('toggle', function (event) {
-      toggle.setAttribute('aria-expanded', event.newState === 'open' ? 'true' : 'false');
-    });
-  })();
-</script>

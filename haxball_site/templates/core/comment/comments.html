@@ -83,9 +83,122 @@
       </div>
     {% endif %}
   {% endpartialdef %}
+
+  <div id="comments-reactions-popover"
+       popover="auto"
+       class="tw:m-0 tw:ml-2 tw:p-0 tw:border-0 tw:bg-transparent tw:shadow-none tw:overflow-visible"
+       style="position: fixed;
+              inset: auto;
+              top: anchor(top);
+              left: anchor(right)">
+    <div data-comments-emoji-mart></div>
+  </div>
 </div>
 
 <script>
+  (function () {
+    const popover = document.getElementById('comments-reactions-popover');
+    const mount = popover && popover.querySelector('[data-comments-emoji-mart]');
+    if (!popover || !mount) {
+      return;
+    }
+
+    let activeRoot = null;
+    let activeToggle = null;
+    let picker = null;
+    let isPopoverOpen = false;
+
+    const ensurePicker = function () {
+      if (picker) {
+        return;
+      }
+
+      const Picker = window.EmojiMart?.Picker;
+      if (!Picker) {
+        mount.textContent = 'Не удалось загрузить EmojiMart';
+        return;
+      }
+
+      picker = new Picker({
+        locale: 'ru',
+        previewPosition: 'none',
+        searchPosition: 'sticky',
+        theme: 'auto',
+        perLine: 8,
+        maxFrequentRows: 2,
+        onEmojiSelect: function (emoji) {
+          if (!activeRoot || !window.htmx) {
+            return;
+          }
+
+          popover.hidePopover();
+          window.htmx.ajax('POST', activeRoot.dataset.reactionsUrl, {
+            target: activeRoot.dataset.commentTarget,
+            swap: 'outerHTML',
+            values: {
+              emoji_id: emoji.id,
+              emoji_native: emoji.native,
+              emoji_name: emoji.name,
+              emoji_shortcodes: emoji.shortcodes,
+              emoji_keywords: JSON.stringify(Array.isArray(emoji.keywords) ? emoji.keywords : []),
+              render_comment: '1',
+            },
+          });
+        },
+      });
+
+      mount.innerHTML = '';
+      mount.appendChild(picker);
+    };
+
+    document.body.addEventListener('click', function (event) {
+      const toggle = event.target.closest('[data-reactions-toggle]');
+      if (!toggle) {
+        return;
+      }
+
+      const root = toggle.closest('[data-reactions-root]');
+      if (!root || root.dataset.canReact !== '1') {
+        return;
+      }
+
+      event.preventDefault();
+      const isSameToggle = activeToggle === toggle;
+
+      if (isPopoverOpen && isSameToggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+        activeRoot = null;
+        activeToggle = null;
+        popover.hidePopover();
+        return;
+      }
+
+      ensurePicker();
+      activeRoot = root;
+      activeToggle = toggle;
+      popover.style.positionAnchor = toggle.style.anchorName;
+
+      if (isPopoverOpen) {
+        popover.hidePopover();
+      }
+
+      requestAnimationFrame(function () {
+        toggle.setAttribute('aria-expanded', 'true');
+        popover.showPopover();
+      });
+    });
+
+    popover.addEventListener('toggle', function (event) {
+      isPopoverOpen = event.newState === 'open';
+      if (activeToggle) {
+        activeToggle.setAttribute('aria-expanded', isPopoverOpen ? 'true' : 'false');
+      }
+      if (!isPopoverOpen) {
+        activeToggle = null;
+      }
+    });
+  })();
+
   document.body.addEventListener('htmx:afterRequest', (event) => {
     $('body').removeClass('modal-open');
     $('.modal-backdrop').remove();
