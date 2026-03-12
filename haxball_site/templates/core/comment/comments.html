@@ -107,6 +107,22 @@
     let activeToggle = null;
     let picker = null;
     let isPopoverOpen = false;
+    const DARK_THEMES = new Set([
+      'dark',
+      'halloween',
+      'forest',
+      'luxury',
+      'dracula',
+      'business',
+      'night',
+      'coffee',
+      'dim',
+      'sunset',
+    ]);
+
+    const getPickerTheme = function () {
+      return DARK_THEMES.has(document.body?.dataset?.theme) ? 'dark' : 'light';
+    };
 
     const ensurePicker = function () {
       if (picker) {
@@ -123,7 +139,7 @@
         locale: 'ru',
         previewPosition: 'none',
         searchPosition: 'sticky',
-        theme: 'auto',
+        theme: getPickerTheme(),
         perLine: 8,
         maxFrequentRows: 2,
         onEmojiSelect: function (emoji) {
