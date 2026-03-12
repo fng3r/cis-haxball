@@ -232,14 +232,31 @@ class LikeDisLikeAdmin(UnfoldModelAdmin):
 @admin.register(ReactionType)
 class ReactionTypeAdmin(UnfoldModelAdmin):
     list_display = (
-        'id',
-        'emoji',
+        'display_reaction',
         'code',
         'name',
         'shortcodes',
     )
     search_fields = ('code', 'name', 'shortcodes', 'emoji')
     search_help_text = 'Поиск по коду/названию/эмодзи'
+
+    @display(description='Реакция', header=True)
+    def display_reaction(self, obj):
+        if obj.image:
+            return [
+                obj.name,
+                obj.shortcodes,
+                None,
+                {
+                    'path': obj.image,
+                    'squared': True,
+                    'borderless': True,
+                    'width': 32,
+                    'height': 32,
+                },
+            ]
+
+        return [obj.name, obj.shortcodes, obj.emoji]
 
 
 @admin.register(Reaction)

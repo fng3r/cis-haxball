@@ -135,14 +135,50 @@
         return;
       }
 
+      const customEmojis = [
+        {
+          id: 'cishaxball',
+          name: 'CIS-HAXBALL',
+          emojis: [
+            {
+              id: 'cishaxball',
+              name: 'CIS-HAXBALL',
+              keywords: ['cis', 'cishaxball'],
+              skins: [{ src: "{% static 'img/emoji/cishaxball.png' %}" }],
+            },
+            {
+              id: 'iks',
+              name: 'iks',
+              keywords: ['iks', 'mas'],
+              skins: [{ src: "{% static 'img/emoji/iks.png' %}" }],
+            },
+            {
+              id: 'wenamka',
+              name: 'Wenamka',
+              keywords: ['wenamka', 'wenam', 'wenom'],
+              skins: [{ src: "{% static 'img/emoji/wenamka.png' %}" }],
+            },
+          ],
+        },
+      ]
+
+      const customCategoryIcons = {
+        cishaxball: {
+          src: "{% static 'img/emoji/cishaxball.png' %}",
+        },
+      }
+
       picker = new Picker({
         locale: 'ru',
-        previewPosition: 'none',
+        previewPosition: 'bottom',
         searchPosition: 'sticky',
         theme: getPickerTheme(),
         perLine: 8,
         maxFrequentRows: 2,
+        custom: customEmojis,
+        categoryIcons: customCategoryIcons,
         onEmojiSelect: function (emoji) {
+          console.log(emoji)
           if (!activeRoot || !window.htmx) {
             return;
           }
@@ -153,7 +189,8 @@
             swap: 'outerHTML',
             values: {
               emoji_id: emoji.id,
-              emoji_native: emoji.native,
+              emoji_native: emoji.native || '',
+              emoji_src: emoji.src || '',
               emoji_name: emoji.name,
               emoji_shortcodes: emoji.shortcodes,
               emoji_keywords: JSON.stringify(Array.isArray(emoji.keywords) ? emoji.keywords : []),

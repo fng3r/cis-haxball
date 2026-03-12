@@ -79,7 +79,8 @@ class LikeDislike(models.Model):
 
 class ReactionType(models.Model):
     code = models.SlugField('Код реакции', max_length=64, unique=True)
-    emoji = models.CharField('Эмодзи', max_length=16)
+    emoji = models.CharField('Эмодзи', max_length=16, blank=True, default='')
+    image = models.CharField('Изображение реакции', max_length=255, blank=True, default='')
     name = models.CharField('Название', max_length=64)
     shortcodes = models.CharField('Шорткоды', max_length=255, blank=True, default='')
     keywords = ArrayField(
@@ -94,7 +95,7 @@ class ReactionType(models.Model):
         verbose_name_plural = 'Типы реакций'
 
     def __str__(self):
-        return f'{self.emoji} {self.name}'
+        return f'{self.emoji or self.code} {self.name}'
 
 
 class Reaction(models.Model):
@@ -116,7 +117,9 @@ class Reaction(models.Model):
         ordering = ('-updated',)
 
     def __str__(self):
-        return f'{self.reaction_type.emoji} от {self.user.username}'
+        return (
+            f'{self.reaction_type.emoji or self.reaction_type.image or self.reaction_type.code} от {self.user.username}'
+        )
 
 
 class Themes(models.Model):

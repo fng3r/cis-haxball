@@ -16,7 +16,11 @@
                 class="tw:btn tw:btn-xs tw:btn-soft tw:min-h-7 tw:h-7 tw:px-2.5 tw:rounded-full tw:gap-1 {% if chip.selected %}tw:border tw:border-primary tw:text-primary/80 tw:bg-primary/12{% endif %}"
                 title="{{ chip.label }}"
                 {% if can_react %} hx-post="{{ reactions_url }}" hx-vals='{"reaction_type": "{{ chip.id }}", "render_comment": "1"}' hx-target="#r{{ comment_id }}" hx-swap="outerHTML" {% elif user.is_authenticated %} onclick="alert('Вам ограничен доступ к реакциям!')" {% else %} onclick="login_modal.showModal()" {% endif %}>
-          <span class="tw:text-base">{{ chip.emoji }}</span>
+          {% if chip.image %}
+            <img src="{{ chip.image }}" alt="{{ chip.label }}" class="tw:size-5.5 tw:object-contain">
+          {% else %}
+            <span class="tw:text-base">{{ chip.emoji }}</span>
+          {% endif %}
           <span class="tw:text-base tw:font-semibold">{{ chip.count }}</span>
         </button>
       {% endfor %}

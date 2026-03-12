@@ -81,6 +81,7 @@ def build_reactions_context(obj, user, *, request=None) -> dict[str, Any]:
                 'id': reaction_type.id,
                 'code': reaction_type.code,
                 'emoji': reaction_type.emoji,
+                'image': reaction_type.image,
                 'label': reaction_type.name,
                 'count': counts.get(reaction_type.id, 0),
                 'selected': reaction_type.id in current_user_reaction_ids,

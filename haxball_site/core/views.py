@@ -635,6 +635,7 @@ class ReactionWidgetView(View):
         if reaction_type is None:
             emoji_id = request.POST.get('emoji_id')
             emoji_native = request.POST.get('emoji_native')
+            emoji_src = request.POST.get('emoji_src')
             emoji_name = request.POST.get('emoji_name')
             emoji_shortcodes = request.POST.get('emoji_shortcodes')
             emoji_keywords_raw = request.POST.get('emoji_keywords')
@@ -648,7 +649,8 @@ class ReactionWidgetView(View):
             reaction_type, _ = ReactionType.objects.update_or_create(
                 code=normalized_code,
                 defaults={
-                    'emoji': emoji_native or '❓',
+                    'emoji': emoji_native or '',
+                    'image': emoji_src or '',
                     'name': (emoji_name or normalized_code)[: self.REACTION_NAME_MAX_LENGTH],
                     'shortcodes': emoji_shortcodes,
                     'keywords': self._extract_keywords(emoji_keywords_raw),
