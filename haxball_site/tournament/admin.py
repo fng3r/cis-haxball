@@ -1050,21 +1050,18 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
     list_display = (
         'match_id',
         'replay_stats',
+        'team',
         'player',
         'nick',
-        'team',
         'avatar',
-        'goals',
-        'assists',
+        'position',
         'played_ticks',
         'rating',
-        'shots_total',
-        'passes_completed',
-        'pass_attempts',
     )
+    list_editable = ('position', 'played_ticks', 'rating')
     list_filter = (('team', RelatedDropdownFilter), ('replay_stats__match__id', SingleNumericFilter))
     search_fields = ('nick', 'player__nickname')
-    ordering = ('replay_stats', 'team', 'nick')
+    ordering = ('-replay_stats__match_replay__id', 'replay_stats__part_order')
     raw_id_fields = ('replay_stats', 'player', 'team')
     list_filter_submit = True
 
