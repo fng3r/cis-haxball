@@ -1013,6 +1013,8 @@ class MatchReplayStatsPlayer(models.Model):
         GK = 'GK', 'GK'
         DM = 'DM', 'DM'
         AM = 'AM', 'AM'
+        LW = 'LW', 'LW'
+        RW = 'RW', 'RW'
         ST = 'ST', 'ST'
 
     replay_stats = models.ForeignKey(

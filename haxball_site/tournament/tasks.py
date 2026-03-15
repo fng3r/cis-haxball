@@ -35,6 +35,8 @@ SUPPORTED_PLAYER_POSITIONS = {
     MatchReplayStatsPlayer.Position.GK,
     MatchReplayStatsPlayer.Position.DM,
     MatchReplayStatsPlayer.Position.AM,
+    MatchReplayStatsPlayer.Position.LW,
+    MatchReplayStatsPlayer.Position.RW,
     MatchReplayStatsPlayer.Position.ST,
 }
 

@@ -124,7 +124,7 @@ def _position_label(position: str | None) -> str | None:
         return 'ГК'
     if position == 'DM':
         return 'ОП'
-    if position in {'AM', 'ST'}:
+    if position in {'AM', 'LW', 'RW', 'ST'}:
         return 'НАП'
     return None
 
@@ -134,7 +134,7 @@ def _position_sort_order(position: str | None) -> int:
         return 0
     if position == 'DM':
         return 1
-    if position in {'AM', 'ST'}:
+    if position in {'AM', 'LW', 'RW', 'ST'}:
         return 2
     return 3
 
