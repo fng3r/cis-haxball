@@ -8,6 +8,11 @@
     <div class="tw:flex tw:items-center tw:justify-between">
       <div class="tw:card-title">
         <span class="tw:font-semibold tw:text-lg">{{ tour|tour_name }} ({{ tour.date_from|date:"d.m.y" }} – {{ tour.date_to|date:"d.m.y" }})</span>
+        {% if is_paired_tour %}
+          <span class="tw:tooltip tw:mt-1" data-tip="Спаренный тур">
+            <i class="fa fa-link"></i>
+          </span>
+        {% endif %}
       </div>
       <div>
         {% if tour|is_open_for_predictions %}

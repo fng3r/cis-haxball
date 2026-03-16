@@ -260,6 +260,21 @@ def group_matches(matches):
     return matches_by_group
 
 
+@register.simple_tag
+def paired_tour_ids(tours):
+    tours_by_date = defaultdict(list)
+    for tour in tours:
+        tours_by_date[tour.date_from].append(tour.id)
+
+    paired_ids = {}
+    for same_day_tour_ids in tours_by_date.values():
+        if len(same_day_tour_ids) > 1:
+            for tour_id in same_day_tour_ids:
+                paired_ids[tour_id] = True
+
+    return paired_ids
+
+
 @register.filter
 def bracket_tours(tours, bracket):
     return [tour for tour in tours.all() if tour.bracket == bracket]
