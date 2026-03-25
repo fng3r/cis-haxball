@@ -48,6 +48,8 @@ from .models import (
     Goal,
     League,
     Match,
+    MatchReplayStats,
+    MatchReplayStatsStatus,
     MatchResult,
     Nation,
     OtherEvents,
@@ -66,6 +68,7 @@ from .models import (
     TourNumber,
 )
 from .services.hall_of_fame import HallOfFameService
+from .services.replay_stats import MatchReplayStatsAggregator
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
 
 
@@ -518,17 +521,48 @@ class MatchDetail(DetailView):
     template_name = 'tournament/match/detail.html'
 
     def get_queryset(self):
-        return Match.objects.select_related(
-            'team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector'
-        ).prefetch_related(
-            'team_home_start__name__user_profile',
-            'team_home_start__player_nation',
-            'team_guest_start__name__user_profile',
-            'team_guest_start__player_nation',
-            'disqualifications__team',
-            'disqualifications__player__name__user_profile',
-            'disqualifications__tours__league',
+        return (
+            Match.objects.select_related(
+                'team_home', 'team_guest', 'numb_tour', 'league__championship', 'inspector__user_profile'
+            )
+            .prefetch_related(
+                'team_home_start__name__user_profile',
+                'team_home_start__player_nation',
+                'team_guest_start__name__user_profile',
+                'team_guest_start__player_nation',
+                'disqualifications__team',
+                'disqualifications__player__name__user_profile',
+                'disqualifications__tours__league',
+                Prefetch(
+                    'replay_stats',
+                    queryset=MatchReplayStats.objects.select_related('match_replay').prefetch_related(
+                        'players__player__name__user_profile',
+                        'players__team',
+                    ),
+                ),
+            )
+            .select_related('replay_stats_status')
         )
+
+    def get_time_played_by_player(self, match: Match) -> dict[int, str]:
+        time_played = defaultdict(int)
+        full_match_time = int(match.duration.total_seconds())
+        start_players = match.team_home_start.all() | match.team_guest_start.all()
+
+        for player in start_players:
+            time_played[player.id] = full_match_time
+
+        for substitution in match.match_substitutions.all():
+            player_in = substitution.player_in.id
+            player_out = substitution.player_out.id
+            time_until_match_end = int(
+                full_match_time
+                - timedelta(minutes=substitution.time_min, seconds=substitution.time_sec).total_seconds()
+            )
+            time_played[player_in] += time_until_match_end
+            time_played[player_out] -= time_until_match_end
+
+        return {player_id: datetime.fromtimestamp(sec).strftime('%M:%S') for player_id, sec in time_played.items()}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -609,27 +643,22 @@ class MatchDetail(DetailView):
         clean_sheets_by_player = {d['author']: d['cs'] for d in clean_sheets}
         context['clean_sheets_by_player'] = clean_sheets_by_player
 
-        time_played = defaultdict(int)
-        substitutions = match.match_substitutions.all()
-        full_match_time = int(timedelta(minutes=16, seconds=0).total_seconds())
-        start_players = match.team_home_start.all() | match.team_guest_start.all()
-        for player in start_players:
-            time_played[player.id] = full_match_time
-
-        for substitution in substitutions:
-            player_in = substitution.player_in.id
-            player_out = substitution.player_out.id
-            time_until_match_end = int(
-                full_match_time
-                - timedelta(minutes=substitution.time_min, seconds=substitution.time_sec).total_seconds()
-            )
-            time_played[player_in] += time_until_match_end
-            time_played[player_out] -= time_until_match_end
-        time_played_by_player = {p: datetime.fromtimestamp(sec).strftime('%M:%S') for (p, sec) in time_played.items()}
-        context['time_played_by_player'] = time_played_by_player
+        context['time_played_by_player'] = self.get_time_played_by_player(match)
 
         cards = match.cards().select_related('team', 'author__name__user_profile')
         context['cards'] = cards
+
+        # Replay-based advanced stats (Haxball Analyzer)
+        replay_status = getattr(match, 'replay_stats_status', None)
+        context['replay_stats_status'] = replay_status
+        if replay_status and replay_status.status in {
+            MatchReplayStatsStatus.Status.SUCCESS,
+            MatchReplayStatsStatus.Status.PARTIAL,
+        }:
+            parts = list(match.replay_stats.all())
+            context['match_replay_stats_aggregated'] = MatchReplayStatsAggregator(match=match, parts=parts).build()
+        else:
+            context['match_replay_stats_aggregated'] = None
 
         if all_matches_between.count() == 0:
             context['no_history'] = True

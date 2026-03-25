@@ -45,6 +45,10 @@ from .models import (
     GroupStage,
     League,
     Match,
+    MatchReplay,
+    MatchReplayStats,
+    MatchReplayStatsPlayer,
+    MatchReplayStatsStatus,
     MatchResult,
     Nation,
     OtherEvents,
@@ -882,6 +886,7 @@ class MatchAdmin(UnfoldModelAdmin):
         ('inspector', RelatedDropdownFilter),
         'is_played',
         ('result__value', ChoicesCheckboxFilter),
+        ('id', SingleNumericFilter),
     )
     list_filter_submit = True
     list_fullwidth = True
@@ -903,8 +908,8 @@ class MatchAdmin(UnfoldModelAdmin):
             {
                 'fields': (
                     ('is_played',),
-                    ('match_date', 'inspector'),
-                    ('replays',),
+                    ('match_date', 'duration'),
+                    ('replays', 'inspector'),
                 )
             },
         ),
@@ -961,6 +966,111 @@ class MatchAdmin(UnfoldModelAdmin):
                 'inspector',
             )
         )
+
+
+@admin.register(MatchReplayStatsStatus)
+class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
+    list_display = ('match_id', 'display_status', 'fetched_at', 'error_message')
+    list_filter = ('status',)
+    search_fields = ('match__id',)
+    ordering = ('-fetched_at',)
+    readonly_fields = ('match', 'fetched_at')
+
+    @display(
+        description='Статус',
+        label={
+            MatchReplayStatsStatus.Status.PENDING: 'warning',
+            MatchReplayStatsStatus.Status.PARTIAL: 'warning',
+            MatchReplayStatsStatus.Status.SUCCESS: 'success',
+            MatchReplayStatsStatus.Status.FAILED: 'danger',
+        },
+    )
+    def display_status(self, obj):
+        return obj.status, obj.get_status_display()
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(MatchReplay)
+class MatchReplayAdmin(UnfoldModelAdmin):
+    list_display = ('match_id', 'match', 'display_status', 'replay_url', 'analyzer_replay_id', 'fetched_at')
+    list_filter = (('match__league', RelatedDropdownFilter), 'status', ('match__id', SingleNumericFilter))
+    list_filter_submit = True
+    search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
+    ordering = ('match_id', 'replay_url')
+    raw_id_fields = ('match',)
+    readonly_fields = ('replay_url', 'analyzer_replay_id', 'status', 'error_message', 'raw_stats_json', 'fetched_at')
+
+    @display(
+        description='Статус',
+        label={
+            MatchReplay.ReplayStatus.PENDING: 'warning',
+            MatchReplay.ReplayStatus.AWAITING_STATS: 'warning',
+            MatchReplay.ReplayStatus.READY: 'success',
+            MatchReplay.ReplayStatus.FAILED: 'danger',
+        },
+    )
+    def display_status(self, obj):
+        return obj.status, obj.get_status_display()
+
+
+@admin.register(MatchReplayStats)
+class MatchReplayStatsAdmin(UnfoldModelAdmin):
+    list_display = (
+        'match_id',
+        'match',
+        'match_replay',
+        'part_label',
+        'part_order',
+        'red_is_home',
+        'score_red',
+        'score_blue',
+        'minutes',
+        'poss_red',
+        'poss_blue',
+    )
+    list_filter = (('match__league', RelatedDropdownFilter), ('match__id', SingleNumericFilter))
+    list_filter_submit = True
+    search_fields = ('match__id', 'match_replay__replay_url', 'match_replay__analyzer_replay_id')
+    ordering = ('match_id', 'part_order')
+    raw_id_fields = ('match', 'match_replay')
+    readonly_fields = ('match_replay', 'part_order')
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('match', 'match__team_home', 'match__team_guest', 'match_replay')
+        )
+
+
+@admin.register(MatchReplayStatsPlayer)
+class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
+    list_display = (
+        'match_id',
+        'replay_stats',
+        'team',
+        'player',
+        'nick',
+        'avatar',
+        'position',
+        'played_ticks',
+        'rating',
+    )
+    list_editable = ('position', 'played_ticks', 'rating')
+    list_filter = (('team', RelatedDropdownFilter), ('replay_stats__match__id', SingleNumericFilter))
+    search_fields = ('nick', 'player__nickname')
+    ordering = ('-replay_stats__match_replay__id', 'replay_stats__part_order')
+    raw_id_fields = ('replay_stats', 'player', 'team')
+    list_filter_submit = True
+
+    @display(description='ID матча')
+    def match_id(self, model):
+        return model.replay_stats.match_id
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('replay_stats__match', 'player', 'team')
 
 
 @admin.register(Goal)

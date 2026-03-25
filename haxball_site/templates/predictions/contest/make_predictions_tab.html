@@ -1,6 +1,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load predictions_extras %}
+{% load tournament_extras %}
 
 <div class="tw:flex tw:flex-col tw:gap-4">
   {% if not user.is_authenticated %}
@@ -27,10 +28,11 @@
           </div>
 
           <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
+            {% paired_tour_ids selected_tournament.league.tours.all as paired_tour_ids_map %}
             {% for tour in selected_tournament.league.tours.all %}
               <div x-data="{isActual: {{ tour|is_tour_actual|yesno:'true,false' }}}" x-show="isActual || showAllTours" x-cloak>
                 {% with prediction_data=user_predictions|get_item:tour.id %}
-                  {% include "predictions/contest/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions %}
+                  {% include "predictions/contest/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions is_paired_tour=paired_tour_ids_map|get_item:tour.id %}
                 {% endwith %}
               </div>
             {% empty %}

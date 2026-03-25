@@ -1,0 +1,82 @@
+{% with agg=match_replay_stats_aggregated status=replay_stats_status.status %}
+  {% if status == 'failed' %}
+    <div class="tw:py-12 tw:px-6 tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:gap-2">
+      <i class="fa fa-ban tw:text-4xl! tw:text-error" aria-hidden="true"></i>
+      <div class="tw:text-xl tw:text-base-content/80 tw:font-semibold">Статистика для данного матча недоступна</div>
+    </div>
+  {% elif status == 'pending' %}
+    <div class="tw:py-12 tw:px-6 tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:gap-2">
+      <i class="fa fa-clock-o tw:text-4xl! tw:text-warning" aria-hidden="true"></i>
+      <div class="tw:text-xl tw:text-base-content/80 tw:font-semibold">
+        <span>Реплей обрабатывается. Cтатистика будет доступна позже</span>
+      </div>
+    </div>
+  {% elif agg %}
+    {{ agg.players_comparison_data|json_script:"players-comparison-data" }}
+    {% if status == 'partial' %}
+      <div class="tw:alert tw:alert-warning tw:mt-1 tw:mb-2 tw:text-sm">
+        <i class="fa fa-info-circle" aria-hidden="true"></i>
+        <span>Статистика загружена частично. Некоторые реплеи матча ещё обрабатываются.</span>
+      </div>
+    {% endif %}
+
+    {# Inner tabs: Teams | Players #}
+    <div class="tw:tabs tw:tabs-border tw:mb-4" role="tablist" x-data="{ view: 'total' }">
+      <input type="radio" name="replay-stats-inner-tabs" class="tw:tab tw:tab-sm" aria-label="Команды" checked>
+      <div class="tw:tab-content tw:bg-base-100 tw:pt-4 tw:px-1 tw:w-full" role="tabpanel">
+        {# Teams H2H tab: compare_teams-style stat rows, toggle Total / Part via Alpine #}
+        <div class="tw:flex tw:flex-col tw:gap-4">
+          <div class="tw:flex tw:gap-1">
+            <button type="button"
+                    class="tw:btn tw:btn-ghost tw:btn-sm"
+                    :class="{ 'tw:btn-active': view === 'total' }"
+                    @click="view = 'total'">Матч</button>
+            {% for part in agg.parts_summary %}
+              <button type="button"
+                      class="tw:btn tw:btn-ghost tw:btn-sm"
+                      :class="{ 'tw:btn-active': view === {{ part.index }} }"
+                      @click="view = {{ part.index }}">{{ part.part_label }}</button>
+            {% endfor %}
+          </div>
+          {# Total stats (shown when "Матч" selected) #}
+          <div class="tw:flex tw:flex-col tw:gap-1 tw:px-2" x-show="view === 'total'" x-cloak>
+            {% include "tournament/match/teams_stats.html" with stats=agg.team %}
+          </div>
+          {# Per-part stats: one card per part, same H2H UI as total #}
+          {% for part in agg.parts_summary %}
+            <div class="tw:flex tw:flex-col tw:gap-1 tw:px-2" x-show="view === {{ part.index }}" x-cloak>
+              {% include "tournament/match/teams_stats.html" with stats=part %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <input type="radio" name="replay-stats-inner-tabs" class="tw:tab tw:tab-sm" aria-label="Игроки">
+      <div class="tw:tab-content tw:bg-base-100 tw:pt-4 tw:px-1 tw:w-full" role="tabpanel">
+        {% include "tournament/match/players_stats.html" with agg=agg %}
+      </div>
+    </div>
+    <div class="tw:mt-3 tw:mx-2 tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-200 tw:p-3">
+      <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-x-2 tw:gap-y-1 tw:text-sm tw:text-base-content/80">
+        <i class="fa fa-line-chart tw:text-primary" aria-hidden="true"></i>
+        <span>
+          Статистика построена на данных, полученных из
+          <a href="https://replay.hax.ma" target="_blank" rel="noopener" class="tw:link tw:link-primary tw:no-underline">Haxball Replay Analyzer v2.0</a>
+        </span>
+      </div>
+
+      {% if agg.replay_links %}
+        <div class="tw:mt-2 tw:flex tw:flex-wrap tw:gap-2">
+          {% for replay_link in agg.replay_links %}
+            <a href="{{ replay_link.analyzer_url }}"
+               target="_blank"
+               rel="noopener"
+               class="tw:inline-flex tw:items-center tw:gap-1.5 tw:rounded-full tw:border tw:border-base-300 tw:bg-base-100 tw:px-2.5 tw:py-1 tw:text-xs tw:font-medium tw:hover:border-primary/50 tw:hover:text-primary">
+              {{ replay_link.label }}
+              <i class="fa fa-external-link" aria-hidden="true"></i>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endwith %}

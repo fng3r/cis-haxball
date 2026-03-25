@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
@@ -620,6 +620,7 @@ class Match(models.Model):
     )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
+    duration = models.DurationField('Длительность матча', default=timedelta(minutes=16))
     replays = ArrayField(models.URLField(), verbose_name='Ссылки на реплеи', default=list, blank=True)
     inspector = models.ForeignKey(
         User,
@@ -822,6 +823,261 @@ class MatchResult(models.Model):
         ordering = ['value']
         verbose_name = 'Результат матча'
         verbose_name_plural = 'Результат матча'
+
+
+class MatchReplayStatsStatus(models.Model):
+    """Fetch status for replay-based stats (one per Match)."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Ожидание'
+        SUCCESS = 'success', 'Успешно'
+        PARTIAL = 'partial', 'Частично'
+        FAILED = 'failed', 'Ошибка'
+
+    match = models.OneToOneField(
+        Match,
+        verbose_name='Матч',
+        related_name='replay_stats_status',
+        on_delete=models.CASCADE,
+        primary_key=True,
+    )
+    status = models.CharField(
+        'Статус',
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    error_message = models.TextField('Сообщение об ошибке', blank=True)
+    fetched_at = models.DateTimeField('Время обновления', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Статус загрузки статистики реплея'
+        verbose_name_plural = 'Статусы загрузки статистики реплеев'
+
+
+class MatchReplay(models.Model):
+    """
+    One per replay URL in a match. Stores fetch metadata and raw analyzer response.
+    """
+
+    class ReplayStatus(models.TextChoices):
+        PENDING = 'pending', 'Ожидание загрузки'
+        AWAITING_STATS = 'awaiting_stats', 'Ожидание статистики'
+        READY = 'ready', 'Готово'
+        FAILED = 'failed', 'Ошибка'
+
+    match = models.ForeignKey(
+        Match,
+        verbose_name='Матч',
+        related_name='match_replays',
+        on_delete=models.CASCADE,
+    )
+    replay_url = models.URLField('URL реплея', max_length=512)
+    analyzer_replay_id = models.CharField(
+        'ID реплея в анализаторе',
+        max_length=32,
+        blank=True,
+        help_text='ID, возвращённый Haxball Analyzer после загрузки',
+    )
+    raw_stats_json = models.JSONField(
+        'Сырой ответ API (stats)',
+        default=list,
+        blank=True,
+        help_text='Массив частей матча из ответа /stats/<id>.json',
+    )
+    status = models.CharField(
+        'Статус',
+        max_length=24,
+        choices=ReplayStatus.choices,
+        default=ReplayStatus.PENDING,
+    )
+    error_message = models.TextField('Сообщение об ошибке', blank=True)
+    fetched_at = models.DateTimeField('Время загрузки', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Реплей матча'
+        verbose_name_plural = 'Реплеи матчей'
+        ordering = ['match_id', 'replay_url']
+        constraints = [
+            models.UniqueConstraint(fields=['match', 'replay_url'], name='tournament_matchreplay_match_url_unique'),
+        ]
+
+    def __str__(self):
+        return f'{self.replay_url}'
+
+
+class MatchReplayStats(models.Model):
+    """Stats for specific replay part."""
+
+    class PartLabel(models.TextChoices):
+        FIRST_HALF = '1H', '1 тайм'
+        SECOND_HALF = '2H', '2 тайм'
+        EXTRA_TIME = 'ET', 'Доп. время'
+
+    match = models.ForeignKey(
+        Match,
+        verbose_name='Матч',
+        related_name='replay_stats',
+        on_delete=models.CASCADE,
+    )
+    match_replay = models.ForeignKey(
+        MatchReplay,
+        verbose_name='Реплей',
+        related_name='parts',
+        on_delete=models.CASCADE,
+    )
+    part_order = models.PositiveSmallIntegerField(
+        'Порядок части',
+        default=0,
+        help_text='Глобальный порядок части в матче (среди всех реплеев)',
+    )
+    part_label = models.CharField(
+        'Часть матча',
+        max_length=2,
+        choices=PartLabel.choices,
+        default=PartLabel.FIRST_HALF,
+    )
+    red_is_home = models.BooleanField(
+        'Красные = хозяева',
+        default=True,
+        help_text='True: красные в реплее = team_home. False: синие в реплее = team_home.',
+    )
+
+    # Scores and teams
+    score_red = models.IntegerField('Голы красных', default=0)
+    score_blue = models.IntegerField('Голы синих', default=0)
+
+    # Match duration
+    game_ticks = models.IntegerField('Тики игры', default=0)
+    minutes = models.IntegerField('Минуты', default=0)
+
+    # Possession and shots
+    poss_red = models.IntegerField('Владение (красные)', default=0)
+    poss_blue = models.IntegerField('Владение (синие)', default=0)
+    shots_red = models.IntegerField('Удары (красные)', default=0)
+    shots_blue = models.IntegerField('Удары (синие)', default=0)
+    shots_off_target_red = models.IntegerField('Мимо (красные)', default=0)
+    shots_off_target_blue = models.IntegerField('Мимо (синие)', default=0)
+    shots_total_red = models.IntegerField('Всего ударов (красные)', default=0)
+    shots_total_blue = models.IntegerField('Всего ударов (синие)', default=0)
+    kicks_red = models.IntegerField('Удары по мячу красные', default=0)
+    kicks_blue = models.IntegerField('Удары по мячу (синие)', default=0)
+    thirds_red = models.IntegerField('Тики в трети красных', default=0)
+    thirds_mid = models.IntegerField('Тики в центре', default=0)
+    thirds_blue = models.IntegerField('Тики в трети синих', default=0)
+
+    # Stadium and mode
+    stadium_name = models.CharField('Название стадиона', max_length=255, blank=True)
+
+    # Team nicks (from API redTeam / blueTeam)
+    red_team_nicks = ArrayField(
+        models.CharField(max_length=150, blank=True),
+        verbose_name='Ники красных',
+        default=list,
+        blank=True,
+    )
+    blue_team_nicks = ArrayField(
+        models.CharField(max_length=150, blank=True),
+        verbose_name='Ники синих',
+        default=list,
+        blank=True,
+    )
+    mvp_nick = models.CharField('MVP (ник)', max_length=150, blank=True)
+
+    class Meta:
+        verbose_name = 'Статистика матча (реплеи)'
+        verbose_name_plural = 'Статистика матчей (реплеи)'
+        ordering = ['part_order']
+
+    def get_match_team_for_replay_side(self, replay_side: str):
+        """Return match team (team_home or team_guest) for replay side 'red' or 'blue'."""
+        if (replay_side or '').lower() == 'red':
+            return self.match.team_home if self.red_is_home else self.match.team_guest
+        return self.match.team_guest if self.red_is_home else self.match.team_home
+
+    def home_guest(self, red_val, blue_val):
+        """Return (home_value, guest_value) for display, from replay red/blue values."""
+        return (red_val, blue_val) if self.red_is_home else (blue_val, red_val)
+
+    def __str__(self):
+        return (
+            f'{self.match.team_home.short_title} - {self.match.team_guest.short_title}'
+            + f' — {self.match.numb_tour} ({self.get_part_label_display()})'
+        )
+
+
+class MatchReplayStatsPlayer(models.Model):
+    """Per-player stats for one part (one MatchReplayStats)."""
+
+    class Position(models.TextChoices):
+        GK = 'GK', 'GK'
+        DM = 'DM', 'DM'
+        AM = 'AM', 'AM'
+        LW = 'LW', 'LW'
+        RW = 'RW', 'RW'
+        ST = 'ST', 'ST'
+
+    replay_stats = models.ForeignKey(
+        MatchReplayStats,
+        verbose_name='Статистика части',
+        related_name='players',
+        on_delete=models.CASCADE,
+    )
+    player = models.ForeignKey(
+        Player,
+        verbose_name='Игрок',
+        related_name='replay_stats_entries',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Сопоставлен по нику (красные=хозяева, синие=гости)',
+    )
+    nick = models.CharField('Ник в реплее', max_length=150)
+    avatar = models.CharField('Аватар', max_length=2, null=True, blank=True)
+    team = models.ForeignKey(
+        Team,
+        verbose_name='Команда',
+        related_name='replay_stats_player_entries',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='Хозяева (красные) или гости (синие) по реплею',
+    )
+
+    goals = models.IntegerField('Голы', default=0)
+    assists = models.IntegerField('Голевые передачи', default=0)
+    played_ticks = models.IntegerField('Сыграно тиков', default=0)
+    position = models.CharField(
+        'Позиция',
+        max_length=2,
+        choices=Position.choices,
+        null=True,
+        blank=True,
+    )
+    rating = models.FloatField('Рейтинг', null=True, blank=True)
+
+    shots_total = models.IntegerField('Ударов всего', default=0)
+    shots_on_target = models.IntegerField('Ударов в створ', default=0)
+    shots_off_target = models.IntegerField('Ударов мимо', default=0)
+
+    passes_completed = models.IntegerField('Передач выполнено', default=0)
+    pass_attempts = models.IntegerField('Передач попыток', default=0)
+    pass_completion_rate = models.FloatField('% передач', null=True, blank=True)
+
+    touches = models.IntegerField('Касаний', default=0)
+    saves = models.IntegerField('Сейвов', default=0)
+    clearances = models.IntegerField('Отборов', default=0)
+    interceptions = models.IntegerField('Перехватов', default=0)
+    duel_wins = models.IntegerField('Дуэли выиграно', default=0)
+    duel_losses = models.IntegerField('Дуэли проиграно', default=0)
+    xg = models.FloatField('xG', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Статистика игрока (реплеи)'
+        verbose_name_plural = 'Статистика игроков (реплеи)'
+
+    def __str__(self):
+        return f'{self.nick}: {self.replay_stats}'
 
 
 class Goal(models.Model):
