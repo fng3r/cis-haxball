@@ -83,11 +83,24 @@
       </div>
     {% endif %}
   {% endpartialdef %}
+
+  <div id="comments-reactions-popover"
+       popover="auto"
+       data-comments-reactions-static-url="{% get_static_prefix %}"
+       class="tw:m-0 tw:ml-2 tw:p-0 tw:border-0 tw:bg-transparent tw:shadow-none tw:overflow-visible"
+       style="position: fixed;
+              inset: auto;
+              top: anchor(top);
+              left: anchor(right)">
+    <div data-comments-emoji-mart></div>
+  </div>
 </div>
 
+<script type="text/javascript" src="{% static 'core/js/comments-reactions.js' %}"></script>
+
 <script>
-  document.body.addEventListener('htmx:afterRequest', (event) => {
+  document.body.addEventListener('htmx:afterRequest', function () {
     $('body').removeClass('modal-open');
     $('.modal-backdrop').remove();
-  })
+  });
 </script>

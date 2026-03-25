@@ -13,6 +13,7 @@ from haxball_site import settings
 from tournament.models import League, PlayerTransfer, Team
 
 from ..models import NewComment, Post, Subscription
+from ..services.reactions import build_reactions_context
 
 register = template.Library()
 
@@ -320,3 +321,19 @@ def show_last_transfers():
     )
 
     return {'transfers': last_transfers}
+
+
+@register.simple_tag(takes_context=True)
+def get_reactions_context(context, obj):
+    request = context['request']
+
+    can_react = False
+    if request.user.is_authenticated:
+        can_react = request.user.user_profile.can_vote
+
+    data = {
+        'can_react': can_react,
+        'user': request.user,
+    }
+    data.update(build_reactions_context(obj, request.user, request=request))
+    return data

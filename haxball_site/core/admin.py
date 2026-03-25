@@ -37,6 +37,8 @@ from .models import (
     NewComment,
     Post,
     Profile,
+    Reaction,
+    ReactionType,
     Subscription,
     Themes,
     UserActivity,
@@ -225,6 +227,45 @@ class LikeDisLikeAdmin(UnfoldModelAdmin):
     @display(description='Голос', label={LikeDislike.LIKE: 'success', LikeDislike.DISLIKE: 'danger'})
     def display_vote(self, model):
         return model.vote, model.get_vote_display()
+
+
+@admin.register(ReactionType)
+class ReactionTypeAdmin(UnfoldModelAdmin):
+    list_display = (
+        'display_reaction',
+        'code',
+        'name',
+        'shortcodes',
+    )
+    search_fields = ('code', 'name', 'shortcodes', 'emoji')
+    search_help_text = 'Поиск по коду/названию/эмодзи'
+
+    @display(description='Реакция', header=True)
+    def display_reaction(self, obj):
+        if obj.image:
+            return [
+                obj.name,
+                obj.shortcodes,
+                None,
+                {
+                    'path': obj.image,
+                    'squared': True,
+                    'borderless': True,
+                    'width': 32,
+                    'height': 32,
+                },
+            ]
+
+        return [obj.name, obj.shortcodes, obj.emoji]
+
+
+@admin.register(Reaction)
+class ReactionAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'reaction_type', 'user', 'content_type', 'object_id', 'content_object', 'updated')
+    list_filter = (('reaction_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter), 'content_type')
+    list_filter_submit = True
+    search_fields = ('user__username', 'reaction_type__code', 'reaction_type__name')
+    search_help_text = 'Поиск по пользователю или типу реакции'
 
 
 @admin.register(Post)

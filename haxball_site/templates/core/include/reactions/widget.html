@@ -1,0 +1,47 @@
+{% load static %}
+
+{% url 'core:reactions' 'comment' comment_id as reactions_url %}
+
+<div id="reactions-comment-{{ comment_id }}"
+     class="tw:inline-flex tw:items-center tw:gap-1.5 tw:flex-wrap"
+     data-reactions-root
+     data-reactions-url="{{ reactions_url }}"
+     data-can-react="{% if can_react %}1{% else %}0{% endif %}"
+     data-comment-id="{{ comment_id }}"
+     data-comment-target="#r{{ comment_id }}">
+  {% if reaction_chips %}
+    <div class="tw:flex tw:items-center tw:flex-wrap tw:gap-1.5">
+      {% for chip in reaction_chips %}
+        <button type="button"
+                class="tw:btn tw:btn-xs tw:btn-soft tw:min-h-7 tw:h-7 tw:px-2.5 tw:rounded-full tw:gap-1 {% if chip.selected %}tw:border tw:border-primary tw:text-primary/80 tw:bg-primary/12{% endif %}"
+                title="{{ chip.label }}"
+                {% if can_react %} hx-post="{{ reactions_url }}" hx-vals='{"reaction_type": "{{ chip.id }}", "render_comment": "1"}' hx-target="#r{{ comment_id }}" hx-swap="outerHTML" {% elif user.is_authenticated %} onclick="alert('Вам ограничен доступ к реакциям!')" {% else %} onclick="login_modal.showModal()" {% endif %}>
+          {% if chip.image %}
+            <img src="{{ chip.image }}" alt="{{ chip.label }}" class="tw:size-5.5 tw:object-contain">
+          {% else %}
+            <span class="tw:text-base">{{ chip.emoji }}</span>
+          {% endif %}
+          <span class="tw:text-base tw:font-semibold">{{ chip.count }}</span>
+        </button>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <button type="button"
+          data-reactions-toggle
+          class="tw:btn tw:btn-xs tw:btn-soft tw:h-7 tw:min-h-7 tw:rounded-full tw:px-1.5"
+          title="Добавить реакцию"
+          aria-expanded="false"
+          style="anchor-name: --reactions-anchor-comment-{{ comment_id }}"
+          {% if not can_react %}{% if user.is_authenticated %}onclick="alert('Вам ограничен доступ к реакциям!')" {% else %}onclick="login_modal.showModal()" {% endif %}
+          {% endif %}>
+    <svg viewBox="0 0 32 32" aria-hidden="true" class="tw:size-6">
+      <circle cx="16" cy="16" r="11.2" fill="currentColor" opacity="0.2"></circle>
+      <circle cx="12.7" cy="13.7" r="1.25" fill="currentColor"></circle>
+      <circle cx="19.3" cy="13.7" r="1.25" fill="currentColor"></circle>
+      <path d="M11.8 19.1c1 1.7 2.5 2.6 4.2 2.6s3.2-.9 4.2-2.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      </path>
+    </svg>
+  </button>
+
+</div>

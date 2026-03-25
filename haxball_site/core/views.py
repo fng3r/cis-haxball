@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from datetime import datetime
 
 from django.contrib.auth.decorators import user_passes_test
@@ -21,7 +22,19 @@ from pytils.translit import slugify
 from tournament.models import Achievements, Team
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
-from .models import Category, LikeDislike, NewComment, Post, Profile, Subscription, Themes, UserNicknameHistoryItem
+from .models import (
+    Category,
+    LikeDislike,
+    NewComment,
+    Post,
+    Profile,
+    Reaction,
+    ReactionType,
+    Subscription,
+    Themes,
+    UserNicknameHistoryItem,
+)
+from .services.reactions import build_reactions_context
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
 from .utils import get_comments_for_object, get_paginated_comments, strtobool
 
@@ -549,6 +562,149 @@ class VotesView(View):
             ),
             content_type='application/json',
         )
+
+
+class ReactionWidgetView(View):
+    REACTION_NAME_MAX_LENGTH = 64
+    REGULAR_REACTIONS_LIMIT = 1
+    PREMIUM_REACTIONS_LIMIT = 3
+
+    def _get_object(self, object_type: str, object_id: int):
+        if object_type != 'comment':
+            return None
+
+        return NewComment.objects.filter(pk=object_id).first()
+
+    def _can_react(self, request) -> bool:
+        if not request.user.is_authenticated:
+            return False
+
+        profile = getattr(request.user, 'user_profile', None)
+        if profile is None:
+            return False
+
+        return profile.can_vote
+
+    def _get_reactions_limit(self, user: User):
+        if user.is_superuser:
+            return None
+
+        if Subscription.objects.by_user(user).active().exists():
+            return self.PREMIUM_REACTIONS_LIMIT
+
+        return self.REGULAR_REACTIONS_LIMIT
+
+    def _render_widget(self, request, obj):
+        context = {
+            'comment_id': obj.id,
+            'can_react': self._can_react(request),
+        }
+        context.update(build_reactions_context(obj, request.user))
+        return render(request, 'core/include/reactions/widget.html', context)
+
+    def _render_comment_item(self, request, comment):
+        return render(
+            request,
+            'core/comment/comment-item.html',
+            {
+                'comment': comment,
+                'object': comment.content_object,
+            },
+        )
+
+    def get(self, request, object_type: str, object_id: int):
+        obj = self._get_object(object_type, object_id)
+        if obj is None:
+            return HttpResponse(status=404)
+
+        return self._render_widget(request, obj)
+
+    def post(self, request, object_type: str, object_id: int):
+        obj = self._get_object(object_type, object_id)
+        if obj is None:
+            return HttpResponse(status=404)
+
+        if not self._can_react(request):
+            return HttpResponse(status=403)
+
+        reaction_type_id = request.POST.get('reaction_type')
+        reaction_type = None
+        if reaction_type_id:
+            reaction_type = ReactionType.objects.filter(pk=reaction_type_id).first()
+
+        if reaction_type is None:
+            emoji_id = request.POST.get('emoji_id')
+            emoji_native = request.POST.get('emoji_native')
+            emoji_src = request.POST.get('emoji_src')
+            emoji_name = request.POST.get('emoji_name')
+            emoji_shortcodes = request.POST.get('emoji_shortcodes')
+            emoji_keywords_raw = request.POST.get('emoji_keywords')
+
+            if not emoji_id and not emoji_native:
+                return HttpResponse(status=400)
+
+            raw_code = emoji_id or emoji_name or emoji_native
+            normalized_code = re.sub(r'[^a-z0-9_-]+', '_', raw_code.lower()).strip('_')
+
+            reaction_type, _ = ReactionType.objects.get_or_create(
+                code=normalized_code,
+                defaults={
+                    'emoji': emoji_native or '',
+                    'image': emoji_src or '',
+                    'name': (emoji_name or normalized_code)[: self.REACTION_NAME_MAX_LENGTH],
+                    'shortcodes': emoji_shortcodes,
+                    'keywords': self._extract_keywords(emoji_keywords_raw),
+                },
+            )
+
+        content_type = ContentType.objects.get_for_model(obj)
+        reaction = Reaction.objects.filter(
+            content_type=content_type,
+            object_id=obj.id,
+            user=request.user,
+            reaction_type=reaction_type,
+        ).first()
+
+        if reaction:
+            reaction.delete()
+        else:
+            reactions_limit = self._get_reactions_limit(request.user)
+            if reactions_limit is not None:
+                user_reactions = Reaction.objects.filter(
+                    content_type=content_type,
+                    object_id=obj.id,
+                    user=request.user,
+                ).order_by('-created', '-id')
+                if user_reactions.count() >= reactions_limit:
+                    latest_reaction = user_reactions.first()
+                    if latest_reaction is not None:
+                        latest_reaction.delete()
+
+            Reaction.objects.create(
+                content_type=content_type,
+                object_id=obj.id,
+                user=request.user,
+                reaction_type=reaction_type,
+            )
+
+        if request.POST.get('render_comment') == '1':
+            return self._render_comment_item(request, obj)
+
+        return self._render_widget(request, obj)
+
+    def _extract_keywords(self, keywords_raw: str) -> list[str]:
+        if not keywords_raw:
+            return []
+
+        try:
+            payload = json.loads(keywords_raw)
+        except json.JSONDecodeError:
+            payload = [keywords_raw]
+
+        if not isinstance(payload, list):
+            return []
+
+        return payload
 
 
 def search_result(request):

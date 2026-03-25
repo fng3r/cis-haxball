@@ -4,6 +4,7 @@ from typing import Self
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Max, Sum
 from django.db.models.signals import post_save, pre_save
@@ -76,6 +77,51 @@ class LikeDislike(models.Model):
         verbose_name_plural = 'Лайки/дизлайки'
 
 
+class ReactionType(models.Model):
+    code = models.SlugField('Код реакции', max_length=64, unique=True)
+    emoji = models.CharField('Эмодзи', max_length=16, blank=True, default='')
+    image = models.CharField('Изображение реакции', max_length=255, blank=True, default='')
+    name = models.CharField('Название', max_length=64)
+    shortcodes = models.CharField('Шорткоды', max_length=255, blank=True, default='')
+    keywords = ArrayField(
+        base_field=models.CharField(max_length=64),
+        verbose_name='Ключевые слова',
+        default=list,
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = 'Тип реакции'
+        verbose_name_plural = 'Типы реакций'
+
+    def __str__(self):
+        return f'{self.emoji or self.code} {self.name}'
+
+
+class Reaction(models.Model):
+    user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE, related_name='reactions')
+    reaction_type = models.ForeignKey(
+        ReactionType, verbose_name='Реакция', on_delete=models.CASCADE, related_name='reactions'
+    )
+    created = models.DateTimeField('Создана', auto_now_add=True)
+    updated = models.DateTimeField('Обновлена', auto_now=True)
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+
+    class Meta:
+        verbose_name = 'Реакция'
+        verbose_name_plural = 'Реакции'
+        unique_together = ('user', 'content_type', 'object_id', 'reaction_type')
+        ordering = ('-updated',)
+
+    def __str__(self):
+        return (
+            f'{self.reaction_type.emoji or self.reaction_type.image or self.reaction_type.code} от {self.user.username}'
+        )
+
+
 class Themes(models.Model):
     title = models.CharField('Тема', max_length=256)
 
@@ -124,6 +170,7 @@ class NewComment(models.Model):
         'self', verbose_name='Родитель', on_delete=models.SET_NULL, blank=True, null=True, related_name='childs'
     )
     votes = GenericRelation(LikeDislike, related_query_name='comments')
+    reactions = GenericRelation(Reaction, related_query_name='comment_reactions')
     version = models.PositiveSmallIntegerField('Версия', default=1)
     purchase = models.ForeignKey(
         'balance.ShopPurchase',
@@ -253,6 +300,7 @@ class Post(models.Model):
     updated = models.DateTimeField('Изменено', auto_now=True)
     important = models.BooleanField('Закрепленный пост', default=False)
     votes = GenericRelation(LikeDislike, related_query_name='posts')
+    reactions = GenericRelation(Reaction, related_query_name='post_reactions')
     views = models.PositiveIntegerField(default=0)
     commentable = models.BooleanField('Комментируемая запись', default=True)
     comments = GenericRelation(NewComment, related_query_name='post_comments')
@@ -352,6 +400,7 @@ class Profile(models.Model):
     views = models.PositiveIntegerField('Просмотры', default=0)
     karma = models.SmallIntegerField('Карма', default=0)
     comments = GenericRelation(NewComment, related_query_name='profile_comments')
+    reactions = GenericRelation(Reaction, related_query_name='profile_reactions')
     commentable = models.BooleanField('Комментируемый профиль', default=True)
     can_vote = models.BooleanField('Может голосовать', default=True)
     can_comment = models.BooleanField('Может комментировать', default=True)
