@@ -646,7 +646,7 @@ class ReactionWidgetView(View):
             raw_code = emoji_id or emoji_name or emoji_native
             normalized_code = re.sub(r'[^a-z0-9_-]+', '_', raw_code.lower()).strip('_')
 
-            reaction_type, _ = ReactionType.objects.update_or_create(
+            reaction_type, _ = ReactionType.objects.get_or_create(
                 code=normalized_code,
                 defaults={
                     'emoji': emoji_native or '',

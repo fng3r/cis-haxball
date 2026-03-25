@@ -329,7 +329,7 @@ def get_reactions_context(context, obj):
 
     can_react = False
     if request.user.is_authenticated:
-        can_react = request.user.user_profile
+        can_react = request.user.user_profile.can_vote
 
     data = {
         'can_react': can_react,
