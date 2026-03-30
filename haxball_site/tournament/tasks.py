@@ -29,6 +29,7 @@ from tournament.replay_stats_client import (
     is_powtorki_url,
     upload_replay_to_analyzer,
 )
+from tournament.services.achievements import sync_career_achievements
 
 logger = logging.getLogger(__name__)
 SUPPORTED_PLAYER_POSITIONS = {
@@ -510,4 +511,14 @@ def refresh_awaiting_replay_stats(batch_size: int = 200):
         'checked': len(awaiting_replays),
         'ready': ready_count,
         'matches_rebuilt': rebuilt_matches,
+    }
+
+
+@shared_task
+def sync_stats_achievements(dry_run: bool = False):
+    summary = sync_career_achievements(dry_run=dry_run)
+    return {
+        'processed_players': summary['processed_players'],
+        'added_achievements': summary['added'],
+        'removed_achievements': summary['removed'],
     }
