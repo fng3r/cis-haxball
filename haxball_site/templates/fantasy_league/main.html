@@ -54,8 +54,8 @@
           <div class="tw:self-end"
             {# djlint:off #}
                x-data="{
-                          lastSeenRulesVersion: JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || 0,
-                          latestRulesVersion: 3,
+                          lastSeenRulesVersion: JSON.parse(localStorage.getItem('fantasy.lastSeenRulesVersion')) || this.latestRulesVersion,
+                          latestRulesVersion: 4,
                           updateLastSeenVersion() { localStorage.setItem('fantasy.lastSeenRulesVersion', this.latestRulesVersion); },
                        }"
           >

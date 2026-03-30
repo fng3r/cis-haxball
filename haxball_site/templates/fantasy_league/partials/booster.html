@@ -7,6 +7,11 @@
       <img src="{% static "img/ico/fantasy/joker.svg" %}" alt="Джокер" title="Джокер" class="tw:size-7">
     {% elif submission.used_booster == 'limitless' %}
       <img src="{% static "img/ico/fantasy/limitless.svg" %}" alt="Безлимит" title="Безлимит" class="tw:size-7">
+    {% elif submission.used_booster == 'bench_boost' %}
+      <img src="{% static "img/ico/fantasy/bench_boost.svg" %}"
+           alt="Усиление скамейки"
+           title="Усиление скамейки"
+           class="tw:size-7">
     {% endif %}
   </div>
 {% endif %}

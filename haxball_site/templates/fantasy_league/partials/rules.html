@@ -101,6 +101,14 @@
         В следующем туре состав сбрасывается до состояния перед использованием бустера (т.е если бустер был применен в туре N, то состав в туре N+1 будет основываться на составе, выбранном в туре N-1)
       </li>
     </ul>
+
+    <span class="tw:inline-flex tw:gap-1 tw:text-base tw:font-semibold">
+      <img src="{% static "img/ico/fantasy/bench_boost.svg" %}" alt="Усиление скамейки" class="tw:my-0! tw:size-6">
+      Усиление скамейки
+    </span>
+    <ul class="tw:mt-0 tw:list-disc">
+      <li>Игроки на скамейке запасных приносят полные очки в текущем туре (множитель равен 1x вместо стандратных 0.5x)</li>
+    </ul>
   </div>
 
   <h5>Стоимость игроков</h5>
@@ -175,6 +183,20 @@
   <div class="tw:divider"></div>
 
   <h5 id="rules-updates" class="tw:mb-4!" x-intersect="updateLastSeenVersion()">История изменений</h5>
+
+  <div x-data="{version: 4}" class="tw:pl-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h6 class="tw:mb-0!">v1.4 (30.03.26)</h6>
+      <span x-show="lastSeenRulesVersion < version" class="tw:status tw:status-warning"></span>
+    </div>
+    <p>
+      <ul>
+        <li>
+          Добавлен новый <a href="#boosters" class="tw:link">бустер</a> "Усиление скамейки"
+        </li>
+      </ul>
+    </p>
+  </div>
 
   <div x-data="{version: 3}" class="tw:pl-2">
     <div class="tw:flex tw:items-center tw:gap-2">

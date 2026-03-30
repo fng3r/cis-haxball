@@ -241,6 +241,28 @@
                 </svg>
               </div>
             </button>
+
+            <button type="button"
+                    title="Усиление скамейки"
+                    class="tw:relative tw:btn tw:btn-lg tw:btn-square"
+                    x-data="{booster: 'bench_boost'}"
+                    :class="{'tw:btn-primary': selectedBooster === booster, 'tw:btn-ghost': selectedBooster !== booster, 'tw:opacity-60': !availableBoosters.includes(booster)}"
+                    :disabled="!availableBoosters.includes(booster)"
+                    @click="selectedBooster = booster == selectedBooster ? null : booster">
+              <img src="{% static "img/ico/fantasy/bench_boost.svg" %}" alt="Усиление скамейки" class="tw:size-9">
+
+              <span x-show="selectedBooster !== booster"
+                    class="tw:absolute tw:-top-1 tw:-right-1 tw:badge tw:badge-xs tw:badge-neutral"
+                    x-text="`${availableBoosters.includes(booster) ? 1 : 0}`"></span>
+              <div x-show="selectedBooster === booster"
+                   x-cloak
+                   class="tw:absolute tw:-top-1 tw:-right-1 tw:bg-green-500 tw:text-white tw:rounded-full tw:w-4 tw:h-4 tw:flex tw:items-center tw:justify-center tw:text-xs tw:font-bold">
+                <svg class="tw:size-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd">
+                  </path>
+                </svg>
+              </div>
+            </button>
           </div>
         </div>
       </div>

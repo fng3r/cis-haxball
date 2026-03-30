@@ -500,8 +500,7 @@ def edit_squad(request, tour_id):
                     penalized_transfers = 0
                 else:
                     penalized_transfers = max(0, transfers_in - 2)
-                if booster:
-                    submission.used_booster = booster
+                submission.used_booster = booster or None
                 submission.penalized_transfers = penalized_transfers
 
                 submission.save()
