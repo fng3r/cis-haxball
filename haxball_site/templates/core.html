@@ -20,8 +20,6 @@
     <aside class="tw:w-1/2 tw:order-2 tw:mt-2 tw:xl:w-1/6 tw:xl:mt-0 tw:xl:order-1 tw:lg:w-1/4 tw:space-y-2 tw:pr-1">
       {% polls_list 2 user %}
 
-      {% include 'core/include/banners/tg_banner.html' %}
-
       {% if project_settings.SHOW_FREE_AGENTS_BANNER %}
         {% include 'core/include/banners/free_agents_banner.html' %}
       {% endif %}
@@ -35,6 +33,8 @@
       {% if project_settings.SHOW_PLAYERS_RATING_BANNER %}
         {% include 'core/include/sidebar_for_players_rating.html' %}
       {% endif %}
+
+      {% include 'core/include/banners/tg_banner.html' %}
 
       {% include 'core/include/sidebar_for_media.html' %}
 

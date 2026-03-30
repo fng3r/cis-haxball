@@ -43,7 +43,13 @@
             <p class="tw:text-sm tw:text-base-content/70 tw:mt-1">
               Множитель: ×{{ breakdown.multipliers.multiplier|floatformat:1 }}
               {% if breakdown.multipliers.captain %}(Капитан){% endif %}
-              {% if breakdown.multipliers.bench %}(Скамейка){% endif %}
+              {% if breakdown.multipliers.bench %}
+                {% if submission.used_booster == 'bench_boost' %}
+                  (Бустер "Усиление скаймеки")
+                {% else %}
+                  (Скамейка)
+                {% endif %}
+              {% endif %}
             </p>
           {% endif %}
           <div class="tw:mt-4">

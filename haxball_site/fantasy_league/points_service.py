@@ -1,4 +1,4 @@
-from .models import SquadPlayer, SquadSubmission
+from .models import BoosterType, SquadPlayer, SquadSubmission
 
 POINTS_CONFIG = {
     'goals': {
@@ -115,11 +115,7 @@ def calculate_submission_total_points(submission, preloaded_data):
                     match_player_teams,
                 )
                 points = match_points['total']
-
-                if submission.captain_player_id == player_id:
-                    points *= 2
-                if squad_player.squad_type == SquadPlayer.SquadType.BENCH:
-                    points *= 0.5
+                points *= _get_player_multiplier(submission, squad_player)
                 total_points += points
                 break
 
@@ -184,11 +180,7 @@ def calculate_player_breakdown(submission, squad_player, preloaded_data):
 
     is_captain = submission.captain_player_id == player.id
     is_bench = squad_player.is_bench_player
-    multiplier = 1.0
-    if is_captain:
-        multiplier = 2.0
-    if is_bench:
-        multiplier = 0.5
+    multiplier = _get_player_multiplier(submission, squad_player)
 
     base_total = match_points['total']
     total_points = base_total * multiplier
@@ -215,6 +207,19 @@ def calculate_player_breakdown(submission, squad_player, preloaded_data):
         ],
         'multipliers': {'captain': is_captain, 'bench': is_bench, 'multiplier': multiplier},
     }
+
+
+def _get_player_multiplier(submission, squad_player):
+    """Return effective multiplier for a player inside a submission."""
+    if squad_player.is_bench_player:
+        if submission.used_booster == BoosterType.BENCH_BOOST:
+            return 1.0
+        return 0.5
+
+    if submission.captain_player_id == squad_player.player_id:
+        return 2.0
+
+    return 1.0
 
 
 def _get_player_team_for_match(player, match, match_player_teams):

@@ -25,7 +25,7 @@ def get_tour_opening_datetime(tour):
 
 
 def get_tour_start_datetime(tour):
-    start_datetime = timezone.datetime.combine(tour.date_from, time(18, 0))
+    start_datetime = timezone.datetime.combine(tour.date_from, time(20, 0))
     start_datetime = timezone.make_aware(start_datetime)
 
     return start_datetime

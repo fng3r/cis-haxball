@@ -61,6 +61,7 @@ class SquadPlayer(models.Model):
 class BoosterType(models.TextChoices):
     JOKER = 'joker', 'Джокер'
     LIMITLESS = 'limitless', 'Безлимитный'
+    BENCH_BOOST = 'bench_boost', 'Усиление скамейки'
 
 
 class SquadSubmission(models.Model):
@@ -95,7 +96,7 @@ class SquadSubmission(models.Model):
 
     used_booster = models.CharField(
         verbose_name='Использованный бустер',
-        max_length=10,
+        max_length=16,
         choices=BoosterType.choices,
         null=True,
         blank=True,
