@@ -108,7 +108,7 @@ class Command(BaseCommand):
                 tour_start_date, tour_end_date = tour_dates[i]
             except KeyError as exc:
                 raise CommandError(f'Missing schedule for tour {i}') from exc
-            tour = TourNumber.objects.create(
+            tour, _ = TourNumber.objects.get_or_create(
                 number=tour_number,
                 league=league,
                 stage=stage,
@@ -121,7 +121,7 @@ class Command(BaseCommand):
                     tour_start_date, tour_end_date = tour_dates[reversed_tour_number]
                 except KeyError as exc:
                     raise CommandError(f'Missing schedule for return tour {reversed_tour_number}') from exc
-                reversed_tour = TourNumber.objects.create(
+                reversed_tour, _ = TourNumber.objects.get_or_create(
                     number=reversed_tour_number,
                     league=league,
                     stage=stage,
