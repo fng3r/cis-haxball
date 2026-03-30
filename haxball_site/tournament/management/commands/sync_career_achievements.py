@@ -14,8 +14,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        summary = sync_career_achievements(dry_run=options['dry_run'], stdout=self.stdout.write)
-        mode_style = self.style.WARNING if summary['dry_run'] else self.style.SUCCESS
+        dry_run = options['dry_run']
+        summary = sync_career_achievements(dry_run=dry_run, stdout=self.stdout.write)
+        mode_style = self.style.WARNING if dry_run else self.style.SUCCESS
         self.stdout.write(
             mode_style(
                 f'Finished sync_stats_achievements: processed {summary["processed_players"]} players, '
