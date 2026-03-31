@@ -33,7 +33,7 @@
   </form>
 
   <div id="players-content">
-    {% partialdef players-content inline=True %}
+    {% partialdef players-content inline %}
       {% cache 3600 players_hall_of_fame players_filter.form.season.value players_filter.form.tournament.value players_filter.form.nation.value %}
         <div class="tw:flex tw:flex-col tw:gap-y-2">
           <div class="tw:grid tw:grid-cols-3 tw:gap-x-2">
