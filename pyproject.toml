@@ -32,7 +32,7 @@ dependencies = [
     "python3-openid==3.2.0",
     "pytils==0.3",
     "requests==2.31.0",
-    "sorl-thumbnail==12.10.0",
+    "sorl-thumbnail==13.0.0",
     "google-api-python-client==2.164.0",
     "isodate==0.7.2",
     "django-notifications-hq==1.8.3",
