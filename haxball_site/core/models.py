@@ -441,7 +441,7 @@ class UserIcon(models.Model):
     priority = models.SmallIntegerField(verbose_name='Приоритетность', default=1)
     description = models.CharField('Описание(при наведении)', max_length=100, blank=True)
     image = models.ImageField('Иконка', upload_to='user_icon/', blank=True, null=True)
-    user = models.ManyToManyField(Profile, verbose_name='Пользователи', related_name='user_icon', blank=True, null=True)
+    user = models.ManyToManyField(Profile, verbose_name='Пользователи', related_name='user_icon', blank=True)
 
     class Meta:
         verbose_name = 'Иконка'

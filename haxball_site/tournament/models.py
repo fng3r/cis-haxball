@@ -1562,7 +1562,7 @@ class Achievements(models.Model):
     title = models.CharField('Название', max_length=100)
     description = models.CharField('Описание', max_length=200)
     image = models.ImageField('Изображение медали', upload_to='medals/', null=True)
-    player = models.ManyToManyField(Player, verbose_name='Игрок', related_name='achievements', blank=True, null=True)
+    player = models.ManyToManyField(Player, verbose_name='Игрок', related_name='achievements', blank=True)
     position_number = models.SmallIntegerField('Позиция', default=0)
     category = models.ForeignKey(
         AchievementCategory,
@@ -1585,7 +1585,7 @@ class TeamAchievement(models.Model):
     title = models.CharField('Название', max_length=100)
     description = models.CharField('Описание', max_length=200)
     image = models.ImageField('Изображение медали', upload_to='medals/', null=True)
-    team = models.ManyToManyField(Team, verbose_name='Команда', related_name='achievements', null=True)
+    team = models.ManyToManyField(Team, verbose_name='Команда', related_name='achievements')
     season = models.ForeignKey(Season, verbose_name='Сезон', on_delete=models.CASCADE, null=True)
     players_raw_list = models.CharField('Состав', max_length=150, default='', blank=True)
     position_number = models.SmallIntegerField('Позиция', default=0)
