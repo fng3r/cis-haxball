@@ -6,7 +6,7 @@
     <div class="tw:space-y-2 tw:max-h-[100vh] tw:overflow-y-auto" id="notification-list" x-show="unreadOnly ? unreadCount > 0 : totalCount > 0">
         {% for notification in notifications %}
             <div id="notification-{{ notification.id }}">
-                {% partialdef notification-list-item inline=True %}
+                {% partialdef notification-list-item inline %}
                     <div class="tw:flex tw:items-start tw:gap-4 tw:p-4 tw:rounded-lg"
                          :class="isUnread ? 'tw:bg-base-200' : ''"
                          x-data="{notifcationId: {{ notification.id }}, isUnread: '{{ notification.unread }}' === 'True', isRemoved: false}"

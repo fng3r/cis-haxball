@@ -14,7 +14,7 @@
 
 <div class="tw:flex tw:flex-col tw:gap-2 tw:mt-2"
      x-data="{ parentComment: null, attachComment(commentId, author) { this.parentComment = { id: commentId, author: author } }, detachComment() { this.parentComment = null } }">
-  {% partialdef comment-form-container inline=True %}
+  {% partialdef comment-form-container inline %}
     {% with content_type=object|content_type %}
       <div id="comment-form-container"
            class="tw:card tw:bg-base-100 tw:rounded-lg tw:py-2 tw:px-1"
@@ -45,7 +45,7 @@
     {% endwith %}
   {% endpartialdef comment-form-container %}
 
-  {% partialdef comments-container inline=True %}
+  {% partialdef comments-container inline %}
     {% if comments|length > 0 or object.commentable %}
       <div class="tw:card tw:bg-base-100 tw:rounded-lg" id="comments-container">
         <div class="tw:card-title tw:flex-col tw:items-start tw:px-4 tw:py-4 tw:gap-1 card-body-comment">

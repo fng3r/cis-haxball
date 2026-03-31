@@ -33,7 +33,7 @@
       <span>Выберите турнир для просмотра предсезонных прогнозов</span>
     </div>
   {% else %}
-    {% partialdef preseason-tabs inline=True %}
+    {% partialdef preseason-tabs inline %}
       <div id="preseason-tabs"
            class="tw:tabs tw:tabs-border tw:[:has(#preseason-tournament-selector.htmx-request)_&]:opacity-50 tw:[:has(#preseason-tournament-selector.htmx-request)_&]:transition-opacity"
            role="tablist">

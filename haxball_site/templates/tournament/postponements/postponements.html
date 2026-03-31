@@ -14,7 +14,7 @@
 {% block title %}Чемпионат | Переносы — CIS-HAXBALL{% endblock %}
 
 {% block profile_of_user %}
-  {% partialdef content-container inline=True %}
+  {% partialdef content-container inline %}
     <div id="content-container" class="tw:space-y-2">
       <div class="tw:card tw:bg-base-100 tw:rounded-lg">
         <div class="tw:w-full tw:flex tw:justify-center tw:align-center tw:bg-base-300 tw:rounded-t-lg tw:py-2 tw:border-b tw:border-b-neutral-300">
@@ -127,7 +127,7 @@
         {% postponements_form user=user league=league %}
       {% endif %}
 
-      {% partialdef postponements-events inline=True %}
+      {% partialdef postponements-events inline %}
         <div id="postponements-events" class="tw:card tw:bg-base-100 tw:rounded-lg">
           <div class="tw:card-title tw:rounded-t-lg tw:p-4 tw:pb-2">
             <h4 class="tw:card-title">Журнал событий ({{ postponements.paginator.count }})</h4>

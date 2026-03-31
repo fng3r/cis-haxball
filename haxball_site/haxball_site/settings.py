@@ -18,7 +18,6 @@ DEBUG = config('APP_DEBUG', cast=bool, default=False)
 ALLOWED_HOSTS = config('APP_ALLOWED_HOSTS', cast=str.split)
 
 INSTALLED_APPS = [
-    'template_partials',
     'online_users',
     'notifications',
     'django_filters',
@@ -31,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -101,7 +101,6 @@ TEMPLATES = [
                 'haxball_site.context_processors.themes_context',
                 'haxball_site.context_processors.settings_context',
             ],
-            'builtins': ['template_partials.templatetags.partials'],
         },
     },
 ]
