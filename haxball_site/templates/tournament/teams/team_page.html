@@ -175,18 +175,22 @@
                          {% if forloop.first %}checked{% endif %} />
                   <div class="tw:tab-content tw:pt-2" role="tabpanel">
                     <div id="season-{{ season.id }}-panel" role="tabpanel" aria-labelledby="schedule-s{{ season.id }}-tab">
-                      <div class="tw:flex tw:flex-col tw:gap-4">
+                      <div class="tw:flex tw:flex-col tw:gap-3">
                         {% for league in season.team_leagues %}
-                          <div>
-                            <h5 class="tw:text-center tw:mb-2">
+                          <div class="tw:flex tw:flex-col">
+                            <h5 class="tw:text-center">
                               <a href="{{ league.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">{{ league.title }}</a>
                             </h5>
 
-                            {% for stage in league.stages.all %}
-                              {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
-                                {% include 'tournament/teams/partials/team_matches.html' %}
-                              {% endwith %}
-                            {% endfor %}
+                            <div class="tw:flex tw:flex-col tw:gap-2">
+                              {% for stage in league.stages.all %}
+                                <div class="tw:flex tw:flex-col tw:gap-1">
+                                  {% with matches=stage.team_matches stage=stage show_stages=league.has_multiple_stages %}
+                                    {% include 'tournament/teams/partials/team_matches.html' %}
+                                  {% endwith %}
+                                </div>
+                              {% endfor %}
+                            </div>
                           </div>
                         {% endfor %}
                       </div>
