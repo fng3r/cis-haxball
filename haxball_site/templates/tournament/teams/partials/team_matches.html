@@ -64,7 +64,27 @@
           </div>
         </div>
 
-        <div class="tw:h-1"></div>
+        <div class="tw:flex tw:justify-end">
+          {% if match.is_played %}
+            {% if team == match.team_home %}
+              {% if match.score_home > match.score_guest %}
+                <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
+              {% elif match.score_home < match.score_guest %}
+                <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
+              {% else %}
+                <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
+              {% endif %}
+            {% else %}
+              {% if match.score_guest > match.score_home %}
+                <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
+              {% elif match.score_guest < match.score_home %}
+                <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
+              {% else %}
+                <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        </div>
       </a>
     {% empty %}
       <div class="tw:flex tw:items-center tw:justify-center tw:rounded-xl tw:border tw:border-dashed tw:border-base-300 tw:bg-base-100 tw:px-4 tw:py-4 tw:text-sm tw:text-base-content/55">
