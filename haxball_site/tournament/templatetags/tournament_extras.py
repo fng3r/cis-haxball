@@ -12,6 +12,7 @@ from django.db.models import (
     Exists,
     F,
     FloatField,
+    IntegerField,
     Max,
     Min,
     OuterRef,
@@ -51,6 +52,33 @@ from ..models import (
 )
 
 register = template.Library()
+
+
+@register.filter
+def player_match_playtime(match: Match, player: Player):
+    if not match or not player or not match.duration:
+        return ''
+
+    full_match_time = int(match.duration.total_seconds())
+    time_played = 0
+    start_players = [*match.team_home_start.all(), *match.team_guest_start.all()]
+    if any(start_player.id == player.id for start_player in start_players):
+        time_played = full_match_time
+
+    substitutions = getattr(match, 'player_substitutions', None)
+    if substitutions is None:
+        substitutions = match.match_substitutions.filter(Q(player_in=player) | Q(player_out=player))
+
+    for substitution in substitutions:
+        time_until_match_end = full_match_time - int(
+            datetime.timedelta(minutes=substitution.time_min, seconds=substitution.time_sec).total_seconds()
+        )
+        if substitution.player_in_id == player.id:
+            time_played += time_until_match_end
+        if substitution.player_out_id == player.id:
+            time_played -= time_until_match_end
+
+    return datetime.datetime.fromtimestamp(max(0, time_played)).strftime('%M:%S')
 
 
 @register.filter
@@ -1078,6 +1106,36 @@ def team_seasons(team):
 
 @register.simple_tag
 def player_seasons(player):
+    goals_subquery = (
+        Goal.objects.filter(author=player, match=OuterRef('id'))
+        .order_by()
+        .values('match')
+        .annotate(c=Count('*'))
+        .values('c')
+    )
+    assists_subquery = (
+        Goal.objects.filter(assistent=player, match=OuterRef('id'))
+        .order_by()
+        .values('match')
+        .annotate(c=Count('*'))
+        .values('c')
+    )
+    cs_subquery = (
+        OtherEvents.objects.cs()
+        .filter(author=player, match=OuterRef('id'))
+        .order_by()
+        .values('match')
+        .annotate(c=Count('*'))
+        .values('c')
+    )
+    ogs_subquery = (
+        OtherEvents.objects.ogs()
+        .filter(author=player, match=OuterRef('id'))
+        .order_by()
+        .values('match')
+        .annotate(c=Count('*'))
+        .values('c')
+    )
     return (
         Season.objects.filter(
             Exists(PlayerMatchStatistics.objects.filter(player=player, league__championship=OuterRef('id')))
@@ -1104,14 +1162,29 @@ def player_seasons(player):
                                     is_played=True,
                                 )
                                 .select_related('team_home', 'team_guest', 'numb_tour__league')
-                                .prefetch_related('numb_tour__stage')
+                                .prefetch_related(
+                                    'numb_tour__stage',
+                                    'team_home_start',
+                                    'team_guest_start',
+                                    Prefetch(
+                                        'match_substitutions',
+                                        queryset=Substitution.objects.filter(
+                                            Q(player_in=player) | Q(player_out=player)
+                                        ),
+                                        to_attr='player_substitutions',
+                                    ),
+                                )
                                 .annotate(
                                     player_team_id=Subquery(
                                         PlayerMatchStatistics.objects.filter(
                                             player=player,
                                             match=OuterRef('id'),
                                         ).values('team')[:1]
-                                    )
+                                    ),
+                                    player_goals=Coalesce(Subquery(goals_subquery, output_field=IntegerField()), 0),
+                                    player_assists=Coalesce(Subquery(assists_subquery, output_field=IntegerField()), 0),
+                                    player_cs=Coalesce(Subquery(cs_subquery, output_field=IntegerField()), 0),
+                                    player_ogs=Coalesce(Subquery(ogs_subquery, output_field=IntegerField()), 0),
                                 )
                                 .order_by('numb_tour'),
                                 to_attr='player_matches',

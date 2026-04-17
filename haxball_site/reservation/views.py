@@ -89,12 +89,19 @@ class ReservationList(ListView):
 
         match_id = int(data['match'])
         host_id = int(data['match_host'])
-        match_date = datetime.combine(
-            datetime.strptime(data['match_date'], '%Y-%m-%d').date(),
-            time(hour=int(data['match_hour']), minute=int(data['match_minute'])),
+        match_date = timezone.make_aware(
+            datetime.combine(
+                datetime.strptime(data['match_date'], '%Y-%m-%d').date(),
+                time(hour=int(data['match_hour']), minute=int(data['match_minute'])),
+            ),
+            timezone.get_current_timezone(),
         )
         prev_match_date = match_date - timedelta(minutes=15)
         next_match_date = match_date + timedelta(minutes=15)
+
+        if match_date <= timezone.now():
+            messages.error(request, 'Дата и время бронирования должны быть больше текущего времени!')
+            return redirect(reverse('reservation:host_reservation'))
 
         match = get_object_or_404(Match, pk=match_id)
         teams = [match.team_home, match.team_guest]
@@ -110,7 +117,7 @@ class ReservationList(ListView):
             is_cancelled=False,
         ).exists()
         if is_host_reserved:
-            messages.error(request, 'Выбранное время занято!')
+            messages.error(request, 'Выбранный хост занят в это время!')
         elif teams_have_other_reservations:
             messages.error(
                 request,

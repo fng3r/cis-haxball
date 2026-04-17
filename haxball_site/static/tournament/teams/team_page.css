@@ -1,7 +1,5 @@
 .team_achievements {
   width: 90%;
-  border: none;
-  border-top: 1px solid #dee2e6;
   margin: 0 auto;
   display: flex;
 }
@@ -31,8 +29,4 @@
   font-weight: 600;
   text-align: center;
   width: 100%;
-}
-
-.team-stats-table td {
-  padding: 0.5rem;
 }
