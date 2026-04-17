@@ -243,7 +243,7 @@
             <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
               {% if team.achievements.count %}
                 {% for season, achievements in team|team_achievements_by_season %}
-                  <div class="team_achievements tw:py-1 tw:text-base-content/80">
+                  <div class="team_achievements tw:py-2 tw:text-base-content/80 tw:not-first:border-t tw:border-neutral-300">
                     <div class="team_achievements-season">{{ season.title }}</div>
                     <div class="team_achievements-medals">
                       {% for achievement in achievements %}
@@ -259,6 +259,8 @@
                     <div class="team_achievements-squad">{{ achievements|team_squad_in_season }}</div>
                   </div>
                 {% endfor %}
+              {% else %}
+                <div class="tw:py-8 tw:text-lg tw:text-center tw:text-base-content/70 tw:font-semibold">Команда пока не имеет достижений</div>
               {% endif %}
             </div>
           </div>
