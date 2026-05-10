@@ -155,22 +155,8 @@
               <div class="tw:tab-content tw:pt-3">
                 <div id="alltime-players-panel" role="tabpanel" aria-labelledby="alltime-players-tab">
 
-                  <div class="tw:flex tw:items-center tw:mb-2">
-                    <fieldset class="tw:fieldset">
-                      <legend class="tw:fieldset-legend tw:text-sm">Сезон</legend>
-                      <select name="season"
-                              class="tw:select tw:select-sm"
-                              hx-get="{% url 'tournament:team_squad_stats' team.id %}"
-                              hx-target="#team-squad-stats"
-                              hx-swap="innerHTML">
-                        <option selected value>Все</option>
-                        {% for season in seasons %}<option value="{{ season.number }}">{{ season.title }}</option>{% endfor %}
-                      </select>
-                    </fieldset>
-                  </div>
-
                   {% with team_squad=team|all_time_squad_stats %}
-                    <div id="team-squad-stats">{% include 'tournament/teams/partials/team_squad_stats.html' with display_rating=False %}</div>
+                    {% include 'tournament/teams/partials/team_squad_stats_panel.html' with display_rating=False %}
                   {% endwith %}
                 </div>
               </div>

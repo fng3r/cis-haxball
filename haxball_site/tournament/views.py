@@ -358,6 +358,7 @@ class TeamDetail(DetailView):
         team = context['team']
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
+        context['tournaments'] = get_team_tournaments(team)
 
         latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
         rating = PlayerRating.objects.select_related('player').filter(
@@ -388,6 +389,14 @@ class TeamDetail(DetailView):
             return 'tournament/teams/team_page.html#team-page-container'
 
         return self.template_name
+
+
+def get_team_tournaments(team, season=None):
+    tournaments = League.objects.filter(teams=team).select_related('championship')
+    if season:
+        return tournaments.filter(championship=season).distinct().order_by('priority', 'title')
+
+    return tournaments.order_by('title', 'priority', '-championship__number').distinct('title')
 
 
 class TeamList(ListView):
@@ -2149,10 +2158,26 @@ def team_statistics(request, pk):
 def team_squad_statistics(request, pk):
     team = Team.objects.get(pk=pk)
     season_number = request.GET.get('season', None)
-    season = Season.objects.get(number=season_number) if season_number else None
-    stats = get_team_squad_stats(team, season=season)
+    tournament_title = request.GET.get('tournament', None)
 
-    return render(request, 'tournament/teams/partials/team_squad_stats.html', {'team': team, 'team_squad': stats})
+    season = Season.objects.filter(number=season_number).first() if season_number else None
+    tournaments = get_team_tournaments(team, season)
+    selected_tournament = tournaments.filter(title=tournament_title).first() if tournament_title else None
+    tournament_title = selected_tournament.title if selected_tournament else None
+
+    stats = get_team_squad_stats(team, season=season, tournament_title=tournament_title)
+    seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
+    context = {
+        'team': team,
+        'team_squad': stats,
+        'seasons': seasons,
+        'tournaments': tournaments,
+        'selected_season': season,
+        'selected_tournament': selected_tournament,
+        'display_rating': False,
+    }
+
+    return render(request, 'tournament/teams/partials/team_squad_stats_panel.html', context)
 
 
 def team_statistics_charts(request, pk):

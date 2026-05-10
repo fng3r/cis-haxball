@@ -109,16 +109,22 @@ def all_time_squad_stats(team):
     return get_team_squad_stats(team, for_current_season=False)
 
 
-def get_team_squad_stats(team, for_current_season=False, season=None):
+def get_team_squad_stats(team, for_current_season=False, season=None, tournament=None, tournament_title=None):
+    if tournament:
+        season = tournament.championship
+        tournament_title = tournament.title
+
     if not season and for_current_season:
         season = Season.objects.filter(is_active=True).first()
-    season_condition = Q(match__league__championship=season) if season else ~Q(pk__in=[])
+    tournament_condition = Q(match__league__title=tournament_title) if tournament_title else Q()
+    season_condition = Q(match__league__championship=season) if season else Q()
+    stats_condition = tournament_condition & season_condition
 
     team_players = get_team_squad(team, for_current_season, season)
-    players_matches = {pl: get_player_matches(pl, team, season) for pl in team_players}
+    players_matches = {pl: get_player_matches(pl, team, season, tournament_title) for pl in team_players}
 
     goals_subquery = (
-        Goal.objects.filter(season_condition, team=team, author=OuterRef('id'))
+        Goal.objects.filter(stats_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -126,7 +132,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
     )
 
     assists_subquery = (
-        Goal.objects.filter(season_condition, team=team, assistent=OuterRef('id'))
+        Goal.objects.filter(stats_condition, team=team, assistent=OuterRef('id'))
         .order_by()
         .values('assistent')
         .annotate(c=Count('*'))
@@ -134,7 +140,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
     )
 
     subs_out_subquery = (
-        Substitution.objects.filter(season_condition, team=team, player_out=OuterRef('id'))
+        Substitution.objects.filter(stats_condition, team=team, player_out=OuterRef('id'))
         .order_by()
         .values('player_out')
         .annotate(c=Count('*'))
@@ -142,7 +148,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
     )
 
     subs_in_subquery = (
-        Substitution.objects.filter(season_condition, team=team, player_in=OuterRef('id'))
+        Substitution.objects.filter(stats_condition, team=team, player_in=OuterRef('id'))
         .order_by()
         .values('player_in')
         .annotate(c=Count('*'))
@@ -151,7 +157,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
 
     cs_subquery = (
         OtherEvents.objects.cs()
-        .filter(season_condition, team=team, author=OuterRef('id'))
+        .filter(stats_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -160,7 +166,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
 
     ogs_subquery = (
         OtherEvents.objects.ogs()
-        .filter(season_condition, team=team, author=OuterRef('id'))
+        .filter(stats_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -169,7 +175,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
 
     yellow_cards_subquery = (
         OtherEvents.objects.yellow_cards()
-        .filter(season_condition, team=team, author=OuterRef('id'))
+        .filter(stats_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -178,7 +184,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
 
     red_cards_subquery = (
         OtherEvents.objects.red_cards()
-        .filter(season_condition, team=team, author=OuterRef('id'))
+        .filter(stats_condition, team=team, author=OuterRef('id'))
         .order_by()
         .values('author')
         .annotate(c=Count('*'))
@@ -199,7 +205,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None):
     for player in players_stats:
         player.__setattr__('matches_c', players_matches[player])
 
-    if not for_current_season and season is None:
+    if not for_current_season and (season is None or tournament_title is not None):
         players_stats = list(filter(lambda stats: stats.matches_c > 0, players_stats))
 
     return sorted(players_stats, key=lambda player: player.matches_c, reverse=True)
@@ -216,10 +222,12 @@ def get_team_squad(team, current=False, season=None):
     )
 
 
-def get_player_matches(player, team, season=None):
-    season_condition = Q(league__championship=season) if season else ~Q(pk__in=[])
+def get_player_matches(player, team, season=None, tournament_title=None):
+    tournament_condition = Q(league__title=tournament_title) if tournament_title else Q()
+    season_condition = Q(league__championship=season) if season else Q()
 
     return PlayerMatchStatistics.objects.filter(
+        tournament_condition,
         season_condition,
         player=player,
         team=team,
