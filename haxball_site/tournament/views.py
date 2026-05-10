@@ -477,8 +477,9 @@ class LeagueDetail(DetailView):
                 }
             )
 
+        now = timezone.now()
         has_awards = (
-            AwardCampaign.objects.filter(season=league.championship).exists()
+            AwardCampaign.objects.filter(season=league.championship, voting_start_date__lte=now).exists()
             and Award.objects.filter(league=league).exists()
         )
         if has_awards:
