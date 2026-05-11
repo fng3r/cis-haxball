@@ -57,6 +57,7 @@ class ChainedForeignKeySupportMixin:
 
 
 class UnfoldModelAdmin(ChainedForeignKeySupportMixin, unfold_admin.ModelAdmin):
+    compressed_fields = False
     formfield_overrides = {
         ArrayField: {
             'widget': ArrayWidget,
