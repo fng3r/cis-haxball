@@ -1,0 +1,35 @@
+<div id="team-squad-stats-panel">
+  <form id="team-squad-stats-filters" class="tw:flex tw:flex-wrap tw:items-center tw:gap-3 tw:mb-2">
+    <fieldset class="tw:fieldset">
+      <legend class="tw:fieldset-legend tw:text-sm">Сезон</legend>
+      <select name="season"
+              class="tw:select tw:select-sm"
+              hx-get="{% url 'tournament:team_squad_stats' team.id %}"
+              hx-include="#team-squad-stats-filters"
+              hx-target="#team-squad-stats-panel"
+              hx-swap="outerHTML">
+        <option value {% if not selected_season %}selected{% endif %}>Все</option>
+        {% for season in seasons %}
+          <option value="{{ season.number }}" {% if selected_season == season %}selected{% endif %}>{{ season.title }}</option>
+        {% endfor %}
+      </select>
+    </fieldset>
+
+    <fieldset class="tw:fieldset">
+      <legend class="tw:fieldset-legend tw:text-sm">Турнир</legend>
+      <select name="tournament"
+              class="tw:select tw:select-sm"
+              hx-get="{% url 'tournament:team_squad_stats' team.id %}"
+              hx-include="#team-squad-stats-filters"
+              hx-target="#team-squad-stats-panel"
+              hx-swap="outerHTML">
+        <option value {% if not selected_tournament %}selected{% endif %}>Все</option>
+        {% for tournament in tournaments %}
+          <option value="{{ tournament.title }}" {% if selected_tournament.title == tournament.title %}selected{% endif %}>{{ tournament.title }}</option>
+        {% endfor %}
+      </select>
+    </fieldset>
+  </form>
+
+  <div id="team-squad-stats">{% include 'tournament/teams/partials/team_squad_stats.html' with display_rating=display_rating %}</div>
+</div>
