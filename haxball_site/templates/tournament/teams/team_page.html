@@ -90,6 +90,7 @@
             <div class="profile-head">
               <h3>
                 {{ team.title }}
+                <span class="tw:badge tw:badge-sm tw:badge-neutral">{{ team.short_title }}</span>
                 {% if team.owner == user or user.is_superuser %}
                   <a href="#"
                      class="tw:text-warning! tw:text-xl"
