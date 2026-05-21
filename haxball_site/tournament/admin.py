@@ -689,6 +689,7 @@ class GoalInline(UnfoldStackedInline):
     model = Goal
     extra = 1
     tab = True
+    show_count = True
 
     fields = (
         ('team', 'author', 'assistent'),
@@ -709,6 +710,7 @@ class SubstitutionInline(UnfoldStackedInline):
     model = Substitution
     extra = 1
     tab = True
+    show_count = True
 
     fields = (
         ('team', 'player_out', 'player_in'),
@@ -731,6 +733,7 @@ class DisqualificationInline(UnfoldStackedInline):
     model = Disqualification
     extra = 1
     tab = True
+    show_count = True
     filter_horizontal = ('tours',)
 
     fields = (
@@ -755,6 +758,7 @@ class EventInline(UnfoldStackedInline):
     model = OtherEvents
     extra = 1
     tab = True
+    show_count = True
 
     fields = (
         ('team', 'author'),
@@ -785,6 +789,7 @@ class PostponementInline(UnfoldStackedInline):
     model = Postponement
     extra = 0
     tab = True
+    show_count = True
 
     fields = (
         ('is_emergency',),
@@ -890,10 +895,11 @@ class MatchAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     list_fullwidth = True
+    compressed_fields = False
 
     fieldsets = (
         (
-            'Основная инфа',
+            'Основная информация',
             {
                 'fields': (
                     ('league', 'stage', 'numb_tour'),
@@ -1325,15 +1331,16 @@ class AwardVoterInline(UnfoldStackedInline):
     model = AwardVoter
     extra = 0
     tab = True
+    show_count = True
     fields = ('league', 'team', 'voter')
     autocomplete_fields = ('league', 'team', 'voter')
-    readonly_fields = ()
 
 
 class AwardInline(UnfoldStackedInline):
     model = Award
     extra = 0
     tab = True
+    show_count = True
     fields = ('league', 'nomination', 'max_nominees')
     autocomplete_fields = ('league', 'nomination')
 
