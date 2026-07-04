@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    ArchiveView,
     AwardVotingView,
     CardsList,
     ComparePlayersView,
@@ -77,4 +78,5 @@ urlpatterns = [
     path('<slug:slug>/awards/results', results_tab, name='awards_results_tab'),
     path('<slug:slug>/awards/status', status_tab, name='awards_status_tab'),
     path('<slug:slug>/awards/vote', AwardVotingView.as_view(), name='award_voting'),
+    path('archive/', ArchiveView.as_view(), name='archive'),
 ]

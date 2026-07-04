@@ -16,7 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_POST
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, TemplateView
 
 from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
 from django_htmx.http import trigger_client_event
@@ -2815,3 +2815,38 @@ class AwardVotingView(View):
             'user_team': user_team,
         }
         return render(request, 'tournament/awards/tabs/voting_edit.html', context)
+
+
+class ArchiveView(TemplateView):
+    template_name = 'tournament/archive/archive.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tournaments = League.objects.order_by('priority', 'title').prefetch_related(
+            Prefetch(
+                'winners',
+                queryset=TournamentWinner.objects.select_related('winner'),
+                to_attr='archive_winners',
+            )
+        )
+        seasons = (
+            Season.objects.filter(tournaments_in_season__isnull=False)
+            .annotate(
+                has_completed_tournaments=Exists(TournamentWinner.objects.filter(league__championship=OuterRef('pk')))
+            )
+            .filter(has_completed_tournaments=True)
+            .annotate(
+                start_date=Min('tournaments_in_season__tours__date_from'),
+                end_date=Max('tournaments_in_season__tours__date_to'),
+            )
+            .distinct()
+            .prefetch_related(Prefetch('tournaments_in_season', queryset=tournaments, to_attr='archive_tournaments'))
+            .order_by('-number')
+        )
+
+        for season in seasons:
+            for tournament in season.archive_tournaments:
+                tournament.winner = tournament.archive_winners[0].winner if tournament.archive_winners else None
+
+        context['seasons'] = seasons
+        return context
