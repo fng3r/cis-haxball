@@ -678,6 +678,12 @@ def _get_league_statistics(league: League, tour_range: tuple = None):
                 'icon_height': 28,
             },
             {
+                'title': 'Автоголы',
+                'players': _get_top_own_goals(league, tour_range),
+                'icon_url': 'img/ico/ball_2_og.png',
+                'icon_title': 'Автоголы',
+            },
+            {
                 'title': 'Желтые карточки',
                 'players': _get_top_yellow_cards(league, tour_range),
                 'icon_url': 'img/ico/yellow_card.png',
@@ -721,6 +727,13 @@ def _get_league_statistics(league: League, tour_range: tuple = None):
                 'icon_title': 'Голы + передачи',
                 'icon_width': 66,
                 'icon_height': 28,
+                'stat_type': 'avg',
+            },
+            {
+                'title': 'Автоголы',
+                'players': _get_top_own_goals_per_match(league, tour_range),
+                'icon_url': 'img/ico/ball_2_og.png',
+                'icon_title': 'Автоголы',
                 'stat_type': 'avg',
             },
             {
@@ -911,90 +924,40 @@ def _get_top_goals_assists_per_match(league: League, tour_range: tuple = None):
 
 
 def _get_top_clean_sheets(league: League, tour_range: tuple = None):
-    queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(event__match__league=league, event__event='CLN')
-
-    if tour_range is not None:
-        min_tour, max_tour = tour_range
-        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
-
-    return (
-        queryset.filter(event_filter)
-        .annotate(
-            count=Count('event__match__league'),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .order_by('-count')
-    )
+    return _get_top_players_by_event(league, OtherEvents.CLEAN_SHEET, tour_range)
 
 
 def _get_top_clean_sheets_per_match(league: League, tour_range: tuple = None):
-    queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(event__match__league=league, event__event='CLN')
+    return _get_top_players_by_event_per_match(league, OtherEvents.CLEAN_SHEET, tour_range)
 
-    if tour_range is not None:
-        min_tour, max_tour = tour_range
-        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
 
-    queryset = queryset.filter(event_filter).annotate(
-        cs_count=Count('event__match__league'),
-        matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
-    )
-    queryset = queryset.annotate(
-        count=Case(
-            When(matches_count__gt=0, then=Cast(F('cs_count'), FloatField()) / F('matches_count')),
-            default=Value(0),
-            output_field=FloatField(),
-        ),
-        last_team_logo=get_player_last_team_logo_subquery(league),
-    )
-    return queryset.filter(matches_count__gte=3, count__gt=0).order_by('-count')
+def _get_top_own_goals(league: League, tour_range: tuple = None):
+    return _get_top_players_by_event(league, OtherEvents.OWN_GOAL, tour_range)
+
+
+def _get_top_own_goals_per_match(league: League, tour_range: tuple = None):
+    return _get_top_players_by_event_per_match(league, OtherEvents.OWN_GOAL, tour_range)
 
 
 def _get_top_yellow_cards(league: League, tour_range: tuple = None):
-    queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(event__match__league=league, event__event='YEL')
-
-    if tour_range is not None:
-        min_tour, max_tour = tour_range
-        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
-
-    return (
-        queryset.filter(event_filter)
-        .annotate(
-            count=Count('event__match__league'),
-            last_team_logo=get_player_last_team_logo_subquery(league),
-        )
-        .order_by('-count')
-    )
+    return _get_top_players_by_event(league, OtherEvents.YELLOW_CARD, tour_range)
 
 
 def _get_top_yellow_cards_per_match(league: League, tour_range: tuple = None):
-    queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(event__match__league=league, event__event='YEL')
-
-    if tour_range is not None:
-        min_tour, max_tour = tour_range
-        event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
-
-    queryset = queryset.filter(event_filter).annotate(
-        yellow_cards_count=Count('event__match__league'),
-        matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
-    )
-    queryset = queryset.annotate(
-        count=Case(
-            When(matches_count__gt=0, then=Cast(F('yellow_cards_count'), FloatField()) / F('matches_count')),
-            default=Value(0),
-            output_field=FloatField(),
-        ),
-        last_team_logo=get_player_last_team_logo_subquery(league),
-    )
-    return queryset.filter(matches_count__gte=3, count__gt=0).order_by('-count')
+    return _get_top_players_by_event_per_match(league, OtherEvents.YELLOW_CARD, tour_range)
 
 
 def _get_top_red_cards(league: League, tour_range: tuple = None):
+    return _get_top_players_by_event(league, OtherEvents.RED_CARD, tour_range)
+
+
+def _get_top_red_cards_per_match(league: League, tour_range: tuple = None):
+    return _get_top_players_by_event_per_match(league, OtherEvents.RED_CARD, tour_range)
+
+
+def _get_top_players_by_event(league: League, event_type: str, tour_range: tuple = None):
     queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(event__match__league=league, event__event='RED')
+    event_filter = Q(event__match__league=league, event__event=event_type)
 
     if tour_range is not None:
         min_tour, max_tour = tour_range
@@ -1010,21 +973,21 @@ def _get_top_red_cards(league: League, tour_range: tuple = None):
     )
 
 
-def _get_top_red_cards_per_match(league: League, tour_range: tuple = None):
+def _get_top_players_by_event_per_match(league: League, event_type: str, tour_range: tuple = None):
     queryset = Player.objects.select_related('team', 'name__user_profile')
-    event_filter = Q(event__match__league=league, event__event='RED')
+    event_filter = Q(event__match__league=league, event__event=event_type)
 
     if tour_range is not None:
         min_tour, max_tour = tour_range
         event_filter &= Q(event__match__numb_tour__number__gte=min_tour, event__match__numb_tour__number__lte=max_tour)
 
     queryset = queryset.filter(event_filter).annotate(
-        red_cards_count=Count('event__match__league'),
+        events_count=Count('event__match__league'),
         matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
     )
     queryset = queryset.annotate(
         count=Case(
-            When(matches_count__gt=0, then=Cast(F('red_cards_count'), FloatField()) / F('matches_count')),
+            When(matches_count__gt=0, then=Cast(F('events_count'), FloatField()) / F('matches_count')),
             default=Value(0),
             output_field=FloatField(),
         ),
