@@ -3,57 +3,68 @@
 {% load polls_extras %}
 
 {% for poll in active_polls %}
-  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-gray-100">
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:border tw:border-base-200">
     <div class="tw:p-2 tw:text-center tw:rounded-t-lg">
-      <h6 class="tw:text-center tw:mb-0! tw:text-base">{{ poll.question_text }}</h6>
-      {% if poll.anonymously %}<i>(анонимно)</i>{% endif %}
+      <h6 class="tw:text-left tw:mb-3! tw:px-1 tw:text-base">{{ poll.question_text }}</h6>
+      <span class="tw:text-base-content/70 tw:font-semibold">
+        {% if poll.anonymously %}
+          Анонимный
+        {% else %}
+          Публичный
+        {% endif %}
+        опрос
+      </span>
     </div>
 
-    <div class="tw:card-body tw:py-2 tw:px-4 tw:rounded-b-lg">
-      {% if user|user_in_poll:poll and user.is_authenticated %}
-        {% for choice in poll.choices.all %}
-          <div class="tw:flex tw:flex-col tw:gap-1 tw:mb-2">
-            <span>{{ choice.choice_text }} ({{ choice.votes.count }})</span>
-            <progress value="{{ choice|percent_choices:poll }}"
-                      max="100"
-                      title="{% if not poll.anonymously %}{{ choice.votes.all|join:', ' }}{% else %}Опрос анонимен{% endif %}"
-                      class="tw:progress tw:w-full {% if choice|most_popular_choice:poll %}tw:progress-success{% endif %}">
-            </progress>
-          </div>
-        {% endfor %}
-        <h6 class="tw:mb-0 tw:mt-3 tw:text-center tw:text-base">Спасибо за голос, {{ user.username }}!</h6>
-      {% else %}
-        <form method="POST" action="{% url 'polls:add_user_vote' poll.id %}">
-          {% csrf_token %}
-          <div class="tw:flex tw:flex-col tw:gap-2 tw:mb-3">
-            {% for choice in poll.choices.all %}
-              <div class="tw:flex tw:gap-1">
-                <input class="tw:radio tw:radio-sm"
-                       type="radio"
-                       name='{{ poll.id }}'
-                       id="choice-{{ choice.id }}"
-                       value="{{ choice.id }}"
-                       {% if forloop.first %}checked{% endif %}>
-                <label class="tw:label tw:text-base-content" for=choice-{{ choice.id }}>
-                  {{ choice.choice_text }}
-                </label>
+    <div class="tw:card-body tw:gap-y-0 tw:py-2 tw:px-4 tw:rounded-b-lg">
+      {% with user_choice=user|user_choice:poll %}
+        {% if user.is_authenticated and user_choice %}
+          {% for choice in poll.choices.all %}
+            <div class="tw:flex tw:flex-col tw:gap-1 tw:mb-2">
+              <span class="tw:text-base-content tw:text-wrap">
+                {{ choice.choice_text }} ({{ choice.votes.count }})
+                {% if user_choice == choice %}<i class="fa fa-check" aria-hidden="true" title="Ваш выбор"></i>{% endif %}
+              </span>
+              <progress value="{{ choice|percent_choices:poll }}"
+                        max="100"
+                        title="{% if not poll.anonymously %}{{ choice.votes.all|join:', ' }}{% else %}Опрос анонимен{% endif %}"
+                        class="tw:progress tw:w-full {% if choice|most_popular_choice:poll %}tw:progress-success{% endif %}">
+              </progress>
+            </div>
+          {% endfor %}
+        {% else %}
+          <form method="POST" action="{% url 'polls:add_user_vote' poll.id %}">
+            {% csrf_token %}
+            <div class="tw:flex tw:flex-col tw:gap-2 tw:mb-3">
+              {% for choice in poll.choices.all %}
+                <div class="tw:flex tw:gap-1">
+                  <input class="tw:radio tw:radio-sm"
+                         type="radio"
+                         name='{{ poll.id }}'
+                         id="choice-{{ choice.id }}"
+                         value="{{ choice.id }}"
+                         {% if forloop.first %}checked{% endif %}>
+                  <label class="tw:label tw:text-base-content tw:text-wrap" for=choice-{{ choice.id }}>
+                    {{ choice.choice_text }}
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+            {% if user.is_authenticated %}
+              <div class="tw:flex tw:justify-center tw:text-center tw:mt-2">
+                <button type="submit" class="tw:btn tw:btn-sm tw:btn-primary tw:mb-2">Проголосовать</button>
               </div>
-            {% endfor %}
-          </div>
-          {% if user.is_authenticated %}
+            {% endif %}
+          </form>
+          {% if not user.is_authenticated %}
             <div class="tw:flex tw:justify-center tw:text-center tw:mt-2">
-              <button type="submit" class="tw:btn tw:btn-primary tw:mb-2">Проголосовать</button>
+              <h6 class="tw:text-base">
+                <a class="tw:link tw:link-hover tw:text-primary" href="#" onclick="login_modal.showModal()">Войдите</a>, чтобы голосовать
+              </h6>
             </div>
           {% endif %}
-        </form>
-        {% if not user.is_authenticated %}
-          <div class="tw:flex tw:justify-center tw:text-center tw:mt-2">
-            <h6 class="tw:text-base">
-              <a class="tw:link tw:link-hover tw:text-primary" href="#" onclick="login_modal.showModal()">Войдите</a>, чтобы голосовать
-            </h6>
-          </div>
         {% endif %}
-      {% endif %}
+      {% endwith %}
     </div>
   </div>
 {% endfor %}
