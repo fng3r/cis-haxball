@@ -8,13 +8,20 @@ register = template.Library()
 
 @register.inclusion_tag('polls/include/polls_list.html')
 def polls_list(count, user):
-    active_polls = Question.objects.filter(is_active=True)
+    active_polls = Question.objects.filter(is_active=True).order_by('-created')
     return {'active_polls': active_polls, 'user': user}
 
 
 @register.filter
 def user_in_poll(user, poll):
     return poll.choices.all().filter(votes=user).exists()
+
+
+@register.filter
+def user_choice(user, poll):
+    if not user.is_authenticated:
+        return False
+    return poll.choices.all().filter(votes=user).first()
 
 
 @register.filter
