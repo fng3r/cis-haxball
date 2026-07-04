@@ -8,7 +8,7 @@
     <div class="tw:flex tw:flex-col tw:gap-4">
       <div>
         <h1 class="tw:text-2xl tw:font-bold tw:mb-1">Архив</h1>
-        <p class="tw:text-sm tw:text-base-content/70 tw:mb-0!">Сборник прошедших сезонов</p>
+        <p class="tw:text-sm tw:text-base-content/70 tw:mb-0!">История прошедших сезонов</p>
       </div>
 
       <div class="tw:flex tw:flex-col tw:gap-3 tw:items-start tw:justify-between tw:sm:flex-row tw:sm:items-center">
@@ -31,7 +31,7 @@
 
     <div class="tw:divider tw:my-0"></div>
 
-    {% if seasons %}
+    {% if seasons or old_seasons %}
       <div class="tw:flex tw:flex-col tw:gap-6" :style="sortOrder === 'old' ? 'flex-direction: column-reverse' : ''">
         {% for season in seasons %}
           <section class="tw:space-y-3" x-data="{ seasonTitle: '{{ season.title }}' }" x-show="seasonMatches(seasonTitle)" x-cloak>
@@ -77,6 +77,20 @@
               {% empty %}
                 <div class="tw:rounded-lg tw:border tw:border-dashed tw:border-base-300 tw:p-4 tw:text-base-content/70">В этом сезоне нет турниров.</div>
               {% endfor %}
+            </div>
+          </section>
+        {% endfor %}
+
+        {% for season in old_seasons %}
+          <section class="tw:space-y-3" x-data="{ seasonTitle: '{{ season.season_title }}' }" x-show="seasonMatches(seasonTitle)" x-cloak>
+            <div class="tw:flex tw:flex-col tw:gap-1">
+              <div class="tw:flex tw:items-center tw:gap-2">
+                <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.season_title }}</h2>
+                {% if season.short_title %}<span class="tw:badge tw:badge-sm tw:badge-primary tw:badge-outline">{{ season.short_title }}</span>{% endif %}
+                <a href="{{ season.post_link }}" class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-square" aria-label="Открыть турнир">
+                  <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                </a>
+              </div>
             </div>
           </section>
         {% endfor %}

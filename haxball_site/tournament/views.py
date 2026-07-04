@@ -2848,5 +2848,34 @@ class ArchiveView(TemplateView):
             for tournament in season.archive_tournaments:
                 tournament.winner = tournament.archive_winners[0].winner if tournament.archive_winners else None
 
+        old_seasons = [
+            {
+                'season_title': 'ЧР, 4 сезон',
+                'short_title': 'ЧР #4',
+                'post_link': reverse('core:post_detail', args=(49, 'season_4')),
+            },
+            {
+                'season_title': 'ЛЧ, 1 сезон',
+                'short_title': 'ЛЧ #1',
+                'post_link': reverse('core:post_detail', args=(50, 'champions_league_1')),
+            },
+            {
+                'season_title': 'ЧР, 3 сезон',
+                'short_title': 'ЧР #3',
+                'post_link': reverse('core:post_detail', args=(48, 'season_3')),
+            },
+            {
+                'season_title': 'ЧР, 2 сезон',
+                'short_title': 'ЧР #2',
+                'post_link': reverse('core:post_detail', args=(47, 'season_2')),
+            },
+            {
+                'season_title': 'ЧР, 1 сезон',
+                'short_title': 'ЧР #1',
+                'post_link': reverse('core:post_detail', args=(46, 'season_1')),
+            },
+        ]
+
         context['seasons'] = seasons
+        context['old_seasons'] = old_seasons
         return context
