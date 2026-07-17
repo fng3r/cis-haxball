@@ -1,7 +1,31 @@
 from django.db.models import Case, Count, Exists, F, FloatField, OuterRef, Q, Subquery, Value, When
 from django.db.models.functions import Cast, Coalesce
 
-from .models import Goal, Match, MatchResult, OtherEvents, Player, Season
+from .models import Goal, League, Match, MatchResult, OtherEvents, Player, Season
+
+
+def _tournament_case(league_path):
+    type_lookup = f'{league_path}__type'
+    return Case(
+        When(**{type_lookup: League.Type.PREMIER_LEAGUE, 'then': Value('Высшая лига')}),
+        When(**{type_lookup: League.Type.FIRST_LEAGUE, 'then': Value('Первая лига')}),
+        When(**{type_lookup: League.Type.SECOND_LEAGUE, 'then': Value('Вторая лига')}),
+        When(
+            **{
+                f'{type_lookup}__in': [
+                    League.Type.PREMIER_LEAGUE_CUP,
+                    League.Type.FIRST_LEAGUE_CUP,
+                    League.Type.SECOND_LEAGUE_CUP,
+                    League.Type.LEAGUE_CUP,
+                ],
+                'then': Value('Кубок лиги'),
+            }
+        ),
+        When(**{type_lookup: League.Type.CHAMPIONS_LEAGUE, 'then': Value('Лига Чемпионов')}),
+        When(**{type_lookup: League.Type.RUSSIAN_CUP, 'then': Value('Кубок России')}),
+        When(**{type_lookup: League.Type.FINALS, 'then': Value('Итоговый турнир')}),
+        default=Value('Unknown'),
+    )
 
 
 class PlayerStatsSource:
@@ -64,26 +88,7 @@ class PlayerStatsSource:
                 Q(team_home_start=player) | Q(team_guest_start=player) | Q(match_substitutions__player_in=player),
                 is_played=True,
             )
-            .annotate(
-                tournament=Case(
-                    When(
-                        Q(league__title__istartswith='Высшая') | Q(league__title__istartswith='Единая'),
-                        then=Value('Высшая лига'),
-                    ),
-                    When(league__title__istartswith='Первая', then=Value('Первая лига')),
-                    When(league__title__istartswith='Вторая', then=Value('Вторая лига')),
-                    When(
-                        Q(league__title__istartswith='Кубок Высшей')
-                        | Q(league__title__istartswith='Кубок Первой')
-                        | Q(league__title__istartswith='Кубок Второй')
-                        | Q(league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги'),
-                    ),
-                    When(league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
-                    When(league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown'),
-                )
-            )
+            .annotate(tournament=_tournament_case('league'))
             .values('tournament')
             .annotate(matches=Count('pk', distinct=True))
             .filter(matches__gt=0)
@@ -151,26 +156,7 @@ class PlayerStatsSource:
         player = self.player
         return (
             Goal.objects.filter(Q(author=player) | Q(assistent=player))
-            .annotate(
-                tournament=Case(
-                    When(
-                        Q(match__league__title__istartswith='Высшая') | Q(match__league__title__istartswith='Единая'),
-                        then=Value('Высшая лига'),
-                    ),
-                    When(match__league__title__istartswith='Первая', then=Value('Первая лига')),
-                    When(match__league__title__istartswith='Вторая', then=Value('Вторая лига')),
-                    When(
-                        Q(match__league__title__istartswith='Кубок Высшей')
-                        | Q(match__league__title__istartswith='Кубок Первой')
-                        | Q(match__league__title__istartswith='Кубок Второй')
-                        | Q(match__league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги'),
-                    ),
-                    When(match__league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
-                    When(match__league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown'),
-                )
-            )
+            .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(
                 goals=Count('author', filter=Q(author=player)),
@@ -226,7 +212,7 @@ class PlayerStatsSource:
         return (
             OtherEvents.objects.cs()
             .filter(author=self.player)
-            .annotate_with_tournament()
+            .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(cs=Count('*'))
             .order_by('-cs')
@@ -291,7 +277,7 @@ class PlayerStatsSource:
     def get_cards_by_tournament(self):
         return (
             OtherEvents.objects.filter(author=self.player)
-            .annotate_with_tournament()
+            .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(
                 yellow_cards=Count('id', filter=Q(event=OtherEvents.YELLOW_CARD)),
@@ -338,8 +324,11 @@ class TeamStatsSource:
         return (
             Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
             .filter(
-                Q(league__title__in=['Высшая лига', 'Единая лига', 'Первая лига', 'Вторая лига'])
-                | Q(league__title__istartswith='Первая лига')
+                league__type__in=[
+                    League.Type.PREMIER_LEAGUE,
+                    League.Type.FIRST_LEAGUE,
+                    League.Type.SECOND_LEAGUE,
+                ]
             )
             .values(season_title=F('league__championship__short_title'))
             .annotate(
@@ -367,26 +356,7 @@ class TeamStatsSource:
         team = self.team
         return (
             Match.objects.filter(Q(team_home=team) | Q(team_guest=team), is_played=True)
-            .annotate(
-                tournament=Case(
-                    When(
-                        Q(league__title__istartswith='Высшая') | Q(league__title__istartswith='Единая'),
-                        then=Value('Высшая лига'),
-                    ),
-                    When(league__title__istartswith='Первая', then=Value('Первая лига')),
-                    When(league__title__istartswith='Вторая', then=Value('Вторая лига')),
-                    When(
-                        Q(league__title__istartswith='Кубок Высшей')
-                        | Q(league__title__istartswith='Кубок Первой')
-                        | Q(league__title__istartswith='Кубок Второй')
-                        | Q(league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги'),
-                    ),
-                    When(league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
-                    When(league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown'),
-                )
-            )
+            .annotate(tournament=_tournament_case('league'))
             .values('tournament')
             .annotate(matches=Count('pk', distinct=True))
             .filter(matches__gt=0)
@@ -461,26 +431,7 @@ class TeamStatsSource:
         team = self.team
         return (
             Goal.objects.filter(team=team)
-            .annotate(
-                tournament=Case(
-                    When(
-                        Q(match__league__title__istartswith='Высшая') | Q(match__league__title__istartswith='Единая'),
-                        then=Value('Высшая лига'),
-                    ),
-                    When(match__league__title__istartswith='Первая', then=Value('Первая лига')),
-                    When(match__league__title__istartswith='Вторая', then=Value('Вторая лига')),
-                    When(
-                        Q(match__league__title__istartswith='Кубок Высшей')
-                        | Q(match__league__title__istartswith='Кубок Первой')
-                        | Q(match__league__title__istartswith='Кубок Второй')
-                        | Q(match__league__title__istartswith='Кубок лиги'),
-                        then=Value('Кубок лиги'),
-                    ),
-                    When(match__league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
-                    When(match__league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                    default=Value('Unknown'),
-                )
-            )
+            .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(
                 goals=Count('team'),
@@ -638,7 +589,7 @@ class TeamStatsSource:
         return (
             OtherEvents.objects.cs()
             .filter(team=self.team)
-            .annotate_with_tournament()
+            .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(cs=Count('*'))
             .order_by('-cs')
@@ -718,7 +669,7 @@ class TeamStatsSource:
     def get_cards_by_tournament(self):
         return (
             OtherEvents.objects.filter(team=self.team)
-            .annotate_with_tournament()
+            .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(
                 yellow_cards=Count('id', filter=Q(event=OtherEvents.YELLOW_CARD)),

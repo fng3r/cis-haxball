@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from tournament.models import (
     Goal,
+    League,
     Match,
     OtherEvents,
     Player,
@@ -326,14 +327,14 @@ RATING_RANGES = {
 }
 
 BUDGET_LIMITS = {
-    'Высшая лига': 110.0,
-    'Первая лига': 65.0,
-    'Вторая лига': 40.0,
+    League.Type.PREMIER_LEAGUE: 110.0,
+    League.Type.FIRST_LEAGUE: 65.0,
+    League.Type.SECOND_LEAGUE: 40.0,
 }
 
 
 def get_league_budget_limit(league):
-    return BUDGET_LIMITS.get(league.title)
+    return BUDGET_LIMITS.get(league.type)
 
 
 def calculate_player_cost(player_rating, player, season):
