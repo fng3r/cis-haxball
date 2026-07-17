@@ -342,7 +342,8 @@ class TeamAdmin(UnfoldModelAdmin):
 
 @admin.register(Season)
 class SeasonAdmin(UnfoldModelAdmin):
-    list_display = ('number', 'title', 'short_title', 'is_active', 'created')
+    list_display = ('number', 'title', 'short_title', 'type', 'is_active', 'created')
+    list_filter = ('type',)
     search_fields = ('title', 'short_title')
 
 
@@ -677,8 +678,8 @@ class PlayOffStageAdmin(TournamentStageChildBase):
 
 @admin.register(League)
 class LeagueAdmin(PolymorphicInlineSupportMixin, UnfoldModelAdmin):
-    list_display = ('title', 'slug', 'priority', 'championship', 'created', 'logo')
-    list_filter = (('championship', RelatedDropdownFilter),)
+    list_display = ('title', 'type', 'slug', 'priority', 'championship', 'created', 'logo')
+    list_filter = ('type', ('championship', RelatedDropdownFilter))
     list_filter_submit = True
     search_fields = ('title',)
     filter_horizontal = ('teams',)

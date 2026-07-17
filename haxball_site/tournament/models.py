@@ -63,9 +63,15 @@ class FreeAgent(models.Model):
 
 
 class Season(models.Model):
+    class Type(models.TextChoices):
+        RUSSIAN_CHAMPIONSHIP = 'russian_championship', 'Чемпионат России'
+        CHAMPIONS_LEAGUE = 'champions_league', 'Лига Чемпионов'
+        FINAL_TOURNAMENT = 'final_tournament', 'Итоговый турнир'
+
     title = models.CharField('Название Розыгрыша', max_length=128)
     short_title = models.CharField('Короткое название', max_length=15, null=True, blank=True)
     number = models.SmallIntegerField('Номер сезона')
+    type = models.CharField('Тип сезона', max_length=32, choices=Type.choices)
     is_active = models.BooleanField('Текущий')
     created = models.DateTimeField('Создана', auto_now_add=True)
     bound_season = models.ForeignKey(
@@ -74,7 +80,7 @@ class Season(models.Model):
 
     @property
     def is_primary(self):
-        return self.title.startswith('ЧР')
+        return self.type == self.Type.RUSSIAN_CHAMPIONSHIP
 
     def __str__(self):
         return self.title
@@ -142,6 +148,18 @@ class Team(models.Model):
 
 
 class League(models.Model):
+    class Type(models.TextChoices):
+        PREMIER_LEAGUE = 'premier_league', 'Высшая лига'
+        FIRST_LEAGUE = 'first_league', 'Первая лига'
+        SECOND_LEAGUE = 'second_league', 'Вторая лига'
+        RUSSIAN_CUP = 'russian_cup', 'Кубок России'
+        PREMIER_LEAGUE_CUP = 'premier_league_cup', 'Кубок Высшей лиги'
+        FIRST_LEAGUE_CUP = 'first_league_cup', 'Кубок Первой лиги'
+        SECOND_LEAGUE_CUP = 'second_league_cup', 'Кубок Второй лиги'
+        LEAGUE_CUP = 'league_cup', 'Кубок лиги'
+        CHAMPIONS_LEAGUE = 'champions_league', 'Лига Чемпионов'
+        FINALS = 'finals', 'Итоговый турнир'
+
     championship = models.ForeignKey(
         Season,
         verbose_name='Сезон',
@@ -149,6 +167,7 @@ class League(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
+    type = models.CharField('Тип турнира', max_length=32, choices=Type.choices)
     title = models.CharField('Название турнира', max_length=128)
     logo = models.ImageField('Логотип турнира', upload_to='tournament_logos/', null=True, blank=True)
     priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
