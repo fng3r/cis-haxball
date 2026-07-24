@@ -45,7 +45,11 @@ class Command(BaseCommand):
             title=new_tournament_title,
             championship=old_league.championship,
             slug=new_slug,
-            defaults={'priority': old_league.priority, 'commentable': old_league.commentable},
+            defaults={
+                'type': old_league.type,
+                'priority': old_league.priority,
+                'commentable': old_league.commentable,
+            },
         )
         if season_number >= 15:
             PostponementSlots.objects.get_or_create(

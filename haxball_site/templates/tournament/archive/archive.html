@@ -4,7 +4,7 @@
 
 {% block postlist %}
   <div class="tw:bg-base-100 tw:rounded-lg tw:p-4 tw:space-y-2"
-       x-data="{ sortOrder: 'new', seasonType: '', seasonMatches(title) { return title.trim().startsWith(this.seasonType); } }">
+       x-data="{ sortOrder: 'new', seasonType: '', seasonMatches(type) { return !this.seasonType || type === this.seasonType; } }">
     <div class="tw:flex tw:flex-col tw:gap-4">
       <div>
         <h1 class="tw:text-2xl tw:font-bold tw:mb-1">Архив</h1>
@@ -14,9 +14,9 @@
       <div class="tw:flex tw:flex-col tw:gap-3 tw:items-start tw:justify-between tw:sm:flex-row tw:sm:items-center">
         <div class="tw:filter tw:gap-y-1" role="radiogroup" aria-label="Тип сезона">
           <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="season-type" value="" aria-label="Все" x-model="seasonType" />
-          <input type="radio" name="season-type" value="ЧР" class="tw:btn tw:btn-sm" aria-label="Чемпионат России" x-model="seasonType">
-          <input type="radio" name="season-type" value="ЛЧ" class="tw:btn tw:btn-sm" aria-label="Лига Чемпионов" x-model="seasonType">
-          <input type="radio" name="season-type" value="ИТ" class="tw:btn tw:btn-sm" aria-label="Итоговый турнир" x-model="seasonType">
+          <input type="radio" name="season-type" value="russian_championship" class="tw:btn tw:btn-sm" aria-label="Чемпионат России" x-model="seasonType">
+          <input type="radio" name="season-type" value="champions_league" class="tw:btn tw:btn-sm" aria-label="Лига Чемпионов" x-model="seasonType">
+          <input type="radio" name="season-type" value="final_tournament" class="tw:btn tw:btn-sm" aria-label="Итоговый турнир" x-model="seasonType">
         </div>
 
         <button type="button"
@@ -34,7 +34,7 @@
     {% if seasons or old_seasons %}
       <div class="tw:flex tw:flex-col tw:gap-6" :style="sortOrder === 'old' ? 'flex-direction: column-reverse' : ''">
         {% for season in seasons %}
-          <section class="tw:space-y-3" x-data="{ seasonTitle: '{{ season.title }}' }" x-show="seasonMatches(seasonTitle)" x-cloak>
+          <section class="tw:space-y-3" x-show="seasonMatches('{{ season.type }}')" x-cloak>
             <div class="tw:flex tw:flex-col tw:gap-1">
               <div class="tw:flex tw:items-center tw:gap-2">
                 <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.title }}</h2>
@@ -82,7 +82,7 @@
         {% endfor %}
 
         {% for season in old_seasons %}
-          <section class="tw:space-y-3" x-data="{ seasonTitle: '{{ season.season_title }}' }" x-show="seasonMatches(seasonTitle)" x-cloak>
+          <section class="tw:space-y-3" x-show="seasonMatches('{{ season.type }}')" x-cloak>
             <div class="tw:flex tw:flex-col tw:gap-1">
               <div class="tw:flex tw:items-center tw:gap-2">
                 <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.season_title }}</h2>

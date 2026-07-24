@@ -25,7 +25,7 @@
               hx-swap="outerHTML">
         <option value {% if not selected_tournament %}selected{% endif %}>Все</option>
         {% for tournament in tournaments %}
-          <option value="{{ tournament.title }}" {% if selected_tournament.title == tournament.title %}selected{% endif %}>{{ tournament.title }}</option>
+          <option value="{{ tournament.id }}" {% if selected_tournament.id == tournament.id %}selected{% endif %}>{{ tournament.title }}</option>
         {% endfor %}
       </select>
     </fieldset>

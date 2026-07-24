@@ -84,13 +84,24 @@ class Command(BaseCommand):
 
         # Create or get active season
         season, created = Season.objects.get_or_create(
-            number=999, defaults={'title': 'Test Season for Predictions', 'short_title': 'TEST', 'is_active': True}
+            number=999,
+            defaults={
+                'title': 'Test Season for Predictions',
+                'short_title': 'TEST',
+                'type': Season.Type.RUSSIAN_CHAMPIONSHIP,
+                'is_active': True,
+            },
         )
 
         # Create test tournament
         tournament, created = League.objects.get_or_create(
             title='Test Prediction Tournament',
-            defaults={'championship': season, 'slug': 'test-prediction-tournament', 'priority': 1},
+            defaults={
+                'championship': season,
+                'type': League.Type.PREMIER_LEAGUE,
+                'slug': 'test-prediction-tournament',
+                'priority': 1,
+            },
         )
 
         # Create regular stage

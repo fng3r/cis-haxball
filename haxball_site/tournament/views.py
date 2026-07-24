@@ -493,16 +493,8 @@ class LeagueDetail(DetailView):
         return quick_links
 
     def _get_all_winners(self, league: League):
-        league_filters = {}
-        if league.title in ['Высшая лига', 'Единая лига']:
-            league_filters = {'league__title__in': ['Высшая лига', 'Единая лига']}
-        elif league.title.startswith('Первая лига'):
-            league_filters = {'league__title__istartswith': 'Первая лига'}
-        else:
-            league_filters = {'league__title': league.title}
-
         winners = (
-            TournamentWinner.objects.filter(**league_filters)
+            TournamentWinner.objects.filter(league__type=league.type)
             .select_related('season', 'winner')
             .order_by('-season__number')
         )
@@ -958,20 +950,7 @@ class HallOfFamePlayerFilter(FilterSet):
     nation = ModelChoiceFilter(queryset=Nation.objects.all(), label='Страна', empty_label='Любая')
     season = ModelChoiceFilter(queryset=Season.objects.filter(number__gt=5), label='Сезон', empty_label='Все')
     tournament = ChoiceFilter(
-        choices=(
-            ('Высшая лига', 'Высшая лига'),
-            ('Единая лига', 'Единая лига'),
-            ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
-            ('Первая лига', 'Первая лига'),
-            ('Вторая лига', 'Вторая лига'),
-            ('Кубок России', 'Кубок России'),
-            ('Лига Чемпионов', 'Лига Чемпионов'),
-            ('Кубок Высшей лиги', 'Кубок Высшей лиги'),
-            ('Кубок Первой лиги', 'Кубок Первой лиги'),
-            ('Кубок Второй лиги', 'Кубок Второй лиги'),
-            ('Кубок лиги', 'Кубок лиги'),
-            ('Итоговый турнир', 'Итоговый турнир'),
-        ),
+        choices=League.Type.choices,
         label='Турнир',
         empty_label='Все',
     )
@@ -980,20 +959,7 @@ class HallOfFamePlayerFilter(FilterSet):
 class HallOfFameTeamFilter(FilterSet):
     season = ModelChoiceFilter(queryset=Season.objects.filter(number__gt=5), label='Сезон', empty_label='Все')
     tournament = ChoiceFilter(
-        choices=(
-            ('Высшая лига', 'Высшая лига'),
-            ('Единая лига', 'Единая лига'),
-            ('Высшая лига|Единая лига', 'Высшая + Единая лига'),
-            ('Первая лига', 'Первая лига'),
-            ('Вторая лига', 'Вторая лига'),
-            ('Кубок России', 'Кубок России'),
-            ('Лига Чемпионов', 'Лига Чемпионов'),
-            ('Кубок Высшей лиги', 'Кубок Высшей лиги'),
-            ('Кубок Первой лиги', 'Кубок Первой лиги'),
-            ('Кубок Второй лиги', 'Кубок Второй лиги'),
-            ('Кубок лиги', 'Кубок лиги'),
-            ('Итоговый турнир', 'Итоговый турнир'),
-        ),
+        choices=League.Type.choices,
         label='Турнир',
         empty_label='Все',
     )
@@ -1006,8 +972,8 @@ def hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
 
-    tournament_name = request.GET.get('tournament', '')
-    tournaments = League.objects.filter(title__iregex=tournament_name)
+    tournament_type = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(type=tournament_type) if tournament_type else League.objects.all()
 
     service = HallOfFameService()
     players = service.get_players_tops(seasons, tournaments, nation)
@@ -1032,8 +998,8 @@ def players_hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
 
-    tournament_name = request.GET.get('tournament', '')
-    tournaments = League.objects.filter(title__iregex=tournament_name)
+    tournament_type = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(type=tournament_type) if tournament_type else League.objects.all()
 
     service = HallOfFameService()
     players = service.get_players_tops(seasons, tournaments, nation)
@@ -1055,8 +1021,8 @@ def players_top_by_stat(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
 
-    tournament_name = request.GET.get('tournament', '')
-    tournaments = League.objects.filter(title__iregex=tournament_name)
+    tournament_type = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(type=tournament_type) if tournament_type else League.objects.all()
 
     stat = request.GET.get('stat')
     page = request.GET.get('page')
@@ -1079,8 +1045,8 @@ def teams_hall_of_fame(request):
     season_id = request.GET.get('season', None)
     seasons = Season.objects.filter(id=season_id) if season_id else Season.objects.filter(number__gt=5)
 
-    tournament_name = request.GET.get('tournament', '')
-    tournaments = League.objects.filter(title__iregex=tournament_name)
+    tournament_type = request.GET.get('tournament', '')
+    tournaments = League.objects.filter(type=tournament_type) if tournament_type else League.objects.all()
 
     service = HallOfFameService()
     teams = service.get_teams_tops(seasons, tournaments)
@@ -1118,7 +1084,9 @@ class TeamsRatingView(ListView):
             TeamRatingVersion.objects.select_related('related_season').get(number=selected_version).related_season
         )
         previous_seasons = Season.objects.filter(
-            number__gt=5, number__lt=source_season.number, title__contains='ЧР'
+            number__gt=5,
+            number__lt=source_season.number,
+            type=Season.Type.RUSSIAN_CHAMPIONSHIP,
         ).order_by('-number')[:5]
         earliest_season_taken_into_account = None
         if previous_seasons.count() > 0:
@@ -1201,7 +1169,9 @@ class TeamsYearlyRatingView(ListView):
                 .order_by('date_from')[:1]
             )
         )
-        seasons_in_year = seasons.filter(~Q(title__startswith='ИТ'), start_date__year=selected_year).order_by('number')
+        seasons_in_year = (
+            seasons.exclude(type=Season.Type.FINAL_TOURNAMENT).filter(start_date__year=selected_year).order_by('number')
+        )
 
         teams_rating = {}
         seasons_rating = self.get_seasons_rating(seasons_in_year)
@@ -1271,7 +1241,7 @@ class TeamPlayersRatingView(View):
 
         teams_in_season = Team.objects.filter(leagues__championship=season).distinct()
         if league and season.is_primary:
-            teams_in_season = teams_in_season.filter(leagues__title=league, leagues__championship=season)
+            teams_in_season = teams_in_season.filter(leagues__type=league, leagues__championship=season)
 
         for team in teams_in_season:
             team_players = (
@@ -1359,7 +1329,10 @@ class TeamPlayersRatingView(View):
 
         # These phases are only applicable for primary seasons (ЧР)
         if phase in [self.SeasonPhase.FIRST_HALF_END, self.SeasonPhase.SECOND_HALF_START] and season.is_primary:
-            league = League.objects.filter(championship=season, title__contains='лига').first()
+            league = League.objects.filter(
+                championship=season,
+                type__in=[League.Type.PREMIER_LEAGUE, League.Type.FIRST_LEAGUE, League.Type.SECOND_LEAGUE],
+            ).first()
             if not league:
                 return timezone.now().date()
 
@@ -2159,14 +2132,13 @@ def team_statistics(request, pk):
 def team_squad_statistics(request, pk):
     team = Team.objects.get(pk=pk)
     season_number = request.GET.get('season', None)
-    tournament_title = request.GET.get('tournament', None)
+    tournament_id = request.GET.get('tournament', None)
 
     season = Season.objects.filter(number=season_number).first() if season_number else None
     tournaments = get_team_tournaments(team, season)
-    selected_tournament = tournaments.filter(title=tournament_title).first() if tournament_title else None
-    tournament_title = selected_tournament.title if selected_tournament else None
+    selected_tournament = tournaments.filter(id=tournament_id).first() if tournament_id else None
 
-    stats = get_team_squad_stats(team, season=season, tournament_title=tournament_title)
+    stats = get_team_squad_stats(team, season=season, tournament=selected_tournament)
     seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
     context = {
         'team': team,
@@ -2246,7 +2218,7 @@ class ComparePlayersView(View):
 
     def get_selected_matches(self, player1, player2, season, tournament, matches_selection):
         season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
-        tournament_condition = Q(league__title__iregex=tournament)
+        tournament_condition = Q(league__type=tournament) if tournament else Q()
 
         player1_matches = player1.played_matches.filter(
             season_condition, tournament_condition, match__is_played=True
@@ -2353,7 +2325,7 @@ class CompareTeamsView(View):
 
     def get_selected_matches(self, team1, team2, season, tournament, matches_selection):
         season_condition = Q(league__championship=season) if season else ~Q(league__championship__in=[])
-        tournament_condition = Q(league__title__iregex=tournament)
+        tournament_condition = Q(league__type=tournament) if tournament else Q()
 
         team1_matches = Match.objects.filter(
             season_condition, tournament_condition, Q(team_home=team1) | Q(team_guest=team1), is_played=True
@@ -2852,26 +2824,31 @@ class ArchiveView(TemplateView):
             {
                 'season_title': 'ЧР, 4 сезон',
                 'short_title': 'ЧР #4',
+                'type': Season.Type.RUSSIAN_CHAMPIONSHIP,
                 'post_link': reverse('core:post_detail', args=(49, 'season_4')),
             },
             {
                 'season_title': 'ЛЧ, 1 сезон',
                 'short_title': 'ЛЧ #1',
+                'type': Season.Type.CHAMPIONS_LEAGUE,
                 'post_link': reverse('core:post_detail', args=(50, 'champions_league_1')),
             },
             {
                 'season_title': 'ЧР, 3 сезон',
                 'short_title': 'ЧР #3',
+                'type': Season.Type.RUSSIAN_CHAMPIONSHIP,
                 'post_link': reverse('core:post_detail', args=(48, 'season_3')),
             },
             {
                 'season_title': 'ЧР, 2 сезон',
                 'short_title': 'ЧР #2',
+                'type': Season.Type.RUSSIAN_CHAMPIONSHIP,
                 'post_link': reverse('core:post_detail', args=(47, 'season_2')),
             },
             {
                 'season_title': 'ЧР, 1 сезон',
                 'short_title': 'ЧР #1',
+                'type': Season.Type.RUSSIAN_CHAMPIONSHIP,
                 'post_link': reverse('core:post_detail', args=(46, 'season_1')),
             },
         ]

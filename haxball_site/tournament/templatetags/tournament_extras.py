@@ -109,19 +109,18 @@ def all_time_squad_stats(team):
     return get_team_squad_stats(team, for_current_season=False)
 
 
-def get_team_squad_stats(team, for_current_season=False, season=None, tournament=None, tournament_title=None):
+def get_team_squad_stats(team, for_current_season=False, season=None, tournament=None):
     if tournament:
         season = tournament.championship
-        tournament_title = tournament.title
 
     if not season and for_current_season:
         season = Season.objects.filter(is_active=True).first()
-    tournament_condition = Q(match__league__title=tournament_title) if tournament_title else Q()
+    tournament_condition = Q(match__league=tournament) if tournament else Q()
     season_condition = Q(match__league__championship=season) if season else Q()
     stats_condition = tournament_condition & season_condition
 
     team_players = get_team_squad(team, for_current_season, season)
-    players_matches = {pl: get_player_matches(pl, team, season, tournament_title) for pl in team_players}
+    players_matches = {pl: get_player_matches(pl, team, season, tournament) for pl in team_players}
 
     goals_subquery = (
         Goal.objects.filter(stats_condition, team=team, author=OuterRef('id'))
@@ -205,7 +204,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None, tournament
     for player in players_stats:
         player.__setattr__('matches_c', players_matches[player])
 
-    if not for_current_season and (season is None or tournament_title is not None):
+    if not for_current_season and (season is None or tournament is not None):
         players_stats = list(filter(lambda stats: stats.matches_c > 0, players_stats))
 
     return sorted(players_stats, key=lambda player: player.matches_c, reverse=True)
@@ -222,8 +221,8 @@ def get_team_squad(team, current=False, season=None):
     )
 
 
-def get_player_matches(player, team, season=None, tournament_title=None):
-    tournament_condition = Q(league__title=tournament_title) if tournament_title else Q()
+def get_player_matches(player, team, season=None, tournament=None):
+    tournament_condition = Q(league=tournament) if tournament else Q()
     season_condition = Q(league__championship=season) if season else Q()
 
     return PlayerMatchStatistics.objects.filter(
@@ -460,9 +459,9 @@ def connector_line_height(tour: TourNumber, tours: Iterable[TourNumber]):
 
 def has_match_for_third_place(league):
     return (
-        league.title.startswith('Лига Чемпионов')
+        league.type == League.Type.CHAMPIONS_LEAGUE
         and league.championship.number < 12
-        or league.title.startswith('Итоговый турнир')
+        or league.type == League.Type.FINALS
     )
 
 
@@ -1372,8 +1371,11 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
 
 @register.filter
 def current_league(team):
-    primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига']
-    primary_league = League.objects.filter(teams=team, title__in=primary_leagues, championship__is_active=True).first()
+    primary_league = League.objects.filter(
+        teams=team,
+        type__in=[League.Type.PREMIER_LEAGUE, League.Type.FIRST_LEAGUE, League.Type.SECOND_LEAGUE],
+        championship__is_active=True,
+    ).first()
 
     if primary_league is not None:
         return primary_league
@@ -1397,9 +1399,17 @@ def current_position(team):
 
 @register.inclusion_tag('core/include/teams_in_navbar.html')
 def teams_in_navbar():
-    primary_leagues = ['Высшая лига', 'Первая лига', 'Вторая лига', 'Лига Чемпионов', 'Итоговый турнир']
     leagues = (
-        League.objects.filter(title__in=primary_leagues, championship__is_active=True)
+        League.objects.filter(
+            type__in=[
+                League.Type.PREMIER_LEAGUE,
+                League.Type.FIRST_LEAGUE,
+                League.Type.SECOND_LEAGUE,
+                League.Type.CHAMPIONS_LEAGUE,
+                League.Type.FINALS,
+            ],
+            championship__is_active=True,
+        )
         .prefetch_related(Prefetch('teams', queryset=Team.objects.order_by('title')))
         .annotate(teams_count=Count('teams'))
         .filter(teams_count__gt=0)

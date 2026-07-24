@@ -4,7 +4,7 @@ from django import template
 from django.utils import timezone
 
 from haxball_site import settings
-from tournament.models import TourNumber
+from tournament.models import League, TourNumber
 
 from .. import utils
 from ..points_service import (
@@ -84,7 +84,9 @@ def is_tour_actual(tour):
 @register.simple_tag
 def time_until_current_tour_deadline():
     current_tour = TourNumber.objects.filter(
-        number=settings.ACTIVITIES_CURRENT_TOUR, league__championship__is_active=True, league__title='Высшая лига'
+        number=settings.ACTIVITIES_CURRENT_TOUR,
+        league__championship__is_active=True,
+        league__type=League.Type.PREMIER_LEAGUE,
     ).first()
     if current_tour is None:
         return None

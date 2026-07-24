@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Case, Q, Value, When
+from django.db.models import Q
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -63,9 +63,15 @@ class FreeAgent(models.Model):
 
 
 class Season(models.Model):
+    class Type(models.TextChoices):
+        RUSSIAN_CHAMPIONSHIP = 'russian_championship', 'Чемпионат России'
+        CHAMPIONS_LEAGUE = 'champions_league', 'Лига Чемпионов'
+        FINAL_TOURNAMENT = 'final_tournament', 'Итоговый турнир'
+
     title = models.CharField('Название Розыгрыша', max_length=128)
     short_title = models.CharField('Короткое название', max_length=15, null=True, blank=True)
     number = models.SmallIntegerField('Номер сезона')
+    type = models.CharField('Тип сезона', max_length=32, choices=Type.choices)
     is_active = models.BooleanField('Текущий')
     created = models.DateTimeField('Создана', auto_now_add=True)
     bound_season = models.ForeignKey(
@@ -74,7 +80,7 @@ class Season(models.Model):
 
     @property
     def is_primary(self):
-        return self.title.startswith('ЧР')
+        return self.type == self.Type.RUSSIAN_CHAMPIONSHIP
 
     def __str__(self):
         return self.title
@@ -142,6 +148,18 @@ class Team(models.Model):
 
 
 class League(models.Model):
+    class Type(models.TextChoices):
+        PREMIER_LEAGUE = 'premier_league', 'Высшая лига'
+        FIRST_LEAGUE = 'first_league', 'Первая лига'
+        SECOND_LEAGUE = 'second_league', 'Вторая лига'
+        RUSSIAN_CUP = 'russian_cup', 'Кубок России'
+        PREMIER_LEAGUE_CUP = 'premier_league_cup', 'Кубок Высшей лиги'
+        FIRST_LEAGUE_CUP = 'first_league_cup', 'Кубок Первой лиги'
+        SECOND_LEAGUE_CUP = 'second_league_cup', 'Кубок Второй лиги'
+        LEAGUE_CUP = 'league_cup', 'Кубок лиги'
+        CHAMPIONS_LEAGUE = 'champions_league', 'Лига Чемпионов'
+        FINALS = 'finals', 'Итоговый турнир'
+
     championship = models.ForeignKey(
         Season,
         verbose_name='Сезон',
@@ -149,6 +167,7 @@ class League(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
+    type = models.CharField('Тип турнира', max_length=32, choices=Type.choices)
     title = models.CharField('Название турнира', max_length=128)
     logo = models.ImageField('Логотип турнира', upload_to='tournament_logos/', null=True, blank=True)
     priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
@@ -1294,28 +1313,6 @@ class OtherEventsQuerySet(models.QuerySet):
 
     def ogs(self):
         return self.filter(event=OtherEvents.OWN_GOAL)
-
-    def annotate_with_tournament(self):
-        return self.annotate(
-            tournament=Case(
-                When(
-                    Q(match__league__title__istartswith='Высшая') | Q(match__league__title__istartswith='Единая'),
-                    then=Value('Высшая лига'),
-                ),
-                When(match__league__title__istartswith='Первая', then=Value('Первая лига')),
-                When(match__league__title__istartswith='Вторая', then=Value('Вторая лига')),
-                When(
-                    Q(match__league__title__istartswith='Кубок Высшей')
-                    | Q(match__league__title__istartswith='Кубок Первой')
-                    | Q(match__league__title__istartswith='Кубок Второй')
-                    | Q(match__league__title__istartswith='Кубок лиги'),
-                    then=Value('Кубок лиги'),
-                ),
-                When(match__league__title__istartswith='Лига Чемпионов', then=Value('Лига Чемпионов')),
-                When(match__league__title__istartswith='Кубок России', then=Value('Кубок России')),
-                default=Value('Unknown'),
-            )
-        )
 
 
 class OtherEvents(models.Model):

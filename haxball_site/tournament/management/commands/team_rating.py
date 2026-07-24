@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import F, Q
 from django.utils import timezone
 
-from ...models import Season, SeasonTeamRating, TeamRating, TeamRatingVersion
+from ...models import League, Season, SeasonTeamRating, TeamRating, TeamRatingVersion
 
 
 class Command(BaseCommand):
@@ -28,7 +28,7 @@ class Command(BaseCommand):
             last_version = TeamRatingVersion.objects.order_by('-number').first()
             version = last_version.number + 1 if last_version else 1
             season_count = 0
-            if not source_season.title.startswith('ЧР'):
+            if source_season.type != Season.Type.RUSSIAN_CHAMPIONSHIP:
                 source_season_number += 1
                 print(f'Rating calculation for season "{source_season.title}" is skipped')
                 return
@@ -39,7 +39,12 @@ class Command(BaseCommand):
                 self.calculate_rating_points(overall_rating, season, season_count)
 
                 previous_season = (
-                    Season.objects.filter(number__lt=season.number, title__contains='ЧР').order_by('-number').first()
+                    Season.objects.filter(
+                        number__lt=season.number,
+                        type=Season.Type.RUSSIAN_CHAMPIONSHIP,
+                    )
+                    .order_by('-number')
+                    .first()
                 )
                 if not previous_season:
                     break
@@ -91,16 +96,14 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_league_weight(league):
-        match league.title:
-            case 'Высшая лига' | 'Единая лига' | 'Кубок Высшей лиги':
+        match league.type:
+            case League.Type.PREMIER_LEAGUE | League.Type.PREMIER_LEAGUE_CUP:
                 return 1
-            case 'Кубок России' | 'Лига Чемпионов':
+            case League.Type.RUSSIAN_CUP | League.Type.CHAMPIONS_LEAGUE:
                 return 0.75
-            case 'Первая лига' | 'Кубок Первой лиги' | 'Кубок лиги':
+            case League.Type.FIRST_LEAGUE | League.Type.FIRST_LEAGUE_CUP | League.Type.LEAGUE_CUP:
                 return 0.5
-            case t if t.startswith('Первая лига'):
-                return 0.5
-            case 'Вторая лига' | 'Кубок Второй лиги':
+            case League.Type.SECOND_LEAGUE | League.Type.SECOND_LEAGUE_CUP:
                 return 0.25
 
-        raise ValueError(f'Unknown league: {league.title}')
+        raise ValueError(f'Unsupported league type: {league.type}')
