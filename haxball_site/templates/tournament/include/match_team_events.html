@@ -3,13 +3,13 @@
 
 {% if event.team == team %}
   <h6>
-    {% if event.event == 'CLN' %}
+    {% if event.period %}
       <img src="{% static 'img/ico/clean_sheet1.png' %}" height="20" width="20" title="Сухой тайм">
       {{ event.author }}
-    {% elif event.event == 'YEL' %}
+    {% elif event.kind == 'YEL' %}
       <img src="{% static 'img/ico/yellow_card.png' %}" height="20" width="20" title="Жёлтая">
       {{ event.author }}
-    {% elif event.event == 'RED' %}
+    {% elif event.kind == 'RED' %}
       <img src="{% static 'img/ico/red_card.png' %}" height="20" width="20" title="Красная">
       {{ event.author }}
     {% elif event.player_out %}

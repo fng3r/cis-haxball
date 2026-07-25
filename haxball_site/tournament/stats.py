@@ -1,7 +1,7 @@
 from django.db.models import Case, Count, Exists, F, FloatField, OuterRef, Q, Subquery, Value, When
 from django.db.models.functions import Cast, Coalesce
 
-from .models import Goal, League, Match, MatchResult, OtherEvents, Player, Season
+from .models import Card, CleanSheet, Goal, League, Match, MatchResult, Player, Season
 
 
 def _tournament_case(league_path):
@@ -180,8 +180,7 @@ class PlayerStatsSource:
             .values('c')
         )
         cs_subquery = (
-            OtherEvents.objects.cs()
-            .filter(match__league__championship=OuterRef('id'), author=player)
+            CleanSheet.objects.filter(match__league__championship=OuterRef('id'), author=player)
             .order_by()
             .values('match__league__championship')
             .annotate(c=Count('*'))
@@ -201,8 +200,7 @@ class PlayerStatsSource:
 
     def get_cs_by_team(self):
         return (
-            OtherEvents.objects.cs()
-            .filter(author=self.player)
+            CleanSheet.objects.filter(author=self.player)
             .values(team_title=F('team__title'))
             .annotate(cs=Count('*'))
             .order_by('-cs')
@@ -210,8 +208,7 @@ class PlayerStatsSource:
 
     def get_cs_by_tournament(self):
         return (
-            OtherEvents.objects.cs()
-            .filter(author=self.player)
+            CleanSheet.objects.filter(author=self.player)
             .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(cs=Count('*'))
@@ -232,17 +229,17 @@ class PlayerStatsSource:
             .values('c')
         )
         yellow_cards_subquery = (
-            OtherEvents.objects.filter(match__league__championship=OuterRef('id'), author=player)
+            Card.objects.filter(match__league__championship=OuterRef('id'), author=player)
             .order_by()
             .values('match__league__championship')
-            .annotate(c=Count('id', filter=Q(event=OtherEvents.YELLOW_CARD)))
+            .annotate(c=Count('id', filter=Q(kind=Card.Kind.YELLOW)))
             .values('c')
         )
         red_cards_subquery = (
-            OtherEvents.objects.filter(match__league__championship=OuterRef('id'), author=player)
+            Card.objects.filter(match__league__championship=OuterRef('id'), author=player)
             .order_by()
             .values('match__league__championship')
-            .annotate(c=Count('id', filter=Q(event=OtherEvents.RED_CARD)))
+            .annotate(c=Count('id', filter=Q(kind=Card.Kind.RED)))
             .values('c')
         )
 
@@ -263,11 +260,11 @@ class PlayerStatsSource:
 
     def get_cards_by_team(self):
         return (
-            OtherEvents.objects.filter(author=self.player)
+            Card.objects.filter(author=self.player)
             .values(team_title=F('team__title'))
             .annotate(
-                yellow_cards=Count('id', filter=Q(event=OtherEvents.YELLOW_CARD)),
-                red_cards=Count('id', filter=Q(event=OtherEvents.RED_CARD)),
+                yellow_cards=Count('id', filter=Q(kind=Card.Kind.YELLOW)),
+                red_cards=Count('id', filter=Q(kind=Card.Kind.RED)),
                 cards=F('yellow_cards') + F('red_cards'),
             )
             .filter(cards__gt=0)
@@ -276,12 +273,12 @@ class PlayerStatsSource:
 
     def get_cards_by_tournament(self):
         return (
-            OtherEvents.objects.filter(author=self.player)
+            Card.objects.filter(author=self.player)
             .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(
-                yellow_cards=Count('id', filter=Q(event=OtherEvents.YELLOW_CARD)),
-                red_cards=Count('id', filter=Q(event=OtherEvents.RED_CARD)),
+                yellow_cards=Count('id', filter=Q(kind=Card.Kind.YELLOW)),
+                red_cards=Count('id', filter=Q(kind=Card.Kind.RED)),
                 cards=F('yellow_cards') + F('red_cards'),
             )
             .filter(cards__gt=0)
@@ -566,8 +563,7 @@ class TeamStatsSource:
             .values('c')
         )
         cs_subquery = (
-            OtherEvents.objects.cs()
-            .filter(match__league__championship=OuterRef('id'), team=team)
+            CleanSheet.objects.filter(match__league__championship=OuterRef('id'), team=team)
             .order_by()
             .values('match__league__championship')
             .annotate(c=Count('*'))
@@ -587,8 +583,7 @@ class TeamStatsSource:
 
     def get_cs_by_tournament(self):
         return (
-            OtherEvents.objects.cs()
-            .filter(team=self.team)
+            CleanSheet.objects.filter(team=self.team)
             .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(cs=Count('*'))
@@ -597,7 +592,7 @@ class TeamStatsSource:
 
     def get_top_players_by_cs(self, top_n=5):
         return (
-            OtherEvents.objects.filter(team=self.team, event=OtherEvents.CLEAN_SHEET)
+            CleanSheet.objects.filter(team=self.team)
             .values(player=F('author__nickname'))
             .annotate(cs=Count('*'))
             .filter(cs__gt=0)
@@ -607,8 +602,7 @@ class TeamStatsSource:
     def get_top_players_by_cs_per_match(self, top_n=5):
         team = self.team
         cs_subquery = (
-            OtherEvents.objects.cs()
-            .filter(author=OuterRef('id'), team=team)
+            CleanSheet.objects.filter(author=OuterRef('id'), team=team)
             .order_by()
             .values('author')
             .annotate(c=Count('id', distinct=True))
@@ -637,17 +631,17 @@ class TeamStatsSource:
             .values('c')
         )
         yellow_cards_subquery = (
-            OtherEvents.objects.filter(match__league__championship=OuterRef('id'), team=team)
+            Card.objects.filter(match__league__championship=OuterRef('id'), team=team)
             .order_by()
             .values('match__league__championship')
-            .annotate(c=Count('id', filter=Q(event=OtherEvents.YELLOW_CARD)))
+            .annotate(c=Count('id', filter=Q(kind=Card.Kind.YELLOW)))
             .values('c')
         )
         red_cards_subquery = (
-            OtherEvents.objects.filter(match__league__championship=OuterRef('id'), team=team)
+            Card.objects.filter(match__league__championship=OuterRef('id'), team=team)
             .order_by()
             .values('match__league__championship')
-            .annotate(c=Count('id', filter=Q(event=OtherEvents.RED_CARD)))
+            .annotate(c=Count('id', filter=Q(kind=Card.Kind.RED)))
             .values('c')
         )
 
@@ -668,12 +662,12 @@ class TeamStatsSource:
 
     def get_cards_by_tournament(self):
         return (
-            OtherEvents.objects.filter(team=self.team)
+            Card.objects.filter(team=self.team)
             .annotate(tournament=_tournament_case('match__league'))
             .values('tournament')
             .annotate(
-                yellow_cards=Count('id', filter=Q(event=OtherEvents.YELLOW_CARD)),
-                red_cards=Count('id', filter=Q(event=OtherEvents.RED_CARD)),
+                yellow_cards=Count('id', filter=Q(kind=Card.Kind.YELLOW)),
+                red_cards=Count('id', filter=Q(kind=Card.Kind.RED)),
                 cards=F('yellow_cards') + F('red_cards'),
             )
             .filter(cards__gt=0)
@@ -682,7 +676,7 @@ class TeamStatsSource:
 
     def get_top_players_by_cards(self, card_type, top_n=5):
         return (
-            OtherEvents.objects.filter(team=self.team, event=card_type)
+            Card.objects.filter(team=self.team, kind=card_type)
             .values(player=F('author__nickname'))
             .annotate(cards=Count('*'))
             .filter(cards__gt=0)

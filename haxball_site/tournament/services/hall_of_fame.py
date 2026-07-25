@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count, F, FloatField, OuterRef, Q, Subquery, Window
 from django.db.models.functions import Cast, Coalesce, RowNumber
 
-from ..models import Match, OtherEvents, Player, Team
+from ..models import Card, Match, Player, Team
 
 
 class PlayerStatChoices(str, Enum):
@@ -58,12 +58,11 @@ class HallOfFameService:
         )
 
         top_cs = (
-            Team.objects.filter(team_events__event=OtherEvents.CLEAN_SHEET)
-            .annotate(
+            Team.objects.annotate(
                 count=Count(
-                    'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments)
-                    & Q(team_events__match__league__championship__in=seasons),
+                    'clean_sheets__match__league',
+                    filter=Q(clean_sheets__match__league__in=tournaments)
+                    & Q(clean_sheets__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -83,12 +82,12 @@ class HallOfFameService:
         )
 
         top_yellow_cards = (
-            Team.objects.filter(team_events__event=OtherEvents.YELLOW_CARD)
-            .annotate(
+            Team.objects.annotate(
                 count=Count(
-                    'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments)
-                    & Q(team_events__match__league__championship__in=seasons),
+                    'cards__match__league',
+                    filter=Q(cards__kind=Card.Kind.YELLOW)
+                    & Q(cards__match__league__in=tournaments)
+                    & Q(cards__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -96,12 +95,12 @@ class HallOfFameService:
         )
 
         top_red_cards = (
-            Team.objects.filter(team_events__event=OtherEvents.RED_CARD)
-            .annotate(
+            Team.objects.annotate(
                 count=Count(
-                    'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments)
-                    & Q(team_events__match__league__championship__in=seasons),
+                    'cards__match__league',
+                    filter=Q(cards__kind=Card.Kind.RED)
+                    & Q(cards__match__league__in=tournaments)
+                    & Q(cards__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -270,11 +269,11 @@ class HallOfFameService:
 
     def _get_top_clean_sheets(self, players, seasons, tournaments):
         return (
-            players.filter(event__event=OtherEvents.CLEAN_SHEET)
-            .annotate(
+            players.annotate(
                 count=Count(
-                    'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
+                    'clean_sheets__match__league',
+                    filter=Q(clean_sheets__match__league__in=tournaments)
+                    & Q(clean_sheets__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
@@ -304,11 +303,12 @@ class HallOfFameService:
 
     def _get_top_yellow_cards(self, players, seasons, tournaments):
         return (
-            players.filter(event__event=OtherEvents.YELLOW_CARD)
-            .annotate(
+            players.annotate(
                 count=Count(
-                    'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
+                    'cards__match__league',
+                    filter=Q(cards__kind=Card.Kind.YELLOW)
+                    & Q(cards__match__league__in=tournaments)
+                    & Q(cards__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
@@ -321,11 +321,12 @@ class HallOfFameService:
 
     def _get_top_red_cards(self, players, seasons, tournaments):
         return (
-            players.filter(event__event=OtherEvents.RED_CARD)
-            .annotate(
+            players.annotate(
                 count=Count(
-                    'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
+                    'cards__match__league',
+                    filter=Q(cards__kind=Card.Kind.RED)
+                    & Q(cards__match__league__in=tournaments)
+                    & Q(cards__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),

@@ -33,7 +33,8 @@ class Command(BaseCommand):
             all_events += (
                 m.match_goal.count()
                 + m.match_substitutions.count()
-                + m.match_event.count()
+                + m.cards.count()
+                + m.clean_sheets.count()
                 + m.disqualifications.count()
             )
             if m.inspector in inspectors:
@@ -50,7 +51,8 @@ class Command(BaseCommand):
                 events_added += (
                     m.match_goal.count()
                     + m.match_substitutions.count()
-                    + m.match_event.count()
+                    + m.cards.count()
+                    + m.clean_sheets.count()
                     + m.disqualifications.count()
                 )
             matches_percent = round(100 * (matches / len(all_matches)), 1)

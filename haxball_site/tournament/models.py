@@ -6,7 +6,6 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Q
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -687,11 +686,6 @@ class Match(models.Model):
     commentable = models.BooleanField('Комментируемый матч', default=True)
 
     tracker = FieldTracker()
-
-    def cards(self):
-        return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by(
-            'team'
-        )
 
     @property
     def can_be_postponed(self):
@@ -1484,6 +1478,160 @@ class Disqualification(models.Model):
         return f'{self.player.nickname} ({self.match.team_home.short_title} - {self.match.team_guest.short_title})'
 
 
+class MatchParticipantValidationMixin(models.Model):
+    """Shared validation for events attributed to a player and their historical team."""
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if self.match_id and self.team_id not in (self.match.team_home_id, self.match.team_guest_id):
+            errors['team'] = 'Команда не участвует в матче'
+
+        if self.match_id and self.team_id and self.author_id:
+            has_match_team = PlayerMatchStatistics.objects.filter(
+                match_id=self.match_id,
+                player_id=self.author_id,
+                team_id=self.team_id,
+            ).exists()
+            has_any_match_team = PlayerMatchStatistics.objects.filter(
+                match_id=self.match_id,
+                player_id=self.author_id,
+            ).exists()
+            has_current_team = Player.objects.filter(pk=self.author_id, team_id=self.team_id).exists()
+            if not has_match_team and (has_any_match_team or not has_current_team):
+                errors['author'] = 'Игрок не относится к выбранной команде в этом матче'
+
+        if errors:
+            raise ValidationError(errors)
+
+
+class CardQuerySet(models.QuerySet):
+    def yellow(self):
+        return self.filter(kind=Card.Kind.YELLOW)
+
+    def red(self):
+        return self.filter(kind=Card.Kind.RED)
+
+
+class Card(MatchParticipantValidationMixin):
+    class Kind(models.TextChoices):
+        YELLOW = 'YEL', 'Жёлтая'
+        RED = 'RED', 'Красная'
+
+    match = models.ForeignKey(Match, verbose_name='Матч', related_name='cards', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', related_name='cards', on_delete=models.PROTECT)
+    author = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Автор',
+        related_name='cards',
+        on_delete=models.PROTECT,
+    )
+    kind = models.CharField('Тип карточки', max_length=3, choices=Kind.choices, db_index=True)
+    time_min = models.PositiveSmallIntegerField('Минута')
+    time_sec = models.PositiveSmallIntegerField('Секунда')
+    reason = models.CharField(
+        'Причина',
+        max_length=300,
+        blank=True,
+        help_text='Указывать в формате "за нарушение гл. 1 ст. 2 ч. 3 Регламента..." для отображения на странице матча',
+    )
+    legacy_event = models.OneToOneField(
+        'OtherEvents',
+        verbose_name='Исходное событие',
+        related_name='migrated_card',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    objects = CardQuerySet.as_manager()
+
+    def __str__(self):
+        icon = '🟨' if self.kind == self.Kind.YELLOW else '🟥'
+        return f'{icon} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
+
+    class Meta:
+        verbose_name = 'Карточка'
+        verbose_name_plural = 'Карточки'
+        ordering = ('time_min', 'time_sec', 'pk')
+        indexes = [
+            models.Index(fields=('kind', 'match')),
+            models.Index(fields=('author', 'match')),
+            models.Index(fields=('team', 'match')),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(time_sec__lt=60), name='card_time_sec_lt_60'),
+        ]
+
+
+class CleanSheet(MatchParticipantValidationMixin):
+    class Period(models.TextChoices):
+        FIRST_HALF = 'H1', 'Первый тайм'
+        SECOND_HALF = 'H2', 'Второй тайм'
+        EXTRA_TIME = 'ET', 'Дополнительное время'
+
+    match = models.ForeignKey(Match, verbose_name='Матч', related_name='clean_sheets', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', related_name='clean_sheets', on_delete=models.PROTECT)
+    author = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Автор',
+        related_name='clean_sheets',
+        on_delete=models.PROTECT,
+    )
+    period = models.CharField('Период', max_length=2, choices=Period.choices, db_index=True)
+    legacy_event = models.OneToOneField(
+        'OtherEvents',
+        verbose_name='Исходное событие',
+        related_name='migrated_clean_sheet',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    @property
+    def time_min(self):
+        if self.period == self.Period.FIRST_HALF:
+            return 8
+        if self.period == self.Period.SECOND_HALF:
+            return 16
+        return int(self.match.duration.total_seconds()) // 60
+
+    @property
+    def time_sec(self):
+        if self.period != self.Period.EXTRA_TIME:
+            return 0
+        return int(self.match.duration.total_seconds()) % 60
+
+    def clean(self):
+        super().clean()
+        if self.period == self.Period.EXTRA_TIME and self.match_id and self.match.duration <= timedelta(minutes=16):
+            raise ValidationError({'period': 'Дополнительное время требует длительности матча больше 16 минут'})
+
+    def __str__(self):
+        return f'🧤 {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
+
+    class Meta:
+        verbose_name = 'Сухой тайм'
+        verbose_name_plural = 'Сухие таймы'
+        ordering = ('match_id', 'period', 'pk')
+        indexes = [
+            models.Index(fields=('period', 'match')),
+            models.Index(fields=('author', 'match')),
+            models.Index(fields=('team', 'match')),
+        ]
+
+
 class OtherEventsQuerySet(models.QuerySet):
     def cards(self):
         return self.filter(event__in=[OtherEvents.YELLOW_CARD, OtherEvents.RED_CARD])
@@ -1577,8 +1725,8 @@ class OtherEvents(models.Model):
         return f'{emoji} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
 
     class Meta:
-        verbose_name = 'Событие'
-        verbose_name_plural = 'События'
+        verbose_name = 'Событие [OBSOLETE])'
+        verbose_name_plural = 'События [OBSOLETE]'
         indexes = [
             models.Index(fields=['event', 'match']),
         ]

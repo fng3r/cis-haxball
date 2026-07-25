@@ -185,12 +185,12 @@
                             <li>
                               <img src="{{ card.team.logo.url }}" alt="{{ card.team.title }}" width="22">
                               <a href="{{ card.author.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">{{ card.author.nickname }}</a> -
-                              {% if card.event == 'YEL' %}
+                              {% if card.kind == 'YEL' %}
                                 <img src="{% static 'img/ico/yellow_card.png' %}" width="24" title="ЖК" alt="ЖК">
                               {% else %}
                                 <img src="{% static 'img/ico/red_card.png' %}" width="24" title="КК" alt="КК">
                               {% endif %}
-                              {{ card.card_reason }}
+                              {{ card.reason }}
                             </li>
                           {% endfor %}
                         </ul>

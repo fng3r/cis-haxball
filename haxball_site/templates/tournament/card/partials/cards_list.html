@@ -13,7 +13,7 @@
       hx-indicator="#scroll-indicator"
     {% endif %}
     {# djlint:on #}
-  >
+    >
     <td class="tw:pr-1">
       <div class="tw:text-sm">{{ card.match.league.championship.short_title }}</div>
     </td>
@@ -57,7 +57,7 @@
 
     <td>
       <div class="tw:text-sm">
-        {% if card.event == 'YEL' %}
+        {% if card.kind == 'YEL' %}
           <img src="{% static 'img/ico/statistic/yellow-card.PNG' %}" width=24 title="ЖК" alt="ЖК">
         {% else %}
           <img src="{% static 'img/ico/statistic/red-card.PNG' %}" width=24 title="КК" alt="КК">
@@ -66,13 +66,7 @@
     </td>
 
     <td>
-      <div class="tw:text-sm">
-        {% if card.card_reason %}
-          {{ card.card_reason }}
-        {% else %}
-          Не указана
-        {% endif %}
-      </div>
+      <div class="tw:text-sm">{{ card.reason|default:'Не указана' }}</div>
     </td>
 
     <td class="tw:pl-2 tw:pr-1">

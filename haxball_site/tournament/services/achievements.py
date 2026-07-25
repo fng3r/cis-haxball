@@ -10,7 +10,6 @@ from tournament.models import Achievements, Player
 class CareerAchievementsSyncService:
     CAREER_TITLE_SEARCH = 'за карьеру'
     THRESHOLD_PATTERN = re.compile(r'(\d+)')
-    CLEAN_SHEET_EVENT = 'CLN'
     STAT_PATTERNS = {
         'matches': ('сыгранных матч',),
         'clean_sheets': ('сухих тайм',),
@@ -106,7 +105,7 @@ class CareerAchievementsSyncService:
             'matches': player.played_matches.filter(match__is_played=True).count(),
             'goals': player.goals.filter(match__is_played=True).count(),
             'assists': player.assists.filter(match__is_played=True).count(),
-            'clean_sheets': player.event.filter(match__is_played=True, event=self.CLEAN_SHEET_EVENT).count(),
+            'clean_sheets': player.clean_sheets.filter(match__is_played=True).count(),
         }
 
         for stat_key, achievements in achievements_by_stat.items():

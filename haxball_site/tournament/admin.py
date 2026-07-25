@@ -38,6 +38,8 @@ from .models import (
     AwardSubmission,
     AwardVote,
     AwardVoter,
+    Card,
+    CleanSheet,
     Disqualification,
     FreeAgent,
     Goal,
@@ -709,6 +711,50 @@ class GoalInline(UnfoldStackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class CardInline(UnfoldStackedInline):
+    model = Card
+    extra = 1
+    tab = True
+    show_count = True
+    fields = (('team', 'author'), ('kind', 'reason'), ('time_min', 'time_sec'))
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == 'kind':
+            kwargs['choices'] = [('', '---------'), *db_field.choices]
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        match = None
+        if 'object_id' in resolved.kwargs:
+            match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
+        if db_field.name == 'team' and match is not None:
+            kwargs['queryset'] = Team.objects.filter(id__in=[match.team_home_id, match.team_guest_id])
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class CleanSheetInline(UnfoldStackedInline):
+    model = CleanSheet
+    extra = 1
+    tab = True
+    show_count = True
+    fields = (('team', 'author'), ('period',))
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == 'period':
+            kwargs['choices'] = [('', '---------'), *db_field.choices]
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        resolved = resolve(request.path_info)
+        match = None
+        if 'object_id' in resolved.kwargs:
+            match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
+        if db_field.name == 'team' and match is not None:
+            kwargs['queryset'] = Team.objects.filter(id__in=[match.team_home_id, match.team_guest_id])
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 class SubstitutionInline(UnfoldStackedInline):
     model = Substitution
     extra = 1
@@ -759,9 +805,13 @@ class DisqualificationInline(UnfoldStackedInline):
 
 class EventInline(UnfoldStackedInline):
     model = OtherEvents
-    extra = 1
+    verbose_name = 'Cобытие [obsolete]'
+    verbose_name_plural = 'Cобытия [obsolete]'
+    extra = 0
     tab = True
     show_count = True
+    can_delete = False
+    readonly_fields = ('team', 'author', 'time_min', 'time_sec', 'event', 'card_reason')
 
     fields = (
         ('team', 'author'),
@@ -770,21 +820,8 @@ class EventInline(UnfoldStackedInline):
         ('card_reason',),
     )
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        resolved = resolve(request.path_info)
-        not_found = False
-        try:
-            self.parent_model.objects.get(id=resolved.kwargs['object_id'])
-        except:
-            not_found = True
-        if db_field.name == 'team' and not not_found:
-            kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    def formfield_for_choice_field(self, db_field, request, **kwargs):
-        if db_field.name == 'event':
-            kwargs['choices'] = [choice for choice in db_field.choices if choice[0] != OtherEvents.OWN_GOAL]
-        return super().formfield_for_choice_field(db_field, request, **kwargs)
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class MatchResultInline(UnfoldTabularInline):
@@ -945,9 +982,11 @@ class MatchAdmin(UnfoldModelAdmin):
         MatchResultInline,
         GoalInline,
         SubstitutionInline,
-        EventInline,
+        CleanSheetInline,
+        CardInline,
         DisqualificationInline,
         PostponementInline,
+        EventInline,
     ]
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -1089,9 +1128,20 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
 
 @admin.register(Goal)
 class GoalAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'kind', 'team', 'author', 'assistent', 'own_goal_team', 'own_goal_author')
-    ordering = ('-id',)
+    list_display = (
+        'match',
+        'kind',
+        'team',
+        'author',
+        'assistent',
+        'own_goal_team',
+        'own_goal_author',
+        'time_min',
+        'time_sec',
+    )
+    ordering = ('-match_id', 'time_min', 'time_sec')
     raw_id_fields = ('match',)
+    readonly_fields = ('legacy_event',)
     list_filter = (
         ('kind', MultipleChoicesDropdownFilter),
         ('team', RelatedDropdownFilter),
@@ -1099,6 +1149,7 @@ class GoalAdmin(UnfoldModelAdmin):
         ('assistent', RelatedDropdownFilter),
         ('own_goal_team', RelatedDropdownFilter),
         ('own_goal_author', RelatedDropdownFilter),
+        ('match__id', SingleNumericFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
@@ -1124,6 +1175,54 @@ class GoalAdmin(UnfoldModelAdmin):
                 'match__team_guest',
                 'match__numb_tour',
             )
+        )
+
+
+@admin.register(Card)
+class CardAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'kind', 'match', 'author', 'team', 'time_min', 'time_sec')
+    ordering = ('-id',)
+    raw_id_fields = ('match',)
+    readonly_fields = ('legacy_event',)
+    list_filter = (
+        ('kind', MultipleChoicesDropdownFilter),
+        ('team', RelatedDropdownFilter),
+        ('author', RelatedDropdownFilter),
+        ('match__league__championship', RelatedDropdownFilter),
+        ('match__league', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    list_filter_sheet = False
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('team', 'author', 'match__team_home', 'match__team_guest', 'match__numb_tour')
+        )
+
+
+@admin.register(CleanSheet)
+class CleanSheetAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'period', 'match', 'author', 'team')
+    ordering = ('-id',)
+    raw_id_fields = ('match',)
+    readonly_fields = ('legacy_event',)
+    list_filter = (
+        ('period', MultipleChoicesDropdownFilter),
+        ('team', RelatedDropdownFilter),
+        ('author', RelatedDropdownFilter),
+        ('match__league__championship', RelatedDropdownFilter),
+        ('match__league', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    list_filter_sheet = False
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('team', 'author', 'match__team_home', 'match__team_guest', 'match__numb_tour')
         )
 
 
@@ -1170,11 +1269,13 @@ class OtherEventsAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     list_filter_sheet = False
+    readonly_fields = ('match', 'team', 'author', 'time_min', 'time_sec', 'event', 'card_reason')
 
-    def formfield_for_choice_field(self, db_field, request, **kwargs):
-        if db_field.name == 'event':
-            kwargs['choices'] = [choice for choice in db_field.choices if choice[0] != OtherEvents.OWN_GOAL]
-        return super().formfield_for_choice_field(db_field, request, **kwargs)
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     def get_queryset(self, request):
         return (

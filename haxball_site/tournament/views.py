@@ -43,6 +43,8 @@ from .models import (
     AwardSubmission,
     AwardVote,
     AwardVoter,
+    Card,
+    CleanSheet,
     Disqualification,
     FreeAgent,
     Goal,
@@ -52,7 +54,6 @@ from .models import (
     MatchReplayStatsStatus,
     MatchResult,
     Nation,
-    OtherEvents,
     Player,
     PlayerRating,
     PlayerRatingVersion,
@@ -102,12 +103,12 @@ class CardFilter(FilterSet):
         queryset=Player.objects.all(),
     )
     card_type = ChoiceFilter(
-        field_name='event',
+        field_name='kind',
         label='Тип',
         empty_label='Все',
         choices=(
-            (OtherEvents.YELLOW_CARD, 'ЖК'),
-            (OtherEvents.RED_CARD, 'КК'),
+            (Card.Kind.YELLOW, 'ЖК'),
+            (Card.Kind.RED, 'КК'),
         ),
     )
     inspector = ModelChoiceFilter(
@@ -117,13 +118,13 @@ class CardFilter(FilterSet):
     )
 
     class Meta:
-        model = OtherEvents
+        model = Card
         fields = ['season', 'team', 'player', 'card_type', 'inspector']
 
 
 class CardsList(ListView):
     queryset = (
-        OtherEvents.objects.cards()
+        Card.objects.all()
         .select_related(
             'team',
             'author__name__user_profile',
@@ -636,18 +637,13 @@ class MatchDetail(DetailView):
         assists_by_player = {d['assistent']: d['assists'] for d in assists}
         context['assists_by_player'] = assists_by_player
 
-        clean_sheets = (
-            match.match_event.filter(event=OtherEvents.CLEAN_SHEET)
-            .values('author')
-            .annotate(cs=Count('author'))
-            .order_by('author')
-        )
+        clean_sheets = match.clean_sheets.all().values('author').annotate(cs=Count('author')).order_by('author')
         clean_sheets_by_player = {d['author']: d['cs'] for d in clean_sheets}
         context['clean_sheets_by_player'] = clean_sheets_by_player
 
         context['time_played_by_player'] = self.get_time_played_by_player(match)
 
-        cards = match.cards().select_related('team', 'author__name__user_profile')
+        cards = match.cards.select_related('team', 'author__name__user_profile').order_by('team')
         context['cards'] = cards
 
         # Replay-based advanced stats (Haxball Analyzer)
@@ -772,7 +768,7 @@ class MatchDetail(DetailView):
             .first()
         )
         top_cs = (
-            team.team_events.cs()
+            team.clean_sheets.all()
             .filter(match__in=selected_matches)
             .values(pl=F('author__nickname'))
             .annotate(count=Count('author'))
@@ -1445,15 +1441,15 @@ def player_detailed_statistics(request, pk):
             'match_goal', queryset=Goal.objects.filter(assistent=player, match__is_played=True), to_attr='assists'
         ),
         Prefetch(
-            'match_event', queryset=OtherEvents.objects.cs().filter(author=player, match__is_played=True), to_attr='cs'
+            'clean_sheets', queryset=CleanSheet.objects.filter(author=player, match__is_played=True), to_attr='cs'
         ),
         Prefetch(
-            'match_event',
+            'match_substitutions',
             queryset=Substitution.objects.filter(player_out=player, match__is_played=True),
             to_attr='subs_out',
         ),
         Prefetch(
-            'match_event',
+            'match_substitutions',
             queryset=Substitution.objects.filter(player_in=player, match__is_played=True),
             to_attr='subs_in',
         ),
@@ -1463,13 +1459,13 @@ def player_detailed_statistics(request, pk):
             to_attr='ogs',
         ),
         Prefetch(
-            'match_event',
-            queryset=OtherEvents.objects.yellow_cards().filter(author=player, match__is_played=True),
+            'cards',
+            queryset=Card.objects.yellow().filter(author=player, match__is_played=True),
             to_attr='yellow_cards',
         ),
         Prefetch(
-            'match_event',
-            queryset=OtherEvents.objects.red_cards().filter(author=player, match__is_played=True),
+            'cards',
+            queryset=Card.objects.red().filter(author=player, match__is_played=True),
             to_attr='red_cards',
         ),
     )
@@ -1525,12 +1521,12 @@ def player_detailed_statistics(request, pk):
 
     all_goals = Goal.objects.filter(author=player, match__is_played=True)
     all_assists = Goal.objects.filter(assistent=player, match__is_played=True)
-    all_clean_sheets = OtherEvents.objects.cs().filter(author=player, match__is_played=True)
+    all_clean_sheets = CleanSheet.objects.filter(author=player, match__is_played=True)
     all_subs_out = Substitution.objects.filter(player_out=player, match__is_played=True)
     all_subs_in = Substitution.objects.filter(player_in=player, match__is_played=True)
     all_ogs = Goal.objects.own_goals().filter(own_goal_author=player, match__is_played=True)
-    all_yellow_cards = OtherEvents.objects.yellow_cards().filter(author=player, match__is_played=True)
-    all_red_cards = OtherEvents.objects.red_cards().filter(author=player, match__is_played=True)
+    all_yellow_cards = Card.objects.yellow().filter(author=player, match__is_played=True)
+    all_red_cards = Card.objects.red().filter(author=player, match__is_played=True)
 
     overall_matches = len(all_matches)
     overall_goals = all_goals.count()
@@ -1670,8 +1666,7 @@ def player_detailed_statistics(request, pk):
     )
 
     cs_subquery = (
-        OtherEvents.objects.cs()
-        .filter(author=player, match__league__championship=OuterRef('id'))
+        CleanSheet.objects.filter(author=player, match__league__championship=OuterRef('id'))
         .order_by()
         .values('match__league__championship')
         .annotate(c=Count('*'))
@@ -1746,7 +1741,7 @@ def get_player_ranks(player):
     assists_top_count = assists_top.count()
 
     cs_top = Player.objects.annotate(
-        count=Count('event', filter=Q(event__event=OtherEvents.CLEAN_SHEET)),
+        count=Count('clean_sheets'),
         rank=Window(expression=Rank(), order_by=('-count',)),
     ).filter(count__gt=0)
     cs_rank = next(filter(lambda p: p.id == player.id, cs_top), None)
@@ -1791,23 +1786,25 @@ def team_statistics(request, pk):
             queryset=Goal.objects.filter(team=team, assistent__isnull=False, match__is_played=True),
             to_attr='assists',
         ),
+        Prefetch('clean_sheets', queryset=CleanSheet.objects.filter(team=team, match__is_played=True), to_attr='cs'),
         Prefetch(
-            'match_event', queryset=OtherEvents.objects.cs().filter(team=team, match__is_played=True), to_attr='cs'
+            'match_substitutions',
+            queryset=Substitution.objects.filter(team=team, match__is_played=True),
+            to_attr='subs',
         ),
-        Prefetch('match_event', queryset=Substitution.objects.filter(team=team, match__is_played=True), to_attr='subs'),
         Prefetch(
             'match_goal',
             queryset=Goal.objects.own_goals().filter(own_goal_team=team, match__is_played=True),
             to_attr='ogs',
         ),
         Prefetch(
-            'match_event',
-            queryset=OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True),
+            'cards',
+            queryset=Card.objects.yellow().filter(team=team, match__is_played=True),
             to_attr='yellow_cards',
         ),
         Prefetch(
-            'match_event',
-            queryset=OtherEvents.objects.red_cards().filter(team=team, match__is_played=True),
+            'cards',
+            queryset=Card.objects.red().filter(team=team, match__is_played=True),
             to_attr='red_cards',
         ),
     )
@@ -1866,11 +1863,11 @@ def team_statistics(request, pk):
         Q(match__team_home=team) | Q(match__team_guest=team), ~Q(team=team), match__is_played=True
     )
     all_assists = Goal.objects.filter(team=team, assistent__isnull=False, match__is_played=True)
-    all_clean_sheets = OtherEvents.objects.cs().filter(team=team, match__is_played=True)
+    all_clean_sheets = CleanSheet.objects.filter(team=team, match__is_played=True)
     all_subs = Substitution.objects.filter(team=team, match__is_played=True)
     all_ogs = Goal.objects.own_goals().filter(own_goal_team=team, match__is_played=True)
-    all_yellow_cards = OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True)
-    all_red_cards = OtherEvents.objects.red_cards().filter(team=team, match__is_played=True)
+    all_yellow_cards = Card.objects.yellow().filter(team=team, match__is_played=True)
+    all_red_cards = Card.objects.red().filter(team=team, match__is_played=True)
 
     overall_matches = len(all_matches)
     overall_wins = all_wins.count()
@@ -1994,10 +1991,9 @@ def team_statistics(request, pk):
         .first()
     )
 
-    cards_filter = Q(match_event__event=OtherEvents.YELLOW_CARD) | Q(match_event__event=OtherEvents.RED_CARD)
     most_biggest_cards_given = (
         (team.home_matches.all() | team.guest_matches.all())
-        .annotate(cards_count=Count('match_event', filter=cards_filter))
+        .annotate(cards_count=Count('cards'))
         .select_related('league__championship')
         .order_by('-cards_count')
     ).first()
@@ -2019,13 +2015,7 @@ def team_statistics(request, pk):
     greatest_assistant = (
         team.goals.values('assistent').annotate(assists=Count('assistent')).order_by('-assists').first()
     )
-    greatest_goalkeeper = (
-        team.team_events.filter(event=OtherEvents.CLEAN_SHEET)
-        .values('author')
-        .annotate(cs=Count('author'))
-        .order_by('-cs')
-        .first()
-    )
+    greatest_goalkeeper = team.clean_sheets.all().values('author').annotate(cs=Count('author')).order_by('-cs').first()
 
     home_matches = (
         Match.objects.filter(team_home=team, is_played=True)
@@ -2260,7 +2250,7 @@ class ComparePlayersView(View):
         assists_per_match = round(float(assists) / matches, 2) if matches else 0
         goals_assists = goals + assists
         goals_assists_per_match = round(float(goals_assists) / matches, 2) if matches else 0
-        cs = player.event.cs().filter(match__in=selected_matches).count()
+        cs = player.clean_sheets.filter(match__in=selected_matches).count()
         cs_per_match = round(float(cs) / matches, 2) if matches else 0
 
         return {
@@ -2275,8 +2265,8 @@ class ComparePlayersView(View):
             'goals_assists_per_match': goals_assists_per_match,
             'cs': cs,
             'cs_per_match': cs_per_match,
-            'yellow_cards': player.event.yellow_cards().filter(match__in=selected_matches).count(),
-            'red_cards': player.event.red_cards().filter(match__in=selected_matches).count(),
+            'yellow_cards': player.cards.yellow().filter(match__in=selected_matches).count(),
+            'red_cards': player.cards.red().filter(match__in=selected_matches).count(),
         }
 
 
@@ -2359,7 +2349,7 @@ class CompareTeamsView(View):
         conceded_goals_per_match = round(float(conceded_goals) / matches, 2) if matches else 0
         assists = team.goals.filter(assistent__isnull=False, match__in=selected_matches).count()
         assists_per_match = round(float(assists) / matches, 2) if matches else 0
-        cs = team.team_events.cs().filter(match__in=selected_matches).count()
+        cs = team.clean_sheets.filter(match__in=selected_matches).count()
         cs_per_match = round(float(cs) / matches, 2) if matches else 0
 
         return {
@@ -2374,8 +2364,8 @@ class CompareTeamsView(View):
             'conceded_goals_per_match': conceded_goals_per_match,
             'cs': cs,
             'cs_per_match': cs_per_match,
-            'yellow_cards': team.team_events.yellow_cards().filter(match__in=selected_matches).count(),
-            'red_cards': team.team_events.red_cards().filter(match__in=selected_matches).count(),
+            'yellow_cards': team.cards.yellow().filter(match__in=selected_matches).count(),
+            'red_cards': team.cards.red().filter(match__in=selected_matches).count(),
         }
 
     def get_player_stats(self, team: Team, selected_matches) -> dict:
@@ -2419,7 +2409,7 @@ class CompareTeamsView(View):
             .first()
         )
         top_cs = (
-            team.team_events.cs()
+            team.clean_sheets.all()
             .filter(match__in=selected_matches)
             .values(pl=F('author__nickname'))
             .annotate(count=Count('author'))

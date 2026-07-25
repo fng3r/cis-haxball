@@ -6,10 +6,10 @@ from django.db.models import Count, F
 from django.utils import timezone
 
 from tournament.models import (
+    CleanSheet,
     Goal,
     League,
     Match,
-    OtherEvents,
     Player,
     PlayerMatchStatistics,
     PlayerRating,
@@ -246,9 +246,7 @@ def preload_fantasy_data(tournament):
             match_goals[goal.match_id] = []
         match_goals[goal.match_id].append(goal)
 
-    events = OtherEvents.objects.filter(match__in=matches, event=OtherEvents.CLEAN_SHEET).select_related(
-        'author', 'team'
-    )
+    events = CleanSheet.objects.filter(match__in=matches).select_related('author', 'team')
     match_cs = {}
     for event in events:
         if event.match_id not in match_cs:
