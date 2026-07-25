@@ -1458,8 +1458,8 @@ def player_detailed_statistics(request, pk):
             to_attr='subs_in',
         ),
         Prefetch(
-            'match_event',
-            queryset=OtherEvents.objects.ogs().filter(author=player, match__is_played=True),
+            'match_goal',
+            queryset=Goal.objects.own_goals().filter(own_goal_author=player, match__is_played=True),
             to_attr='ogs',
         ),
         Prefetch(
@@ -1528,7 +1528,7 @@ def player_detailed_statistics(request, pk):
     all_clean_sheets = OtherEvents.objects.cs().filter(author=player, match__is_played=True)
     all_subs_out = Substitution.objects.filter(player_out=player, match__is_played=True)
     all_subs_in = Substitution.objects.filter(player_in=player, match__is_played=True)
-    all_ogs = OtherEvents.objects.ogs().filter(author=player, match__is_played=True)
+    all_ogs = Goal.objects.own_goals().filter(own_goal_author=player, match__is_played=True)
     all_yellow_cards = OtherEvents.objects.yellow_cards().filter(author=player, match__is_played=True)
     all_red_cards = OtherEvents.objects.red_cards().filter(author=player, match__is_played=True)
 
@@ -1796,7 +1796,9 @@ def team_statistics(request, pk):
         ),
         Prefetch('match_event', queryset=Substitution.objects.filter(team=team, match__is_played=True), to_attr='subs'),
         Prefetch(
-            'match_event', queryset=OtherEvents.objects.ogs().filter(team=team, match__is_played=True), to_attr='ogs'
+            'match_goal',
+            queryset=Goal.objects.own_goals().filter(own_goal_team=team, match__is_played=True),
+            to_attr='ogs',
         ),
         Prefetch(
             'match_event',
@@ -1866,7 +1868,7 @@ def team_statistics(request, pk):
     all_assists = Goal.objects.filter(team=team, assistent__isnull=False, match__is_played=True)
     all_clean_sheets = OtherEvents.objects.cs().filter(team=team, match__is_played=True)
     all_subs = Substitution.objects.filter(team=team, match__is_played=True)
-    all_ogs = OtherEvents.objects.ogs().filter(team=team, match__is_played=True)
+    all_ogs = Goal.objects.own_goals().filter(own_goal_team=team, match__is_played=True)
     all_yellow_cards = OtherEvents.objects.yellow_cards().filter(team=team, match__is_played=True)
     all_red_cards = OtherEvents.objects.red_cards().filter(team=team, match__is_played=True)
 

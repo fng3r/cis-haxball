@@ -164,10 +164,10 @@ def get_team_squad_stats(team, for_current_season=False, season=None, tournament
     )
 
     ogs_subquery = (
-        OtherEvents.objects.ogs()
-        .filter(stats_condition, team=team, author=OuterRef('id'))
+        Goal.objects.own_goals()
+        .filter(stats_condition, own_goal_team=team, own_goal_author=OuterRef('id'))
         .order_by()
-        .values('author')
+        .values('own_goal_author')
         .annotate(c=Count('*'))
         .values('c')
     )
@@ -251,9 +251,13 @@ def player_stats_rows_count(stats: defaultdict, season):
 #   Для детальной статы матча
 @register.filter
 def events_sorted(match: Match):
-    events = match.match_event.select_related('team', 'author').all()
+    events = match.match_event.filter(
+        event__in=[OtherEvents.CLEAN_SHEET, OtherEvents.YELLOW_CARD, OtherEvents.RED_CARD]
+    ).select_related('team', 'author')
     substitutions = match.match_substitutions.select_related('team', 'player_in', 'player_out').all()
-    all_events = list(match.match_goal.select_related('team', 'author', 'assistent').all())
+    all_events = list(
+        match.match_goal.select_related('team', 'author', 'assistent', 'own_goal_team', 'own_goal_author').all()
+    )
     for e in events:
         all_events.append(e)
     for s in substitutions:
@@ -931,11 +935,41 @@ def _get_top_clean_sheets_per_match(league: League, tour_range: tuple = None):
 
 
 def _get_top_own_goals(league: League, tour_range: tuple = None):
-    return _get_top_players_by_event(league, OtherEvents.OWN_GOAL, tour_range)
+    own_goals_filter = Q(own_goals__match__league=league)
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        own_goals_filter &= Q(
+            own_goals__match__numb_tour__number__gte=min_tour,
+            own_goals__match__numb_tour__number__lte=max_tour,
+        )
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .filter(own_goals_filter)
+        .annotate(count=Count('own_goals'), last_team_logo=get_player_last_team_logo_subquery(league))
+        .order_by('-count')
+    )
 
 
 def _get_top_own_goals_per_match(league: League, tour_range: tuple = None):
-    return _get_top_players_by_event_per_match(league, OtherEvents.OWN_GOAL, tour_range)
+    own_goals = Goal.objects.own_goals().filter(match__league=league, own_goal_author=OuterRef('id'))
+    if tour_range is not None:
+        min_tour, max_tour = tour_range
+        own_goals = own_goals.filter(
+            match__numb_tour__number__gte=min_tour,
+            match__numb_tour__number__lte=max_tour,
+        )
+    own_goals_count = Subquery(own_goals.order_by().values('own_goal_author').annotate(c=Count('id')).values('c'))
+    return (
+        Player.objects.select_related('team', 'name__user_profile')
+        .annotate(
+            own_goals_count=Coalesce(own_goals_count, 0),
+            matches_count=Coalesce(get_player_matches_subquery(league, tour_range), 0),
+            last_team_logo=get_player_last_team_logo_subquery(league),
+        )
+        .filter(matches_count__gte=3, own_goals_count__gt=0)
+        .annotate(count=Cast(F('own_goals_count'), FloatField()) / F('matches_count'))
+        .order_by('-count')
+    )
 
 
 def _get_top_yellow_cards(league: League, tour_range: tuple = None):
@@ -1099,8 +1133,8 @@ def player_seasons(player):
         .values('c')
     )
     ogs_subquery = (
-        OtherEvents.objects.ogs()
-        .filter(author=player, match=OuterRef('id'))
+        Goal.objects.own_goals()
+        .filter(own_goal_author=player, match=OuterRef('id'))
         .order_by()
         .values('match')
         .annotate(c=Count('*'))

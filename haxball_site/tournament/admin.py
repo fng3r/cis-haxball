@@ -693,7 +693,9 @@ class GoalInline(UnfoldStackedInline):
     show_count = True
 
     fields = (
+        ('kind',),
         ('team', 'author', 'assistent'),
+        ('own_goal_team', 'own_goal_author'),
         ('time_min', 'time_sec'),
     )
 
@@ -702,7 +704,7 @@ class GoalInline(UnfoldStackedInline):
         match = None
         if 'object_id' in resolved.kwargs:
             match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
-        if db_field.name == 'team' and match is not None:
+        if db_field.name in ('team', 'own_goal_team') and match is not None:
             kwargs['queryset'] = Team.objects.filter(id__in=[match.team_home.id, match.team_guest.id])
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -778,6 +780,11 @@ class EventInline(UnfoldStackedInline):
         if db_field.name == 'team' and not not_found:
             kwargs['queryset'] = Team.objects.filter(leagues__championship__is_active=True).distinct().order_by('title')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == 'event':
+            kwargs['choices'] = [choice for choice in db_field.choices if choice[0] != OtherEvents.OWN_GOAL]
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
 
 
 class MatchResultInline(UnfoldTabularInline):
@@ -1082,18 +1089,41 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
 
 @admin.register(Goal)
 class GoalAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'author', 'assistent')
+    list_display = ('match', 'kind', 'team', 'author', 'assistent', 'own_goal_team', 'own_goal_author')
     ordering = ('-id',)
     raw_id_fields = ('match',)
-    list_filter = (('author', RelatedDropdownFilter), ('assistent', RelatedDropdownFilter))
+    list_filter = (
+        ('kind', MultipleChoicesDropdownFilter),
+        ('team', RelatedDropdownFilter),
+        ('author', RelatedDropdownFilter),
+        ('assistent', RelatedDropdownFilter),
+        ('own_goal_team', RelatedDropdownFilter),
+        ('own_goal_author', RelatedDropdownFilter),
+    )
     list_filter_submit = True
     list_filter_sheet = False
+    conditional_fields = {
+        'team': "kind == 'REG'",
+        'author': "kind == 'REG'",
+        'assistent': "kind == 'REG'",
+        'own_goal_team': "kind == 'OG'",
+        'own_goal_author': "kind == 'OG'",
+    }
 
     def get_queryset(self, request):
         return (
             super()
             .get_queryset(request)
-            .select_related('author', 'assistent', 'match__team_home', 'match__team_guest', 'match__numb_tour')
+            .select_related(
+                'team',
+                'author',
+                'assistent',
+                'own_goal_team',
+                'own_goal_author',
+                'match__team_home',
+                'match__team_guest',
+                'match__numb_tour',
+            )
         )
 
 
@@ -1140,6 +1170,11 @@ class OtherEventsAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     list_filter_sheet = False
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == 'event':
+            kwargs['choices'] = [choice for choice in db_field.choices if choice[0] != OtherEvents.OWN_GOAL]
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         return (

@@ -4,7 +4,8 @@ from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
@@ -758,6 +759,15 @@ class Match(models.Model):
 
         raise TeamIsNotMatchParticipantError(team, self)
 
+    def opponent_of(self, team):
+        team_id = getattr(team, 'pk', team)
+        if team_id == self.team_home_id:
+            return self.team_guest
+        if team_id == self.team_guest_id:
+            return self.team_home
+
+        raise TeamIsNotMatchParticipantError(team, self)
+
     def get_absolute_url(self):
         return reverse('tournament:match_detail', args=[self.id])
 
@@ -1099,10 +1109,36 @@ class MatchReplayStatsPlayer(models.Model):
         return f'{self.nick}: {self.replay_stats}'
 
 
+class GoalQuerySet(models.QuerySet):
+    def regular(self):
+        return self.filter(kind=Goal.Kind.REGULAR)
+
+    def own_goals(self):
+        return self.filter(kind=Goal.Kind.OWN_GOAL)
+
+    def scored_by(self, player):
+        return self.regular().filter(author=player)
+
+    def committed_by(self, player):
+        return self.own_goals().filter(own_goal_author=player)
+
+    def credited_to(self, team):
+        return self.filter(team=team)
+
+    def committed_for(self, team):
+        return self.own_goals().filter(own_goal_team=team)
+
+
 class Goal(models.Model):
+    class Kind(models.TextChoices):
+        REGULAR = 'REG', 'Гол'
+        OWN_GOAL = 'OG', 'Автогол'
+
     match = models.ForeignKey(
         Match, verbose_name='Матч', related_name='match_goal', null=True, blank=True, on_delete=models.CASCADE
     )
+
+    kind = models.CharField('Тип гола', max_length=3, choices=Kind.choices, default=Kind.REGULAR, db_index=True)
 
     team = models.ForeignKey(
         Team, verbose_name='Команда забила', related_name='goals', null=True, on_delete=models.SET_NULL
@@ -1114,6 +1150,7 @@ class Goal(models.Model):
         chained_model_field='team',
         verbose_name='Автор гола',
         related_name='goals',
+        blank=True,
         null=True,
         on_delete=models.CASCADE,
     )
@@ -1130,26 +1167,155 @@ class Goal(models.Model):
     time_min = models.SmallIntegerField('Минута')
     time_sec = models.SmallIntegerField('Секунда')
 
+    own_goal_team = models.ForeignKey(
+        Team,
+        verbose_name='Команда автора автогола',
+        related_name='own_goals',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+    own_goal_author = ChainedForeignKey(
+        Player,
+        chained_field='own_goal_team',
+        chained_model_field='team',
+        verbose_name='Автор автогола',
+        related_name='own_goals',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    legacy_event = models.OneToOneField(
+        'OtherEvents',
+        verbose_name='Исходное событие автогола',
+        related_name='migrated_goal',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    objects = GoalQuerySet.as_manager()
+
+    @classmethod
+    def create_regular(cls, *, match, team, author, time_min, time_sec, assistent=None):
+        goal = cls(
+            match=match,
+            kind=cls.Kind.REGULAR,
+            team=team,
+            author=author,
+            assistent=assistent,
+            time_min=time_min,
+            time_sec=time_sec,
+        )
+        goal.save()
+        return goal
+
+    @classmethod
+    def create_own_goal(cls, *, match, offending_team, author, time_min, time_sec):
+        goal = cls(
+            match=match,
+            kind=cls.Kind.OWN_GOAL,
+            own_goal_team=offending_team,
+            own_goal_author=author,
+            time_min=time_min,
+            time_sec=time_sec,
+        )
+        goal.save()
+        return goal
+
+    def clean(self):
+        super().clean()
+        if self.kind == self.Kind.OWN_GOAL and self.match_id and self.own_goal_team_id:
+            self.team = self.match.opponent_of(self.own_goal_team_id)
+
+        errors = {}
+        if self.match_id and self.team_id not in (self.match.team_home_id, self.match.team_guest_id):
+            errors['team'] = 'Команда, которой засчитан гол, не участвует в матче'
+
+        if self.kind == self.Kind.REGULAR:
+            participants = (('author', self.author_id), ('assistent', self.assistent_id))
+            participant_team_id = self.team_id
+        else:
+            participants = (('own_goal_author', self.own_goal_author_id),)
+            participant_team_id = self.own_goal_team_id
+
+        for field, player_id in participants:
+            if not self.match_id or not participant_team_id or not player_id:
+                continue
+            has_match_team = PlayerMatchStatistics.objects.filter(
+                match_id=self.match_id,
+                player_id=player_id,
+                team_id=participant_team_id,
+            ).exists()
+            has_any_match_team = PlayerMatchStatistics.objects.filter(
+                match_id=self.match_id,
+                player_id=player_id,
+            ).exists()
+            has_current_team = Player.objects.filter(pk=player_id, team_id=participant_team_id).exists()
+            if not has_match_team and (has_any_match_team or not has_current_team):
+                errors[field] = 'Игрок не относится к выбранной команде в этом матче'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def _normalize(self):
+        if self.kind == self.Kind.OWN_GOAL:
+            if not self.match_id or not self.own_goal_team_id:
+                raise ValueError('An own goal requires match and own_goal_team')
+            self.team = self.match.opponent_of(self.own_goal_team_id)
+            self.author = None
+            self.assistent = None
+        else:
+            self.own_goal_team = None
+            self.own_goal_author = None
+
+    @staticmethod
+    def _apply_score_delta(match_id, team_id, delta):
+        match = Match.objects.only('team_home_id', 'team_guest_id').get(pk=match_id)
+        if team_id == match.team_home_id:
+            Match.objects.filter(pk=match_id).update(score_home=models.F('score_home') + delta)
+        elif team_id == match.team_guest_id:
+            Match.objects.filter(pk=match_id).update(score_guest=models.F('score_guest') + delta)
+        else:
+            raise TeamIsNotMatchParticipantError(team_id, match)
+
     def save(self, *args, **kwargs):
-        if self.pk is None:  # update score only when goal is created
-            if self.team == self.match.team_home:
-                self.match.score_home += 1
-                self.match.save(update_fields=['score_home'])
-            elif self.team == self.match.team_guest:
-                self.match.score_guest += 1
-                self.match.save(update_fields=['score_guest'])
-        super(Goal, self).save(*args, **kwargs)
+        with transaction.atomic():
+            previous = None
+            if self.pk:
+                previous = Goal.objects.filter(pk=self.pk).values('match_id', 'team_id').first()
+
+            self._normalize()
+            self.full_clean()
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {
+                    'team',
+                    'author',
+                    'assistent',
+                    'own_goal_team',
+                    'own_goal_author',
+                }
+            super().save(*args, **kwargs)
+
+            current = {'match_id': self.match_id, 'team_id': self.team_id}
+            if previous != current:
+                if previous and previous['match_id'] and previous['team_id']:
+                    self._apply_score_delta(previous['match_id'], previous['team_id'], -1)
+                if current['match_id'] and current['team_id']:
+                    self._apply_score_delta(current['match_id'], current['team_id'], 1)
 
     def delete(self, *args, **kwargs):
-        if self.team == self.match.team_home:
-            self.match.score_home -= 1
-            self.match.save(update_fields=['score_home'])
-        elif self.team == self.match.team_guest:
-            self.match.score_guest -= 1
-            self.match.save(update_fields=['score_guest'])
-        super(Goal, self).delete(*args, **kwargs)
+        with transaction.atomic():
+            match_id = self.match_id
+            team_id = self.team_id
+            result = super().delete(*args, **kwargs)
+            if match_id and team_id:
+                self._apply_score_delta(match_id, team_id, -1)
+            return result
 
     def __str__(self):
+        if self.kind == self.Kind.OWN_GOAL:
+            return f'🔴 {self.time_min:02d}:{self.time_sec:02d} {self.team} - {self.own_goal_author} (АГ)'
         assistant = f' ({self.assistent})' if self.assistent else ''
         return f'⚽ {self.time_min:02d}:{self.time_sec:02d} {self.team} - {self.author}{assistant}'
 
@@ -1160,6 +1326,26 @@ class Goal(models.Model):
         indexes = [
             models.Index(fields=['author', 'match']),
             models.Index(fields=['assistent', 'match']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        kind='REG',
+                        author__isnull=False,
+                        own_goal_team__isnull=True,
+                        own_goal_author__isnull=True,
+                    )
+                    | models.Q(
+                        kind='OG',
+                        author__isnull=True,
+                        assistent__isnull=True,
+                        own_goal_team__isnull=False,
+                        own_goal_author__isnull=False,
+                    )
+                ),
+                name='goal_fields_match_kind',
+            ),
         ]
 
 

@@ -71,12 +71,11 @@ class HallOfFameService:
         )
 
         top_ogs = (
-            Team.objects.filter(team_events__event=OtherEvents.OWN_GOAL)
-            .annotate(
+            Team.objects.annotate(
                 count=Count(
-                    'team_events__match__league',
-                    filter=Q(team_events__match__league__in=tournaments)
-                    & Q(team_events__match__league__championship__in=seasons),
+                    'own_goals__match__league',
+                    filter=Q(own_goals__match__league__in=tournaments)
+                    & Q(own_goals__match__league__championship__in=seasons),
                 )
             )
             .filter(count__gt=0)
@@ -288,11 +287,11 @@ class HallOfFameService:
 
     def _get_top_own_goals(self, players, seasons, tournaments):
         return (
-            players.filter(event__event=OtherEvents.OWN_GOAL)
-            .annotate(
+            players.annotate(
                 count=Count(
-                    'event__match__league',
-                    filter=Q(event__match__league__in=tournaments) & Q(event__match__league__championship__in=seasons),
+                    'own_goals__match__league',
+                    filter=Q(own_goals__match__league__in=tournaments)
+                    & Q(own_goals__match__league__championship__in=seasons),
                 ),
                 rank=Window(
                     expression=RowNumber(),
