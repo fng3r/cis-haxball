@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.db import models, transaction
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
@@ -1158,8 +1159,11 @@ class Goal(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    time_min = models.SmallIntegerField('Минута')
-    time_sec = models.SmallIntegerField('Секунда')
+    time_min = models.PositiveSmallIntegerField('Минута')
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        validators=[MaxValueValidator(59, message='Значение должно быть от 0 до 59')],
+    )
 
     own_goal_team = models.ForeignKey(
         Team,
@@ -1370,8 +1374,11 @@ class Substitution(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    time_min = models.SmallIntegerField('Минута')
-    time_sec = models.SmallIntegerField('Секунда')
+    time_min = models.PositiveSmallIntegerField('Минута')
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        validators=[MaxValueValidator(59, message='Значение должно быть от 0 до 59')],
+    )
 
     def __str__(self):
         return f'🔁 {self.time_min:02d}:{self.time_sec:02d} {self.team} ({self.player_out} -> {self.player_in})'
@@ -1478,40 +1485,6 @@ class Disqualification(models.Model):
         return f'{self.player.nickname} ({self.match.team_home.short_title} - {self.match.team_guest.short_title})'
 
 
-class MatchParticipantValidationMixin(models.Model):
-    """Shared validation for events attributed to a player and their historical team."""
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
-    def clean(self):
-        super().clean()
-        errors = {}
-        if self.match_id and self.team_id not in (self.match.team_home_id, self.match.team_guest_id):
-            errors['team'] = 'Команда не участвует в матче'
-
-        if self.match_id and self.team_id and self.author_id:
-            has_match_team = PlayerMatchStatistics.objects.filter(
-                match_id=self.match_id,
-                player_id=self.author_id,
-                team_id=self.team_id,
-            ).exists()
-            has_any_match_team = PlayerMatchStatistics.objects.filter(
-                match_id=self.match_id,
-                player_id=self.author_id,
-            ).exists()
-            has_current_team = Player.objects.filter(pk=self.author_id, team_id=self.team_id).exists()
-            if not has_match_team and (has_any_match_team or not has_current_team):
-                errors['author'] = 'Игрок не относится к выбранной команде в этом матче'
-
-        if errors:
-            raise ValidationError(errors)
-
-
 class CardQuerySet(models.QuerySet):
     def yellow(self):
         return self.filter(kind=Card.Kind.YELLOW)
@@ -1520,7 +1493,7 @@ class CardQuerySet(models.QuerySet):
         return self.filter(kind=Card.Kind.RED)
 
 
-class Card(MatchParticipantValidationMixin):
+class Card(models.Model):
     class Kind(models.TextChoices):
         YELLOW = 'YEL', 'Жёлтая'
         RED = 'RED', 'Красная'
@@ -1537,7 +1510,12 @@ class Card(MatchParticipantValidationMixin):
     )
     kind = models.CharField('Тип карточки', max_length=3, choices=Kind.choices, db_index=True)
     time_min = models.PositiveSmallIntegerField('Минута')
-    time_sec = models.PositiveSmallIntegerField('Секунда')
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        validators=[
+            MaxValueValidator(59, message='Значение должно быть от 0 до 59'),
+        ],
+    )
     reason = models.CharField(
         'Причина',
         max_length=300,
@@ -1573,7 +1551,7 @@ class Card(MatchParticipantValidationMixin):
         ]
 
 
-class CleanSheet(MatchParticipantValidationMixin):
+class CleanSheet(models.Model):
     class Period(models.TextChoices):
         FIRST_HALF = 'H1', 'Первый тайм'
         SECOND_HALF = 'H2', 'Второй тайм'
@@ -1612,11 +1590,6 @@ class CleanSheet(MatchParticipantValidationMixin):
         if self.period != self.Period.EXTRA_TIME:
             return 0
         return int(self.match.duration.total_seconds()) % 60
-
-    def clean(self):
-        super().clean()
-        if self.period == self.Period.EXTRA_TIME and self.match_id and self.match.duration <= timedelta(minutes=16):
-            raise ValidationError({'period': 'Дополнительное время требует длительности матча больше 16 минут'})
 
     def __str__(self):
         return f'🧤 {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
@@ -1667,8 +1640,11 @@ class OtherEvents(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    time_min = models.SmallIntegerField('Минута')
-    time_sec = models.SmallIntegerField('Секунда')
+    time_min = models.PositiveSmallIntegerField('Минута')
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        validators=[MaxValueValidator(59, message='Значение должно быть от 0 до 59')],
+    )
 
     YELLOW_CARD = 'YEL'
     RED_CARD = 'RED'

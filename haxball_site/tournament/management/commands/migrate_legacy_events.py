@@ -100,7 +100,6 @@ class Command(BaseCommand):
             card.legacy_event_id: card
             for card in Card.objects.filter(legacy_event_id__in=[event.pk for event in source_events])
         }
-        participant_pairs = self._participant_pairs(source_events)
         errors = []
         warnings = []
         objects_to_create = []
@@ -108,7 +107,6 @@ class Command(BaseCommand):
         for event in source_events:
             if not self._has_required_fields(event, errors):
                 continue
-            self._append_event_warnings(event, participant_pairs, warnings)
             values = {
                 'match_id': event.match_id,
                 'team_id': event.team_id,
