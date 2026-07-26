@@ -841,12 +841,17 @@ class MatchResult(models.Model):
     @staticmethod
     @receiver(post_save, sender=Match)
     def create_or_update_result(sender, instance, created, **kwargs):
-        if not instance.is_played:
+        MatchResult.create_or_update_for_match(instance)
+
+    @classmethod
+    def create_or_update_for_match(cls, match):
+        if not match.is_played:
             return
 
-        result = MatchResult.objects.filter(match=instance).first()
+        result = MatchResult.objects.filter(match=match).first()
         if not result:
-            result = MatchResult(match=instance)
+            result = MatchResult(match=match)
+        result.match = match
         result.save()
 
     def get_result_from_scores(self):
@@ -1296,6 +1301,9 @@ class Goal(models.Model):
             Match.objects.filter(pk=match_id).update(score_guest=models.F('score_guest') + delta)
         else:
             raise TeamIsNotMatchParticipantError(team_id, match)
+
+        match.refresh_from_db(fields=('score_home', 'score_guest', 'is_played'))
+        MatchResult.create_or_update_for_match(match)
 
     def save(self, *args, **kwargs):
         with transaction.atomic():
