@@ -887,7 +887,6 @@ class MatchAdmin(UnfoldModelAdmin):
         'inspector',
         'id',
     )
-    list_editable = ('bracket_slot', 'is_played')
 
     @display(description='Этап', ordering='stage__order')
     def display_stage(self, model):
@@ -1136,6 +1135,12 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
         return super().get_queryset(request).select_related('replay_stats__match', 'player', 'team')
 
 
+class MatchIdFilter(SingleNumericFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = 'ID матча'
+
+
 @admin.register(Goal)
 class GoalAdmin(UnfoldModelAdmin):
     list_display = (
@@ -1159,7 +1164,7 @@ class GoalAdmin(UnfoldModelAdmin):
         ('assistent', RelatedDropdownFilter),
         ('own_goal_team', RelatedDropdownFilter),
         ('own_goal_author', RelatedDropdownFilter),
-        ('match__id', SingleNumericFilter),
+        ('match__id', MatchIdFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
@@ -1200,6 +1205,7 @@ class CardAdmin(UnfoldModelAdmin):
         ('author', RelatedDropdownFilter),
         ('match__league__championship', RelatedDropdownFilter),
         ('match__league', RelatedDropdownFilter),
+        ('match__id', MatchIdFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
@@ -1224,6 +1230,7 @@ class CleanSheetAdmin(UnfoldModelAdmin):
         ('author', RelatedDropdownFilter),
         ('match__league__championship', RelatedDropdownFilter),
         ('match__league', RelatedDropdownFilter),
+        ('match__id', MatchIdFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
@@ -1245,6 +1252,7 @@ class SubstitutionAdmin(UnfoldModelAdmin):
         ('team', RelatedDropdownFilter),
         ('player_out', RelatedDropdownFilter),
         ('player_in', RelatedDropdownFilter),
+        ('match__id', MatchIdFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
@@ -1276,6 +1284,7 @@ class OtherEventsAdmin(UnfoldModelAdmin):
         ('author', RelatedDropdownFilter),
         ('match__league__championship', RelatedDropdownFilter),
         ('match__league', RelatedDropdownFilter),
+        ('match__id', MatchIdFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
