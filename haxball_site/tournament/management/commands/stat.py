@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 
@@ -20,7 +22,7 @@ class Command(BaseCommand):
         for m in matches:
             all_goals = m.score_home + m.score_guest
 
-            goals_scored = m.match_goal.count() + m.match_event.filter(event='OG').count()
+            goals_scored = m.match_goal.count()
 
             if goals_scored == all_goals:
                 norm_matches.append(m)
@@ -34,17 +36,17 @@ class Command(BaseCommand):
         win_red = 0
         win_blue = 0
         draws = 0
-        goals = [0 for _ in range(16)]
+        goals = defaultdict[int, int](int)
         # goals - og count
         goals_not_og = 0
         goals_with_assist = 0
         og = 0
         for m in norm_matches:
-            goals_not_og += m.match_goal.count()
+            goals_not_og += m.match_goal.regular().count()
             for g in m.match_goal.all():
                 if g.assistent:
                     goals_with_assist += 1
-            og += m.match_event.filter(event='OG').count()
+            og += m.match_goal.own_goals().count()
 
             score_red += m.score_home
             score_blue += m.score_guest
@@ -76,7 +78,7 @@ class Command(BaseCommand):
             win_red = 0
             win_blue = 0
             draws = 0
-            goals = [0 for _ in range(16)]
+            goals = defaultdict[int, int](int)
             # goals - og count
             goals_not_og = 0
             goals_with_assist = 0
@@ -86,14 +88,12 @@ class Command(BaseCommand):
             for m in norm_matches:
                 if m.team_home == t or m.team_guest == t:
                     matches_played += 1
-                    goals_not_og += m.match_goal.filter(team=t).count()
+                    goals_not_og += m.match_goal.regular().filter(team=t).count()
                     for g in m.match_goal.all():
                         if g.assistent and g.team == t:
                             goals_with_assist += 1
-                    og += m.match_event.filter(event='OG', team=t).count()
-                    og_opp = og_opp + (
-                        m.match_event.filter(event='OG').count() - m.match_event.filter(event='OG', team=t).count()
-                    )
+                    og += m.match_goal.own_goals().filter(own_goal_team=t).count()
+                    og_opp += m.match_goal.own_goals().filter(team=t).count()
 
                     if t == m.team_home:
                         score_red += m.score_home
@@ -108,9 +108,6 @@ class Command(BaseCommand):
 
                     for goal in m.match_goal.all():
                         if goal.team == t:
-                            goals[goal.time_min] += 1
-                    for own_goal in m.match_event.filter(event='OG').all():
-                        if own_goal.team != t:
                             goals[goal.time_min] += 1
 
             if score_blue + score_red != 0:
@@ -176,12 +173,8 @@ class Command(BaseCommand):
                         t_sop = m.team_home
 
                     if vishel == 0 and ushel == 0:
-                        t_score += (
-                            m.match_goal.filter(team=t).count() + m.match_event.filter(team=t_sop, event='OG').count()
-                        )
-                        t_consid += (
-                            m.match_goal.filter(team=t_sop).count() + m.match_event.filter(team=t, event='OG').count()
-                        )
+                        t_score += m.match_goal.filter(team=t).count()
+                        t_consid += m.match_goal.filter(team=t_sop).count()
                         secs_in_match += 960
                     elif vishel == 0 and ushel == 1:
                         sub_out = m.match_substitutions.get(player_out=p)
@@ -191,13 +184,6 @@ class Command(BaseCommand):
                                 t_score += 1
                             elif ii.team == t_sop:
                                 t_consid += 1
-                        for ii in m.match_event.filter(
-                            time_min__lte=sub_out.time_min, time_sec__lte=sub_out.time_sec, event='OG'
-                        ):
-                            if ii.team == t:
-                                t_consid += 1
-                            elif ii.team == t_sop:
-                                t_score += 1
 
                     elif vishel == 1 and ushel == 1:
                         sub_out = m.match_substitutions.get(player_out=p)
@@ -213,13 +199,6 @@ class Command(BaseCommand):
                                 t_score += 1
                             elif ii.team == t_sop:
                                 t_consid += 1
-                        for ii in m.match_event.filter(
-                            time_min__lte=sub_out.time_min, time_sec__lte=sub_out.time_sec, event='OG'
-                        ):
-                            if ii.team == t:
-                                t_consid += 1
-                            elif ii.team == t_sop:
-                                t_score += 1
 
                     elif vishel == 1 and ushel == 2:
                         sub_in = m.match_substitutions.get(player_in=p)

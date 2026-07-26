@@ -4,8 +4,9 @@ from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
-from django.db.models import Q
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.core.validators import MaxValueValidator
+from django.db import models, transaction
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -23,6 +24,22 @@ class TeamIsNotMatchParticipantError(Exception):
     def __init__(self, team, match):
         message = f'Team {team} is not a participant of the match {match}'
         super().__init__(message)
+
+
+def event_time_exceeds_match_duration(event):
+    if not event.match_id or event.time_min is None or event.time_sec is None or event.match.duration is None:
+        return None
+
+    event_seconds = event.time_min * 60 + event.time_sec
+    match_seconds = int(event.match.duration.total_seconds())
+    if event_seconds <= match_seconds:
+        return None
+
+    return (
+        f'Время события ({event.time_min:02d}:{event.time_sec:02d}) '
+        f'превышает длительность матча ({match_seconds // 60:02d}:{match_seconds % 60:02d}). '
+        f'Убедитесь, что длительность матча указана верно или исправьте время события'
+    )
 
 
 class FreeAgent(models.Model):
@@ -687,11 +704,6 @@ class Match(models.Model):
 
     tracker = FieldTracker()
 
-    def cards(self):
-        return self.match_event.filter(Q(event=OtherEvents.YELLOW_CARD) | Q(event=OtherEvents.RED_CARD)).order_by(
-            'team'
-        )
-
     @property
     def can_be_postponed(self):
         if self.is_played:
@@ -758,6 +770,15 @@ class Match(models.Model):
 
         raise TeamIsNotMatchParticipantError(team, self)
 
+    def opponent_of(self, team):
+        team_id = getattr(team, 'pk', team)
+        if team_id == self.team_home_id:
+            return self.team_guest
+        if team_id == self.team_guest_id:
+            return self.team_home
+
+        raise TeamIsNotMatchParticipantError(team, self)
+
     def get_absolute_url(self):
         return reverse('tournament:match_detail', args=[self.id])
 
@@ -820,12 +841,17 @@ class MatchResult(models.Model):
     @staticmethod
     @receiver(post_save, sender=Match)
     def create_or_update_result(sender, instance, created, **kwargs):
-        if not instance.is_played:
+        MatchResult.create_or_update_for_match(instance)
+
+    @classmethod
+    def create_or_update_for_match(cls, match):
+        if not match.is_played:
             return
 
-        result = MatchResult.objects.filter(match=instance).first()
+        result = MatchResult.objects.filter(match=match).first()
         if not result:
-            result = MatchResult(match=instance)
+            result = MatchResult(match=match)
+        result.match = match
         result.save()
 
     def get_result_from_scores(self):
@@ -1099,10 +1125,36 @@ class MatchReplayStatsPlayer(models.Model):
         return f'{self.nick}: {self.replay_stats}'
 
 
+class GoalQuerySet(models.QuerySet):
+    def regular(self):
+        return self.filter(kind=Goal.Kind.REGULAR)
+
+    def own_goals(self):
+        return self.filter(kind=Goal.Kind.OWN_GOAL)
+
+    def scored_by(self, player):
+        return self.regular().filter(author=player)
+
+    def committed_by(self, player):
+        return self.own_goals().filter(own_goal_author=player)
+
+    def credited_to(self, team):
+        return self.filter(team=team)
+
+    def committed_for(self, team):
+        return self.own_goals().filter(own_goal_team=team)
+
+
 class Goal(models.Model):
+    class Kind(models.TextChoices):
+        REGULAR = 'REG', 'Гол'
+        OWN_GOAL = 'OG', 'Автогол'
+
     match = models.ForeignKey(
         Match, verbose_name='Матч', related_name='match_goal', null=True, blank=True, on_delete=models.CASCADE
     )
+
+    kind = models.CharField('Тип гола', max_length=3, choices=Kind.choices, default=Kind.REGULAR, db_index=True)
 
     team = models.ForeignKey(
         Team, verbose_name='Команда забила', related_name='goals', null=True, on_delete=models.SET_NULL
@@ -1114,6 +1166,7 @@ class Goal(models.Model):
         chained_model_field='team',
         verbose_name='Автор гола',
         related_name='goals',
+        blank=True,
         null=True,
         on_delete=models.CASCADE,
     )
@@ -1127,29 +1180,168 @@ class Goal(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    time_min = models.SmallIntegerField('Минута')
-    time_sec = models.SmallIntegerField('Секунда')
+    time_min = models.PositiveSmallIntegerField('Минута')
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        validators=[MaxValueValidator(59, message='Значение должно быть от 0 до 59')],
+    )
+
+    own_goal_team = models.ForeignKey(
+        Team,
+        verbose_name='Команда автора автогола',
+        related_name='own_goals',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+    own_goal_author = ChainedForeignKey(
+        Player,
+        chained_field='own_goal_team',
+        chained_model_field='team',
+        verbose_name='Автор автогола',
+        related_name='own_goals',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    legacy_event = models.OneToOneField(
+        'OtherEvents',
+        verbose_name='Исходное событие автогола',
+        related_name='migrated_goal',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    objects = GoalQuerySet.as_manager()
+
+    @classmethod
+    def create_regular(cls, *, match, team, author, time_min, time_sec, assistent=None):
+        goal = cls(
+            match=match,
+            kind=cls.Kind.REGULAR,
+            team=team,
+            author=author,
+            assistent=assistent,
+            time_min=time_min,
+            time_sec=time_sec,
+        )
+        goal.save()
+        return goal
+
+    @classmethod
+    def create_own_goal(cls, *, match, offending_team, author, time_min, time_sec):
+        goal = cls(
+            match=match,
+            kind=cls.Kind.OWN_GOAL,
+            own_goal_team=offending_team,
+            own_goal_author=author,
+            time_min=time_min,
+            time_sec=time_sec,
+        )
+        goal.save()
+        return goal
+
+    def clean(self):
+        super().clean()
+        if self.kind == self.Kind.OWN_GOAL and self.match_id and self.own_goal_team_id:
+            self.team = self.match.opponent_of(self.own_goal_team_id)
+
+        errors = {}
+        time_error = event_time_exceeds_match_duration(self)
+        if time_error:
+            errors.setdefault(NON_FIELD_ERRORS, []).append(time_error)
+
+        if self.match_id and self.team_id not in (self.match.team_home_id, self.match.team_guest_id):
+            errors['team'] = 'Команда, которой засчитан гол, не участвует в матче'
+
+        if self.kind == self.Kind.REGULAR:
+            participants = (('author', self.author_id), ('assistent', self.assistent_id))
+            participant_team_id = self.team_id
+        else:
+            participants = (('own_goal_author', self.own_goal_author_id),)
+            participant_team_id = self.own_goal_team_id
+
+        for field, player_id in participants:
+            if not self.match_id or not participant_team_id or not player_id:
+                continue
+            has_match_team = PlayerMatchStatistics.objects.filter(
+                match_id=self.match_id,
+                player_id=player_id,
+                team_id=participant_team_id,
+            ).exists()
+            has_any_match_team = PlayerMatchStatistics.objects.filter(
+                match_id=self.match_id,
+                player_id=player_id,
+            ).exists()
+            has_current_team = Player.objects.filter(pk=player_id, team_id=participant_team_id).exists()
+            if not has_match_team and (has_any_match_team or not has_current_team):
+                errors[field] = 'Игрок не относится к выбранной команде в этом матче'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def _normalize(self):
+        if self.kind == self.Kind.OWN_GOAL:
+            if not self.match_id or not self.own_goal_team_id:
+                raise ValueError('An own goal requires match and own_goal_team')
+            self.team = self.match.opponent_of(self.own_goal_team_id)
+            self.author = None
+            self.assistent = None
+        else:
+            self.own_goal_team = None
+            self.own_goal_author = None
+
+    @staticmethod
+    def _apply_score_delta(match_id, team_id, delta):
+        match = Match.objects.only('team_home_id', 'team_guest_id').get(pk=match_id)
+        if team_id == match.team_home_id:
+            Match.objects.filter(pk=match_id).update(score_home=models.F('score_home') + delta)
+        elif team_id == match.team_guest_id:
+            Match.objects.filter(pk=match_id).update(score_guest=models.F('score_guest') + delta)
+        else:
+            raise TeamIsNotMatchParticipantError(team_id, match)
+
+        match.refresh_from_db(fields=('score_home', 'score_guest', 'is_played'))
+        MatchResult.create_or_update_for_match(match)
 
     def save(self, *args, **kwargs):
-        if self.pk is None:  # update score only when goal is created
-            if self.team == self.match.team_home:
-                self.match.score_home += 1
-                self.match.save(update_fields=['score_home'])
-            elif self.team == self.match.team_guest:
-                self.match.score_guest += 1
-                self.match.save(update_fields=['score_guest'])
-        super(Goal, self).save(*args, **kwargs)
+        with transaction.atomic():
+            previous = None
+            if self.pk:
+                previous = Goal.objects.filter(pk=self.pk).values('match_id', 'team_id').first()
+
+            self._normalize()
+            self.full_clean()
+            if kwargs.get('update_fields') is not None:
+                kwargs['update_fields'] = set(kwargs['update_fields']) | {
+                    'team',
+                    'author',
+                    'assistent',
+                    'own_goal_team',
+                    'own_goal_author',
+                }
+            super().save(*args, **kwargs)
+
+            current = {'match_id': self.match_id, 'team_id': self.team_id}
+            if previous != current:
+                if previous and previous['match_id'] and previous['team_id']:
+                    self._apply_score_delta(previous['match_id'], previous['team_id'], -1)
+                if current['match_id'] and current['team_id']:
+                    self._apply_score_delta(current['match_id'], current['team_id'], 1)
 
     def delete(self, *args, **kwargs):
-        if self.team == self.match.team_home:
-            self.match.score_home -= 1
-            self.match.save(update_fields=['score_home'])
-        elif self.team == self.match.team_guest:
-            self.match.score_guest -= 1
-            self.match.save(update_fields=['score_guest'])
-        super(Goal, self).delete(*args, **kwargs)
+        with transaction.atomic():
+            match_id = self.match_id
+            team_id = self.team_id
+            result = super().delete(*args, **kwargs)
+            if match_id and team_id:
+                self._apply_score_delta(match_id, team_id, -1)
+            return result
 
     def __str__(self):
+        if self.kind == self.Kind.OWN_GOAL:
+            return f'🔴 {self.time_min:02d}:{self.time_sec:02d} {self.team} - {self.own_goal_author} (АГ)'
         assistant = f' ({self.assistent})' if self.assistent else ''
         return f'⚽ {self.time_min:02d}:{self.time_sec:02d} {self.team} - {self.author}{assistant}'
 
@@ -1160,6 +1352,26 @@ class Goal(models.Model):
         indexes = [
             models.Index(fields=['author', 'match']),
             models.Index(fields=['assistent', 'match']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        kind='REG',
+                        author__isnull=False,
+                        own_goal_team__isnull=True,
+                        own_goal_author__isnull=True,
+                    )
+                    | models.Q(
+                        kind='OG',
+                        author__isnull=True,
+                        assistent__isnull=True,
+                        own_goal_team__isnull=False,
+                        own_goal_author__isnull=False,
+                    )
+                ),
+                name='goal_fields_match_kind',
+            ),
         ]
 
 
@@ -1190,8 +1402,17 @@ class Substitution(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    time_min = models.SmallIntegerField('Минута')
-    time_sec = models.SmallIntegerField('Секунда')
+    time_min = models.PositiveSmallIntegerField('Минута')
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        validators=[MaxValueValidator(59, message='Значение должно быть от 0 до 59')],
+    )
+
+    def clean(self):
+        super().clean()
+        time_error = event_time_exceeds_match_duration(self)
+        if time_error:
+            raise ValidationError({NON_FIELD_ERRORS: [time_error]})
 
     def __str__(self):
         return f'🔁 {self.time_min:02d}:{self.time_sec:02d} {self.team} ({self.player_out} -> {self.player_in})'
@@ -1298,6 +1519,127 @@ class Disqualification(models.Model):
         return f'{self.player.nickname} ({self.match.team_home.short_title} - {self.match.team_guest.short_title})'
 
 
+class CardQuerySet(models.QuerySet):
+    def yellow(self):
+        return self.filter(kind=Card.Kind.YELLOW)
+
+    def red(self):
+        return self.filter(kind=Card.Kind.RED)
+
+
+class Card(models.Model):
+    class Kind(models.TextChoices):
+        YELLOW = 'YEL', 'Жёлтая'
+        RED = 'RED', 'Красная'
+
+    match = models.ForeignKey(Match, verbose_name='Матч', related_name='cards', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', related_name='cards', on_delete=models.PROTECT)
+    author = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Автор',
+        related_name='cards',
+        on_delete=models.PROTECT,
+    )
+    kind = models.CharField('Тип карточки', max_length=3, choices=Kind.choices, db_index=True)
+    time_min = models.PositiveSmallIntegerField('Минута', default=16)
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        default=1,
+        validators=[
+            MaxValueValidator(59, message='Значение должно быть от 0 до 59'),
+        ],
+    )
+    reason = models.CharField(
+        'Причина',
+        max_length=300,
+        blank=True,
+        help_text='Указывать в формате "за нарушение гл. 1 ст. 2 ч. 3 Регламента..." для отображения на странице матча',
+    )
+    legacy_event = models.OneToOneField(
+        'OtherEvents',
+        verbose_name='Исходное событие',
+        related_name='migrated_card',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    objects = CardQuerySet.as_manager()
+
+    def __str__(self):
+        icon = '🟨' if self.kind == self.Kind.YELLOW else '🟥'
+        return f'{icon} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
+
+    class Meta:
+        verbose_name = 'Карточка'
+        verbose_name_plural = 'Карточки'
+        ordering = ('time_min', 'time_sec', 'pk')
+        indexes = [
+            models.Index(fields=('kind', 'match')),
+            models.Index(fields=('author', 'match')),
+            models.Index(fields=('team', 'match')),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(time_sec__lt=60), name='card_time_sec_lt_60'),
+        ]
+
+
+class CleanSheet(models.Model):
+    class Period(models.TextChoices):
+        FIRST_HALF = 'H1', 'Первый тайм'
+        SECOND_HALF = 'H2', 'Второй тайм'
+        EXTRA_TIME = 'ET', 'Дополнительное время'
+
+    match = models.ForeignKey(Match, verbose_name='Матч', related_name='clean_sheets', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', related_name='clean_sheets', on_delete=models.PROTECT)
+    author = ChainedForeignKey(
+        Player,
+        chained_field='team',
+        chained_model_field='team',
+        verbose_name='Автор',
+        related_name='clean_sheets',
+        on_delete=models.PROTECT,
+    )
+    period = models.CharField('Период', max_length=2, choices=Period.choices, db_index=True)
+    legacy_event = models.OneToOneField(
+        'OtherEvents',
+        verbose_name='Исходное событие',
+        related_name='migrated_clean_sheet',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    @property
+    def time_min(self):
+        if self.period == self.Period.FIRST_HALF:
+            return 8
+        if self.period == self.Period.SECOND_HALF:
+            return 16
+        return int(self.match.duration.total_seconds()) // 60
+
+    @property
+    def time_sec(self):
+        if self.period != self.Period.EXTRA_TIME:
+            return 0
+        return int(self.match.duration.total_seconds()) % 60
+
+    def __str__(self):
+        return f'🧤 {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
+
+    class Meta:
+        verbose_name = 'Сухой тайм'
+        verbose_name_plural = 'Сухие таймы'
+        ordering = ('match_id', 'period', 'pk')
+        indexes = [
+            models.Index(fields=('period', 'match')),
+            models.Index(fields=('author', 'match')),
+            models.Index(fields=('team', 'match')),
+        ]
+
+
 class OtherEventsQuerySet(models.QuerySet):
     def cards(self):
         return self.filter(event__in=[OtherEvents.YELLOW_CARD, OtherEvents.RED_CARD])
@@ -1333,8 +1675,11 @@ class OtherEvents(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    time_min = models.SmallIntegerField('Минута')
-    time_sec = models.SmallIntegerField('Секунда')
+    time_min = models.PositiveSmallIntegerField('Минута')
+    time_sec = models.PositiveSmallIntegerField(
+        'Секунда',
+        validators=[MaxValueValidator(59, message='Значение должно быть от 0 до 59')],
+    )
 
     YELLOW_CARD = 'YEL'
     RED_CARD = 'RED'
@@ -1391,8 +1736,8 @@ class OtherEvents(models.Model):
         return f'{emoji} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
 
     class Meta:
-        verbose_name = 'Событие'
-        verbose_name_plural = 'События'
+        verbose_name = 'Событие [OBSOLETE])'
+        verbose_name_plural = 'События [OBSOLETE]'
         indexes = [
             models.Index(fields=['event', 'match']),
         ]

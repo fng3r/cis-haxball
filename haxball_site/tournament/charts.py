@@ -1,6 +1,6 @@
 import plotly.express as px
 
-from .models import OtherEvents
+from .models import Card
 from .stats import PlayerStatsSource, TeamStatsSource
 
 
@@ -366,11 +366,11 @@ class TeamStatCharts:
         yellow_cards_by_tournament_chart = Charts.yellow_cards_by_tournament(tournaments, yellow_cards)
         red_cards_by_tournament_chart = Charts.red_cards_by_tournament(tournaments, red_cards)
 
-        yellow_cards_by_player = self.tcs.get_top_players_by_cards(OtherEvents.YELLOW_CARD)
+        yellow_cards_by_player = self.tcs.get_top_players_by_cards(Card.Kind.YELLOW)
         players, yellow_cards = column_values_list(yellow_cards_by_player, 'player', 'cards')
         top_players_by_yellow_cards_chart = Charts.top_players_by_yellow_cards(players, yellow_cards)
 
-        red_cards_by_player = self.tcs.get_top_players_by_cards(OtherEvents.RED_CARD)
+        red_cards_by_player = self.tcs.get_top_players_by_cards(Card.Kind.RED)
         players, red_cards = column_values_list(red_cards_by_player, 'player', 'cards')
         top_players_by_red_cards_chart = Charts.top_players_by_red_cards(players, red_cards)
 
