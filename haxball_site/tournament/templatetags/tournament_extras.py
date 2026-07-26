@@ -849,7 +849,7 @@ def _get_top_assistants_per_match(league: League, tour_range: tuple = None):
 
 
 def _get_player_goals_assists_data(league: League, tour_range: tuple = None):
-    goals_queryset = Goal.objects.filter(match__league=league, author__isnull=False)
+    goals_queryset = Goal.objects.regular().filter(match__league=league)
     assists_queryset = Goal.objects.filter(match__league=league, assistent__isnull=False)
     matches_queryset = PlayerMatchStatistics.objects.filter(league=league)
 

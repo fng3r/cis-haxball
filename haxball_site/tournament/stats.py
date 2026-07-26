@@ -440,7 +440,8 @@ class TeamStatsSource:
 
     def get_top_players_by_goals(self, top_n=10):
         return (
-            Goal.objects.filter(team=self.team)
+            Goal.objects.regular()
+            .filter(team=self.team)
             .values(player=F('author__nickname'))
             .annotate(goals=Count('*'))
             .filter(goals__gt=0)

@@ -624,8 +624,8 @@ class MatchDetail(DetailView):
         context['team_home_substitutes'] = substitutes[match.team_home]
         context['team_guest_substitutes'] = substitutes[match.team_guest]
 
-        goals = match.match_goal.values('author').annotate(goals=Count('author')).order_by('author')
-        goals_by_player = {d['author']: d['goals'] for d in goals}
+        regular_goals = match.match_goal.regular().values('author').annotate(goals=Count('author')).order_by('author')
+        goals_by_player = {d['author']: d['goals'] for d in regular_goals}
         context['goals_by_player'] = goals_by_player
 
         assists = (
@@ -754,14 +754,15 @@ class MatchDetail(DetailView):
             .first()
         )
         top_goals = (
-            team.goals.filter(match__in=selected_matches)
+            team.goals.regular()
+            .filter(match__in=selected_matches)
             .values(pl=F('author__nickname'))
             .annotate(count=Count('author'))
             .order_by('-count')
             .first()
         )
         top_assists = (
-            team.goals.filter(match__in=selected_matches)
+            team.goals.filter(match__in=selected_matches, assistent__isnull=False)
             .values(pl=F('assistent__nickname'))
             .annotate(count=Count('assistent'))
             .order_by('-count')
@@ -2011,9 +2012,15 @@ def team_statistics(request, pk):
         .first()
     )
 
-    greatest_goalscorer = team.goals.values('author').annotate(goals=Count('author')).order_by('-goals').first()
+    greatest_goalscorer = (
+        team.goals.regular().values('author').annotate(goals=Count('author')).order_by('-goals').first()
+    )
     greatest_assistant = (
-        team.goals.values('assistent').annotate(assists=Count('assistent')).order_by('-assists').first()
+        team.goals.filter(assistent__isnull=False)
+        .values('assistent')
+        .annotate(assists=Count('assistent'))
+        .order_by('-assists')
+        .first()
     )
     greatest_goalkeeper = team.clean_sheets.all().values('author').annotate(cs=Count('author')).order_by('-cs').first()
 
@@ -2384,14 +2391,15 @@ class CompareTeamsView(View):
             .first()
         )
         top_goals = (
-            team.goals.filter(match__in=selected_matches)
+            team.goals.regular()
+            .filter(match__in=selected_matches)
             .values(pl=F('author__nickname'))
             .annotate(count=Count('author'))
             .order_by('-count')
             .first()
         )
         top_assists = (
-            team.goals.filter(match__in=selected_matches)
+            team.goals.filter(match__in=selected_matches, assistent__isnull=False)
             .values(pl=F('assistent__nickname'))
             .annotate(count=Count('assistent'))
             .order_by('-count')
