@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -13,6 +15,15 @@ from .models import (
     Season,
     Team,
 )
+
+
+class ShortDurationField(forms.DurationField):
+    def prepare_value(self, value):
+        if isinstance(value, timedelta):
+            seconds = int(value.total_seconds())
+            return f'{seconds // 60:02d}:{seconds % 60:02d}'
+
+        return super().prepare_value(value)
 
 
 class FreeAgentForm(forms.ModelForm):

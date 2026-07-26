@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin, messages
+from django.db import models
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import resolve, reverse_lazy
@@ -23,10 +24,12 @@ from unfold.contrib.filters.admin import (
 from unfold.contrib.forms.widgets import ArrayWidget
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
+from unfold.overrides import FORMFIELD_OVERRIDES
 from unfold.sections import TableSection
 
 from haxball_site.admin import UnfoldChainedSelect, UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
 
+from .forms import ShortDurationField
 from .models import (
     AchievementCategory,
     Achievements,
@@ -861,6 +864,13 @@ class PostponementInline(UnfoldStackedInline):
 
 @admin.register(Match)
 class MatchAdmin(UnfoldModelAdmin):
+    FORMFIELD_OVERRIDES
+    formfield_overrides = {
+        **UnfoldModelAdmin.formfield_overrides,
+        models.DurationField: {
+            'form_class': ShortDurationField,
+        },
+    }
     list_display = (
         'league',
         'display_stage',
