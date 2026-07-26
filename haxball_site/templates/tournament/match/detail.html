@@ -172,33 +172,27 @@
 
               {% if match.is_played or cards|length > 0 %}
                 <div class="tw:text-center">
-                  {% comment %}
-                      Показывать секцию с карточками и дисквалификациями только после 11 сезона,
-                      ранее информация о них содержалась в комментариях инспекторов под матчами 
-                  {% endcomment %}
-                  {% if match.league.championship.number > 14 %}
-                    <h5>Нарушения</h5>
-                    <div class="tw:px-2 tw:text-base">
-                      {% if cards|length > 0 %}
-                        <ul class="tw:text-left tw:space-y-0.5">
-                          {% for card in cards %}
-                            <li>
-                              <img src="{{ card.team.logo.url }}" alt="{{ card.team.title }}" width="22">
-                              <a href="{{ card.author.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">{{ card.author.nickname }}</a> -
-                              {% if card.kind == 'YEL' %}
-                                <img src="{% static 'img/ico/yellow_card.png' %}" width="24" title="ЖК" alt="ЖК">
-                              {% else %}
-                                <img src="{% static 'img/ico/red_card.png' %}" width="24" title="КК" alt="КК">
-                              {% endif %}
-                              {{ card.reason }}
-                            </li>
-                          {% endfor %}
-                        </ul>
-                      {% else %}
-                        <span class="tw:text-base">Нарушений не зафиксировано</span>
-                      {% endif %}
-                    </div>
-                  {% endif %}
+                  <h5>Нарушения</h5>
+                  <div class="tw:px-2 tw:text-base">
+                    {% if cards|length > 0 %}
+                      <ul class="tw:text-left tw:space-y-0.5">
+                        {% for card in cards %}
+                          <li>
+                            <img src="{{ card.team.logo.url }}" alt="{{ card.team.title }}" width="22">
+                            <a href="{{ card.author.name.user_profile.get_absolute_url }}" class="tw:link tw:link-hover tw:font-semibold">{{ card.author.nickname }}</a> -
+                            {% if card.kind == 'YEL' %}
+                              <img src="{% static 'img/ico/yellow_card.png' %}" width="24" title="ЖК" alt="ЖК">
+                            {% else %}
+                              <img src="{% static 'img/ico/red_card.png' %}" width="24" title="КК" alt="КК">
+                            {% endif %}
+                            {{ card.reason }}
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <span class="tw:text-base">Нарушений не зафиксировано</span>
+                    {% endif %}
+                  </div>
                 </div>
               {% endif %}
 

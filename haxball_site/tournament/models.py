@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import models, transaction
 from django.db.models.signals import m2m_changed, post_delete, post_save
@@ -24,6 +24,22 @@ class TeamIsNotMatchParticipantError(Exception):
     def __init__(self, team, match):
         message = f'Team {team} is not a participant of the match {match}'
         super().__init__(message)
+
+
+def event_time_exceeds_match_duration(event):
+    if not event.match_id or event.time_min is None or event.time_sec is None or event.match.duration is None:
+        return None
+
+    event_seconds = event.time_min * 60 + event.time_sec
+    match_seconds = int(event.match.duration.total_seconds())
+    if event_seconds <= match_seconds:
+        return None
+
+    return (
+        f'Время события ({event.time_min:02d}:{event.time_sec:02d}) '
+        f'превышает длительность матча ({match_seconds // 60:02d}:{match_seconds % 60:02d}). '
+        f'Убедитесь, что длительность матча указана верно или исправьте время события'
+    )
 
 
 class FreeAgent(models.Model):
@@ -1227,6 +1243,10 @@ class Goal(models.Model):
             self.team = self.match.opponent_of(self.own_goal_team_id)
 
         errors = {}
+        time_error = event_time_exceeds_match_duration(self)
+        if time_error:
+            errors.setdefault(NON_FIELD_ERRORS, []).append(time_error)
+
         if self.match_id and self.team_id not in (self.match.team_home_id, self.match.team_guest_id):
             errors['team'] = 'Команда, которой засчитан гол, не участвует в матче'
 
@@ -1380,6 +1400,12 @@ class Substitution(models.Model):
         validators=[MaxValueValidator(59, message='Значение должно быть от 0 до 59')],
     )
 
+    def clean(self):
+        super().clean()
+        time_error = event_time_exceeds_match_duration(self)
+        if time_error:
+            raise ValidationError({NON_FIELD_ERRORS: [time_error]})
+
     def __str__(self):
         return f'🔁 {self.time_min:02d}:{self.time_sec:02d} {self.team} ({self.player_out} -> {self.player_in})'
 
@@ -1509,9 +1535,10 @@ class Card(models.Model):
         on_delete=models.PROTECT,
     )
     kind = models.CharField('Тип карточки', max_length=3, choices=Kind.choices, db_index=True)
-    time_min = models.PositiveSmallIntegerField('Минута')
+    time_min = models.PositiveSmallIntegerField('Минута', default=16)
     time_sec = models.PositiveSmallIntegerField(
         'Секунда',
+        default=1,
         validators=[
             MaxValueValidator(59, message='Значение должно быть от 0 до 59'),
         ],

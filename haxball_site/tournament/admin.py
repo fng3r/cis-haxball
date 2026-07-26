@@ -1228,7 +1228,7 @@ class CleanSheetAdmin(UnfoldModelAdmin):
 
 @admin.register(Substitution)
 class SubstitutionAdmin(UnfoldModelAdmin):
-    list_display = ('match', 'team', 'player_out', 'player_in')
+    list_display = ('match', 'team', 'player_out', 'player_in', 'time_min', 'time_sec')
     ordering = ('-id',)
     raw_id_fields = ('match',)
     list_filter = (
