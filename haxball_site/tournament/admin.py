@@ -1169,7 +1169,6 @@ class GoalAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     list_filter_sheet = False
     conditional_fields = {
-        'team': "kind == 'REG'",
         'author': "kind == 'REG'",
         'assistent': "kind == 'REG'",
         'own_goal_team': "kind == 'OG'",
