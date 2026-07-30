@@ -49,16 +49,20 @@ from .models import (
     Group,
     GroupStage,
     League,
+    LegacyMedalMapping,
     Match,
     MatchReplay,
     MatchReplayStats,
     MatchReplayStatsPlayer,
     MatchReplayStatsStatus,
     MatchResult,
+    Medal,
+    MedalType,
     Nation,
     OtherEvents,
     Player,
     PlayerMatchStatistics,
+    PlayerMedal,
     PlayerRating,
     PlayerRatingVersion,
     PlayerTransfer,
@@ -72,6 +76,7 @@ from .models import (
     Substitution,
     Team,
     TeamAchievement,
+    TeamMedal,
     TeamPenaltyPoints,
     TeamRating,
     TeamRatingVersion,
@@ -148,6 +153,101 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
                 'height': 48,
             },
         ]
+
+
+@admin.register(MedalType)
+class MedalTypeAdmin(UnfoldModelAdmin):
+    list_display = ('code', 'title', 'kind', 'league_type', 'place', 'nomination', 'statistic')
+    list_filter = ('kind', 'league_type', 'place', 'statistic')
+    list_filter_submit = True
+    search_fields = ('code', 'title', 'description')
+    autocomplete_fields = ('nomination',)
+    ordering = ('order', 'code')
+    fields = (
+        ('code', 'kind'),
+        ('title', 'description'),
+        'image',
+        'order',
+        ('league_type', 'place'),
+        'nomination',
+        'statistic',
+        ('competition_code', 'variant'),
+        ('threshold', 'unit'),
+    )
+    conditional_fields = {
+        'league_type': (
+            "['tournament_place', 'statistic_place', 'nomination_place', 'auxiliary_competition_place'].includes(kind)"
+        ),
+        'place': (
+            "['tournament_place', 'statistic_place', 'nomination_place', 'auxiliary_competition_place'].includes(kind)"
+        ),
+        'nomination': "kind == 'nomination_place'",
+        'statistic': "kind == 'statistic_place'",
+        'competition_code': "kind == 'auxiliary_competition_place'",
+        'variant': "kind == 'auxiliary_competition_place'",
+        'threshold': "kind == 'career_milestone'",
+        'unit': "kind == 'career_milestone'",
+    }
+
+
+class PlayerMedalInline(UnfoldTabularInline):
+    model = PlayerMedal
+    tab = True
+    extra = 0
+    fields = ('player', 'awarded_at')
+    autocomplete_fields = ('player',)
+    show_change_link = True
+    verbose_name = 'Медаль игрока'
+    verbose_name_plural = 'Игроки'
+
+
+class TeamMedalInline(UnfoldTabularInline):
+    model = TeamMedal
+    tab = True
+    extra = 0
+    fields = ('team', 'players_raw_list', 'awarded_at')
+    autocomplete_fields = ('team',)
+    show_change_link = True
+    verbose_name = 'Медаль команды'
+    verbose_name_plural = 'Команды'
+
+
+@admin.register(Medal)
+class MedalAdmin(UnfoldModelAdmin):
+    list_display = ('key', 'medal_type', 'season', 'league', 'edition', 'result_value')
+    list_filter = (
+        ('medal_type', RelatedDropdownFilter),
+        ('season', RelatedDropdownFilter),
+        ('league', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    search_fields = ('key', 'title_override', 'description_override', 'medal_type__title')
+    autocomplete_fields = ('medal_type', 'season', 'league')
+    inlines = (PlayerMedalInline, TeamMedalInline)
+
+
+@admin.register(PlayerMedal)
+class PlayerMedalAdmin(UnfoldModelAdmin):
+    list_display = ('player', 'medal', 'awarded_at')
+    list_filter = (('medal', RelatedDropdownFilter),)
+    search_fields = ('player__nickname', 'medal__medal_type__title')
+    autocomplete_fields = ('player', 'medal')
+
+
+@admin.register(TeamMedal)
+class TeamMedalAdmin(UnfoldModelAdmin):
+    list_display = ('team', 'medal', 'awarded_at')
+    list_filter = (('medal', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
+    search_fields = ('team__title', 'medal__medal_type__title')
+    autocomplete_fields = ('team', 'medal')
+
+
+@admin.register(LegacyMedalMapping)
+class LegacyMedalMappingAdmin(UnfoldModelAdmin):
+    list_display = ('source_model', 'source_id', 'medal')
+    list_filter = ('source_model',)
+    search_fields = ('source_id', 'medal__key', 'medal__medal_type__title')
+    autocomplete_fields = ('medal',)
 
 
 class AchievementsInline(UnfoldTabularInline):

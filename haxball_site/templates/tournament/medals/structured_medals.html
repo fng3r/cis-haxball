@@ -1,0 +1,93 @@
+<section class="structured-medals" aria-label="Структурированные медали">
+  {% if structured_medals.groups %}
+    <div class="structured-medals__summary">
+      <div>
+        <span class="structured-medals__eyebrow">Новая модель</span>
+        <h3>Коллекция по типам</h3>
+      </div>
+      <div class="structured-medals__totals" aria-label="Сводка медалей">
+        <span><strong>{{ structured_medals.type_count }}</strong> типов</span>
+        <span><strong>{{ structured_medals.total_count }}</strong> награждений</span>
+      </div>
+    </div>
+
+    <div class="structured-medals__grid">
+      {% for group in structured_medals.groups %}
+        <article class="structured-medal-card">
+          <div class="structured-medal-card__header">
+            <div class="structured-medal-card__image-wrap">
+              {% if group.medal_type.image %}
+                <img src="{{ group.medal_type.image.url }}" alt="{{ group.medal_type.title }}" class="structured-medal-card__image">
+              {% elif group.grants.0.medal.image_override %}
+                <img src="{{ group.grants.0.medal.image_override.url }}"
+                     alt="{{ group.medal_type.title }}"
+                     class="structured-medal-card__image">
+              {% else %}
+                <i class="fa fa-trophy structured-medal-card__fallback" aria-hidden="true"></i>
+              {% endif %}
+              <span class="structured-medal-card__count" title="Количество награждений">×{{ group.count }}</span>
+            </div>
+
+            <div class="structured-medal-card__identity">
+              <h4>{{ group.medal_type.title }}</h4>
+              <div class="structured-medal-card__tags">
+                {% if group.medal_type.league_type %}<span>{{ group.medal_type.get_league_type_display }}</span>{% endif %}
+                <span>{{ group.medal_type.get_kind_display }}</span>
+              </div>
+            </div>
+          </div>
+
+          <details class="structured-medal-card__history">
+            <summary>
+              <span>История награждений</span>
+              <i class="fa fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <ol>
+              {% for grant in group.grants %}
+                <li>
+                  <div class="structured-medal-occurrence__main">
+                    <strong>
+                      {% if grant.medal.season %}
+                        {{ grant.medal.season.title }}
+                      {% elif grant.medal.edition %}
+                        {{ grant.medal.edition }}
+                      {% elif grant.awarded_at %}
+                        {{ grant.awarded_at|date:"Y" }}
+                      {% else %}
+                        Без сезона
+                      {% endif %}
+                    </strong>
+                    {% if grant.medal.league %}<span class="structured-medal-occurrence__league">{{ grant.medal.league.title }}</span>{% endif %}
+                  </div>
+
+                  {% if grant.awarded_at or grant.medal.result_value is not None %}
+                    <div class="structured-medal-occurrence__aside">
+                      {% if grant.medal.result_value is not None %}
+                        <span class="structured-medal-occurrence__result">
+                          {{ grant.medal.result_value|floatformat:"-2" }} {{ grant.medal.result_unit_display }}
+                        </span>
+                      {% endif %}
+                      {% if grant.awarded_at %}
+                        <time class="structured-medal-occurrence__date" datetime="{{ grant.awarded_at|date:'Y-m-d' }}" title="Дата награждения">
+                          {{ grant.awarded_at|date:"d.m.Y" }}
+                        </time>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+
+                  {% if show_squad and grant.players_raw_list %}<p class="structured-medal-occurrence__squad">{{ grant.players_raw_list }}</p>{% endif %}
+                </li>
+              {% endfor %}
+            </ol>
+          </details>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="structured-medals__empty">
+      <i class="fa fa-layer-group" aria-hidden="true"></i>
+      <strong>Структурированных медалей пока нет</strong>
+      <span>Новая модель работает отдельно от текущей коллекции.</span>
+    </div>
+  {% endif %}
+</section>

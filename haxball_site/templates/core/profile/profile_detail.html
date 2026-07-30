@@ -7,6 +7,7 @@
 {% block styles %}
   <link rel="stylesheet" type="text/css" href="{% static "core/profile/profile.css" %}">
   <link rel="stylesheet" type="text/css" href="{% static "core/include/comments.css" %}">
+  <link rel="stylesheet" type="text/css" href="{% static "tournament/medals/structured_medals.css" %}">
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap">
   <link rel="stylesheet"
@@ -163,7 +164,7 @@
                                class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
                                role="tab"
                                aria-label="Основная информация"
-                               checked />
+                               {% if medals_view != 'structured' %}checked{% endif %} />
                         <div class="tw:tab-content">
                           <div id="profile-info-panel" class="tw:h-[580px]" role="tabpanel" aria-labelledby="profile-info-tab">
                             <div class="tw:flex tw:flex-wrap tw:gap-y-2 tw:px-4 tw:py-2 profile-info-table">
@@ -241,35 +242,53 @@
                                name="profile-tabs"
                                class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
                                role="tab"
-                               aria-label="Достижения" />
+                               aria-label="Достижения"
+                               {% if medals_view == 'structured' %}checked{% endif %} />
                         <div class="tw:tab-content">
-                          <div class="tw:overflow-y-auto tw:h-[580px] tw:mt-0"
+                          <div class="tw:overflow-y-auto tw:h-[580px] tw:mt-0 tw:px-1"
                                id="profile-achievements-panel"
                                role="tabpanel"
-                               aria-labelledby="profile-achievements-tab">
-                            {% if achievements_by_category %}
-                              <div class="tw:flex tw:flex-col tw:gap-4">
-                                {% for category, achievements in achievements_by_category %}
-                                  <div class="tw:flex tw:flex-col tw:gap-2">
-                                    <div class="tw:text-lg tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ category }}</div>
-                                    <div class="tw:grid tw:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] tw:gap-1.5 tw:-ml-0.5">
-                                      {% for achievement in achievements %}
-                                        <img class="tw:w-[96px] tw:h-[96px]"
-                                             src="{{ achievement.image.url }}"
-                                             title="{{ achievement.description }}"
-                                             alt="{{ achievement.title }}">
-                                      {% endfor %}
+                               aria-labelledby="profile-achievements-tab"
+                               x-data="{ medalsView: new URLSearchParams(window.location.search).get('medals') === 'structured' ? 'structured' : 'legacy', setMedalsView(view) { this.medalsView = view; const url = new URL(window.location); view === 'structured' ? url.searchParams.set('medals', view) : url.searchParams.delete('medals'); history.replaceState({}, '', url); } }">
+                            <div class="medal-view-switch" role="group" aria-label="Вариант отображения медалей">
+                              <button type="button" @click="setMedalsView('legacy')" :aria-pressed="medalsView === 'legacy'">
+                                Текущие
+                                <span class="medal-view-switch__count">{{ legacy_medals_count }}</span>
+                              </button>
+                              <button type="button" @click="setMedalsView('structured')" :aria-pressed="medalsView === 'structured'">
+                                По типам
+                                <span class="medal-view-switch__count">{{ structured_medals.total_count }}</span>
+                                <span class="medal-view-switch__preview">preview</span>
+                              </button>
+                            </div>
+
+                            <div x-show="medalsView === 'legacy'">
+                              {% if achievements_by_category %}
+                                <div class="tw:flex tw:flex-col tw:gap-4">
+                                  {% for category, achievements in achievements_by_category %}
+                                    <div class="tw:flex tw:flex-col tw:gap-2">
+                                      <div class="tw:text-lg tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ category }}</div>
+                                      <div class="tw:grid tw:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] tw:gap-1.5 tw:-ml-0.5">
+                                        {% for achievement in achievements %}
+                                          <img class="tw:w-[96px] tw:h-[96px]"
+                                               src="{{ achievement.image.url }}"
+                                               title="{{ achievement.description }}"
+                                               alt="{{ achievement.title }}">
+                                        {% endfor %}
+                                      </div>
                                     </div>
-                                  </div>
-                                {% endfor %}
-                              </div>
-                            {% else %}
-                              <div class="tw:h-full tw:min-h-[400px] tw:flex tw:flex-col tw:items-center tw:justify-center tw:px-2 tw:text-center">
-                                <i class="fa fa-star tw:text-warning tw:text-4xl! tw:mb-2"></i>
-                                <div class="tw:text-base-content/80 tw:text-lg tw:mb-2">Пока здесь пусто, но это поправимо!</div>
-                                <div class="tw:text-base-content/70">Участвуй в турнирах и проявляй активность — достижения не заставят себя ждать.</div>
-                              </div>
-                            {% endif %}
+                                  {% endfor %}
+                                </div>
+                              {% else %}
+                                <div class="tw:h-full tw:min-h-[400px] tw:flex tw:flex-col tw:items-center tw:justify-center tw:px-2 tw:text-center">
+                                  <i class="fa fa-star tw:text-warning tw:text-4xl! tw:mb-2"></i>
+                                  <div class="tw:text-base-content/80 tw:text-lg tw:mb-2">Пока здесь пусто, но это поправимо!</div>
+                                  <div class="tw:text-base-content/70">Участвуй в турнирах и проявляй активность — достижения не заставят себя ждать.</div>
+                                </div>
+                              {% endif %}
+                            </div>
+
+                            <div x-show="medalsView === 'structured'" x-cloak>{% include 'tournament/medals/structured_medals.html' %}</div>
                           </div>
                         </div>
                       </div>

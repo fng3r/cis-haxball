@@ -20,6 +20,7 @@ from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
 
 from tournament.models import Achievements, Team
+from tournament.services.structured_medals import StructuredMedalCollection, get_player_medals
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import (
@@ -253,6 +254,7 @@ class ProfileDetail(View):
             'page': page,
             'comments': comments,
             'comment_form': NewCommentForm(),
+            'medals_view': request.GET.get('medals', 'legacy'),
         }
 
         all_achievements = Achievements.objects.select_related('category').filter(player__name=profile.name)
@@ -265,6 +267,11 @@ class ProfileDetail(View):
                 achievements_by_category[category] = list()
             achievements_by_category[category].append(achievement)
         context['achievements_by_category'] = achievements_by_category.items()
+        context['legacy_medals_count'] = len(all_achievements)
+        player = getattr(profile.name, 'user_player', None)
+        context['structured_medals'] = (
+            get_player_medals(player) if player else StructuredMedalCollection(groups=[], total_count=0)
+        )
         context['previous_nicknames'] = UserNicknameHistoryItem.objects.filter(user=profile.name).order_by('-edited')
 
         if request.htmx:

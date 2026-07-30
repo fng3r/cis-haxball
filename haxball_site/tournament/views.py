@@ -70,6 +70,7 @@ from .models import (
 )
 from .services.hall_of_fame import HallOfFameService
 from .services.replay_stats import MatchReplayStatsAggregator
+from .services.structured_medals import get_team_medals
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
 
 
@@ -360,6 +361,8 @@ class TeamDetail(DetailView):
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
         context['tournaments'] = get_team_tournaments(team)
+        context['structured_medals'] = get_team_medals(team)
+        context['medals_view'] = self.request.GET.get('medals', 'legacy')
 
         latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
         rating = PlayerRating.objects.select_related('player').filter(
