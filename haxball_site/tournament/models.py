@@ -2582,7 +2582,9 @@ class Medal(models.Model):
     """A concrete occurrence of a canonical medal in a season or competition edition."""
 
     key = models.CharField('Ключ медали', max_length=200, unique=True)
-    medal_type = models.ForeignKey(MedalType, related_name='medals', on_delete=models.PROTECT)
+    medal_type = models.ForeignKey(
+        MedalType, verbose_name='Тип медали', related_name='medals', on_delete=models.PROTECT
+    )
     season = models.ForeignKey(
         Season, verbose_name='Сезон', related_name='medals', on_delete=models.PROTECT, null=True, blank=True
     )
@@ -2590,8 +2592,7 @@ class Medal(models.Model):
         League, verbose_name='Турнир', related_name='medals', on_delete=models.PROTECT, null=True, blank=True
     )
     edition = models.CharField('Розыгрыш', max_length=100, blank=True)
-    result_value = models.DecimalField('Результат', max_digits=10, decimal_places=2, null=True, blank=True)
-    result_unit = models.CharField('Единица результата', max_length=32, blank=True)
+    result_value = models.PositiveIntegerField('Результат', null=True, blank=True)
     title_override = models.CharField('Историческое название', max_length=100, blank=True)
     description_override = models.CharField('Историческое описание', max_length=200, blank=True)
     image_override = models.ImageField('Историческое изображение', upload_to='medals/', null=True, blank=True)
@@ -2607,7 +2608,7 @@ class Medal(models.Model):
             MedalType.Statistic.GOALS: 'голов',
             MedalType.Statistic.ASSISTS: 'ассистов',
             MedalType.Statistic.CLEAN_SHEETS: 'сухих таймов',
-        }.get(self.result_unit, self.result_unit)
+        }.get(self.medal_type.statistic, '')
 
     def __str__(self):
         return self.title_override or self.medal_type.title

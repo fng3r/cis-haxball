@@ -1,7 +1,6 @@
 import re
 from dataclasses import dataclass, replace
 from datetime import date
-from decimal import Decimal
 
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.contenttypes.models import ContentType
@@ -64,6 +63,24 @@ AUXILIARY_COMPETITIONS = {
     'лиги европы': ('europe_league', 'Лига Европы'),
 }
 
+STATISTIC_MEDAL_TITLES = {
+    MedalType.Statistic.GOALS: {
+        1: 'Золотой мяч',
+        2: 'Серебряный мяч',
+        3: 'Бронзовый мяч',
+    },
+    MedalType.Statistic.ASSISTS: {
+        1: 'Золотая бутса',
+        2: 'Серебряная бутса',
+        3: 'Бронзовая бутса',
+    },
+    MedalType.Statistic.CLEAN_SHEETS: {
+        1: 'Золотая перчатка',
+        2: 'Серебряная перчатка',
+        3: 'Бронзовая перчатка',
+    },
+}
+
 
 @dataclass(frozen=True)
 class MedalDescriptor:
@@ -79,8 +96,7 @@ class MedalDescriptor:
     variant: str = ''
     threshold: int | None = None
     unit: str = ''
-    result_value: Decimal | None = None
-    result_unit: str = ''
+    result_value: int | None = None
     season_ordinal: int | None = None
     season_type: str | None = None
     season_year: int | None = None
@@ -144,17 +160,16 @@ class LegacyMedalClassifier:
 
         statistic = self._statistic(text)
         if statistic and place and league_type:
-            statistic_code, result_unit, title = statistic
-            result_value = self._result_value(text, result_unit)
+            statistic_code = statistic
+            result_value = self._result_value(text, statistic_code)
             return MedalDescriptor(
                 code=f'stat.{statistic_code}.{league_type}.{place}',
                 kind=MedalType.Kind.STATISTIC_PLACE,
-                title=f'{title} — {self._place_label(place)}',
+                title=STATISTIC_MEDAL_TITLES[statistic_code][place],
                 place=place,
                 league_type=league_type,
                 statistic=statistic_code,
                 result_value=result_value,
-                result_unit=result_unit,
                 season_ordinal=season_ordinal,
                 season_type=season_type,
             )
@@ -162,8 +177,10 @@ class LegacyMedalClassifier:
         auxiliary = self._auxiliary(text)
         if auxiliary and place:
             competition_code, title, variant = auxiliary
-            scope = f'.{league_type}' if league_type else ''
+            canonical_league_type = None if competition_code == 'predictions' else league_type
+            scope = f'.{canonical_league_type}' if canonical_league_type else ''
             variant_code = f'.{variant}' if variant else ''
+            season_scoped = bool(league_type) or competition_code in {'predictions', 'saturday_cup_rating'}
             return MedalDescriptor(
                 code=f'aux.{competition_code}{variant_code}{scope}.{place}',
                 kind=MedalType.Kind.AUXILIARY_COMPETITION_PLACE,
@@ -172,20 +189,28 @@ class LegacyMedalClassifier:
                 league_type=league_type,
                 competition_code=competition_code,
                 variant=variant,
-                season_ordinal=season_ordinal if league_type else None,
-                season_type=season_type if league_type else None,
-                edition=self._external_edition(achievement.title),
+                season_ordinal=season_ordinal if season_scoped else None,
+                season_type=season_type if season_scoped else None,
+                edition=self._auxiliary_edition(
+                    achievement.title,
+                    competition_code,
+                    variant,
+                    season_ordinal,
+                ),
             )
 
         for marker, (code, title) in HONORARY.items():
             if marker in text:
+                honorary_season_ordinal = 8 if code == 'thanos_of_season' else season_ordinal
+                honorary_season_type = Season.Type.RUSSIAN_CHAMPIONSHIP if code == 'thanos_of_season' else season_type
                 return MedalDescriptor(
                     code=f'honorary.{code}',
                     kind=MedalType.Kind.HONORARY,
                     title=title,
-                    season_ordinal=season_ordinal,
-                    season_type=season_type,
+                    season_ordinal=honorary_season_ordinal,
+                    season_type=honorary_season_type,
                     season_year=season_year,
+                    edition=f'{season_year} год' if code == 'rooster_of_year' and season_year else '',
                 )
 
         if league_type and place and self._is_tournament_result(text):
@@ -269,22 +294,22 @@ class LegacyMedalClassifier:
     @staticmethod
     def _statistic(text):
         if 'мяч' in text:
-            return MedalType.Statistic.GOALS, 'goals', 'Бомбардир'
+            return MedalType.Statistic.GOALS
         if 'бутс' in text:
-            return MedalType.Statistic.ASSISTS, 'assists', 'Ассистент'
+            return MedalType.Statistic.ASSISTS
         if 'перчат' in text:
-            return MedalType.Statistic.CLEAN_SHEETS, 'clean_sheets', 'Сухие таймы'
+            return MedalType.Statistic.CLEAN_SHEETS
         return None
 
     @staticmethod
-    def _result_value(text, unit):
+    def _result_value(text, statistic):
         result_words = {
             'goals': r'гол(?:а|ов)?',
             'assists': r'(?:ассист(?:а|ов)?|передач(?:а|и)?)',
             'clean_sheets': r'сухар(?:ь|я|ей)?',
         }
-        match = re.search(rf'\(?\b(\d+)\b\)?\s*{result_words[unit]}', text)
-        return Decimal(match.group(1)) if match else None
+        match = re.search(rf'\(?\b(\d+)\b\)?\s*{result_words[statistic]}', text)
+        return int(match.group(1)) if match else None
 
     @staticmethod
     def _career(text):
@@ -317,6 +342,24 @@ class LegacyMedalClassifier:
     @staticmethod
     def _external_edition(title):
         return re.sub(r'^(Победитель|Серебряный приз[её]р|Бронзовый приз[её]р)\s+', '', title, flags=re.I)
+
+    @classmethod
+    def _auxiliary_edition(cls, title, competition_code, variant, season_ordinal):
+        if competition_code in {'predictions', 'fantasy_league', 'saturday_cup_rating'} and season_ordinal:
+            return ''
+        if competition_code in {'elo', 'europe_league'} and season_ordinal:
+            return f'{season_ordinal} сезон'
+        if competition_code == 'slotcybercup' and (
+            edition_number := re.search(r'slotcybercup\s*#\s*(\d+)', title, flags=re.I)
+        ):
+            return f'SlotCyberCup#{edition_number.group(1)}'
+        if competition_code == 'arena_reborn' and season_ordinal:
+            variant_title = {
+                'futsal': 'Futsal',
+                'classic_9': 'Classic 9',
+            }.get(variant)
+            return f'{season_ordinal} сезон [{variant_title}]' if variant_title else f'{season_ordinal} сезон'
+        return cls._external_edition(title)
 
     @staticmethod
     def _is_tournament_result(text):
@@ -426,7 +469,7 @@ class LegacyMedalImporter:
                 'title': descriptor.title,
                 'description': source.description,
                 'image': source.image.name if source.image else None,
-                'league_type': descriptor.league_type,
+                'league_type': None if descriptor.competition_code == 'predictions' else descriptor.league_type,
                 'place': descriptor.place,
                 'nomination': nomination,
                 'statistic': descriptor.statistic,
@@ -445,7 +488,6 @@ class LegacyMedalImporter:
                 'league': league,
                 'edition': descriptor.edition,
                 'result_value': descriptor.result_value,
-                'result_unit': descriptor.result_unit,
                 'title_override': source.title,
                 'description_override': source.description,
                 'image_override': self._image_override(descriptor, source),

@@ -54,7 +54,7 @@
                       {% elif grant.awarded_at %}
                         {{ grant.awarded_at|date:"Y" }}
                       {% else %}
-                        Без сезона
+                        Получено
                       {% endif %}
                     </strong>
                     {% if grant.medal.league %}<span class="structured-medal-occurrence__league">{{ grant.medal.league.title }}</span>{% endif %}
@@ -63,9 +63,7 @@
                   {% if grant.awarded_at or grant.medal.result_value is not None %}
                     <div class="structured-medal-occurrence__aside">
                       {% if grant.medal.result_value is not None %}
-                        <span class="structured-medal-occurrence__result">
-                          {{ grant.medal.result_value|floatformat:"-2" }} {{ grant.medal.result_unit_display }}
-                        </span>
+                        <span class="structured-medal-occurrence__result">{{ grant.medal.result_value }} {{ grant.medal.result_unit_display }}</span>
                       {% endif %}
                       {% if grant.awarded_at %}
                         <time class="structured-medal-occurrence__date" datetime="{{ grant.awarded_at|date:'Y-m-d' }}" title="Дата награждения">
