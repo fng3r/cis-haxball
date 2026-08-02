@@ -7,33 +7,35 @@
         <div class="tw:grid tw:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] tw:gap-1.5">
           {% for grant in group.grants %}
             <div class="tw:tooltip tw:tooltip-top tw:w-fit tw:cursor-help" tabindex="0" aria-label="{{ grant.medal.medal_type.title }}">
-              <div class="tw:tooltip-content tw:z-50 tw:max-w-72 tw:whitespace-normal tw:text-left">
-                <div class="tw:flex tw:min-w-44 tw:flex-col tw:gap-2 tw:py-0.5">
+              <div class="tw:tooltip-content tw:max-w-64 tw:whitespace-normal tw:text-left">
+                <div class="tw:flex tw:flex-col tw:min-w-44 tw:gap-2 tw:py-0.5">
                   <div>
                     <div class="tw:text-xs tw:font-semibold">Тип медали</div>
                     <div class="tw:text-xs tw:font-normal tw:opacity-70">{{ grant.medal.medal_type.title }}</div>
                   </div>
-                  <div>
-                    <div class="tw:text-xs tw:font-semibold">
-                      {% if grant.medal.season %}
-                        Сезон
-                      {% elif grant.medal.edition %}
-                        Розыгрыш
-                      {% endif %}
-                    </div>
-                    <div class="tw:text-xs tw:font-normal tw:opacity-70">
-                      {% if grant.medal.season %}
-                        {{ grant.medal.season.title }}
-                        {% if grant.medal.league %}
-                          ({{ grant.medal.league.title }})
-                        {% elif grant.medal.medal_type.league_type %}
-                          ({{ grant.medal.medal_type.get_league_type_display }})
+                  {% if grant.medal.league or grant.medal.edition %}
+                    <div>
+                      <div class="tw:text-xs tw:font-semibold">
+                        {% if grant.medal.season %}
+                          Сезон
+                        {% elif grant.medal.edition %}
+                          Розыгрыш
                         {% endif %}
-                      {% elif grant.medal.edition %}
-                        {{ grant.medal.edition }}
-                      {% endif %}
+                      </div>
+                      <div class="tw:text-xs tw:font-normal tw:opacity-70">
+                        {% if grant.medal.season %}
+                          {{ grant.medal.season.title }}
+                          {% if grant.medal.league %}
+                            ({{ grant.medal.league.title }})
+                          {% elif grant.medal.medal_type.league_type %}
+                            ({{ grant.medal.medal_type.get_league_type_display }})
+                          {% endif %}
+                        {% elif grant.medal.edition %}
+                          {{ grant.medal.edition }}
+                        {% endif %}
+                      </div>
                     </div>
-                  </div>
+                  {% endif %}
                   {% if grant.medal.result_value is not None %}
                     <div>
                       <div class="tw:text-xs tw:font-semibold">{{ grant.medal.medal_type.get_statistic_display }}</div>
