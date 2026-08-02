@@ -57,6 +57,7 @@ from .models import (
     MatchReplayStatsStatus,
     MatchResult,
     Medal,
+    MedalCategory,
     MedalType,
     Nation,
     OtherEvents,
@@ -214,16 +215,24 @@ class TeamMedalInline(UnfoldTabularInline):
 
 @admin.register(Medal)
 class MedalAdmin(UnfoldModelAdmin):
-    list_display = ('key', 'medal_type', 'season', 'league', 'edition', 'result_value')
+    list_display = ('key', 'medal_type', 'category', 'season', 'league', 'edition', 'result_value')
     list_filter = (
         ('medal_type', RelatedDropdownFilter),
+        ('category', RelatedDropdownFilter),
         ('season', RelatedDropdownFilter),
         ('league', RelatedDropdownFilter),
     )
     list_filter_submit = True
     search_fields = ('key', 'title_override', 'description_override', 'medal_type__title')
-    autocomplete_fields = ('medal_type', 'season', 'league')
+    autocomplete_fields = ('medal_type', 'category', 'season', 'league')
     inlines = (PlayerMedalInline, TeamMedalInline)
+
+
+@admin.register(MedalCategory)
+class MedalCategoryAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'title', 'description', 'order')
+    search_fields = ('title', 'description')
+    ordering = ('order', 'id')
 
 
 @admin.register(PlayerMedal)

@@ -1,5 +1,5 @@
 <section class="structured-medals" aria-label="Структурированные медали">
-  {% if structured_medals.groups %}
+  {% if structured_medals.categories %}
     <div class="structured-medals__summary">
       <div>
         <span class="structured-medals__eyebrow">Новая модель</span>
@@ -11,74 +11,17 @@
       </div>
     </div>
 
-    <div class="structured-medals__grid">
-      {% for group in structured_medals.groups %}
-        <article class="structured-medal-card">
-          <div class="structured-medal-card__header">
-            <div class="structured-medal-card__image-wrap">
-              {% if group.medal_type.image %}
-                <img src="{{ group.medal_type.image.url }}" alt="{{ group.medal_type.title }}" class="structured-medal-card__image">
-              {% elif group.grants.0.medal.image_override %}
-                <img src="{{ group.grants.0.medal.image_override.url }}"
-                     alt="{{ group.medal_type.title }}"
-                     class="structured-medal-card__image">
-              {% else %}
-                <i class="fa fa-trophy structured-medal-card__fallback" aria-hidden="true"></i>
-              {% endif %}
-              <span class="structured-medal-card__count" title="Количество награждений">×{{ group.count }}</span>
-            </div>
-
-            <div class="structured-medal-card__identity">
-              <h4>{{ group.medal_type.title }}</h4>
-              <div class="structured-medal-card__tags">
-                {% if group.medal_type.league_type %}<span>{{ group.medal_type.get_league_type_display }}</span>{% endif %}
-                <span>{{ group.medal_type.get_kind_display }}</span>
-              </div>
-            </div>
+    <div class="tw:flex tw:flex-col tw:gap-5">
+      {% for category_group in structured_medals.categories %}
+        <section class="tw:flex tw:flex-col tw:gap-2" aria-labelledby="structured-medal-category-{{ forloop.counter }}">
+          <h3 id="structured-medal-category-{{ forloop.counter }}"
+              class="tw:text-xl! tw:mb-0! tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ category_group.title }}</h3>
+          <div class="structured-medals__grid">
+            {% for group in category_group.groups %}
+              {% include 'tournament/medals/structured_medal_card.html' %}
+            {% endfor %}
           </div>
-
-          <details class="structured-medal-card__history">
-            <summary>
-              <span>История награждений</span>
-              <i class="fa fa-chevron-down" aria-hidden="true"></i>
-            </summary>
-            <ol>
-              {% for grant in group.grants %}
-                <li>
-                  <div class="structured-medal-occurrence__main">
-                    <strong>
-                      {% if grant.medal.season %}
-                        {{ grant.medal.season.title }}
-                      {% elif grant.medal.edition %}
-                        {{ grant.medal.edition }}
-                      {% elif grant.awarded_at %}
-                        {{ grant.awarded_at|date:"Y" }}
-                      {% else %}
-                        Получено
-                      {% endif %}
-                    </strong>
-                    {% if grant.medal.league %}<span class="structured-medal-occurrence__league">{{ grant.medal.league.title }}</span>{% endif %}
-                  </div>
-
-                  {% if grant.awarded_at or grant.medal.result_value is not None %}
-                    <div class="structured-medal-occurrence__aside">
-                      {% if grant.medal.result_value is not None %}
-                        <span class="structured-medal-occurrence__result">{{ grant.medal.result_value }} {{ grant.medal.result_unit_display }}</span>
-                      {% endif %}
-                      {% if grant.awarded_at %}
-                        <time class="structured-medal-occurrence__date" datetime="{{ grant.awarded_at|date:'Y-m-d' }}" title="Дата награждения">
-                          {{ grant.awarded_at|date:"d.m.Y" }}
-                        </time>
-                      {% endif %}
-                    </div>
-                  {% endif %}
-
-                  {% if show_squad and grant.players_raw_list %}<p class="structured-medal-occurrence__squad">{{ grant.players_raw_list }}</p>{% endif %}
-                </li>
-              {% endfor %}
-            </ol>
-          </details>
-        </article>
+        </section>
       {% endfor %}
     </div>
   {% else %}

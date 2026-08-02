@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from tournament.models import LegacyMedalMapping, Medal, MedalType, PlayerMedal, TeamMedal
+from tournament.models import LegacyMedalMapping, Medal, MedalCategory, MedalType, PlayerMedal, TeamMedal
 from tournament.services.medals_import import LegacyMedalImporter
 
 
@@ -75,10 +75,12 @@ class Command(BaseCommand):
             'team_grants': TeamMedal.objects.count(),
             'medals': Medal.objects.count(),
             'medal_types': MedalType.objects.count(),
+            'medal_categories': MedalCategory.objects.count(),
         }
         LegacyMedalMapping.objects.all().delete()
         PlayerMedal.objects.all().delete()
         TeamMedal.objects.all().delete()
         Medal.objects.all().delete()
         MedalType.objects.all().delete()
+        MedalCategory.objects.all().delete()
         return ', '.join(f'{name}={count}' for name, count in counts.items())

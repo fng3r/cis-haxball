@@ -19,8 +19,13 @@ from django.views.generic import DetailView, ListView, View
 from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
 
-from tournament.models import Achievements, Team
-from tournament.services.structured_medals import StructuredMedalCollection, get_player_medals
+from tournament.models import Team
+from tournament.services.structured_medals import (
+    CategorizedMedalCollection,
+    StructuredMedalCollection,
+    get_player_medals,
+    get_player_medals_by_category,
+)
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import (
@@ -257,20 +262,13 @@ class ProfileDetail(View):
             'medals_view': request.GET.get('medals', 'legacy'),
         }
 
-        all_achievements = Achievements.objects.select_related('category').filter(player__name=profile.name)
-        achievements_by_category = {}
-        for achievement in all_achievements:
-            category = 'Без категории'
-            if achievement.category:
-                category = achievement.category.title
-            if category not in achievements_by_category:
-                achievements_by_category[category] = list()
-            achievements_by_category[category].append(achievement)
-        context['achievements_by_category'] = achievements_by_category.items()
-        context['legacy_medals_count'] = len(all_achievements)
         player = getattr(profile.name, 'user_player', None)
+        context['categorized_medals'] = (
+            get_player_medals_by_category(player) if player else CategorizedMedalCollection(groups=[], total_count=0)
+        )
+        context['legacy_medals_count'] = context['categorized_medals'].total_count
         context['structured_medals'] = (
-            get_player_medals(player) if player else StructuredMedalCollection(groups=[], total_count=0)
+            get_player_medals(player) if player else StructuredMedalCollection(categories=[], total_count=0)
         )
         context['previous_nicknames'] = UserNicknameHistoryItem.objects.filter(user=profile.name).order_by('-edited')
 

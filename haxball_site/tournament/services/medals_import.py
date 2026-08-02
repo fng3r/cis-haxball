@@ -9,11 +9,13 @@ from django.db import transaction
 from django.utils import timezone
 
 from tournament.models import (
+    AchievementCategory,
     Achievements,
     AwardNomination,
     League,
     LegacyMedalMapping,
     Medal,
+    MedalCategory,
     MedalType,
     PlayerMedal,
     PlayerTransfer,
@@ -378,9 +380,13 @@ class LegacyMedalImporter:
         self.classifier = LegacyMedalClassifier()
         self._legacy_awarded_dates = None
         self._legacy_season_cutoff_number = None
+        self._medal_categories = {}
+        self._career_medal_category = None
 
     def run(self):
         report = ImportReport()
+        if self.apply:
+            self._copy_medal_categories()
         sources = [
             (LegacyMedalMapping.SourceModel.TEAM_ACHIEVEMENT, TeamAchievement.objects.prefetch_related('team')),
             (
@@ -480,10 +486,12 @@ class LegacyMedalImporter:
             },
         )
         medal_key = self._medal_key(descriptor, medal_type, season, league, source)
+        medal_category = self._medal_category(source, descriptor)
         medal, _ = Medal.objects.get_or_create(
             key=medal_key,
             defaults={
                 'medal_type': medal_type,
+                'category': medal_category,
                 'season': season,
                 'league': league,
                 'edition': descriptor.edition,
@@ -493,6 +501,9 @@ class LegacyMedalImporter:
                 'image_override': self._image_override(descriptor, source),
             },
         )
+        if medal.category_id is None and medal_category:
+            medal.category = medal_category
+            medal.save(update_fields=['category'])
         self._set_image_override(medal, descriptor, source)
         LegacyMedalMapping.objects.create(source_model=source_model, source_id=source.pk, medal=medal)
         if source_model == LegacyMedalMapping.SourceModel.PLAYER_ACHIEVEMENT:
@@ -522,6 +533,32 @@ class LegacyMedalImporter:
             overwrite=overwrite_awarded_at,
         )
         return 'imported', '; '.join(warnings) or None
+
+    def _copy_medal_categories(self):
+        legacy_categories = list(AchievementCategory.objects.all())
+        for legacy_category in legacy_categories:
+            category, _ = MedalCategory.objects.update_or_create(
+                title=legacy_category.title,
+                defaults={
+                    'description': legacy_category.description,
+                    'order': legacy_category.order,
+                },
+            )
+            self._medal_categories[legacy_category.pk] = category
+
+        self._career_medal_category, _ = MedalCategory.objects.update_or_create(
+            title='Карьерные достижения',
+            defaults={
+                'description': 'Медали за карьерные рубежи',
+                'order': max((category.order for category in legacy_categories), default=0) + 1,
+            },
+        )
+
+    def _medal_category(self, source, descriptor):
+        if descriptor.kind == MedalType.Kind.CAREER_MILESTONE:
+            return self._career_medal_category
+        category_id = getattr(source, 'category_id', None)
+        return self._medal_categories.get(category_id)
 
     def _legacy_awarded_at(self, source_model, source, descriptor):
         if awarded_at := self._awarded_at_override(descriptor):

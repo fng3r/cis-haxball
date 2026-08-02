@@ -2494,6 +2494,20 @@ class AwardResult(models.Model):
         verbose_name_plural = 'Результаты голосований за награды'
 
 
+class MedalCategory(models.Model):
+    title = models.CharField('Название категории', max_length=50, unique=True)
+    description = models.CharField('Описание категории', max_length=150)
+    order = models.SmallIntegerField('Порядок категории при отображении в профиле')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'Категория медалей'
+        verbose_name_plural = 'Категории медалей'
+
+
 class MedalType(models.Model):
     """Canonical identity shared by equivalent medals from different seasons."""
 
@@ -2584,6 +2598,14 @@ class Medal(models.Model):
     key = models.CharField('Ключ медали', max_length=200, unique=True)
     medal_type = models.ForeignKey(
         MedalType, verbose_name='Тип медали', related_name='medals', on_delete=models.PROTECT
+    )
+    category = models.ForeignKey(
+        MedalCategory,
+        verbose_name='Категория',
+        related_name='medals',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
     season = models.ForeignKey(
         Season, verbose_name='Сезон', related_name='medals', on_delete=models.PROTECT, null=True, blank=True
