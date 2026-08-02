@@ -119,13 +119,13 @@
     <div class="tw:w-2/3"
          {% if profile.background %} style="background-image:url({{ profile.background.url }}); background-size: cover; background-repeat: no-repeat;" {% endif %}>
       <div class="tw:card tw:px-6 tw:pt-2 tw:pb-3 tw:rounded-br-lg">
-        <div class="tw:tabs tw:tabs-border tw:gap-x-8 tw:gap-y-3 tw:bg-transparent!" role="tablist">
+        <div class="tw:tabs tw:tabs-border tw:w-full tw:gap-x-2 tw:gap-y-3 tw:bg-transparent!" role="tablist">
           <input type="radio"
                  name="profile-tabs"
                  class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
                  role="tab"
                  aria-label="Основная информация"
-                 {% if medals_view != 'structured' %}checked{% endif %} />
+                 checked />
           <div class="tw:tab-content">
             <div id="profile-info-panel" class="tw:h-[580px]" role="tabpanel" aria-labelledby="profile-info-tab">
               <div class="tw:flex tw:flex-wrap tw:gap-y-2 tw:px-4 tw:py-2 profile-info-table">
@@ -203,31 +203,33 @@
                  name="profile-tabs"
                  class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
                  role="tab"
-                 aria-label="Достижения"
-                 {% if medals_view == 'structured' %}checked{% endif %} />
+                 aria-label="Достижения" />
           <div class="tw:tab-content">
             <div class="tw:min-h-[580px] tw:mt-0 tw:px-1"
                  id="profile-achievements-panel"
                  role="tabpanel"
                  aria-labelledby="profile-achievements-tab"
-                 x-data="{ medalsView: new URLSearchParams(window.location.search).get('medals') === 'structured' ? 'structured' : 'legacy', setMedalsView(view) { this.medalsView = view; const url = new URL(window.location); view === 'structured' ? url.searchParams.set('medals', view) : url.searchParams.delete('medals'); history.replaceState({}, '', url); } }">
+                 x-data="{ medalsView: $persist('plain').as('medals-view') }">
               <div class="medal-view-switch" role="group" aria-label="Вариант отображения медалей">
-                <button type="button" @click="setMedalsView('legacy')" :aria-pressed="medalsView === 'legacy'">
-                  Текущие
-                  <span class="medal-view-switch__count">{{ legacy_medals_count }}</span>
+                <button type="button"
+                        title="Обычный вид"
+                        aria-label="Обычный вид"
+                        @click="medalsView = 'plain'"
+                        :aria-pressed="medalsView === 'plain'">
+                  <i class="fa fa-th-large" aria-hidden="true"></i>
                 </button>
-                <button type="button" @click="setMedalsView('structured')" :aria-pressed="medalsView === 'structured'">
-                  По типам
-                  <span class="medal-view-switch__count">{{ structured_medals.total_count }}</span>
-                  <span class="medal-view-switch__preview">preview</span>
+                <button type="button"
+                        title="Группировка по медалям"
+                        aria-label="Группировка по медалям"
+                        @click="medalsView = 'grouped'"
+                        :aria-pressed="medalsView === 'grouped'">
+                  <i class="fa fa-object-group" aria-hidden="true"></i>
                 </button>
               </div>
 
-              <div x-show="medalsView === 'legacy'">
-                {% include 'tournament/medals/categorized_medals.html' %}
-              </div>
+              <div x-show="medalsView === 'plain'" x-cloak>{% include 'tournament/medals/categorized_medals.html' %}</div>
 
-              <div x-show="medalsView === 'structured'" x-cloak>{% include 'tournament/medals/structured_medals.html' %}</div>
+              <div x-show="medalsView === 'grouped'" x-cloak>{% include 'tournament/medals/structured_medals.html' %}</div>
             </div>
           </div>
         </div>

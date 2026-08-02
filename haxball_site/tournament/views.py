@@ -362,7 +362,6 @@ class TeamDetail(DetailView):
         context['seasons'] = team_seasons
         context['tournaments'] = get_team_tournaments(team)
         context['structured_medals'] = get_team_medals(team)
-        context['medals_view'] = self.request.GET.get('medals', 'legacy')
 
         latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
         rating = PlayerRating.objects.select_related('player').filter(

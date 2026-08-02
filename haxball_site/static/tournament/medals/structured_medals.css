@@ -1,23 +1,24 @@
 .medal-view-switch {
-  display: inline-flex;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  margin-bottom: 1rem;
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 0.125rem;
+  padding: 0.1875rem;
+  margin-bottom: 0.5rem;
   border: 1px solid var(--color-base-300);
-  border-radius: 999px;
+  border-radius: 0.625rem;
   background: var(--color-base-200);
 }
 
 .medal-view-switch button {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  min-height: 2.25rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 0.4375rem;
   color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
@@ -26,22 +27,6 @@
   color: var(--color-base-content);
   background: var(--color-base-100);
   box-shadow: 0 1px 5px color-mix(in oklab, var(--color-base-content) 12%, transparent);
-}
-
-.medal-view-switch__count,
-.medal-view-switch__preview {
-  padding: 0.1rem 0.42rem;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--color-base-content) 9%, transparent);
-  font-size: 0.68rem;
-  line-height: 1.3;
-}
-
-.medal-view-switch__preview {
-  color: var(--color-warning-content);
-  background: color-mix(in oklab, var(--color-warning) 70%, var(--color-base-100));
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .structured-medals {
@@ -283,7 +268,7 @@
   padding: 0.15rem 0.4rem;
   color: color-mix(in oklab, var(--color-base-content) 72%, transparent);
   background: color-mix(in oklab, var(--color-base-100) 82%, transparent);
-  font-size: 0.65rem;
+  font-size: 0.66rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
@@ -301,7 +286,6 @@
 }
 
 .structured-medal-occurrence__squad {
-  grid-column: 1 / -1;
   margin: 0;
   line-height: 1.35;
 }
@@ -331,17 +315,6 @@
 }
 
 @media (max-width: 640px) {
-  .medal-view-switch {
-    display: flex;
-    width: 100%;
-  }
-
-  .medal-view-switch button {
-    justify-content: center;
-    flex: 1;
-    padding-inline: 0.55rem;
-  }
-
   .structured-medals__summary {
     align-items: start;
     flex-direction: column;

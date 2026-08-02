@@ -259,7 +259,6 @@ class ProfileDetail(View):
             'page': page,
             'comments': comments,
             'comment_form': NewCommentForm(),
-            'medals_view': request.GET.get('medals', 'legacy'),
         }
 
         player = getattr(profile.name, 'user_player', None)
