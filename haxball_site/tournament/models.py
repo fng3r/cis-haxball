@@ -2550,7 +2550,7 @@ class MedalType(models.Model):
     variant = models.SlugField('Вариант', max_length=64, blank=True)
     threshold = models.PositiveIntegerField('Порог', null=True, blank=True)
     unit = models.CharField('Единица', max_length=32, choices=Unit.choices, blank=True)
-    order = models.SmallIntegerField('Порядок', default=0)
+    order = models.SmallIntegerField('Порядок внутри категории', default=0)
 
     def clean(self):
         super().clean()

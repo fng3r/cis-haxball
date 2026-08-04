@@ -83,6 +83,79 @@ STATISTIC_MEDAL_TITLES = {
     },
 }
 
+PLACE_ORDER = {1: 0, 2: 10, 3: 20}
+
+NOMINATION_ORDER = {
+    'BEST_PLAYER': 300,
+    'BEST_GOALKEEPER': 400,
+    'BEST_DEFENDER': 500,
+    'BEST_STRIKER': 600,
+    'BEST_CAPTAIN': 700,
+    'BEST_LEADER': 800,
+    'BEST_NEWCOMER': 900,
+    'BREAKTHROUGH': 1000,
+    'DISCOVERY': 1100,
+    'PROGRESS': 1200,
+}
+
+STATISTIC_ORDER = {
+    MedalType.Statistic.GOALS: 1400,
+    MedalType.Statistic.ASSISTS: 1500,
+    MedalType.Statistic.CLEAN_SHEETS: 1600,
+}
+
+AUXILIARY_COMPETITION_ORDER = {
+    'elo': 100,
+    'predictions': 200,
+    'arena_reborn': 300,
+    'fantasy_league': 400,
+    'survival_instinct': 500,
+    'saturday_cup_rating': 600,
+    'slotcybercup': 700,
+    'hax_premier_trophy': 800,
+    'copa_del_cis': 900,
+    'euro_2024': 1000,
+    'europe_league': 1100,
+    'leopards_trophy': 1200,
+}
+
+AUXILIARY_VARIANT_ORDER = {
+    '': 0,
+    'classic_9': 0,
+    'futsal': 30,
+}
+
+LEAGUE_SCOPE_ORDER = {
+    League.Type.PREMIER_LEAGUE: 0,
+    League.Type.FIRST_LEAGUE: 30,
+    League.Type.SECOND_LEAGUE: 60,
+    League.Type.CHAMPIONS_LEAGUE: 90,
+}
+
+CAREER_UNIT_ORDER = {
+    MedalType.Unit.MATCHES: 0,
+    MedalType.Unit.GOALS: 50,
+    MedalType.Unit.ASSISTS: 100,
+    MedalType.Unit.CLEAN_SHEETS: 150,
+}
+
+HONORARY_ORDER = {
+    'best_inspector': 2000,
+    'media_contributor': 2100,
+    'designer': 2200,
+    'rooster_of_year': 2300,
+    'thanos_of_season': 2400,
+    'roflyanka': 2500,
+}
+
+CUP_LEAGUE_ORDER = {
+    League.Type.RUSSIAN_CUP: 0,
+    League.Type.PREMIER_LEAGUE_CUP: 30,
+    League.Type.FIRST_LEAGUE_CUP: 60,
+    League.Type.SECOND_LEAGUE_CUP: 90,
+    League.Type.LEAGUE_CUP: 120,
+}
+
 
 @dataclass(frozen=True)
 class MedalDescriptor:
@@ -430,11 +503,12 @@ class LegacyMedalImporter:
     @transaction.atomic
     def _import_source(self, source_model, source, descriptor):
         mapping = (
-            LegacyMedalMapping.objects.select_related('medal')
+            LegacyMedalMapping.objects.select_related('medal__medal_type')
             .filter(source_model=source_model, source_id=source.pk)
             .first()
         )
         if mapping:
+            self._set_medal_type_order(mapping.medal.medal_type, descriptor)
             self._set_image_override(mapping.medal, descriptor, source)
             awarded_at = self._legacy_awarded_at(source_model, source, descriptor)
             overwrite_awarded_at = self._awarded_at_override(descriptor) is not None
@@ -483,8 +557,10 @@ class LegacyMedalImporter:
                 'variant': descriptor.variant,
                 'threshold': descriptor.threshold,
                 'unit': descriptor.unit,
+                'order': self._medal_type_order(descriptor),
             },
         )
+        self._set_medal_type_order(medal_type, descriptor)
         medal_key = self._medal_key(descriptor, medal_type, season, league, source)
         medal_category = self._medal_category(source, descriptor)
         medal, _ = Medal.objects.get_or_create(
@@ -533,6 +609,48 @@ class LegacyMedalImporter:
             overwrite=overwrite_awarded_at,
         )
         return 'imported', '; '.join(warnings) or None
+
+    @classmethod
+    def _set_medal_type_order(cls, medal_type, descriptor):
+        order = cls._medal_type_order(descriptor)
+        if medal_type.order != order:
+            medal_type.order = order
+            medal_type.save(update_fields=['order'])
+
+    @staticmethod
+    def _medal_type_order(descriptor):
+        place_order = PLACE_ORDER.get(descriptor.place, 0)
+
+        if descriptor.kind == MedalType.Kind.TOURNAMENT_PLACE:
+            if descriptor.league_type in CUP_LEAGUE_ORDER:
+                return 200 + CUP_LEAGUE_ORDER[descriptor.league_type] + place_order
+            return 100 + place_order
+
+        if descriptor.kind == MedalType.Kind.NOMINATION_PLACE:
+            return NOMINATION_ORDER.get(descriptor.nomination_code, 1300) + place_order
+
+        if descriptor.kind == MedalType.Kind.STATISTIC_PLACE:
+            return STATISTIC_ORDER.get(descriptor.statistic, 1200) + place_order
+
+        if descriptor.kind == MedalType.Kind.AUXILIARY_COMPETITION_PLACE:
+            league_scope_order = (
+                0 if descriptor.competition_code == 'predictions' else LEAGUE_SCOPE_ORDER.get(descriptor.league_type, 0)
+            )
+            return (
+                AUXILIARY_COMPETITION_ORDER.get(descriptor.competition_code, 2000)
+                + AUXILIARY_VARIANT_ORDER.get(descriptor.variant, 20)
+                + league_scope_order
+                + place_order
+            )
+
+        if descriptor.kind == MedalType.Kind.CAREER_MILESTONE:
+            return CAREER_UNIT_ORDER.get(descriptor.unit, 20000) + (descriptor.threshold or 0)
+
+        if descriptor.kind == MedalType.Kind.HONORARY:
+            honorary_code = descriptor.code.removeprefix('honorary.')
+            return HONORARY_ORDER.get(honorary_code, 3000)
+
+        return 0
 
     def _copy_medal_categories(self):
         legacy_categories = list(AchievementCategory.objects.all())
