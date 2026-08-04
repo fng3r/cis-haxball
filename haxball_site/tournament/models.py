@@ -2625,14 +2625,6 @@ class Medal(models.Model):
             raise ValidationError({'season': 'Сезон не совпадает с сезоном турнира.'})
 
     @property
-    def result_unit_display(self):
-        return {
-            MedalType.Statistic.GOALS: 'голов',
-            MedalType.Statistic.ASSISTS: 'ассистов',
-            MedalType.Statistic.CLEAN_SHEETS: 'сухих таймов',
-        }.get(self.medal_type.statistic, '')
-
-    @property
     def image(self):
         return self.image_override or self.medal_type.image
 

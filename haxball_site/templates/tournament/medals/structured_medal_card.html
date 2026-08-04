@@ -1,3 +1,5 @@
+{% load utils %}
+
 <article class="structured-medal-card">
   <div class="structured-medal-card__header">
     <div class="structured-medal-card__image-wrap">
@@ -46,7 +48,16 @@
           {% if grant.awarded_at or grant.medal.result_value is not None %}
             <div class="structured-medal-occurrence__aside">
               {% if grant.medal.result_value is not None %}
-                <span class="structured-medal-occurrence__result">{{ grant.medal.result_value }} {{ grant.medal.result_unit_display }}</span>
+                <span class="structured-medal-occurrence__result">
+                  {{ grant.medal.result_value }}
+                  {% if grant.medal.medal_type.statistic == 'goals' %}
+                    {{ grant.medal.result_value|ru_pluralize:'гол,гола,голов' }}
+                  {% elif grant.medal.medal_type.statistic == 'assists' %}
+                    {{ grant.medal.result_value|ru_pluralize:'ассист,ассиста,ассистов' }}
+                  {% elif grant.medal.medal_type.statistic == 'goals' %}
+                    {{ grant.medal.result_value|ru_pluralize:'сухой тайм,сухих тайма,сухих таймов' }}
+                  {% endif %}
+                </span>
               {% endif %}
               {% if grant.awarded_at %}
                 <time class="structured-medal-occurrence__date" datetime="{{ grant.awarded_at|date:'Y-m-d' }}" title="Дата награждения">{{ grant.awarded_at|date:"d.m.Y" }}</time>

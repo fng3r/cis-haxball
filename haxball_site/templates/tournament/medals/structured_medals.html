@@ -1,10 +1,12 @@
+{% load utils %}
+
 <section class="structured-medals" aria-label="Структурированные медали">
   {% if structured_medals.categories %}
     <div class="structured-medals__summary">
-      <h3>Коллекция по типам</h3>
+      <h3>Коллекция по типам медалей</h3>
       <div class="structured-medals__totals" aria-label="Сводка медалей">
-        <span><strong>{{ structured_medals.type_count }}</strong> типов</span>
-        <span><strong>{{ structured_medals.total_count }}</strong> награждений</span>
+        <span><strong>{{ structured_medals.type_count }}</strong> {{ structured_medals.type_count|ru_pluralize:'тип,типа,типов' }}</span>
+        <span><strong>{{ structured_medals.total_count }}</strong> {{ structured_medals.total_count|ru_pluralize:'награждение,награждения,награждений' }}</span>
       </div>
     </div>
 
