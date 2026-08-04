@@ -188,7 +188,7 @@
           </div>
 
           {% if profile.name.username == user.username %}
-            <div class="tw:-ml-6">
+            <div class="tw:-ml-1">
               <span class="tw:text-warning tw:hover:text-warning/85 tw:cursor-pointer"
                     hx-get="{% url 'core:edit_profile' profile.slug profile.id %}"
                     hx-target="#profile-container"

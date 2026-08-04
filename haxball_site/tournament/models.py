@@ -2516,7 +2516,7 @@ class MedalType(models.Model):
         STATISTIC_PLACE = 'statistic_place', 'Место по статистике'
         NOMINATION_PLACE = 'nomination_place', 'Место в номинации'
         CAREER_MILESTONE = 'career_milestone', 'Карьерное достижение'
-        AUXILIARY_COMPETITION_PLACE = 'auxiliary_competition_place', 'Место в дополнительном турнире'
+        AUXILIARY_COMPETITION_PLACE = 'auxiliary_competition_place', 'Прочие турниры'
         HONORARY = 'honorary', 'Особая награда'
 
     class Statistic(models.TextChoices):

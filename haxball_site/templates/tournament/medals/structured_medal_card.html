@@ -36,8 +36,6 @@
                 {{ grant.medal.season.title }}
               {% elif grant.medal.edition %}
                 {{ grant.medal.edition }}
-              {% elif grant.awarded_at %}
-                {{ grant.awarded_at|date:"Y" }}
               {% else %}
                 Получено
               {% endif %}
