@@ -528,7 +528,12 @@ class LegacyMedalImporter:
             raise ValueError(f'Cannot resolve season for {source_model}:{source.pk} {source.title!r}')
         descriptor, league = self._resolve_descriptor_and_league(descriptor, season, source)
         warnings = []
-        if descriptor.league_type and season and not league:
+        if (
+            descriptor.league_type
+            and season
+            and not league
+            and not self._has_multiple_first_league_divisions(descriptor, season)
+        ):
             warnings.append(
                 f'No League row for {League.Type(descriptor.league_type).label!r} in {season.title!r}; '
                 'created a season-scoped medal'
@@ -793,6 +798,9 @@ class LegacyMedalImporter:
 
     @classmethod
     def _resolve_descriptor_and_league(cls, descriptor, season, source):
+        if cls._has_multiple_first_league_divisions(descriptor, season):
+            return descriptor, None
+
         if descriptor.league_type != League.Type.LEAGUE_CUP:
             return descriptor, cls._resolve_league(descriptor.league_type, season, source)
 
@@ -814,6 +822,14 @@ class LegacyMedalImporter:
             league_type=league.type,
         )
         return resolved, league
+
+    @staticmethod
+    def _has_multiple_first_league_divisions(descriptor, season):
+        return (
+            season is not None
+            and descriptor.league_type == League.Type.FIRST_LEAGUE
+            and League.objects.filter(championship=season, type=League.Type.FIRST_LEAGUE).count() > 1
+        )
 
     @classmethod
     def _resolve_league(cls, league_type, season, source):
