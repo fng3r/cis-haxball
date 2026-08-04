@@ -1,11 +1,12 @@
 {% load static %}
+{% load user_tags %}
 
 <header class="tw:card tw:rounded-b-none tw:border-b tw:border-base-300 tw:bg-base-200">
   <div class="tw:card-body tw:flex tw:flex-col tw:gap-4 tw:p-4!">
     <div class="tw:flex tw:gap-4 tw:items-center tw:justify-between">
       <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-4">
         <div class="tw:avatar tw:shrink-0">
-          <div class="tw:size-20 tw:rounded-box tw:ring tw:ring-warning/50 tw:ring-offset-2 tw:ring-offset-base-200 tw:sm:size-28">
+          <div class="tw:size-20 tw:rounded-box tw:shadow-[0_6px_18px_rgba(0,0,0,0.4)] tw:sm:size-28 tw:ring-offset-2 tw:ring-offset-base-200{% if profile.avatar_frame and profile.name|can_use_premium_features %} tw:ring-2{% if profile.avatar_frame == 'yellow' %} tw:ring-yellow-400{% elif profile.avatar_frame == 'orange' %} tw:ring-orange-400{% elif profile.avatar_frame == 'blue' %} tw:ring-blue-500{% elif profile.avatar_frame == 'violet' %} tw:ring-violet-500{% elif profile.avatar_frame == 'rose' %} tw:ring-rose-500{% endif %}{% else %} tw:ring-1 tw:ring-base-content/30{% endif %}">
             <img src="{{ profile.avatar.url }}" alt="Аватар {{ profile.name.username }}">
           </div>
         </div>
