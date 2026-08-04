@@ -2,11 +2,11 @@
 {% load tournament_extras %}
 
 <div class="tw:card user-card-full">
-  {% include 'core/profile/partials/profile_identity_horizontal.html' %}
+  {% include 'core/profile/partials/profile_identity.html' %}
 
   <div class="tw:rounded-b-lg tw:bg-cover tw:bg-center tw:bg-no-repeat"
        {% if profile.background %}style="background-image:url({{ profile.background.url }});"{% endif %}>
-    <div class="tw:rounded-b-lg tw:min-h-[39rem] tw:bg-base-100/65 tw:backdrop-blur-[1px]">
+    <div class="tw:rounded-b-lg tw:min-h-[39rem] tw:bg-base-100/35 tw:backdrop-blur-[1px]">
       <div class="tw:card tw:px-6 tw:pt-2 tw:pb-3">
         <div class="tw:tabs tw:tabs-border tw:w-full tw:gap-x-2 tw:gap-y-3 tw:bg-transparent!" role="tablist">
           <input type="radio"
@@ -16,7 +16,7 @@
                  aria-label="Основная информация"
                  checked />
           <div class="tw:tab-content tw:w-full">
-            <div id="profile-info-panel" class="tw:h-[580px]" role="tabpanel" aria-labelledby="profile-info-tab">
+            <div id="profile-info-panel" class="tw:h-[600px]" role="tabpanel" aria-labelledby="profile-info-tab">
               <div class="tw:mb-[30px] tw:ml-0 tw:flex tw:w-full tw:flex-wrap tw:gap-y-2 tw:rounded-[10px] tw:px-4 tw:py-2 tw:shadow-[0_0_10px_#000]">
                 <div class="tw:sm:w-1/2 tw:w-full">
                   <div class="tw:font-semibold">Дата регистрации</div>
@@ -51,7 +51,7 @@
                   </div>
                 </div>
               </div>
-              <div class="tw:flex tw:h-[430px] tw:flex-col tw:gap-2 tw:overflow-y-auto tw:rounded-[10px] tw:p-[15px] tw:shadow-[0_0_10px_#000]">
+              <div class="tw:flex tw:h-[450px] tw:flex-col tw:gap-2 tw:overflow-y-auto tw:rounded-[10px] tw:p-[15px] tw:shadow-[0_0_10px_#000]">
                 <div>
                   <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">О себе</h5>
                   <div class="tw:w-full">
@@ -94,7 +94,7 @@
                  role="tab"
                  aria-label="Достижения" />
           <div class="tw:tab-content tw:w-full">
-            <div class="tw:min-h-[580px] tw:mt-0 tw:px-1"
+            <div class="tw:h-[600px] tw:overflow-x-hidden tw:overflow-y-auto tw:mt-0 tw:px-1"
                  id="profile-achievements-panel"
                  role="tabpanel"
                  aria-labelledby="profile-achievements-tab"

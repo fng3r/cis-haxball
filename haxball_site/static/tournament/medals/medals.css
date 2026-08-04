@@ -33,6 +33,22 @@
   color: var(--color-base-content);
 }
 
+.medal-anchor-tooltip > .tw\:tooltip-content {
+  position: fixed !important;
+  position-area: top center;
+  position-try-fallbacks: flip-block;
+  inset: auto !important;
+  z-index: 9999;
+  width: max-content;
+  max-width: min(16rem, calc(100vw - 1rem));
+  margin: 0.5rem;
+  transform: translateY(var(--tt-pos, 0.25rem)) !important;
+}
+
+.medal-anchor-tooltip::after {
+  display: none;
+}
+
 .structured-medals__summary {
   display: flex;
   align-items: end;
