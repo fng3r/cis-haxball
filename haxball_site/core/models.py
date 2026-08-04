@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max, Sum
 from django.db.models.signals import post_save, pre_save
@@ -434,6 +435,54 @@ class Profile(models.Model):
     class Meta:
         verbose_name = 'Профиль'
         verbose_name_plural = 'Профили'
+
+
+class FavoriteMedal(models.Model):
+    profile = models.ForeignKey(
+        Profile,
+        verbose_name='Профиль',
+        related_name='favorite_medals',
+        on_delete=models.CASCADE,
+    )
+    medal = models.ForeignKey(
+        'tournament.Medal',
+        verbose_name='Медаль',
+        related_name='favorite_medals',
+        on_delete=models.CASCADE,
+    )
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        profile_player = getattr(self.profile.name, 'user_player', None) if self.profile_id else None
+        if self.medal_id and (
+            not profile_player or not self.medal.player_medals.filter(player=profile_player).exists()
+        ):
+            errors['medal'] = 'Эта медаль не была вручена выбранному игроку.'
+        if self.profile_id:
+            favorites = type(self).objects.filter(profile=self.profile)
+            if self.pk:
+                favorites = favorites.exclude(pk=self.pk)
+            if favorites.count() >= 5:
+                errors['medal'] = 'Можно выбрать не более 5 достижений.'
+        if errors:
+            raise ValidationError(errors)
+
+    @property
+    def awarded_at(self):
+        player = getattr(self.profile.name, 'user_player', None)
+        if not player:
+            return None
+        grant = next((grant for grant in self.medal.player_medals.all() if grant.player_id == player.pk), None)
+        return grant.awarded_at if grant else None
+
+    def __str__(self):
+        return f'{self.medal}'
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['profile', 'medal'], name='unique_favorite_profile_medal')]
+        verbose_name = 'Избранная медаль'
+        verbose_name_plural = 'Избранные медали'
 
 
 class UserIcon(models.Model):

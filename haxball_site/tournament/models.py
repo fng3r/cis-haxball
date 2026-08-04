@@ -1736,7 +1736,7 @@ class OtherEvents(models.Model):
         return f'{emoji} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
 
     class Meta:
-        verbose_name = 'Событие [OBSOLETE])'
+        verbose_name = 'Событие [OBSOLETE]'
         verbose_name_plural = 'События [OBSOLETE]'
         indexes = [
             models.Index(fields=['event', 'match']),
@@ -1896,8 +1896,8 @@ class AchievementCategory(models.Model):
 
     class Meta:
         ordering = ['order']
-        verbose_name = 'Категория медалек'
-        verbose_name_plural = 'Категории медалек'
+        verbose_name = 'Категория медалек [OBSOLETE]'
+        verbose_name_plural = 'Категории медалек [OBSOLETE]'
 
 
 class Achievements(models.Model):
@@ -2631,6 +2631,18 @@ class Medal(models.Model):
             MedalType.Statistic.ASSISTS: 'ассистов',
             MedalType.Statistic.CLEAN_SHEETS: 'сухих таймов',
         }.get(self.medal_type.statistic, '')
+
+    @property
+    def image(self):
+        return self.image_override or self.medal_type.image
+
+    @property
+    def title(self):
+        return self.title_override or self.medal_type.title
+
+    @property
+    def description(self):
+        return self.description_override or self.medal_type.description
 
     def __str__(self):
         return self.title_override or self.medal_type.title

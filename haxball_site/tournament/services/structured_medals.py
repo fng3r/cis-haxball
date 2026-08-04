@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from django.db.models import F, QuerySet
 
-from tournament.models import MedalCategory, MedalType, Player, PlayerMedal, Team, TeamMedal
+from tournament.models import MedalCategory, MedalType, Player, PlayerMedal, Season, Team, TeamMedal
 
 
 @dataclass(frozen=True)
@@ -103,6 +103,32 @@ def get_player_medals_by_category(player: Player) -> CategorizedMedalCollection:
         current_group.grants.append(grant)
 
     return CategorizedMedalCollection(groups=groups, total_count=sum(len(group.grants) for group in groups))
+
+
+def get_team_medals_by_season(team: Team) -> list[tuple[Season | None, list[TeamMedal]]]:
+    grants = (
+        TeamMedal.objects.filter(team=team)
+        .select_related(
+            'medal__medal_type',
+            'medal__season',
+            'medal__league',
+        )
+        .order_by(
+            'medal__season__number',
+            'medal__medal_type__order',
+            'medal_id',
+        )
+    )
+    season_groups = []
+    current_season_id = object()
+    current_grants = None
+    for grant in grants:
+        if grant.medal.season_id != current_season_id:
+            current_season_id = grant.medal.season_id
+            current_grants = []
+            season_groups.append((grant.medal.season, current_grants))
+        current_grants.append(grant)
+    return season_groups
 
 
 def get_team_medals(team: Team) -> StructuredMedalCollection:

@@ -12,52 +12,7 @@
                  style="anchor-name: --medal-tooltip-{{ grant.pk }}">
               <div class="tw:tooltip-content tw:max-w-64 tw:whitespace-normal tw:text-left"
                    style="position-anchor: --medal-tooltip-{{ grant.pk }}">
-                <div class="tw:flex tw:flex-col tw:min-w-44 tw:gap-2 tw:py-0.5">
-                    <div>
-                      <div class="tw:text-xs tw:font-semibold">Тип медали</div>
-                      <div class="tw:text-xs tw:font-normal tw:opacity-70">{{ grant.medal.medal_type.title }}</div>
-                    </div>
-                    {% if grant.medal.league or grant.medal.edition %}
-                      <div>
-                        <div class="tw:text-xs tw:font-semibold">
-                          {% if grant.medal.season %}
-                            Сезон
-                          {% elif grant.medal.edition %}
-                            Розыгрыш
-                          {% endif %}
-                        </div>
-                        <div class="tw:text-xs tw:font-normal tw:opacity-70">
-                          {% if grant.medal.season %}
-                            {{ grant.medal.season.title }}
-                            {% if grant.medal.league %}
-                              ({{ grant.medal.league.title }})
-                            {% elif grant.medal.medal_type.league_type %}
-                              ({{ grant.medal.medal_type.get_league_type_display }})
-                            {% endif %}
-                          {% elif grant.medal.edition %}
-                            {{ grant.medal.edition }}
-                          {% endif %}
-                        </div>
-                      </div>
-                    {% endif %}
-                    {% if grant.medal.result_value is not None %}
-                      <div>
-                        <div class="tw:text-xs tw:font-semibold">{{ grant.medal.medal_type.get_statistic_display }}</div>
-                        <div class="tw:text-xs tw:font-normal tw:opacity-70">{{ grant.medal.result_value }}</div>
-                      </div>
-                    {% endif %}
-                    <div>
-                      <div class="tw:text-xs tw:font-semibold">Дата получения</div>
-                      <time class="tw:block tw:text-xs tw:font-normal tw:opacity-70"
-                            {% if grant.awarded_at %}datetime="{{ grant.awarded_at|date:'Y-m-d' }}"{% endif %}>
-                        {% if grant.awarded_at %}
-                          {{ grant.awarded_at|date:"d.m.Y" }}
-                        {% else %}
-                          Не указана
-                        {% endif %}
-                      </time>
-                    </div>
-                </div>
+                {% include 'tournament/medals/medal_tooltip_content.html' with medal=grant.medal awarded_at=grant.awarded_at %}
               </div>
 
               {% if grant.medal.image_override %}

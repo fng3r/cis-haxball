@@ -70,7 +70,7 @@ from .models import (
 )
 from .services.hall_of_fame import HallOfFameService
 from .services.replay_stats import MatchReplayStatsAggregator
-from .services.structured_medals import get_team_medals
+from .services.structured_medals import get_team_medals, get_team_medals_by_season
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
 
 
@@ -361,6 +361,7 @@ class TeamDetail(DetailView):
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
         context['tournaments'] = get_team_tournaments(team)
+        context['team_medals_by_season'] = get_team_medals_by_season(team)
         context['structured_medals'] = get_team_medals(team)
 
         latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
@@ -811,7 +812,17 @@ def get_postponements_queryset():
         .prefetch_related(
             'teams',
             'taken_by__user_profile__user_icon',
+            'taken_by__user_profile__favorite_medals__medal__medal_type',
+            'taken_by__user_profile__favorite_medals__medal__season',
+            'taken_by__user_profile__favorite_medals__medal__league',
+            'taken_by__user_profile__favorite_medals__medal__player_medals',
+            'taken_by__user_player__medals',
             'cancelled_by__user_profile__user_icon',
+            'cancelled_by__user_profile__favorite_medals__medal__medal_type',
+            'cancelled_by__user_profile__favorite_medals__medal__season',
+            'cancelled_by__user_profile__favorite_medals__medal__league',
+            'cancelled_by__user_profile__favorite_medals__medal__player_medals',
+            'cancelled_by__user_player__medals',
             'taken_by__user_player__team__owner',
             'taken_by__user_player__team__captain',
             'taken_by__user_player__team__captain_assistant',

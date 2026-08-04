@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from core.models import FavoriteMedal
 from tournament.models import (
     AchievementCategory,
     Achievements,
@@ -41,8 +42,8 @@ NOMINATIONS = {
 }
 
 HONORARY = {
-    'инспектор сезона': ('best_inspector', 'Инспектор сезона'),
-    'инспектор,': ('best_inspector', 'Инспектор сезона'),
+    'инспектор сезона': ('inspector', 'Инспектор'),
+    'инспектор,': ('inspector', 'Инспектор'),
     'медиа-сотрудник': ('media_contributor', 'Медиа-сотрудник'),
     'дизайнер': ('designer', 'Дизайнер'),
     'петух года': ('rooster_of_year', 'Петух года'),
@@ -519,6 +520,7 @@ class LegacyMedalImporter:
                 awarded_at,
                 overwrite=overwrite_awarded_at,
             )
+            self._import_favorites(source_model, source, mapping.medal)
             return 'mapped', self._awarded_at_warning(descriptor, awarded_at)
 
         season = self._resolve_season(descriptor)
@@ -608,7 +610,15 @@ class LegacyMedalImporter:
             awarded_at,
             overwrite=overwrite_awarded_at,
         )
+        self._import_favorites(source_model, source, medal)
         return 'imported', '; '.join(warnings) or None
+
+    @staticmethod
+    def _import_favorites(source_model, source, medal):
+        if source_model != LegacyMedalMapping.SourceModel.PLAYER_ACHIEVEMENT:
+            return
+        for profile in source.favorited_by_profiles.all():
+            FavoriteMedal.objects.get_or_create(profile=profile, medal=medal)
 
     @classmethod
     def _set_medal_type_order(cls, medal_type, descriptor):

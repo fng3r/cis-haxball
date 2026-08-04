@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
+from core.models import FavoriteMedal
 from tournament.models import LegacyMedalMapping, Medal, MedalCategory, MedalType, PlayerMedal, TeamMedal
 from tournament.services.medals_import import LegacyMedalImporter
 
@@ -70,6 +71,7 @@ class Command(BaseCommand):
     @staticmethod
     def _clear_structured_medals():
         counts = {
+            'favorite_medals': FavoriteMedal.objects.count(),
             'mappings': LegacyMedalMapping.objects.count(),
             'player_grants': PlayerMedal.objects.count(),
             'team_grants': TeamMedal.objects.count(),

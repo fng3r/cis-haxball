@@ -1,0 +1,46 @@
+<div class="tw:flex tw:flex-col tw:min-w-44 tw:gap-2 tw:py-0.5">
+  <div>
+    <div class="tw:text-xs tw:font-semibold">Тип медали</div>
+    <div class="tw:text-xs tw:font-normal tw:opacity-70">{{ medal.medal_type.title }}</div>
+  </div>
+  {% if medal.season or medal.edition %}
+    <div>
+      <div class="tw:text-xs tw:font-semibold">
+        {% if medal.season %}
+          Сезон
+        {% elif medal.edition %}
+          Розыгрыш
+        {% endif %}
+      </div>
+      <div class="tw:text-xs tw:font-normal tw:opacity-70">
+        {% if medal.season %}
+          {{ medal.season.title }}
+          {% if medal.league %}
+            ({{ medal.league.title }})
+          {% elif medal.medal_type.league_type %}
+            ({{ medal.medal_type.get_league_type_display }})
+          {% endif %}
+        {% elif medal.edition %}
+          {{ medal.edition }}
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+  {% if medal.result_value is not None %}
+    <div>
+      <div class="tw:text-xs tw:font-semibold">{{ medal.medal_type.get_statistic_display }}</div>
+      <div class="tw:text-xs tw:font-normal tw:opacity-70">{{ medal.result_value }}</div>
+    </div>
+  {% endif %}
+  <div>
+    <div class="tw:text-xs tw:font-semibold">Дата получения</div>
+    <time class="tw:block tw:text-xs tw:font-normal tw:opacity-70"
+          {% if awarded_at %}datetime="{{ awarded_at|date:'Y-m-d' }}"{% endif %}>
+      {% if awarded_at %}
+        {{ awarded_at|date:"d.m.Y" }}
+      {% else %}
+        Не указана
+      {% endif %}
+    </time>
+  </div>
+</div>

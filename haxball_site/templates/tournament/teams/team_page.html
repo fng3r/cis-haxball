@@ -250,22 +250,24 @@
               </div>
 
               <div x-show="medalsView === 'plain'" x-cloak>
-                {% if team.achievements.count %}
-                  {% for season, achievements in team|team_achievements_by_season %}
+                {% if team_medals_by_season %}
+                  {% for season, grants in team_medals_by_season %}
                     <div class="team_achievements tw:py-2 tw:text-base-content/80 tw:not-first:border-t tw:border-neutral-300">
                       <div class="team_achievements-season">{{ season.title }}</div>
                       <div class="team_achievements-medals">
-                        {% for achievement in achievements %}
-                          <div class="team_achievements-medal">
-                            <img src="{{ achievement.image.url }}"
-                                 title="{{ achievement.description }}"
-                                 width="80px"
-                                 height="80px"
-                                 alt="{{ achievement.title }}">
+                        {% for grant in grants %}
+                          <div class="team_achievements-medal tw:tooltip tw:tooltip-top tw:cursor-help"
+                               tabindex="0"
+                               aria-label="{{ grant.medal.medal_type.title }}"
+                               style="anchor-name: --team-medal-tooltip-{{ grant.pk }}">
+                            <div class="tw:tooltip-content tw:max-w-64 tw:whitespace-normal tw:text-left">
+                              {% include 'tournament/medals/medal_tooltip_content.html' with medal=grant.medal awarded_at=grant.awarded_at %}
+                            </div>
+                            <img src="{{ grant.medal.image.url }}" width="80px" height="80px" alt="{{ grant.medal.title }}">
                           </div>
                         {% endfor %}
                       </div>
-                      <div class="team_achievements-squad">{{ achievements|team_squad_in_season }}</div>
+                      <div class="team_achievements-squad">{{ grants.0.players_raw_list }}</div>
                     </div>
                   {% endfor %}
                 {% else %}

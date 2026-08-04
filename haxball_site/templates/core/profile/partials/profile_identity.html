@@ -49,9 +49,9 @@
 
           {% if profile.name.user_player.team %}
             <a href="{{ profile.name.user_player.team.get_absolute_url }}"
-               class="tw:link tw:link-hover tw:inline-flex tw:items-center tw:gap-2 tw:text-sm tw:font-bold">
+               class="tw:link tw:link-hover tw:inline-flex tw:items-center tw:gap-1 tw:text-sm tw:font-bold">
               <img src="{{ profile.name.user_player.team.logo.url }}"
-                   class="tw:size-6 tw:sm:size-7 tw:object-contain"
+                   class="tw:size-5 tw:sm:size-6 tw:object-contain"
                    alt="{{ profile.name.user_player.team.title }}">
               <span>{{ profile.name.user_player.team.title }}</span>
             </a>

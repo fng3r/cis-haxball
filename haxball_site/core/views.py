@@ -370,27 +370,35 @@ class EditCommentView(View):
             comment.body = form.cleaned_data['edit_body']
             comment.save()
 
+        comment = get_comment_for_render(comment.pk)
         return render(request, 'core/comment/comment-item.html', {'comment': comment, 'object': comment.content_object})
 
 
-def get_comment(request, pk):
+def get_comment_for_render(pk):
     prefetch_likes = Prefetch(
         'votes', queryset=LikeDislike.objects.likes().prefetch_related('user__user_profile'), to_attr='likes'
     )
     prefetch_dislikes = Prefetch(
         'votes', queryset=LikeDislike.objects.dislikes().prefetch_related('user__user_profile'), to_attr='dislikes'
     )
-    comment = (
+    return (
         NewComment.objects.select_related('author__user_profile')
         .prefetch_related(
             'author__user_profile__user_icon',
-            'author__user_profile__favorite_achievements',
-            'author__user_player__achievements',
+            'author__user_profile__favorite_medals__medal__medal_type',
+            'author__user_profile__favorite_medals__medal__season',
+            'author__user_profile__favorite_medals__medal__league',
+            'author__user_profile__favorite_medals__medal__player_medals',
+            'author__user_player__medals',
             prefetch_likes,
             prefetch_dislikes,
         )
         .get(pk=pk)
     )
+
+
+def get_comment(request, pk):
+    comment = get_comment_for_render(pk)
 
     return render(request, 'core/comment/comment-item.html', {'comment': comment, 'object': comment.content_object})
 
@@ -607,6 +615,7 @@ class ReactionWidgetView(View):
         return render(request, 'core/include/reactions/widget.html', context)
 
     def _render_comment_item(self, request, comment):
+        comment = get_comment_for_render(comment.pk)
         return render(
             request,
             'core/comment/comment-item.html',
@@ -787,8 +796,11 @@ class UserCommentsView(View):
             NewComment.objects.select_related('author__user_profile', 'content_type')
             .prefetch_related(
                 'author__user_profile__user_icon',
-                'author__user_profile__favorite_achievements',
-                'author__user_player__achievements',
+                'author__user_profile__favorite_medals__medal__medal_type',
+                'author__user_profile__favorite_medals__medal__season',
+                'author__user_profile__favorite_medals__medal__league',
+                'author__user_profile__favorite_medals__medal__player_medals',
+                'author__user_player__medals',
                 'votes',
             )
             .filter(author__id=user_id)

@@ -1,18 +1,24 @@
 {% load user_tags %}
 
-{% if user.user_profile.favorite_achievements.exists %}
+{% if user.user_profile.favorite_medals.exists %}
   <span class="tw:inline-flex tw:gap-1 tw:items-center tw:mr-2">
-    {% for achievement in user.user_profile.favorite_achievements.all|slice:":5" %}
-      <img src="{{ achievement.image.url }}"
-           alt="{{ achievement.title }}"
-           width="24"
-           height="24"
-           class="tw:object-contain"
-           title="{{ achievement.description }}">
+    {% for favorite in user.user_profile.favorite_medals.all|slice:":5" %}
+      <span class="tw:tooltip tw:tooltip-top tw:cursor-help"
+            tabindex="0"
+            aria-label="{{ favorite.medal.medal_type.title }}">
+        <span class="tw:tooltip-content tw:max-w-64 tw:whitespace-normal tw:text-left">
+          {% include 'tournament/medals/medal_tooltip_content.html' with medal=favorite.medal awarded_at=favorite.awarded_at %}
+        </span>
+        <img src="{{ favorite.medal.image.url }}"
+             alt="{{ favorite.medal.title }}"
+             width="24"
+             height="24"
+             class="tw:object-contain">
+      </span>
     {% endfor %}
     {% if user.user_player %}
-      {% with total_ach=user.user_player.achievements.count %}
-        {% with displayed=user.user_profile.favorite_achievements.count %}
+      {% with total_ach=user.user_player.medals.count %}
+        {% with displayed=user.user_profile.favorite_medals.count %}
           {% if total_ach > displayed %}
             <span class="tw:text-base-content/70 tw:text-sm" title="Ещё достижений: {{ total_ach|subtract:displayed }}">+{{ total_ach|subtract:displayed }}</span>
           {% endif %}
