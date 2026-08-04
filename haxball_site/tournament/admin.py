@@ -283,6 +283,34 @@ class TeamAchievementsInline(UnfoldTabularInline):
         return False
 
 
+class PlayerMedalsInline(UnfoldTabularInline):
+    model = PlayerMedal
+    extra = 0
+    tab = True
+    fields = ('medal', 'awarded_at')
+    raw_id_fields = ('medal',)
+    show_change_link = True
+    verbose_name = 'Медаль игрока'
+    verbose_name_plural = 'Медали'
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class TeamMedalsInline(UnfoldTabularInline):
+    model = TeamMedal
+    extra = 0
+    tab = True
+    fields = ('medal', 'players_raw_list', 'awarded_at')
+    raw_id_fields = ('medal',)
+    show_change_link = True
+    verbose_name = 'Медаль команды'
+    verbose_name_plural = 'Медали'
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Player)
 class PlayerAdmin(UnfoldModelAdmin):
     list_display = (
@@ -303,7 +331,7 @@ class PlayerAdmin(UnfoldModelAdmin):
         'nickname',
         'name__username',
     )
-    inlines = [AchievementsInline]
+    inlines = [PlayerMedalsInline]
 
     @display(description='Позиции', label=True)
     def display_positions(self, obj):
@@ -425,7 +453,7 @@ class TeamAdmin(UnfoldModelAdmin):
     list_filter_sheet = False
     show_facets = False
     search_fields = ('title', 'short_title')
-    inlines = [TeamPlayerInline, TeamAchievementsInline]
+    inlines = [TeamPlayerInline, TeamMedalsInline]
     ordering = ['-date_found', '-id']
 
     @display(description='Команда', header=True)
