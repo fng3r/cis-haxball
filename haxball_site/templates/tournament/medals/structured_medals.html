@@ -24,10 +24,6 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="structured-medals__empty">
-      <i class="fa fa-layer-group" aria-hidden="true"></i>
-      <strong>Структурированных медалей пока нет</strong>
-      <span>Новая модель работает отдельно от текущей коллекции.</span>
-    </div>
+    {% include 'tournament/medals/no_medals.html' %}
   {% endif %}
 </section>
