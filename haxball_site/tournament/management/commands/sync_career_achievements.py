@@ -4,13 +4,13 @@ from tournament.services.achievements import sync_career_achievements
 
 
 class Command(BaseCommand):
-    help = 'Sync career achievements for matches, goals, assists, and clean sheets'
+    help = 'Sync career medals for matches, goals, assists, and clean sheets'
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--dry-run',
             action='store_true',
-            help='Show what would change without modifying achievements',
+            help='Show what would change without modifying medals',
         )
 
     def handle(self, *args, **options):
@@ -20,6 +20,7 @@ class Command(BaseCommand):
         self.stdout.write(
             mode_style(
                 f'Finished sync_stats_achievements: processed {summary["processed_players"]} players, '
-                f'added {summary["added"]}, removed {summary["removed"]}'
+                f'added {summary["added"]}, removed {summary["removed"]}, '
+                f'updated dates {summary["updated_dates"]}'
             )
         )

@@ -1,57 +1,54 @@
-import re
 from collections import defaultdict
 from typing import Callable
 
 from django.core.management.base import CommandError
+from django.db.models import Q
+from django.db.models.functions import Coalesce
 
-from tournament.models import Achievements, Player
+from tournament.models import Medal, MedalType, Player, PlayerMedal
 
 
 class CareerAchievementsSyncService:
-    CAREER_TITLE_SEARCH = 'за карьеру'
-    THRESHOLD_PATTERN = re.compile(r'(\d+)')
-    STAT_PATTERNS = {
-        'matches': ('сыгранных матч',),
-        'clean_sheets': ('сухих тайм',),
-        'goals': ('забитых голов',),
-        'assists': ('голевых передач',),
-    }
     STAT_LABELS = {
-        'matches': 'matches',
-        'clean_sheets': 'clean sheets',
-        'goals': 'goals',
-        'assists': 'assists',
+        MedalType.Unit.MATCHES: 'matches',
+        MedalType.Unit.CLEAN_SHEETS: 'clean sheets',
+        MedalType.Unit.GOALS: 'goals',
+        MedalType.Unit.ASSISTS: 'assists',
     }
 
     def __init__(self, stdout: Callable[[str], None] | None = None):
         self.stdout = stdout
 
     def sync(self, dry_run: bool = False):
-        achievements_by_stat = self._load_career_achievements()
+        medals_by_stat = self._load_career_medals()
 
         added_total = 0
         removed_total = 0
+        updated_dates_total = 0
         processed_players = 0
 
-        for stat_key, achievements in achievements_by_stat.items():
-            thresholds = ', '.join(str(item['threshold']) for item in achievements)
+        for stat_key, medals in medals_by_stat.items():
+            thresholds = ', '.join(str(item['threshold']) for item in medals)
             self._write(f'{stat_key}: {thresholds}')
 
         for player in self._get_players():
             processed_players += 1
-            added, removed = self._sync_player(player, achievements_by_stat, dry_run=dry_run)
+            added, removed, updated_dates = self._sync_player(player, medals_by_stat, dry_run=dry_run)
             added_total += added
             removed_total += removed
+            updated_dates_total += updated_dates
 
         summary = {
             'processed_players': processed_players,
             'added': added_total,
             'removed': removed_total,
+            'updated_dates': updated_dates_total,
         }
         mode_label = 'Dry run' if dry_run else 'Sync complete'
         self._write(
             f'{mode_label}: processed {processed_players} players, '
-            f'added {added_total} achievement links, removed {removed_total} achievement links'
+            f'added {added_total} medal grants, removed {removed_total} medal grants, '
+            f'updated {updated_dates_total} award dates'
         )
         return summary
 
@@ -59,106 +56,141 @@ class CareerAchievementsSyncService:
         if self.stdout is not None:
             self.stdout(message)
 
-    def _load_career_achievements(self):
-        achievements = (
-            Achievements.objects.filter(title__icontains=self.CAREER_TITLE_SEARCH)
-            .order_by('position_number', 'id')
-            .only('id', 'title', 'position_number')
+    def _load_career_medals(self):
+        medal_types = list(
+            MedalType.objects.filter(kind=MedalType.Kind.CAREER_MILESTONE).order_by('unit', 'threshold', 'id')
         )
-
-        achievements_by_stat = defaultdict(list)
-
-        for achievement in achievements:
-            stat_key = self._detect_stat_key(achievement.title)
-            threshold = self._extract_threshold(achievement.title)
-            achievements_by_stat[stat_key].append({'achievement': achievement, 'threshold': threshold})
-
-        missing_stats = sorted(set(self.STAT_PATTERNS) - set(achievements_by_stat))
-        if missing_stats:
-            raise CommandError(
-                f'Missing career achievements for stats: {", ".join(missing_stats)}. '
-                f'Search query: "{self.CAREER_TITLE_SEARCH}"'
+        medals_by_key = {
+            medal.key: medal
+            for medal in Medal.objects.filter(medal_type__kind=MedalType.Kind.CAREER_MILESTONE).select_related(
+                'medal_type'
             )
+        }
+        medals_by_stat = defaultdict(list)
 
-        for stat_key, items in achievements_by_stat.items():
-            items.sort(key=lambda item: item['threshold'])
+        for medal_type in medal_types:
+            if medal_type.unit not in self.STAT_LABELS:
+                raise CommandError(f'Unsupported career medal unit: {medal_type.unit or "<empty>"}')
+            if not medal_type.threshold:
+                raise CommandError(f'Career medal type has no threshold: {medal_type.code}')
 
-        return dict(achievements_by_stat)
+            medal_key = f'{medal_type.code}:global'
+            medal = medals_by_key.get(medal_key)
+            if medal is None or medal.medal_type_id != medal_type.id:
+                raise CommandError(f'Missing global medal for career medal type: {medal_type.code}')
+
+            medals_by_stat[medal_type.unit].append({'medal': medal, 'threshold': medal_type.threshold})
+
+        missing_stats = sorted(set(self.STAT_LABELS) - set(medals_by_stat))
+        if missing_stats:
+            raise CommandError(f'Missing career medal types for stats: {", ".join(missing_stats)}')
+
+        return dict(medals_by_stat)
 
     def _get_players(self):
         return (
-            Player.objects.filter(played_matches__match__is_played=True)
+            Player.objects.filter(
+                Q(played_matches__match__is_played=True)
+                | Q(medals__medal__medal_type__kind=MedalType.Kind.CAREER_MILESTONE)
+            )
             .distinct()
             .only('id', 'nickname')
             .order_by('id')
             .iterator(chunk_size=200)
         )
 
-    def _sync_player(self, player, achievements_by_stat, dry_run=False):
-        current_ids = set(
-            player.achievements.filter(title__icontains=self.CAREER_TITLE_SEARCH).values_list('id', flat=True)
-        )
+    def _sync_player(self, player, medals_by_stat, dry_run=False):
+        current_grants = {
+            grant.medal_id: grant
+            for grant in PlayerMedal.objects.filter(
+                player=player,
+                medal__medal_type__kind=MedalType.Kind.CAREER_MILESTONE,
+            ).only('id', 'medal_id', 'awarded_at')
+        }
         added = 0
         removed = 0
+        updated_dates = 0
 
-        stat_values = {
-            'matches': player.played_matches.filter(match__is_played=True).count(),
-            'goals': player.goals.filter(match__is_played=True).count(),
-            'assists': player.assists.filter(match__is_played=True).count(),
-            'clean_sheets': player.clean_sheets.filter(match__is_played=True).count(),
-        }
+        for stat_key, medals in medals_by_stat.items():
+            events = self._get_stat_events(player, stat_key)
+            stat_value = events.count()
+            target = self._pick_target_medal(medals, stat_value)
+            family_ids = {item['medal'].id for item in medals}
+            family_titles = {item['medal'].id: str(item['medal']) for item in medals}
+            target_id = target['medal'].id if target else None
 
-        for stat_key, achievements in achievements_by_stat.items():
-            target_achievement = self._pick_target_achievement(achievements, stat_values[stat_key])
-            family_ids = {item['achievement'].id for item in achievements}
-            family_titles = {item['achievement'].id: item['achievement'].title for item in achievements}
-            target_id = target_achievement.id if target_achievement else None
+            to_add = {target_id} - current_grants.keys() if target_id else set()
+            to_remove = (current_grants.keys() & family_ids) - ({target_id} if target_id else set())
+            awarded_at = self._threshold_awarded_at(events, target['threshold']) if target else None
+            target_grant = current_grants.get(target_id)
+            update_date = target_grant is not None and target_grant.awarded_at != awarded_at
 
-            to_add = {target_id} - current_ids if target_id else set()
-            to_remove = (current_ids & family_ids) - ({target_id} if target_id else set())
-
-            if not to_add and not to_remove:
+            if not to_add and not to_remove and not update_date:
                 continue
 
             if not dry_run:
                 if to_add:
-                    player.achievements.add(*to_add)
+                    target_grant = PlayerMedal.objects.create(
+                        medal=target['medal'],
+                        player=player,
+                        awarded_at=awarded_at,
+                    )
+                    current_grants[target_id] = target_grant
+                elif update_date:
+                    target_grant.awarded_at = awarded_at
+                    target_grant.save(update_fields=['awarded_at'])
+
                 if to_remove:
-                    player.achievements.remove(*to_remove)
+                    PlayerMedal.objects.filter(player=player, medal_id__in=to_remove).delete()
 
             added += len(to_add)
             removed += len(to_remove)
+            updated_dates += int(update_date)
 
             self._write(
-                f'{player.nickname}: {self.STAT_LABELS[stat_key]}={stat_values[stat_key]} '
-                f'add={self._format_achievement_titles(to_add, family_titles)} '
-                f'remove={self._format_achievement_titles(to_remove, family_titles)}'
+                f'{player.nickname}: {self.STAT_LABELS[stat_key]}={stat_value} '
+                f'add={self._format_medal_titles(to_add, family_titles)} '
+                f'remove={self._format_medal_titles(to_remove, family_titles)} '
+                f'awarded_at={awarded_at}'
             )
 
-            current_ids |= to_add
-            current_ids -= to_remove
+            for medal_id in to_remove:
+                current_grants.pop(medal_id, None)
 
-        return added, removed
+        return added, removed, updated_dates
 
-    def _pick_target_achievement(self, achievements, value):
-        eligible = [item['achievement'] for item in achievements if value >= item['threshold']]
+    @staticmethod
+    def _get_stat_events(player, stat_key):
+        if stat_key == MedalType.Unit.MATCHES:
+            events = player.played_matches.filter(match__is_played=True)
+        elif stat_key == MedalType.Unit.GOALS:
+            events = player.goals.filter(match__is_played=True)
+        elif stat_key == MedalType.Unit.ASSISTS:
+            events = player.assists.filter(match__is_played=True)
+        elif stat_key == MedalType.Unit.CLEAN_SHEETS:
+            events = player.clean_sheets.filter(match__is_played=True)
+        else:
+            raise CommandError(f'Unsupported career medal unit: {stat_key}')
+
+        return events.annotate(
+            event_date=Coalesce('match__match_date', 'match__numb_tour__date_to', 'match__numb_tour__date_from')
+        ).order_by('event_date', 'match_id', 'id')
+
+    @staticmethod
+    def _threshold_awarded_at(events, threshold):
+        awarded_at = events.values_list('event_date', flat=True)[threshold - 1]
+        if awarded_at is None:
+            raise CommandError(f'Could not determine award date for threshold {threshold}')
+        return awarded_at
+
+    @staticmethod
+    def _pick_target_medal(medals, value):
+        eligible = [item for item in medals if value >= item['threshold']]
         return eligible[-1] if eligible else None
 
-    def _detect_stat_key(self, title):
-        lowered_title = title.lower()
-        for stat_key, patterns in self.STAT_PATTERNS.items():
-            if any(pattern in lowered_title for pattern in patterns):
-                return stat_key
-        raise CommandError(f'Could not detect career achievement stat type from title: {title}')
-
-    def _extract_threshold(self, title):
-        match = self.THRESHOLD_PATTERN.search(title)
-        if not match:
-            raise CommandError(f'Could not extract threshold from title: {title}')
-        return int(match.group(1))
-
-    def _format_achievement_titles(self, achievement_ids, titles_by_id):
-        return [titles_by_id[achievement_id] for achievement_id in sorted(achievement_ids)]
+    @staticmethod
+    def _format_medal_titles(medal_ids, titles_by_id):
+        return [titles_by_id[medal_id] for medal_id in sorted(medal_ids)]
 
 
 def sync_career_achievements(*, dry_run: bool = False, stdout: Callable[[str], None] | None = None):

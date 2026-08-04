@@ -2643,7 +2643,7 @@ class Medal(models.Model):
 
 class PlayerMedal(models.Model):
     medal = models.ForeignKey(Medal, related_name='player_medals', on_delete=models.CASCADE)
-    player = models.ForeignKey(Player, verbose_name='Игрок', related_name='structured_medals', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, verbose_name='Игрок', related_name='medals', on_delete=models.CASCADE)
     awarded_at = models.DateField('Дата награждения', default=timezone.localdate, null=True, blank=True)
 
     def __str__(self):
@@ -2657,7 +2657,7 @@ class PlayerMedal(models.Model):
 
 class TeamMedal(models.Model):
     medal = models.ForeignKey(Medal, related_name='team_medals', on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, verbose_name='Команда', related_name='structured_medals', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', related_name='medals', on_delete=models.CASCADE)
     players_raw_list = models.CharField('Состав', max_length=150, blank=True)
     awarded_at = models.DateField('Дата награждения', default=timezone.localdate, null=True, blank=True)
 
