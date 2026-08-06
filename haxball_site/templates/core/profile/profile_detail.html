@@ -40,10 +40,7 @@
                  aria-label="Профиль пользователя"
                  checked />
           <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg">
-            <div id="profile-panel" role="tabpanel" aria-labelledby="profile-tab">
-              {# Swap this include for profile_user_panel_legacy.html to restore the previous layout. #}
-              {% include 'core/profile/partials/profile_user_panel_horizontal.html' %}
-            </div>
+            <div id="profile-panel" role="tabpanel" aria-labelledby="profile-tab">{% include 'core/profile/partials/profile_user_panel.html' %}</div>
           </div>
 
           {% if profile.name.user_player %}
