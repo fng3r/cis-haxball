@@ -1,7 +1,7 @@
 {% load static %}
 {% load user_tags %}
 
-<header class="tw:card tw:rounded-b-none tw:border-b tw:border-base-300 tw:bg-base-200">
+<header class="tw:card tw:rounded-none tw:border-b tw:border-base-300 tw:bg-base-200">
   <div class="tw:card-body tw:flex tw:flex-col tw:gap-4 tw:p-4!">
     <div class="tw:flex tw:gap-4 tw:items-center tw:justify-between">
       <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-4">
@@ -63,51 +63,45 @@
         </div>
       </div>
 
-      <div class="tw:flex tw:flex-col tw:shrink-0 tw:sm:justify-end tw:gap-4 tw:sm:self-stretch">
+      <div class="tw:flex tw:flex-col tw:shrink-0 tw:sm:justify-center tw:gap-4 tw:sm:self-stretch">
         <div class="tw:flex tw:flex-col tw:gap-1.5 tw:text-xs tw:font-bold tw:text-base-content/50">
           Репутация
           <strong class="tw:badge tw:badge-sm tw:font-bold {% if profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">{{ profile.karma }}</strong>
         </div>
 
-        <div class="tw:flex tw:flex-col tw:gap-2">
+        <div class="tw:flex tw:flex-col tw:gap-1.5">
           <span class="tw:text-xs tw:font-bold tw:text-base-content/50">Контакты</span>
           {% if profile.vk or profile.discord or profile.telegram %}
-            <div class="tw:join">
+            <div class="tw:flex tw:gap-0.5">
               {% if profile.vk %}
-                <div class="tw:tooltip tw:tooltip-bottom" data-tip="VK: {{ profile.vk }}">
-                  <a href="https://vk.com/{{ profile.vk }}"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
-                     aria-label="VK: {{ profile.vk }}">
-                    <img src="{% static 'img/ico/vk_1.png' %}" class="tw:size-8" alt="VK">
-                  </a>
-                </div>
+                <a href="https://vk.com/{{ profile.vk }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
+                   aria-label="VK: {{ profile.vk }}">
+                  <img src="{% static 'img/ico/vk_1.png' %}" class="tw:size-8" title="{{ profile.vk }}" alt="VK">
+                </a>
               {% endif %}
               {% if profile.discord %}
-                <div class="tw:tooltip tw:tooltip-bottom" data-tip="Discord: {{ profile.discord }}">
-                  <button type="button"
-                          class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
-                          onclick="myFunction()"
-                          aria-label="Скопировать Discord: {{ profile.discord }}">
-                    <img src="{% static 'img/ico/discord_1.png' %}" class="tw:size-8" id="discord" title="{{ profile.discord }}" alt="Discord">
-                  </button>
-                </div>
+                <button type="button"
+                        class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
+                        onclick="myFunction()"
+                        aria-label="Скопировать Discord: {{ profile.discord }}">
+                  <img src="{% static 'img/ico/discord_1.png' %}" class="tw:size-8" id="discord" title="{{ profile.discord }}" alt="Discord">
+                </button>
               {% endif %}
               {% if profile.telegram %}
-                <div class="tw:tooltip tw:tooltip-bottom" data-tip="Telegram: {{ profile.telegram }}">
-                  <a href="https://t.me/{{ profile.telegram }}"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
-                     aria-label="Telegram: {{ profile.telegram }}">
-                    <img src="{% static 'img/ico/tg_1.png' %}" class="tw:size-8" alt="Telegram">
-                  </a>
-                </div>
+                <a href="https://t.me/{{ profile.telegram }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
+                   aria-label="Telegram: {{ profile.telegram }}">
+                  <img src="{% static 'img/ico/tg_1.png' %}" class="tw:size-8" title="{{ profile.telegram }}" alt="Telegram">
+                </a>
               {% endif %}
             </div>
           {% else %}
-            <span class="tw:badge tw:badge-ghost tw:badge-sm">Не указаны</span>
+            <span class="tw:badge tw:badge-soft tw:badge-sm">Не указаны</span>
           {% endif %}
         </div>
       </div>
