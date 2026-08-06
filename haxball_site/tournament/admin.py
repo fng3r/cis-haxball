@@ -161,18 +161,18 @@ class MedalTypeAdmin(UnfoldModelAdmin):
     list_display = ('code', 'title', 'kind', 'league_type', 'place', 'nomination', 'statistic')
     list_filter = ('kind', 'league_type', 'place', 'statistic')
     list_filter_submit = True
-    search_fields = ('code', 'title', 'description')
+    search_fields = ('code', 'title')
     autocomplete_fields = ('nomination',)
     ordering = ('order', 'code')
     fields = (
         ('code', 'kind'),
-        ('title', 'description'),
+        'title',
         'image',
         'order',
         ('league_type', 'place'),
         'nomination',
         'statistic',
-        ('competition_code', 'variant'),
+        'competition_code',
         ('threshold', 'unit'),
     )
     conditional_fields = {
@@ -185,7 +185,6 @@ class MedalTypeAdmin(UnfoldModelAdmin):
         'nomination': "kind == 'nomination_place'",
         'statistic': "kind == 'statistic_place'",
         'competition_code': "kind == 'auxiliary_competition_place'",
-        'variant': "kind == 'auxiliary_competition_place'",
         'threshold': "kind == 'career_milestone'",
         'unit': "kind == 'career_milestone'",
     }
@@ -223,7 +222,7 @@ class MedalAdmin(UnfoldModelAdmin):
         ('league', RelatedDropdownFilter),
     )
     list_filter_submit = True
-    search_fields = ('key', 'title_override', 'description_override', 'medal_type__title')
+    search_fields = ('key', 'medal_type__title', 'season__title', 'edition')
     autocomplete_fields = ('medal_type', 'category', 'season', 'league')
     inlines = (PlayerMedalInline, TeamMedalInline)
 

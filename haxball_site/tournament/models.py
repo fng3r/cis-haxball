@@ -2533,7 +2533,6 @@ class MedalType(models.Model):
     code = models.CharField('Код', max_length=150, unique=True)
     kind = models.CharField('Вид медали', max_length=32, choices=Kind.choices)
     title = models.CharField('Название', max_length=100)
-    description = models.CharField('Описание', max_length=200, blank=True)
     image = models.ImageField('Изображение', upload_to='medals/', null=True, blank=True)
     league_type = models.CharField('Тип турнира', max_length=32, choices=League.Type.choices, null=True, blank=True)
     place = models.PositiveSmallIntegerField('Место', null=True, blank=True)
@@ -2547,7 +2546,6 @@ class MedalType(models.Model):
     )
     statistic = models.CharField('Статистика', max_length=32, choices=Statistic.choices, null=True, blank=True)
     competition_code = models.SlugField('Код дополнительного турнира', max_length=64, blank=True)
-    variant = models.SlugField('Вариант', max_length=64, blank=True)
     threshold = models.PositiveIntegerField('Порог', null=True, blank=True)
     unit = models.CharField('Единица', max_length=32, choices=Unit.choices, blank=True)
     order = models.SmallIntegerField('Порядок внутри категории', default=0)
@@ -2615,8 +2613,6 @@ class Medal(models.Model):
     )
     edition = models.CharField('Розыгрыш', max_length=100, blank=True)
     result_value = models.PositiveIntegerField('Результат', null=True, blank=True)
-    title_override = models.CharField('Историческое название', max_length=100, blank=True)
-    description_override = models.CharField('Историческое описание', max_length=200, blank=True)
     image_override = models.ImageField('Историческое изображение', upload_to='medals/', null=True, blank=True)
 
     def clean(self):
@@ -2630,14 +2626,11 @@ class Medal(models.Model):
 
     @property
     def title(self):
-        return self.title_override or self.medal_type.title
-
-    @property
-    def description(self):
-        return self.description_override or self.medal_type.description
+        scope = self.season or self.edition
+        return f'{self.medal_type.title} - {scope}' if scope else self.medal_type.title
 
     def __str__(self):
-        return self.title_override or self.medal_type.title
+        return self.title
 
     class Meta:
         ordering = ['-season__number', 'medal_type__order', 'key']

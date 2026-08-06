@@ -120,12 +120,6 @@ AUXILIARY_COMPETITION_ORDER = {
     'leopards_trophy': 1200,
 }
 
-AUXILIARY_VARIANT_ORDER = {
-    '': 0,
-    'classic_9': 0,
-    'futsal': 30,
-}
-
 LEAGUE_SCOPE_ORDER = {
     League.Type.PREMIER_LEAGUE: 0,
     League.Type.FIRST_LEAGUE: 30,
@@ -255,10 +249,9 @@ class LegacyMedalClassifier:
             competition_code, title, variant = auxiliary
             canonical_league_type = None if competition_code == 'predictions' else league_type
             scope = f'.{canonical_league_type}' if canonical_league_type else ''
-            variant_code = f'.{variant}' if variant else ''
             season_scoped = bool(league_type) or competition_code in {'predictions', 'saturday_cup_rating'}
             return MedalDescriptor(
-                code=f'aux.{competition_code}{variant_code}{scope}.{place}',
+                code=f'aux.{competition_code}{scope}.{place}',
                 kind=MedalType.Kind.AUXILIARY_COMPETITION_PLACE,
                 title=f'{title} — {self._place_label(place)}',
                 place=place,
@@ -554,14 +547,12 @@ class LegacyMedalImporter:
             defaults={
                 'kind': descriptor.kind,
                 'title': descriptor.title,
-                'description': source.description,
                 'image': source.image.name if source.image else None,
                 'league_type': None if descriptor.competition_code == 'predictions' else descriptor.league_type,
                 'place': descriptor.place,
                 'nomination': nomination,
                 'statistic': descriptor.statistic,
                 'competition_code': descriptor.competition_code,
-                'variant': descriptor.variant,
                 'threshold': descriptor.threshold,
                 'unit': descriptor.unit,
                 'order': self._medal_type_order(descriptor),
@@ -579,8 +570,6 @@ class LegacyMedalImporter:
                 'league': league,
                 'edition': descriptor.edition,
                 'result_value': descriptor.result_value,
-                'title_override': source.title,
-                'description_override': source.description,
                 'image_override': self._image_override(descriptor, source),
             },
         )
@@ -651,12 +640,7 @@ class LegacyMedalImporter:
             league_scope_order = (
                 0 if descriptor.competition_code == 'predictions' else LEAGUE_SCOPE_ORDER.get(descriptor.league_type, 0)
             )
-            return (
-                AUXILIARY_COMPETITION_ORDER.get(descriptor.competition_code, 2000)
-                + AUXILIARY_VARIANT_ORDER.get(descriptor.variant, 20)
-                + league_scope_order
-                + place_order
-            )
+            return AUXILIARY_COMPETITION_ORDER.get(descriptor.competition_code, 2000) + league_scope_order + place_order
 
         if descriptor.kind == MedalType.Kind.CAREER_MILESTONE:
             return CAREER_UNIT_ORDER.get(descriptor.unit, 20000) + (descriptor.threshold or 0)
