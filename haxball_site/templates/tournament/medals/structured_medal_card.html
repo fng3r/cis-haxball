@@ -54,8 +54,8 @@
                     {{ grant.medal.result_value|ru_pluralize:'гол,гола,голов' }}
                   {% elif grant.medal.medal_type.statistic == 'assists' %}
                     {{ grant.medal.result_value|ru_pluralize:'ассист,ассиста,ассистов' }}
-                  {% elif grant.medal.medal_type.statistic == 'goals' %}
-                    {{ grant.medal.result_value|ru_pluralize:'сухой тайм,сухих тайма,сухих таймов' }}
+                  {% elif grant.medal.medal_type.statistic == 'clean_sheets' %}
+                    {{ grant.medal.result_value|ru_pluralize:'сухарь,сухаря,сухарей' }}
                   {% endif %}
                 </span>
               {% endif %}
