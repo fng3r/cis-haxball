@@ -542,33 +542,35 @@ class LegacyMedalImporter:
                 code=descriptor.nomination_code,
                 defaults={'name': descriptor.nomination_name, 'order': 100},
             )
+        medal_type_lookup = {
+            'kind': descriptor.kind,
+            'league_type': None if descriptor.competition_code == 'predictions' else descriptor.league_type,
+            'place': descriptor.place,
+            'nomination': nomination,
+            'statistic': descriptor.statistic,
+            'competition_code': descriptor.competition_code,
+            'threshold': descriptor.threshold,
+            'unit': descriptor.unit,
+        }
+        if descriptor.kind == MedalType.Kind.HONORARY:
+            medal_type_lookup['title'] = descriptor.title
         medal_type, _ = MedalType.objects.get_or_create(
-            code=descriptor.code,
+            **medal_type_lookup,
             defaults={
-                'kind': descriptor.kind,
                 'title': descriptor.title,
                 'image': source.image.name if source.image else None,
-                'league_type': None if descriptor.competition_code == 'predictions' else descriptor.league_type,
-                'place': descriptor.place,
-                'nomination': nomination,
-                'statistic': descriptor.statistic,
-                'competition_code': descriptor.competition_code,
-                'threshold': descriptor.threshold,
-                'unit': descriptor.unit,
                 'order': self._medal_type_order(descriptor),
             },
         )
         self._set_medal_type_order(medal_type, descriptor)
-        medal_key = self._medal_key(descriptor, medal_type, season, league, source)
         medal_category = self._medal_category(source, descriptor)
         medal, _ = Medal.objects.get_or_create(
-            key=medal_key,
+            medal_type=medal_type,
+            season=season,
+            league=league,
+            edition=descriptor.edition,
             defaults={
-                'medal_type': medal_type,
                 'category': medal_category,
-                'season': season,
-                'league': league,
-                'edition': descriptor.edition,
                 'result_value': descriptor.result_value,
                 'image_override': self._image_override(descriptor, source),
             },
@@ -849,14 +851,3 @@ class LegacyMedalImporter:
             if len(best_leagues) == 1:
                 return best_leagues[0]
         return None
-
-    @staticmethod
-    def _medal_key(descriptor, medal_type, season, league, source):
-        if season or league:
-            return f'{medal_type.code}:season:{season.pk if season else 0}:league:{league.pk if league else 0}'
-        if descriptor.edition:
-            edition = re.sub(r'[^a-zа-я0-9]+', '-', descriptor.edition.lower()).strip('-')
-            return f'{medal_type.code}:edition:{edition}'[:200]
-        if descriptor.kind == MedalType.Kind.CAREER_MILESTONE:
-            return f'{medal_type.code}:global'
-        return f'{medal_type.code}:legacy:{source.pk}'

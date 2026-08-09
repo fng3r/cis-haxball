@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from datetime import date, timedelta
 
@@ -15,6 +16,7 @@ from django.utils import timezone
 from colorfield.fields import ColorField
 from model_utils import FieldTracker
 from polymorphic.models import PolymorphicModel
+from pytils.translit import slugify
 from smart_selects.db_fields import ChainedForeignKey
 
 from core.models import NewComment
@@ -2530,7 +2532,7 @@ class MedalType(models.Model):
         ASSISTS = 'assists', 'Голевые передачи'
         CLEAN_SHEETS = 'clean_sheets', 'Сухие таймы'
 
-    code = models.CharField('Код', max_length=150, unique=True)
+    code = models.CharField('Код', max_length=150, unique=True, blank=True)
     kind = models.CharField('Вид медали', max_length=32, choices=Kind.choices)
     title = models.CharField('Название', max_length=100)
     image = models.ImageField('Изображение', upload_to='medals/', null=True, blank=True)
@@ -2552,6 +2554,8 @@ class MedalType(models.Model):
 
     def clean(self):
         super().clean()
+        if not self.code:
+            self.code = self.generate_code()
         errors = {}
         place_kinds = {
             self.Kind.TOURNAMENT_PLACE,
@@ -2575,6 +2579,28 @@ class MedalType(models.Model):
         if errors:
             raise ValidationError(errors)
 
+    def generate_code(self):
+        if self.kind == self.Kind.TOURNAMENT_PLACE:
+            return f'tournament.{self.league_type}.{self.place}'
+        if self.kind == self.Kind.STATISTIC_PLACE:
+            return f'stat.{self.statistic}.{self.league_type}.{self.place}'
+        if self.kind == self.Kind.NOMINATION_PLACE:
+            nomination_code = self.nomination.code.lower() if self.nomination_id else 'unknown'
+            return f'nomination.{nomination_code}.{self.league_type}.{self.place}'
+        if self.kind == self.Kind.CAREER_MILESTONE:
+            return f'career.{self.unit}.{self.threshold}'
+        if self.kind == self.Kind.AUXILIARY_COMPETITION_PLACE:
+            league_scope = f'.{self.league_type}' if self.league_type else ''
+            return f'aux.{self.competition_code}{league_scope}.{self.place}'
+        if self.kind == self.Kind.HONORARY:
+            return f'honorary.{slugify(self.title)}'
+        raise ValidationError({'kind': 'Невозможно сформировать код для выбранного вида медали.'})
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = self.generate_code()
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return self.title
 
@@ -2593,7 +2619,7 @@ class MedalType(models.Model):
 class Medal(models.Model):
     """A concrete occurrence of a canonical medal in a season or competition edition."""
 
-    key = models.CharField('Ключ медали', max_length=200, unique=True)
+    key = models.CharField('Ключ медали', max_length=200, unique=True, blank=True)
     medal_type = models.ForeignKey(
         MedalType, verbose_name='Тип медали', related_name='medals', on_delete=models.PROTECT
     )
@@ -2617,8 +2643,23 @@ class Medal(models.Model):
 
     def clean(self):
         super().clean()
+        if not self.key:
+            self.key = self.generate_key()
         if self.league_id and self.season_id and self.league.championship_id != self.season_id:
             raise ValidationError({'season': 'Сезон не совпадает с сезоном турнира.'})
+
+    def generate_key(self):
+        if self.season_id or self.league_id:
+            return f'{self.medal_type.code}:season:{self.season_id or 0}:league:{self.league_id or 0}'
+        if self.edition:
+            edition = re.sub(r'[^a-zа-я0-9]+', '-', self.edition.lower()).strip('-')
+            return f'{self.medal_type.code}:edition:{edition}'[:200]
+        return f'{self.medal_type.code}:global'
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+        return super().save(*args, **kwargs)
 
     @property
     def image(self):

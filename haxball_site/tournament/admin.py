@@ -163,6 +163,7 @@ class MedalTypeAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     search_fields = ('code', 'title')
     autocomplete_fields = ('nomination',)
+    readonly_fields = ('code',)
     ordering = ('order', 'code')
     fields = (
         ('code', 'kind'),
@@ -224,6 +225,7 @@ class MedalAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     search_fields = ('key', 'medal_type__title', 'season__title', 'edition')
     autocomplete_fields = ('medal_type', 'category', 'season', 'league')
+    readonly_fields = ('key',)
     inlines = (PlayerMedalInline, TeamMedalInline)
 
 

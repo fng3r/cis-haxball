@@ -60,12 +60,11 @@ class CareerAchievementsSyncService:
         medal_types = list(
             MedalType.objects.filter(kind=MedalType.Kind.CAREER_MILESTONE).order_by('unit', 'threshold', 'id')
         )
-        medals_by_key = {
-            medal.key: medal
-            for medal in Medal.objects.filter(medal_type__kind=MedalType.Kind.CAREER_MILESTONE).select_related(
-                'medal_type'
-            )
-        }
+        medals_by_type = defaultdict(list)
+        for medal in Medal.objects.filter(
+            medal_type__kind=MedalType.Kind.CAREER_MILESTONE,
+        ).select_related('medal_type'):
+            medals_by_type[medal.medal_type_id].append(medal)
         medals_by_stat = defaultdict(list)
 
         for medal_type in medal_types:
@@ -74,10 +73,12 @@ class CareerAchievementsSyncService:
             if not medal_type.threshold:
                 raise CommandError(f'Career medal type has no threshold: {medal_type.code}')
 
-            medal_key = f'{medal_type.code}:global'
-            medal = medals_by_key.get(medal_key)
-            if medal is None or medal.medal_type_id != medal_type.id:
-                raise CommandError(f'Missing global medal for career medal type: {medal_type.code}')
+            medals = medals_by_type.get(medal_type.id, [])
+            if len(medals) != 1:
+                raise CommandError(
+                    f'Expected exactly one medal for career medal type {medal_type}, found {len(medals)}'
+                )
+            medal = medals[0]
 
             medals_by_stat[medal_type.unit].append({'medal': medal, 'threshold': medal_type.threshold})
 
