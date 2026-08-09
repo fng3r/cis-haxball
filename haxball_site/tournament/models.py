@@ -2632,14 +2632,56 @@ class Medal(models.Model):
         blank=True,
     )
     season = models.ForeignKey(
-        Season, verbose_name='Сезон', related_name='medals', on_delete=models.PROTECT, null=True, blank=True
+        Season,
+        verbose_name='Сезон',
+        related_name='medals',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text=('Указывать для медалей, имеющих четкую привязку к конкретному сезону'),
     )
-    league = models.ForeignKey(
-        League, verbose_name='Турнир', related_name='medals', on_delete=models.PROTECT, null=True, blank=True
+    league = ChainedForeignKey(
+        League,
+        verbose_name='Турнир',
+        chained_field='season',
+        chained_model_field='championship',
+        related_name='medals',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text=(
+            'Указывать, если медаль относится к конкретному турниру в рамках сезона. '
+            'Для наград уровня всего сезона оставить пустым'
+        ),
     )
-    edition = models.CharField('Розыгрыш', max_length=100, blank=True)
-    result_value = models.PositiveIntegerField('Результат', null=True, blank=True)
-    image_override = models.ImageField('Историческое изображение', upload_to='medals/', null=True, blank=True)
+    edition = models.CharField(
+        'Розыгрыш',
+        max_length=100,
+        blank=True,
+        help_text=(
+            'Указывать для медалей, не относящихся к конкретному (официальному) сезону, '
+            'но имеющих собственное версионирование. Примеры: 11 сезон ELO, Copa del CIS #2 и т.д.'
+        ),
+    )
+    result_value = models.PositiveIntegerField(
+        'Результат',
+        null=True,
+        blank=True,
+        help_text=(
+            'Указывать только для медалей за статистику. '
+            'Должно содержать фактическое значение статистического показателя'
+        ),
+    )
+    image_override = models.ImageField(
+        'Изображение',
+        upload_to='medals/',
+        null=True,
+        blank=True,
+        help_text=(
+            'Указывать, когда изображение медали отличается от общего изображения медалей данного типа. '
+            'Пример: медали за ИТ, имеющие указание конкретного розыгрыша на изображении'
+        ),
+    )
 
     def clean(self):
         super().clean()
