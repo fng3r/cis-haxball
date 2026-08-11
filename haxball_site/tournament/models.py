@@ -2536,6 +2536,14 @@ class MedalType(models.Model):
     kind = models.CharField('Вид медали', max_length=32, choices=Kind.choices)
     title = models.CharField('Название', max_length=100)
     image = models.ImageField('Изображение', upload_to='medals/', null=True, blank=True)
+    category = models.ForeignKey(
+        MedalCategory,
+        verbose_name='Категория',
+        related_name='medal_types',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     league_type = models.CharField('Тип турнира', max_length=32, choices=League.Type.choices, null=True, blank=True)
     place = models.PositiveSmallIntegerField('Место', null=True, blank=True)
     nomination = models.ForeignKey(
@@ -2622,14 +2630,6 @@ class Medal(models.Model):
     key = models.CharField('Ключ медали', max_length=200, unique=True, blank=True)
     medal_type = models.ForeignKey(
         MedalType, verbose_name='Тип медали', related_name='medals', on_delete=models.PROTECT
-    )
-    category = models.ForeignKey(
-        MedalCategory,
-        verbose_name='Категория',
-        related_name='medals',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
     )
     season = models.ForeignKey(
         Season,

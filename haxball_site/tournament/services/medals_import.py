@@ -554,30 +554,35 @@ class LegacyMedalImporter:
         }
         if descriptor.kind == MedalType.Kind.HONORARY:
             medal_type_lookup['title'] = descriptor.title
+        medal_category = self._medal_category(source, descriptor)
         medal_type, _ = MedalType.objects.get_or_create(
             **medal_type_lookup,
             defaults={
                 'title': descriptor.title,
                 'image': source.image.name if source.image else None,
+                'category': medal_category,
                 'order': self._medal_type_order(descriptor),
             },
         )
+        if medal_type.category_id is None and medal_category:
+            medal_type.category = medal_category
+            medal_type.save(update_fields=['category'])
+        elif medal_category and medal_type.category_id != medal_category.pk:
+            raise ValueError(
+                f'Medal type {medal_type.code!r} is already assigned to category '
+                f'{medal_type.category!s}, cannot assign it to {medal_category!s}'
+            )
         self._set_medal_type_order(medal_type, descriptor)
-        medal_category = self._medal_category(source, descriptor)
         medal, _ = Medal.objects.get_or_create(
             medal_type=medal_type,
             season=season,
             league=league,
             edition=descriptor.edition,
             defaults={
-                'category': medal_category,
                 'result_value': descriptor.result_value,
                 'image_override': self._image_override(descriptor, source),
             },
         )
-        if medal.category_id is None and medal_category:
-            medal.category = medal_category
-            medal.save(update_fields=['category'])
         self._set_image_override(medal, descriptor, source)
         LegacyMedalMapping.objects.create(source_model=source_model, source_id=source.pk, medal=medal)
         if source_model == LegacyMedalMapping.SourceModel.PLAYER_ACHIEVEMENT:

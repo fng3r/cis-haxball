@@ -55,14 +55,14 @@ def get_player_medals(player: Player) -> StructuredMedalCollection:
     grants = (
         PlayerMedal.objects.filter(player=player)
         .select_related(
-            'medal__category',
+            'medal__medal_type__category',
             'medal__medal_type',
             'medal__season',
             'medal__league',
         )
         .order_by(
-            F('medal__category__order').asc(nulls_last=True),
-            'medal__category_id',
+            F('medal__medal_type__category__order').asc(nulls_last=True),
+            'medal__medal_type__category_id',
             'medal__medal_type__order',
             'medal__medal_type__code',
             F('medal__season__number').desc(nulls_last=True),
@@ -76,14 +76,14 @@ def get_player_medals_by_category(player: Player) -> CategorizedMedalCollection:
     grants = (
         PlayerMedal.objects.filter(player=player)
         .select_related(
-            'medal__category',
+            'medal__medal_type__category',
             'medal__medal_type',
             'medal__season',
             'medal__league',
         )
         .order_by(
-            F('medal__category__order').asc(nulls_last=True),
-            'medal__category_id',
+            F('medal__medal_type__category__order').asc(nulls_last=True),
+            'medal__medal_type__category_id',
             F('awarded_at').desc(nulls_last=True),
             F('medal__season__number').desc(nulls_last=True),
             '-medal_id',
@@ -94,7 +94,7 @@ def get_player_medals_by_category(player: Player) -> CategorizedMedalCollection:
     current_group = None
 
     for grant in grants:
-        category = grant.medal.category
+        category = grant.medal.medal_type.category
         category_id = category.pk if category else None
         if category_id != current_category_id:
             current_category_id = category_id
@@ -135,14 +135,14 @@ def get_team_medals(team: Team) -> StructuredMedalCollection:
     grants = (
         TeamMedal.objects.filter(team=team)
         .select_related(
-            'medal__category',
+            'medal__medal_type__category',
             'medal__medal_type',
             'medal__season',
             'medal__league',
         )
         .order_by(
-            F('medal__category__order').asc(nulls_last=True),
-            'medal__category_id',
+            F('medal__medal_type__category__order').asc(nulls_last=True),
+            'medal__medal_type__category_id',
             'medal__medal_type__order',
             'medal__medal_type__code',
             F('medal__season__number').desc(nulls_last=True),
@@ -162,7 +162,7 @@ def _group_medals(grants: QuerySet[PlayerMedal] | QuerySet[TeamMedal]) -> Struct
 
     for grant in grants:
         total_count += 1
-        category = grant.medal.category
+        category = grant.medal.medal_type.category
         category_id = category.pk if category else None
         if category_id != current_category_id:
             current_category_id = category_id

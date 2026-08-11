@@ -17,6 +17,7 @@ from unfold import admin as unfold_admin
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     ChoicesCheckboxFilter,
+    ChoicesDropdownFilter,
     MultipleChoicesDropdownFilter,
     RelatedDropdownFilter,
     SingleNumericFilter,
@@ -158,18 +159,24 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
 
 @admin.register(MedalType)
 class MedalTypeAdmin(UnfoldModelAdmin):
-    list_display = ('code', 'title', 'kind', 'league_type', 'place', 'nomination', 'statistic')
-    list_filter = ('kind', 'league_type', 'place', 'statistic')
+    list_display = ('code', 'title', 'kind', 'league_type', 'place', 'category', 'nomination', 'statistic')
+    list_filter = (
+        ('category', RelatedDropdownFilter),
+        ('kind', ChoicesDropdownFilter),
+        ('league_type', ChoicesDropdownFilter),
+        'place',
+        ('statistic', ChoicesCheckboxFilter),
+    )
     list_filter_submit = True
     search_fields = ('code', 'title')
-    autocomplete_fields = ('nomination',)
+    autocomplete_fields = ('category', 'nomination')
     readonly_fields = ('code',)
     ordering = ('order', 'code')
     fields = (
         'kind',
         'title',
         'image',
-        'order',
+        ('category', 'order'),
         ('league_type', 'place'),
         'nomination',
         'statistic',
@@ -216,16 +223,16 @@ class TeamMedalInline(UnfoldTabularInline):
 
 @admin.register(Medal)
 class MedalAdmin(UnfoldModelAdmin):
-    list_display = ('key', 'medal_type', 'category', 'season', 'league', 'edition', 'result_value')
+    list_display = ('key', 'medal_type', 'season', 'league', 'edition', 'result_value')
     list_filter = (
         ('medal_type', RelatedDropdownFilter),
-        ('category', RelatedDropdownFilter),
+        ('medal_type__category', RelatedDropdownFilter),
         ('season', RelatedDropdownFilter),
         ('league', RelatedDropdownFilter),
     )
     list_filter_submit = True
     search_fields = ('key', 'medal_type__title', 'season__title', 'edition')
-    autocomplete_fields = ('medal_type', 'category', 'season')
+    autocomplete_fields = ('medal_type', 'season')
     readonly_fields = ('key',)
     inlines = (PlayerMedalInline, TeamMedalInline)
 
