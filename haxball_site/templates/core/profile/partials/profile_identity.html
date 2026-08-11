@@ -13,9 +13,9 @@
 
         <div class="tw:min-w-0 tw:flex-1 tw:flex tw:flex-col tw:gap-1.5">
           <div class="tw:flex tw:items-center tw:gap-2">
-            <div class="tw:min-w-0 tw:truncate tw:text-xl tw:sm:text-2xl tw:font-bold tw:tracking-tight"
+            <div class="tw:min-w-0 tw:truncate tw:text-xl tw:sm:text-3xl tw:font-bold tw:tracking-tight"
                  title="{{ profile.name.username }}">{{ profile.name.username|truncatechars:50 }}</div>
-            {% include 'core/include/user_tag.html' with user=profile.name size='sm' %}
+            <div class="tw:sm:mt-1">{% include 'core/include/user_tag.html' with user=profile.name size='sm' %}</div>
 
             {% if previous_nicknames.count > 0 %}
               <div class="tw:self-end tw:mb-0.5 tw:dropdown tw:dropdown-end tw:shrink-0">
@@ -50,23 +50,23 @@
 
           {% if profile.name.user_player.team %}
             <a href="{{ profile.name.user_player.team.get_absolute_url }}"
-               class="tw:link tw:link-hover tw:inline-flex tw:items-center tw:gap-1 tw:text-sm tw:font-bold">
+               class="tw:link tw:link-hover tw:inline-flex tw:items-center tw:gap-1 tw:text-sm tw:sm:text-lg tw:text-base-content/85 tw:font-bold">
               <img src="{{ profile.name.user_player.team.logo.url }}"
                    class="tw:size-5 tw:sm:size-6 tw:object-contain"
                    alt="{{ profile.name.user_player.team.title }}">
               <span>{{ profile.name.user_player.team.title }}</span>
             </a>
           {% else %}
-            <span class="tw:text-sm tw:font-bold tw:text-base-content/70">Без команды</span>
+            <span class="tw:text-sm tw:sm:text-lg tw:font-bold tw:text-base-content/85">Без команды</span>
           {% endif %}
 
         </div>
       </div>
 
-      <div class="tw:flex tw:flex-col tw:shrink-0 tw:sm:justify-center tw:gap-4 tw:sm:self-stretch">
+      <div class="tw:flex tw:flex-col tw:shrink-0 tw:sm:justify-center tw:gap-2 tw:sm:gap-4 tw:sm:self-stretch">
         <div class="tw:flex tw:flex-col tw:gap-1.5 tw:text-xs tw:font-bold tw:text-base-content/50">
           Репутация
-          <strong class="tw:badge tw:badge-sm tw:font-bold {% if profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">{{ profile.karma }}</strong>
+          <strong class="tw:badge tw:badge-xs tw:sm:badge-sm tw:font-bold {% if profile.karma >= 0 %}tw:badge-success{% else %}tw:badge-error{% endif %}">{{ profile.karma }}</strong>
         </div>
 
         <div class="tw:flex tw:flex-col tw:gap-1.5">
@@ -79,7 +79,7 @@
                    rel="noopener noreferrer"
                    class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
                    aria-label="VK: {{ profile.vk }}">
-                  <img src="{% static 'img/ico/vk_1.png' %}" class="tw:size-8" title="{{ profile.vk }}" alt="VK">
+                  <img src="{% static 'img/ico/vk_1.png' %}" class="tw:size-7 tw:sm:size-8" title="{{ profile.vk }}" alt="VK">
                 </a>
               {% endif %}
               {% if profile.discord %}
@@ -87,7 +87,11 @@
                         class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
                         onclick="myFunction()"
                         aria-label="Скопировать Discord: {{ profile.discord }}">
-                  <img src="{% static 'img/ico/discord_1.png' %}" class="tw:size-8" id="discord" title="{{ profile.discord }}" alt="Discord">
+                  <img src="{% static 'img/ico/discord_1.png' %}"
+                       class="tw:size-7 tw:sm:size-8"
+                       id="discord"
+                       title="{{ profile.discord }}"
+                       alt="Discord">
                 </button>
               {% endif %}
               {% if profile.telegram %}
@@ -96,7 +100,7 @@
                    rel="noopener noreferrer"
                    class="tw:btn tw:btn-square tw:btn-ghost tw:btn-sm tw:join-item"
                    aria-label="Telegram: {{ profile.telegram }}">
-                  <img src="{% static 'img/ico/tg_1.png' %}" class="tw:size-8" title="{{ profile.telegram }}" alt="Telegram">
+                  <img src="{% static 'img/ico/tg_1.png' %}" class="tw:size-7 tw:sm:size-8" title="{{ profile.telegram }}" alt="Telegram">
                 </a>
               {% endif %}
             </div>
