@@ -2537,6 +2537,12 @@ class MedalType(models.Model):
         SECOND = 2, '2'
         THIRD = 3, '3'
 
+    LEAGUE_SCOPED_KINDS = {
+        Kind.TOURNAMENT_PLACE,
+        Kind.STATISTIC_PLACE,
+        Kind.NOMINATION_PLACE,
+    }
+
     code = models.CharField('Код', max_length=150, unique=True, blank=True)
     kind = models.CharField('Вид медали', max_length=32, choices=Kind.choices)
     title = models.CharField('Название', max_length=100)
@@ -2569,14 +2575,11 @@ class MedalType(models.Model):
         super().clean()
         self.code = self.generate_code()
         errors = {}
-        place_kinds = {
-            self.Kind.TOURNAMENT_PLACE,
-            self.Kind.STATISTIC_PLACE,
-            self.Kind.NOMINATION_PLACE,
-            self.Kind.AUXILIARY_COMPETITION_PLACE,
-        }
+        place_kinds = self.LEAGUE_SCOPED_KINDS | {self.Kind.AUXILIARY_COMPETITION_PLACE}
+        if self.kind in self.LEAGUE_SCOPED_KINDS and not self.league_type:
+            errors['league_type'] = 'Для этого вида медали укажите тип турнира.'
         if self.kind in place_kinds and not self.place:
-            errors['place'] = 'Для призовой медали укажите место.'
+            errors['place'] = 'Для этого вида медали укажите место.'
         if self.kind == self.Kind.STATISTIC_PLACE and not self.statistic:
             errors['statistic'] = 'Для статистической медали укажите вид статистики.'
         if self.kind == self.Kind.NOMINATION_PLACE and not self.nomination_id:
