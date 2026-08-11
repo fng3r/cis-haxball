@@ -2610,6 +2610,8 @@ class MedalType(models.Model):
         return super().save(*args, **kwargs)
 
     def __str__(self):
+        if self.league_type:
+            return f'{self.title} ({self.get_league_type_display()})'
         return self.title
 
     class Meta:
