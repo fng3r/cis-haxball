@@ -246,9 +246,9 @@ class MedalAdmin(UnfoldModelAdmin):
         ('league', RelatedDropdownFilter),
     )
     list_filter_submit = True
-    search_fields = ('key', 'medal_type__title', 'season__title', 'edition')
+    search_fields = ('code', 'medal_type__title', 'season__title', 'edition')
     autocomplete_fields = ('medal_type', 'season')
-    readonly_fields = ('key',)
+    readonly_fields = ('code',)
     inlines = (PlayerMedalInline, TeamMedalInline)
     ordering = (F('season__number').desc(nulls_last=True), 'medal_type__category__order', 'medal_type__order')
 
@@ -293,7 +293,7 @@ class TeamMedalAdmin(UnfoldModelAdmin):
 class LegacyMedalMappingAdmin(UnfoldModelAdmin):
     list_display = ('source_model', 'source_id', 'medal')
     list_filter = ('source_model',)
-    search_fields = ('source_id', 'medal__key', 'medal__medal_type__title')
+    search_fields = ('source_id', 'medal__code', 'medal__medal_type__title')
     autocomplete_fields = ('medal',)
 
 

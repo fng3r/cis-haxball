@@ -2567,8 +2567,7 @@ class MedalType(models.Model):
 
     def clean(self):
         super().clean()
-        if not self.code:
-            self.code = self.generate_code()
+        self.code = self.generate_code()
         errors = {}
         place_kinds = {
             self.Kind.TOURNAMENT_PLACE,
@@ -2576,10 +2575,10 @@ class MedalType(models.Model):
             self.Kind.NOMINATION_PLACE,
             self.Kind.AUXILIARY_COMPETITION_PLACE,
         }
-        if self.kind in place_kinds and self.place not in {1, 2, 3}:
-            errors['place'] = 'Для призовой медали укажите место 1, 2 или 3.'
+        if self.kind in place_kinds and not self.place:
+            errors['place'] = 'Для призовой медали укажите место.'
         if self.kind == self.Kind.STATISTIC_PLACE and not self.statistic:
-            errors['statistic'] = 'Для статистической медали укажите статистику.'
+            errors['statistic'] = 'Для статистической медали укажите вид статистики.'
         if self.kind == self.Kind.NOMINATION_PLACE and not self.nomination_id:
             errors['nomination'] = 'Для медали в номинации укажите номинацию.'
         if self.kind == self.Kind.CAREER_MILESTONE:
@@ -2610,9 +2609,18 @@ class MedalType(models.Model):
         raise ValidationError({'kind': 'Невозможно сформировать код для выбранного вида медали.'})
 
     def save(self, *args, **kwargs):
-        if not self.code:
-            self.code = self.generate_code()
-        return super().save(*args, **kwargs)
+        generated_code = self.generate_code()
+        code_changed = self.code != generated_code
+        self.code = generated_code
+        if code_changed and kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'code'}
+
+        with transaction.atomic():
+            result = super().save(*args, **kwargs)
+            if code_changed:
+                for medal in self.medals.select_related('medal_type'):
+                    medal.save(update_fields=['code'])
+            return result
 
     def __str__(self):
         if self.league_type:
@@ -2634,7 +2642,7 @@ class MedalType(models.Model):
 class Medal(models.Model):
     """A concrete occurrence of a canonical medal in a season or competition edition."""
 
-    key = models.CharField('Ключ медали', max_length=200, unique=True, blank=True)
+    code = models.CharField('Код', max_length=200, unique=True, blank=True)
     medal_type = models.ForeignKey(
         MedalType, verbose_name='Тип медали', related_name='medals', on_delete=models.PROTECT
     )
@@ -2692,12 +2700,11 @@ class Medal(models.Model):
 
     def clean(self):
         super().clean()
-        if not self.key:
-            self.key = self.generate_key()
+        self.code = self.generate_code()
         if self.league_id and self.season_id and self.league.championship_id != self.season_id:
             raise ValidationError({'season': 'Сезон не совпадает с сезоном турнира.'})
 
-    def generate_key(self):
+    def generate_code(self):
         if self.season_id or self.league_id:
             return f'{self.medal_type.code}:season:{self.season_id or 0}:league:{self.league_id or 0}'
         if self.edition:
@@ -2706,8 +2713,11 @@ class Medal(models.Model):
         return f'{self.medal_type.code}:global'
 
     def save(self, *args, **kwargs):
-        if not self.key:
-            self.key = self.generate_key()
+        generated_code = self.generate_code()
+        code_changed = self.code != generated_code
+        self.code = generated_code
+        if code_changed and kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'code'}
         return super().save(*args, **kwargs)
 
     @property
@@ -2723,7 +2733,7 @@ class Medal(models.Model):
         return self.title
 
     class Meta:
-        ordering = ['-season__number', 'medal_type__order', 'key']
+        ordering = ['-season__number', 'medal_type__order', 'code']
         verbose_name = 'Медаль'
         verbose_name_plural = 'Медали'
 
