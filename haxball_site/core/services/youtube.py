@@ -41,11 +41,6 @@ class YoutubeService:
 
     @cache_with_timeout(180)
     def search_channel_livestreams(self, channel_id):
-        return {
-            'active': [],
-            'completed': [],
-        }
-
         # First get the uploads playlist ID for the channel
         channel_response = self.youtube.channels().list(part='contentDetails', id=channel_id).execute()
 
@@ -126,7 +121,6 @@ class YoutubeService:
             - duration: Duration object with hours, minutes, seconds and formatted string
         """
         if not video_ids:
-            logger.warning('No video IDs provided to get_videos_by_ids')
             return []
 
         try:
