@@ -228,54 +228,55 @@
 
           <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Достижения" />
           <div class="tw:tab-content tw:pt-2 tw:mb-2">
-            <div id="achievements-panel"
-                 role="tabpanel"
-                 aria-labelledby="achievements-tab"
-                 x-data="{ medalsView: $persist('plain').as('medals-view') }">
-              <div class="medal-view-switch" role="group" aria-label="Вариант отображения медалей">
-                <button type="button"
-                        title="Обычный вид"
-                        aria-label="Обычный вид"
-                        @click="medalsView = 'plain'"
-                        :aria-pressed="medalsView === 'plain'">
-                  <i class="fa fa-th-large" aria-hidden="true"></i>
-                </button>
-                <button type="button"
-                        title="Группировка по медалям"
-                        aria-label="Группировка по медалям"
-                        @click="medalsView = 'grouped'"
-                        :aria-pressed="medalsView === 'grouped'">
-                  <i class="fa fa-object-group" aria-hidden="true"></i>
-                </button>
-              </div>
+            <div id="achievements-panel" role="tabpanel" aria-labelledby="achievements-tab">
+              {% if structured_medals.total_count %}
+                <div x-data="{ medalsView: $persist('plain').as('medals-view') }">
+                  <div class="medal-view-switch" role="group" aria-label="Вариант отображения медалей">
+                    <button type="button"
+                            title="Обычный вид"
+                            aria-label="Обычный вид"
+                            @click="medalsView = 'plain'"
+                            :aria-pressed="medalsView === 'plain'">
+                      <i class="fa fa-th-large" aria-hidden="true"></i>
+                    </button>
+                    <button type="button"
+                            title="Группировка по медалям"
+                            aria-label="Группировка по медалям"
+                            @click="medalsView = 'grouped'"
+                            :aria-pressed="medalsView === 'grouped'">
+                      <i class="fa fa-object-group" aria-hidden="true"></i>
+                    </button>
+                  </div>
 
-              <div x-show="medalsView === 'plain'" x-cloak>
-                {% if team_medals_by_season %}
-                  {% for season, grants in team_medals_by_season %}
-                    <div class="team_achievements tw:py-2 tw:text-base-content/80 tw:not-first:border-t tw:border-neutral-300">
-                      <div class="team_achievements-season">{{ season.title }}</div>
-                      <div class="team_achievements-medals">
-                        {% for grant in grants %}
-                          <div class="team_achievements-medal tw:tooltip tw:tooltip-top tw:cursor-help"
-                               tabindex="0"
-                               aria-label="{{ grant.medal.medal_type.title }}"
-                               style="anchor-name: --team-medal-tooltip-{{ grant.pk }}">
-                            <div class="tw:tooltip-content tw:max-w-64 tw:whitespace-normal tw:text-left">
-                              {% include 'tournament/medals/medal_tooltip_content.html' with medal=grant.medal awarded_at=grant.awarded_at %}
+                  <div x-show="medalsView === 'plain'" x-cloak>
+                    {% for season, grants in team_medals_by_season %}
+                      <div class="team_achievements tw:py-2 tw:text-base-content/80 tw:not-first:border-t tw:border-neutral-300">
+                        <div class="team_achievements-season">{{ season.title }}</div>
+                        <div class="team_achievements-medals">
+                          {% for grant in grants %}
+                            <div class="team_achievements-medal tw:tooltip tw:tooltip-top tw:cursor-help"
+                                 tabindex="0"
+                                 aria-label="{{ grant.medal.medal_type.title }}"
+                                 style="anchor-name: --team-medal-tooltip-{{ grant.pk }}">
+                              <div class="tw:tooltip-content tw:max-w-64 tw:whitespace-normal tw:text-left">
+                                {% include 'tournament/medals/medal_tooltip_content.html' with medal=grant.medal awarded_at=grant.awarded_at %}
+                              </div>
+                              <img src="{{ grant.medal.image.url }}" width="80px" height="80px" alt="{{ grant.medal.title }}">
                             </div>
-                            <img src="{{ grant.medal.image.url }}" width="80px" height="80px" alt="{{ grant.medal.title }}">
-                          </div>
-                        {% endfor %}
+                          {% endfor %}
+                        </div>
+                        <div class="team_achievements-squad">{{ grants.0.players_raw_list }}</div>
                       </div>
-                      <div class="team_achievements-squad">{{ grants.0.players_raw_list }}</div>
-                    </div>
-                  {% endfor %}
-                {% else %}
-                  <div class="tw:py-8 tw:text-lg tw:text-center tw:text-base-content/70 tw:font-semibold">Команда пока не имеет достижений</div>
-                {% endif %}
-              </div>
+                    {% endfor %}
+                  </div>
 
-              <div x-show="medalsView === 'grouped'" x-cloak>{% include 'tournament/medals/structured_medals.html' with show_squad=True %}</div>
+                  <div x-show="medalsView === 'grouped'" x-cloak>{% include 'tournament/medals/structured_medals.html' with show_squad=True %}</div>
+                </div>
+              {% else %}
+                <div class="tw:h-full tw:min-h-[200px] tw:flex tw:flex-col tw:items-center tw:justify-center tw:px-2 tw:text-center">
+                  <div class="tw:text-base-content/80 tw:text-lg tw:mb-2">Команда пока не имеет достижений</div>
+                </div>
+              {% endif %}
             </div>
           </div>
 

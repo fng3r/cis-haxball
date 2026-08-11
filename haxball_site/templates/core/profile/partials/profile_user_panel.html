@@ -97,28 +97,33 @@
             <div class="tw:h-[600px] tw:overflow-x-hidden tw:overflow-y-auto tw:mt-0 tw:px-1"
                  id="profile-achievements-panel"
                  role="tabpanel"
-                 aria-labelledby="profile-achievements-tab"
-                 x-data="{ medalsView: $persist('plain').as('medals-view') }">
-              <div class="medal-view-switch" role="group" aria-label="Вариант отображения медалей">
-                <button type="button"
-                        title="Обычный вид"
-                        aria-label="Обычный вид"
-                        @click="medalsView = 'plain'"
-                        :aria-pressed="medalsView === 'plain'">
-                  <i class="fa fa-th-large" aria-hidden="true"></i>
-                </button>
-                <button type="button"
-                        title="Группировка по медалям"
-                        aria-label="Группировка по медалям"
-                        @click="medalsView = 'grouped'"
-                        :aria-pressed="medalsView === 'grouped'">
-                  <i class="fa fa-object-group" aria-hidden="true"></i>
-                </button>
-              </div>
+                 aria-labelledby="profile-achievements-tab">
+              {% if structured_medals.total_count %}
+                <div x-data="{ medalsView: $persist('plain').as('medals-view') }">
+                  <div class="medal-view-switch" role="group" aria-label="Вариант отображения медалей">
+                    <button type="button"
+                            title="Обычный вид"
+                            aria-label="Обычный вид"
+                            @click="medalsView = 'plain'"
+                            :aria-pressed="medalsView === 'plain'">
+                      <i class="fa fa-th-large" aria-hidden="true"></i>
+                    </button>
+                    <button type="button"
+                            title="Группировка по медалям"
+                            aria-label="Группировка по медалям"
+                            @click="medalsView = 'grouped'"
+                            :aria-pressed="medalsView === 'grouped'">
+                      <i class="fa fa-object-group" aria-hidden="true"></i>
+                    </button>
+                  </div>
 
-              <div x-show="medalsView === 'plain'" x-cloak>{% include 'tournament/medals/categorized_medals.html' %}</div>
+                  <div x-show="medalsView === 'plain'" x-cloak>{% include 'tournament/medals/categorized_medals.html' %}</div>
 
-              <div x-show="medalsView === 'grouped'" x-cloak>{% include 'tournament/medals/structured_medals.html' %}</div>
+                  <div x-show="medalsView === 'grouped'" x-cloak>{% include 'tournament/medals/structured_medals.html' %}</div>
+                </div>
+              {% else %}
+                {% include 'tournament/medals/no_medals.html' %}
+              {% endif %}
             </div>
           </div>
         </div>
