@@ -2704,8 +2704,13 @@ class Medal(models.Model):
     def clean(self):
         super().clean()
         self.code = self.generate_code()
+        errors = {}
+        if self.medal_type.kind == MedalType.Kind.STATISTIC_PLACE and self.result_value is None:
+            errors['result_value'] = 'Для медали за статистику укажите результат.'
         if self.league_id and self.season_id and self.league.championship_id != self.season_id:
-            raise ValidationError({'season': 'Сезон не совпадает с сезоном турнира.'})
+            errors['season'] = 'Сезон не совпадает с сезоном турнира.'
+        if errors:
+            raise ValidationError(errors)
 
     def generate_code(self):
         if self.season_id or self.league_id:

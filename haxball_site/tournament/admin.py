@@ -3,7 +3,8 @@ from django.contrib import admin, messages
 from django.db import models
 from django.db.models import F, Q
 from django.shortcuts import redirect
-from django.urls import resolve, reverse_lazy
+from django.urls import resolve, reverse, reverse_lazy
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from polymorphic.admin import (
@@ -157,8 +158,45 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
         ]
 
 
+class DerivedCodeCollisionAdminForm(forms.ModelForm):
+    duplicate_error_intro = ''
+
+    def _post_clean(self):
+        super()._post_clean()
+        if self.errors or not self.instance.code:
+            return
+
+        duplicate = type(self.instance).objects.filter(code=self.instance.code).exclude(pk=self.instance.pk).first()
+        if not duplicate:
+            return
+
+        opts = duplicate._meta
+        url = reverse(f'admin:{opts.app_label}_{opts.model_name}_change', args=[duplicate.pk])
+        self.add_error(
+            None,
+            format_html('{}: <a href="{}">{}</a>.', self.duplicate_error_intro, url, duplicate),
+        )
+
+
+class MedalTypeAdminForm(DerivedCodeCollisionAdminForm):
+    duplicate_error_intro = 'Тип медали с такими идентифицирующими атрибутами уже существует'
+
+    class Meta:
+        model = MedalType
+        exclude = ('code',)
+
+
+class MedalAdminForm(DerivedCodeCollisionAdminForm):
+    duplicate_error_intro = 'Медаль с такими типом и областью действия уже существует'
+
+    class Meta:
+        model = Medal
+        exclude = ('code',)
+
+
 @admin.register(MedalType)
 class MedalTypeAdmin(UnfoldModelAdmin):
+    form = MedalTypeAdminForm
     list_display = ('display_medal', 'kind', 'league_type', 'place', 'category', 'order', 'nomination', 'statistic')
     list_filter = (
         ('category', RelatedDropdownFilter),
@@ -238,6 +276,7 @@ class TeamMedalInline(UnfoldTabularInline):
 
 @admin.register(Medal)
 class MedalAdmin(UnfoldModelAdmin):
+    form = MedalAdminForm
     list_display = ('display_medal_type', 'season', 'league', 'edition', 'result_value')
     list_filter = (
         ('medal_type', RelatedDropdownFilter),
