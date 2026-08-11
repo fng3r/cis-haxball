@@ -2,9 +2,11 @@ from collections import defaultdict
 from typing import Callable
 
 from django.core.management.base import CommandError
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Coalesce
 
+from core.models import FavoriteMedal
 from tournament.models import Medal, MedalType, Player, PlayerMedal
 
 
@@ -100,6 +102,7 @@ class CareerAchievementsSyncService:
             .iterator(chunk_size=200)
         )
 
+    @transaction.atomic
     def _sync_player(self, player, medals_by_stat, dry_run=False):
         current_grants = {
             grant.medal_id: grant
@@ -142,6 +145,7 @@ class CareerAchievementsSyncService:
                     target_grant.save(update_fields=['awarded_at'])
 
                 if to_remove:
+                    self._replace_revoked_favorites(player, to_remove, target_id)
                     PlayerMedal.objects.filter(player=player, medal_id__in=to_remove).delete()
 
             added += len(to_add)
@@ -159,6 +163,26 @@ class CareerAchievementsSyncService:
                 current_grants.pop(medal_id, None)
 
         return added, removed, updated_dates
+
+    @staticmethod
+    def _replace_revoked_favorites(player, revoked_medal_ids, replacement_medal_id):
+        if not player.name_id:
+            return
+
+        favorites = FavoriteMedal.objects.filter(
+            profile__name_id=player.name_id,
+            medal_id__in=revoked_medal_ids,
+        )
+        profile_id = favorites.values_list('profile_id', flat=True).first()
+        if profile_id is None:
+            return
+
+        favorites.delete()
+        if replacement_medal_id:
+            FavoriteMedal.objects.get_or_create(
+                profile_id=profile_id,
+                medal_id=replacement_medal_id,
+            )
 
     @staticmethod
     def _get_stat_events(player, stat_key):
