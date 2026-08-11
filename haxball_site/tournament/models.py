@@ -2532,6 +2532,11 @@ class MedalType(models.Model):
         ASSISTS = 'assists', 'Голевые передачи'
         CLEAN_SHEETS = 'clean_sheets', 'Сухие таймы'
 
+    class Place(models.IntegerChoices):
+        FIRST = 1, '1'
+        SECOND = 2, '2'
+        THIRD = 3, '3'
+
     code = models.CharField('Код', max_length=150, unique=True, blank=True)
     kind = models.CharField('Вид медали', max_length=32, choices=Kind.choices)
     title = models.CharField('Название', max_length=100)
@@ -2545,7 +2550,7 @@ class MedalType(models.Model):
         blank=True,
     )
     league_type = models.CharField('Тип турнира', max_length=32, choices=League.Type.choices, null=True, blank=True)
-    place = models.PositiveSmallIntegerField('Место', null=True, blank=True)
+    place = models.PositiveSmallIntegerField('Место', choices=Place.choices, null=True, blank=True)
     nomination = models.ForeignKey(
         AwardNomination,
         verbose_name='Номинация',

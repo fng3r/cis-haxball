@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 from django.db import models
-from django.db.models import Q
+from django.db.models import F, Q
 from django.shortcuts import redirect
 from django.urls import resolve, reverse_lazy
 from django.utils.safestring import mark_safe
@@ -159,19 +159,21 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
 
 @admin.register(MedalType)
 class MedalTypeAdmin(UnfoldModelAdmin):
-    list_display = ('code', 'title', 'kind', 'league_type', 'place', 'category', 'nomination', 'statistic')
+    list_display = ('display_medal', 'kind', 'league_type', 'place', 'category', 'nomination', 'statistic')
     list_filter = (
         ('category', RelatedDropdownFilter),
         ('kind', ChoicesDropdownFilter),
         ('league_type', ChoicesDropdownFilter),
-        'place',
+        ('place', ChoicesCheckboxFilter),
         ('statistic', ChoicesCheckboxFilter),
+        ('nomination', RelatedDropdownFilter),
     )
+
     list_filter_submit = True
     search_fields = ('code', 'title')
     autocomplete_fields = ('category', 'nomination')
     readonly_fields = ('code',)
-    ordering = ('order', 'code')
+    ordering = ('category__order', 'order', 'code')
     fields = (
         'kind',
         'title',
@@ -198,6 +200,19 @@ class MedalTypeAdmin(UnfoldModelAdmin):
         'unit': "kind == 'career_milestone'",
     }
 
+    @display(description='Медаль', header=True, ordering='title')
+    def display_medal(self, model):
+        image = None
+        if model.image:
+            image = {
+                'path': model.image.url,
+                'squared': False,
+                'borderless': True,
+                'width': 36,
+                'height': 36,
+            }
+        return [model.title, None, None, image]
+
 
 class PlayerMedalInline(UnfoldTabularInline):
     model = PlayerMedal
@@ -223,7 +238,7 @@ class TeamMedalInline(UnfoldTabularInline):
 
 @admin.register(Medal)
 class MedalAdmin(UnfoldModelAdmin):
-    list_display = ('key', 'medal_type', 'season', 'league', 'edition', 'result_value')
+    list_display = ('display_medal_type', 'season', 'league', 'edition', 'result_value')
     list_filter = (
         ('medal_type', RelatedDropdownFilter),
         ('medal_type__category', RelatedDropdownFilter),
@@ -235,6 +250,20 @@ class MedalAdmin(UnfoldModelAdmin):
     autocomplete_fields = ('medal_type', 'season')
     readonly_fields = ('key',)
     inlines = (PlayerMedalInline, TeamMedalInline)
+    ordering = (F('season__number').desc(nulls_last=True), 'medal_type__category__order', 'medal_type__order')
+
+    @display(description='Тип медали', header=True, ordering='medal_type')
+    def display_medal_type(self, model):
+        image = None
+        if model.medal_type.image:
+            image = {
+                'path': model.image.url,
+                'squared': False,
+                'borderless': True,
+                'width': 40,
+                'height': 40,
+            }
+        return [model.medal_type.title, model.medal_type.get_league_type_display, None, image]
 
 
 @admin.register(MedalCategory)
