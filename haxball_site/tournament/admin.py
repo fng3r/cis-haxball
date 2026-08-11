@@ -159,7 +159,7 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
 
 @admin.register(MedalType)
 class MedalTypeAdmin(UnfoldModelAdmin):
-    list_display = ('display_medal', 'kind', 'league_type', 'place', 'category', 'nomination', 'statistic')
+    list_display = ('display_medal', 'kind', 'league_type', 'place', 'category', 'order', 'nomination', 'statistic')
     list_filter = (
         ('category', RelatedDropdownFilter),
         ('kind', ChoicesDropdownFilter),
