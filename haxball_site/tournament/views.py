@@ -22,7 +22,7 @@ from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
 from django_htmx.http import trigger_client_event
 
 from core.forms import NewCommentForm
-from core.utils import get_comments_for_object, get_paginated_comments
+from core.utils import get_comments_for_object, get_paginated_comments, prefetch_favorite_medals
 from fantasy_league.models import FantasyTournament
 from haxball_site import settings
 from predictions.models import PredictionsContestTournament
@@ -812,16 +812,10 @@ def get_postponements_queryset():
         .prefetch_related(
             'teams',
             'taken_by__user_profile__user_icon',
-            'taken_by__user_profile__favorite_medals__medal__medal_type',
-            'taken_by__user_profile__favorite_medals__medal__season',
-            'taken_by__user_profile__favorite_medals__medal__league',
-            'taken_by__user_profile__favorite_medals__medal__player_medals',
+            prefetch_favorite_medals('taken_by__user_profile__favorite_medals'),
             'taken_by__user_player__medals',
             'cancelled_by__user_profile__user_icon',
-            'cancelled_by__user_profile__favorite_medals__medal__medal_type',
-            'cancelled_by__user_profile__favorite_medals__medal__season',
-            'cancelled_by__user_profile__favorite_medals__medal__league',
-            'cancelled_by__user_profile__favorite_medals__medal__player_medals',
+            prefetch_favorite_medals('cancelled_by__user_profile__favorite_medals'),
             'cancelled_by__user_player__medals',
             'taken_by__user_player__team__owner',
             'taken_by__user_player__team__captain',

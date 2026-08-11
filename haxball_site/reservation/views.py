@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 
+from core.utils import prefetch_favorite_medals
 from tournament.models import Match, Team
 
 from .models import Replay, ReservationEntry, ReservationHost
@@ -29,16 +30,10 @@ def get_reservatons_queryset():
             'match__stage',
             'match__numb_tour__stage',
             'author__user_profile__user_icon',
-            'author__user_profile__favorite_medals__medal__medal_type',
-            'author__user_profile__favorite_medals__medal__season',
-            'author__user_profile__favorite_medals__medal__league',
-            'author__user_profile__favorite_medals__medal__player_medals',
+            prefetch_favorite_medals('author__user_profile__favorite_medals'),
             'author__user_player__medals',
             'cancelled_by__user_profile__user_icon',
-            'cancelled_by__user_profile__favorite_medals__medal__medal_type',
-            'cancelled_by__user_profile__favorite_medals__medal__season',
-            'cancelled_by__user_profile__favorite_medals__medal__league',
-            'cancelled_by__user_profile__favorite_medals__medal__player_medals',
+            prefetch_favorite_medals('cancelled_by__user_profile__favorite_medals'),
             'cancelled_by__user_player__medals',
             'author__user_player__team__owner',
             'author__user_player__team__captain',

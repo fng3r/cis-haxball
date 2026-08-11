@@ -1,10 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
-from django.db.models import Prefetch
+from django.db.models import F, Prefetch
 
 from tournament.models import Team
 
-from .models import LikeDislike, NewComment
+from .models import FavoriteMedal, LikeDislike, NewComment
 
 
 def strtobool(val: str) -> bool:
@@ -22,6 +22,17 @@ def strtobool(val: str) -> bool:
         return False
 
     raise ValueError(f'invalid truth value {val!r}')
+
+
+def prefetch_favorite_medals(path):
+    return Prefetch(
+        path,
+        queryset=(
+            FavoriteMedal.objects.with_awarded_at()
+            .select_related('medal__medal_type', 'medal__season', 'medal__league')
+            .order_by(F('_awarded_at').desc(nulls_last=True), '-id')
+        ),
+    )
 
 
 def get_comments_for_object(model, obj_id):
@@ -44,10 +55,7 @@ def get_comments_for_object(model, obj_id):
     return prefetch_recursively(
         'content_object',
         'author__user_profile__user_icon',
-        'author__user_profile__favorite_medals__medal__medal_type',
-        'author__user_profile__favorite_medals__medal__season',
-        'author__user_profile__favorite_medals__medal__league',
-        'author__user_profile__favorite_medals__medal__player_medals',
+        prefetch_favorite_medals('author__user_profile__favorite_medals'),
         'author__user_player__medals',
         'author__user_player__team__owner',
         'author__user_player__team__captain',

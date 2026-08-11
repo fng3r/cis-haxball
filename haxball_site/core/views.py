@@ -42,7 +42,7 @@ from .models import (
 )
 from .services.reactions import build_reactions_context
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
-from .utils import get_comments_for_object, get_paginated_comments, strtobool
+from .utils import get_comments_for_object, get_paginated_comments, prefetch_favorite_medals, strtobool
 
 logger = logging.getLogger('haxball_site')
 
@@ -385,10 +385,7 @@ def get_comment_for_render(pk):
         NewComment.objects.select_related('author__user_profile')
         .prefetch_related(
             'author__user_profile__user_icon',
-            'author__user_profile__favorite_medals__medal__medal_type',
-            'author__user_profile__favorite_medals__medal__season',
-            'author__user_profile__favorite_medals__medal__league',
-            'author__user_profile__favorite_medals__medal__player_medals',
+            prefetch_favorite_medals('author__user_profile__favorite_medals'),
             'author__user_player__medals',
             prefetch_likes,
             prefetch_dislikes,
@@ -796,10 +793,7 @@ class UserCommentsView(View):
             NewComment.objects.select_related('author__user_profile', 'content_type')
             .prefetch_related(
                 'author__user_profile__user_icon',
-                'author__user_profile__favorite_medals__medal__medal_type',
-                'author__user_profile__favorite_medals__medal__season',
-                'author__user_profile__favorite_medals__medal__league',
-                'author__user_profile__favorite_medals__medal__player_medals',
+                prefetch_favorite_medals('author__user_profile__favorite_medals'),
                 'author__user_player__medals',
                 'votes',
             )

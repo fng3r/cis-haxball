@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Max, Sum
+from django.db.models import Max, OuterRef, Subquery, Sum
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -437,6 +437,17 @@ class Profile(models.Model):
         verbose_name_plural = 'Профили'
 
 
+class FavoriteMedalQuerySet(models.QuerySet):
+    def with_awarded_at(self):
+        from tournament.models import PlayerMedal
+
+        player_grant = PlayerMedal.objects.filter(
+            medal_id=OuterRef('medal_id'),
+            player__name_id=OuterRef('profile__name_id'),
+        )
+        return self.annotate(_awarded_at=Subquery(player_grant.values('awarded_at')[:1]))
+
+
 class FavoriteMedal(models.Model):
     profile = models.ForeignKey(
         Profile,
@@ -450,6 +461,7 @@ class FavoriteMedal(models.Model):
         related_name='favorite_medals',
         on_delete=models.CASCADE,
     )
+    objects = FavoriteMedalQuerySet.as_manager()
 
     def clean(self):
         super().clean()
@@ -470,11 +482,21 @@ class FavoriteMedal(models.Model):
 
     @property
     def awarded_at(self):
-        player = getattr(self.profile.name, 'user_player', None)
-        if not player:
+        if '_awarded_at' in self.__dict__:
+            return self._awarded_at
+        if not self.profile_id or not self.medal_id:
             return None
-        grant = next((grant for grant in self.medal.player_medals.all() if grant.player_id == player.pk), None)
-        return grant.awarded_at if grant else None
+
+        from tournament.models import PlayerMedal
+
+        return (
+            PlayerMedal.objects.filter(
+                medal_id=self.medal_id,
+                player__name_id=self.profile.name_id,
+            )
+            .values_list('awarded_at', flat=True)
+            .first()
+        )
 
     def __str__(self):
         return f'{self.medal}'
