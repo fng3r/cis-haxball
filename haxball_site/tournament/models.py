@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
@@ -562,8 +562,8 @@ class Player(models.Model):
 class TourNumber(models.Model):
     number = models.SmallIntegerField('Номер тура')
     name = models.CharField('Название тура/раунда (опционально)', max_length=30, null=True, blank=True)
-    date_from = models.DateField('Дата начала тура', default=date.today, blank=True, null=True)
-    date_to = models.DateField('Дата окончания тура', default=date.today, blank=True, null=True)
+    date_from = models.DateField('Дата начала тура', default=timezone.localdate)
+    date_to = models.DateField('Дата окончания тура', default=timezone.localdate)
     league = models.ForeignKey(League, verbose_name='Турнир', related_name='tours', on_delete=models.CASCADE)
     stage = ChainedForeignKey(
         TournamentStage,
@@ -572,8 +572,6 @@ class TourNumber(models.Model):
         related_name='tours',
         verbose_name='Этап',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
     )
     bracket = models.PositiveSmallIntegerField('Сетка', choices=PlayOffStage.Bracket.choices, null=True, blank=True)
 
