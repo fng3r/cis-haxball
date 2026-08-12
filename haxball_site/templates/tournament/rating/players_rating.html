@@ -108,7 +108,7 @@
                 <input type="search"
                        x-model="search"
                        placeholder="Поиск игрока..."
-                       class="tw:input tw:input-bordered tw:w-full tw:max-w-xs tw:text-base-content"
+                       class="tw:input tw:w-full tw:max-w-xs tw:text-base-content"
                        autocomplete="off">
               </div>
 
@@ -136,7 +136,7 @@
               <div class="tw:flex tw:flex-col tw:justify-center">
                 <label class="tw:label tw:text-base-content tw:font-bold">Сезон</label>
                 <select name="season"
-                        class="tw:select tw:select-bordered"
+                        class="tw:select"
                         @change="selectedSeason = $el.value; selectedSeasonIsPrimary = $el.options[$el.selectedIndex].dataset.isPrimary === 'true'">
                   {% for season in seasons %}
                     <option value="{{ season.id }}" {% if forloop.first %}selected{% endif %} data-is-primary="{{ season.is_primary|yesno:'true,false' }}">
@@ -148,7 +148,7 @@
 
               <div class="tw:flex tw:flex-col tw:justify-center">
                 <label class="tw:label tw:text-base-content tw:font-bold">Фаза сезона</label>
-                <select name="phase" class="tw:select tw:select-bordered">
+                <select name="phase" class="tw:select">
                   <option value="now" x-show="selectedSeason === activeSeason" :selected="selectedSeason === activeSeason">Текущий период</option>
                   <option value="start" :selected="selectedSeason !== activeSeason">Начало сезона</option>
                   <option value="first-half-end" x-show="selectedSeasonIsPrimary">Конец первого круга</option>
@@ -159,7 +159,7 @@
 
               <div class="tw:flex tw:flex-col tw:justify-center" x-show="selectedSeasonIsPrimary">
                 <label class="tw:label tw:text-base-content tw:font-bold">Лига</label>
-                <select name="league" class="tw:select tw:select-bordered" :disabled="!selectedSeasonIsPrimary">
+                <select name="league" class="tw:select" :disabled="!selectedSeasonIsPrimary">
                   <option value="">Все</option>
                   <option value="premier_league">Высшая лига</option>
                   <option value="first_league">Первая лига</option>

@@ -243,7 +243,7 @@
     <div class="tw:flex tw:gap-4 tw:flex-wrap">
       <div class="tw:flex-1 tw:min-w-[140px]">
         <p class="tw:font-semibold tw:mb-1">{{ match.team_home.title }}</p>
-        <select class="tw:select tw:select-bordered tw:select-sm tw:w-full" x-model="selectedHomeName" @change="syncSelection()">
+        <select class="tw:select tw:select-sm tw:w-full" x-model="selectedHomeName" @change="syncSelection()">
           <option value="" :selected="!selectedHomeName" disabled>Выберите игрока</option>
           <template x-for="(p, idx) in allHome" :key="'h'+idx">
             <option :value="p.name" :disabled="!isAvailable('home', p.name)" x-text="p.name"></option>
@@ -252,7 +252,7 @@
       </div>
       <div class="tw:flex-1 tw:min-w-[140px]">
         <p class="tw:font-semibold tw:mb-1">{{ match.team_guest.title }}</p>
-        <select class="tw:select tw:select-bordered tw:select-sm tw:w-full" x-model="selectedGuestName" @change="syncSelection()">
+        <select class="tw:select tw:select-sm tw:w-full" x-model="selectedGuestName" @change="syncSelection()">
           <option value="" :selected="!selectedGuestName" disabled>Выберите игрока</option>
           <template x-for="(p, idx) in allGuest" :key="'g'+idx">
             <option :value="p.name" :disabled="!isAvailable('guest', p.name)" x-text="p.name"></option>

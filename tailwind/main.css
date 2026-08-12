@@ -4,7 +4,7 @@
 
 @plugin "daisyui" {
   themes: all;
-  exclude: [ "scrollbar"];
+  exclude: scrollbar;
 }
 
 @plugin "@tailwindcss/typography";
@@ -226,6 +226,10 @@
     &:before {
       background-color: var(--tw-color-gray-300) !important;
     }
+  }
+
+  .tw\:btn-ghost {
+    --btn-rest-fg: currentColor;
   }
 
   .tw\:btn-soft {
