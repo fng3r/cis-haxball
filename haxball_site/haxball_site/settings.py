@@ -427,6 +427,7 @@ MESSAGE_TAGS = {
     messages.ERROR: 'alert-danger',
 }
 
+YOUTUBE_SHOW_CONTENT = config('YOUTUBE_SHOW_CONTENT', cast=bool, default=False)
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 YOUTUBE_CHANNEL_ID = config('YOUTUBE_CHANNEL_ID', default='UCQV_rveyeAE7e2M8C-osaGQ')
 YOUTUBE_FEATURED_VIDEO_IDS = config('YOUTUBE_FEATURED_VIDEO_IDS', cast=str.split, default='')
@@ -629,3 +630,5 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 ALLAUTH_TRUSTED_CLIENT_IP_HEADER = 'X-Real-IP'
+if DEBUG:
+    ACCOUNT_RATE_LIMITS = False

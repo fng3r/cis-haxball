@@ -1,0 +1,78 @@
+{% load utils %}
+
+<article class="structured-medal-card">
+  <div class="structured-medal-card__header">
+    <div class="structured-medal-card__image-wrap">
+      {% if group.medal_type.image %}
+        <img src="{{ group.medal_type.image.url }}" alt="{{ group.medal_type.title }}" class="structured-medal-card__image">
+      {% elif group.grants.0.medal.image_override %}
+        <img src="{{ group.grants.0.medal.image_override.url }}"
+             alt="{{ group.medal_type.title }}"
+             class="structured-medal-card__image">
+      {% else %}
+        <i class="fa fa-trophy structured-medal-card__fallback" aria-hidden="true"></i>
+      {% endif %}
+      <span class="structured-medal-card__count" title="Количество награждений">×{{ group.count }}</span>
+    </div>
+
+    <div class="structured-medal-card__identity">
+      <h4>{{ group.medal_type.title }}</h4>
+      <div class="structured-medal-card__tags">
+        {% if group.medal_type.league_type %}<span>{{ group.medal_type.get_league_type_display }}</span>{% endif %}
+        <span>{{ group.medal_type.get_kind_display }}</span>
+      </div>
+    </div>
+  </div>
+
+  <details class="structured-medal-card__history">
+    <summary>
+      <span>История награждений</span>
+      <i class="fa fa-chevron-down" aria-hidden="true"></i>
+    </summary>
+    <ol>
+      {% for grant in group.grants %}
+        <li>
+          <div class="structured-medal-occurrence__main">
+            <strong>
+              {% if grant.medal.season %}
+                {{ grant.medal.season.title }}
+              {% elif grant.medal.edition %}
+                {{ grant.medal.edition }}
+              {% else %}
+                Получено
+              {% endif %}
+            </strong>
+            {% if grant.medal.league %}<span class="structured-medal-occurrence__league">{{ grant.medal.league.title }}</span>{% endif %}
+          </div>
+
+          {% if grant.awarded_at or grant.medal.result_value is not None %}
+            <div class="structured-medal-occurrence__aside">
+              {% if grant.medal.result_value is not None %}
+                <span class="structured-medal-occurrence__result">
+                  {{ grant.medal.result_value }}
+                  {% if grant.medal.medal_type.statistic == 'goals' %}
+                    {{ grant.medal.result_value|ru_pluralize:'гол,гола,голов' }}
+                  {% elif grant.medal.medal_type.statistic == 'assists' %}
+                    {{ grant.medal.result_value|ru_pluralize:'ассист,ассиста,ассистов' }}
+                  {% elif grant.medal.medal_type.statistic == 'clean_sheets' %}
+                    {{ grant.medal.result_value|ru_pluralize:'сухарь,сухаря,сухарей' }}
+                  {% endif %}
+                </span>
+              {% endif %}
+              {% if grant.awarded_at %}
+                <time class="structured-medal-occurrence__date" datetime="{{ grant.awarded_at|date:'Y-m-d' }}" title="Дата награждения">{{ grant.awarded_at|date:"d.m.Y" }}</time>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% if show_squad and grant.players_raw_list %}
+            <div class="tw:flex tw:flex-col tw:gap-1 tw:col-span-2">
+              <div class="tw:text-xs tw:font-semibold">Состав</div>
+              <p class="structured-medal-occurrence__squad">{{ grant.players_raw_list }}</p>
+            </div>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  </details>
+</article>

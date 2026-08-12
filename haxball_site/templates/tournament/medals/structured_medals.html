@@ -1,0 +1,27 @@
+{% load utils %}
+
+<section class="structured-medals" aria-label="Структурированные медали">
+  {% if structured_medals.categories %}
+    <div class="structured-medals__summary">
+      <h3>Коллекция по типам медалей</h3>
+      <div class="structured-medals__totals" aria-label="Сводка медалей">
+        <span><strong>{{ structured_medals.type_count }}</strong> {{ structured_medals.type_count|ru_pluralize:'тип,типа,типов' }}</span>
+        <span><strong>{{ structured_medals.total_count }}</strong> {{ structured_medals.total_count|ru_pluralize:'награждение,награждения,награждений' }}</span>
+      </div>
+    </div>
+
+    <div class="tw:flex tw:flex-col tw:gap-5">
+      {% for category_group in structured_medals.categories %}
+        <section class="tw:flex tw:flex-col tw:gap-2" aria-labelledby="structured-medal-category-{{ forloop.counter }}">
+          <h3 id="structured-medal-category-{{ forloop.counter }}"
+              class="tw:text-xl! tw:mb-0! tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ category_group.title }}</h3>
+          <div class="structured-medals__grid">
+            {% for group in category_group.groups %}
+              {% include 'tournament/medals/structured_medal_card.html' %}
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>

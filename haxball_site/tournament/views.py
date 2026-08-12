@@ -22,7 +22,7 @@ from django_filters import ChoiceFilter, FilterSet, ModelChoiceFilter
 from django_htmx.http import trigger_client_event
 
 from core.forms import NewCommentForm
-from core.utils import get_comments_for_object, get_paginated_comments
+from core.utils import get_comments_for_object, get_paginated_comments, prefetch_favorite_medals
 from fantasy_league.models import FantasyTournament
 from haxball_site import settings
 from predictions.models import PredictionsContestTournament
@@ -70,6 +70,7 @@ from .models import (
 )
 from .services.hall_of_fame import HallOfFameService
 from .services.replay_stats import MatchReplayStatsAggregator
+from .services.structured_medals import get_team_medals, get_team_medals_by_season
 from .templatetags.tournament_extras import get_team_squad_stats, get_user_teams
 
 
@@ -360,6 +361,8 @@ class TeamDetail(DetailView):
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
         context['tournaments'] = get_team_tournaments(team)
+        context['team_medals_by_season'] = get_team_medals_by_season(team)
+        context['structured_medals'] = get_team_medals(team)
 
         latest_rating_version = PlayerRatingVersion.objects.aggregate(number=Max('number'))['number']
         rating = PlayerRating.objects.select_related('player').filter(
@@ -809,7 +812,11 @@ def get_postponements_queryset():
         .prefetch_related(
             'teams',
             'taken_by__user_profile__user_icon',
+            prefetch_favorite_medals('taken_by__user_profile__favorite_medals'),
+            'taken_by__user_player__medals',
             'cancelled_by__user_profile__user_icon',
+            prefetch_favorite_medals('cancelled_by__user_profile__favorite_medals'),
+            'cancelled_by__user_player__medals',
             'taken_by__user_player__team__owner',
             'taken_by__user_player__team__captain',
             'taken_by__user_player__team__captain_assistant',

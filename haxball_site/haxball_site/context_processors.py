@@ -73,6 +73,9 @@ def youtube_context(request):
     """
     Add featured YouTube videos to the context for all templates.
     """
+    if not settings.YOUTUBE_SHOW_CONTENT:
+        return {'featured_videos': [], 'livestreams': []}
+
     try:
         youtube_service = YoutubeService()
         livestreams = youtube_service.search_channel_livestreams(settings.YOUTUBE_CHANNEL_ID)

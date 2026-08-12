@@ -3,9 +3,9 @@ from django.core.exceptions import ValidationError
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
-from tournament.models import Achievements
+from tournament.models import Medal
 
-from .models import NewComment, Post, Profile
+from .models import FavoriteMedal, NewComment, Post, Profile
 
 
 class NewCommentForm(forms.ModelForm):
@@ -26,6 +26,13 @@ class EditCommentForm(forms.ModelForm):
 
 class EditProfileForm(forms.ModelForm):
     remove_bg = forms.BooleanField(label='Удалить фон', required=False)
+    favorite_medals = forms.ModelMultipleChoiceField(
+        label='Избранные достижения',
+        queryset=Medal.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(),
+        help_text='Выберите до 5 достижений для отображения в комментариях',
+    )
 
     class Meta:
         model = Profile
@@ -43,11 +50,8 @@ class EditProfileForm(forms.ModelForm):
             'favourite_teams',
             'favourite_players',
             'tag',
-            'favorite_achievements',
+            'favorite_medals',
         )
-        widgets = {
-            'favorite_achievements': forms.CheckboxSelectMultiple(),
-        }
 
     def __init__(self, *args, can_use_premium_features: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,19 +61,34 @@ class EditProfileForm(forms.ModelForm):
             avatar_frame_field.disabled = True
             tag_field.disabled = True
 
-        # Filter achievements to only show those the user has earned
         if self.instance and self.instance.name:
-            user_achievements = Achievements.objects.filter(player__name=self.instance.name).select_related('category')
-            self.fields['favorite_achievements'].queryset = user_achievements
-            self.fields['favorite_achievements'].help_text = 'Выберите до 5 достижений для отображения в комментариях'
-        else:
-            self.fields['favorite_achievements'].queryset = Achievements.objects.none()
+            player = getattr(self.instance.name, 'user_player', None)
+            if player:
+                self.fields['favorite_medals'].queryset = Medal.objects.filter(
+                    player_medals__player=player
+                ).select_related('medal_type')
+                if not self.is_bound:
+                    self.initial['favorite_medals'] = self.instance.favorite_medals.values_list('medal_id', flat=True)
 
-    def clean_favorite_achievements(self):
-        achievements = self.cleaned_data.get('favorite_achievements')
-        if achievements and len(achievements) > 5:
+    def clean_favorite_medals(self):
+        medals = self.cleaned_data.get('favorite_medals')
+        if medals and len(medals) > 5:
             raise ValidationError('Можно выбрать не более 5 достижений.')
-        return achievements
+        return medals
+
+    def save(self, commit=True):
+        profile = super().save(commit=commit)
+        if commit:
+            selected_medals = self.cleaned_data['favorite_medals']
+            profile.favorite_medals.exclude(medal__in=selected_medals).delete()
+            FavoriteMedal.objects.bulk_create(
+                [
+                    FavoriteMedal(profile=profile, medal=medal)
+                    for medal in selected_medals
+                    if not profile.favorite_medals.filter(medal=medal).exists()
+                ]
+            )
+        return profile
 
 
 class PostForm(forms.ModelForm):

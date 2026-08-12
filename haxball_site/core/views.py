@@ -19,7 +19,13 @@ from django.views.generic import DetailView, ListView, View
 from django_htmx.http import trigger_client_event
 from pytils.translit import slugify
 
-from tournament.models import Achievements, Team
+from tournament.models import Team
+from tournament.services.structured_medals import (
+    CategorizedMedalCollection,
+    StructuredMedalCollection,
+    get_player_medals,
+    get_player_medals_by_category,
+)
 
 from .forms import EditCommentForm, EditProfileForm, NewCommentForm, PostForm
 from .models import (
@@ -36,7 +42,7 @@ from .models import (
 )
 from .services.reactions import build_reactions_context
 from .templatetags.user_tags import can_delete, can_edit, exceeds_edit_limit
-from .utils import get_comments_for_object, get_paginated_comments, strtobool
+from .utils import get_comments_for_object, get_paginated_comments, prefetch_favorite_medals, strtobool
 
 logger = logging.getLogger('haxball_site')
 
@@ -255,16 +261,14 @@ class ProfileDetail(View):
             'comment_form': NewCommentForm(),
         }
 
-        all_achievements = Achievements.objects.select_related('category').filter(player__name=profile.name)
-        achievements_by_category = {}
-        for achievement in all_achievements:
-            category = 'Без категории'
-            if achievement.category:
-                category = achievement.category.title
-            if category not in achievements_by_category:
-                achievements_by_category[category] = list()
-            achievements_by_category[category].append(achievement)
-        context['achievements_by_category'] = achievements_by_category.items()
+        player = getattr(profile.name, 'user_player', None)
+        context['categorized_medals'] = (
+            get_player_medals_by_category(player) if player else CategorizedMedalCollection(groups=[], total_count=0)
+        )
+        context['legacy_medals_count'] = context['categorized_medals'].total_count
+        context['structured_medals'] = (
+            get_player_medals(player) if player else StructuredMedalCollection(categories=[], total_count=0)
+        )
         context['previous_nicknames'] = UserNicknameHistoryItem.objects.filter(user=profile.name).order_by('-edited')
 
         if request.htmx:
@@ -366,27 +370,32 @@ class EditCommentView(View):
             comment.body = form.cleaned_data['edit_body']
             comment.save()
 
+        comment = get_comment_for_render(comment.pk)
         return render(request, 'core/comment/comment-item.html', {'comment': comment, 'object': comment.content_object})
 
 
-def get_comment(request, pk):
+def get_comment_for_render(pk):
     prefetch_likes = Prefetch(
         'votes', queryset=LikeDislike.objects.likes().prefetch_related('user__user_profile'), to_attr='likes'
     )
     prefetch_dislikes = Prefetch(
         'votes', queryset=LikeDislike.objects.dislikes().prefetch_related('user__user_profile'), to_attr='dislikes'
     )
-    comment = (
+    return (
         NewComment.objects.select_related('author__user_profile')
         .prefetch_related(
             'author__user_profile__user_icon',
-            'author__user_profile__favorite_achievements',
-            'author__user_player__achievements',
+            prefetch_favorite_medals('author__user_profile__favorite_medals'),
+            'author__user_player__medals',
             prefetch_likes,
             prefetch_dislikes,
         )
         .get(pk=pk)
     )
+
+
+def get_comment(request, pk):
+    comment = get_comment_for_render(pk)
 
     return render(request, 'core/comment/comment-item.html', {'comment': comment, 'object': comment.content_object})
 
@@ -603,6 +612,7 @@ class ReactionWidgetView(View):
         return render(request, 'core/include/reactions/widget.html', context)
 
     def _render_comment_item(self, request, comment):
+        comment = get_comment_for_render(comment.pk)
         return render(
             request,
             'core/comment/comment-item.html',
@@ -783,8 +793,8 @@ class UserCommentsView(View):
             NewComment.objects.select_related('author__user_profile', 'content_type')
             .prefetch_related(
                 'author__user_profile__user_icon',
-                'author__user_profile__favorite_achievements',
-                'author__user_player__achievements',
+                prefetch_favorite_medals('author__user_profile__favorite_medals'),
+                'author__user_player__medals',
                 'votes',
             )
             .filter(author__id=user_id)

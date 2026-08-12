@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib import admin, messages
 from django.db import models
-from django.db.models import Q
+from django.db.models import F, Q
 from django.shortcuts import redirect
-from django.urls import resolve, reverse_lazy
+from django.urls import resolve, reverse, reverse_lazy
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from polymorphic.admin import (
@@ -17,6 +18,7 @@ from unfold import admin as unfold_admin
 from unfold.contrib.filters.admin import (
     AutocompleteSelectFilter,
     ChoicesCheckboxFilter,
+    ChoicesDropdownFilter,
     MultipleChoicesDropdownFilter,
     RelatedDropdownFilter,
     SingleNumericFilter,
@@ -49,16 +51,21 @@ from .models import (
     Group,
     GroupStage,
     League,
+    LegacyMedalMapping,
     Match,
     MatchReplay,
     MatchReplayStats,
     MatchReplayStatsPlayer,
     MatchReplayStatsStatus,
     MatchResult,
+    Medal,
+    MedalCategory,
+    MedalType,
     Nation,
     OtherEvents,
     Player,
     PlayerMatchStatistics,
+    PlayerMedal,
     PlayerRating,
     PlayerRatingVersion,
     PlayerTransfer,
@@ -72,6 +79,7 @@ from .models import (
     Substitution,
     Team,
     TeamAchievement,
+    TeamMedal,
     TeamPenaltyPoints,
     TeamRating,
     TeamRatingVersion,
@@ -150,6 +158,184 @@ class TeamAchievementAdmin(UnfoldModelAdmin):
         ]
 
 
+class DerivedCodeCollisionAdminForm(forms.ModelForm):
+    duplicate_error_intro = ''
+
+    def _post_clean(self):
+        super()._post_clean()
+        if self.errors or not self.instance.code:
+            return
+
+        duplicate = type(self.instance).objects.filter(code=self.instance.code).exclude(pk=self.instance.pk).first()
+        if not duplicate:
+            return
+
+        opts = duplicate._meta
+        url = reverse(f'admin:{opts.app_label}_{opts.model_name}_change', args=[duplicate.pk])
+        self.add_error(
+            None,
+            format_html('{}: <a href="{}">{}</a>.', self.duplicate_error_intro, url, duplicate),
+        )
+
+
+class MedalTypeAdminForm(DerivedCodeCollisionAdminForm):
+    duplicate_error_intro = 'Тип медали с такими идентифицирующими атрибутами уже существует'
+
+    class Meta:
+        model = MedalType
+        exclude = ('code',)
+
+
+class MedalAdminForm(DerivedCodeCollisionAdminForm):
+    duplicate_error_intro = 'Медаль с такими типом и областью действия уже существует'
+
+    class Meta:
+        model = Medal
+        exclude = ('code',)
+
+
+@admin.register(MedalType)
+class MedalTypeAdmin(UnfoldModelAdmin):
+    form = MedalTypeAdminForm
+    list_display = ('display_medal', 'kind', 'league_type', 'place', 'category', 'order', 'nomination', 'statistic')
+    list_filter = (
+        ('category', RelatedDropdownFilter),
+        ('kind', ChoicesDropdownFilter),
+        ('league_type', ChoicesDropdownFilter),
+        ('place', ChoicesCheckboxFilter),
+        ('statistic', ChoicesCheckboxFilter),
+        ('nomination', RelatedDropdownFilter),
+    )
+
+    list_filter_submit = True
+    search_fields = ('code', 'title')
+    autocomplete_fields = ('category', 'nomination')
+    readonly_fields = ('code',)
+    ordering = ('category__order', 'order', 'code')
+    fields = (
+        'kind',
+        'title',
+        'image',
+        ('category', 'order'),
+        ('league_type', 'place'),
+        'nomination',
+        'statistic',
+        'competition_code',
+        ('threshold', 'unit'),
+        'code',
+    )
+    conditional_fields = {
+        'league_type': (
+            "['tournament_place', 'statistic_place', 'nomination_place', 'auxiliary_competition_place'].includes(kind)"
+        ),
+        'place': (
+            "['tournament_place', 'statistic_place', 'nomination_place', 'auxiliary_competition_place'].includes(kind)"
+        ),
+        'nomination': "kind == 'nomination_place'",
+        'statistic': "kind == 'statistic_place'",
+        'competition_code': "kind == 'auxiliary_competition_place'",
+        'threshold': "kind == 'career_milestone'",
+        'unit': "kind == 'career_milestone'",
+    }
+
+    @display(description='Медаль', header=True, ordering='title')
+    def display_medal(self, model):
+        image = None
+        if model.image:
+            image = {
+                'path': model.image.url,
+                'squared': False,
+                'borderless': True,
+                'width': 36,
+                'height': 36,
+            }
+        return [model.title, None, None, image]
+
+
+class PlayerMedalInline(UnfoldTabularInline):
+    model = PlayerMedal
+    tab = True
+    extra = 0
+    fields = ('player', 'awarded_at')
+    autocomplete_fields = ('player',)
+    show_change_link = True
+    verbose_name = 'Медаль игрока'
+    verbose_name_plural = 'Игроки'
+
+
+class TeamMedalInline(UnfoldTabularInline):
+    model = TeamMedal
+    tab = True
+    extra = 0
+    fields = ('team', 'players_raw_list', 'awarded_at')
+    autocomplete_fields = ('team',)
+    show_change_link = True
+    verbose_name = 'Медаль команды'
+    verbose_name_plural = 'Команды'
+
+
+@admin.register(Medal)
+class MedalAdmin(UnfoldModelAdmin):
+    form = MedalAdminForm
+    list_display = ('display_medal_type', 'season', 'league', 'edition', 'result_value')
+    list_filter = (
+        ('medal_type', RelatedDropdownFilter),
+        ('medal_type__category', RelatedDropdownFilter),
+        ('season', RelatedDropdownFilter),
+        ('league', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    search_fields = ('code', 'medal_type__title', 'season__title', 'edition')
+    autocomplete_fields = ('medal_type', 'season')
+    readonly_fields = ('code',)
+    inlines = (PlayerMedalInline, TeamMedalInline)
+    ordering = (F('season__number').desc(nulls_last=True), 'medal_type__category__order', 'medal_type__order')
+
+    @display(description='Тип медали', header=True, ordering='medal_type')
+    def display_medal_type(self, model):
+        image = None
+        if model.medal_type.image:
+            image = {
+                'path': model.image.url,
+                'squared': False,
+                'borderless': True,
+                'width': 40,
+                'height': 40,
+            }
+        return [model.medal_type.title, model.medal_type.get_league_type_display, None, image]
+
+
+@admin.register(MedalCategory)
+class MedalCategoryAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'title', 'description', 'order')
+    search_fields = ('title', 'description')
+    ordering = ('order', 'id')
+
+
+@admin.register(PlayerMedal)
+class PlayerMedalAdmin(UnfoldModelAdmin):
+    list_display = ('player', 'medal', 'awarded_at')
+    list_filter = (('medal', RelatedDropdownFilter),)
+    search_fields = ('player__nickname', 'medal__medal_type__title')
+    autocomplete_fields = ('player', 'medal')
+
+
+@admin.register(TeamMedal)
+class TeamMedalAdmin(UnfoldModelAdmin):
+    list_display = ('team', 'medal', 'awarded_at')
+    list_filter = (('medal', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
+    search_fields = ('team__title', 'medal__medal_type__title')
+    autocomplete_fields = ('team', 'medal')
+
+
+@admin.register(LegacyMedalMapping)
+class LegacyMedalMappingAdmin(UnfoldModelAdmin):
+    list_display = ('source_model', 'source_id', 'medal')
+    list_filter = ('source_model',)
+    search_fields = ('source_id', 'medal__code', 'medal__medal_type__title')
+    autocomplete_fields = ('medal',)
+
+
 class AchievementsInline(UnfoldTabularInline):
     model = Achievements.player.through
     extra = 0
@@ -168,6 +354,34 @@ class TeamAchievementsInline(UnfoldTabularInline):
     tab = True
 
     verbose_name = 'Медаль'
+    verbose_name_plural = 'Медали'
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class PlayerMedalsInline(UnfoldTabularInline):
+    model = PlayerMedal
+    extra = 0
+    tab = True
+    fields = ('medal', 'awarded_at')
+    raw_id_fields = ('medal',)
+    show_change_link = True
+    verbose_name = 'Медаль игрока'
+    verbose_name_plural = 'Медали'
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class TeamMedalsInline(UnfoldTabularInline):
+    model = TeamMedal
+    extra = 0
+    tab = True
+    fields = ('medal', 'players_raw_list', 'awarded_at')
+    raw_id_fields = ('medal',)
+    show_change_link = True
+    verbose_name = 'Медаль команды'
     verbose_name_plural = 'Медали'
 
     def has_change_permission(self, request, obj=None):
@@ -194,7 +408,7 @@ class PlayerAdmin(UnfoldModelAdmin):
         'nickname',
         'name__username',
     )
-    inlines = [AchievementsInline]
+    inlines = [PlayerMedalsInline]
 
     @display(description='Позиции', label=True)
     def display_positions(self, obj):
@@ -316,7 +530,7 @@ class TeamAdmin(UnfoldModelAdmin):
     list_filter_sheet = False
     show_facets = False
     search_fields = ('title', 'short_title')
-    inlines = [TeamPlayerInline, TeamAchievementsInline]
+    inlines = [TeamPlayerInline, TeamMedalsInline]
     ordering = ['-date_found', '-id']
 
     @display(description='Команда', header=True)

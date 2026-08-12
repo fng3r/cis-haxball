@@ -1,0 +1,133 @@
+{% load user_tags %}
+{% load tournament_extras %}
+
+<div class="tw:card user-card-full">
+  {% include 'core/profile/partials/profile_identity.html' %}
+
+  <div class="tw:rounded-b-lg tw:bg-cover tw:bg-center tw:bg-no-repeat"
+       {% if profile.background %}style="background-image:url({{ profile.background.url }});"{% endif %}>
+    <div class="tw:rounded-b-lg tw:min-h-[39rem] tw:bg-base-100/35 tw:backdrop-blur-[1px]">
+      <div class="tw:card tw:px-6 tw:pt-2 tw:pb-3">
+        <div class="tw:tabs tw:tabs-border tw:w-full tw:gap-x-2 tw:gap-y-3 tw:bg-transparent!" role="tablist">
+          <input type="radio"
+                 name="profile-tabs"
+                 class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
+                 role="tab"
+                 aria-label="Основная информация"
+                 checked />
+          <div class="tw:tab-content tw:w-full">
+            <div id="profile-info-panel" class="tw:sm:h-[600px]" role="tabpanel" aria-labelledby="profile-info-tab">
+              <div class="tw:mb-[30px] tw:ml-0 tw:flex tw:w-full tw:flex-wrap tw:gap-y-2 tw:rounded-[10px] tw:px-4 tw:py-2 tw:shadow-[0_0_10px_#000]">
+                <div class="tw:sm:w-1/2 tw:w-full">
+                  <div class="tw:font-semibold">Дата регистрации</div>
+                  <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">{{ profile.name.date_joined|date }}</div>
+                </div>
+
+                <div class="tw:sm:w-1/2 tw:w-full">
+                  <div class="tw:font-semibold">Последний визит</div>
+                  <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">{% user_last_activity profile.name %}</div>
+                </div>
+
+                <div class="tw:sm:w-1/2 tw:w-full">
+                  <div class="tw:font-semibold">Дата рождения</div>
+                  <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">
+                    {% if profile.born_date %}
+                      {{ profile.born_date }}
+                      ({% age profile.born_date %})
+                    {% else %}
+                      не указана
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="tw:sm:w-1/2 tw:w-full">
+                  <div class="tw:font-semibold">Город</div>
+                  <div class="tw:text-base-content/70 tw:text-sm tw:font-semibold">
+                    {% if profile.city %}
+                      {{ profile.city }}
+                    {% else %}
+                      не указан
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="tw:flex tw:h-[450px] tw:flex-col tw:gap-2 tw:overflow-y-auto tw:rounded-[10px] tw:p-[15px] tw:shadow-[0_0_10px_#000]">
+                <div>
+                  <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">О себе</h5>
+                  <div class="tw:w-full">
+                    <h6 class="tw:text-base-content/70">{{ profile.about|linebreaks }}</h6>
+                  </div>
+                </div>
+
+                <div>
+                  <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">Любимые команды</h5>
+                  <div class="tw:w-full">
+                    <h6 class="tw:text-base-content/70">{{ profile.favourite_teams|default:"Не указано"|linebreaks }}</h6>
+                  </div>
+                </div>
+
+                <div>
+                  <h5 class="tw:mb-0! tw:pb-1 tw:font-semibold">Любимые игроки</h5>
+                  <div class="tw:w-full">
+                    <h6 class="tw:text-base-content/70">{{ profile.favourite_players|default:"Не указано"|linebreaks }}</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {% if profile.name.username == user.username %}
+            <div class="tw:-ml-2">
+              <span class="tw:text-warning tw:hover:text-warning/85 tw:cursor-pointer"
+                    hx-get="{% url 'core:edit_profile' profile.slug profile.id %}"
+                    hx-target="#profile-container"
+                    hx-swap="outerHTML"
+                    hx-push-url="true">
+                <i class="fa fa-pencil tw:mt-3" aria-hidden="true"></i>
+              </span>
+            </div>
+          {% endif %}
+
+          <input type="radio"
+                 name="profile-tabs"
+                 class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
+                 role="tab"
+                 aria-label="Достижения" />
+          <div class="tw:tab-content tw:w-full">
+            <div class="tw:h-[600px] tw:overflow-x-hidden tw:overflow-y-auto tw:mt-0 tw:px-1"
+                 id="profile-achievements-panel"
+                 role="tabpanel"
+                 aria-labelledby="profile-achievements-tab">
+              {% if structured_medals.total_count %}
+                <div x-data="{ medalsView: $persist('plain').as('medals-view') }">
+                  <div class="medal-view-switch" role="group" aria-label="Вариант отображения медалей">
+                    <button type="button"
+                            title="Обычный вид"
+                            aria-label="Обычный вид"
+                            @click="medalsView = 'plain'"
+                            :aria-pressed="medalsView === 'plain'">
+                      <i class="fa fa-th-large" aria-hidden="true"></i>
+                    </button>
+                    <button type="button"
+                            title="Группировка по медалям"
+                            aria-label="Группировка по медалям"
+                            @click="medalsView = 'grouped'"
+                            :aria-pressed="medalsView === 'grouped'">
+                      <i class="fa fa-object-group" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  <div x-show="medalsView === 'plain'" x-cloak>{% include 'tournament/medals/categorized_medals.html' %}</div>
+
+                  <div x-show="medalsView === 'grouped'" x-cloak>{% include 'tournament/medals/structured_medals.html' %}</div>
+                </div>
+              {% else %}
+                {% include 'tournament/medals/no_medals.html' %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

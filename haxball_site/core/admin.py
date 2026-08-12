@@ -27,11 +27,12 @@ from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationFo
 from unfold.widgets import UnfoldAdminFileFieldWidget
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldStackedInline
-from tournament.models import Achievements
+from tournament.models import Medal
 
 from .models import (
     Category,
     CommentHistoryItem,
+    FavoriteMedal,
     IPAdress,
     LikeDislike,
     NewComment,
@@ -281,26 +282,36 @@ class PostAdmin(UnfoldModelAdmin):
     list_editable = ('important',)
 
 
+class FavoriteMedalInline(UnfoldStackedInline):
+    model = FavoriteMedal
+    extra = 0
+    max_num = 5
+    fields = ('medal',)
+    verbose_name = 'Избранная медаль'
+    verbose_name_plural = 'Избранные медали'
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'medal':
+            kwargs['queryset'] = Medal.objects.none()
+            resolved = resolve(request.path_info)
+            if profile_id := resolved.kwargs.get('object_id'):
+                profile = Profile.objects.select_related('name').filter(pk=profile_id).first()
+                player = getattr(profile.name, 'user_player', None) if profile else None
+                if player:
+                    kwargs['queryset'] = Medal.objects.filter(player_medals__player=player).select_related('medal_type')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 @admin.register(Profile)
 class ProfileAdmin(UnfoldModelAdmin):
     list_display = ('id', 'name', 'slug', 'can_comment', 'can_vote', 'views', 'karma', 'background')
     list_filter = (('id', SingleNumericFilter), ('name', RelatedDropdownFilter), 'can_comment', 'can_vote')
     list_filter_submit = True
-    filter_horizontal = ('favorite_achievements',)
     search_fields = ('name__username',)
     search_help_text = 'Поиск по имени пользователя'
     list_editable = ('can_comment', 'can_vote')
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == 'favorite_achievements':
-            kwargs['queryset'] = Achievements.objects.none()
-            resolved = resolve(request.path_info)
-            if 'object_id' in resolved.kwargs:
-                profile = Profile.objects.filter(pk=resolved.kwargs['object_id']).first()
-                if profile and hasattr(profile.name, 'user_player'):
-                    kwargs['queryset'] = Achievements.objects.filter(player=profile.name.user_player)
-
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
+    exclude = ('favorite_achievements',)
+    inlines = (FavoriteMedalInline,)
 
 
 @admin.register(Themes)

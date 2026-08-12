@@ -121,7 +121,6 @@ class YoutubeService:
             - duration: Duration object with hours, minutes, seconds and formatted string
         """
         if not video_ids:
-            logger.warning('No video IDs provided to get_videos_by_ids')
             return []
 
         try:

@@ -1,0 +1,37 @@
+{% if categorized_medals.groups %}
+  <div class="tw:flex tw:flex-col tw:gap-4">
+    {% for group in categorized_medals.groups %}
+      <section class="tw:flex tw:flex-col tw:gap-2" aria-labelledby="medal-category-{{ forloop.counter }}">
+        <h3 id="medal-category-{{ forloop.counter }}"
+            class="tw:text-xl! tw:mb-0! tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ group.title }}</h3>
+        <div class="tw:grid tw:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] tw:gap-1.5">
+          {% for grant in group.grants %}
+            <div class="tw:tooltip tw:tooltip-top tw:w-fit tw:cursor-help medal-anchor-tooltip"
+                 tabindex="0"
+                 aria-label="{{ grant.medal.medal_type.title }}"
+                 style="anchor-name: --medal-tooltip-{{ grant.pk }}">
+              <div class="tw:tooltip-content tw:max-w-64 tw:whitespace-normal tw:text-left"
+                   style="position-anchor: --medal-tooltip-{{ grant.pk }}">
+                {% include 'tournament/medals/medal_tooltip_content.html' with medal=grant.medal awarded_at=grant.awarded_at %}
+              </div>
+
+              {% if grant.medal.image_override %}
+                <img class="tw:w-24 tw:h-24 tw:object-contain"
+                     src="{{ grant.medal.image_override.url }}"
+                     alt="{{ grant.medal.medal_type.title }}">
+              {% elif grant.medal.medal_type.image %}
+                <img class="tw:w-24 tw:h-24 tw:object-contain"
+                     src="{{ grant.medal.medal_type.image.url }}"
+                     alt="{{ grant.medal.medal_type.title }}">
+              {% else %}
+                <span class="tw:flex tw:w-24 tw:h-24 tw:items-center tw:justify-center tw:text-warning tw:text-4xl" aria-hidden="true">
+                  <i class="fa fa-trophy"></i>
+                </span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+{% endif %}

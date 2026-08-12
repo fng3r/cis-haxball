@@ -1,5 +1,6 @@
+import re
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
@@ -15,6 +16,7 @@ from django.utils import timezone
 from colorfield.fields import ColorField
 from model_utils import FieldTracker
 from polymorphic.models import PolymorphicModel
+from pytils.translit import slugify
 from smart_selects.db_fields import ChainedForeignKey
 
 from core.models import NewComment
@@ -560,8 +562,8 @@ class Player(models.Model):
 class TourNumber(models.Model):
     number = models.SmallIntegerField('Номер тура')
     name = models.CharField('Название тура/раунда (опционально)', max_length=30, null=True, blank=True)
-    date_from = models.DateField('Дата начала тура', default=date.today, blank=True, null=True)
-    date_to = models.DateField('Дата окончания тура', default=date.today, blank=True, null=True)
+    date_from = models.DateField('Дата начала тура', default=timezone.localdate)
+    date_to = models.DateField('Дата окончания тура', default=timezone.localdate)
     league = models.ForeignKey(League, verbose_name='Турнир', related_name='tours', on_delete=models.CASCADE)
     stage = ChainedForeignKey(
         TournamentStage,
@@ -570,8 +572,6 @@ class TourNumber(models.Model):
         related_name='tours',
         verbose_name='Этап',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
     )
     bracket = models.PositiveSmallIntegerField('Сетка', choices=PlayOffStage.Bracket.choices, null=True, blank=True)
 
@@ -1736,7 +1736,7 @@ class OtherEvents(models.Model):
         return f'{emoji} {self.time_min:02d}:{self.time_sec:02d} {self.author} ({self.team})'
 
     class Meta:
-        verbose_name = 'Событие [OBSOLETE])'
+        verbose_name = 'Событие [OBSOLETE]'
         verbose_name_plural = 'События [OBSOLETE]'
         indexes = [
             models.Index(fields=['event', 'match']),
@@ -1896,8 +1896,8 @@ class AchievementCategory(models.Model):
 
     class Meta:
         ordering = ['order']
-        verbose_name = 'Категория медалек'
-        verbose_name_plural = 'Категории медалек'
+        verbose_name = 'Категория медалек [OBSOLETE]'
+        verbose_name_plural = 'Категории медалек [OBSOLETE]'
 
 
 class Achievements(models.Model):
@@ -1919,8 +1919,8 @@ class Achievements(models.Model):
 
     class Meta:
         ordering = ['category__order', 'position_number']
-        verbose_name = 'Медаль'
-        verbose_name_plural = 'Медали'
+        verbose_name = 'Медаль [OBSOLETE]'
+        verbose_name_plural = 'Медали [OBSOLETE]'
 
 
 class TeamAchievement(models.Model):
@@ -1937,8 +1937,8 @@ class TeamAchievement(models.Model):
 
     class Meta:
         ordering = ['season__number', 'position_number']
-        verbose_name = 'Медаль (командная)'
-        verbose_name_plural = 'Медали (командные)'
+        verbose_name = 'Медаль (командная) [OBSOLETE]'
+        verbose_name_plural = 'Медали (командные) [OBSOLETE]'
 
 
 class SeasonTeamRating(models.Model):
@@ -2492,3 +2492,306 @@ class AwardResult(models.Model):
         ]
         verbose_name = 'Результат голосования за награду'
         verbose_name_plural = 'Результаты голосований за награды'
+
+
+class MedalCategory(models.Model):
+    title = models.CharField('Название категории', max_length=50, unique=True)
+    description = models.CharField('Описание категории', max_length=150)
+    order = models.SmallIntegerField('Порядок категории при отображении в профиле')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'Категория медалей'
+        verbose_name_plural = 'Категории медалей'
+
+
+class MedalType(models.Model):
+    """Canonical identity shared by equivalent medals from different seasons."""
+
+    class Kind(models.TextChoices):
+        TOURNAMENT_PLACE = 'tournament_place', 'Место в турнире'
+        STATISTIC_PLACE = 'statistic_place', 'Место по статистике'
+        NOMINATION_PLACE = 'nomination_place', 'Место в номинации'
+        CAREER_MILESTONE = 'career_milestone', 'Карьерное достижение'
+        AUXILIARY_COMPETITION_PLACE = 'auxiliary_competition_place', 'Прочие турниры'
+        HONORARY = 'honorary', 'Особая награда'
+
+    class Statistic(models.TextChoices):
+        GOALS = 'goals', 'Голы'
+        ASSISTS = 'assists', 'Голевые передачи'
+        CLEAN_SHEETS = 'clean_sheets', 'Сухие таймы'
+
+    class Unit(models.TextChoices):
+        MATCHES = 'matches', 'Матчи'
+        GOALS = 'goals', 'Голы'
+        ASSISTS = 'assists', 'Голевые передачи'
+        CLEAN_SHEETS = 'clean_sheets', 'Сухие таймы'
+
+    class Place(models.IntegerChoices):
+        FIRST = 1, '1'
+        SECOND = 2, '2'
+        THIRD = 3, '3'
+
+    LEAGUE_SCOPED_KINDS = {
+        Kind.TOURNAMENT_PLACE,
+        Kind.STATISTIC_PLACE,
+        Kind.NOMINATION_PLACE,
+    }
+
+    code = models.CharField('Код', max_length=150, unique=True, blank=True)
+    kind = models.CharField('Вид медали', max_length=32, choices=Kind.choices)
+    title = models.CharField('Название', max_length=100)
+    image = models.ImageField('Изображение', upload_to='medals/')
+    category = models.ForeignKey(
+        MedalCategory,
+        verbose_name='Категория',
+        related_name='medal_types',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False,
+    )
+    league_type = models.CharField('Тип турнира', max_length=32, choices=League.Type.choices, null=True, blank=True)
+    place = models.PositiveSmallIntegerField('Место', choices=Place.choices, null=True, blank=True)
+    nomination = models.ForeignKey(
+        AwardNomination,
+        verbose_name='Номинация',
+        related_name='medal_types',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    statistic = models.CharField('Статистика', max_length=32, choices=Statistic.choices, null=True, blank=True)
+    competition_code = models.SlugField('Код дополнительного турнира', max_length=64, blank=True)
+    threshold = models.PositiveIntegerField('Порог', null=True, blank=True)
+    unit = models.CharField('Единица', max_length=32, choices=Unit.choices, blank=True)
+    order = models.SmallIntegerField('Порядок внутри категории', default=0)
+
+    def clean(self):
+        super().clean()
+        self.code = self.generate_code()
+        errors = {}
+        place_kinds = self.LEAGUE_SCOPED_KINDS | {self.Kind.AUXILIARY_COMPETITION_PLACE}
+        if self.kind in self.LEAGUE_SCOPED_KINDS and not self.league_type:
+            errors['league_type'] = 'Для этого вида медали укажите тип турнира.'
+        if self.kind in place_kinds and not self.place:
+            errors['place'] = 'Для этого вида медали укажите место.'
+        if self.kind == self.Kind.STATISTIC_PLACE and not self.statistic:
+            errors['statistic'] = 'Для статистической медали укажите вид статистики.'
+        if self.kind == self.Kind.NOMINATION_PLACE and not self.nomination_id:
+            errors['nomination'] = 'Для медали в номинации укажите номинацию.'
+        if self.kind == self.Kind.CAREER_MILESTONE:
+            if not self.threshold:
+                errors['threshold'] = 'Для карьерной медали укажите порог.'
+            if not self.unit:
+                errors['unit'] = 'Для карьерной медали укажите единицу.'
+        if self.kind == self.Kind.AUXILIARY_COMPETITION_PLACE and not self.competition_code:
+            errors['competition_code'] = 'Укажите код дополнительного турнира.'
+        if errors:
+            raise ValidationError(errors)
+
+    def generate_code(self):
+        if self.kind == self.Kind.TOURNAMENT_PLACE:
+            return f'tournament.{self.league_type}.{self.place}'
+        if self.kind == self.Kind.STATISTIC_PLACE:
+            return f'stat.{self.statistic}.{self.league_type}.{self.place}'
+        if self.kind == self.Kind.NOMINATION_PLACE:
+            nomination_code = self.nomination.code.lower() if self.nomination_id else 'unknown'
+            return f'nomination.{nomination_code}.{self.league_type}.{self.place}'
+        if self.kind == self.Kind.CAREER_MILESTONE:
+            return f'career.{self.unit}.{self.threshold}'
+        if self.kind == self.Kind.AUXILIARY_COMPETITION_PLACE:
+            league_scope = f'.{self.league_type}' if self.league_type else ''
+            return f'aux.{self.competition_code}{league_scope}.{self.place}'
+        if self.kind == self.Kind.HONORARY:
+            return f'honorary.{slugify(self.title)}'
+        raise ValidationError({'kind': 'Невозможно сформировать код для выбранного вида медали.'})
+
+    def save(self, *args, **kwargs):
+        generated_code = self.generate_code()
+        code_changed = self.code != generated_code
+        self.code = generated_code
+        if code_changed and kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'code'}
+
+        with transaction.atomic():
+            result = super().save(*args, **kwargs)
+            if code_changed:
+                for medal in self.medals.select_related('medal_type'):
+                    medal.save(update_fields=['code'])
+            return result
+
+    def __str__(self):
+        if self.league_type:
+            return f'{self.title} ({self.get_league_type_display()})'
+        return self.title
+
+    class Meta:
+        ordering = ['order', 'code']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(place__isnull=True) | models.Q(place__in=[1, 2, 3]),
+                name='structured_medal_valid_place',
+            )
+        ]
+        verbose_name = 'Тип медали'
+        verbose_name_plural = 'Типы медалей'
+
+
+class Medal(models.Model):
+    """A concrete occurrence of a canonical medal in a season or competition edition."""
+
+    code = models.CharField('Код', max_length=200, unique=True, blank=True)
+    medal_type = models.ForeignKey(
+        MedalType, verbose_name='Тип медали', related_name='medals', on_delete=models.PROTECT
+    )
+    season = models.ForeignKey(
+        Season,
+        verbose_name='Сезон',
+        related_name='medals',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text=('Указывать для медалей, имеющих четкую привязку к конкретному сезону'),
+    )
+    league = ChainedForeignKey(
+        League,
+        verbose_name='Турнир',
+        chained_field='season',
+        chained_model_field='championship',
+        related_name='medals',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text=(
+            'Указывать, если медаль относится к конкретному турниру в рамках сезона. '
+            'Для наград уровня всего сезона оставить пустым'
+        ),
+    )
+    edition = models.CharField(
+        'Розыгрыш',
+        max_length=100,
+        blank=True,
+        help_text=(
+            'Указывать для медалей, не относящихся к конкретному (официальному) сезону, '
+            'но имеющих собственное версионирование. Примеры: 11 сезон ELO, Copa del CIS #2 и т.д.'
+        ),
+    )
+    result_value = models.PositiveIntegerField(
+        'Результат',
+        null=True,
+        blank=True,
+        help_text=(
+            'Указывать только для медалей за статистику. '
+            'Должно содержать фактическое значение статистического показателя'
+        ),
+    )
+    image_override = models.ImageField(
+        'Изображение',
+        upload_to='medals/',
+        null=True,
+        blank=True,
+        help_text=(
+            'Указывать, когда изображение медали отличается от общего изображения медалей данного типа. '
+            'Пример: медали за ИТ, имеющие указание конкретного розыгрыша на изображении'
+        ),
+    )
+
+    def clean(self):
+        super().clean()
+        self.code = self.generate_code()
+        errors = {}
+        if self.medal_type.kind == MedalType.Kind.STATISTIC_PLACE and self.result_value is None:
+            errors['result_value'] = 'Для медали за статистику укажите результат.'
+        if self.league_id and self.season_id and self.league.championship_id != self.season_id:
+            errors['season'] = 'Сезон не совпадает с сезоном турнира.'
+        if errors:
+            raise ValidationError(errors)
+
+    def generate_code(self):
+        if self.season_id or self.league_id:
+            return f'{self.medal_type.code}:season:{self.season_id or 0}:league:{self.league_id or 0}'
+        if self.edition:
+            edition = re.sub(r'[^a-zа-я0-9]+', '-', self.edition.lower()).strip('-')
+            return f'{self.medal_type.code}:edition:{edition}'[:200]
+        return f'{self.medal_type.code}:global'
+
+    def save(self, *args, **kwargs):
+        generated_code = self.generate_code()
+        code_changed = self.code != generated_code
+        self.code = generated_code
+        if code_changed and kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'code'}
+        return super().save(*args, **kwargs)
+
+    @property
+    def image(self):
+        return self.image_override or self.medal_type.image
+
+    @property
+    def title(self):
+        scope = self.season or self.edition
+        return f'{self.medal_type.title} - {scope}' if scope else self.medal_type.title
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-season__number', 'medal_type__order', 'code']
+        verbose_name = 'Медаль'
+        verbose_name_plural = 'Медали'
+
+
+class PlayerMedal(models.Model):
+    medal = models.ForeignKey(Medal, related_name='player_medals', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, verbose_name='Игрок', related_name='medals', on_delete=models.CASCADE)
+    awarded_at = models.DateField('Дата награждения', default=timezone.localdate, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.player} — {self.medal}'
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['medal', 'player'], name='unique_structured_player_medal')]
+        verbose_name = 'Медаль игрока'
+        verbose_name_plural = 'Медали игроков'
+
+
+class TeamMedal(models.Model):
+    medal = models.ForeignKey(Medal, related_name='team_medals', on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, verbose_name='Команда', related_name='medals', on_delete=models.CASCADE)
+    players_raw_list = models.CharField('Состав', max_length=150, blank=True)
+    awarded_at = models.DateField('Дата награждения', default=timezone.localdate, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.team} — {self.medal}'
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['medal', 'team'], name='unique_structured_team_medal')]
+        verbose_name = 'Медаль команды'
+        verbose_name_plural = 'Медали команд'
+
+
+class LegacyMedalMapping(models.Model):
+    class SourceModel(models.TextChoices):
+        PLAYER_ACHIEVEMENT = 'player_achievement', 'Achievements'
+        TEAM_ACHIEVEMENT = 'team_achievement', 'TeamAchievement'
+
+    source_model = models.CharField('Источник', max_length=32, choices=SourceModel.choices)
+    source_id = models.PositiveIntegerField('ID источника')
+    medal = models.ForeignKey(Medal, related_name='legacy_mappings', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.source_model}:{self.source_id} → {self.medal_id}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source_model', 'source_id'],
+                name='unique_legacy_medal_mapping',
+            )
+        ]
+        indexes = [models.Index(fields=['source_model', 'source_id'], name='legacy_medal_source_idx')]
+        verbose_name = 'Связь со старой медалью'
+        verbose_name_plural = 'Связи со старыми медалями'

@@ -519,6 +519,7 @@ def sync_stats_achievements(dry_run: bool = False):
     summary = sync_career_achievements(dry_run=dry_run)
     return {
         'processed_players': summary['processed_players'],
-        'added_achievements': summary['added'],
-        'removed_achievements': summary['removed'],
+        'added_medals': summary['added'],
+        'removed_medals': summary['removed'],
+        'updated_award_dates': summary['updated_dates'],
     }

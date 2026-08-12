@@ -37,10 +37,10 @@
               getSelectedCount() { return this.selectedAchievements.length; }
               }"
       x-init="selectedAchievements =
-              {% if profile.favorite_achievements.all %}
+              {% if profile.favorite_medals.all %}
                 [
-                {% for achievement in profile.favorite_achievements.all %}
-                  {{ achievement.id }}
+                {% for favorite in profile.favorite_medals.all %}
+                  {{ favorite.medal_id }}
                   {% if not forloop.last %},{% endif %}
 
                 {% endfor %}
@@ -300,15 +300,15 @@
                           <i class="fa fa-info-circle tw:text-sm!" aria-hidden="true"></i>
                         </div>
                       </legend>
-                      {% if profile_form.favorite_achievements.field.queryset.exists %}
+                      {% if profile_form.favorite_medals.field.queryset.exists %}
                         <div class="tw:max-h-[450px] tw:overflow-y-auto">
                           <div class="tw:grid tw:grid-cols-2 tw:md:grid-cols-3 tw:lg:grid-cols-4 tw:gap-3">
-                            {% for achievement in profile_form.favorite_achievements.field.queryset %}
+                            {% for achievement in profile_form.favorite_medals.field.queryset %}
                               <div class="tw:flex tw:flex-col tw:items-center tw:gap-2 tw:p-2 tw:rounded-lg tw:border tw:border-base-300 tw:bg-base-200/70 tw:transition tw:select-none"
                                    :class="{ 'tw:border-primary tw:bg-primary/10 tw:shadow-inner': isAchievementSelected({{ achievement.id }}), 'tw:opacity-50 tw:cursor-not-allowed': isAchievementDisabled({{ achievement.id }}), 'tw:cursor-pointer tw:hover:border-primary/60': !isAchievementDisabled({{ achievement.id }}) }"
                                    @click="!isAchievementDisabled({{ achievement.id }}) && toggleAchievement({{ achievement.id }}, $event)">
                                 <template x-if="isAchievementSelected({{ achievement.id }})">
-                                  <input type="hidden" name="favorite_achievements" :value="{{ achievement.id }}">
+                                  <input type="hidden" name="favorite_medals" :value="{{ achievement.id }}">
                                 </template>
                                 <img src="{{ achievement.image.url }}"
                                      alt="{{ achievement.title }}"
