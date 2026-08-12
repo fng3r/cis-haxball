@@ -15,7 +15,10 @@
           <div class="tw:flex tw:items-center tw:gap-2">
             <div class="tw:min-w-0 tw:truncate tw:text-xl tw:sm:text-3xl tw:font-bold tw:tracking-tight"
                  title="{{ profile.name.username }}">{{ profile.name.username|truncatechars:50 }}</div>
-            <div class="tw:sm:mt-1">{% include 'core/include/user_tag.html' with user=profile.name size='sm' %}</div>
+
+            {% if profile.tag and profile.name|can_use_premium_features %}
+              <div class="tw:sm:mt-1">{% include 'core/include/user_tag.html' with user=profile.name size='sm' %}</div>
+            {% endif %}
 
             {% if previous_nicknames.count > 0 %}
               <div class="tw:self-end tw:mb-0.5 tw:dropdown tw:dropdown-end tw:shrink-0">
