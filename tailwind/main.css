@@ -238,6 +238,10 @@
     }
   }
 
+  select.tw\:select {
+    appearance: none;
+  }
+
   .tw\:bg-body {
     background-color: var(--bg-body);
   }
