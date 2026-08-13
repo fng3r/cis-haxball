@@ -19,7 +19,7 @@
             hx-get="{% url 'tournament:transfers' %}"
             hx-trigger="submit"
             hx-target="#transfers-list-container"
-            hx-swap="innerHTML show:top"
+            hx-swap="innerHTML scroll:#transfers-table:top"
             hx-disabled-elt="find button">
 
         <div class="tw:flex tw:flex-wrap tw:items-center">
@@ -48,7 +48,7 @@
         </div>
       </form>
 
-      <div class="tw:max-h-[875px] tw:overflow-y-auto">
+      <div id="transfers-table" class="tw:max-h-[875px] tw:overflow-y-auto">
         <table class="tw:table tw:table-zebra tw:table-pin-rows">
           <thead class="tw:thead tw:text-left">
             <tr class="tw:bg-base-300!">
