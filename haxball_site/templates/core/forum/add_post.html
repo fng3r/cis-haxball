@@ -28,7 +28,7 @@
 
           <fieldset class="tw:fieldset">
             <legend class="tw:fieldset-legend tw:text-sm">Краткое описание</legend>
-            {{ form.description|add_class:'tw:textarea tw:textarea-sm tw:textarea-bordered' }}
+            {{ form.description|add_class:'tw:textarea tw:textarea-sm' }}
             {% if form.description.help_text %}<p class="tw:label tw:mb-0!">{{ form.description.help_text }}</p>{% endif %}
           </fieldset>
 

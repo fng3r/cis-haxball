@@ -4,12 +4,12 @@
     "build": "vite build"
   },
   "dependencies": {
-    "daisyui": "^5.0.46",
-    "tailwindcss": "^4.0.17"
+    "daisyui": "^5.7.16",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
-    "@tailwindcss/vite": "^4.0.17",
-    "vite": "^6.2.2"
+    "@tailwindcss/vite": "^4.3.3",
+    "vite": "^8.2.1"
   }
 }

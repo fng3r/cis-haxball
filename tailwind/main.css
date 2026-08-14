@@ -4,7 +4,7 @@
 
 @plugin "daisyui" {
   themes: all;
-  exclude: [ "scrollbar"];
+  exclude: scrollbar;
 }
 
 @plugin "@tailwindcss/typography";
@@ -228,10 +228,18 @@
     }
   }
 
+  .tw\:btn-ghost {
+    --btn-rest-fg: currentColor;
+  }
+
   .tw\:btn-soft {
     &:not(.tw\:btn-active, :hover, :active:focus, :focus-visible, :disabled, [disabled], .tw\:btn-disabled) {
       --btn-bg: color-mix(in oklab, var(--btn-color, var(--color-base-content)) 12%, var(--color-base-100));
     }
+  }
+
+  select.tw\:select {
+    appearance: none;
   }
 
   .tw\:bg-body {

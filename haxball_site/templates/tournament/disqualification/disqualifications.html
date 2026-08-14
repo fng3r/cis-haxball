@@ -21,7 +21,7 @@
             hx-get="{% url 'tournament:disqualifications' %}"
             hx-trigger="submit"
             hx-target="#disqualifications-list-container"
-            hx-swap="innerHTML show:top"
+            hx-swap="innerHTML scroll:#disqualifications-table:top"
             hx-disabled-elt="find button">
 
         <div class="tw:flex tw:flex-wrap tw:items-center">
@@ -50,7 +50,7 @@
         </div>
       </form>
 
-      <div class="tw:max-h-[880px] tw:overflow-auto">
+      <div id="disqualifications-table" class="tw:max-h-[880px] tw:overflow-auto">
         <table class="tw:table tw:table-zebra tw:table-pin-rows">
           <thead class="tw:thead tw:text-left">
             <tr class="tw:bg-base-300!">
