@@ -2,25 +2,134 @@
 
 {% block title %}Чемпионат | Архив — CIS-HAXBALL{% endblock %}
 
+{% block scripts %}
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('archivePage', () => ({
+        sortOrder: 'new',
+        seasonType: '',
+        activeSeason: '',
+        isAutoScrolling: false,
+        scrollAnimation: null,
+
+        init() {
+          this.activeSeason = window.location.hash.slice(1);
+          this.$nextTick(() => {
+            this.updateActiveSeason();
+            this.$watch('seasonType', () => this.$nextTick(() => this.updateActiveSeason()));
+            this.$watch('sortOrder', () => this.$nextTick(() => this.updateActiveSeason()));
+          });
+        },
+
+        seasonMatches(type) {
+          return !this.seasonType || type === this.seasonType;
+        },
+
+        updateActiveSeason() {
+          if (this.isAutoScrolling) return;
+
+          const seasons = [...this.$root.querySelectorAll('[data-season-anchor]')]
+            .filter((season) => season.offsetParent !== null)
+            .map((season) => ({ season, top: season.getBoundingClientRect().top }))
+            .sort((first, second) => first.top - second.top);
+          if (!seasons.length) return;
+
+          const reachedPageEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+          let currentSeason = seasons[0];
+
+          if (reachedPageEnd) {
+            currentSeason = seasons[seasons.length - 1];
+          } else {
+            const trackingLine = 24;
+            for (const season of seasons) {
+              if (season.top > trackingLine) break;
+              currentSeason = season;
+            }
+          }
+
+          this.activeSeason = currentSeason.season.id;
+        },
+
+        scrollToSeason(id) {
+          const season = document.getElementById(id);
+          if (!season) return;
+
+          this.activeSeason = id;
+          this.isAutoScrolling = true;
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const start = window.scrollY;
+          const target = season.getBoundingClientRect().top + start - 16;
+          const distance = target - start;
+          const duration = reduceMotion ? 0 : 200;
+
+          if (this.scrollAnimation) cancelAnimationFrame(this.scrollAnimation);
+
+          if (!duration) {
+            window.scrollTo(0, target);
+            this.isAutoScrolling = false;
+          } else {
+            const startedAt = performance.now();
+            const animate = (now) => {
+              const progress = Math.min((now - startedAt) / duration, 1);
+              const easedProgress = 1 - Math.pow(1 - progress, 3);
+              window.scrollTo(0, start + distance * easedProgress);
+
+              if (progress < 1) {
+                this.scrollAnimation = requestAnimationFrame(animate);
+              } else {
+                this.isAutoScrolling = false;
+                this.activeSeason = id;
+              }
+            };
+
+            this.scrollAnimation = requestAnimationFrame(animate);
+          }
+
+          history.replaceState(null, '', '#' + id);
+        },
+      }));
+    });
+  </script>
+{% endblock %}
+
 {% block postlist %}
   <div class="tw:bg-base-100 tw:rounded-lg tw:p-4 tw:space-y-2"
-       x-data="{ sortOrder: 'new', seasonType: '', seasonMatches(type) { return !this.seasonType || type === this.seasonType; } }">
+       x-data="archivePage"
+       @scroll.window.throttle.50ms="updateActiveSeason()"
+       @resize.window.debounce.100ms="updateActiveSeason()">
     <div class="tw:flex tw:flex-col tw:gap-4">
       <div>
         <h1 class="tw:text-2xl tw:font-bold tw:mb-1">Архив</h1>
         <p class="tw:text-sm tw:text-base-content/70 tw:mb-0!">История прошедших сезонов</p>
       </div>
 
-      <div class="tw:flex tw:flex-col tw:gap-3 tw:items-start tw:justify-between tw:sm:flex-row tw:sm:items-center">
-        <div class="tw:filter tw:gap-y-1" role="radiogroup" aria-label="Тип сезона">
-          <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="season-type" value="" aria-label="Все" x-model="seasonType" />
-          <input type="radio" name="season-type" value="russian_championship" class="tw:btn tw:btn-sm" aria-label="Чемпионат России" x-model="seasonType">
-          <input type="radio" name="season-type" value="champions_league" class="tw:btn tw:btn-sm" aria-label="Лига Чемпионов" x-model="seasonType">
-          <input type="radio" name="season-type" value="final_tournament" class="tw:btn tw:btn-sm" aria-label="Итоговый турнир" x-model="seasonType">
+      <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+        <div class="tw:filter tw:min-w-0 tw:flex-1 tw:basis-[28rem] tw:flex-wrap tw:gap-y-1"
+             role="radiogroup"
+             aria-label="Тип сезона">
+          <input class="tw:btn tw:btn-sm tw:filter-reset" type="radio" name="season-type" value="" aria-label="×" x-model="seasonType" />
+          <input type="radio"
+                 name="season-type"
+                 value="russian_championship"
+                 class="tw:btn tw:btn-sm"
+                 aria-label="Чемпионат России"
+                 x-model="seasonType">
+          <input type="radio"
+                 name="season-type"
+                 value="champions_league"
+                 class="tw:btn tw:btn-sm"
+                 aria-label="Лига Чемпионов"
+                 x-model="seasonType">
+          <input type="radio"
+                 name="season-type"
+                 value="final_tournament"
+                 class="tw:btn tw:btn-sm"
+                 aria-label="Итоговый турнир"
+                 x-model="seasonType">
         </div>
 
         <button type="button"
-                class="tw:inline-flex tw:items-center tw:gap-1 tw:border-0 tw:p-0 tw:text-sm tw:font-medium tw:text-base-content/80 tw:hover:text-base-content tw:hover:cursor-pointer"
+                class="tw:inline-flex tw:shrink-0 tw:items-center tw:gap-1 tw:whitespace-nowrap tw:border-0 tw:p-0 tw:text-sm tw:font-medium tw:text-base-content/80 tw:hover:text-base-content tw:hover:cursor-pointer"
                 aria-label="Изменить сортировку сезонов"
                 @click="sortOrder = sortOrder === 'new' ? 'old' : 'new'">
           <i class="fa" :class="sortOrder === 'new' ? 'fa-arrow-down' : 'fa-arrow-up'" aria-hidden="true"></i>
@@ -32,68 +141,110 @@
     <div class="tw:divider tw:my-0"></div>
 
     {% if seasons or old_seasons %}
-      <div class="tw:flex tw:flex-col tw:gap-6" :style="sortOrder === 'old' ? 'flex-direction: column-reverse' : ''">
-        {% for season in seasons %}
-          <section class="tw:space-y-3" x-show="seasonMatches('{{ season.type }}')" x-cloak>
-            <div class="tw:flex tw:flex-col tw:gap-1">
-              <div class="tw:flex tw:items-center tw:gap-2">
-                <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.title }}</h2>
-                {% if season.short_title %}<span class="tw:badge tw:badge-sm tw:badge-primary tw:badge-outline">{{ season.short_title }}</span>{% endif %}
+      <div class="tw:grid tw:grid-cols-1 tw:items-start tw:gap-6 tw:sm:grid-cols-[max-content_minmax(0,1fr)]">
+        <aside class="tw:w-full tw:max-w-full tw:justify-self-start tw:self-start tw:rounded-box tw:border tw:border-base-300 tw:bg-base-200 tw:p-2 tw:sm:sticky tw:sm:top-4 tw:sm:w-max"
+               aria-label="Навигация по сезонам">
+          <div class="tw:px-3 tw:pt-2 tw:pb-1">
+            <h2 class="tw:mb-0! tw:text-sm! tw:font-semibold tw:uppercase tw:tracking-wide tw:text-base-content/60">Сезоны</h2>
+          </div>
+
+          <nav class="tw:sm:max-h-[calc(100vh-8rem)] tw:sm:overflow-y-auto" aria-label="Список сезонов">
+            <ul class="tw:menu tw:menu-horizontal tw:w-full tw:flex-wrap tw:sm:menu-vertical tw:sm:w-max tw:sm:flex-nowrap"
+                :class="{ 'tw:flex-row-reverse tw:sm:flex-col-reverse': sortOrder === 'old' }">
+              {% for season in seasons %}
+                <li x-show="seasonMatches('{{ season.type }}')" x-cloak>
+                  <a href="#season-{{ season.pk }}"
+                     :class="{ 'tw:menu-active': activeSeason === 'season-{{ season.pk }}' }"
+                     :aria-current="activeSeason === 'season-{{ season.pk }}' ? 'location' : null"
+                     @click.prevent="scrollToSeason('season-{{ season.pk }}')">{{ season.short_title|default:season.title }}</a>
+                </li>
+              {% endfor %}
+
+              {% for season in old_seasons %}
+                <li x-show="seasonMatches('{{ season.type }}')" x-cloak>
+                  <a href="#historic-season-{{ forloop.counter }}"
+                     :class="{ 'tw:menu-active': activeSeason === 'historic-season-{{ forloop.counter }}' }"
+                     :aria-current="activeSeason === 'historic-season-{{ forloop.counter }}' ? 'location' : null"
+                     @click.prevent="scrollToSeason('historic-season-{{ forloop.counter }}')">
+                    {{ season.short_title|default:season.season_title }}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </nav>
+        </aside>
+
+        <div class="tw:flex tw:min-w-0 tw:flex-col tw:gap-6" :style="sortOrder === 'old' ? 'flex-direction: column-reverse' : ''">
+          {% for season in seasons %}
+            <section id="season-{{ season.pk }}"
+                     data-season-anchor
+                     class="tw:scroll-mt-4 tw:space-y-3"
+                     x-show="seasonMatches('{{ season.type }}')"
+                     x-cloak>
+              <div class="tw:flex tw:flex-col tw:gap-1">
+                <div class="tw:flex tw:items-center tw:gap-2">
+                  <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.title }}</h2>
+                  {% if season.short_title %}<span class="tw:badge tw:badge-sm tw:badge-primary tw:badge-outline">{{ season.short_title }}</span>{% endif %}
+                </div>
+
+                {% if season.start_date and season.end_date %}
+                  <div class="tw:text-base-content/60">{{ season.start_date|date:"d.m.y" }} - {{ season.end_date|date:"d.m.y" }}</div>
+                {% endif %}
               </div>
 
-              {% if season.start_date and season.end_date %}
-                <div class="tw:text-base-content/60">{{ season.start_date|date:"d.m.y" }} - {{ season.end_date|date:"d.m.y" }}</div>
-              {% endif %}
-            </div>
-
-            <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3">
-              {% for tournament in season.archive_tournaments %}
-                {% if tournament.winner %}
-                  <article class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-lg">
-                    <div class="tw:card-body tw:p-4 tw:gap-3">
-                      <div class="tw:flex tw:items-start tw:justify-between tw:gap-3">
-                        <a href="{{ tournament.get_absolute_url }}" class="tw:link tw:link-hover tw:text-lg tw:font-semibold">{{ tournament.title }}</a>
-                        <a href="{{ tournament.get_absolute_url }}"
-                           class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-square"
-                           aria-label="Открыть турнир">
-                          <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                        </a>
-                      </div>
-
-                      <div class="tw:flex tw:items-center tw:gap-2.5">
-                        <div class="tw:flex tw:items-center tw:gap-1.5">
-                          <img src="{{ tournament.winner.logo.url }}"
-                               alt="{{ tournament.winner.title }}"
-                               class="tw:w-6 tw:h-6 tw:rounded tw:object-contain">
-                          <a href="{{ tournament.winner.get_absolute_url }}" class="tw:link tw:text-base tw:link-hover tw:font-semibold">
-                            {{ tournament.winner.title }}
+              <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3">
+                {% for tournament in season.archive_tournaments %}
+                  {% if tournament.winner %}
+                    <article class="tw:card tw:bg-base-200 tw:border tw:border-base-300 tw:rounded-lg">
+                      <div class="tw:card-body tw:p-4 tw:gap-3">
+                        <div class="tw:flex tw:items-start tw:justify-between tw:gap-3">
+                          <a href="{{ tournament.get_absolute_url }}" class="tw:link tw:link-hover tw:text-lg tw:font-semibold">{{ tournament.title }}</a>
+                          <a href="{{ tournament.get_absolute_url }}"
+                             class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-square"
+                             aria-label="Открыть турнир">
+                            <i class="fa fa-chevron-right" aria-hidden="true"></i>
                           </a>
                         </div>
-                        <i class="fa fa-trophy tw:text-warning tw:text-lg!" aria-hidden="true"></i>
-                      </div>
-                    </div>
-                  </article>
-                {% endif %}
-              {% empty %}
-                <div class="tw:rounded-lg tw:border tw:border-dashed tw:border-base-300 tw:p-4 tw:text-base-content/70">В этом сезоне нет турниров.</div>
-              {% endfor %}
-            </div>
-          </section>
-        {% endfor %}
 
-        {% for season in old_seasons %}
-          <section class="tw:space-y-3" x-show="seasonMatches('{{ season.type }}')" x-cloak>
-            <div class="tw:flex tw:flex-col tw:gap-1">
-              <div class="tw:flex tw:items-center tw:gap-2">
-                <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.season_title }}</h2>
-                {% if season.short_title %}<span class="tw:badge tw:badge-sm tw:badge-primary tw:badge-outline">{{ season.short_title }}</span>{% endif %}
-                <a href="{{ season.post_link }}" class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-square" aria-label="Открыть турнир">
-                  <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                </a>
+                        <div class="tw:flex tw:items-center tw:gap-2.5">
+                          <div class="tw:flex tw:items-center tw:gap-1.5">
+                            <img src="{{ tournament.winner.logo.url }}"
+                                 alt="{{ tournament.winner.title }}"
+                                 class="tw:w-6 tw:h-6 tw:rounded tw:object-contain">
+                            <a href="{{ tournament.winner.get_absolute_url }}" class="tw:link tw:text-base tw:link-hover tw:font-semibold">
+                              {{ tournament.winner.title }}
+                            </a>
+                          </div>
+                          <i class="fa fa-trophy tw:text-warning tw:text-lg!" aria-hidden="true"></i>
+                        </div>
+                      </div>
+                    </article>
+                  {% endif %}
+                {% empty %}
+                  <div class="tw:rounded-lg tw:border tw:border-dashed tw:border-base-300 tw:p-4 tw:text-base-content/70">В этом сезоне нет турниров.</div>
+                {% endfor %}
               </div>
-            </div>
-          </section>
-        {% endfor %}
+            </section>
+          {% endfor %}
+
+          {% for season in old_seasons %}
+            <section id="historic-season-{{ forloop.counter }}"
+                     data-season-anchor
+                     class="tw:scroll-mt-4 tw:space-y-3"
+                     x-show="seasonMatches('{{ season.type }}')"
+                     x-cloak>
+              <div class="tw:flex tw:flex-col tw:gap-1">
+                <div class="tw:flex tw:items-center tw:gap-2">
+                  <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.season_title }}</h2>
+                  {% if season.short_title %}<span class="tw:badge tw:badge-sm tw:badge-primary tw:badge-outline">{{ season.short_title }}</span>{% endif %}
+                  <a href="{{ season.post_link }}" class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-square" aria-label="Открыть турнир">
+                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                  </a>
+                </div>
+              </div>
+            </section>
+          {% endfor %}
+        </div>
       </div>
     {% else %}
       <div class="tw:rounded-lg tw:border tw:border-dashed tw:border-base-300 tw:p-6 tw:text-center tw:text-base-content/70">
