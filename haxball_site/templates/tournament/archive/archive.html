@@ -28,26 +28,24 @@
         updateActiveSeason() {
           if (this.isAutoScrolling) return;
 
-          const seasons = [...this.$root.querySelectorAll('[data-season-anchor]')]
-            .filter((season) => season.offsetParent !== null)
-            .map((season) => ({ season, top: season.getBoundingClientRect().top }))
+          const seasonHeaders = [...this.$root.querySelectorAll('[data-season-heading]')]
+            .filter((heading) => heading.offsetParent !== null)
+            .map((heading) => ({
+              season: heading.closest('[data-season-anchor]'),
+              top: heading.getBoundingClientRect().top,
+            }))
             .sort((first, second) => first.top - second.top);
-          if (!seasons.length) return;
+          if (!seasonHeaders.length) return;
 
-          const reachedPageEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
-          let currentSeason = seasons[0];
+          const activationBoundary = Math.min(window.innerHeight * 0.35, 320);
+          const visibleHeader = seasonHeaders.find(({ top }) => top >= 0 && top <= activationBoundary);
+          const activeSeasonIsVisible = seasonHeaders.some(({ season }) => season.id === this.activeSeason);
 
-          if (reachedPageEnd) {
-            currentSeason = seasons[seasons.length - 1];
-          } else {
-            const trackingLine = 24;
-            for (const season of seasons) {
-              if (season.top > trackingLine) break;
-              currentSeason = season;
-            }
+          if (visibleHeader) {
+            this.activeSeason = visibleHeader.season.id;
+          } else if (!activeSeasonIsVisible) {
+            this.activeSeason = seasonHeaders[0].season.id;
           }
-
-          this.activeSeason = currentSeason.season.id;
         },
 
         scrollToSeason(id) {
@@ -181,7 +179,7 @@
                      class="tw:scroll-mt-4 tw:space-y-3"
                      x-show="seasonMatches('{{ season.type }}')"
                      x-cloak>
-              <div class="tw:flex tw:flex-col tw:gap-1">
+              <div class="tw:flex tw:flex-col tw:gap-1" data-season-heading>
                 <div class="tw:flex tw:items-center tw:gap-2">
                   <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.title }}</h2>
                   {% if season.short_title %}<span class="tw:badge tw:badge-sm tw:badge-primary tw:badge-outline">{{ season.short_title }}</span>{% endif %}
@@ -233,7 +231,7 @@
                      class="tw:scroll-mt-4 tw:space-y-3"
                      x-show="seasonMatches('{{ season.type }}')"
                      x-cloak>
-              <div class="tw:flex tw:flex-col tw:gap-1">
+              <div class="tw:flex tw:flex-col tw:gap-1" data-season-heading>
                 <div class="tw:flex tw:items-center tw:gap-2">
                   <h2 class="tw:text-2xl! tw:font-semibold tw:mb-0">{{ season.season_title }}</h2>
                   {% if season.short_title %}<span class="tw:badge tw:badge-sm tw:badge-primary tw:badge-outline">{{ season.short_title }}</span>{% endif %}
