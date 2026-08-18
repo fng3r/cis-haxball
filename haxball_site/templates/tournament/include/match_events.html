@@ -1,7 +1,7 @@
 {% load static %}
 {% load tournament_extras %}
 
-<div class="tw:flex tw:flex-col tw:gap-2">
+<div class="tw:flex tw:flex-col tw:gap-1">
   {% if events|length == 0 %}
     <div class="tw:flex tw:w-full">
       <div class="tw:w-5/12"></div>
@@ -17,18 +17,11 @@
   {% for event in events %}
     {% if event.team == match.team_home or event.team == match.team_guest %}
       <div class="tw:flex tw:w-full">
-        <div class="tw:w-5/12 tw:flex tw:items-center tw:justify-center">
-          {% include 'tournament/include/match_team_events.html' with team=match.team_home %}
+        <div class="tw:w-5/12 tw:flex tw:justify-center">{% include 'tournament/include/match_team_events.html' with team=match.team_home %}</div>
+        <div class="tw:w-2/12 tw:flex tw:justify-center">
+          <h6 class="event-time">{{ event|event_time }}</h6>
         </div>
-        <div class="tw:w-2/12 tw:flex tw:flex-col tw:items-center tw:justify-center">
-          <div class="event-time tw:flex tw:flex-col tw:items-center tw:leading-none">
-            <span class="tw:text-base tw:font-semibold">{{ event|event_time }}</span>
-            {% if event.timeline_score %}<span class="tw:text-xs tw:text-base-content/60">{{ event.timeline_score }}</span>{% endif %}
-          </div>
-        </div>
-        <div class="tw:w-5/12 tw:flex tw:items-center tw:justify-center">
-          {% include 'tournament/include/match_team_events.html' with team=match.team_guest %}
-        </div>
+        <div class="tw:w-5/12 tw:flex tw:justify-center">{% include 'tournament/include/match_team_events.html' with team=match.team_guest %}</div>
       </div>
     {% endif %}
   {% endfor %}
