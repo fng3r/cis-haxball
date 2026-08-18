@@ -263,18 +263,6 @@ def events_sorted(match: Match):
         all_events.append(s)
 
     sorted_events = sorted(all_events, key=lambda event: datetime.time(minute=event.time_min, second=event.time_sec))
-    score_home = 0
-    score_guest = 0
-    for event in sorted_events:
-        is_goal = isinstance(event, Goal)
-        if is_goal:
-            if event.team_id == match.team_home_id:
-                score_home += 1
-            elif event.team_id == match.team_guest_id:
-                score_guest += 1
-
-        event.timeline_score = f'{score_home} : {score_guest}' if is_goal else None
-
     events_by_time = {'first_time': [], 'second_time': [], 'extra_time': []}
     for event in sorted_events:
         if event.time_min < 8 or event.time_min == 8 and event.time_sec == 0:
