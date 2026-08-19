@@ -1,9 +1,9 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch
 
-from ..models import Group, League, Match, PlayOffStage, Team, TournamentStage, TournamentWinner
+from ..models import Group, League, Match, PlayOffStage, Team, TournamentStage
 from ..templatetags.tournament_extras import get_league_table, round_name
 
 
@@ -21,7 +21,7 @@ class TeamSeasonResults:
 
 
 def get_team_results(team: Team) -> list[TeamSeasonResults]:
-    team_matches = Match.objects.filter(Q(team_home=team) | Q(team_guest=team)).select_related(
+    league_matches = Match.objects.select_related(
         'numb_tour', 'result__winner', 'team_home', 'team_guest'
     )
     leagues = (
@@ -29,16 +29,18 @@ def get_team_results(team: Team) -> list[TeamSeasonResults]:
         .select_related('championship')
         .prefetch_related(
             Prefetch('stages', queryset=TournamentStage.objects.order_by('order')),
-            Prefetch('matches_in_league', queryset=team_matches, to_attr='team_matches'),
+            Prefetch('matches_in_league', queryset=league_matches, to_attr='prefetched_matches'),
+            'stages__teams',
             'stages__tours',
+            'winners__winner',
         )
         .order_by('-championship__number', 'priority', 'title')
     )
-    winner_league_ids = set(TournamentWinner.objects.filter(winner=team).values_list('league_id', flat=True))
     results_by_season = OrderedDict()
 
     for league in leagues:
-        result = infer_team_tournament_result(team, league, league.id in winner_league_ids)
+        is_tournament_winner = any(winner.winner_id == team.id for winner in league.winners.all())
+        result = infer_team_tournament_result(team, league, is_tournament_winner)
         if result is None:
             continue
         results_by_season.setdefault(league.championship_id, (league.championship, []))[1].append(result)
@@ -49,7 +51,7 @@ def get_team_results(team: Team) -> list[TeamSeasonResults]:
 def infer_team_tournament_result(
     team: Team, league: League, is_tournament_winner: bool = False
 ) -> TeamTournamentResult | None:
-    stages = [stage for stage in league.stages.all() if _team_reached_stage(team, stage, league.team_matches)]
+    stages = [stage for stage in league.stages.all() if _team_reached_stage(team, stage, league.prefetched_matches)]
     if not stages:
         return None
 
@@ -57,14 +59,14 @@ def infer_team_tournament_result(
     stage_name = stage.stage_name if len(league.stages.all()) > 1 else None
 
     if stage.is_playoff:
-        result, bracket_name = _playoff_result(team, stage, is_tournament_winner)
+        result, bracket_name = _playoff_result(team, stage, league.prefetched_matches, is_tournament_winner)
         if bracket_name:
             stage_name = f'{stage_name} · {bracket_name}' if stage_name else bracket_name
     elif stage.is_group_stage:
         group = next((group for group in stage.groups.all() if team in group.teams.all()), None)
-        result = _table_result(team, league, stage, group) if group else None
+        result = _table_result(team, league, stage, group, league.prefetched_matches) if group else None
     else:
-        result = _table_result(team, league, stage, None)
+        result = _table_result(team, league, stage, None, league.prefetched_matches)
 
     if result is None:
         return None
@@ -75,17 +77,25 @@ def _team_reached_stage(team: Team, stage: TournamentStage, matches: list[Match]
     return team in stage.teams.all() or any(match.stage_id == stage.id for match in matches)
 
 
-def _table_result(team: Team, league: League, stage: TournamentStage, group: Group | None) -> str | None:
-    table = get_league_table(league, stage, group)
+def _table_result(
+    team: Team,
+    league: League,
+    stage: TournamentStage,
+    group: Group | None,
+    matches: list[Match],
+) -> str | None:
+    table = get_league_table(league, stage, group, prefetched_matches=matches)
     place = next((place for place, row in enumerate(table, start=1) if row[0] == team), None)
     return _format_place(place) if place is not None else None
 
 
-def _playoff_result(team: Team, stage: PlayOffStage, is_tournament_winner: bool) -> tuple[str | None, str | None]:
-    stage_matches = stage.matches.filter(is_played=True).select_related(
-        'numb_tour', 'result__winner', 'team_home', 'team_guest'
-    )
-    all_matches = list(stage_matches)
+def _playoff_result(
+    team: Team,
+    stage: PlayOffStage,
+    league_matches: list[Match],
+    is_tournament_winner: bool,
+) -> tuple[str | None, str | None]:
+    all_matches = [match for match in league_matches if match.stage_id == stage.id and match.is_played]
     matches = [match for match in all_matches if _team_in_match(team, match)]
     if is_tournament_winner:
         return 'Победитель', None
@@ -98,7 +108,7 @@ def _playoff_result(team: Team, stage: PlayOffStage, is_tournament_winner: bool)
             return _format_place(place), None
 
     if stage.has_match_for_third_place:
-        tournament_winner = TournamentWinner.objects.filter(league=stage.league).select_related('winner').first()
+        tournament_winner = next(iter(stage.league.winners.all()), None)
         if tournament_winner:
             winner_matches = [match for match in all_matches if _team_in_match(tournament_winner.winner, match)]
             if winner_matches:
@@ -118,7 +128,7 @@ def _playoff_result(team: Team, stage: PlayOffStage, is_tournament_winner: bool)
                         return '3-е место', None
 
     last_match = max(matches, key=_match_round_key)
-    tours_total = stage.tours.filter(bracket=last_match.numb_tour.bracket).count()
+    tours_total = sum(tour.bracket == last_match.numb_tour.bracket for tour in stage.tours.all())
     result = round_name(last_match.numb_tour, tours_total)
     bracket_name = None
     if stage.is_double_elimination() and last_match.numb_tour.bracket is not None:
@@ -132,7 +142,11 @@ def _double_elimination_place(team: Team, stage: PlayOffStage, matches: list[Mat
         (PlayOffStage.Bracket.LOWER, 3),
     )
     for bracket, place in bracket_places:
-        final_tour = stage.tours.filter(bracket=bracket).order_by('-number').first()
+        final_tour = max(
+            (tour for tour in stage.tours.all() if tour.bracket == bracket),
+            key=lambda tour: tour.number,
+            default=None,
+        )
         if final_tour is None:
             continue
         final_matches = [match for match in matches if match.numb_tour_id == final_tour.id]
