@@ -9,7 +9,7 @@
   <div class="tw:flex tw:flex-col tw:gap-2.5">
     {% for match in matches %}
       <a href="{{ match.get_absolute_url }}"
-         class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-200/70 tw:shadow-[0_1px_2px_rgba(0,0,0,0.08)] tw:px-3 tw:py-2.5 tw:transition tw:hover:border-primary/25 tw:hover:bg-base-200 tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3">
+         class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-200 tw:px-3 tw:py-2.5 tw:shadow-sm tw:transition-[background-color,box-shadow] tw:hover:bg-base-300/90 tw:hover:shadow-md tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3">
         <div class="tw:flex tw:min-w-0 tw:flex-col tw:justify-center tw:gap-1">
           <span class="tw:text-[10px] tw:font-semibold tw:uppercase tw:tracking-[0.2em] tw:text-base-content/40">Матч</span>
           <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-1 tw:text-sm tw:font-semibold tw:text-base-content/85">

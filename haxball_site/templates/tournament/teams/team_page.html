@@ -206,6 +206,53 @@
             </div>
           </div>
 
+          <input type="radio" name="team-tabs" class="tw:grow tw:tab tw:font-semibold" role="tab" aria-label="Результаты" />
+          <div class="tw:tab-content tw:pt-3">
+            <div id="results-panel" role="tabpanel" aria-label="Результаты команды">
+              {% if team_results %}
+                <div class="tw:flex tw:flex-col tw:gap-5">
+                  {% for season_result in team_results %}
+                    <section aria-labelledby="team-results-season-{{ season_result.season.id }}">
+                      <div class="tw:mb-2 tw:flex tw:items-center tw:gap-3">
+                        <h4 id="team-results-season-{{ season_result.season.id }}" class="tw:m-0 tw:text-lg tw:font-bold">{{ season_result.season.title }}</h4>
+                      </div>
+                      <ul class="tw:flex tw:flex-col tw:gap-2">
+                        {% for tournament_result in season_result.tournaments %}
+                          <li class="tw:card tw:card-border tw:bg-base-200 tw:shadow-sm tw:transition-[background-color,box-shadow] tw:hover:bg-base-300/90 tw:hover:shadow-md">
+                            <div class="tw:card-body tw:flex-row tw:items-center tw:gap-3 tw:p-3! tw:sm:p-4!">
+                              {% if tournament_result.league.logo %}
+                                <div class="tw:flex tw:size-11 tw:shrink-0 tw:items-center tw:justify-center tw:rounded-box tw:border tw:border-black/10 tw:bg-white tw:p-1.5 tw:shadow-inner">
+                                  <img src="{{ tournament_result.league.logo.url }}" alt="" class="tw:size-full tw:object-contain tw:drop-shadow-sm">
+                                </div>
+                              {% else %}
+                                <div class="tw:flex tw:size-11 tw:shrink-0 tw:items-center tw:justify-center tw:rounded-box tw:border tw:border-black/10 tw:bg-white tw:p-1.5 tw:shadow-inner">
+                                  <img src="{% static 'img/logo_try.png' %}" alt="" class="tw:size-full tw:object-contain tw:drop-shadow-sm">
+                                </div>
+                              {% endif %}
+                              <div class="tw:min-w-0 tw:grow">
+                                <a href="{{ tournament_result.league.get_absolute_url }}" class="tw:link tw:link-hover tw:link-primary tw:font-semibold">
+                                  {{ tournament_result.league.title }}
+                                </a>
+                              </div>
+                              <div class="tw:flex tw:shrink-0 tw:flex-col tw:items-end tw:gap-1 tw:text-right">
+                                <div class="tw:font-semibold">{{ tournament_result.result }}</div>
+                                {% if tournament_result.stage_name %}<div class="tw:text-xs tw:text-base-content/70">{{ tournament_result.stage_name }}</div>{% endif %}
+                              </div>
+                            </div>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </section>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="tw:flex tw:min-h-50 tw:items-center tw:justify-center tw:px-2 tw:text-center tw:text-lg tw:text-base-content/80">
+                  Команда еще не принимала участия в турнирах
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
           <input type="radio"
                  name="team-tabs"
                  class="tw:grow tw:tab tw:font-semibold"
@@ -273,7 +320,7 @@
                   <div x-show="medalsView === 'grouped'" x-cloak>{% include 'tournament/medals/structured_medals.html' with show_squad=True %}</div>
                 </div>
               {% else %}
-                <div class="tw:h-full tw:min-h-[200px] tw:flex tw:flex-col tw:items-center tw:justify-center tw:px-2 tw:text-center">
+                <div class="tw:h-full tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:px-2 tw:text-center">
                   <div class="tw:text-base-content/80 tw:text-lg tw:mb-2">Команда пока не имеет достижений</div>
                 </div>
               {% endif %}
