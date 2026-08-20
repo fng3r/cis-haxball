@@ -1255,7 +1255,13 @@ def sort_teams(league: League):
     return [i[0] for i in lt]
 
 
-def get_league_table(league: League, stage: TournamentStage = None, group: Group = None, tour_range: tuple = None):
+def get_league_table(
+    league: League,
+    stage: TournamentStage = None,
+    group: Group = None,
+    tour_range: tuple = None,
+    prefetched_matches: Iterable[Match] | None = None,
+):
     always_true = ~Q(pk__in=[])
     stage_condition = Q(stages=stage) if stage is not None else always_true
     group_condition = Q(groups=group) if group is not None else always_true
@@ -1285,18 +1291,30 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
 
     for i, team in enumerate(teams):
         teams_indexes[team] = i
-        matches = Match.objects.select_related('team_home', 'team_guest', 'result__winner', 'numb_tour').filter(
-            Q(team_home=team) | Q(team_guest=team),
-            league=league,
-            stage=stage,
-            group=group,
-            is_played=True,
-        )
+        if prefetched_matches is None:
+            matches = Match.objects.select_related('team_home', 'team_guest', 'result__winner', 'numb_tour').filter(
+                Q(team_home=team) | Q(team_guest=team),
+                league=league,
+                stage=stage,
+                group=group,
+                is_played=True,
+            )
+        else:
+            matches = [
+                match
+                for match in prefetched_matches
+                if match.is_played
+                and team.id in (match.team_home_id, match.team_guest_id)
+                and match.stage_id == getattr(stage, 'id', None)
+                and match.group_id == getattr(group, 'id', None)
+            ]
         if tour_range is not None:
             min_tour, max_tour = tour_range
-            matches = matches.filter(numb_tour__number__gte=min_tour, numb_tour__number__lte=max_tour)
-        matches = matches
-        matches_played[i] = matches.count()
+            if prefetched_matches is None:
+                matches = matches.filter(numb_tour__number__gte=min_tour, numb_tour__number__lte=max_tour)
+            else:
+                matches = [match for match in matches if min_tour <= match.numb_tour.number <= max_tour]
+        matches_played[i] = matches.count() if prefetched_matches is None else len(matches)
         penalty_points = penalties_by_team.get(team.id, 0)
 
         wins_count = 0
@@ -1386,13 +1404,20 @@ def get_league_table(league: League, stage: TournamentStage = None, group: Group
             losses = [0 for _ in range(teams_count)]  # Поражений
             for i, team in enumerate(mini_table):
                 matches = []
-                matches_all = Match.objects.select_related(
-                    'team_home', 'team_guest', 'result__winner', 'numb_tour'
-                ).filter(
-                    Q(team_home=team) | Q(team_guest=team),
-                    league=league,
-                    is_played=True,
-                )
+                if prefetched_matches is None:
+                    matches_all = Match.objects.select_related(
+                        'team_home', 'team_guest', 'result__winner', 'numb_tour'
+                    ).filter(
+                        Q(team_home=team) | Q(team_guest=team),
+                        league=league,
+                        is_played=True,
+                    )
+                else:
+                    matches_all = [
+                        match
+                        for match in prefetched_matches
+                        if match.is_played and team.id in (match.team_home_id, match.team_guest_id)
+                    ]
                 for match in matches_all:
                     if (match.team_home in mini_table) and (match.team_guest in mini_table):
                         matches.append(match)
