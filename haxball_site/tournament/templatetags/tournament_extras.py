@@ -286,8 +286,8 @@ def events_sorted(match: Match):
     return events_by_time
 
 
-@register.inclusion_tag('tournament/tournament/partials/cup_bracket.html')
-def cup_bracket(stage, bracket):
+@register.inclusion_tag('tournament/tournament/partials/playoff_bracket.html')
+def playoff_bracket(stage, bracket):
     tours = bracket_tours(stage.tours, bracket)
     slots = get_slots_by_tours(tours)
     return {

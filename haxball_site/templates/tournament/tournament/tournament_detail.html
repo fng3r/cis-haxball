@@ -81,11 +81,11 @@
                  class="tw:p-1">
               {% if stage.is_playoff %}
                 {% if stage.is_double_elimination %}
-                  <div id="bracket-upper" class="tw:mt-2 tw:text-center">{% cup_bracket stage 1 %}</div>
+                  <div id="bracket-upper" class="tw:mt-2 tw:text-center">{% playoff_bracket stage 1 %}</div>
                   <div class="tw:divider tw:my-2"></div>
-                  <div id="bracket-lower" class="tw:text-center">{% cup_bracket stage 0 %}</div>
+                  <div id="bracket-lower" class="tw:text-center">{% playoff_bracket stage 0 %}</div>
                 {% else %}
-                  <div id="bracket" class="tw:text-center">{% cup_bracket stage None %}</div>
+                  <div id="bracket" class="tw:text-center">{% playoff_bracket stage None %}</div>
                 {% endif %}
               {% else %}
                 {% if stage.is_group_stage %}

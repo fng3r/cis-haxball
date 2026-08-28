@@ -1,7 +1,7 @@
 {% load static %}
 {% load tournament_extras %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'tournament/tournament/cup_bracket.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'tournament/tournament/playoff_bracket.css' %}">
 
 {% partialdef pair-team %}
   <div class="pair-{{ position }} team {% if team == series_result.winner %}series-winner{% elif team == series_result.loser %}series-loser{% endif %}">
@@ -55,6 +55,9 @@
                   {% endif %} max-width: 300px">
         <div class="tw:my-1">
           {% with tours_count=tours|length %}<h5>{{ tour|round_name:tours_count }}</h5>{% endwith %}
+          <div class="tw:text-xs tw:text-base-content/60 tw:font-normal">
+            {{ tour.date_from|date:"d.m" }} – {{ tour.date_to|date:"d.m" }}
+          </div>
         </div>
 
         <div class="tw:flex tw:flex-col tw:justify-around tw:h-full tw:px-0">
