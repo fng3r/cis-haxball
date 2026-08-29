@@ -454,6 +454,8 @@ class LeagueDetail(DetailView):
         context['winners'] = winners
         context['default_stage'] = default_stage
         context['quick_links'] = quick_links
+        user_player = getattr(self.request.user, 'user_player', None)
+        context['user_player_pk'] = user_player.pk if user_player else None
         return context
 
     def _get_quick_links(self, league: League):
