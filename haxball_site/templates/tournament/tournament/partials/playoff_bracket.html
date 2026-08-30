@@ -18,16 +18,16 @@
   <a class="pair-match"
      href="{{ match.get_absolute_url }}"
      aria-label="Матч {{ match_no }}: {{ match.team_home.title }} – {{ match.team_guest.title }}">
-    <span class="score score-top {% if match.is_played and match.team_home|is_match_winner:match %}match-winner{% endif %}">
+    <span class="score score-top {% if match.is_played and top_team|is_match_winner:match %}match-winner{% endif %}">
       {% if match.is_played %}
-        {{ match.team_home|team_score_in_match:match }}
+        {{ top_team|team_score_in_match:match }}
       {% else %}
         –
       {% endif %}
     </span>
-    <span class="score score-bottom {% if match.is_played and match.team_guest|is_match_winner:match %}match-winner{% endif %}">
+    <span class="score score-bottom {% if match.is_played and bottom_team|is_match_winner:match %}match-winner{% endif %}">
       {% if match.is_played %}
-        {{ match.team_guest|team_score_in_match:match }}
+        {{ bottom_team|team_score_in_match:match }}
       {% else %}
         –
       {% endif %}
@@ -94,7 +94,7 @@
                       </div>
                       <div class="pair-matches">
                         {% for match in slot.matches %}
-                          {% with match_no=forloop.counter %}
+                          {% with match_no=forloop.counter top_team=slot.pair.0 bottom_team=slot.pair.1 %}
                             {% partial pair-match %}
                           {% endwith %}
                         {% endfor %}
