@@ -75,7 +75,7 @@
                aria-controls="tournament-panel"
                aria-label="Турнир"
                checked />
-        <div class="tw:tab-content tw:p-1 tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
+        <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
              id="tournament-panel"
              role="tabpanel"
              aria-labelledby="tournament-tab">
@@ -97,9 +97,7 @@
                   <div id="stage-{{ forloop.counter }}-panel"
                        class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0"
                        role="tabpanel"
-                       aria-labelledby="stage-{{ forloop.counter }}-tab">
-                    {% include 'tournament/tournament/partials/stage.html' %}
-                  </div>
+                       aria-labelledby="stage-{{ forloop.counter }}-tab">{% include 'tournament/tournament/partials/stage.html' %}</div>
                 {% endfor %}
               </div>
             {% endif %}
