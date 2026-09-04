@@ -1,11 +1,11 @@
-.draggable-container { 
+.draggable-container {
   /* ie 10+ */
   -ms-overflow-style: none;
 
   /* chromium-based */
   &::-webkit-scrollbar {
     width: 0;
-    height: 0; 
+    height: 0;
   }
 }
 
@@ -23,20 +23,46 @@
 .pair {
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   width: 100%;
   height: 64px;
+  padding: 0.2rem 0.25rem;
+  background: linear-gradient(to bottom, #617894 0 50%, #638ab8 50% 100%);
+  border: 1px solid black;
+  border-radius: 4px;
+}
 
-  .pair-top {
-    border-radius: 2px 2px 0 0;
-    border: 1px solid black;
-    background: #617894;
+.pair-matches {
+  display: flex;
+  flex-direction: row;
+}
+
+.pair-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  height: 100%;
+  flex: 1 1 auto;
+
+  .team {
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
   }
+}
 
-  .pair-bottom {
-    border-radius: 0 0 2px 2px;
-    border: 1px solid black;
-    background: #638ab8;
+.pair-match {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 0 0 30px;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 3px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -46,7 +72,7 @@
   align-items: center;
   width: 100%;
   height: 100%;
-  padding: 0.2rem 0.25rem;
+  padding: 0;
   color: #ffffff;
 
   &.series-loser {
@@ -60,22 +86,15 @@
       opacity: 0.65;
     }
   }
-
-  &:first-child {
-    margin-bottom: -2px;
-  }
 }
 
 .team {
-  span {
-    padding-left: 4px;
-  }
-
   .image {
     padding-left: 2px;
   }
 
   .name {
+    padding-left: 4px;
     margin-right: auto;
 
     a {
@@ -83,15 +102,19 @@
       color: inherit;
     }
   }
+}
 
-  .score {
-    width: 26px;
-    font-size: 14px;
-    color: #dfdfdf;
+.pair-match .score {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-size: 14px;
+  color: #dfdfdf;
 
-    &.match-winner {
-      color: #00f9ff;
-    }
+  &.match-winner {
+    color: #00f9ff;
   }
 }
 
@@ -112,7 +135,7 @@
     width: 12px;
     height: 2px;
   }
-  
+
   .line-two {
     height: var(--line-height);
     width: 2px;
@@ -122,7 +145,7 @@
       top: calc(var(--line-height) * -1);
     }
   }
-  
+
   .line-three {
     width: 12px;
     height: 2px;

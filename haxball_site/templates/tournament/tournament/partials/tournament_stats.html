@@ -18,12 +18,13 @@
       </div>
     </div>
 
-    <div class="tw:card-body tw:p-0 tw:overflow-y-auto tw:rounded-b-lg">
+    <div class="tw:card-body tw:p-0 tw:overflow-y-auto tw:rounded-b-lg stats-scroll">
       {% if players %}
         <table class="tw:table tw:table-fixed tw:mb-0">
           <tbody>
             {% for player in players %}
-              <tr>
+              <tr class="{% if player.pk == user_player_pk %}user-row{% endif %}"
+                  {% if player.pk == user_player_pk %}:class="{ 'user-row-highlight': pinned }"{% endif %}>
                 <td width="45px" class="tw:pl-3 tw:pr-2 tw:text-center">
                   <span class="tw:text-base tw:font-semibold">{{ forloop.counter }}</span>
                 </td>
@@ -66,202 +67,217 @@
   </div>
 {% endpartialdef %}
 
-{% if stats_data.show_rounds %}
-  <div x-data="{ activeRoundTab: 'general' }" x-cloak class="tw:flex tw:flex-col tw:w-full">
-    <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
-      <input type="radio" name="statistics-tabs" class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!" aria-label="Общая" checked />
-      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
-        <div role="tabpanel" aria-labelledby="general-stats-tab">
-          <div class="tw:flex tw:gap-2 tw:mx-2 tw:mt-3 tw:mb-1">
-            <button x-data="{ tab: 'general'}"
-                    @click="activeRoundTab = tab"
-                    class="tw:btn tw:btn-xs tw:btn-primary"
-                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">Общая</button>
-            <button x-data="{ tab: 'first'}"
-                    @click="activeRoundTab = tab"
-                    class="tw:btn tw:btn-xs tw:btn-outline"
-                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">1 круг</button>
-            <button x-data="{ tab: 'second'}"
-                    @click="activeRoundTab = tab"
-                    class="tw:btn tw:btn-xs tw:btn-outline"
-                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">2 круг</button>
-          </div>
+{% partialdef statistics-tab %}
+  {% if show_rounds or show_pin_toggle %}
+    <div class="tw:flex tw:gap-2 tw:mb-3">
+      {% if show_rounds %}
+        <button x-data="{ tab: 'general'}"
+                @click="activeRoundTab = tab"
+                class="tw:btn tw:btn-xs tw:btn-primary"
+                :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">Общая</button>
+        <button x-data="{ tab: 'first'}"
+                @click="activeRoundTab = tab"
+                class="tw:btn tw:btn-xs tw:btn-outline"
+                :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">1 круг</button>
+        <button x-data="{ tab: 'second'}"
+                @click="activeRoundTab = tab"
+                class="tw:btn tw:btn-xs tw:btn-outline"
+                :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">2 круг</button>
+      {% endif %}
+      {% if show_pin_toggle %}
+        <label class="tw:ml-auto tw:mr-1 tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
+          <span class="tw:text-sm tw:font-medium">Всегда показывать мою позицию</span>
+          <input type="checkbox" x-model="pinned" class="tw:toggle tw:toggle-sm tw:toggle-primary">
+        </label>
+      {% endif %}
+    </div>
+  {% endif %}
 
-          <div class="tw:p-2">
-            <div class="tw:relative">
-              <div x-show="activeRoundTab === 'general'"
-                   x-transition:enter="tw:transition-opacity tw:duration-200"
-                   x-transition:enter-start="tw:opacity-0"
-                   x-transition:enter-end="tw:opacity-100"
-                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-                   x-transition:leave-start="tw:opacity-100"
-                   x-transition:leave-end="tw:opacity-0">
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-                  {% for stat_item in stats_data.general_stats.total %}
-                    <div>
-                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
-                        {% partial statistics-card %}
-                      {% endwith %}
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-
-              <div x-show="activeRoundTab === 'first'"
-                   x-cloak
-                   x-transition:enter="tw:transition-opacity tw:duration-200"
-                   x-transition:enter-start="tw:opacity-0"
-                   x-transition:enter-end="tw:opacity-100"
-                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-                   x-transition:leave-start="tw:opacity-100"
-                   x-transition:leave-end="tw:opacity-0">
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-                  {% for stat_item in stats_data.first_round_stats.total %}
-                    <div>
-                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
-                        {% partial statistics-card %}
-                      {% endwith %}
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-
-              <div x-show="activeRoundTab === 'second'"
-                   x-cloak
-                   x-transition:enter="tw:transition-opacity tw:duration-200"
-                   x-transition:enter-start="tw:opacity-0"
-                   x-transition:enter-end="tw:opacity-100"
-                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-                   x-transition:leave-start="tw:opacity-100"
-                   x-transition:leave-end="tw:opacity-0">
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-                  {% for stat_item in stats_data.second_round_stats.total %}
-                    <div>
-                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
-                        {% partial statistics-card %}
-                      {% endwith %}
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="tw:relative">
+    <div x-show="activeRoundTab === 'general'"
+         x-transition:enter="tw:transition-opacity tw:duration-200"
+         x-transition:enter-start="tw:opacity-0"
+         x-transition:enter-end="tw:opacity-100"
+         x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+         x-transition:leave-start="tw:opacity-100"
+         x-transition:leave-end="tw:opacity-0">
+      <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+        {% for stat_item in general_stats %}
+          {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
+            {% partial statistics-card %}
+          {% endwith %}
+        {% endfor %}
       </div>
+    </div>
 
-      <input type="radio" name="statistics-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="В среднем за матч" />
-      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
-        <div role="tabpanel" aria-labelledby="avg-stats-tab">
-          <div class="tw:flex tw:gap-2 tw:mx-2 tw:mt-3 tw:mb-1">
-            <button x-data="{ tab: 'general'}"
-                    @click="activeRoundTab = tab"
-                    class="tw:btn tw:btn-xs tw:btn-primary"
-                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">Общая</button>
-            <button x-data="{ tab: 'first'}"
-                    @click="activeRoundTab = tab"
-                    class="tw:btn tw:btn-xs tw:btn-outline"
-                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">1 круг</button>
-            <button x-data="{ tab: 'second'}"
-                    @click="activeRoundTab = tab"
-                    class="tw:btn tw:btn-xs tw:btn-outline"
-                    :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">2 круг</button>
-          </div>
+    <div x-show="activeRoundTab === 'first'"
+         x-cloak
+         x-transition:enter="tw:transition-opacity tw:duration-200"
+         x-transition:enter-start="tw:opacity-0"
+         x-transition:enter-end="tw:opacity-100"
+         x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+         x-transition:leave-start="tw:opacity-100"
+         x-transition:leave-end="tw:opacity-0">
+      <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+        {% for stat_item in first_round_stats %}
+          {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
+            {% partial statistics-card %}
+          {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
 
-          <div class="tw:p-2">
-            <div class="tw:relative">
-              <div x-show="activeRoundTab === 'general'"
-                   x-transition:enter="tw:transition-opacity tw:duration-200"
-                   x-transition:enter-start="tw:opacity-0"
-                   x-transition:enter-end="tw:opacity-100"
-                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-                   x-transition:leave-start="tw:opacity-100"
-                   x-transition:leave-end="tw:opacity-0">
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-                  {% for stat_item in stats_data.general_stats.avg %}
-                    <div>
-                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
-                        {% partial statistics-card %}
-                      {% endwith %}
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-
-              <div x-show="activeRoundTab === 'first'"
-                   x-cloak
-                   x-transition:enter="tw:transition-opacity tw:duration-200"
-                   x-transition:enter-start="tw:opacity-0"
-                   x-transition:enter-end="tw:opacity-100"
-                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-                   x-transition:leave-start="tw:opacity-100"
-                   x-transition:leave-end="tw:opacity-0">
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-                  {% for stat_item in stats_data.first_round_stats.avg %}
-                    <div>
-                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
-                        {% partial statistics-card %}
-                      {% endwith %}
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-
-              <div x-show="activeRoundTab === 'second'"
-                   x-cloak
-                   x-transition:enter="tw:transition-opacity tw:duration-200"
-                   x-transition:enter-start="tw:opacity-0"
-                   x-transition:enter-end="tw:opacity-100"
-                   x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-                   x-transition:leave-start="tw:opacity-100"
-                   x-transition:leave-end="tw:opacity-0">
-                <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-                  {% for stat_item in stats_data.second_round_stats.avg %}
-                    <div>
-                      {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
-                        {% partial statistics-card %}
-                      {% endwith %}
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div x-show="activeRoundTab === 'second'"
+         x-cloak
+         x-transition:enter="tw:transition-opacity tw:duration-200"
+         x-transition:enter-start="tw:opacity-0"
+         x-transition:enter-end="tw:opacity-100"
+         x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+         x-transition:leave-start="tw:opacity-100"
+         x-transition:leave-end="tw:opacity-0">
+      <div class="tw:grid tw:grid-cols-3 tw:gap-2">
+        {% for stat_item in second_round_stats %}
+          {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
+            {% partial statistics-card %}
+          {% endwith %}
+        {% endfor %}
       </div>
     </div>
   </div>
-{% else %}
-  <div class="tw:flex tw:flex-col tw:w-full">
-    <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
-      <input type="radio" name="statistics-tabs" class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!" aria-label="Общая" checked />
-      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
-        <div role="tabpanel" aria-labelledby="general-stats-tab" class="tw:p-2">
-          <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-            {% for stat_item in stats_data.general_stats.total %}
-              <div>
-                {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height %}
-                  {% partial statistics-card %}
-                {% endwith %}
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
+{% endpartialdef %}
 
-      <input type="radio" name="statistics-tabs" class="tw:tab tw:px-3! tw:shadow-none!" aria-label="В среднем за матч" />
-      <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0">
-        <div role="tabpanel" aria-labelledby="avg-stats-tab" class="tw:p-2">
-          <div class="tw:grid tw:grid-cols-3 tw:gap-2">
-            {% for stat_item in stats_data.general_stats.avg %}
-              <div>
-                {% with players=stat_item.players title=stat_item.title icon_url=stat_item.icon_url icon_title=stat_item.icon_title icon_width=stat_item.icon_width icon_height=stat_item.icon_height stat_type=stat_item.stat_type %}
-                  {% partial statistics-card %}
-                {% endwith %}
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
+<div x-data="{ activeRoundTab: 'general', pinned: $persist(true).as('cis_stats_pin_user_row') }"
+     x-init="$watch('pinned', v => window.setStatPinEnabled(v))"
+     class="tw:flex tw:flex-col tw:w-full">
+  <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
+    <input type="radio"
+           name="statistics-tabs"
+           id="general-stats-tab"
+           class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!"
+           aria-label="Общая"
+           checked />
+    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0 tw:p-2 tw:pt-3"
+         role="tabpanel"
+         aria-labelledby="general-stats-tab">
+      {% with show_rounds=stats_data.show_rounds show_pin_toggle=request.user.is_authenticated general_stats=stats_data.general_stats.total first_round_stats=stats_data.first_round_stats.total second_round_stats=stats_data.second_round_stats.total %}
+        {% partial statistics-tab %}
+      {% endwith %}
+    </div>
+
+    <input type="radio"
+           name="statistics-tabs"
+           id="avg-stats-tab"
+           class="tw:tab tw:px-3! tw:shadow-none!"
+           aria-label="В среднем за матч" />
+    <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0 tw:p-2 tw:pt-3"
+         role="tabpanel"
+         aria-labelledby="avg-stats-tab">
+      {% with show_rounds=stats_data.show_rounds show_pin_toggle=request.user.is_authenticated general_stats=stats_data.general_stats.avg first_round_stats=stats_data.first_round_stats.avg second_round_stats=stats_data.second_round_stats.avg %}
+        {% partial statistics-tab %}
+      {% endwith %}
     </div>
   </div>
-{% endif %}
+</div>
+
+<style>
+  tr.user-row-highlight>td {
+    background-color: color-mix(in oklab, var(--color-primary) 15%, var(--color-base-100));
+  }
+
+  tr.user-row-sticky {
+    position: sticky;
+    z-index: 6;
+  }
+
+  tr.user-row-sticky>td {
+    background-color: color-mix(in oklab, var(--color-primary) 24%, var(--color-base-100));
+  }
+
+  tr.user-row-sticky-top {
+    top: 0;
+  }
+
+  tr.user-row-sticky-bottom {
+    bottom: 0;
+  }
+
+  tr.user-row-sticky>td:first-child {
+    box-shadow: inset 3px 0 0 0 var(--color-primary);
+  }
+</style>
+
+<script>
+  function ensureOnePin(ref) {
+    if (ref._statPin) return;
+    const scroll = ref.closest('.stats-scroll');
+    if (!scroll) return;
+    const tbody = scroll.querySelector('tbody');
+    if (!tbody) return;
+
+    const top = ref.cloneNode(true);
+    const bottom = ref.cloneNode(true);
+    top.classList.remove('user-row', 'user-row-highlight');
+    bottom.classList.remove('user-row', 'user-row-highlight');
+    top.classList.add('user-row-sticky', 'user-row-sticky-top');
+    bottom.classList.add('user-row-sticky', 'user-row-sticky-bottom');
+    top.style.display = 'none';
+    bottom.style.display = 'none';
+
+    const first = tbody.firstElementChild;
+    if (first) tbody.insertBefore(top, first);
+    else tbody.appendChild(top);
+    tbody.appendChild(bottom);
+
+    const setPin = () => {
+      const s = scroll.getBoundingClientRect();
+      if (s.height === 0) {
+        top.style.display = 'none';
+        bottom.style.display = 'none';
+        return;
+      }
+      const r = ref.getBoundingClientRect();
+      const visible = r.bottom > s.top && r.top < s.bottom;
+      if (visible) {
+        top.style.display = 'none';
+        bottom.style.display = 'none';
+      } else if (r.bottom <= s.top) {
+        top.style.display = '';
+        bottom.style.display = 'none';
+      } else {
+        top.style.display = 'none';
+        bottom.style.display = '';
+      }
+    };
+
+    const io = new IntersectionObserver(() => setPin(), { root: scroll, threshold: 0 });
+    io.observe(ref);
+    const cardIO = new IntersectionObserver(() => setPin(), { root: null, threshold: 0 });
+    cardIO.observe(scroll);
+    scroll.addEventListener('scroll', setPin, { passive: true });
+    setTimeout(setPin, 30);
+
+    ref._statPin = { top, bottom, io, cardIO };
+  }
+
+  function removeOnePin(ref) {
+    if (!ref._statPin) return;
+    const p = ref._statPin;
+    p.io.disconnect();
+    p.cardIO.disconnect();
+    p.top.remove();
+    p.bottom.remove();
+    ref._statPin = null;
+  }
+
+  window.setStatPinEnabled = function (enabled) {
+    document.querySelectorAll('tr.user-row').forEach((ref) => {
+      if (enabled) ensureOnePin(ref);
+      else removeOnePin(ref);
+    });
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const raw = localStorage.getItem('cis_stats_pin_user_row');
+    window.setStatPinEnabled(raw !== 'false');
+  });
+</script>

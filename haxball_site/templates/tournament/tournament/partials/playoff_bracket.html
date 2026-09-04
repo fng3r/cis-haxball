@@ -1,0 +1,135 @@
+{% load static %}
+{% load tournament_extras %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'tournament/tournament/playoff_bracket.css' %}">
+
+{% partialdef pair-teams %}
+  <div class="team {% if team == series_result.winner %}series-winner{% elif team == series_result.loser %}series-loser{% endif %}">
+    <span class="image">
+      <img src="{{ team.logo.url }}" alt="{{ team.title }}" width="24" height="24">
+    </span>
+    <span class="name tw:truncate">
+      <a href="{{ team.get_absolute_url }}" class="tw:link tw:link-hover">{{ team.short_title }}</a>
+    </span>
+  </div>
+{% endpartialdef %}
+
+{% partialdef pair-match %}
+  <a class="pair-match"
+     href="{{ match.get_absolute_url }}"
+     aria-label="Матч {{ match_no }}: {{ match.team_home.title }} – {{ match.team_guest.title }}">
+    <span class="score score-top {% if match.is_played and top_team|is_match_winner:match %}match-winner{% endif %}">
+      {% if match.is_played %}
+        {{ top_team|team_score_in_match:match }}
+      {% else %}
+        –
+      {% endif %}
+    </span>
+    <span class="score score-bottom {% if match.is_played and bottom_team|is_match_winner:match %}match-winner{% endif %}">
+      {% if match.is_played %}
+        {{ bottom_team|team_score_in_match:match }}
+      {% else %}
+        –
+      {% endif %}
+    </span>
+  </a>
+{% endpartialdef %}
+
+{% partialdef pair-team-stub %}
+  <div class="team">
+    {% if team %}
+      <span class="image">
+        <img src="{{ team.logo.url }}" alt="{{ team.title }}" width="24" height="24">
+      </span>
+      <span class="name tw:truncate">
+        <a href="{{ team.get_absolute_url }}" class="tw:link tw:link-hover">{{ team.short_title }}</a>
+      </span>
+    {% elif team_placeholder %}
+      <span class="name tw:truncate">{{ team_placeholder }}</span>
+    {% endif %}
+  </div>
+{% endpartialdef %}
+
+<script type="text/javascript" src="{% static 'scripts/dragToScroll.js' %}"></script>
+
+{% if bracket is not None %}
+  <h5>
+    {% if bracket == bracket_types.UPPER %}
+      Верхняя сетка
+    {% else %}
+      Нижняя сетка
+    {% endif %}
+  </h5>
+{% endif %}
+
+<div class="draggable-container tw:overflow-x-auto">
+  <div class="tw:flex tw:flex-nowrap tw:justify-start tw:mx-0">
+    {% for tour, slots in slots_by_tour %}
+      <div class="tw:flex tw:flex-col tw:px-[15px]"
+           style="{% if stage.show_bracket_slot_labels %}min-width:235px;
+                  {% else %}min-width:205px;
+                  {% endif %} max-width: 300px">
+        <div class="tw:my-1">
+          {% with tours_count=tours|length %}<h5>{{ tour|round_name:tours_count }}</h5>{% endwith %}
+          <div class="tw:text-xs tw:text-base-content/60 tw:font-normal">{{ tour.date_from|date:"d.m" }} – {{ tour.date_to|date:"d.m" }}</div>
+        </div>
+
+        <div class="tw:flex tw:flex-col tw:justify-around tw:h-full tw:px-0">
+          {% with show_connector=tour|show_connector:tours connector_line_height=tour|connector_line_height:tours %}
+            {% for slot in slots %}
+              <div class="pair-container tw:flex tw:items-center">
+                {% if slot.pair or slot.stub or not forloop.parentloop.first %}
+                  {% if slot.label and stage.show_bracket_slot_labels %}<div class="pair-label tw:text-center tw:mr-1">{{ slot.label }}</div>{% endif %}
+                  <div class="pair">
+                    {% if slot.pair %}
+                      {% get_series_result slot.pair slot.matches stage as series_result %}
+                      <div class="pair-teams tw:truncate">
+                        {% with team=slot.pair.0 series_result=series_result %}
+                          {% partial pair-teams %}
+                        {% endwith %}
+
+                        {% with team=slot.pair.1 series_result=series_result %}
+                          {% partial pair-teams %}
+                        {% endwith %}
+                      </div>
+                      <div class="pair-matches">
+                        {% for match in slot.matches %}
+                          {% with match_no=forloop.counter top_team=slot.pair.0 bottom_team=slot.pair.1 %}
+                            {% partial pair-match %}
+                          {% endwith %}
+                        {% endfor %}
+                      </div>
+                    {% elif slot.stub %}
+                      <div class="pair-teams">
+                        {% with team=slot.stub.top_team team_placeholder=slot.stub.top_team_placeholder %}
+                          {% partial pair-team-stub %}
+                        {% endwith %}
+
+                        {% with team=slot.stub.bottom_team team_placeholder=slot.stub.bottom_team_placeholder %}
+                          {% partial pair-team-stub %}
+                        {% endwith %}
+                      </div>
+                    {% elif not forloop.parentloop.first %}
+                      <div class="pair-teams">
+                        <div class="team"></div>
+                        <div class="team"></div>
+                      </div>
+                    {% endif %}
+
+                    {% if show_connector %}
+                      <div class="pair-connector" style="--line-height: {{ connector_line_height }}px">
+                        <div class="line line-one"></div>
+                        <div class="line line-two"></div>
+                        <div class="line line-three"></div>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% endwith %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

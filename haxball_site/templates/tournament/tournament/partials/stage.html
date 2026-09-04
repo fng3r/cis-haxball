@@ -1,0 +1,28 @@
+{% load tournament_extras %}
+
+<div class="tw:p-2">
+  {% if stage.is_playoff %}
+    {% if stage.is_double_elimination %}
+      <div id="bracket-upper" class="tw:text-center">{% playoff_bracket stage 1 %}</div>
+      <div class="tw:divider tw:my-2"></div>
+      <div id="bracket-lower" class="tw:text-center">{% playoff_bracket stage 0 %}</div>
+    {% else %}
+      <div id="bracket" class="tw:text-center">{% playoff_bracket stage None %}</div>
+    {% endif %}
+  {% else %}
+    {% if stage.is_group_stage %}
+      <div class="tw:flex tw:flex-col">
+        {% for group in stage.groups.all %}
+          <div class="tw:text-center">
+            <h4 class="tw:text-lg">{{ group.name }}</h4>
+            {% tournament_table league stage group %}
+          </div>
+
+          {% if not forloop.last %}<div class="tw:divider tw:m-1"></div>{% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+      {% tournament_table league stage None %}
+    {% endif %}
+  {% endif %}
+</div>
