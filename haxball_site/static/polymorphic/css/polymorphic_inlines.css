@@ -1,46 +1,19 @@
 .polymorphic-add-choice {
   position: relative;
-  clear: left;
-
-  /* CHANGED ORIGINAL FILE */
-  /* ADDED */
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: end;
-  /* END OF CHANGE */
-}
-
-/* CHANGED ORIGINAL FILE */
-/* ADDED */
-polymorphic-add-choice a {
-  float: none;
-  max-width: fit-content;
+  align-items: start;
 }
 
 .polymorphic-add-choice ul {
   display: flex;
   flex-direction: column;
 }
-/* END OF CHANGE */
 
 .polymorphic-add-choice a:focus {
   text-decoration: none;
 }
-
-/* CHANGED ORIGINAL FILE */
-/* REMOVED */
-/* .polymorphic-type-menu {
-  position: absolute;
-  top: 2.2em;
-  left: 0.5em;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 2px;
-  background-color: #fff;
-  z-index: 1000;
-} */
-/* END OF CHANGE */
 
 .polymorphic-type-menu ul {
   padding: 2px;
@@ -53,6 +26,308 @@ polymorphic-add-choice a {
 }
 
 .inline-related.empty-form {
-  /* needed for grapelli, which uses grp-empty-form */
   display: none;
+}
+
+/* === Unfold-styled polymorphic inlines === */
+
+.inline-group {
+  border: 1px solid var(--color-base-200, #e5e7eb);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.dark .inline-group {
+  border-color: var(--color-base-800, #1f2937);
+}
+
+.inline-group > fieldset.module {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.inline-group > fieldset.module > h2 {
+  background-color: var(--color-base-100, #f3f4f6);
+  border-radius: 0.5rem 0.5rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  height: 2.375rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0;
+  padding: 0 0.75rem;
+  color: var(--color-font-important-light, #111827);
+}
+
+.dark .inline-group > fieldset.module > h2 {
+  background-color: rgb(255 255 255 / 0.02);
+  color: var(--color-font-important-dark, #f3f4f6);
+}
+
+.inline-group .inline-related {
+  border-bottom: 1px solid var(--color-base-200, #e5e7eb);
+  position: relative;
+  padding: 0;
+}
+
+.dark .inline-group .inline-related {
+  border-bottom-color: var(--color-base-800, #1f2937);
+}
+
+.inline-group .inline-related.last-related {
+  border-bottom: none;
+}
+
+.inline-group .inline-related > h3 {
+  border-bottom: 1px solid var(--color-base-200, #e5e7eb);
+  display: flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+.dark .inline-group .inline-related > h3 {
+  border-bottom-color: var(--color-base-800, #1f2937);
+  color: var(--color-font-important-dark, #f3f4f6);
+}
+
+.inline-group .inline-related > h3 > b {
+  color: var(--color-font-important-light, #111827);
+  font-weight: 600;
+}
+
+.dark .inline-group .inline-related > h3 > b {
+  color: var(--color-font-important-dark, #f3f4f6);
+}
+
+.inline-group .inline-related > h3 > .inlinechangelink {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-primary-600, #4f46e5);
+  margin-left: 0.5rem;
+}
+
+.dark .inline-group .inline-related > h3 > .inlinechangelink {
+  color: var(--color-primary-500, #6366f1);
+}
+
+.inline-group .inline-related > h3 .delete {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.inline_label + span {
+  margin-left: auto;
+}
+
+.inline-deletelink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  user-select: none;
+  font-size: 0;
+}
+
+.inline-deletelink::after {
+  content: "delete";
+  font-family: "Material Symbols Outlined";
+  font-size: 1.125rem;
+  color: #dc2626;
+}
+
+.inline-deletelink:hover {
+  background-color: var(--color-base-50, #f9fafb);
+}
+
+.dark .inline-deletelink::after {
+  color: #ef4444;
+}
+
+.dark .inline-deletelink:hover {
+  background-color: var(--color-base-800, #1f2937);
+}
+
+.inline-group .inline-related > h3 .delete input[type="checkbox"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Fieldset stacked styling */
+.inline-group .inline-related fieldset.module {
+  position: relative;
+  border-left: 1px solid var(--color-base-200, #e5e7eb);
+  margin-left: 0.75rem;
+}
+
+.dark .inline-group .inline-related fieldset.module {
+  border-left-color: var(--color-base-800, #1f2937);
+}
+
+.inline-group .inline-related fieldset.module::before {
+  content: "";
+  display: block;
+  height: 100%;
+  position: absolute;
+  left: -0.75rem;
+  top: 0;
+  width: 0.75rem;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgb(0 0 0 / 0.03) 4px,
+    rgb(0 0 0 / 0.03) 8px
+  );
+}
+
+.dark .inline-group .inline-related fieldset.module::before {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgb(255 255 255 / 0.03) 4px,
+    rgb(255 255 255 / 0.03) 8px
+  );
+}
+
+.inline-group .inline-related fieldset.module > h2 {
+  background-color: var(--color-base-50, #f9fafb);
+  border-bottom: 1px solid var(--color-base-200, #e5e7eb);
+  border-radius: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  height: auto;
+  margin-bottom: 0;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  gap: 0.75rem;
+  color: var(--color-font-important-light, #111827);
+}
+
+.dark .inline-group .inline-related fieldset.module > h2 {
+  background-color: rgb(255 255 255 / 0.02);
+  border-bottom-color: var(--color-base-800, #1f2937);
+  color: var(--color-font-important-dark, #f3f4f6);
+}
+
+.inline-group .inline-related fieldset.module > h2 + .form-row,
+.inline-group .inline-related fieldset.module > h2 + div > .form-row {
+  border-top: none;
+}
+
+/* Add button (polymorphic type selector) */
+.polymorphic-add-choice {
+  padding: 0.75rem;
+  border-top: 1px solid var(--color-base-200, #e5e7eb);
+}
+
+.dark .polymorphic-add-choice {
+  border-top-color: var(--color-base-800, #1f2937);
+}
+
+.polymorphic-add-choice > a {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  color: var(--color-primary-600, #4f46e5);
+  text-decoration: none;
+  padding: 0;
+}
+
+.dark .polymorphic-add-choice > a {
+  color: var(--color-primary-500, #6366f1);
+}
+
+.polymorphic-add-choice > a:hover {
+  text-decoration: none;
+}
+
+.polymorphic-add-choice > a::before {
+  content: "add";
+  font-family: "Material Symbols Outlined";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 9999px;
+  background-color: var(--color-primary-600, #4f46e5);
+  color: white;
+  font-size: 0.6875rem;
+  margin-right: 0.375rem;
+}
+
+.dark .polymorphic-add-choice > a::before {
+  background-color: var(--color-primary-500, #6366f1);
+}
+
+/* Polymorphic type menu dropdown */
+.polymorphic-type-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1000;
+  background-color: var(--color-white, #ffffff);
+  border: 1px solid var(--color-base-200, #e5e7eb);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  min-width: 10rem;
+}
+
+.dark .polymorphic-type-menu {
+  background-color: var(--color-base-900, #111827);
+  border-color: var(--color-base-700, #374151);
+}
+
+.polymorphic-type-menu ul {
+  list-style: none;
+  padding: 0.125rem;
+  margin: 0;
+}
+
+.polymorphic-type-menu ul li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.polymorphic-type-menu ul li a {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--color-base-600, #4b5563);
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.dark .polymorphic-type-menu li a {
+  color: var(--color-base-300, #d1d5db);
+}
+
+.polymorphic-type-menu li a:hover {
+  background-color: var(--color-base-50, #f9fafb);
+}
+
+.dark .polymorphic-type-menu li a:hover {
+  background-color: var(--color-base-800, #1f2937);
 }

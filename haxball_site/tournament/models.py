@@ -276,10 +276,10 @@ class TournamentStage(PolymorphicModel):
         PLAYOFF = 'PO', 'Плей-офф'
 
     type = models.CharField('Тип', max_length=10, choices=StageType.choices, null=False, blank=True)
+    order = models.PositiveSmallIntegerField('Порядковый номер этапа')
     name = models.CharField('Название (опционально)', max_length=50, null=True, blank=True)
     league = models.ForeignKey(League, verbose_name='Турнир', related_name='stages', on_delete=models.CASCADE)
     teams = models.ManyToManyField(Team, verbose_name='Команды', related_name='stages', blank=True)
-    order = models.PositiveSmallIntegerField('Порядковый номер этапа')
     postponable = models.BooleanField('Можно ли переносить матчи этапа', default=False, blank=True)
     use_buchholz = models.BooleanField('Использовать коэффициент Бухгольца при равенстве очков', default=False)
 
