@@ -25,7 +25,9 @@
     <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:text-center tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
       <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
         <span class="tw:min-w-0 tw:truncate tw:text-sm {% if match.team_home.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
-          {{ match.team_home.title }}
+          {% with team_name=match.team_home %}
+            {% partial card-team-name %}
+          {% endwith %}
         </span>
         <img src="{{ match.team_home.logo.url }}"
              alt="{{ match.team_home.title }}"
@@ -49,7 +51,9 @@
              width="24"
              height="24">
         <span class="tw:min-w-0 tw:truncate tw:text-sm {% if match.team_guest.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
-          {{ match.team_guest.title }}
+          {% with team_name=match.team_guest %}
+            {% partial card-team-name %}
+          {% endwith %}
         </span>
       </div>
     </div>
@@ -86,6 +90,11 @@
       {% endif %}
     </div>
   </a>
+{% endpartialdef %}
+
+{% partialdef card-team-name %}
+  <span class="tw:md:hidden">{{ team_name.short_title|default:team_name.title }}</span>
+  <span class="tw:hidden tw:md:inline">{{ team_name.title }}</span>
 {% endpartialdef %}
 
 <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
@@ -140,7 +149,11 @@
                                 </div>
                                 <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
                                   <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
-                                    <span class="tw:min-w-0 tw:truncate tw:text-sm {% if series_first_match.player_team_id == series.team_home.id %}tw:font-bold tw:text-base-content{% endif %}">{{ series.team_home.title }}</span>
+                                    <span class="tw:min-w-0 tw:truncate tw:text-sm {% if series_first_match.player_team_id == series.team_home.id %}tw:font-bold tw:text-base-content{% endif %}">
+                                      {% with team_name=series.team_home %}
+                                        {% partial card-team-name %}
+                                      {% endwith %}
+                                    </span>
                                     <img src="{{ series.team_home.logo.url }}"
                                          alt="{{ series.team_home.title }}"
                                          class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
@@ -160,7 +173,11 @@
                                          class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
                                          width="24"
                                          height="24">
-                                    <span class="tw:min-w-0 tw:truncate tw:text-sm {% if series_first_match.player_team_id == series.team_guest.id %}tw:font-bold tw:text-base-content{% endif %}">{{ series.team_guest.title }}</span>
+                                    <span class="tw:min-w-0 tw:truncate tw:text-sm {% if series_first_match.player_team_id == series.team_guest.id %}tw:font-bold tw:text-base-content{% endif %}">
+                                      {% with team_name=series.team_guest %}
+                                        {% partial card-team-name %}
+                                      {% endwith %}
+                                    </span>
                                   </div>
                                 </div>
                                 <div></div>
@@ -179,7 +196,9 @@
                                       <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:text-center tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
                                         <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
                                           <span class="tw:min-w-0 tw:truncate tw:text-sm {% if match.team_home.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
-                                            {{ match.team_home.title }}
+                                            {% with team_name=match.team_home %}
+                                              {% partial card-team-name %}
+                                            {% endwith %}
                                           </span>
                                           <img src="{{ match.team_home.logo.url }}"
                                                alt="{{ match.team_home.title }}"
@@ -203,7 +222,9 @@
                                                width="24"
                                                height="24">
                                           <span class="tw:min-w-0 tw:truncate tw:text-sm {% if match.team_guest.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
-                                            {{ match.team_guest.title }}
+                                            {% with team_name=match.team_guest %}
+                                              {% partial card-team-name %}
+                                            {% endwith %}
                                           </span>
                                         </div>
                                       </div>
