@@ -1,6 +1,93 @@
 {% load static %}
 {% load tournament_extras %}
 
+{% partialdef player-match-card %}
+  <a href="{{ match.get_absolute_url }}"
+     class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-100 tw:shadow-[0_1px_2px_rgba(0,0,0,0.08)] tw:px-3 tw:py-2.5 tw:transition tw:hover:border-primary/25 tw:hover:bg-base-200/75 tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3">
+    <div class="tw:flex tw:min-w-0 tw:flex-col tw:justify-center tw:gap-1">
+      <span class="tw:text-[10px] tw:font-semibold tw:uppercase tw:tracking-[0.2em] tw:text-base-content/40">Матч</span>
+      <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-1 tw:text-sm tw:font-semibold tw:text-base-content/85">
+        {% if stage.is_playoff %}
+          {% if stage.is_double_elimination %}
+            <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
+                 title="{{ match.numb_tour.get_bracket_display }}"
+                 class="tw:size-4 tw:aspect-square tw:shrink-0">
+          {% endif %}
+          {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
+            {% with tours_count=tours_by_bracket|length %}<span>{{ match.numb_tour|round_name:tours_count }}</span>{% endwith %}
+          {% endwith %}
+        {% else %}
+          <span>{{ match.numb_tour|tour_name }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:text-center tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
+      <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
+        <span class="tw:min-w-0 tw:truncate tw:text-sm tw:text-base-content/85 {% if match.team_home.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
+          {{ match.team_home.title }}
+        </span>
+        <img src="{{ match.team_home.logo.url }}"
+             alt="{{ match.team_home.title }}"
+             class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+             width="24"
+             height="24">
+      </div>
+
+      <span class="tw:w-[72px] tw:justify-self-center tw:rounded-full tw:bg-primary/10 tw:px-2.5 tw:py-1 tw:text-center tw:text-sm tw:font-bold tw:text-primary tw:sm:w-[84px]">
+        {% if not match.is_played %}
+          vs
+        {% else %}
+          {{ match.score_home }} : {{ match.score_guest }}
+        {% endif %}
+      </span>
+
+      <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-start tw:gap-1.5 tw:sm:gap-2">
+        <img src="{{ match.team_guest.logo.url }}"
+             alt="{{ match.team_guest.title }}"
+             class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+             width="24"
+             height="24">
+        <span class="tw:min-w-0 tw:truncate tw:text-sm tw:text-base-content/85 {% if match.team_guest.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
+          {{ match.team_guest.title }}
+        </span>
+      </div>
+    </div>
+
+    <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1 tw:sm:gap-1.5">
+      {% if match.player_goals > 0 %}
+        <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-success/20 tw:bg-success/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-success tw:sm:px-2">
+          <img src="{% static 'img/ico/ball_2.png' %}" alt="" class="tw:size-3 tw:object-contain tw:sm:size-3.5">
+          <span>{{ match.player_goals }}</span>
+        </span>
+      {% endif %}
+      {% if match.player_assists > 0 %}
+        <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-info/20 tw:bg-info/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-info tw:sm:px-2">
+          <img src="{% static 'img/ico/boot_ass_2.png' %}" alt="" class="tw:size-3 tw:object-contain tw:sm:size-3.5">
+          <span>{{ match.player_assists }}</span>
+        </span>
+      {% endif %}
+      {% if match.player_cs > 0 %}
+        <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-warning/20 tw:bg-warning/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-warning tw:sm:px-2">
+          <img src="{% static 'img/ico/clean_sheet1.png' %}" alt="" class="tw:size-3 tw:object-contain tw:sm:size-3.5">
+          <span>{{ match.player_cs }}</span>
+        </span>
+      {% endif %}
+      {% if match.player_ogs > 0 %}
+        <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-error/20 tw:bg-error/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-error tw:sm:px-2">
+          <span class="tw:text-[10px] tw:uppercase tw:tracking-[0.16em]">АГ</span>
+          <span>{{ match.player_ogs }}</span>
+        </span>
+      {% endif %}
+      {% if playtime %}
+        <span class="tw:shrink-0 tw:rounded-full tw:border tw:border-base-300 tw:bg-base-200/60 tw:px-1.5 tw:py-1 tw:text-[10px] tw:font-semibold tw:tracking-[0.16em] tw:text-base-content/55 tw:sm:px-2">
+          {{ playtime }}
+        </span>
+      {% endif %}
+    </div>
+  </a>
+{% endpartialdef %}
+
 <div class="tw:w-full tw:tabs tw:tabs-box tw:px-0! tw:pt-0! tw:shadow-none! tw:bg-transparent" role="tablist">
   {% player_seasons player as player_matches_by_season %}
 
@@ -29,93 +116,38 @@
                     {% endif %}
 
                     <div class="tw:flex tw:flex-col tw:gap-2.5">
-                      {% for match in matches %}
-                        {% with playtime=match|player_match_playtime:player %}
-                          <a href="{{ match.get_absolute_url }}"
-                             class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-100 tw:shadow-[0_1px_2px_rgba(0,0,0,0.08)] tw:px-3 tw:py-2.5 tw:transition tw:hover:border-primary/25 tw:hover:bg-base-200/75 tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3">
-                            <div class="tw:flex tw:min-w-0 tw:flex-col tw:justify-center tw:gap-1">
-                              <span class="tw:text-[10px] tw:font-semibold tw:uppercase tw:tracking-[0.2em] tw:text-base-content/40">Матч</span>
-                              <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-1 tw:text-sm tw:font-semibold tw:text-base-content/85">
-                                {% if stage.is_playoff %}
-                                  {% if stage.is_double_elimination %}
-                                    <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
-                                         title="{{ match.numb_tour.get_bracket_display }}"
-                                         class="tw:size-4 tw:aspect-square tw:shrink-0">
+                      {% for item in matches|group_by_series %}
+                        {% if item.series %}
+                          {% with series=item.series series_score=item.series.score %}
+                            <div class="tw:flex tw:flex-col tw:gap-1 tw:border-l-[3px] tw:border-primary/40 tw:py-1 tw:pl-3">
+                              <div class="tw:flex tw:items-center tw:justify-center tw:gap-1.5 tw:text-sm tw:font-semibold">
+                                <span class="tw:min-w-0 tw:truncate">{{ series.team_home.title }}</span>
+                                <span class="tw:shrink-0">
+                                  {% if series_score %}
+                                    {{ series_score.team1_score }} : {{ series_score.team2_score }}
+                                  {% else %}
+                                    vs
                                   {% endif %}
-                                  {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
-                                    {% with tours_count=tours_by_bracket|length %}<span>{{ match.numb_tour|round_name:tours_count }}</span>{% endwith %}
-                                  {% endwith %}
-                                {% else %}
-                                  <span>{{ match.numb_tour|tour_name }}</span>
-                                {% endif %}
+                                </span>
+                                <span class="tw:min-w-0 tw:truncate">{{ series.team_guest.title }}</span>
                               </div>
-                            </div>
-
-                            <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:text-center tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
-                              <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
-                                <span class="tw:min-w-0 tw:truncate tw:text-sm tw:text-base-content/85 {% if match.team_home.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
-                                  {{ match.team_home.title }}
-                                </span>
-                                <img src="{{ match.team_home.logo.url }}"
-                                     alt="{{ match.team_home.title }}"
-                                     class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
-                                     width="24"
-                                     height="24">
+                              <div class="tw:flex tw:justify-center tw:gap-1.5">
+                                {% for series_match in item.matches %}
+                                  <a href="{{ series_match.get_absolute_url }}" class="tw:btn tw:btn-xs tw:btn-outline">{{ forloop.counter }} матч</a>
+                                {% endfor %}
                               </div>
-
-                              <span class="tw:w-[72px] tw:justify-self-center tw:rounded-full tw:bg-primary/10 tw:px-2.5 tw:py-1 tw:text-center tw:text-sm tw:font-bold tw:text-primary tw:sm:w-[84px]">
-                                {% if not match.is_played %}
-                                  vs
-                                {% else %}
-                                  {{ match.score_home }} : {{ match.score_guest }}
-                                {% endif %}
-                              </span>
-
-                              <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-start tw:gap-1.5 tw:sm:gap-2">
-                                <img src="{{ match.team_guest.logo.url }}"
-                                     alt="{{ match.team_guest.title }}"
-                                     class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
-                                     width="24"
-                                     height="24">
-                                <span class="tw:min-w-0 tw:truncate tw:text-sm tw:text-base-content/85 {% if match.team_guest.id == match.player_team_id %}tw:font-bold tw:text-base-content{% endif %}">
-                                  {{ match.team_guest.title }}
-                                </span>
-                              </div>
+                              {% for series_match in item.matches %}
+                                {% with match=series_match playtime=series_match|player_match_playtime:player %}
+                                  {% partial player-match-card %}
+                                {% endwith %}
+                              {% endfor %}
                             </div>
-
-                            <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1 tw:sm:gap-1.5">
-                              {% if match.player_goals > 0 %}
-                                <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-success/20 tw:bg-success/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-success tw:sm:px-2">
-                                  <img src="{% static 'img/ico/ball_2.png' %}" alt="" class="tw:size-3 tw:object-contain tw:sm:size-3.5">
-                                  <span>{{ match.player_goals }}</span>
-                                </span>
-                              {% endif %}
-                              {% if match.player_assists > 0 %}
-                                <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-info/20 tw:bg-info/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-info tw:sm:px-2">
-                                  <img src="{% static 'img/ico/boot_ass_2.png' %}" alt="" class="tw:size-3 tw:object-contain tw:sm:size-3.5">
-                                  <span>{{ match.player_assists }}</span>
-                                </span>
-                              {% endif %}
-                              {% if match.player_cs > 0 %}
-                                <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-warning/20 tw:bg-warning/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-warning tw:sm:px-2">
-                                  <img src="{% static 'img/ico/clean_sheet1.png' %}" alt="" class="tw:size-3 tw:object-contain tw:sm:size-3.5">
-                                  <span>{{ match.player_cs }}</span>
-                                </span>
-                              {% endif %}
-                              {% if match.player_ogs > 0 %}
-                                <span class="tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border tw:border-error/20 tw:bg-error/10 tw:px-1.5 tw:py-1 tw:text-[11px] tw:font-semibold tw:leading-none tw:text-error tw:sm:px-2">
-                                  <span class="tw:text-[10px] tw:uppercase tw:tracking-[0.16em]">АГ</span>
-                                  <span>{{ match.player_ogs }}</span>
-                                </span>
-                              {% endif %}
-                              {% if playtime %}
-                                <span class="tw:shrink-0 tw:rounded-full tw:border tw:border-base-300 tw:bg-base-200/60 tw:px-1.5 tw:py-1 tw:text-[10px] tw:font-semibold tw:tracking-[0.16em] tw:text-base-content/55 tw:sm:px-2">
-                                  {{ playtime }}
-                                </span>
-                              {% endif %}
-                            </div>
-                          </a>
-                        {% endwith %}
+                          {% endwith %}
+                        {% else %}
+                          {% with match=item.match playtime=item.match|player_match_playtime:player %}
+                            {% partial player-match-card %}
+                          {% endwith %}
+                        {% endif %}
                       {% empty %}
                         <div class="tw:flex tw:items-center tw:justify-center tw:rounded-xl tw:border tw:border-dashed tw:border-base-300 tw:bg-base-100/70 tw:px-4 tw:py-4 tw:text-sm tw:text-base-content/55">
                           Матчей пока нет

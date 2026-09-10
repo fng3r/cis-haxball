@@ -1184,8 +1184,11 @@ def player_seasons(player):
                                     is_played=True,
                                 )
                                 .select_related('team_home', 'team_guest', 'numb_tour__league')
+                                .select_related('series__team_home', 'series__team_guest')
                                 .prefetch_related(
                                     'numb_tour__stage',
+                                    'series__tour__stage',
+                                    Prefetch('series__matches', queryset=Match.objects.order_by('id')),
                                     'team_home_start',
                                     'team_guest_start',
                                     Prefetch(
@@ -1208,7 +1211,7 @@ def player_seasons(player):
                                     player_cs=Coalesce(Subquery(cs_subquery, output_field=IntegerField()), 0),
                                     player_ogs=Coalesce(Subquery(ogs_subquery, output_field=IntegerField()), 0),
                                 )
-                                .order_by('numb_tour'),
+                                .order_by('numb_tour', 'id'),
                                 to_attr='player_matches',
                             ),
                         )
