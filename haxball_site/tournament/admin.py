@@ -1723,12 +1723,20 @@ class TourAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
 
-    inlines = [MatchSeriesInline, MatchInline]
     list_sections = [MatchesTableSection]
 
     @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
         return model.is_actual
+
+    def get_inlines(self, request, obj):
+        if obj is None:
+            return [MatchSeriesInline, MatchInline]
+
+        if obj.stage.is_playoff:
+            return [MatchSeriesInline]
+
+        return [MatchInline]
 
     def get_queryset(self, request):
         return (
