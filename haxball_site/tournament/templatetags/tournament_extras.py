@@ -1056,9 +1056,19 @@ def team_seasons(team):
                             Prefetch(
                                 'matches',
                                 queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                                .select_related('team_home', 'team_guest', 'numb_tour__league')
-                                .prefetch_related('numb_tour__stage')
-                                .order_by('numb_tour'),
+                                .select_related(
+                                    'team_home',
+                                    'team_guest',
+                                    'numb_tour__league',
+                                    'series__team_home',
+                                    'series__team_guest',
+                                )
+                                .prefetch_related(
+                                    'numb_tour__stage',
+                                    'series__tour__stage',
+                                    Prefetch('series__matches', queryset=Match.objects.order_by('id')),
+                                )
+                                .order_by('numb_tour', 'id'),
                                 to_attr='team_matches',
                             ),
                         )
@@ -1072,6 +1082,49 @@ def team_seasons(team):
         )
         .order_by('-number')
     )
+
+
+@register.filter
+def group_by_series(matches):
+    """Group matches into multi-match MatchSeries and standalone singles.
+
+    Expects matches to have series prefetched (select_related('series',
+    ...) plus 'series__matches' for match counting). Returns a list of
+    {'series': ..., 'matches': [...]} dicts for series with more than one
+    match and {'match': ...} dicts for everything else.
+    """
+    groups = []
+    current_series = None
+    current_matches = []
+
+    def flush():
+        nonlocal current_series, current_matches
+        if current_series is None:
+            return
+        series_matches = current_series.matches.all()
+        if len(series_matches) > 1:
+            groups.append({'series': current_series, 'matches': current_matches})
+        else:
+            groups.extend({'match': match} for match in current_matches)
+        current_series = None
+        current_matches = []
+
+    for match in matches:
+        series = match.series
+        if current_series is not None and series == current_series:
+            current_matches.append(match)
+        elif series is not None:
+            flush()
+            current_series = series
+            if not hasattr(series, '_prefetched_stage'):
+                series._prefetched_stage = series.tour.stage
+            current_matches = [match]
+        else:
+            flush()
+            groups.append({'match': match})
+
+    flush()
+    return groups
 
 
 @register.simple_tag
