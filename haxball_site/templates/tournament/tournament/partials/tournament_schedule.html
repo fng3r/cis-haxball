@@ -45,62 +45,59 @@
 {% endpartialdef %}
 
 {% partialdef tour-series %}
-  {% with slot_matches=matches|matches_by_bracket_slot %}
-    {% for slot, slot_matches_list in slot_matches %}
-      {% if slot_matches_list|length > 1 %}
-        {% with first_match=slot_matches_list|first %}
-          {% get_series_score first_match.team_home first_match.team_guest slot_matches_list stage as series_score %}
-          <div class="tw:flex tw:flex-col tw:mb-2 tw:border-l-2 tw:border-primary/50">
-            {# Series header with teams and series score #}
-            <div class="tw:flex tw:items-center tw:text-xl tw:font-semibold tw:mb-1.5">
-              <div class="tw:w-4/9 tw:text-right tw:justify-center">
-                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ first_match.team_home.get_absolute_url }}">
-                  {{ first_match.team_home.title }}
-                  <img src="{{ first_match.team_home.logo.url }}"
-                       alt="{{ first_match.team_home.title }}"
-                       width="25"
-                       height="25"
-                       class="tw:ml-1">
-                </a>
-              </div>
-
-              <div class="tw:w-1/9 tw:px-0 tw:text-center">
-                {% if series_score %}
-                  <span class="tw:font-bold">{{ series_score.team1_score }} : {{ series_score.team2_score }}</span>
-                {% else %}
-                  <span>vs</span>
-                {% endif %}
-              </div>
-
-              <div class="tw:w-4/9 tw:text-left">
-                <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ first_match.team_guest.get_absolute_url }}">
-                  <img src="{{ first_match.team_guest.logo.url }}"
-                       alt="{{ first_match.team_guest.title }}"
-                       width="25"
-                       height="25"
-                       class="tw:mr-1">
-                  {{ first_match.team_guest.title }}
-                </a>
-              </div>
+  {% for series in series_list %}
+    {% if series.matches.all|length > 1 %}
+      {% with series_score=series.score %}
+        <div class="tw:flex tw:flex-col tw:mb-2 tw:border-l-2 tw:border-primary/50">
+          {# Series header with teams and series score #}
+          <div class="tw:flex tw:items-center tw:text-xl tw:font-semibold tw:mb-1.5">
+            <div class="tw:w-4/9 tw:text-right tw:justify-center">
+              <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ series.team_home.get_absolute_url }}">
+                {{ series.team_home.title }}
+                <img src="{{ series.team_home.logo.url }}"
+                     alt="{{ series.team_home.title }}"
+                     width="25"
+                     height="25"
+                     class="tw:ml-1">
+              </a>
             </div>
 
-            {# Individual matches in the series #}
-            <div class="tw:flex tw:flex-col tw:gap-1">
-              {% for match in slot_matches_list %}
-                {% with text_size="base" logo_size="20" %}
-                  {% partial match-row %}
-                {% endwith %}
-              {% endfor %}
+            <div class="tw:w-1/9 tw:px-0 tw:text-center">
+              {% if series_score %}
+                <span class="tw:font-bold">{{ series_score.team1_score }} : {{ series_score.team2_score }}</span>
+              {% else %}
+                <span>vs</span>
+              {% endif %}
+            </div>
+
+            <div class="tw:w-4/9 tw:text-left">
+              <a class="tw:link tw:link-hover tw:text-base-content/90" href="{{ series.team_guest.get_absolute_url }}">
+                <img src="{{ series.team_guest.logo.url }}"
+                     alt="{{ series.team_guest.title }}"
+                     width="25"
+                     height="25"
+                     class="tw:mr-1">
+                {{ series.team_guest.title }}
+              </a>
             </div>
           </div>
-        {% endwith %}
-      {% else %}
-        {% with matches=slot_matches_list %}
-          {% partial tour-matches %}
-        {% endwith %}
-      {% endif %}
-    {% endfor %}
-  {% endwith %}
+
+          {# Individual matches in the series #}
+          <div class="tw:flex tw:flex-col tw:gap-1">
+            {% for match in series.matches.all %}
+              {% with text_size="base" logo_size="20" %}
+                {% partial match-row %}
+              {% endwith %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endwith %}
+    {% else %}
+      {% with matches=series.matches.all %}
+        {% partial tour-matches %}
+      {% endwith %}
+    {% endif %}
+  {% endfor %}
 {% endpartialdef %}
 
 {% partialdef tour-block %}
@@ -137,7 +134,7 @@
       {% endwith %}
     {% else %}
       {% if stage.is_playoff %}
-        {% with matches=tour.tour_matches.all stage=stage %}
+        {% with series_list=tour|tour_series %}
           {% partial tour-series %}
         {% endwith %}
       {% else %}

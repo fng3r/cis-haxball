@@ -389,19 +389,37 @@ def get_slots_by_tours(tours):
     return slots_by_tour.items()
 
 
+def _prefetch_tour_series(tour):
+    return list(
+        tour.series.select_related('team_home', 'team_guest').prefetch_related(
+            'tour__stage', Prefetch('matches', queryset=Match.objects.order_by('id'))
+        )
+    )
+
+
 def get_tour_slots(tour, tours):
-    series_list = list(tour.series.select_related('team_home', 'team_guest').prefetch_related('matches'))
+    series_list = _prefetch_tour_series(tour)
+    for series in series_list:
+        series._prefetched_stage = series.tour.stage
     stubs = list(tour.stubs.all())
     slots_count = get_bracket_slots(tours)[tour.number - 1]
     slots = []
     for slot in range(1, slots_count + 1):
         series = next((s for s in series_list if s.bracket_slot == slot), None)
         pair = (series.team_home, series.team_guest) if series else None
-        matches = series.matches.all().order_by('id') if series else None
+        matches = series.matches.all() if series else None
         stub = get_slot_stub(stubs, slot)
         slots.append(BracketSlot(slot, pair, matches, stub, series=series))
 
     return slots
+
+
+@register.filter
+def tour_series(tour):
+    series_list = _prefetch_tour_series(tour)
+    for series in series_list:
+        series._prefetched_stage = series.tour.stage
+    return series_list
 
 
 def get_slot_stub(stubs, slot):
@@ -473,51 +491,7 @@ def is_match_winner(team, match):
     return match.is_win(team)
 
 
-@register.simple_tag
-def get_series_score(team1, team2, matches, stage):
-    """Calculate and return series score display based on winner_determinator."""
-    if not any(match.is_played for match in matches):
-        return None
-
-    team1_series_score = 0
-    team2_series_score = 0
-
-    for match in matches:
-        if not match.is_played:
-            continue
-
-        team1_score = team_score_in_match(team1, match)
-        team2_score = team_score_in_match(team2, match)
-
-        if team1_score is None or team2_score is None:
-            continue
-
-        winner_determinator = stage.winner_determinator
-        if winner_determinator == PlayOffStage.WinnerDeterminator.GOALS:
-            team1_series_score += team1_score
-            team2_series_score += team2_score
-        elif winner_determinator == PlayOffStage.WinnerDeterminator.MATCHES:
-            if team1_score > team2_score:
-                team1_series_score += 1
-            elif team2_score > team1_score:
-                team2_series_score += 1
-
-    return {'team1_score': team1_series_score, 'team2_score': team2_series_score}
-
-
 @register.filter
-def matches_by_bracket_slot(matches):
-    """Group matches by bracket_slot for playoff series display."""
-    slots = {}
-    for match in matches:
-        slot = match.bracket_slot
-        if slot not in slots:
-            slots[slot] = []
-        slots[slot].append(match)
-
-    return sorted(slots.items(), key=lambda x: x[0])
-
-
 @register.filter
 def tour_name(tour: TourNumber):
     if tour.name:

@@ -835,7 +835,9 @@ class MatchSeries(models.Model):
 
     @property
     def stage(self) -> TournamentStage:
-        return self.tour.stage
+        if hasattr(self, '_prefetched_stage'):
+            return self._prefetched_stage
+        return TournamentStage.objects.get(pk=self.tour.stage_id)
 
     @property
     def score(self):
@@ -873,9 +875,9 @@ class MatchSeries(models.Model):
 
     @staticmethod
     def _team_score_in_match(team, match):
-        if team == match.team_home:
+        if team.id == match.team_home_id:
             return match.score_home
-        if team == match.team_guest:
+        if team.id == match.team_guest_id:
             return match.score_guest
         return None
 
