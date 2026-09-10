@@ -833,6 +833,71 @@ class MatchSeries(models.Model):
     def __str__(self):
         return f'{self.team_home.short_title} - {self.team_guest.short_title} ({self.tour.number} тур)'
 
+    @property
+    def stage(self) -> TournamentStage:
+        return self.tour.stage
+
+    @property
+    def score(self):
+        """Aggregate series score for team_home/team_guest.
+
+        Computed on-the-fly from individual match results using the stage's
+        winner_determinator. Returns None when no match has been played yet.
+        """
+        matches = self.matches.all()
+        if not any(match.is_played for match in matches):
+            return None
+
+        team_home_score = 0
+        team_guest_score = 0
+        winner_determinator = self.stage.winner_determinator
+
+        for match in matches:
+            if not match.is_played:
+                continue
+            team_home_match_score = self._team_score_in_match(self.team_home, match)
+            team_guest_match_score = self._team_score_in_match(self.team_guest, match)
+            if team_home_match_score is None or team_guest_match_score is None:
+                continue
+
+            if winner_determinator == PlayOffStage.WinnerDeterminator.GOALS:
+                team_home_score += team_home_match_score
+                team_guest_score += team_guest_match_score
+            elif winner_determinator == PlayOffStage.WinnerDeterminator.MATCHES:
+                if team_home_match_score > team_guest_match_score:
+                    team_home_score += 1
+                elif team_guest_match_score > team_home_match_score:
+                    team_guest_score += 1
+
+        return {'team1_score': team_home_score, 'team2_score': team_guest_score}
+
+    @staticmethod
+    def _team_score_in_match(team, match):
+        if team == match.team_home:
+            return match.score_home
+        if team == match.team_guest:
+            return match.score_guest
+        return None
+
+    @property
+    def result(self):
+        """Return {'winner': ..., 'loser': ...} when series is decided, else None."""
+        matches = self.matches.all()
+        if not matches or not all(match.is_played for match in matches):
+            return None
+
+        score = self.score
+        if score is None or score['team1_score'] == score['team2_score']:
+            return None
+
+        if score['team1_score'] > score['team2_score']:
+            return {'winner': self.team_home, 'loser': self.team_guest}
+        return {'winner': self.team_guest, 'loser': self.team_home}
+
+    @property
+    def is_completed(self) -> bool:
+        return self.result is not None
+
     class Meta:
         verbose_name = 'Серия матчей'
         verbose_name_plural = 'Серии матчей'
