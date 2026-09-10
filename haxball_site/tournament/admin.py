@@ -58,6 +58,7 @@ from .models import (
     MatchReplayStatsPlayer,
     MatchReplayStatsStatus,
     MatchResult,
+    MatchSeries,
     Medal,
     MedalCategory,
     MedalType,
@@ -1088,12 +1089,14 @@ class MatchAdmin(UnfoldModelAdmin):
             'form_class': ShortDurationField,
         },
     }
+    readonly_fields = ('series',)
     list_display = (
         'league',
         'display_stage',
         'display_tour',
         'group',
         'bracket_slot',
+        'display_series',
         'display_team_home',
         'score_home',
         'display_team_guest',
@@ -1108,6 +1111,10 @@ class MatchAdmin(UnfoldModelAdmin):
     @display(description='Этап', ordering='stage__order')
     def display_stage(self, model):
         return model.stage.stage_name
+
+    @display(description='Серия', ordering='series__bracket_slot')
+    def display_series(self, model):
+        return model.series.id if model.series_id else '-'
 
     @display(description='Тур', ordering='numb_tour__number')
     def display_tour(self, model):
@@ -1174,7 +1181,7 @@ class MatchAdmin(UnfoldModelAdmin):
             {
                 'fields': (
                     ('league', 'stage', 'numb_tour'),
-                    ('group', 'bracket_slot'),
+                    ('group', 'bracket_slot', 'series'),
                     ('team_home', 'team_guest'),
                     ('score_home', 'score_guest'),
                 )
@@ -1243,8 +1250,68 @@ class MatchAdmin(UnfoldModelAdmin):
                 'group',
                 'result',
                 'inspector',
+                'series',
             )
         )
+
+
+@admin.register(MatchSeries)
+class MatchSeriesAdmin(UnfoldModelAdmin):
+    list_display = (
+        'tour',
+        'league',
+        'bracket_slot',
+        'display_team_home',
+        'display_team_guest',
+        'matches_count',
+    )
+    list_filter = (
+        ('tour__league', RelatedDropdownFilter),
+        ('tour__stage', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    search_fields = ('team_home__title', 'team_guest__title')
+
+    @display(description='Турнир', ordering='tour__league')
+    def league(self, model):
+        return model.tour.league
+
+    @display(description='Хозяева', header=True)
+    def display_team_home(self, model):
+        return [
+            model.team_home,
+            None,
+            None,
+            {
+                'path': model.team_home.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            },
+        ]
+
+    @display(description='Гости', header=True)
+    def display_team_guest(self, model):
+        return [
+            model.team_guest,
+            None,
+            None,
+            {
+                'path': model.team_guest.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            },
+        ]
+
+    @display(description='Матчей')
+    def matches_count(self, model):
+        return model.matches.count()
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('tour__league', 'tour__stage', 'team_home', 'team_guest')
 
 
 @admin.register(MatchReplayStatsStatus)

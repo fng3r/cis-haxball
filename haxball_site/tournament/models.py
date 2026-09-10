@@ -654,6 +654,15 @@ class Match(models.Model):
         null=False,
         help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы',
     )
+    series = models.ForeignKey(
+        'MatchSeries',
+        verbose_name='Серия',
+        related_name='matches',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text='Серия матчей плей-офф, к которой относится матч',
+    )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
     duration = models.DurationField('Длительность матча', default=timedelta(minutes=16))
@@ -791,7 +800,44 @@ class Match(models.Model):
         ordering = ['league', 'stage', 'numb_tour', 'id']
         indexes = [
             models.Index(fields=['league', 'numb_tour']),
+            models.Index(fields=['series']),
         ]
+
+
+class MatchSeries(models.Model):
+    """Серия матчей между двумя командами в слоте сетки плей-офф."""
+
+    tour = models.ForeignKey(
+        TourNumber,
+        verbose_name='Тур',
+        related_name='series',
+        on_delete=models.CASCADE,
+    )
+    bracket_slot = models.PositiveSmallIntegerField(
+        'Слот сетки',
+        help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы',
+    )
+    team_home = models.ForeignKey(
+        Team,
+        verbose_name='Команда (верхняя строка)',
+        related_name='home_series',
+        on_delete=models.CASCADE,
+    )
+    team_guest = models.ForeignKey(
+        Team,
+        verbose_name='Команда (нижняя строка)',
+        related_name='guest_series',
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return f'{self.team_home.short_title} - {self.team_guest.short_title} ({self.tour.number} тур)'
+
+    class Meta:
+        verbose_name = 'Серия матчей'
+        verbose_name_plural = 'Серии матчей'
+        ordering = ['tour', 'bracket_slot']
+        unique_together = ('tour', 'bracket_slot')
 
 
 class MatchResult(models.Model):
