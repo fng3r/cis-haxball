@@ -1089,13 +1089,13 @@ class MatchAdmin(UnfoldModelAdmin):
             'form_class': ShortDurationField,
         },
     }
-    readonly_fields = ('series',)
+    readonly_fields = ('series', 'bracket_slot')
     list_display = (
         'league',
         'display_stage',
         'display_tour',
         'group',
-        'bracket_slot',
+        'display_series_bracket_slot',
         'display_series',
         'display_team_home',
         'score_home',
@@ -1115,6 +1115,10 @@ class MatchAdmin(UnfoldModelAdmin):
     @display(description='Серия', ordering='series__bracket_slot')
     def display_series(self, model):
         return model.series.id if model.series_id else '-'
+
+    @display(description='Слот серии', ordering='series__bracket_slot')
+    def display_series_bracket_slot(self, model):
+        return model.series.bracket_slot if model.series_id else '-'
 
     @display(description='Тур', ordering='numb_tour__number')
     def display_tour(self, model):
@@ -1595,7 +1599,7 @@ class MatchInline(unfold_admin.StackedInline):
     fields = (
         ('league', 'stage'),
         ('team_home', 'team_guest'),
-        ('group', 'bracket_slot'),
+        ('group',),
     )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -1639,6 +1643,64 @@ class MatchInline(unfold_admin.StackedInline):
         return False
 
 
+class SeriesMatchInline(unfold_admin.StackedInline):
+    model = Match
+    extra = 0
+    fields = (
+        ('league', 'stage'),
+        ('team_home', 'team_guest'),
+        ('group',),
+    )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # override chained selects behavior for fields which should be prefilled with inferred data
+        if db_field.name == 'league' or db_field.name == 'stage':
+            resolved = resolve(request.path)
+            if 'object_id' not in resolved.kwargs:
+                return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            tour = TourNumber.objects.get(id=resolved.kwargs['object_id'])
+            if db_field.name == 'league':
+                kwargs['queryset'] = League.objects.filter(id__in=[tour.league.id])
+                formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+                formfield.initial = tour.league
+            if db_field.name == 'stage':
+                kwargs['queryset'] = TournamentStage.objects.filter(id__in=[tour.stage.id])
+                formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+                formfield.initial = tour.stage
+
+            return formfield
+
+        if isinstance(db_field, ChainedForeignKey):
+            widget = UnfoldChainedSelect(
+                to_app_name=db_field.to_app_name,
+                to_model_name=db_field.to_model_name,
+                chained_field=db_field.chained_field,
+                chained_model_field=db_field.chained_model_field,
+                foreign_key_app_name=db_field.model._meta.app_label,
+                foreign_key_model_name=db_field.model._meta.object_name,
+                foreign_key_field_name=db_field.name,
+                show_all=db_field.show_all,
+                auto_choose=db_field.auto_choose,
+                sort=db_field.sort,
+                view_name=db_field.view_name,
+            )
+            kwargs['widget'] = widget
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class MatchSeriesInline(unfold_admin.StackedInline):
+    model = MatchSeries
+    extra = 0
+    tab = True
+    fields = (
+        ('bracket_slot',),
+        ('team_home', 'team_guest'),
+    )
+    inlines = [SeriesMatchInline]
+
+
 class MatchesTableSection(TableSection):
     related_name = 'tour_matches'
     fields = ['team_home', 'team_guest', 'display_result']
@@ -1661,7 +1723,7 @@ class TourAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
 
-    inlines = [MatchInline]
+    inlines = [MatchSeriesInline, MatchInline]
     list_sections = [MatchesTableSection]
 
     @display(description='Актуальный', boolean=True)
