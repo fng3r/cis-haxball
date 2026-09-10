@@ -38,6 +38,7 @@ from ..models import (
     Group,
     League,
     Match,
+    MatchSeries,
     Player,
     PlayerMatchStatistics,
     PlayerTransfer,
@@ -359,25 +360,10 @@ class BracketSlot:
     matches: Iterable[Match]
     stub: PlayoffBracketSlotStub
     label: str | None = None
+    series: MatchSeries | None = None
 
     def is_empty(self):
         return self.pair is None and self.stub is None
-
-
-@register.filter
-def pairs_in_tour(tour):
-    pairs = {}
-    for match in tour.tour_matches.all():
-        pair = frozenset((match.team_home, match.team_guest))
-        if pair not in pairs:
-            pairs[pair] = []
-        pairs[pair].append(match)
-
-    return {
-        # there's guaranteed to be at least one match per pair
-        (matches[0].team_home, matches[0].team_guest): matches
-        for pair, matches in sorted(pairs.items(), key=lambda x: min(m.id for m in x[1]))
-    }
 
 
 def get_slots_by_tours(tours):
@@ -404,25 +390,18 @@ def get_slots_by_tours(tours):
 
 
 def get_tour_slots(tour, tours):
-    pairs = pairs_in_tour(tour)
+    series_list = list(tour.series.select_related('team_home', 'team_guest').prefetch_related('matches'))
     stubs = list(tour.stubs.all())
     slots_count = get_bracket_slots(tours)[tour.number - 1]
     slots = []
     for slot in range(1, slots_count + 1):
-        pair, matches = get_pair_in_slot(pairs, slot)
+        series = next((s for s in series_list if s.bracket_slot == slot), None)
+        pair = (series.team_home, series.team_guest) if series else None
+        matches = series.matches.all().order_by('id') if series else None
         stub = get_slot_stub(stubs, slot)
-        slots.append(BracketSlot(slot, pair, matches, stub))
+        slots.append(BracketSlot(slot, pair, matches, stub, series=series))
 
     return slots
-
-
-def get_pair_in_slot(pairs, slot):
-    for pair in pairs:
-        matches = pairs[pair]
-        if any(match.bracket_slot == slot for match in matches):
-            return pair, matches
-
-    return None, None
 
 
 def get_slot_stub(stubs, slot):
@@ -492,28 +471,6 @@ def team_score_in_match(team, match):
 @register.filter
 def is_match_winner(team, match):
     return match.is_win(team)
-
-
-@register.simple_tag
-def get_series_result(teams, matches, stage):
-    """Return series result if all matches are played and there is a winner."""
-    if not matches:
-        return None
-
-    if not all((match.is_played for match in matches)):
-        return None
-
-    team1, team2 = teams
-    series_score = get_series_score(team1, team2, matches, stage)
-    if series_score['team1_score'] == series_score['team2_score']:
-        return None
-
-    if series_score['team1_score'] > series_score['team2_score']:
-        winner, loser = team1, team2
-    else:
-        winner, loser = team2, team1
-
-    return {'winner': winner, 'loser': loser}
 
 
 @register.simple_tag

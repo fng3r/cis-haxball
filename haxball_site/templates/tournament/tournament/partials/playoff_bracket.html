@@ -82,7 +82,7 @@
                   {% if slot.label and stage.show_bracket_slot_labels %}<div class="pair-label tw:text-center tw:mr-1">{{ slot.label }}</div>{% endif %}
                   <div class="pair">
                     {% if slot.pair %}
-                      {% get_series_result slot.pair slot.matches stage as series_result %}
+                      {% with series_result=slot.series.result %}
                       <div class="pair-teams tw:truncate">
                         {% with team=slot.pair.0 series_result=series_result %}
                           {% partial pair-teams %}
@@ -99,6 +99,7 @@
                           {% endwith %}
                         {% endfor %}
                       </div>
+                      {% endwith %}
                     {% elif slot.stub %}
                       <div class="pair-teams">
                         {% with team=slot.stub.top_team team_placeholder=slot.stub.top_team_placeholder %}
