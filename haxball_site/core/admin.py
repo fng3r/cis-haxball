@@ -140,7 +140,7 @@ class CommentHistoryItemAdmin(UnfoldModelAdmin):
         'get_author',
         'body',
     )
-    list_filter = (('comment__author', RelatedDropdownFilter),)
+    list_filter = (('comment__author', AutocompleteSelectFilter),)
     list_filter_submit = True
     search_fields = ('body',)
     search_help_text = 'Поиск по тексту комментария'
@@ -186,7 +186,7 @@ class NewCommentAdmin(UnfoldModelAdmin):
         'object_id',
         'content_object',
     )
-    list_filter = ('created', ('author', RelatedDropdownFilter))
+    list_filter = ('created', ('author', AutocompleteSelectFilter))
     list_filter_submit = True
     list_fullwidth = True
     search_fields = (
@@ -217,8 +217,8 @@ class LikeDisLikeAdmin(UnfoldModelAdmin):
     )
     list_filter = (
         ('vote', ChoicesCheckboxFilter),
-        ('user', RelatedDropdownFilter),
-        ('comments__author', RelatedDropdownFilter),
+        ('user', AutocompleteSelectFilter),
+        ('comments__author', AutocompleteSelectFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
@@ -263,7 +263,7 @@ class ReactionTypeAdmin(UnfoldModelAdmin):
 @admin.register(Reaction)
 class ReactionAdmin(UnfoldModelAdmin):
     list_display = ('id', 'reaction_type', 'user', 'content_type', 'object_id', 'content_object', 'updated')
-    list_filter = (('reaction_type', RelatedDropdownFilter), ('user', RelatedDropdownFilter), 'content_type')
+    list_filter = (('reaction_type', RelatedDropdownFilter), ('user', AutocompleteSelectFilter), 'content_type')
     list_filter_submit = True
     search_fields = ('user__username', 'reaction_type__code', 'reaction_type__name')
     search_help_text = 'Поиск по пользователю или типу реакции'
@@ -272,7 +272,7 @@ class ReactionAdmin(UnfoldModelAdmin):
 @admin.register(Post)
 class PostAdmin(UnfoldModelAdmin):
     list_display = ('id', 'title', 'author', 'views', 'category', 'created', 'updated', 'important')
-    list_filter = ('created', ('author', RelatedDropdownFilter), 'important')
+    list_filter = ('created', ('author', AutocompleteSelectFilter), 'important')
     list_filter_submit = True
     search_fields = ('title',)
     search_help_text = 'Поиск по названию поста'
@@ -305,7 +305,7 @@ class FavoriteMedalInline(UnfoldStackedInline):
 @admin.register(Profile)
 class ProfileAdmin(UnfoldModelAdmin):
     list_display = ('id', 'name', 'slug', 'can_comment', 'can_vote', 'views', 'karma', 'background')
-    list_filter = (('id', SingleNumericFilter), ('name', RelatedDropdownFilter), 'can_comment', 'can_vote')
+    list_filter = (('id', SingleNumericFilter), ('name', AutocompleteSelectFilter), 'can_comment', 'can_vote')
     list_filter_submit = True
     search_fields = ('name__username',)
     search_help_text = 'Поиск по имени пользователя'
@@ -383,7 +383,7 @@ class UserActivityAdmin(UnfoldModelAdmin):
 @admin.register(Subscription)
 class SubscriptionAdmin(UnfoldModelAdmin):
     list_display = ('user', 'starts_at', 'expires_at', 'tier', 'is_active', 'disabled')
-    list_filter = (('user', RelatedDropdownFilter), ('tier', ChoicesCheckboxFilter), 'disabled')
+    list_filter = (('user', AutocompleteSelectFilter), ('tier', ChoicesCheckboxFilter), 'disabled')
     list_filter_submit = True
     autocomplete_fields = ('user',)
     radio_fields = {'tier': admin.HORIZONTAL}

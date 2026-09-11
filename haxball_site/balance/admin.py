@@ -5,7 +5,11 @@ from django.utils.translation import gettext_lazy as _
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from unfold.admin import ModelAdmin
-from unfold.contrib.filters.admin import ChoicesCheckboxFilter, RangeNumericFilter, RelatedDropdownFilter
+from unfold.contrib.filters.admin import (
+    AutocompleteSelectFilter,
+    ChoicesCheckboxFilter,
+    RangeNumericFilter,
+)
 
 from balance.services import BalanceService
 
@@ -15,7 +19,7 @@ from .models import Balance, ShopItem, ShopPurchase, Transaction
 @admin.register(Balance)
 class BalanceAdmin(ModelAdmin):
     list_display = ['user', 'current_balance', 'updated_at']
-    list_filter = [('user', RelatedDropdownFilter), ('current_balance', RangeNumericFilter)]
+    list_filter = [('user', AutocompleteSelectFilter), ('current_balance', RangeNumericFilter)]
     list_filter_submit = True
     list_filter_sheet = False
     search_fields = ['user__username']
@@ -99,9 +103,9 @@ class TransactionAdmin(ModelAdmin):
         'created_at',
     ]
     list_filter = [
-        ('user', RelatedDropdownFilter),
+        ('user', AutocompleteSelectFilter),
         ('transaction_type', ChoicesCheckboxFilter),
-        ('admin_user', RelatedDropdownFilter),
+        ('admin_user', AutocompleteSelectFilter),
     ]
     list_filter_submit = True
     search_fields = ['user__username', 'user__email', 'description', 'admin_user__username']

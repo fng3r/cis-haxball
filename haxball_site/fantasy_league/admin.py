@@ -64,7 +64,7 @@ class SquadSubmissionAdmin(unfold_admin.ModelAdmin):
 @admin.register(PlayerCost)
 class PlayerCostAdmin(unfold_admin.ModelAdmin):
     list_display = ('season', 'player', 'cost')
-    list_filter = (('season', RelatedDropdownFilter), ('player', RelatedDropdownFilter))
+    list_filter = (('season', RelatedDropdownFilter), ('player', AutocompleteSelectFilter))
     list_filter_submit = True
     list_filter_sheet = False
     search_fields = ('player__nickname',)
