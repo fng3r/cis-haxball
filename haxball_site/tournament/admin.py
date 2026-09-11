@@ -315,7 +315,8 @@ class MedalCategoryAdmin(UnfoldModelAdmin):
 @admin.register(PlayerMedal)
 class PlayerMedalAdmin(UnfoldModelAdmin):
     list_display = ('player', 'medal', 'awarded_at')
-    list_filter = (('medal', RelatedDropdownFilter),)
+    list_filter = (('medal', AutocompleteSelectFilter),)
+    list_filter_submit = True
     search_fields = ('player__nickname', 'medal__medal_type__title')
     autocomplete_fields = ('player', 'medal')
 
@@ -323,7 +324,8 @@ class PlayerMedalAdmin(UnfoldModelAdmin):
 @admin.register(TeamMedal)
 class TeamMedalAdmin(UnfoldModelAdmin):
     list_display = ('team', 'medal', 'awarded_at')
-    list_filter = (('medal', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
+    list_filter = (('medal', AutocompleteSelectFilter), ('team', RelatedDropdownFilter))
+    list_filter_submit = True
     search_fields = ('team__title', 'medal__medal_type__title')
     autocomplete_fields = ('team', 'medal')
 
@@ -332,6 +334,7 @@ class TeamMedalAdmin(UnfoldModelAdmin):
 class LegacyMedalMappingAdmin(UnfoldModelAdmin):
     list_display = ('source_model', 'source_id', 'medal')
     list_filter = ('source_model',)
+    list_filter_submit = True
     search_fields = ('source_id', 'medal__code', 'medal__medal_type__title')
     autocomplete_fields = ('medal',)
 
@@ -400,7 +403,7 @@ class PlayerAdmin(UnfoldModelAdmin):
     autocomplete_fields = ('name',)
     list_filter = (
         ('team', RelatedDropdownFilter),
-        ('name', RelatedDropdownFilter),
+        ('name', AutocompleteSelectFilter),
         ('player_nation', RelatedDropdownFilter),
     )
     list_filter_submit = True
@@ -435,7 +438,7 @@ class PlayerAdmin(UnfoldModelAdmin):
 class PlayerTransferAdmin(UnfoldModelAdmin):
     list_display = ('trans_player', 'display_from_team', 'display_to_team', 'date_join', 'season_join', 'is_technical')
     list_filter = (
-        ('trans_player', RelatedDropdownFilter),
+        ('trans_player', AutocompleteSelectFilter),
         ('from_team', RelatedDropdownFilter),
         ('to_team', RelatedDropdownFilter),
     )
@@ -522,9 +525,9 @@ class TeamAdmin(UnfoldModelAdmin):
         'date_found',
     )
     list_filter = (
-        ('owner', RelatedDropdownFilter),
-        ('captain', RelatedDropdownFilter),
-        ('captain_assistant', RelatedDropdownFilter),
+        ('owner', AutocompleteSelectFilter),
+        ('captain', AutocompleteSelectFilter),
+        ('captain_assistant', AutocompleteSelectFilter),
     )
     list_filter_submit = True
     list_filter_sheet = False
@@ -593,7 +596,7 @@ class DisqualificationAdmin(UnfoldModelAdmin):
     list_filter = (
         ('match__league', RelatedDropdownFilter),
         ('team', RelatedDropdownFilter),
-        ('player', RelatedDropdownFilter),
+        ('player', AutocompleteSelectFilter),
     )
     list_filter_submit = True
     list_fullwidth = True
@@ -1156,7 +1159,7 @@ class MatchAdmin(UnfoldModelAdmin):
         ('league', RelatedDropdownFilter),
         ('stage', RelatedDropdownFilter),
         ('numb_tour__number', SingleNumericFilter),
-        ('inspector', RelatedDropdownFilter),
+        ('inspector', AutocompleteSelectFilter),
         'is_played',
         ('result__value', ChoicesCheckboxFilter),
         ('id', SingleNumericFilter),
@@ -1374,10 +1377,10 @@ class GoalAdmin(UnfoldModelAdmin):
     list_filter = (
         ('kind', MultipleChoicesDropdownFilter),
         ('team', RelatedDropdownFilter),
-        ('author', RelatedDropdownFilter),
-        ('assistent', RelatedDropdownFilter),
+        ('author', AutocompleteSelectFilter),
+        ('assistent', AutocompleteSelectFilter),
         ('own_goal_team', RelatedDropdownFilter),
-        ('own_goal_author', RelatedDropdownFilter),
+        ('own_goal_author', AutocompleteSelectFilter),
         ('match__id', MatchIdFilter),
     )
     list_filter_submit = True
@@ -1415,7 +1418,7 @@ class CardAdmin(UnfoldModelAdmin):
     list_filter = (
         ('kind', MultipleChoicesDropdownFilter),
         ('team', RelatedDropdownFilter),
-        ('author', RelatedDropdownFilter),
+        ('author', AutocompleteSelectFilter),
         ('match__league__championship', RelatedDropdownFilter),
         ('match__league', RelatedDropdownFilter),
         ('match__id', MatchIdFilter),
@@ -1440,7 +1443,7 @@ class CleanSheetAdmin(UnfoldModelAdmin):
     list_filter = (
         ('period', MultipleChoicesDropdownFilter),
         ('team', RelatedDropdownFilter),
-        ('author', RelatedDropdownFilter),
+        ('author', AutocompleteSelectFilter),
         ('match__league__championship', RelatedDropdownFilter),
         ('match__league', RelatedDropdownFilter),
         ('match__id', MatchIdFilter),
@@ -1463,8 +1466,8 @@ class SubstitutionAdmin(UnfoldModelAdmin):
     raw_id_fields = ('match',)
     list_filter = (
         ('team', RelatedDropdownFilter),
-        ('player_out', RelatedDropdownFilter),
-        ('player_in', RelatedDropdownFilter),
+        ('player_out', AutocompleteSelectFilter),
+        ('player_in', AutocompleteSelectFilter),
         ('match__id', MatchIdFilter),
     )
     list_filter_submit = True
@@ -1494,7 +1497,7 @@ class OtherEventsAdmin(UnfoldModelAdmin):
     list_filter = (
         ('event', MultipleChoicesDropdownFilter),
         ('team', RelatedDropdownFilter),
-        ('author', RelatedDropdownFilter),
+        ('author', AutocompleteSelectFilter),
         ('match__league__championship', RelatedDropdownFilter),
         ('match__league', RelatedDropdownFilter),
         ('match__id', MatchIdFilter),
@@ -1629,7 +1632,7 @@ class TeamRatingAdmin(UnfoldModelAdmin):
 @admin.register(PlayerMatchStatistics)
 class PlayerMatchStatisticsAdmin(UnfoldModelAdmin):
     list_display = ('player', 'match', 'team', 'league')
-    list_filter = (('player', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
+    list_filter = (('player', AutocompleteSelectFilter), ('team', RelatedDropdownFilter))
     list_filter_submit = True
 
 
@@ -1643,7 +1646,7 @@ class PlayerRatingAdmin(UnfoldModelAdmin):
     list_display = ('player', 'rating_points', 'grade', 'rating_update_status', 'version')
     list_filter = (
         ('version', RelatedDropdownFilter),
-        ('player', RelatedDropdownFilter),
+        ('player', AutocompleteSelectFilter),
         ('player__team', RelatedDropdownFilter),
         ('grade', ChoicesCheckboxFilter),
         ('rating_update_status', ChoicesCheckboxFilter),

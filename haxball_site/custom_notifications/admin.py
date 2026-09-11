@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from notifications.models import Notification
-from unfold.contrib.filters.admin import RelatedDropdownFilter
+from unfold.contrib.filters.admin import AutocompleteSelectFilter
 
 from haxball_site.admin import UnfoldModelAdmin
 
@@ -14,7 +14,7 @@ admin.site.unregister(Notification)
 class NotificationAdmin(UnfoldModelAdmin):
     list_display = ('recipient', 'actor', 'level', 'target', 'timestamp', 'unread')
     list_filter = (
-        ('recipient', RelatedDropdownFilter),
+        ('recipient', AutocompleteSelectFilter),
         'timestamp',
         'unread',
         'level',

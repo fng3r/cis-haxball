@@ -37,7 +37,7 @@ dependencies = [
     "isodate==0.7.2",
     "django-notifications-hq==1.8.3",
     "django-vite==3.1.0",
-    "django-unfold==0.100.0",
+    "django-unfold==0.105.0",
     "celery[redis]==5.6.3",
     "django-celery-beat==2.9.0",
     "django-celery-results==2.6.0",

@@ -19,6 +19,7 @@ from smart_selects.db_fields import ChainedForeignKey
 from smart_selects.widgets import ChainedSelect
 from unfold import admin as unfold_admin
 from unfold.contrib.forms.widgets import ArrayWidget
+from unfold.mixins.nested_inlines_model_admin import NestedInlinesModelAdminMixin
 from unfold.widgets import SELECT_CLASSES, UnfoldAdminSelectWidget, UnfoldAdminTextInputWidget
 
 
@@ -128,3 +129,57 @@ class TaskResultAdmin(BaseTaskResultAdmin, UnfoldModelAdmin):
 @admin.register(GroupResult)
 class GroupResultAdmin(BaseGroupResultAdmin, UnfoldModelAdmin):
     pass
+
+
+# Monkey-patch build_nested_formsets to make it work with polymorphic inlines
+def _patched_build_nested_formsets(self, request, obj, formsets, inline_instances, change):
+    from unfold.admin import TabularInline
+
+    for formset, inline in zip(formsets, inline_instances):
+        for form in formset.forms:
+            nested_formsets = []
+
+            if not hasattr(inline, 'inlines'):
+                continue
+
+            for inline_class in inline.inlines:
+                inline_formset = self._get_nested_formset(request, obj, form, inline, inline_class, change)
+
+                if not inline_formset:
+                    continue
+
+                inline_formset.inline_type = 'stacked'
+                if issubclass(inline_class, TabularInline):
+                    inline_formset.inline_type = 'tabular'
+
+                nested_formsets.append(inline_formset)
+                self.nested_formset_media += inline_formset.media
+
+            form.nested_formsets = nested_formsets
+
+        has_empty_forms = hasattr(formset, 'empty_forms') and formset.empty_forms
+        has_empty_form = not has_empty_forms and hasattr(formset, 'empty_form')
+        if (
+            (has_empty_forms or has_empty_form)
+            and hasattr(inline, 'inlines')
+            and inline.has_add_permission(request, obj)
+        ):
+            formset.form.nested_formsets = []
+
+            template_form = formset.empty_forms[0] if has_empty_forms else formset.empty_form
+
+            for inline_class in inline.inlines:
+                inline_formset = self._get_nested_formset(request, obj, template_form, inline, inline_class, change)
+
+                if not inline_formset:
+                    continue
+
+                inline_formset.inline_type = 'stacked'
+                if issubclass(inline_class, TabularInline):
+                    inline_formset.inline_type = 'tabular'
+
+                formset.form.nested_formsets.append(inline_formset)
+                self.nested_formset_media += inline_formset.media
+
+
+NestedInlinesModelAdminMixin._build_nested_formsets = _patched_build_nested_formsets

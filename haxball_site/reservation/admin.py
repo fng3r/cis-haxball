@@ -4,8 +4,8 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 
 from unfold.contrib.filters.admin import (
+    AutocompleteSelectFilter,
     MultipleRelatedDropdownFilter,
-    RelatedDropdownFilter,
 )
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
@@ -58,7 +58,7 @@ class ReservationEntryAdmin(UnfoldModelAdmin):
     raw_id_fields = ('match',)
     list_filter = (
         ('host', MultipleRelatedDropdownFilter),
-        ('author', RelatedDropdownFilter),
+        ('author', AutocompleteSelectFilter),
         'time_date',
         IsActiveReservationFilter,
     )
