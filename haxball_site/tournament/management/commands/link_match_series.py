@@ -9,10 +9,13 @@ class Command(BaseCommand):
     help = (
         'Create MatchSeries for playoff matches and link matches to them. '
         'Run after migrating from the legacy bracket_slot-based data. '
-        'Idempotent: existing series and links are kept intact.'
+        'Idempotent: existing series and links are kept intact. '
+        'First fixes malformed bracket_slot=0 values before wiring matches to series.'
     )
 
     def handle(self, *args, **options):
+        self.fix_zero_bracket_slots()
+
         matches = (
             Match.objects.filter(bracket_slot__gt=0, numb_tour_id__isnull=False)
             .order_by('-id')
@@ -57,3 +60,46 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(f'Match series: {created} created, {linked} matches linked, {skipped} already linked')
         )
+
+    def fix_zero_bracket_slots(self):
+        """Malformed bracket_slot=0 means the slot was never assigned.
+
+        Recover the real slot from the sibling leg of the same pair within the
+        same tour (playoff legs share one bracket slot).
+        """
+        zero_matches = list(
+            Match.objects.filter(numb_tour__stage__type='PO', bracket_slot=0).only(
+                'id', 'numb_tour_id', 'team_home_id', 'team_guest_id'
+            )
+        )
+        if not zero_matches:
+            self.stdout.write('No malformed bracket_slot=0 matches to fix')
+            return
+
+        by_pair = defaultdict(list)
+        for match in Match.objects.filter(numb_tour__stage__type='PO').only(
+            'id', 'numb_tour_id', 'bracket_slot', 'team_home_id', 'team_guest_id'
+        ):
+            key = (match.numb_tour_id, frozenset((match.team_home_id, match.team_guest_id)))
+            by_pair[key].append(match)
+
+        fixed = 0
+        for match in zero_matches:
+            key = (match.numb_tour_id, frozenset((match.team_home_id, match.team_guest_id)))
+            slots = {
+                sibling.bracket_slot for sibling in by_pair[key]
+                if sibling.id != match.id and sibling.bracket_slot > 0
+            }
+            if len(slots) != 1:
+                self.stderr.write(
+                    self.style.WARNING(
+                        f'Match {match.id} (tour {match.numb_tour_id}, '
+                        f'pair {sorted(key[1])}): cannot recover slot, found {sorted(slots)}'
+                    )
+                )
+                continue
+
+            Match.objects.filter(id=match.id).update(bracket_slot=slots.pop())
+            fixed += 1
+
+        self.stdout.write(self.style.SUCCESS(f'Fixed {fixed} malformed bracket_slot=0 matches'))
