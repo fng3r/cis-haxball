@@ -26,7 +26,6 @@ from unfold.contrib.filters.admin import (
 from unfold.contrib.forms.widgets import ArrayWidget
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
-from unfold.overrides import FORMFIELD_OVERRIDES
 from unfold.sections import TableSection
 
 from haxball_site.admin import UnfoldChainedSelect, UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
@@ -1082,20 +1081,20 @@ class PostponementInline(UnfoldStackedInline):
 
 @admin.register(Match)
 class MatchAdmin(UnfoldModelAdmin):
-    FORMFIELD_OVERRIDES
     formfield_overrides = {
         **UnfoldModelAdmin.formfield_overrides,
         models.DurationField: {
             'form_class': ShortDurationField,
         },
     }
-    readonly_fields = ('series', 'bracket_slot')
+
+    readonly_fields = ('series',)
+    exclude = ('bracket_slot',)
     list_display = (
         'league',
         'display_stage',
         'display_tour',
         'group',
-        'display_series_bracket_slot',
         'display_series',
         'display_team_home',
         'score_home',
@@ -1115,10 +1114,6 @@ class MatchAdmin(UnfoldModelAdmin):
     @display(description='Серия', ordering='series__bracket_slot')
     def display_series(self, model):
         return model.series.id if model.series_id else '-'
-
-    @display(description='Слот серии', ordering='series__bracket_slot')
-    def display_series_bracket_slot(self, model):
-        return model.series.bracket_slot if model.series_id else '-'
 
     @display(description='Тур', ordering='numb_tour__number')
     def display_tour(self, model):
@@ -1185,7 +1180,7 @@ class MatchAdmin(UnfoldModelAdmin):
             {
                 'fields': (
                     ('league', 'stage', 'numb_tour'),
-                    ('group', 'bracket_slot', 'series'),
+                    ('group', 'series'),
                     ('team_home', 'team_guest'),
                     ('score_home', 'score_guest'),
                 )
@@ -1259,6 +1254,20 @@ class MatchAdmin(UnfoldModelAdmin):
         )
 
 
+class SeriesMatchesInline(UnfoldStackedInline):
+    model = Match
+    tab = True
+
+    def has_add_permission(self, request, obj):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(MatchSeries)
 class MatchSeriesAdmin(UnfoldModelAdmin):
     list_display = (
@@ -1275,6 +1284,7 @@ class MatchSeriesAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
     search_fields = ('team_home__title', 'team_guest__title')
+    inlines = [SeriesMatchesInline]
 
     @display(description='Турнир', ordering='tour__league')
     def league(self, model):
@@ -1649,11 +1659,19 @@ class SeriesMatchInline(unfold_admin.StackedInline):
     fields = (
         ('league', 'stage'),
         ('team_home', 'team_guest'),
-        ('group',),
     )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # override chained selects behavior for fields which should be prefilled with inferred data
+        if db_field.name == 'team_home' or db_field.name == 'team_guest':
+            resolved = resolve(request.path)
+            if 'object_id' not in resolved.kwargs:
+                return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            tour = TourNumber.objects.get(id=resolved.kwargs['object_id'])
+            kwargs['queryset'] = tour.stage.teams.all()
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
         if db_field.name == 'league' or db_field.name == 'stage':
             resolved = resolve(request.path)
             if 'object_id' not in resolved.kwargs:
@@ -1699,6 +1717,18 @@ class MatchSeriesInline(unfold_admin.StackedInline):
         ('team_home', 'team_guest'),
     )
     inlines = [SeriesMatchInline]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'team_home' or db_field.name == 'team_guest':
+            resolved = resolve(request.path)
+            if 'object_id' not in resolved.kwargs:
+                return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            tour = TourNumber.objects.get(id=resolved.kwargs['object_id'])
+            kwargs['queryset'] = tour.stage.teams.all()
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class MatchesTableSection(TableSection):

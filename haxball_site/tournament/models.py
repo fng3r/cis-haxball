@@ -646,12 +646,12 @@ class Match(models.Model):
         verbose_name='Тур',
         related_name='tour_matches',
         on_delete=models.CASCADE,
-        null=True,
     )
     bracket_slot = models.PositiveSmallIntegerField(
         'Слот сетки',
         default=0,
         null=False,
+        editable=False,
         help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы',
     )
     series = models.ForeignKey(
@@ -794,6 +794,25 @@ class Match(models.Model):
     def __str__(self):
         return f'Матч {self.team_home.short_title} - {self.team_guest.short_title}. {self.numb_tour.number} тур'
 
+    def clean(self):
+        super().clean()
+        if not (self.series_id and self.team_home_id and self.team_guest_id):
+            return
+
+        participants = {self.series.team_home_id, self.series.team_guest_id}
+        errors = {}
+        if self.team_home_id not in participants:
+            errors['team_home'] = 'Команда хозяев не является участником серии'
+        if self.team_guest_id not in participants:
+            errors['team_guest'] = 'Команда гостей не является участником серии'
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        if self.series_id and not self.numb_tour_id:
+            self.numb_tour_id = self.series.tour_id
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Матч'
         verbose_name_plural = 'Матчи'
@@ -819,13 +838,13 @@ class MatchSeries(models.Model):
     )
     team_home = models.ForeignKey(
         Team,
-        verbose_name='Команда (верхняя строка)',
+        verbose_name='Команда хозяев',
         related_name='home_series',
         on_delete=models.CASCADE,
     )
     team_guest = models.ForeignKey(
         Team,
-        verbose_name='Команда (нижняя строка)',
+        verbose_name='Команда гостей',
         related_name='guest_series',
         on_delete=models.CASCADE,
     )
