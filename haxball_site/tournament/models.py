@@ -166,6 +166,20 @@ class Team(models.Model):
         verbose_name_plural = 'Команды'
 
 
+LEAGUE_PRIORITY_BY_TYPE = {
+    'premier_league': 1,
+    'russian_cup': 2,
+    'premier_league_cup': 3,
+    'champions_league': 5,
+    'finals': 6,
+    'first_league': 11,
+    'first_league_cup': 13,
+    'league_cup': 13,
+    'second_league': 21,
+    'second_league_cup': 23,
+}
+
+
 class League(models.Model):
     class Type(models.TextChoices):
         PREMIER_LEAGUE = 'premier_league', 'Высшая лига'
@@ -189,9 +203,22 @@ class League(models.Model):
     type = models.CharField('Тип турнира', max_length=32, choices=Type.choices)
     title = models.CharField('Название турнира', max_length=128)
     logo = models.ImageField('Логотип турнира', upload_to='tournament_logos/', null=True, blank=True)
-    priority = models.SmallIntegerField('Приоритет турнира', help_text='1-высшая, 2-пердив, 3-втордив', blank=True)
+    priority = models.GeneratedField(
+        expression=models.Case(
+            *[
+                models.When(type=league_type, then=models.Value(priority))
+                for league_type, priority in LEAGUE_PRIORITY_BY_TYPE.items()
+            ],
+            default=models.Value(0),
+        ),
+        output_field=models.SmallIntegerField(
+            'Приоритет турнира', help_text='Вычисляется автоматически из типа турнира'
+        ),
+        verbose_name='Приоритет турнира',
+        db_persist=True,
+    )
     slug = models.SlugField(max_length=250)
-    created = models.DateTimeField('Создана', auto_now_add=True)
+    created = models.DateTimeField('Создан', auto_now_add=True)
     teams = models.ManyToManyField(
         Team,
         related_name='leagues',
@@ -646,13 +673,22 @@ class Match(models.Model):
         verbose_name='Тур',
         related_name='tour_matches',
         on_delete=models.CASCADE,
-        null=True,
     )
     bracket_slot = models.PositiveSmallIntegerField(
         'Слот сетки',
         default=0,
         null=False,
+        editable=False,
         help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы',
+    )
+    series = models.ForeignKey(
+        'MatchSeries',
+        verbose_name='Серия',
+        related_name='matches',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text='Серия матчей плей-офф, к которой относится матч',
     )
 
     match_date = models.DateField('Дата матча', default=None, blank=True, null=True)
@@ -785,13 +821,136 @@ class Match(models.Model):
     def __str__(self):
         return f'Матч {self.team_home.short_title} - {self.team_guest.short_title}. {self.numb_tour.number} тур'
 
+    def clean(self):
+        super().clean()
+        if not (self.series_id and self.team_home_id and self.team_guest_id):
+            return
+
+        participants = {self.series.team_home_id, self.series.team_guest_id}
+        errors = {}
+        if self.team_home_id not in participants:
+            errors['team_home'] = 'Команда хозяев не является участником серии'
+        if self.team_guest_id not in participants:
+            errors['team_guest'] = 'Команда гостей не является участником серии'
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        if self.series_id and not self.numb_tour_id:
+            self.numb_tour_id = self.series.tour_id
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Матч'
         verbose_name_plural = 'Матчи'
         ordering = ['league', 'stage', 'numb_tour', 'id']
         indexes = [
             models.Index(fields=['league', 'numb_tour']),
+            models.Index(fields=['series']),
         ]
+
+
+class MatchSeries(models.Model):
+    """Серия матчей между двумя командами в слоте сетки плей-офф."""
+
+    tour = models.ForeignKey(
+        TourNumber,
+        verbose_name='Тур',
+        related_name='series',
+        on_delete=models.CASCADE,
+    )
+    bracket_slot = models.PositiveSmallIntegerField(
+        'Слот сетки',
+        help_text='Номер слота в сетке ПО. Слоты нумеруются сверху вниз, в каждом раунде нумерация начинется с единицы',
+    )
+    team_home = models.ForeignKey(
+        Team,
+        verbose_name='Команда хозяев',
+        related_name='home_series',
+        on_delete=models.CASCADE,
+    )
+    team_guest = models.ForeignKey(
+        Team,
+        verbose_name='Команда гостей',
+        related_name='guest_series',
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return f'{self.team_home.short_title} - {self.team_guest.short_title} ({self.tour.number} тур)'
+
+    @property
+    def stage(self) -> TournamentStage:
+        if hasattr(self, '_prefetched_stage'):
+            return self._prefetched_stage
+        return TournamentStage.objects.get(pk=self.tour.stage_id)
+
+    @property
+    def score(self):
+        """Aggregate series score for team_home/team_guest.
+
+        Computed on-the-fly from individual match results using the stage's
+        winner_determinator. Returns None when no match has been played yet.
+        """
+        matches = self.matches.all()
+        if not any(match.is_played for match in matches):
+            return None
+
+        team_home_score = 0
+        team_guest_score = 0
+        winner_determinator = self.stage.winner_determinator
+
+        for match in matches:
+            if not match.is_played:
+                continue
+            team_home_match_score = self._team_score_in_match(self.team_home, match)
+            team_guest_match_score = self._team_score_in_match(self.team_guest, match)
+            if team_home_match_score is None or team_guest_match_score is None:
+                continue
+
+            if winner_determinator == PlayOffStage.WinnerDeterminator.GOALS:
+                team_home_score += team_home_match_score
+                team_guest_score += team_guest_match_score
+            elif winner_determinator == PlayOffStage.WinnerDeterminator.MATCHES:
+                if team_home_match_score > team_guest_match_score:
+                    team_home_score += 1
+                elif team_guest_match_score > team_home_match_score:
+                    team_guest_score += 1
+
+        return {'team1_score': team_home_score, 'team2_score': team_guest_score}
+
+    @staticmethod
+    def _team_score_in_match(team, match):
+        if team.id == match.team_home_id:
+            return match.score_home
+        if team.id == match.team_guest_id:
+            return match.score_guest
+        return None
+
+    @property
+    def result(self):
+        """Return {'winner': ..., 'loser': ...} when series is decided, else None."""
+        matches = self.matches.all()
+        if not matches or not all(match.is_played for match in matches):
+            return None
+
+        score = self.score
+        if score is None or score['team1_score'] == score['team2_score']:
+            return None
+
+        if score['team1_score'] > score['team2_score']:
+            return {'winner': self.team_home, 'loser': self.team_guest}
+        return {'winner': self.team_guest, 'loser': self.team_home}
+
+    @property
+    def is_completed(self) -> bool:
+        return self.result is not None
+
+    class Meta:
+        verbose_name = 'Серия матчей'
+        verbose_name_plural = 'Серии матчей'
+        ordering = ['tour', 'bracket_slot']
+        unique_together = ('tour', 'bracket_slot')
 
 
 class MatchResult(models.Model):

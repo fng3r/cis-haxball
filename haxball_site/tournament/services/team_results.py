@@ -21,9 +21,7 @@ class TeamSeasonResults:
 
 
 def get_team_results(team: Team) -> list[TeamSeasonResults]:
-    league_matches = Match.objects.select_related(
-        'numb_tour', 'result__winner', 'team_home', 'team_guest'
-    )
+    league_matches = Match.objects.select_related('numb_tour', 'result__winner', 'team_home', 'team_guest', 'series')
     leagues = (
         League.objects.filter(teams=team)
         .select_related('championship')
@@ -159,6 +157,11 @@ def _team_lost_series(team: Team, stage: PlayOffStage, matches: list[Match]) -> 
     opponent = matches[0].opponent_of(team)
     if any(match.opponent_of(team) != opponent for match in matches):
         return False
+
+    series = matches[0].series
+    if series is not None and len(series.matches.all()) == len(matches):
+        result = series.result
+        return result is not None and result['loser'].id == team.id
 
     if stage.winner_determinator == PlayOffStage.WinnerDeterminator.MATCHES:
         team_score = sum(match.result.winner_id == team.id for match in matches)

@@ -26,7 +26,6 @@ from unfold.contrib.filters.admin import (
 from unfold.contrib.forms.widgets import ArrayWidget
 from unfold.decorators import action, display
 from unfold.enums import ActionVariant
-from unfold.overrides import FORMFIELD_OVERRIDES
 from unfold.sections import TableSection
 
 from haxball_site.admin import UnfoldChainedSelect, UnfoldModelAdmin, UnfoldStackedInline, UnfoldTabularInline
@@ -58,6 +57,7 @@ from .models import (
     MatchReplayStatsPlayer,
     MatchReplayStatsStatus,
     MatchResult,
+    MatchSeries,
     Medal,
     MedalCategory,
     MedalType,
@@ -900,12 +900,28 @@ class PlayOffStageAdmin(TournamentStageChildBase):
 
 @admin.register(League)
 class LeagueAdmin(PolymorphicInlineSupportMixin, UnfoldModelAdmin):
-    list_display = ('title', 'type', 'slug', 'priority', 'championship', 'created', 'logo')
+    list_display = (
+        'title',
+        'type',
+        'slug',
+        'championship',
+        'display_stages',
+        'created',
+        'priority',
+        'logo',
+    )
     list_filter = ('type', ('championship', RelatedDropdownFilter))
     list_filter_submit = True
     search_fields = ('title',)
     filter_horizontal = ('teams',)
     inlines = [PostponementSlotsInline, TournamentStageInline]
+
+    @display(description='Этапы', dropdown=True)
+    def display_stages(self, model):
+        return {
+            'title': model.stages.count(),
+            'items': [{'title': stage.stage_name} for stage in model.stages.all()],
+        }
 
 
 class GoalInline(UnfoldStackedInline):
@@ -1081,19 +1097,21 @@ class PostponementInline(UnfoldStackedInline):
 
 @admin.register(Match)
 class MatchAdmin(UnfoldModelAdmin):
-    FORMFIELD_OVERRIDES
     formfield_overrides = {
         **UnfoldModelAdmin.formfield_overrides,
         models.DurationField: {
             'form_class': ShortDurationField,
         },
     }
+
+    readonly_fields = ('series',)
+    exclude = ('bracket_slot',)
     list_display = (
         'league',
         'display_stage',
         'display_tour',
         'group',
-        'bracket_slot',
+        'display_series',
         'display_team_home',
         'score_home',
         'display_team_guest',
@@ -1108,6 +1126,10 @@ class MatchAdmin(UnfoldModelAdmin):
     @display(description='Этап', ordering='stage__order')
     def display_stage(self, model):
         return model.stage.stage_name
+
+    @display(description='Серия', ordering='series__bracket_slot')
+    def display_series(self, model):
+        return model.series.id if model.series_id else '-'
 
     @display(description='Тур', ordering='numb_tour__number')
     def display_tour(self, model):
@@ -1174,7 +1196,7 @@ class MatchAdmin(UnfoldModelAdmin):
             {
                 'fields': (
                     ('league', 'stage', 'numb_tour'),
-                    ('group', 'bracket_slot'),
+                    ('group', 'series'),
                     ('team_home', 'team_guest'),
                     ('score_home', 'score_guest'),
                 )
@@ -1243,8 +1265,83 @@ class MatchAdmin(UnfoldModelAdmin):
                 'group',
                 'result',
                 'inspector',
+                'series',
             )
         )
+
+
+class SeriesMatchesInline(UnfoldStackedInline):
+    model = Match
+    tab = True
+
+    def has_add_permission(self, request, obj):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(MatchSeries)
+class MatchSeriesAdmin(UnfoldModelAdmin):
+    list_display = (
+        'tour',
+        'league',
+        'bracket_slot',
+        'display_team_home',
+        'display_team_guest',
+        'matches_count',
+    )
+    list_filter = (
+        ('tour__league', RelatedDropdownFilter),
+        ('tour__stage', RelatedDropdownFilter),
+    )
+    list_filter_submit = True
+    search_fields = ('team_home__title', 'team_guest__title')
+    inlines = [SeriesMatchesInline]
+
+    @display(description='Турнир', ordering='tour__league')
+    def league(self, model):
+        return model.tour.league
+
+    @display(description='Хозяева', header=True)
+    def display_team_home(self, model):
+        return [
+            model.team_home,
+            None,
+            None,
+            {
+                'path': model.team_home.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            },
+        ]
+
+    @display(description='Гости', header=True)
+    def display_team_guest(self, model):
+        return [
+            model.team_guest,
+            None,
+            None,
+            {
+                'path': model.team_guest.logo.url,
+                'squared': True,
+                'borderless': True,
+                'width': 24,
+                'height': 24,
+            },
+        ]
+
+    @display(description='Матчей')
+    def matches_count(self, model):
+        return model.matches.count()
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('tour__league', 'tour__stage', 'team_home', 'team_guest')
 
 
 @admin.register(MatchReplayStatsStatus)
@@ -1528,7 +1625,7 @@ class MatchInline(unfold_admin.StackedInline):
     fields = (
         ('league', 'stage'),
         ('team_home', 'team_guest'),
-        ('group', 'bracket_slot'),
+        ('group',),
     )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -1572,6 +1669,84 @@ class MatchInline(unfold_admin.StackedInline):
         return False
 
 
+class SeriesMatchInline(unfold_admin.StackedInline):
+    model = Match
+    extra = 0
+    fields = (
+        ('league', 'stage'),
+        ('team_home', 'team_guest'),
+    )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # override chained selects behavior for fields which should be prefilled with inferred data
+        if db_field.name == 'team_home' or db_field.name == 'team_guest':
+            resolved = resolve(request.path)
+            if 'object_id' not in resolved.kwargs:
+                return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            tour = TourNumber.objects.get(id=resolved.kwargs['object_id'])
+            kwargs['queryset'] = tour.stage.teams.all()
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+        if db_field.name == 'league' or db_field.name == 'stage':
+            resolved = resolve(request.path)
+            if 'object_id' not in resolved.kwargs:
+                return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            tour = TourNumber.objects.get(id=resolved.kwargs['object_id'])
+            if db_field.name == 'league':
+                kwargs['queryset'] = League.objects.filter(id__in=[tour.league.id])
+                formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+                formfield.initial = tour.league
+            if db_field.name == 'stage':
+                kwargs['queryset'] = TournamentStage.objects.filter(id__in=[tour.stage.id])
+                formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+                formfield.initial = tour.stage
+
+            return formfield
+
+        if isinstance(db_field, ChainedForeignKey):
+            widget = UnfoldChainedSelect(
+                to_app_name=db_field.to_app_name,
+                to_model_name=db_field.to_model_name,
+                chained_field=db_field.chained_field,
+                chained_model_field=db_field.chained_model_field,
+                foreign_key_app_name=db_field.model._meta.app_label,
+                foreign_key_model_name=db_field.model._meta.object_name,
+                foreign_key_field_name=db_field.name,
+                show_all=db_field.show_all,
+                auto_choose=db_field.auto_choose,
+                sort=db_field.sort,
+                view_name=db_field.view_name,
+            )
+            kwargs['widget'] = widget
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class MatchSeriesInline(unfold_admin.StackedInline):
+    model = MatchSeries
+    extra = 0
+    tab = True
+    fields = (
+        ('bracket_slot',),
+        ('team_home', 'team_guest'),
+    )
+    inlines = [SeriesMatchInline]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'team_home' or db_field.name == 'team_guest':
+            resolved = resolve(request.path)
+            if 'object_id' not in resolved.kwargs:
+                return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            tour = TourNumber.objects.get(id=resolved.kwargs['object_id'])
+            kwargs['queryset'] = tour.stage.teams.all()
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 class MatchesTableSection(TableSection):
     related_name = 'tour_matches'
     fields = ['team_home', 'team_guest', 'display_result']
@@ -1594,12 +1769,20 @@ class TourAdmin(UnfoldModelAdmin):
     )
     list_filter_submit = True
 
-    inlines = [MatchInline]
     list_sections = [MatchesTableSection]
 
     @display(description='Актуальный', boolean=True)
     def is_actual(self, model):
         return model.is_actual
+
+    def get_inlines(self, request, obj):
+        if obj is None:
+            return [MatchSeriesInline, MatchInline]
+
+        if obj.stage.is_playoff:
+            return [MatchSeriesInline]
+
+        return [MatchInline]
 
     def get_queryset(self, request):
         return (

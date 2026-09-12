@@ -1,91 +1,282 @@
 {% load static %}
 {% load tournament_extras %}
 
+{% partialdef match-card %}
+  <a href="{{ match.get_absolute_url }}"
+     class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-200 tw:shadow-[0_1px_2px_rgba(0,0,0,0.08)] tw:px-3 tw:py-2.5 tw:transition tw:hover:bg-base-100 tw:hover:shadow-md tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3">
+    <div class="tw:flex tw:min-w-0 tw:flex-col tw:justify-center tw:gap-1">
+      <span class="tw:text-[10px] tw:font-semibold tw:uppercase tw:tracking-[0.2em] tw:text-base-content/40">Матч</span>
+      <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-1 tw:text-sm tw:font-semibold tw:text-base-content/85">
+        {% if stage.is_playoff %}
+          {% if stage.is_double_elimination %}
+            <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
+                 title="{{ match.numb_tour.get_bracket_display }}"
+                 class="tw:size-4 tw:aspect-square tw:shrink-0">
+          {% endif %}
+          {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
+            {% with tours_count=tours_by_bracket|length %}<span>{{ match.numb_tour|round_name:tours_count }}</span>{% endwith %}
+          {% endwith %}
+        {% else %}
+          <span>{{ match.numb_tour|tour_name }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:text-center tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
+      <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
+        {% if team == match.team_home %}
+          <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">
+            {% with team_name=match.team_home %}
+              {% partial card-team-name %}
+            {% endwith %}
+          </span>
+        {% else %}
+          <span class="tw:min-w-0 tw:truncate tw:text-sm">
+            {% with team_name=match.team_home %}
+              {% partial card-team-name %}
+            {% endwith %}
+          </span>
+        {% endif %}
+        <img src="{{ match.team_home.logo.url }}"
+             alt="{{ match.team_home.title }}"
+             class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+             width="24"
+             height="24">
+      </div>
+
+      <span class="tw:w-[72px] tw:justify-self-center tw:rounded-full tw:bg-primary/10 tw:px-2.5 tw:py-1 tw:text-center tw:text-sm tw:font-bold tw:text-primary tw:sm:w-[84px]">
+        {% if not match.is_played %}
+          vs
+        {% else %}
+          {{ match.score_home }} : {{ match.score_guest }}
+        {% endif %}
+      </span>
+
+      <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-start tw:gap-1.5 tw:sm:gap-2">
+        <img src="{{ match.team_guest.logo.url }}"
+             alt="{{ match.team_guest.title }}"
+             class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+             width="24"
+             height="24">
+        {% if team == match.team_guest %}
+          <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">
+            {% with team_name=match.team_guest %}
+              {% partial card-team-name %}
+            {% endwith %}
+          </span>
+        {% else %}
+          <span class="tw:min-w-0 tw:truncate tw:text-sm">
+            {% with team_name=match.team_guest %}
+              {% partial card-team-name %}
+            {% endwith %}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tw:flex tw:justify-end">
+      {% if match.is_played %}
+        {% if team == match.team_home %}
+          {% if match.score_home > match.score_guest %}
+            <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
+          {% elif match.score_home < match.score_guest %}
+            <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
+          {% else %}
+            <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
+          {% endif %}
+        {% else %}
+          {% if match.score_guest > match.score_home %}
+            <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
+          {% elif match.score_guest < match.score_home %}
+            <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
+          {% else %}
+            <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+    </div>
+  </a>
+{% endpartialdef %}
+
+{% partialdef card-team-name %}
+  <span class="tw:md:hidden">{{ team_name.short_title|default:team_name.title }}</span>
+  <span class="tw:hidden tw:md:inline">{{ team_name.title }}</span>
+{% endpartialdef %}
+
 <div class="tw:flex tw:flex-col tw:gap-1">
   {% if stage and show_stages %}
     <h5 class="tw:text-center tw:text-base tw:font-semibold tw:text-base-content/90">{{ stage.stage_name }}</h5>
   {% endif %}
 
   <div class="tw:flex tw:flex-col tw:gap-2.5">
-    {% for match in matches %}
-      <a href="{{ match.get_absolute_url }}"
-         class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-200 tw:px-3 tw:py-2.5 tw:shadow-sm tw:transition-[background-color,box-shadow] tw:hover:bg-base-300/90 tw:hover:shadow-md tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3">
-        <div class="tw:flex tw:min-w-0 tw:flex-col tw:justify-center tw:gap-1">
-          <span class="tw:text-[10px] tw:font-semibold tw:uppercase tw:tracking-[0.2em] tw:text-base-content/40">Матч</span>
-          <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-1 tw:text-sm tw:font-semibold tw:text-base-content/85">
-            {% if stage.is_playoff %}
-              {% if stage.is_double_elimination %}
-                <img src="{% if match.numb_tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
-                     title="{{ match.numb_tour.get_bracket_display }}"
-                     class="tw:size-4 tw:aspect-square tw:shrink-0">
-              {% endif %}
-              {% with tours_by_bracket=stage.tours|bracket_tours:match.numb_tour.bracket %}
-                {% with tours_count=tours_by_bracket|length %}<span>{{ match.numb_tour|round_name:tours_count }}</span>{% endwith %}
-              {% endwith %}
-            {% else %}
-              <span>{{ match.numb_tour|tour_name }}</span>
-            {% endif %}
+    {% for item in matches|group_by_series %}
+      {% if item.series %}
+        {% with series=item.series series_score=item.series.score %}
+          <div class="tw:flex tw:flex-col tw:overflow-hidden tw:rounded-xl tw:border tw:border-base-300 tw:bg-base-200 tw:shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+            <div class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:border-b tw:border-base-300/70 tw:bg-base-300/50 tw:px-3 tw:py-2 tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3 tw:sm:px-4">
+              <div class="tw:flex tw:min-w-0 tw:flex-col tw:justify-center tw:gap-1">
+                <span class="tw:text-[10px] tw:font-semibold tw:uppercase tw:tracking-[0.2em] tw:text-base-content/40">Серия</span>
+                <div class="tw:flex tw:items-center tw:gap-1 tw:text-sm tw:font-semibold tw:text-base-content/85">
+                  {% if stage.is_playoff %}
+                    {% if stage.is_double_elimination %}
+                      <img src="{% if series.tour.bracket == 1 %}{% static 'img/ico/upper-bracket.png' %}{% else %}{% static 'img/ico/lower-bracket.png' %}{% endif %}"
+                           title="{{ series.tour.get_bracket_display }}"
+                           class="tw:size-4 tw:aspect-square tw:shrink-0">
+                    {% endif %}
+                    {% with tours_by_bracket=stage.tours|bracket_tours:series.tour.bracket %}
+                      {% with tours_count=tours_by_bracket|length %}<span>{{ series.tour|round_name:tours_count }}</span>{% endwith %}
+                    {% endwith %}
+                  {% else %}
+                    <span>{{ series.tour|tour_name }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
+                <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
+                  {% if team == series.team_home %}
+                    <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">
+                      {% with team_name=series.team_home %}
+                        {% partial card-team-name %}
+                      {% endwith %}
+                    </span>
+                  {% else %}
+                    <span class="tw:min-w-0 tw:truncate tw:text-sm">
+                      {% with team_name=series.team_home %}
+                        {% partial card-team-name %}
+                      {% endwith %}
+                    </span>
+                  {% endif %}
+                  <img src="{{ series.team_home.logo.url }}"
+                       alt="{{ series.team_home.title }}"
+                       class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+                       width="24"
+                       height="24">
+                </div>
+                <span class="tw:w-[72px] tw:justify-self-center tw:rounded-full tw:bg-primary/10 tw:px-2.5 tw:py-1 tw:text-center tw:text-sm tw:font-bold tw:text-primary tw:sm:w-[84px]">
+                  {% if series_score %}
+                    {{ series_score.team1_score }} : {{ series_score.team2_score }}
+                  {% else %}
+                    vs
+                  {% endif %}
+                </span>
+                <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-start tw:gap-1.5 tw:sm:gap-2">
+                  <img src="{{ series.team_guest.logo.url }}"
+                       alt="{{ series.team_guest.title }}"
+                       class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+                       width="24"
+                       height="24">
+                  {% if team == series.team_guest %}
+                    <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">
+                      {% with team_name=series.team_guest %}
+                        {% partial card-team-name %}
+                      {% endwith %}
+                    </span>
+                  {% else %}
+                    <span class="tw:min-w-0 tw:truncate tw:text-sm">
+                      {% with team_name=series.team_guest %}
+                        {% partial card-team-name %}
+                      {% endwith %}
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+              <div></div>
+            </div>
+
+            <div class="tw:flex tw:flex-col tw:divide-y tw:divide-base-300/60">
+              {% for series_match in item.matches %}
+                {% with match=series_match %}
+                  <a href="{{ match.get_absolute_url }}"
+                     class="tw:grid tw:grid-cols-[96px_minmax(0,1fr)_96px] tw:items-center tw:gap-2 tw:px-3 tw:py-2.5 tw:transition tw:hover:bg-base-100 tw:hover:shadow-inner tw:sm:grid-cols-[132px_minmax(0,1fr)_132px] tw:sm:gap-3">
+                    <div class="tw:flex tw:min-w-0 tw:flex-col tw:justify-center tw:gap-1">
+                      <span class="tw:text-[10px] tw:font-semibold tw:uppercase tw:tracking-[0.2em] tw:text-base-content/40">Матч</span>
+                      <span class="tw:text-sm tw:font-semibold tw:text-base-content/85">{{ forloop.counter }}</span>
+                    </div>
+
+                    <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:text-center tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
+                      <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
+                        {% if team == match.team_home %}
+                          <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">
+                            {% with team_name=match.team_home %}
+                              {% partial card-team-name %}
+                            {% endwith %}
+                          </span>
+                        {% else %}
+                          <span class="tw:min-w-0 tw:truncate tw:text-sm">
+                            {% with team_name=match.team_home %}
+                              {% partial card-team-name %}
+                            {% endwith %}
+                          </span>
+                        {% endif %}
+                        <img src="{{ match.team_home.logo.url }}"
+                             alt="{{ match.team_home.title }}"
+                             class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+                             width="24"
+                             height="24">
+                      </div>
+
+                      <span class="tw:w-[72px] tw:justify-self-center tw:rounded-full tw:bg-primary/10 tw:px-2.5 tw:py-1 tw:text-center tw:text-sm tw:font-bold tw:text-primary tw:sm:w-[84px]">
+                        {% if not match.is_played %}
+                          vs
+                        {% else %}
+                          {{ match.score_home }} : {{ match.score_guest }}
+                        {% endif %}
+                      </span>
+
+                      <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-start tw:gap-1.5 tw:sm:gap-2">
+                        <img src="{{ match.team_guest.logo.url }}"
+                             alt="{{ match.team_guest.title }}"
+                             class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
+                             width="24"
+                             height="24">
+                        {% if team == match.team_guest %}
+                          <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">
+                            {% with team_name=match.team_guest %}
+                              {% partial card-team-name %}
+                            {% endwith %}
+                          </span>
+                        {% else %}
+                          <span class="tw:min-w-0 tw:truncate tw:text-sm">
+                            {% with team_name=match.team_guest %}
+                              {% partial card-team-name %}
+                            {% endwith %}
+                          </span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="tw:flex tw:justify-end">
+                      {% if match.is_played %}
+                        {% if team == match.team_home %}
+                          {% if match.score_home > match.score_guest %}
+                            <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
+                          {% elif match.score_home < match.score_guest %}
+                            <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
+                          {% else %}
+                            <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
+                          {% endif %}
+                        {% else %}
+                          {% if match.score_guest > match.score_home %}
+                            <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
+                          {% elif match.score_guest < match.score_home %}
+                            <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
+                          {% else %}
+                            <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
+                          {% endif %}
+                        {% endif %}
+                      {% endif %}
+                    </div>
+                  </a>
+                {% endwith %}
+              {% endfor %}
+            </div>
           </div>
-        </div>
-
-        <div class="tw:grid tw:min-w-0 tw:grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] tw:items-center tw:gap-2 tw:text-center tw:sm:grid-cols-[minmax(0,1fr)_84px_minmax(0,1fr)] tw:sm:gap-3">
-          <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-end tw:gap-1.5 tw:sm:gap-2">
-            {% if team == match.team_home %}
-              <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">{{ match.team_home.title }}</span>
-            {% else %}
-              <span class="tw:min-w-0 tw:truncate tw:text-sm tw:text-base-content/85">{{ match.team_home.title }}</span>
-            {% endif %}
-            <img src="{{ match.team_home.logo.url }}"
-                 alt="{{ match.team_home.title }}"
-                 class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
-                 width="24"
-                 height="24">
-          </div>
-
-          <span class="tw:w-[72px] tw:justify-self-center tw:rounded-full tw:bg-primary/10 tw:px-2.5 tw:py-1 tw:text-center tw:text-sm tw:font-bold tw:text-primary tw:sm:w-[84px]">
-            {% if not match.is_played %}
-              vs
-            {% else %}
-              {{ match.score_home }} : {{ match.score_guest }}
-            {% endif %}
-          </span>
-
-          <div class="tw:flex tw:min-w-0 tw:items-center tw:justify-start tw:gap-1.5 tw:sm:gap-2">
-            <img src="{{ match.team_guest.logo.url }}"
-                 alt="{{ match.team_guest.title }}"
-                 class="tw:size-5 tw:shrink-0 tw:object-contain tw:sm:size-6"
-                 width="24"
-                 height="24">
-            {% if team == match.team_guest %}
-              <span class="tw:min-w-0 tw:truncate tw:text-sm tw:font-bold tw:text-base-content">{{ match.team_guest.title }}</span>
-            {% else %}
-              <span class="tw:min-w-0 tw:truncate tw:text-sm tw:text-base-content/85">{{ match.team_guest.title }}</span>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="tw:flex tw:justify-end">
-          {% if match.is_played %}
-            {% if team == match.team_home %}
-              {% if match.score_home > match.score_guest %}
-                <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
-              {% elif match.score_home < match.score_guest %}
-                <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
-              {% else %}
-                <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
-              {% endif %}
-            {% else %}
-              {% if match.score_guest > match.score_home %}
-                <span class="tw:w-8 tw:badge tw:badge-success tw:badge-soft tw:font-semibold tw:text-[11px]">В</span>
-              {% elif match.score_guest < match.score_home %}
-                <span class="tw:w-8 tw:badge tw:badge-error tw:badge-soft tw:font-semibold tw:text-[11px]">П</span>
-              {% else %}
-                <span class="tw:w-8 tw:badge tw:badge-soft tw:font-semibold tw:text-[11px]">Н</span>
-              {% endif %}
-            {% endif %}
-          {% endif %}
-        </div>
-      </a>
+        {% endwith %}
+      {% else %}
+        {% with match=item.match %}
+          {% partial match-card %}
+        {% endwith %}
+      {% endif %}
     {% empty %}
       <div class="tw:flex tw:items-center tw:justify-center tw:rounded-xl tw:border tw:border-dashed tw:border-base-300 tw:bg-base-100 tw:px-4 tw:py-4 tw:text-sm tw:text-base-content/55">
         Матчей пока нет
