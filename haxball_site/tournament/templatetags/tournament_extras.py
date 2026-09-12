@@ -1068,7 +1068,7 @@ def team_seasons(team):
                                     'series__tour__stage',
                                     Prefetch('series__matches', queryset=Match.objects.order_by('id')),
                                 )
-                                .order_by('numb_tour', 'id'),
+                                .order_by('numb_tour__date_from', 'numb_tour__number', 'id'),
                                 to_attr='team_matches',
                             ),
                         )
@@ -1076,7 +1076,7 @@ def team_seasons(team):
                     ),
                 )
                 .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
-                .order_by('-id'),
+                .order_by('priority', 'id'),
                 to_attr='team_leagues',
             ),
         )
@@ -1211,7 +1211,7 @@ def player_seasons(player):
                                     player_cs=Coalesce(Subquery(cs_subquery, output_field=IntegerField()), 0),
                                     player_ogs=Coalesce(Subquery(ogs_subquery, output_field=IntegerField()), 0),
                                 )
-                                .order_by('numb_tour', 'id'),
+                                .order_by('numb_tour__date_from', 'numb_tour__number', 'id'),
                                 to_attr='player_matches',
                             ),
                         )
@@ -1219,7 +1219,7 @@ def player_seasons(player):
                     ),
                 )
                 .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
-                .order_by('-id'),
+                .order_by('priority', 'id'),
                 to_attr='player_leagues',
             ),
         )

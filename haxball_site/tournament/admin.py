@@ -900,12 +900,28 @@ class PlayOffStageAdmin(TournamentStageChildBase):
 
 @admin.register(League)
 class LeagueAdmin(PolymorphicInlineSupportMixin, UnfoldModelAdmin):
-    list_display = ('title', 'type', 'slug', 'priority', 'championship', 'created', 'logo')
+    list_display = (
+        'title',
+        'type',
+        'slug',
+        'championship',
+        'display_stages',
+        'created',
+        'priority',
+        'logo',
+    )
     list_filter = ('type', ('championship', RelatedDropdownFilter))
     list_filter_submit = True
     search_fields = ('title',)
     filter_horizontal = ('teams',)
     inlines = [PostponementSlotsInline, TournamentStageInline]
+
+    @display(description='Этапы', dropdown=True)
+    def display_stages(self, model):
+        return {
+            'title': model.stages.count(),
+            'items': [{'title': stage.stage_name} for stage in model.stages.all()],
+        }
 
 
 class GoalInline(UnfoldStackedInline):
