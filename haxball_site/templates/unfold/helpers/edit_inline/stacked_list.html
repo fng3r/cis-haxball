@@ -23,7 +23,7 @@
          {% if inline_admin_formset.opts.ordering_field %}data-ordering-field="{{ inline_admin_formset.opts.ordering_field }}" x-sort.ghost x-sort:config="{preventOnFilter: false, filter: '.template', onMove: moveRecords, onEnd: sortRecords}"{% endif %}>
 
       {% for inline_admin_form in inline_admin_formset %}
-        <div x-sort:item class="form-group has-[.delete:checked]:[&>.form-delete]:block relative
+        <div x-sort:item class="form-group has-[>_.form-row_.delete:checked]:[&>.form-delete]:block relative
           {% if nested_inline %}
             group/nested
           {% else %}
