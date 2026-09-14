@@ -1669,9 +1669,10 @@ class MatchInline(unfold_admin.StackedInline):
         return False
 
 
-class SeriesMatchInline(unfold_admin.StackedInline):
+class SeriesMatchInline(UnfoldTabularInline):
     model = Match
     extra = 0
+    show_title = False
     fields = (
         ('league', 'stage'),
         ('team_home', 'team_guest'),
@@ -1724,9 +1725,10 @@ class SeriesMatchInline(unfold_admin.StackedInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class MatchSeriesInline(unfold_admin.StackedInline):
+class MatchSeriesInline(UnfoldStackedInline):
     model = MatchSeries
     extra = 0
+    collapsible = False
     tab = True
     fields = (
         ('bracket_slot',),
