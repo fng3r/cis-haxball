@@ -38,6 +38,7 @@ from ..models import (
     Group,
     League,
     Match,
+    MatchSeries,
     Player,
     PlayerMatchStatistics,
     PlayerTransfer,
@@ -359,25 +360,10 @@ class BracketSlot:
     matches: Iterable[Match]
     stub: PlayoffBracketSlotStub
     label: str | None = None
+    series: MatchSeries | None = None
 
     def is_empty(self):
         return self.pair is None and self.stub is None
-
-
-@register.filter
-def pairs_in_tour(tour):
-    pairs = {}
-    for match in tour.tour_matches.all():
-        pair = frozenset((match.team_home, match.team_guest))
-        if pair not in pairs:
-            pairs[pair] = []
-        pairs[pair].append(match)
-
-    return {
-        # there's guaranteed to be at least one match per pair
-        (matches[0].team_home, matches[0].team_guest): matches
-        for pair, matches in sorted(pairs.items(), key=lambda x: min(m.id for m in x[1]))
-    }
 
 
 def get_slots_by_tours(tours):
@@ -403,26 +389,37 @@ def get_slots_by_tours(tours):
     return slots_by_tour.items()
 
 
+def _prefetch_tour_series(tour):
+    return list(
+        tour.series.select_related('team_home', 'team_guest').prefetch_related(
+            'tour__stage', Prefetch('matches', queryset=Match.objects.order_by('id'))
+        )
+    )
+
+
 def get_tour_slots(tour, tours):
-    pairs = pairs_in_tour(tour)
+    series_list = _prefetch_tour_series(tour)
+    for series in series_list:
+        series._prefetched_stage = series.tour.stage
     stubs = list(tour.stubs.all())
     slots_count = get_bracket_slots(tours)[tour.number - 1]
     slots = []
     for slot in range(1, slots_count + 1):
-        pair, matches = get_pair_in_slot(pairs, slot)
+        series = next((s for s in series_list if s.bracket_slot == slot), None)
+        pair = (series.team_home, series.team_guest) if series else None
+        matches = series.matches.all() if series else None
         stub = get_slot_stub(stubs, slot)
-        slots.append(BracketSlot(slot, pair, matches, stub))
+        slots.append(BracketSlot(slot, pair, matches, stub, series=series))
 
     return slots
 
 
-def get_pair_in_slot(pairs, slot):
-    for pair in pairs:
-        matches = pairs[pair]
-        if any(match.bracket_slot == slot for match in matches):
-            return pair, matches
-
-    return None, None
+@register.filter
+def tour_series(tour):
+    series_list = _prefetch_tour_series(tour)
+    for series in series_list:
+        series._prefetched_stage = series.tour.stage
+    return series_list
 
 
 def get_slot_stub(stubs, slot):
@@ -494,73 +491,7 @@ def is_match_winner(team, match):
     return match.is_win(team)
 
 
-@register.simple_tag
-def get_series_result(teams, matches, stage):
-    """Return series result if all matches are played and there is a winner."""
-    if not matches:
-        return None
-
-    if not all((match.is_played for match in matches)):
-        return None
-
-    team1, team2 = teams
-    series_score = get_series_score(team1, team2, matches, stage)
-    if series_score['team1_score'] == series_score['team2_score']:
-        return None
-
-    if series_score['team1_score'] > series_score['team2_score']:
-        winner, loser = team1, team2
-    else:
-        winner, loser = team2, team1
-
-    return {'winner': winner, 'loser': loser}
-
-
-@register.simple_tag
-def get_series_score(team1, team2, matches, stage):
-    """Calculate and return series score display based on winner_determinator."""
-    if not any(match.is_played for match in matches):
-        return None
-
-    team1_series_score = 0
-    team2_series_score = 0
-
-    for match in matches:
-        if not match.is_played:
-            continue
-
-        team1_score = team_score_in_match(team1, match)
-        team2_score = team_score_in_match(team2, match)
-
-        if team1_score is None or team2_score is None:
-            continue
-
-        winner_determinator = stage.winner_determinator
-        if winner_determinator == PlayOffStage.WinnerDeterminator.GOALS:
-            team1_series_score += team1_score
-            team2_series_score += team2_score
-        elif winner_determinator == PlayOffStage.WinnerDeterminator.MATCHES:
-            if team1_score > team2_score:
-                team1_series_score += 1
-            elif team2_score > team1_score:
-                team2_series_score += 1
-
-    return {'team1_score': team1_series_score, 'team2_score': team2_series_score}
-
-
 @register.filter
-def matches_by_bracket_slot(matches):
-    """Group matches by bracket_slot for playoff series display."""
-    slots = {}
-    for match in matches:
-        slot = match.bracket_slot
-        if slot not in slots:
-            slots[slot] = []
-        slots[slot].append(match)
-
-    return sorted(slots.items(), key=lambda x: x[0])
-
-
 @register.filter
 def tour_name(tour: TourNumber):
     if tour.name:
@@ -1125,9 +1056,19 @@ def team_seasons(team):
                             Prefetch(
                                 'matches',
                                 queryset=Match.objects.filter(Q(team_home=team) | Q(team_guest=team))
-                                .select_related('team_home', 'team_guest', 'numb_tour__league')
-                                .prefetch_related('numb_tour__stage')
-                                .order_by('numb_tour'),
+                                .select_related(
+                                    'team_home',
+                                    'team_guest',
+                                    'numb_tour__league',
+                                    'series__team_home',
+                                    'series__team_guest',
+                                )
+                                .prefetch_related(
+                                    'numb_tour__stage',
+                                    'series__tour__stage',
+                                    Prefetch('series__matches', queryset=Match.objects.order_by('id')),
+                                )
+                                .order_by('numb_tour__date_from', 'numb_tour__number', 'id'),
                                 to_attr='team_matches',
                             ),
                         )
@@ -1135,12 +1076,55 @@ def team_seasons(team):
                     ),
                 )
                 .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
-                .order_by('-id'),
+                .order_by('priority', 'id'),
                 to_attr='team_leagues',
             ),
         )
         .order_by('-number')
     )
+
+
+@register.filter
+def group_by_series(matches):
+    """Group matches into multi-match MatchSeries and standalone singles.
+
+    Expects matches to have series prefetched (select_related('series',
+    ...) plus 'series__matches' for match counting). Returns a list of
+    {'series': ..., 'matches': [...]} dicts for series with more than one
+    match and {'match': ...} dicts for everything else.
+    """
+    groups = []
+    current_series = None
+    current_matches = []
+
+    def flush():
+        nonlocal current_series, current_matches
+        if current_series is None:
+            return
+        series_matches = current_series.matches.all()
+        if len(series_matches) > 1:
+            groups.append({'series': current_series, 'matches': current_matches})
+        else:
+            groups.extend({'match': match} for match in current_matches)
+        current_series = None
+        current_matches = []
+
+    for match in matches:
+        series = match.series
+        if current_series is not None and series == current_series:
+            current_matches.append(match)
+        elif series is not None:
+            flush()
+            current_series = series
+            if not hasattr(series, '_prefetched_stage'):
+                series._prefetched_stage = series.tour.stage
+            current_matches = [match]
+        else:
+            flush()
+            groups.append({'match': match})
+
+    flush()
+    return groups
 
 
 @register.simple_tag
@@ -1200,8 +1184,11 @@ def player_seasons(player):
                                     is_played=True,
                                 )
                                 .select_related('team_home', 'team_guest', 'numb_tour__league')
+                                .select_related('series__team_home', 'series__team_guest')
                                 .prefetch_related(
                                     'numb_tour__stage',
+                                    'series__tour__stage',
+                                    Prefetch('series__matches', queryset=Match.objects.order_by('id')),
                                     'team_home_start',
                                     'team_guest_start',
                                     Prefetch(
@@ -1224,7 +1211,7 @@ def player_seasons(player):
                                     player_cs=Coalesce(Subquery(cs_subquery, output_field=IntegerField()), 0),
                                     player_ogs=Coalesce(Subquery(ogs_subquery, output_field=IntegerField()), 0),
                                 )
-                                .order_by('numb_tour'),
+                                .order_by('numb_tour__date_from', 'numb_tour__number', 'id'),
                                 to_attr='player_matches',
                             ),
                         )
@@ -1232,7 +1219,7 @@ def player_seasons(player):
                     ),
                 )
                 .annotate(has_multiple_stages=GreaterThan(Coalesce(Count('stages'), 0), 1))
-                .order_by('-id'),
+                .order_by('priority', 'id'),
                 to_attr='player_leagues',
             ),
         )

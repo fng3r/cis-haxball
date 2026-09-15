@@ -1,7 +1,7 @@
 {% load static %}
 {% load tournament_extras %}
 
-<div class="tw:bg-base-200">
+<div class="tw:bg-base-200 tw:rounded-b-lg">
   <div class="tw:flex tw:items-center tw:gap-2 tw:p-3">
     <div class="tw:avatar">
       <div class="tw:size-28 tw:rounded">
@@ -85,7 +85,7 @@
 
   <div class="tw:divider tw:mx-2 tw:my-0"></div>
 
-  <div class="tw:tabs tw:tabs-box tw:w-full tw:px-2 tw:pt-2" role="tablist">
+  <div class="tw:tabs tw:tabs-box tw:shadow-none tw:w-full tw:px-2 tw:pt-2" role="tablist">
     <input type="radio" id="player-stats-tab" name="player-profile-tabs" role="tab" aria-label="Статистика" class="tw:tab" checked />
     <div class="tw:tab-content">
       <div id="player-stats-panel" role="tabpanel" aria-labelledby="player-stats-tab">
@@ -94,7 +94,7 @@
     </div>
 
     <input type="radio" id="player-matches-tab" name="player-profile-tabs" role="tab" aria-label="Матчи" class="tw:tab" />
-    <div class="tw:tab-content tw:mt-2">
+    <div class="tw:tab-content tw:mt-2!">
       <div id="player-matches-panel" role="tabpanel" aria-labelledby="player-matches-tab">
         {% include 'tournament/player/partials/player_matches.html' %}
       </div>
