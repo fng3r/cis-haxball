@@ -27,7 +27,7 @@
         Кубок лиги<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
       </div>
       <ul tabindex="0"
-          class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+          class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:min-w-40 tw:shadow-sm">
         <li>
           <a href="{% url 'tournament:league' 's16-league-cup-pl' %}">Высшая лига</a>
         </li>
@@ -111,7 +111,7 @@
         Соцсети<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
       </div>
       <ul tabindex="0"
-          class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:min-w-40 tw:shadow-sm">
+          class="tw:dropdown-content tw:ml-4 tw:p-2 tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:min-w-40 tw:shadow-sm">
         <li>
           <a href="https://discord.gg/h6mgc4bTJh" target="_blank" class="tw:flex tw:items-center tw:gap-2">
             <img src="{% static 'img/ico/discord.PNG' %}" title="discord" width="20%">
@@ -163,13 +163,13 @@
           </svg>
         </div>
         <nav class="tw:dropdown-content tw:mt-1">
-          <ul tabindex="0" class="tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:w-40 tw:p-2 tw:shadow">
+          <ul tabindex="0" class="tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:w-40 tw:p-2 tw:shadow">
             <li>
               <div class="tw:dropdown tw:dropdown-right">
                 <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
                   Чемпионат<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                 </div>
-                <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
                   {% partial championship_dropdown_content %}
                 </ul>
               </div>
@@ -180,7 +180,7 @@
                 <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
                   Команды<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                 </div>
-                <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                <div tabindex="0" class="tw:w-[450px] tw:dropdown-content tw:ml-4 tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
                   {% teams_in_navbar %}
                 </div>
               </div>
@@ -191,7 +191,7 @@
                 <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
                   Турниры<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                 </div>
-                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
                   {% partial tournaments_dropdown_content %}
                 </ul>
               </div>
@@ -206,7 +206,7 @@
                 <div tabindex="0" class="tw:flex tw:gap-3! tw:items-center">
                   Рейтинг<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                 </div>
-                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
                   {% partial rating_dropdown_content %}
                 </ul>
               </div>
@@ -225,7 +225,7 @@
                 <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
                   Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                 </div>
-                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
                   {% partial media_dropdown_content %}
                 </ul>
               </div>
@@ -249,7 +249,7 @@
           <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
             Чемпионат<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
           </div>
-          <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+          <ul tabindex="0" class="tw:min-w-45 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
             {% partial championship_dropdown_content %}
           </ul>
         </div>
@@ -258,7 +258,7 @@
           <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
             Команды<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
           </div>
-          <div tabindex="0" class="tw:w-[650px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+          <div tabindex="0" class="tw:w-[650px] tw:dropdown-content tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
             {% teams_in_navbar %}
           </div>
         </div>
@@ -267,7 +267,7 @@
           <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
             Турниры<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
           </div>
-          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
             {% partial tournaments_dropdown_content %}
           </ul>
         </div>
@@ -278,7 +278,7 @@
           <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
             Рейтинг<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
           </div>
-          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
             {% partial rating_dropdown_content %}
           </ul>
         </div>
@@ -291,7 +291,7 @@
           <div tabindex="0" role="button" class="tw:btn tw:btn-ghost">
             Ещё<i class="fa fa-chevron-down" style="font-size: 10px;"></i>
           </div>
-          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+          <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
             <li>
               <a href="{% url 'core:admins' %}">Администрация</a>
             </li>
@@ -305,7 +305,7 @@
                 <div tabindex="0" role="button" class="tw:flex tw:gap-3! tw:items-center">
                   Медиа<i class="fa fa-chevron-right tw:pt-0.5" style="font-size: 10px;"></i>
                 </div>
-                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-1 tw:p-2 tw:shadow-sm">
+                <ul tabindex="0" class="tw:min-w-40 tw:dropdown-content tw:menu tw:bg-base-100 tw:rounded-box tw:z-10 tw:p-2 tw:shadow-sm">
                   {% partial media_dropdown_content %}
                 </ul>
               </div>
