@@ -51,13 +51,13 @@
                 <tr class="tw:bg-base-300!">
                   <th scope="col" class="tw:border-r tw:border-neutral-200/50">Команда</th>
                   {% for i in ''|rjust:league.get_postponement_slots.common_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Обычн. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:not-last:border-r tw:border-neutral-200/50">Обычн. {{ forloop.counter }}</th>
                   {% endfor %}
                   {% for i in ''|rjust:league.get_postponement_slots.emergency_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Экстр. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:not-last:border-r tw:border-neutral-200/50">Экстр. {{ forloop.counter }}</th>
                   {% endfor %}
                   {% for i in ''|rjust:league.get_postponement_slots.extra_count %}
-                    <th scope="col" class="tw:border-r tw:border-neutral-200/50">Платн. {{ forloop.counter }}</th>
+                    <th scope="col" class="tw:not-last:border-r tw:border-neutral-200/50">Платн. {{ forloop.counter }}</th>
                   {% endfor %}
                 </tr>
               </thead>
@@ -70,7 +70,7 @@
                       <a href="{{ team.get_absolute_url }}" class="tw:link tw:link-hover">{{ team.title }}</a>
                     </td>
                     {% for postponement in team|postponements_in_league:league %}
-                      <td class="tw:h-20 tw:p-1 tw:border-r tw:border-neutral-200/50 tw:text-sm">
+                      <td class="tw:h-20 tw:p-1 tw:not-last:border-r tw:border-neutral-200/50 tw:text-sm">
                         {% if postponement is not None %}
                           {% with match=postponement.match %}
                             <div class="{% if postponement.match.is_played %}tw:line-through{% endif %}">

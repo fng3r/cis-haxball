@@ -16,7 +16,7 @@
           </div>
         </th>
       {% endfor %}
-      <th scope="col" class="tw:bg-base-300 tw:text-center!">Итого</th>
+      <th scope="col" class="tw:bg-base-300 tw:text-center! tw:border-neutral-200">Итого</th>
     </tr>
   </thead>
 
@@ -78,7 +78,7 @@
           </td>
         {% endfor %}
 
-        <td>
+        <td class="tw:border-neutral-200">
           <div>
             <span style="font-weight: 700">{{ rating_entry.total_points|floatformat:2 }}</span>
           </div>
