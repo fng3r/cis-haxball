@@ -27,10 +27,10 @@
           <div class="tw:max-h-[700px] tw:overflow-y-auto">
             <table class="tw:table tw:table-pin-rows">
               <thead>
-                <tr>
+                <tr class="tw:bg-base-300">
                   {% for host in active_hosts %}
                     <th width="{{ active_hosts.count|cols_span }}%"
-                        class="tw:text-center! tw:text-lg tw:not-last:border-r tw:not-last:border-neutral-200">
+                        class="tw:text-center! tw:text-lg tw:not-last:border-r tw:border-neutral-200/50">
                       <span class="tw:text-wrap!">
                         <i class="fa fa-trophy tw:text-warning tw:align-middle" aria-hidden="true"></i>
                         {{ host.name }}
@@ -50,7 +50,7 @@
 
                   <tr>
                     {% for host in active_hosts %}
-                      <td class="tw:p-0 tw:not-last:border-r tw:not-last:border-neutral-200" style="vertical-align: initial;">
+                      <td class="tw:p-0 tw:not-last:border-r tw:border-neutral-200/50" style="vertical-align: initial;">
                         <div class="tw:flex tw:flex-col">
                           {% for res in reservations %}
                             {% if res.host == host and res.time_date|date_equal:match_day %}
