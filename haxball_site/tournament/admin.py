@@ -1104,7 +1104,7 @@ class MatchAdmin(UnfoldModelAdmin):
         },
     }
 
-    readonly_fields = ('series',)
+    raw_id_fields = ('series',)
     exclude = ('bracket_slot',)
     list_display = (
         'league',
