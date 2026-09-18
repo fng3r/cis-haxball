@@ -32,7 +32,6 @@ from haxball_site.admin import UnfoldChainedSelect, UnfoldModelAdmin, UnfoldStac
 
 from .forms import ShortDurationField
 from .models import (
-    AchievementCategory,
     Achievements,
     Award,
     AwardCampaign,
@@ -62,7 +61,6 @@ from .models import (
     MedalCategory,
     MedalType,
     Nation,
-    OtherEvents,
     Player,
     PlayerMatchStatistics,
     PlayerMedal,
@@ -95,67 +93,6 @@ class FreeAgentAdmin(UnfoldModelAdmin):
     list_filter = ('is_active',)
     search_fields = ('player__username',)
     ordering = ('-created',)
-
-
-@admin.register(AchievementCategory)
-class AchievementCategoryAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'title', 'description', 'order')
-
-
-@admin.register(Achievements)
-class AchievementsAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'position_number', 'display_medal', 'category')
-    list_filter = ('category', ('player', AutocompleteSelectFilter))
-    list_filter_submit = True
-    list_filter_sheet = False
-    filter_horizontal = ('player',)
-    search_fields = (
-        'title__icontains',
-        'description__icontains',
-    )
-
-    @display(description='Медаль', header=True)
-    def display_medal(self, model):
-        return [
-            model.title,
-            model.description,
-            None,
-            {
-                'path': model.image.url,
-                'squared': False,
-                'borderless': True,
-                'width': 48,
-                'height': 48,
-            },
-        ]
-
-
-@admin.register(TeamAchievement)
-class TeamAchievementAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'season', 'position_number', 'display_medal', 'players_raw_list')
-    list_filter = (('season', RelatedDropdownFilter), ('team', RelatedDropdownFilter))
-    list_filter_submit = True
-    autocomplete_fields = ('team',)
-    search_fields = (
-        'title__icontains',
-        'description__icontains',
-    )
-    ordering = ('-season__number', 'position_number')
-
-    @display(description='Медаль', header=True)
-    def display_medal(self, model):
-        return [
-            model.title,
-            model.description,
-            None,
-            {
-                'path': model.image.url,
-                'squared': False,
-                'borderless': True,
-                'width': 48,
-                'height': 48,
-            },
-        ]
 
 
 class DerivedCodeCollisionAdminForm(forms.ModelForm):
@@ -1039,27 +976,6 @@ class DisqualificationInline(UnfoldStackedInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class EventInline(UnfoldStackedInline):
-    model = OtherEvents
-    verbose_name = 'Cобытие [obsolete]'
-    verbose_name_plural = 'Cобытия [obsolete]'
-    extra = 0
-    tab = True
-    show_count = True
-    can_delete = False
-    readonly_fields = ('team', 'author', 'time_min', 'time_sec', 'event', 'card_reason')
-
-    fields = (
-        ('team', 'author'),
-        ('time_min', 'time_sec'),
-        ('event',),
-        ('card_reason',),
-    )
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-
 class MatchResultInline(UnfoldTabularInline):
     model = MatchResult
     readonly_fields = ['winner']
@@ -1234,7 +1150,6 @@ class MatchAdmin(UnfoldModelAdmin):
         CardInline,
         DisqualificationInline,
         PostponementInline,
-        EventInline,
     ]
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -1577,43 +1492,6 @@ class SubstitutionAdmin(UnfoldModelAdmin):
             .select_related(
                 'team', 'player_out', 'player_in', 'match__team_home', 'match__team_guest', 'match__numb_tour'
             )
-        )
-
-
-@admin.register(OtherEvents)
-class OtherEventsAdmin(UnfoldModelAdmin):
-    list_display = (
-        'id',
-        'event',
-        'match',
-        'author',
-        'team',
-    )
-    ordering = ('-id',)
-    raw_id_fields = ('match',)
-    list_filter = (
-        ('event', MultipleChoicesDropdownFilter),
-        ('team', RelatedDropdownFilter),
-        ('author', AutocompleteSelectFilter),
-        ('match__league__championship', RelatedDropdownFilter),
-        ('match__league', RelatedDropdownFilter),
-        ('match__id', MatchIdFilter),
-    )
-    list_filter_submit = True
-    list_filter_sheet = False
-    readonly_fields = ('match', 'team', 'author', 'time_min', 'time_sec', 'event', 'card_reason')
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .select_related('team', 'author', 'match__team_home', 'match__team_guest', 'match__numb_tour')
         )
 
 
