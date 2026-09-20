@@ -3,10 +3,11 @@
 {% partialdef team-list-item %}
   <div class="tw:flex tw:justify-start tw:gap-x-1.5">
     {% thumbnail team.logo "25x25" format="PNG" as im %}
-      <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1 tw:size-6">
+      <img src="{{ im.url }}" alt="{{ team.title }}" class="tw:ml-1 tw:size-6 tw:object-contain">
     {% endthumbnail %}
 
-    <a href="{{ team.get_absolute_url }}" class="tw:font-semibold tw:link tw:link-hover tw:link-primary tw:text-base">{{ team.title|truncatechars:18 }}</a>
+    <a href="{{ team.get_absolute_url }}"
+       class="tw:font-semibold tw:link tw:link-hover tw:link-primary tw:text-base tw:truncate">{{ team.title }}</a>
   </div>
 {% endpartialdef %}
 
