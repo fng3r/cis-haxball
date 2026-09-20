@@ -111,18 +111,15 @@ def all_time_squad_stats(team):
     return get_team_squad_stats(team, for_current_season=False)
 
 
-def get_team_squad_stats(team, for_current_season=False, season=None, tournament=None):
-    if tournament:
-        season = tournament.championship
-
+def get_team_squad_stats(team, for_current_season=False, season=None, tournament_type=None):
     if not season and for_current_season:
         season = Season.objects.filter(is_active=True).first()
-    tournament_condition = Q(match__league=tournament) if tournament else Q()
+    tournament_condition = Q(match__league__type=tournament_type) if tournament_type else Q()
     season_condition = Q(match__league__championship=season) if season else Q()
     stats_condition = tournament_condition & season_condition
 
     team_players = get_team_squad(team, for_current_season, season)
-    players_matches = {pl: get_player_matches(pl, team, season, tournament) for pl in team_players}
+    players_matches = {pl: get_player_matches(pl, team, season, tournament_type) for pl in team_players}
 
     goals_subquery = (
         Goal.objects.filter(stats_condition, team=team, author=OuterRef('id'))
@@ -205,7 +202,7 @@ def get_team_squad_stats(team, for_current_season=False, season=None, tournament
     for player in players_stats:
         player.__setattr__('matches_c', players_matches[player])
 
-    if not for_current_season and (season is None or tournament is not None):
+    if not for_current_season and (season is None or tournament_type is not None):
         players_stats = list(filter(lambda stats: stats.matches_c > 0, players_stats))
 
     return sorted(players_stats, key=lambda player: player.matches_c, reverse=True)
@@ -222,8 +219,8 @@ def get_team_squad(team, current=False, season=None):
     )
 
 
-def get_player_matches(player, team, season=None, tournament=None):
-    tournament_condition = Q(league=tournament) if tournament else Q()
+def get_player_matches(player, team, season=None, tournament_type=None):
+    tournament_condition = Q(league__type=tournament_type) if tournament_type else Q()
     season_condition = Q(league__championship=season) if season else Q()
 
     return PlayerMatchStatistics.objects.filter(

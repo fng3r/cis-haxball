@@ -23,9 +23,9 @@
               hx-include="#team-squad-stats-filters"
               hx-target="#team-squad-stats-panel"
               hx-swap="outerHTML">
-        <option value {% if not selected_tournament %}selected{% endif %}>Все</option>
-        {% for tournament in tournaments %}
-          <option value="{{ tournament.id }}" {% if selected_tournament.id == tournament.id %}selected{% endif %}>{{ tournament.title }}</option>
+        <option value {% if not selected_tournament_type %}selected{% endif %}>Все</option>
+        {% for tournament_value, tournament_label in tournament_types %}
+          <option value="{{ tournament_value }}" {% if selected_tournament_type == tournament_value %}selected{% endif %}>{{ tournament_label }}</option>
         {% endfor %}
       </select>
     </fieldset>
