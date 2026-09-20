@@ -1202,12 +1202,13 @@ class SeriesMatchesInline(UnfoldStackedInline):
 @admin.register(MatchSeries)
 class MatchSeriesAdmin(UnfoldModelAdmin):
     list_display = (
-        'tour',
         'league',
+        'tour',
+        'display_bracket',
         'bracket_slot',
         'display_team_home',
         'display_team_guest',
-        'matches_count',
+        'display_matches_count',
     )
     list_filter = (
         ('tour__league', RelatedDropdownFilter),
@@ -1251,8 +1252,12 @@ class MatchSeriesAdmin(UnfoldModelAdmin):
             },
         ]
 
-    @display(description='Матчей')
-    def matches_count(self, model):
+    @display(description='Сетка')
+    def display_bracket(self, model):
+        return model.tour.get_bracket_display()
+
+    @display(description='Кол-во матчей')
+    def display_matches_count(self, model):
         return model.matches.count()
 
     def get_queryset(self, request):
