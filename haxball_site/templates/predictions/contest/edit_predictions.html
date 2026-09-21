@@ -55,9 +55,28 @@
                   </div>
                 </div>
 
-                {% if match.is_played %}
-                  <div class="tw:badge tw:badge-success tw:badge-sm">Результат: {{ match.score_home }}:{{ match.score_guest }}</div>
-                {% endif %}
+                <div class="tw:flex tw:items-center tw:gap-2">
+                  {% if not uses_coefficients %}
+                    <label class="tw:flex tw:items-center tw:gap-1 tw:cursor-pointer" x-show="hasPrediction">
+                      <input type="checkbox"
+                             name="special_{{ match.id }}"
+                             class="tw:checkbox tw:checkbox-warning tw:checkbox-sm tw:rounded tw:peer"
+                             x-model="specials['{{ match.id }}']"
+                             :disabled="!hasPrediction || (Object.values(specials).filter(Boolean).length >= 2 && !specials['{{ match.id }}'])">
+                      <i class="fa fa-star tw:text-xs tw:text-warning tw:peer-disabled:opacity-50"></i>
+                    </label>
+                  {% endif %}
+
+                  <button type="button"
+                    class="tw:ml-2 tw:btn tw:btn-error tw:btn-xs"
+                    x-show="hasPrediction"
+                    {# djlint:off #}
+                        @click="const radios = $el.closest('[data-prediction-block]').querySelectorAll('input[type=radio]'); radios.forEach(r => r.checked = false); hasPrediction = false; {% if not uses_coefficients %}specials['{{ match.id }}'] = false;{% endif %}"
+                    {# djlint:on #}
+                    title="Очистить прогноз">
+                    <i class="fa fa-trash tw:text-xs"></i>
+                  </button>
+                </div>
               </div>
 
               {% with existing_prediction=existing_predictions|get_item:match.id %}
@@ -82,7 +101,7 @@
                         {% with coefficients=match_coefficients|get_item:match.id %}
                           {% for value, label in prediction_outcome_choices %}
                             {% with coefficient=coefficients|get_coefficient:value %}
-                              <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
+                              <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
                                      title="{{ label }}{% if coefficient %} — коэффициент {{ coefficient }}{% endif %}">
                                 <input type="radio"
                                        name="prediction_{{ match.id }}"
@@ -106,7 +125,7 @@
                               <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Форы</span>
                               <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
                                 {% for hcp in match_handicaps_list %}
-                                  <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
+                                  <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
                                          title="{{ hcp.display_label }} — коэффициент {{ hcp.coefficient }}">
                                     <input type="radio"
                                            name="prediction_{{ match.id }}"
@@ -123,29 +142,6 @@
                           {% endif %}
                         {% endwith %}
                       {% endif %}
-
-                      <div class="tw:flex tw:items-center tw:gap-2">
-                        {% if not uses_coefficients %}
-                          <label class="tw:flex tw:items-center tw:gap-1 tw:cursor-pointer" x-show="hasPrediction">
-                            <input type="checkbox"
-                                   name="special_{{ match.id }}"
-                                   class="tw:checkbox tw:checkbox-warning tw:checkbox-sm tw:rounded tw:peer"
-                                   x-model="specials['{{ match.id }}']"
-                                   :disabled="!hasPrediction || (Object.values(specials).filter(Boolean).length >= 2 && !specials['{{ match.id }}'])">
-                            <i class="fa fa-star tw:text-xs tw:text-warning tw:peer-disabled:opacity-50"></i>
-                          </label>
-                        {% endif %}
-
-                        <button type="button"
-                          class="tw:ml-2 tw:btn tw:btn-error tw:btn-xs"
-                          x-show="hasPrediction"
-                          {# djlint:off #}
-                              @click="const radios = $el.closest('[data-prediction-block]').querySelectorAll('input[type=radio]'); radios.forEach(r => r.checked = false); hasPrediction = false; {% if not uses_coefficients %}specials['{{ match.id }}'] = false;{% endif %}"
-                          {# djlint:on #}
-                          title="Очистить прогноз">
-                          <i class="fa fa-trash tw:text-xs"></i>
-                        </button>
-                      </div>
                     </div>
                   {% endif %}
                 {% endwith %}
