@@ -17,7 +17,7 @@
         {% if selected_tournament.league.championship.number == 25 %}
           <div class="tw:alert tw:alert-warning">
             <i class="fa fa-exclamation-triangle"></i>
-            <span>Прогнозы на 1 тур принимаются в тестовом режиме и не будут учитываться при расчете итогого количества очков участников</span>
+            <span>Прогнозы на 1 тур принимаются в тестовом режиме и не будут учитываться при расчете итового количества очков участников</span>
           </div>
         {% endif %}
         <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }"
