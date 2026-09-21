@@ -21,6 +21,7 @@
     {% if matches %}
       <div class="tw:space-y-4"
         {# djlint:off #}
+        {% if not uses_coefficients %}
            x-data="{ specials: {} }"
            x-init="
                    {% for match in matches %}
@@ -31,6 +32,7 @@
                      {% endwith %}
                    {% endfor %}
                   "
+        {% endif %}
         {# djlint:on #}
       >
         {% for match in matches %}
@@ -58,56 +60,75 @@
                 {% endif %}
               </div>
 
-              <div class="tw:flex tw:items-center tw:gap-3">
-                <label class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Ваш прогноз:</label>
-
-                {% with existing_prediction=existing_predictions|get_item:match.id %}
-                  <div class="tw:flex tw:gap-2" x-data="{ hasPrediction: {{ existing_prediction|yesno:'true,false' }} }">
-                    <div class="tw:join">
-                      <input type="radio"
-                             name="prediction_{{ match.id }}"
-                             value="HW"
-                             aria-label="П1"
-                             class="tw:join-item tw:btn tw:btn-xs tw:w-8"
-                             {% if existing_prediction.predicted_result == 'HW' %}checked{% endif %}
-                             @change="hasPrediction = true">
-
-                      <input type="radio"
-                             name="prediction_{{ match.id }}"
-                             value="D"
-                             aria-label="X"
-                             class="tw:join-item tw:btn tw:btn-xs tw:w-8"
-                             {% if existing_prediction.predicted_result == 'D' %}checked{% endif %}
-                             @change="hasPrediction = true">
-
-                      <input type="radio"
-                             name="prediction_{{ match.id }}"
-                             value="AW"
-                             aria-label="П2"
-                             class="tw:join-item tw:btn tw:btn-xs tw:w-8"
-                             {% if existing_prediction.predicted_result == 'AW' %}checked{% endif %}
-                             @change="hasPrediction = true">
+              {% with existing_prediction=existing_predictions|get_item:match.id %}
+                {% if uses_coefficients and not match_coefficients|get_item:match.id %}
+                  <div class="tw:flex tw:items-center tw:gap-2">
+                    <span class="tw:label tw:text-base-content/70 tw:font-bold tw:text-sm">Ваш прогноз:</span>
+                    <span class="tw:badge tw:badge-warning tw:badge-sm">
+                      <i class="fa fa-exclamation-triangle tw:mr-1"></i>
+                      Нет коэффициентов
+                    </span>
+                  </div>
+                {% else %}
+                  <div class="tw:flex tw:flex-col tw:gap-1.5"
+                       {# djlint:off #}
+                       x-data="{ hasPrediction: {{ existing_prediction|yesno:'true,false' }} }"
+                       data-prediction-block
+                       {# djlint:on #}
+                  >
+                    <div class="tw:flex tw:items-center tw:gap-2">
+                      <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm tw:py-0">Ваш прогноз:</span>
                     </div>
 
-                    <label class="tw:flex tw:items-center tw:gap-1 tw:ml-2 tw:cursor-pointer" x-show="hasPrediction">
-                      <input type="checkbox"
-                             name="special_{{ match.id }}"
-                             class="tw:checkbox tw:checkbox-warning tw:checkbox-sm tw:rounded tw:peer"
-                             x-model="specials['{{ match.id }}']"
-                             :disabled="!hasPrediction || (Object.values(specials).filter(Boolean).length >= 2 && !specials['{{ match.id }}'])">
-                      <i class="fa fa-star tw:text-xs tw:text-warning tw:peer-disabled:opacity-50"></i>
-                    </label>
+                    <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
+                      {% with coefficients=match_coefficients|get_item:match.id %}
+                        {% for value, label in prediction_outcome_choices %}
+                          {% with coefficient=coefficients|get_coefficient:value %}
+                            <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
+                                   title="{{ label }}{% if coefficient %} — коэффициент {{ coefficient }}{% endif %}">
+                              <input type="radio"
+                                     name="prediction_{{ match.id }}"
+                                     value="{{ value }}"
+                                     {# djlint:off #}
+                                     class="tw:peer tw:sr-only"
+                                     {% if existing_prediction.predicted_result == value %}checked{% endif %}
+                                     @change="hasPrediction = true">
+                              {# djlint:on #}
+                              <span class="tw:text-sm tw:font-bold tw:leading-none tw:normal-case">{{ label }}</span>
+                              {% if coefficient %}
+                                <span class="tw:text-2xs tw:leading-none tw:opacity-80">{{ coefficient }}</span>
+                              {% endif %}
+                            </label>
+                          {% endwith %}
+                        {% endfor %}
+                      {% endwith %}
+                    </div>
 
-                    <button type="button"
-                            class="tw:ml-2 tw:btn tw:btn-error tw:btn-xs"
-                            x-show="hasPrediction"
-                            @click="const radios = $el.parentElement.querySelectorAll('input[type=radio]'); radios.forEach(r => r.checked = false); hasPrediction = false; specials['{{ match.id }}'] = false;"
-                            title="Очистить прогноз">
-                      <i class="fa fa-trash tw:text-xs"></i>
-                    </button>
+                    <div class="tw:flex tw:items-center tw:gap-2">
+                      {% if not uses_coefficients %}
+                        <label class="tw:flex tw:items-center tw:gap-1 tw:cursor-pointer" x-show="hasPrediction">
+                          <input type="checkbox"
+                                 name="special_{{ match.id }}"
+                                 class="tw:checkbox tw:checkbox-warning tw:checkbox-sm tw:rounded tw:peer"
+                                 x-model="specials['{{ match.id }}']"
+                                 :disabled="!hasPrediction || (Object.values(specials).filter(Boolean).length >= 2 && !specials['{{ match.id }}'])">
+                          <i class="fa fa-star tw:text-xs tw:text-warning tw:peer-disabled:opacity-50"></i>
+                        </label>
+                      {% endif %}
+
+                      <button type="button"
+                              class="tw:ml-2 tw:btn tw:btn-error tw:btn-xs"
+                              x-show="hasPrediction"
+                              {# djlint:off #}
+                              @click="const radios = $el.closest('[data-prediction-block]').querySelectorAll('input[type=radio]'); radios.forEach(r => r.checked = false); hasPrediction = false; {% if not uses_coefficients %}specials['{{ match.id }}'] = false;{% endif %}"
+                              {# djlint:on #}
+                              title="Очистить прогноз">
+                        <i class="fa fa-trash tw:text-xs"></i>
+                      </button>
+                    </div>
                   </div>
-                {% endwith %}
-              </div>
+                {% endif %}
+              {% endwith %}
             </div>
           </div>
         {% endfor %}

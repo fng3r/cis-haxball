@@ -86,6 +86,8 @@ from .models import (
     TourNumber,
 )
 
+from predictions.models import MatchPredictionCoefficients
+
 
 @admin.register(FreeAgent)
 class FreeAgentAdmin(UnfoldModelAdmin):
@@ -982,6 +984,13 @@ class MatchResultInline(UnfoldTabularInline):
     can_delete = False
 
 
+class PredictionCoefficientsInline(UnfoldTabularInline):
+    model = MatchPredictionCoefficients
+    fk_name = 'match'
+    extra = 0
+    fields = ('home_win', 'home_win_or_draw', 'draw', 'away_win_or_draw', 'away_win')
+
+
 class PostponementInline(UnfoldStackedInline):
     model = Postponement
     extra = 0
@@ -1144,6 +1153,7 @@ class MatchAdmin(UnfoldModelAdmin):
     )
     inlines = [
         MatchResultInline,
+        PredictionCoefficientsInline,
         GoalInline,
         SubstitutionInline,
         CleanSheetInline,

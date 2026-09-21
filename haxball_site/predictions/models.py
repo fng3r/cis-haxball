@@ -8,18 +8,49 @@ from tournament.models import League, Match, Team, TourNumber
 class PredictionsContestTournament(models.Model):
     """Tournament that is available for predictions contest"""
 
+    class ScoringMethod(models.TextChoices):
+        LEGACY = 'legacy', 'Классические очки'
+        COEFFICIENT = 'coefficient', 'Коэффициенты'
+
     league = models.OneToOneField(
         League, verbose_name='Турнир', on_delete=models.CASCADE, related_name='predictions_contest_tournament'
     )
     is_active = models.BooleanField('Активен для прогнозов', default=True)
+    scoring_method = models.CharField(
+        'Формат начисления очков',
+        max_length=16,
+        choices=ScoringMethod.choices,
+        default=ScoringMethod.LEGACY,
+        help_text='"Классические очки" — прежний формат (1/3 очка, особые матчи). '
+        '"Коэффициенты" — 5 исходов матча с коэффициентами, очки = номинальные × коэффициент',
+    )
+    nominal_points = models.DecimalField(
+        'Номинальные очки',
+        default=100,
+        max_digits=5,
+        decimal_places=2,
+        help_text='Очки за верный прогноз до умножения на коэффициент (формат "Коэффициенты")',
+    )
     points_for_win_prediction = models.DecimalField(
-        'Очки за верный прогноз победителя', default=1, max_digits=5, decimal_places=2
+        'Очки за верный прогноз победителя',
+        default=1,
+        max_digits=5,
+        decimal_places=2,
+        help_text='Для классического формата',
     )
     points_for_draw_prediction = models.DecimalField(
-        'Очки за верный прогноз ничьей', default=3, max_digits=5, decimal_places=2
+        'Очки за верный прогноз ничьей',
+        default=3,
+        max_digits=5,
+        decimal_places=2,
+        help_text='Для классического формата',
     )
     special_match_points_delta = models.DecimalField(
-        'Бонус/штраф за особый прогноз', default=0.5, max_digits=5, decimal_places=2
+        'Бонус/штраф за особый прогноз',
+        default=0.5,
+        max_digits=5,
+        decimal_places=2,
+        help_text='Для классического формата',
     )
 
     def __str__(self):
@@ -79,14 +110,16 @@ class Prediction(models.Model):
 
     class Result(models.TextChoices):
         HOME_WIN = 'HW', 'П1'
+        HOME_WIN_OR_DRAW = 'HWD', '1Х'
         DRAW = 'D', 'X'
+        AWAY_WIN_OR_DRAW = 'AWD', 'Х2'
         AWAY_WIN = 'AW', 'П2'
 
     submission = models.ForeignKey(
         PredictionSubmission, verbose_name='Отправка', on_delete=models.CASCADE, related_name='predictions'
     )
     match = models.ForeignKey(Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='predictions')
-    predicted_result = models.CharField('Предсказанный результат', max_length=2, choices=Result.choices)
+    predicted_result = models.CharField('Предсказанный результат', max_length=3, choices=Result.choices)
     is_special = models.BooleanField('Особый прогноз', default=False)
 
     class Meta:
@@ -96,6 +129,48 @@ class Prediction(models.Model):
 
     def __str__(self):
         return f'{self.submission.user.username}: {self.match} - {self.get_predicted_result_display()}'
+
+
+class MatchPredictionCoefficients(models.Model):
+    """Coefficients of prediction outcomes for a match.
+
+    A match is available for predictions in the "coefficients" format only
+    when this row exists for it.
+    """
+
+    match = models.OneToOneField(
+        Match,
+        verbose_name='Матч',
+        on_delete=models.CASCADE,
+        related_name='prediction_coefficients',
+    )
+    home_win = models.DecimalField('Коэффициент П1', max_digits=5, decimal_places=2)
+    home_win_or_draw = models.DecimalField('Коэффициент 1Х', max_digits=5, decimal_places=2)
+    draw = models.DecimalField('Коэффициент Х', max_digits=5, decimal_places=2)
+    away_win_or_draw = models.DecimalField('Коэффициент Х2', max_digits=5, decimal_places=2)
+    away_win = models.DecimalField('Коэффициент П2', max_digits=5, decimal_places=2)
+
+    COEFFICIENT_FIELD_BY_RESULT = {
+        Prediction.Result.HOME_WIN: 'home_win',
+        Prediction.Result.HOME_WIN_OR_DRAW: 'home_win_or_draw',
+        Prediction.Result.DRAW: 'draw',
+        Prediction.Result.AWAY_WIN_OR_DRAW: 'away_win_or_draw',
+        Prediction.Result.AWAY_WIN: 'away_win',
+    }
+
+    def coefficient_for(self, result_value):
+        """Return Decimal coefficient for a Prediction.Result value or None."""
+        field_name = self.COEFFICIENT_FIELD_BY_RESULT.get(result_value)
+        if field_name is None:
+            return None
+        return getattr(self, field_name)
+
+    def __str__(self):
+        return f'Коэффициенты: {self.match.team_home.short_title} - {self.match.team_guest.short_title}'
+
+    class Meta:
+        verbose_name = 'Коэффициенты прогноза на матч'
+        verbose_name_plural = 'Коэффициенты прогнозов на матчи'
 
 
 class PreseasonPredictionSubmission(models.Model):

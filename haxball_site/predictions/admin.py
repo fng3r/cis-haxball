@@ -4,8 +4,10 @@ from unfold.admin import display
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
+from tournament.models import Match
 
 from .models import (
+    MatchPredictionCoefficients,
     Prediction,
     PredictionsContestTournament,
     PredictionSubmission,
@@ -27,12 +29,16 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
     list_display = [
         'league',
         'is_active',
+        'scoring_method',
+        'nominal_points',
         'points_for_win_prediction',
         'points_for_draw_prediction',
         'special_match_points_delta',
     ]
     list_editable = [
         'is_active',
+        'scoring_method',
+        'nominal_points',
         'points_for_win_prediction',
         'points_for_draw_prediction',
         'special_match_points_delta',
@@ -41,6 +47,48 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
     list_filter_sheet = False
     search_fields = ['league__title']
     ordering = ['-id']
+
+
+@admin.register(MatchPredictionCoefficients)
+class MatchPredictionCoefficientsAdmin(UnfoldModelAdmin):
+    list_display = [
+        'match',
+        'home_win',
+        'home_win_or_draw',
+        'draw',
+        'away_win_or_draw',
+        'away_win',
+    ]
+    list_filter = [
+        ('match__league', RelatedDropdownFilter),
+        ('match__numb_tour', RelatedDropdownFilter),
+    ]
+    list_filter_sheet = False
+    list_filter_submit = True
+    search_fields = ['match__team_home__title', 'match__team_guest__title']
+    ordering = ['-id']
+
+    fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'match',
+                    ('home_win', 'home_win_or_draw'),
+                    ('draw',),
+                    ('away_win_or_draw', 'away_win'),
+                )
+            },
+        ),
+    )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'match':
+            coefficient_tournament_leagues = PredictionsContestTournament.objects.filter(
+                scoring_method=PredictionsContestTournament.ScoringMethod.COEFFICIENT
+            ).values_list('league_id', flat=True)
+            kwargs['queryset'] = Match.objects.filter(league_id__in=coefficient_tournament_leagues)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(PredictionSubmission)

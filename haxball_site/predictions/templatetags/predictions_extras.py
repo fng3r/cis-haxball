@@ -18,6 +18,14 @@ def get_item(dictionary, key):
 
 
 @register.filter
+def get_coefficient(coefficients, result_value):
+    """Get the coefficient for a given outcome value from MatchPredictionCoefficients."""
+    if coefficients is None:
+        return None
+    return coefficients.coefficient_for(result_value)
+
+
+@register.filter
 def is_open_for_predictions(tour):
     """Template filter to check if a tour is open for predictions"""
     return utils.is_tour_open_for_predictions(tour)

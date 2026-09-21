@@ -32,7 +32,7 @@
             {% for tour in selected_tournament.league.tours.all %}
               <div x-data="{isActual: {{ tour|is_tour_actual|yesno:'true,false' }}}" x-show="isActual || showAllTours" x-cloak>
                 {% with prediction_data=user_predictions|get_item:tour.id %}
-                  {% include "predictions/contest/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions is_paired_tour=paired_tour_ids_map|get_item:tour.id %}
+                  {% include "predictions/contest/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions match_coefficients=match_coefficients_by_tour|get_item:tour.id scoring_method=scoring_method is_paired_tour=paired_tour_ids_map|get_item:tour.id %}
                 {% endwith %}
               </div>
             {% empty %}

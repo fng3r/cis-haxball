@@ -8,6 +8,20 @@ from .models import PredictionSubmission
 from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
 
 
+def build_match_coefficients_map(tour):
+    """Return mapping {match_id: MatchPredictionCoefficients} for matches of a tour.
+
+    Uses the coefficients prefetched on tour's matches, so requires the queryset to
+    prefetch 'tour_matches__prediction_coefficients' to avoid N+1 queries.
+    """
+    coefficients = {}
+    for match in tour.tour_matches.all():
+        match_coefficients = getattr(match, 'prediction_coefficients', None)
+        if match_coefficients is not None:
+            coefficients[match.id] = match_coefficients
+    return coefficients
+
+
 def is_tour_open_for_predictions(tour):
     """Check if a tour is currently open for predictions"""
     now = timezone.localtime()

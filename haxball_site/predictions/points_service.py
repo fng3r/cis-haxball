@@ -3,7 +3,7 @@ from decimal import Decimal
 from tournament.models import MatchResult
 from tournament.templatetags.tournament_extras import get_league_table
 
-from .models import Prediction
+from .models import MatchPredictionCoefficients, Prediction, PredictionsContestTournament
 
 
 def calculate_submission_total_points(submission):
@@ -35,6 +35,27 @@ def calculate_prediction_points(prediction, tournament=None):
         return 0
 
     tournament = tournament or prediction.submission.tournament
+
+    if tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT:
+        return _calculate_coefficient_prediction_points(prediction, tournament)
+
+    return _calculate_legacy_prediction_points(prediction, tournament)
+
+
+def _calculate_coefficient_prediction_points(prediction, tournament):
+    """Points for coefficient format: nominal points multiplied by outcome coefficient."""
+    if not is_prediction_correct(prediction):
+        return Decimal('0.00')
+
+    coefficient = get_prediction_coefficient(prediction)
+    if coefficient is None:
+        return Decimal('0.00')
+
+    return tournament.nominal_points * coefficient
+
+
+def _calculate_legacy_prediction_points(prediction, tournament):
+    """Points for legacy format (fixed win/draw points and special bonus/penalty)."""
     is_correct = is_prediction_correct(prediction)
 
     points = Decimal('0.00')
@@ -53,32 +74,43 @@ def calculate_prediction_points(prediction, tournament=None):
     return points
 
 
-def _match_result_to_prediction_result(match_result):
+def get_prediction_coefficient(prediction) -> Decimal | None:
+    """Return the coefficient of the prediction's outcome, or None if not set."""
+    coefficients = getattr(prediction.match, 'prediction_coefficients', None)
+    if coefficients is None:
+        coefficients = MatchPredictionCoefficients.objects.filter(match=prediction.match).first()
+    if coefficients is None:
+        return None
+    return coefficients.coefficient_for(prediction.predicted_result)
+
+
+def _match_result_to_prediction_results(match_result):
+    """Return the set of prediction outcomes satisfied by a match result."""
     if match_result in [MatchResult.HOME_WIN, MatchResult.HOME_DEF_WIN]:
-        return Prediction.Result.HOME_WIN
+        return {Prediction.Result.HOME_WIN, Prediction.Result.HOME_WIN_OR_DRAW}
     if match_result in [MatchResult.AWAY_WIN, MatchResult.AWAY_DEF_WIN]:
-        return Prediction.Result.AWAY_WIN
+        return {Prediction.Result.AWAY_WIN, Prediction.Result.AWAY_WIN_OR_DRAW}
     if match_result == MatchResult.DRAW:
-        return Prediction.Result.DRAW
-    return None
+        return {Prediction.Result.DRAW, Prediction.Result.HOME_WIN_OR_DRAW, Prediction.Result.AWAY_WIN_OR_DRAW}
+    return set()
 
 
 def is_prediction_correct(prediction: Prediction):
-    """Return True when prediction exactly matches an already played match result."""
+    """Return True when the prediction's outcome matches an already played match result."""
     if not prediction.match.is_played:
         return False
 
-    prediction_result = _match_result_to_prediction_result(prediction.match.result.value)
-    if prediction_result is None:
+    satisfied_results = _match_result_to_prediction_results(prediction.match.result.value)
+    if not satisfied_results:
         return False
 
-    return prediction.predicted_result == prediction_result
+    return prediction.predicted_result in satisfied_results
 
 
 def is_prediction_result_supported(prediction):
     if not prediction.match.is_played:
         return False
-    return _match_result_to_prediction_result(prediction.match.result.value) is not None
+    return bool(_match_result_to_prediction_results(prediction.match.result.value))
 
 
 def get_teams_actual_positions(league):
