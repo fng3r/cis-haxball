@@ -14,6 +14,12 @@
       {% if not selected_tournament %}
         <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">Данная секция будет доступна после запуска турниров</div>
       {% else %}
+        {% if selected_tournament.league.championship.number == 25 %}
+          <div class="tw:alert tw:alert-warning">
+            <i class="fa fa-exclamation-triangle"></i>
+            <span>Прогнозы на 1 тур принимаются в тестовом режиме и не будут учитываться при расчете итогого количества очков участников</span>
+          </div>
+        {% endif %}
         <div x-data="{ showAllTours: {{ is_tournament_ended|yesno:'true,false' }} }"
              class="tw:[#make-predictions-content:has(.htmx-request)_&]:opacity-50 tw:[#make-predictions-content:has(.htmx-request)_&]:transition-opacity">
           <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
