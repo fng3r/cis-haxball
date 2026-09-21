@@ -1,13 +1,14 @@
 from django.contrib import admin
 
-from unfold.admin import display
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter
+from unfold.decorators import display
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
 from tournament.models import Match
 
 from .models import (
     MatchPredictionCoefficients,
+    MatchPredictionHandicap,
     Prediction,
     PredictionsContestTournament,
     PredictionSubmission,
@@ -21,7 +22,7 @@ class PredictionInline(UnfoldTabularInline):
     model = Prediction
     extra = 0
     readonly_fields = ['match']
-    fields = ['match', 'predicted_result', 'is_special']
+    fields = ['match', 'predicted_result', 'handicap', 'is_special']
 
 
 @admin.register(PredictionsContestTournament)
@@ -49,6 +50,13 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
     ordering = ['-id']
 
 
+class MatchPredictionHandicapInline(UnfoldTabularInline):
+    model = MatchPredictionHandicap
+    fk_name = 'coefficients'
+    extra = 0
+    fields = ('team', 'value', 'coefficient')
+
+
 @admin.register(MatchPredictionCoefficients)
 class MatchPredictionCoefficientsAdmin(UnfoldModelAdmin):
     list_display = [
@@ -58,6 +66,7 @@ class MatchPredictionCoefficientsAdmin(UnfoldModelAdmin):
         'draw',
         'away_win_or_draw',
         'away_win',
+        'display_handicaps',
     ]
     list_filter = [
         ('match__league', RelatedDropdownFilter),
@@ -67,6 +76,7 @@ class MatchPredictionCoefficientsAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     search_fields = ['match__team_home__title', 'match__team_guest__title']
     ordering = ['-id']
+    inlines = [MatchPredictionHandicapInline]
 
     fieldsets = (
         (
@@ -81,6 +91,17 @@ class MatchPredictionCoefficientsAdmin(UnfoldModelAdmin):
             },
         ),
     )
+
+    @display(description='Форы', dropdown=True)
+    def display_handicaps(self, model):
+        handicaps = list(model.handicaps.all())
+        return {
+            'title': len(handicaps),
+            'items': [{'title': f'{handicap.display_label} ×{handicap.coefficient}'} for handicap in handicaps],
+        }
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('handicaps')
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'match':

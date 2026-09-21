@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -114,13 +116,29 @@ class Prediction(models.Model):
         DRAW = 'D', 'X'
         AWAY_WIN_OR_DRAW = 'AWD', 'Х2'
         AWAY_WIN = 'AW', 'П2'
+        HANDICAP = 'FH', 'Фора'
 
     submission = models.ForeignKey(
         PredictionSubmission, verbose_name='Отправка', on_delete=models.CASCADE, related_name='predictions'
     )
     match = models.ForeignKey(Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='predictions')
     predicted_result = models.CharField('Предсказанный результат', max_length=3, choices=Result.choices)
+    handicap = models.ForeignKey(
+        'MatchPredictionHandicap',
+        verbose_name='Фора',
+        on_delete=models.CASCADE,
+        related_name='predictions',
+        null=True,
+        blank=True,
+        help_text='Заполняется, когда выбран исход "Фора"',
+    )
     is_special = models.BooleanField('Особый прогноз', default=False)
+
+    @property
+    def outcome_label(self):
+        if self.handicap_id:
+            return self.handicap.display_label
+        return self.get_predicted_result_display()
 
     class Meta:
         verbose_name = 'Прогноз'
@@ -171,6 +189,62 @@ class MatchPredictionCoefficients(models.Model):
     class Meta:
         verbose_name = 'Коэффициенты прогноза на матч'
         verbose_name_plural = 'Коэффициенты прогнозов на матчи'
+
+
+def format_handicap_value(value) -> str:
+    """Format a signed handicap value to one decimal digit, e.g. -5.5 / +5.5 / 0."""
+    decimal_value = Decimal(value)
+    if decimal_value < 0:
+        return f'-{abs(decimal_value.quantize(Decimal("0.1")).normalize())}'
+    if decimal_value > 0:
+        return f'+{decimal_value.quantize(Decimal("0.1")).normalize()}'
+    return '0'
+
+
+class MatchPredictionHandicap(models.Model):
+    """A single handicap outcome (Ф1/Ф2 with a value and coefficient) for a match.
+
+    Handicaps belong to a MatchPredictionCoefficients row and are managed in
+    the admin as an inline of it. A match can have zero or more handicaps, each
+    becoming an extra outcome to predict on in the "coefficients" format.
+    """
+
+    class Team(models.TextChoices):
+        HOME = 'home', 'Ф1'
+        AWAY = 'away', 'Ф2'
+
+    coefficients = models.ForeignKey(
+        MatchPredictionCoefficients,
+        verbose_name='Коэффициенты матча',
+        on_delete=models.CASCADE,
+        related_name='handicaps',
+    )
+    team = models.CharField(
+        'Команда',
+        max_length=4,
+        choices=Team.choices,
+        default=Team.HOME,
+        help_text='Ф1 — хозяева, Ф2 — гости',
+    )
+    value = models.DecimalField(
+        'Значение форы',
+        max_digits=6,
+        decimal_places=2,
+        help_text='Со знаком: -5.5 для Ф1 (-5.5) или +5.5 для Ф2 (+5.5). '
+        'Прогноз верен, если счёт команды с форой больше счёта соперника.',
+    )
+    coefficient = models.DecimalField('Коэффициент', max_digits=5, decimal_places=2)
+
+    @property
+    def display_label(self):
+        return f'{self.get_team_display()} ({format_handicap_value(self.value)})'
+
+    def __str__(self):
+        return f'{self.coefficients.match}: {self.display_label}'
+
+    class Meta:
+        verbose_name = 'Фора на матч'
+        verbose_name_plural = 'Форы на матчи'
 
 
 class PreseasonPredictionSubmission(models.Model):

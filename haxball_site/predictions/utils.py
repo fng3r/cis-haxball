@@ -22,6 +22,23 @@ def build_match_coefficients_map(tour):
     return coefficients
 
 
+def build_match_handicaps_map(tour):
+    """Return mapping {match_id: list of MatchPredictionHandicap} for matches of a tour.
+
+    Uses handicaps prefetched on tour's matches coefficients, so requires
+    prefetching 'tour_matches__prediction_coefficients__handicaps' to avoid N+1 queries.
+    """
+    handicaps = {}
+    for match in tour.tour_matches.all():
+        coefficients = getattr(match, 'prediction_coefficients', None)
+        if coefficients is None:
+            continue
+        match_handicaps = list(coefficients.handicaps.all())
+        if match_handicaps:
+            handicaps[match.id] = match_handicaps
+    return handicaps
+
+
 def is_tour_open_for_predictions(tour):
     """Check if a tour is currently open for predictions"""
     now = timezone.localtime()

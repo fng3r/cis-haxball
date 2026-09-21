@@ -3,7 +3,7 @@ from decimal import Decimal
 from tournament.models import MatchResult
 from tournament.templatetags.tournament_extras import get_league_table
 
-from .models import MatchPredictionCoefficients, Prediction, PredictionsContestTournament
+from .models import MatchPredictionCoefficients, MatchPredictionHandicap, Prediction, PredictionsContestTournament
 
 
 def calculate_submission_total_points(submission):
@@ -37,9 +37,20 @@ def calculate_prediction_points(prediction, tournament=None):
     tournament = tournament or prediction.submission.tournament
 
     if tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT:
+        if prediction.handicap_id:
+            return _calculate_handicap_prediction_points(prediction, tournament)
+
         return _calculate_coefficient_prediction_points(prediction, tournament)
 
     return _calculate_legacy_prediction_points(prediction, tournament)
+
+
+def _calculate_handicap_prediction_points(prediction, tournament):
+    """Points for a handicap outcome: nominal points multiplied by its coefficient."""
+    if not is_handicap_correct(prediction):
+        return Decimal('0.00')
+
+    return tournament.nominal_points * prediction.handicap.coefficient
 
 
 def _calculate_coefficient_prediction_points(prediction, tournament):
@@ -76,6 +87,9 @@ def _calculate_legacy_prediction_points(prediction, tournament):
 
 def get_prediction_coefficient(prediction) -> Decimal | None:
     """Return the coefficient of the prediction's outcome, or None if not set."""
+    if prediction.handicap_id:
+        return prediction.handicap.coefficient
+
     coefficients = getattr(prediction.match, 'prediction_coefficients', None)
     if coefficients is None:
         coefficients = MatchPredictionCoefficients.objects.filter(match=prediction.match).first()
@@ -95,10 +109,28 @@ def _match_result_to_prediction_results(match_result):
     return set()
 
 
+def is_handicap_correct(prediction: Prediction):
+    """Return True when a handicap prediction wins: team's score with the handicap applied beats the opponent."""
+    match = prediction.match
+    if not match.is_played:
+        return False
+
+    handicap = prediction.handicap
+    home_score = Decimal(match.score_home)
+    away_score = Decimal(match.score_guest)
+
+    if handicap.team == MatchPredictionHandicap.Team.HOME:
+        return home_score + handicap.value > away_score
+    return away_score + handicap.value > home_score
+
+
 def is_prediction_correct(prediction: Prediction):
     """Return True when the prediction's outcome matches an already played match result."""
     if not prediction.match.is_played:
         return False
+
+    if prediction.handicap_id:
+        return is_handicap_correct(prediction)
 
     satisfied_results = _match_result_to_prediction_results(prediction.match.result.value)
     if not satisfied_results:
