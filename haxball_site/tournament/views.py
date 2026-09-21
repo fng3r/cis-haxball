@@ -37,6 +37,7 @@ from .forms import (
     TeamsYearlyRatingForm,
 )
 from .models import (
+    LEAGUE_PRIORITY_BY_TYPE,
     Award,
     AwardCampaign,
     AwardResult,
@@ -362,6 +363,7 @@ class TeamDetail(DetailView):
         team_seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
         context['seasons'] = team_seasons
         context['tournaments'] = get_team_tournaments(team)
+        context['tournament_types'] = get_team_tournament_types(team)
         context['team_medals_by_season'] = get_team_medals_by_season(team)
         context['structured_medals'] = get_team_medals(team)
         context['team_results'] = get_team_results(team)
@@ -403,6 +405,21 @@ def get_team_tournaments(team, season=None):
         return tournaments.filter(championship=season).distinct().order_by('priority', 'title')
 
     return tournaments.order_by('title', 'priority', '-championship__number').distinct('title')
+
+
+def get_team_tournament_types(team, season=None):
+    leagues = League.objects.filter(teams=team)
+    if season:
+        leagues = leagues.filter(championship=season)
+    # order_by() clears League's default ordering (championship, -created),
+    # otherwise its columns leak into SELECT and break DISTINCT on type.
+    types = leagues.order_by().values_list('type', flat=True).distinct()
+    labels = dict(League.Type.choices)
+    enum_order = {league_type: index for index, league_type in enumerate(League.Type.values)}
+    return sorted(
+        ((league_type, labels.get(league_type, league_type)) for league_type in types),
+        key=lambda item: (LEAGUE_PRIORITY_BY_TYPE.get(item[0], 999), enum_order.get(item[0], 999)),
+    )
 
 
 class TeamList(ListView):
@@ -2132,21 +2149,22 @@ def team_statistics(request, pk):
 def team_squad_statistics(request, pk):
     team = Team.objects.get(pk=pk)
     season_number = request.GET.get('season', None)
-    tournament_id = request.GET.get('tournament', None)
+    tournament_type = request.GET.get('tournament', None) or None
 
     season = Season.objects.filter(number=season_number).first() if season_number else None
-    tournaments = get_team_tournaments(team, season)
-    selected_tournament = tournaments.filter(id=tournament_id).first() if tournament_id else None
+    tournament_types = get_team_tournament_types(team, season)
+    if tournament_type not in dict(tournament_types):
+        tournament_type = None
 
-    stats = get_team_squad_stats(team, season=season, tournament=selected_tournament)
+    stats = get_team_squad_stats(team, season=season, tournament_type=tournament_type)
     seasons = Season.objects.filter(tournaments_in_season__teams=team).distinct()
     context = {
         'team': team,
         'team_squad': stats,
         'seasons': seasons,
-        'tournaments': tournaments,
+        'tournament_types': tournament_types,
         'selected_season': season,
-        'selected_tournament': selected_tournament,
+        'selected_tournament_type': tournament_type,
         'display_rating': False,
     }
 

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -44,7 +44,10 @@ from .utils import (
 def resolve_selected_season(request):
     """Return (selected_season, season_form) for predictions contests."""
     seasons = (
-        Season.objects.filter(tournaments_in_season__predictions_contest_tournament__isnull=False)
+        Season.objects.filter(
+            Q(tournaments_in_season__predictions_contest_tournament__isnull=False)
+            | Q(tournaments_in_season__preseason_predictions_tournament__isnull=False)
+        )
         .distinct()
         .order_by('-number')
     )

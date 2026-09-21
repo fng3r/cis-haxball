@@ -45,12 +45,8 @@
 
         <td class="tw:text-left tw:px-0 tw:w-1/3">
           <a class="tw:link tw:link-hover tw:text-base-content/95 tw:text-lg tw:font-semibold" href="{{ team.0.get_absolute_url }}">
-            <img src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28" class="tw:mr-2">
-            {% if team.0.title|length < 20 %}
-              {{ team.0.title }}
-            {% else %}
-              {{ team.0.short_title }}
-            {% endif %}
+            <img src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28" class="tw:size-7 tw:mr-2 tw:object-contain">
+            {{ team.0.title|truncatechars:25 }}
           </a>
         </td>
         <td width="6%">{{ team.1 }}</td>

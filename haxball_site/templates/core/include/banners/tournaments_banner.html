@@ -1,0 +1,18 @@
+{% load static %}
+{% load fantasy_league_extras %}
+
+<div class="tw:card tw:bg-base-100 tw:rounded-lg tw:shadow-sm tw:border tw:border-base-200">
+  <div class="tw:p-4">
+    <div class="tw:flex tw:items-center tw:gap-2 tw:font-bold tw:text-base-content/90">
+      <h5 class="tw:text-lg tw:mb-3!">Турниры</h5>
+    </div>
+
+    <div class="tw:flex tw:flex-col tw:gap-1">
+      <a href="{% url 'tournament:league' 's17-premier-league' %}"
+         class="tw:justify-start tw:btn tw:btn-primary tw:btn-ghost tw:btn-sm">Единая лига</a>
+
+      <a href="{% url 'tournament:league' 's17-russian-cup' %}"
+         class="tw:justify-start tw:btn tw:btn-primary tw:btn-ghost tw:btn-sm">Кубок России</a>
+    </div>
+  </div>
+</div>

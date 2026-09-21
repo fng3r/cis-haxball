@@ -15,6 +15,7 @@ class Command(BaseCommand):
         parser.add_argument('tournament', type=str)
         parser.add_argument('-s', '--stage', type=str, required=True)
         parser.add_argument('-r', dest='has_return_matches', action='store_true')
+        parser.add_argument('--tours-only', action='store_true', help='Generate only tours, without matches')
         parser.add_argument(
             '--schedule',
             type=str,
@@ -24,6 +25,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         has_return_matches = options['has_return_matches']
+        tours_only = options['tours_only']
         tournament_title = options['tournament']
         stage_type = options['stage']
         tour_dates = self.parse_tour_dates(options['schedule'])
@@ -36,11 +38,13 @@ class Command(BaseCommand):
 
         if isinstance(stage, RegularStage):
             teams = list(stage.teams.all())
-            self.generate_schedule(league, teams, has_return_matches, stage, tour_dates=tour_dates)
+            self.generate_schedule(league, teams, has_return_matches, tours_only, stage, tour_dates=tour_dates)
         elif isinstance(stage, GroupStage):
             for group in stage.groups.all():
                 teams = list(group.teams.all())
-                self.generate_schedule(league, teams, has_return_matches, stage, group, tour_dates=tour_dates)
+                self.generate_schedule(
+                    league, teams, has_return_matches, tours_only, stage, group, tour_dates=tour_dates
+                )
         else:
             raise CommandError('Unknown stage type')
 
@@ -79,7 +83,9 @@ class Command(BaseCommand):
 
         return parsed_schedule
 
-    def generate_schedule(self, league, teams, has_return_matches, stage=None, group=None, tour_dates=None):
+    def generate_schedule(
+        self, league, teams, has_return_matches, tours_only=False, stage=None, group=None, tour_dates=None
+    ):
         if tour_dates is None:
             raise CommandError('Schedule is required')
         # add dummy team when number of teams is odd
@@ -128,6 +134,9 @@ class Command(BaseCommand):
                     date_from=tour_start_date,
                     date_to=tour_end_date,
                 )
+
+            if tours_only:
+                continue
 
             for j in range(half):
                 team_home = teams[j]
