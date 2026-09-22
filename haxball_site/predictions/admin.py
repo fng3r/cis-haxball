@@ -10,6 +10,7 @@ from tournament.models import Match
 
 from .models import (
     HandicapOutcome,
+    IndividualTotalOutcome,
     MatchPredictionOffer,
     MatchPredictionOutcome,
     Prediction,
@@ -144,9 +145,27 @@ class TotalsInline(BaseOutcomeInline):
     verbose_name_plural = 'Тоталы'
 
 
+class IndividualTotalsInline(BaseOutcomeInline):
+    model = IndividualTotalOutcome
+    form = outcome_form_for(
+        MatchPredictionOutcome.Market.INDIVIDUAL_TOTAL,
+        [('HT_OVER', 'ИТБ1'), ('HT_UNDER', 'ИТМ1'), ('AT_OVER', 'ИТБ2'), ('AT_UNDER', 'ИТМ2')],
+    )
+    fields = ('market', 'selection', 'line', 'coefficient')
+    verbose_name = 'Инд. тотал'
+    verbose_name_plural = 'Индивидуальные тоталы'
+
+
 @admin.register(MatchPredictionOffer)
 class MatchPredictionOfferAdmin(UnfoldModelAdmin):
-    list_display = ['match', 'is_published', 'display_results', 'display_handicaps', 'display_totals']
+    list_display = [
+        'match',
+        'is_published',
+        'display_results',
+        'display_handicaps',
+        'display_totals',
+        'display_individual_totals',
+    ]
     list_filter = [
         ('match__league', RelatedDropdownFilter),
         ('match__numb_tour__number', SingleNumericFilter),
@@ -156,7 +175,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     list_filter_submit = True
     search_fields = ['match__team_home__title', 'match__team_guest__title']
     ordering = ['-id']
-    inlines = [ResultsInline, HandicapsInline, TotalsInline]
+    inlines = [ResultsInline, HandicapsInline, TotalsInline, IndividualTotalsInline]
 
     @display(description='Исходы', dropdown=True)
     def display_results(self, model):
@@ -169,6 +188,10 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     @display(description='Тоталы', dropdown=True)
     def display_totals(self, model):
         return self._market_dropdown(model, MatchPredictionOutcome.Market.TOTAL)
+
+    @display(description='Инд. тоталы', dropdown=True)
+    def display_individual_totals(self, model):
+        return self._market_dropdown(model, MatchPredictionOutcome.Market.INDIVIDUAL_TOTAL)
 
     @staticmethod
     def _market_dropdown(model, market):

@@ -258,15 +258,17 @@ class MatchPredictionOffer(models.Model):
 class MatchPredictionOutcome(models.Model):
     """A single bettable outcome (event + coefficient) for a match.
 
-    Unifies all markets: match results, handicaps and totals live in one
-    table, distinguished by (market, selection, line). Settlement logic is
-    a single MatchPredictionOutcome.settle() instead of per-type branches.
+    Unifies all markets: match results, handicaps, totals and individual
+    totals live in one table, distinguished by (market, selection, line).
+    Settlement logic is a single MatchPredictionOutcome.settle() instead of
+    per-type branches.
     """
 
     class Market(models.TextChoices):
         RESULT = 'RESULT', 'Исход'
         HANDICAP = 'HANDICAP', 'Фора'
         TOTAL = 'TOTAL', 'Тотал'
+        INDIVIDUAL_TOTAL = 'ITOTAL', 'Инд. тотал'
 
     class Selection(models.TextChoices):
         # RESULT market
@@ -281,6 +283,11 @@ class MatchPredictionOutcome(models.Model):
         # TOTAL market
         OVER = 'OVER', 'ТБ'
         UNDER = 'UNDER', 'ТМ'
+        # INDIVIDUAL_TOTAL market
+        HOME_OVER = 'HT_OVER', 'ИТБ1'
+        HOME_UNDER = 'HT_UNDER', 'ИТМ1'
+        AWAY_OVER = 'AT_OVER', 'ИТБ2'
+        AWAY_UNDER = 'AT_UNDER', 'ИТМ2'
 
     # Allowed selections per market. Single source of truth for clean(),
     # CheckConstraint and admin/form choice filtering.
@@ -294,6 +301,12 @@ class MatchPredictionOutcome(models.Model):
         },
         Market.HANDICAP: {Selection.HOME_HANDICAP, Selection.AWAY_HANDICAP},
         Market.TOTAL: {Selection.OVER, Selection.UNDER},
+        Market.INDIVIDUAL_TOTAL: {
+            Selection.HOME_OVER,
+            Selection.HOME_UNDER,
+            Selection.AWAY_OVER,
+            Selection.AWAY_UNDER,
+        },
     }
 
     offer = models.ForeignKey(
@@ -303,7 +316,7 @@ class MatchPredictionOutcome(models.Model):
         related_name='outcomes',
     )
     market = models.CharField('Рынок', max_length=8, choices=Market.choices)
-    selection = models.CharField('Исход', max_length=5, choices=Selection.choices)
+    selection = models.CharField('Исход', max_length=8, choices=Selection.choices)
     line = models.DecimalField(
         'Линия',
         max_digits=6,
@@ -322,7 +335,7 @@ class MatchPredictionOutcome(models.Model):
     def display_label(self):
         if self.market == self.Market.HANDICAP:
             return f'{self.get_selection_display()} ({format_handicap_value(self.line)})'
-        if self.market == self.Market.TOTAL:
+        if self.market in (self.Market.TOTAL, self.Market.INDIVIDUAL_TOTAL):
             return f'{self.get_selection_display()} ({format_total_value(self.line)})'
         return self.get_selection_display()
 
@@ -348,13 +361,24 @@ class MatchPredictionOutcome(models.Model):
                 return home_score + self.line > away_score
             return away_score + self.line > home_score
 
-        # TOTAL market
-        total = Decimal(match.score_home + match.score_guest)
-        if total == self.line:
-            return None
-        if self.selection == self.Selection.OVER:
-            return total > self.line
-        return total < self.line
+        if self.market == self.Market.TOTAL:
+            total = Decimal(match.score_home + match.score_guest)
+            if total == self.line:
+                return None
+            return total > self.line if self.selection == self.Selection.OVER else total < self.line
+
+        if self.market == self.Market.INDIVIDUAL_TOTAL:
+            if self.selection in (self.Selection.HOME_OVER, self.Selection.HOME_UNDER):
+                team_score = Decimal(match.score_home)
+            else:
+                team_score = Decimal(match.score_guest)
+            if team_score == self.line:
+                return None
+            if self.selection in (self.Selection.HOME_OVER, self.Selection.AWAY_OVER):
+                return team_score > self.line
+            return team_score < self.line
+
+        return None
 
     def clean(self):
         allowed = self.SELECTIONS_BY_MARKET.get(self.market, set())
@@ -362,7 +386,7 @@ class MatchPredictionOutcome(models.Model):
             raise ValidationError({'selection': f'Исход {self.selection} не относится к рынку {self.market}'})
         if self.market == self.Market.RESULT and self.line is not None:
             raise ValidationError({'line': 'Линия должна быть пустой для основных исходов'})
-        if self.market in (self.Market.HANDICAP, self.Market.TOTAL) and self.line is None:
+        if self.market in (self.Market.HANDICAP, self.Market.TOTAL, self.Market.INDIVIDUAL_TOTAL) and self.line is None:
             raise ValidationError({'line': 'Линия обязательна для фор и тоталов'})
 
     def save(self, *args, **kwargs):
@@ -393,12 +417,14 @@ class MatchPredictionOutcome(models.Model):
                     Q(market='RESULT', selection__in=['HW', 'HWD', 'D', 'AWD', 'AW'])
                     | Q(market='HANDICAP', selection__in=['F1', 'F2'])
                     | Q(market='TOTAL', selection__in=['OVER', 'UNDER'])
+                    | Q(market='ITOTAL', selection__in=['HT_OVER', 'HT_UNDER', 'AT_OVER', 'AT_UNDER'])
                 ),
                 name='outcome_selection_matches_market',
             ),
             models.CheckConstraint(
                 condition=(
-                    Q(market='RESULT', line__isnull=True) | Q(market__in=['HANDICAP', 'TOTAL'], line__isnull=False)
+                    Q(market='RESULT', line__isnull=True)
+                    | Q(market__in=['HANDICAP', 'TOTAL', 'ITOTAL'], line__isnull=False)
                 ),
                 name='outcome_line_required_by_market',
             ),
@@ -437,6 +463,10 @@ class TotalOutcomeManager(_MarketManager):
     market = MatchPredictionOutcome.Market.TOTAL
 
 
+class IndividualTotalOutcomeManager(_MarketManager):
+    market = MatchPredictionOutcome.Market.INDIVIDUAL_TOTAL
+
+
 class ResultOutcome(MatchPredictionOutcome):
     """Proxy for administering RESULT outcomes (separate inline, own form)."""
 
@@ -468,6 +498,17 @@ class TotalOutcome(MatchPredictionOutcome):
         proxy = True
         verbose_name = 'Тотал'
         verbose_name_plural = 'Тоталы'
+
+
+class IndividualTotalOutcome(MatchPredictionOutcome):
+    """Proxy for administering INDIVIDUAL_TOTAL outcomes (separate inline, own form)."""
+
+    objects = IndividualTotalOutcomeManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Инд. тотал'
+        verbose_name_plural = 'Индивидуальные тоталы'
 
 
 class PreseasonPredictionSubmission(models.Model):
