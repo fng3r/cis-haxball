@@ -504,10 +504,6 @@ def edit_predictions(request, tour_id):
             return tour_card(request, tour_id)
         return redirect('predictions:main')
 
-    submission, _ = PredictionSubmission.objects.get_or_create(
-        user=request.user, tour=tour, tournament=prediction_tournament
-    )
-
     matches = tour.tour_matches.all().order_by('id')
 
     match_coefficients = build_match_coefficients_map(tour)
@@ -518,10 +514,13 @@ def edit_predictions(request, tour_id):
         prediction_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT
     )
 
-    existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
-
     if request.method == 'POST':
         with transaction.atomic():
+            submission, _ = PredictionSubmission.objects.get_or_create(
+                user=request.user, tour=tour, tournament=prediction_tournament
+            )
+            existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
+
             for match in matches:
                 if uses_coefficients and match.id not in match_coefficients:
                     existing_prediction = existing_predictions.get(match.id)
@@ -573,6 +572,13 @@ def edit_predictions(request, tour_id):
             return tour_card(request, tour_id)
 
         return redirect('predictions:main')
+
+    submission = (
+        PredictionSubmission.objects.filter(user=request.user, tour=tour, tournament=prediction_tournament)
+        .select_related('tournament')
+        .first()
+    )
+    existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()} if submission else {}
 
     context = {
         'tour': tour,
