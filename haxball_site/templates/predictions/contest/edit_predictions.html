@@ -36,7 +36,13 @@
         {# djlint:on #}
         >
         {% for match in matches %}
-          <div class="tw:card tw:bg-base-100 tw:shadow-sm">
+          {% with existing_prediction=existing_predictions|get_item:match.id %}
+          <div class="tw:card tw:bg-base-100 tw:shadow-sm"
+            {# djlint:off #}
+               x-data="{ hasPrediction: {{ existing_prediction|yesno:'true,false' }} }"
+               data-prediction-block
+            {# djlint:on #}
+            >
             <div class="tw:card-body tw:p-3">
               <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
                 <div class="tw:flex tw:items-center tw:gap-2">
@@ -79,8 +85,7 @@
                 </div>
               </div>
 
-              {% with existing_prediction=existing_predictions|get_item:match.id %}
-                {% if uses_coefficients and not match_coefficients|get_item:match.id %}
+              {% if uses_coefficients and not match_coefficients|get_item:match.id %}
                   <div class="tw:flex tw:items-center tw:gap-2">
                     <span class="tw:badge tw:badge-warning tw:badge-sm">
                       <i class="fa fa-exclamation-triangle tw:mr-1"></i>
@@ -88,12 +93,7 @@
                     </span>
                   </div>
                 {% else %}
-                  <div class="tw:flex tw:flex-col tw:gap-1.5"
-                    {# djlint:off #}
-                       x-data="{ hasPrediction: {{ existing_prediction|yesno:'true,false' }} }"
-                       data-prediction-block
-                    {# djlint:on #}
-                    >
+                  <div class="tw:flex tw:flex-col tw:gap-1.5">
 
                     <div class="tw:flex tw:flex-col tw:gap-2">
                       <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Основные исходы</span>
@@ -143,11 +143,11 @@
                         {% endwith %}
                       {% endif %}
                     </div>
-                  {% endif %}
-                {% endwith %}
-              </div>
-            </div>
-          {% endfor %}
+{% endif %}
+                  </div>
+                </div>
+              {% endwith %}
+            {% endfor %}
         </div>
 
         <div class="tw:flex tw:justify-end tw:gap-2 tw:mt-4">
