@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import PredictionSubmission
+from .models import MatchPredictionOutcome, PredictionSubmission
 from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
 
 
@@ -37,6 +37,57 @@ def build_match_handicaps_map(tour):
         if match_handicaps:
             handicaps[match.id] = match_handicaps
     return handicaps
+
+
+def build_match_offers_map(tour):
+    """Return mapping {match_id: MatchPredictionOffer} for matches of a tour.
+
+    Uses the offer prefetched on tour's matches, so requires the queryset to
+    prefetch 'tour_matches__prediction_offer' to avoid N+1 queries.
+    """
+    offers = {}
+    for match in tour.tour_matches.all():
+        offer = getattr(match, 'prediction_offer', None)
+        if offer is not None:
+            offers[match.id] = offer
+    return offers
+
+
+def build_match_outcomes_map(tour):
+    """Return mapping {match_id: list of MatchPredictionOutcome} for a tour.
+
+    Single unified map for all markets (results, handicaps, totals), ordered
+    by market group. Requires prefetching
+    'tour_matches__prediction_offer__outcomes' to avoid N+1 queries.
+    """
+    outcomes = {}
+    for match in tour.tour_matches.all():
+        offer = getattr(match, 'prediction_offer', None)
+        if offer is None or not getattr(offer, 'is_published', True):
+            continue
+        match_outcomes = sorted(
+            offer.outcomes.all(),
+            key=lambda o: (
+                MatchPredictionOutcome.MARKET_ORDER.get(o.market, 99),
+                o.selection,
+                o.line is None,
+                o.line or 0,
+            ),
+        )
+        if match_outcomes:
+            outcomes[match.id] = match_outcomes
+    return outcomes
+
+
+def build_match_outcome_groups_map(tour):
+    """Return mapping {match_id: {market: [outcomes]}} for rendering grouped forms."""
+    groups = {}
+    for match_id, match_outcomes in build_match_outcomes_map(tour).items():
+        market_groups = {}
+        for outcome in match_outcomes:
+            market_groups.setdefault(outcome.market, []).append(outcome)
+        groups[match_id] = market_groups
+    return groups
 
 
 def is_tour_open_for_predictions(tour):

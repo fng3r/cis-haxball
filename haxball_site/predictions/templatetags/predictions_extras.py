@@ -5,7 +5,7 @@ from django import template
 from django.utils import timezone
 
 from .. import utils
-from ..points_service import calculate_prediction_points, is_prediction_correct
+from ..points_service import calculate_prediction_points, is_prediction_correct, is_prediction_void
 
 register = template.Library()
 
@@ -96,3 +96,8 @@ def hours_until_start(tournament):
 @register.filter
 def prediction_is_correct(prediction):
     return is_prediction_correct(prediction)
+
+
+@register.filter
+def prediction_is_void(prediction):
+    return is_prediction_void(prediction)

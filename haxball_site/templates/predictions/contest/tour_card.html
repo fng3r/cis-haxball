@@ -57,6 +57,31 @@
                 {% endif %}
               </div>
               {% if prediction %}
+                {% if prediction.outcome %}
+                  <span class="tw:ml-1 tw:font-bold">
+                    {{ prediction.outcome_label }}
+                    {% if prediction.is_special %}*{% endif %}
+                  </span>
+                  {% if scoring_method == 'coefficient' %}
+                    <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.outcome.coefficient }}</span>
+                  {% endif %}
+                  {% if match.is_played %}
+                    <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
+                      {% if prediction|prediction_is_void %}
+                        <span class="tw:text-warning">=</span>
+                      {% elif prediction|prediction_is_correct %}
+                        <span class="tw:text-success">✓</span>
+                      {% else %}
+                        <span class="tw:text-error">✗</span>
+                      {% endif %}
+                      {% if scoring_method == 'coefficient' %}
+                        <span class="tw:font-bold {% if prediction|prediction_is_void %}tw:text-warning{% elif prediction|prediction_is_correct %}tw:text-success{% else %}tw:text-error{% endif %}">
+                          {{ prediction|get_prediction_points|format_points }}
+                        </span>
+                      {% endif %}
+                    </span>
+                  {% endif %}
+                {% else %}
                 <span class="tw:ml-1 tw:font-bold">
                   {{ prediction.outcome_label }}
                   {% if prediction.is_special %}*{% endif %}
@@ -85,6 +110,7 @@
                       </span>
                     {% endif %}
                   </span>
+                {% endif %}
                 {% endif %}
               {% elif not prediction and not tour|is_not_open_yet %}
                 <span class="tw:ml-2 tw:text-warning tw:font-bold">—</span>

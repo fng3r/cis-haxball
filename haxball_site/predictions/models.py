@@ -1,10 +1,12 @@
 from decimal import Decimal
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
-from tournament.models import League, Match, Team, TourNumber
+from tournament.models import League, Match, MatchResult, Team, TourNumber
 
 
 class PredictionsContestTournament(models.Model):
@@ -124,7 +126,15 @@ class Prediction(models.Model):
         PredictionSubmission, verbose_name='Отправка', on_delete=models.CASCADE, related_name='predictions'
     )
     match = models.ForeignKey(Match, verbose_name='Матч', on_delete=models.CASCADE, related_name='predictions')
-    predicted_result = models.CharField('Предсказанный результат', max_length=3, choices=Result.choices)
+    predicted_result = models.CharField(
+        'Предсказанный результат',
+        max_length=3,
+        choices=Result.choices,
+        null=True,
+        blank=True,
+        help_text='Только для legacy-конкурсов и старого формата коэффициентов. '
+        'Прогнозы через унифицированные исходы (outcome) оставляют поле пустым.',
+    )
     handicap = models.ForeignKey(
         'MatchPredictionHandicap',
         verbose_name='Фора',
@@ -132,23 +142,92 @@ class Prediction(models.Model):
         related_name='predictions',
         null=True,
         blank=True,
-        help_text='Заполняется, когда выбран исход "Фора"',
+        help_text='Заполняется, когда выбран исход "Фора" (старый формат, для legacy и переходного периода)',
+    )
+    outcome = models.ForeignKey(
+        'MatchPredictionOutcome',
+        verbose_name='Исход',
+        on_delete=models.CASCADE,
+        related_name='predictions',
+        null=True,
+        blank=True,
+        help_text='Унифицированный исход (формат "Коэффициенты"): результат, фора или тотал. '
+        'Для legacy-конкурсов не используется',
     )
     is_special = models.BooleanField('Особый прогноз', default=False)
 
     @property
     def outcome_label(self):
+        if self.outcome_id and self.outcome is not None:
+            return self.outcome.display_label
         if self.handicap_id:
             return self.handicap.display_label
-        return self.get_predicted_result_display()
+        if self.predicted_result:
+            return self.get_predicted_result_display()
+        return ''
+
+    def clean(self):
+        """Enforce one prediction path depending on the contest format.
+
+        Legacy contests use `predicted_result` (П1/X/П2) only;
+        coefficient contests use `outcome` only.
+        """
+        # Assigned-but-unsaved relations (admin inlines, tests) live in the
+        # descriptor cache while their *_id is still None.
+        submission = self.__dict__.get('submission') or self.submission
+        if submission is None:
+            return
+        outcome = self.__dict__.get('outcome') or self.outcome
+        handicap = self.__dict__.get('handicap') or self.handicap
+        tournament = submission.tournament
+        is_legacy = (
+            tournament.scoring_method == PredictionsContestTournament.ScoringMethod.LEGACY
+        )
+        if is_legacy:
+            if outcome is not None:
+                raise ValidationError({'outcome': 'Legacy-конкурс использует только предсказанный результат'})
+            if not self.predicted_result:
+                raise ValidationError({'predicted_result': 'Обязательное поле для legacy-конкурса'})
+            if self.predicted_result not in (
+                self.Result.HOME_WIN, self.Result.DRAW, self.Result.AWAY_WIN,
+            ):
+                raise ValidationError({'predicted_result': 'Legacy-конкурс допускает только П1/Х/П2'})
+            if handicap is not None:
+                raise ValidationError({'handicap': 'Legacy-конкурс не использует форы'})
+        else:
+            if outcome is None:
+                raise ValidationError({'outcome': 'Обязательное поле для формата "Коэффициенты"'})
+            if self.predicted_result:
+                raise ValidationError(
+                    {'predicted_result': 'Формат "Коэффициенты" использует только унифицированный исход'}
+                )
+            if handicap is not None:
+                raise ValidationError(
+                    {'handicap': 'Формат "Коэффициенты" использует только унифицированный исход'}
+                )
+            if self.is_special:
+                raise ValidationError({'is_special': 'Особые прогнозы только для legacy-конкурсов'})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Прогноз'
         verbose_name_plural = 'Прогнозы'
         unique_together = ['submission', 'match']
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(outcome__isnull=True, predicted_result__isnull=False)
+                    | Q(outcome__isnull=False, predicted_result__isnull=True, handicap__isnull=True)
+                ),
+                name='prediction_outcome_xor_legacy_result',
+            ),
+        ]
 
     def __str__(self):
-        return f'{self.submission.user.username}: {self.match} - {self.get_predicted_result_display()}'
+        return f'{self.submission.user.username}: {self.match} - {self.outcome_label}'
 
 
 class MatchPredictionCoefficients(models.Model):
@@ -247,6 +326,270 @@ class MatchPredictionHandicap(models.Model):
     class Meta:
         verbose_name = 'Фора на матч'
         verbose_name_plural = 'Форы на матчи'
+
+
+def format_total_value(value) -> str:
+    """Format a total line without sign, e.g. 5.5 / 5."""
+    decimal_value = Decimal(value).quantize(Decimal('0.1')).normalize()
+    return f'{decimal_value}'
+
+
+class MatchPredictionOffer(models.Model):
+    """Betting card for a single match: aggregates all unified outcomes.
+
+    Exists (and published) = the match is open for predictions in the
+    "coefficients" format. Keeps predictions-related configuration out of
+    the tournament's Match model and its admin.
+    """
+
+    match = models.OneToOneField(
+        Match,
+        verbose_name='Матч',
+        on_delete=models.CASCADE,
+        related_name='prediction_offer',
+    )
+    is_published = models.BooleanField(
+        'Опубликовано',
+        default=True,
+        help_text='Снимите, чтобы скрыть все исходы матча из формы прогнозов, не удаляя их',
+    )
+
+    @property
+    def results(self):
+        return self.outcomes.filter(market=MatchPredictionOutcome.Market.RESULT)
+
+    @property
+    def handicaps(self):
+        return self.outcomes.filter(market=MatchPredictionOutcome.Market.HANDICAP)
+
+    @property
+    def totals(self):
+        return self.outcomes.filter(market=MatchPredictionOutcome.Market.TOTAL)
+
+    def __str__(self):
+        return f'Исходы: {self.match.team_home.short_title} - {self.match.team_guest.short_title}'
+
+    class Meta:
+        verbose_name = 'Исходы матча для прогнозов'
+        verbose_name_plural = 'Исходы матчей для прогнозов'
+
+
+class MatchPredictionOutcome(models.Model):
+    """A single bettable outcome (event + coefficient) for a match.
+
+    Unifies all markets: match results, handicaps and totals live in one
+    table, distinguished by (market, selection, line). Settlement logic is
+    a single MatchPredictionOutcome.settle() instead of per-type branches.
+    """
+
+    class Market(models.TextChoices):
+        RESULT = 'RESULT', 'Исход'
+        HANDICAP = 'HANDICAP', 'Фора'
+        TOTAL = 'TOTAL', 'Тотал'
+
+    class Selection(models.TextChoices):
+        # RESULT market
+        HOME_WIN = 'HW', 'П1'
+        HOME_WIN_OR_DRAW = 'HWD', '1Х'
+        DRAW = 'D', 'X'
+        AWAY_WIN_OR_DRAW = 'AWD', 'Х2'
+        AWAY_WIN = 'AW', 'П2'
+        # HANDICAP market
+        HOME_HANDICAP = 'F1', 'Ф1'
+        AWAY_HANDICAP = 'F2', 'Ф2'
+        # TOTAL market
+        OVER = 'OVER', 'ТБ'
+        UNDER = 'UNDER', 'ТМ'
+
+    # Allowed selections per market. Single source of truth for clean(),
+    # CheckConstraint and admin/form choice filtering.
+    SELECTIONS_BY_MARKET = {
+        Market.RESULT: {
+            Selection.HOME_WIN,
+            Selection.HOME_WIN_OR_DRAW,
+            Selection.DRAW,
+            Selection.AWAY_WIN_OR_DRAW,
+            Selection.AWAY_WIN,
+        },
+        Market.HANDICAP: {Selection.HOME_HANDICAP, Selection.AWAY_HANDICAP},
+        Market.TOTAL: {Selection.OVER, Selection.UNDER},
+    }
+
+    # Display order of market groups in forms.
+    MARKET_ORDER = {Market.RESULT: 0, Market.HANDICAP: 1, Market.TOTAL: 2}
+
+    offer = models.ForeignKey(
+        MatchPredictionOffer,
+        verbose_name='Исходы матча',
+        on_delete=models.CASCADE,
+        related_name='outcomes',
+    )
+    market = models.CharField('Рынок', max_length=8, choices=Market.choices)
+    selection = models.CharField('Исход', max_length=5, choices=Selection.choices)
+    line = models.DecimalField(
+        'Линия',
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Значение форы или тотала. Пусто для основных исходов.',
+    )
+    coefficient = models.DecimalField('Коэффициент', max_digits=5, decimal_places=2)
+
+    @property
+    def match(self):
+        return self.offer.match
+
+    @property
+    def display_label(self):
+        if self.market == self.Market.HANDICAP:
+            return f'{self.get_selection_display()} ({format_handicap_value(self.line)})'
+        if self.market == self.Market.TOTAL:
+            return f'{self.get_selection_display()} ({format_total_value(self.line)})'
+        return self.get_selection_display()
+
+    def settle(self, match) -> bool | None:
+        """Settle the outcome against a played match.
+
+        Returns True (win), False (loss) or None (void/push: unsupported
+        result such as mutual tech defeat, or total exactly on the line).
+        """
+        if not match.is_played:
+            return None
+        result_value = match.result.value if getattr(match, 'result', None) else None
+        if result_value not in RESULT_SELECTIONS_BY_MATCH_RESULT:
+            return None
+
+        if self.market == self.Market.RESULT:
+            return self.selection in RESULT_SELECTIONS_BY_MATCH_RESULT[result_value]
+
+        if self.market == self.Market.HANDICAP:
+            home_score = Decimal(match.score_home)
+            away_score = Decimal(match.score_guest)
+            if self.selection == self.Selection.HOME_HANDICAP:
+                return home_score + self.line > away_score
+            return away_score + self.line > home_score
+
+        # TOTAL market
+        total = Decimal(match.score_home + match.score_guest)
+        if total == self.line:
+            return None
+        if self.selection == self.Selection.OVER:
+            return total > self.line
+        return total < self.line
+
+    def clean(self):
+        allowed = self.SELECTIONS_BY_MARKET.get(self.market, set())
+        if self.selection not in allowed:
+            raise ValidationError({'selection': f'Исход {self.selection} не относится к рынку {self.market}'})
+        if self.market == self.Market.RESULT and self.line is not None:
+            raise ValidationError({'line': 'Линия должна быть пустой для основных исходов'})
+        if self.market in (self.Market.HANDICAP, self.Market.TOTAL) and self.line is None:
+            raise ValidationError({'line': 'Линия обязательна для фор и тоталов'})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.offer.match}: {self.display_label} ×{self.coefficient}'
+
+    class Meta:
+        verbose_name = 'Исход для прогноза'
+        verbose_name_plural = 'Исходы для прогнозов'
+        constraints = [
+            # Partial indexes: plain NULLS NOT DISTINCT needs Postgres 15+,
+            # these two are enforceable everywhere.
+            models.UniqueConstraint(
+                fields=['offer', 'market', 'selection'],
+                condition=Q(line__isnull=True),
+                name='unique_outcome_per_offer_no_line',
+            ),
+            models.UniqueConstraint(
+                fields=['offer', 'market', 'selection', 'line'],
+                condition=Q(line__isnull=False),
+                name='unique_outcome_per_offer_with_line',
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(market='RESULT', selection__in=['HW', 'HWD', 'D', 'AWD', 'AW'])
+                    | Q(market='HANDICAP', selection__in=['F1', 'F2'])
+                    | Q(market='TOTAL', selection__in=['OVER', 'UNDER'])
+                ),
+                name='outcome_selection_matches_market',
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(market='RESULT', line__isnull=True) | Q(market__in=['HANDICAP', 'TOTAL'], line__isnull=False)
+                ),
+                name='outcome_line_required_by_market',
+            ),
+        ]
+
+
+# Maps a MatchResult value to the set of RESULT selections it satisfies.
+# Shared by MatchPredictionOutcome.settle() and points_service (single source).
+RESULT_SELECTIONS_BY_MATCH_RESULT = {
+    MatchResult.HOME_WIN: {'HW', 'HWD'},
+    MatchResult.HOME_DEF_WIN: {'HW', 'HWD'},
+    MatchResult.AWAY_WIN: {'AW', 'AWD'},
+    MatchResult.AWAY_DEF_WIN: {'AW', 'AWD'},
+    MatchResult.DRAW: {'D', 'HWD', 'AWD'},
+}
+
+
+class _MarketManager(models.Manager):
+    """Base manager for proxy models: filters the shared table by market."""
+
+    market = None
+
+    def get_queryset(self):
+        return super().get_queryset().filter(market=self.market)
+
+
+class ResultOutcomeManager(_MarketManager):
+    market = MatchPredictionOutcome.Market.RESULT
+
+
+class HandicapOutcomeManager(_MarketManager):
+    market = MatchPredictionOutcome.Market.HANDICAP
+
+
+class TotalOutcomeManager(_MarketManager):
+    market = MatchPredictionOutcome.Market.TOTAL
+
+
+class ResultOutcome(MatchPredictionOutcome):
+    """Proxy for administering RESULT outcomes (separate inline, own form)."""
+
+    objects = ResultOutcomeManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Исход (основной)'
+        verbose_name_plural = 'Основные исходы'
+
+
+class HandicapOutcome(MatchPredictionOutcome):
+    """Proxy for administering HANDICAP outcomes (separate inline, own form)."""
+
+    objects = HandicapOutcomeManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Фора'
+        verbose_name_plural = 'Форы (унифицированные)'
+
+
+class TotalOutcome(MatchPredictionOutcome):
+    """Proxy for administering TOTAL outcomes (separate inline, own form)."""
+
+    objects = TotalOutcomeManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Тотал'
+        verbose_name_plural = 'Тоталы'
 
 
 class PreseasonPredictionSubmission(models.Model):

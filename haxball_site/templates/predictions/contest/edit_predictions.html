@@ -85,7 +85,8 @@
                 </div>
               </div>
 
-              {% if uses_coefficients and not match_coefficients|get_item:match.id %}
+              {% with outcome_groups=match_outcome_groups|get_item:match.id %}
+              {% if uses_coefficients and not match_coefficients|get_item:match.id and not outcome_groups %}
                   <div class="tw:flex tw:items-center tw:gap-2">
                     <span class="tw:badge tw:badge-warning tw:badge-sm">
                       <i class="fa fa-exclamation-triangle tw:mr-1"></i>
@@ -93,6 +94,31 @@
                     </span>
                   </div>
                 {% else %}
+                  {% if uses_coefficients and outcome_groups %}
+                    {# Unified path: all markets (results, handicaps, totals) as outcome ids #}
+                    <div class="tw:flex tw:flex-col tw:gap-1.5">
+                      {% for market, outcomes in outcome_groups.items %}
+                        <div class="tw:flex tw:flex-col tw:gap-2">
+                          <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm">{% if market == 'RESULT' %}Основные исходы{% elif market == 'HANDICAP' %}Форы{% else %}Тоталы{% endif %}</span>
+                          <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
+                            {% for outcome in outcomes %}
+                              <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
+                                     title="{{ outcome.display_label }} — коэффициент {{ outcome.coefficient }}">
+                                <input type="radio"
+                                       name="prediction_{{ match.id }}"
+                                       value="{{ outcome.id }}"
+                                       class="tw:peer tw:sr-only"
+                                       {% if existing_prediction.outcome_id == outcome.id %}checked{% endif %}
+                                       @change="hasPrediction = true">
+                                <span class="tw:text-sm tw:font-bold tw:leading-none tw:normal-case">{{ outcome.display_label }}</span>
+                                <span class="tw:text-2xs tw:leading-none tw:opacity-80">{{ outcome.coefficient }}</span>
+                              </label>
+                            {% endfor %}
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
                   <div class="tw:flex tw:flex-col tw:gap-1.5">
 
                     <div class="tw:flex tw:flex-col tw:gap-2">
@@ -143,7 +169,9 @@
                         {% endwith %}
                       {% endif %}
                     </div>
+                  {% endif %}
 {% endif %}
+                  {% endwith %}
                   </div>
                 </div>
               {% endwith %}

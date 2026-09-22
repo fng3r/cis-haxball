@@ -1,9 +1,14 @@
 from decimal import Decimal
 
-from tournament.models import MatchResult
 from tournament.templatetags.tournament_extras import get_league_table
 
-from .models import MatchPredictionCoefficients, MatchPredictionHandicap, Prediction, PredictionsContestTournament
+from .models import (
+    RESULT_SELECTIONS_BY_MATCH_RESULT,
+    MatchPredictionCoefficients,
+    MatchPredictionHandicap,
+    Prediction,
+    PredictionsContestTournament,
+)
 
 
 def calculate_submission_total_points(submission):
@@ -37,12 +42,29 @@ def calculate_prediction_points(prediction, tournament=None):
     tournament = tournament or prediction.submission.tournament
 
     if tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT:
-        if prediction.handicap_id:
+        if getattr(prediction, 'outcome_id', None):
+            return _calculate_outcome_prediction_points(prediction, tournament)
+
+        if getattr(prediction, 'handicap_id', None):
             return _calculate_handicap_prediction_points(prediction, tournament)
 
         return _calculate_coefficient_prediction_points(prediction, tournament)
 
     return _calculate_legacy_prediction_points(prediction, tournament)
+
+
+def _calculate_outcome_prediction_points(prediction, tournament):
+    """Betting-style points for a unified outcome.
+
+    Correct: nominal * (coefficient - 1). Incorrect: -nominal.
+    Void/push (unsupported result, total exactly on the line): 0.
+    """
+    result = prediction.outcome.settle(prediction.match)
+    if result is None:
+        return Decimal('0.00')
+    if result:
+        return tournament.nominal_points * (prediction.outcome.coefficient - 1)
+    return -tournament.nominal_points
 
 
 def _calculate_handicap_prediction_points(prediction, tournament):
@@ -92,7 +114,11 @@ def _calculate_legacy_prediction_points(prediction, tournament):
 
 def get_prediction_coefficient(prediction) -> Decimal | None:
     """Return the coefficient of the prediction's outcome, or None if not set."""
-    if prediction.handicap_id:
+    if getattr(prediction, 'outcome_id', None):
+        outcome = prediction.outcome
+        return outcome.coefficient if outcome is not None else None
+
+    if getattr(prediction, 'handicap_id', None):
         return prediction.handicap.coefficient
 
     coefficients = getattr(prediction.match, 'prediction_coefficients', None)
@@ -105,13 +131,7 @@ def get_prediction_coefficient(prediction) -> Decimal | None:
 
 def _match_result_to_prediction_results(match_result):
     """Return the set of prediction outcomes satisfied by a match result."""
-    if match_result in [MatchResult.HOME_WIN, MatchResult.HOME_DEF_WIN]:
-        return {Prediction.Result.HOME_WIN, Prediction.Result.HOME_WIN_OR_DRAW}
-    if match_result in [MatchResult.AWAY_WIN, MatchResult.AWAY_DEF_WIN]:
-        return {Prediction.Result.AWAY_WIN, Prediction.Result.AWAY_WIN_OR_DRAW}
-    if match_result == MatchResult.DRAW:
-        return {Prediction.Result.DRAW, Prediction.Result.HOME_WIN_OR_DRAW, Prediction.Result.AWAY_WIN_OR_DRAW}
-    return set()
+    return set(RESULT_SELECTIONS_BY_MATCH_RESULT.get(match_result, ()))
 
 
 def is_handicap_correct(prediction: Prediction):
@@ -134,7 +154,10 @@ def is_prediction_correct(prediction: Prediction):
     if not prediction.match.is_played:
         return False
 
-    if prediction.handicap_id:
+    if getattr(prediction, 'outcome_id', None):
+        return prediction.outcome.settle(prediction.match) is True
+
+    if getattr(prediction, 'handicap_id', None):
         return is_handicap_correct(prediction)
 
     satisfied_results = _match_result_to_prediction_results(prediction.match.result.value)
@@ -142,6 +165,19 @@ def is_prediction_correct(prediction: Prediction):
         return False
 
     return prediction.predicted_result in satisfied_results
+
+
+def is_prediction_void(prediction: Prediction):
+    """Return True when an outcome-based prediction is void/push (scores 0).
+
+    Only applies to unified outcomes; legacy and old-format predictions
+    never void (they keep the previous behavior).
+    """
+    if not prediction.match.is_played:
+        return False
+    if not getattr(prediction, 'outcome_id', None):
+        return False
+    return prediction.outcome.settle(prediction.match) is None
 
 
 def is_prediction_result_supported(prediction):

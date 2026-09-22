@@ -65,12 +65,16 @@
                                         <img src="{{ match.team_guest.logo.url }}" alt="{{ match.team_guest.title }}" class="tw:w-5 tw:h-5 tw:rounded">
                                       {% endif %}
                                     </div>
-                                    {% if not prediction.handicap %}
-                                      <span class="tw:ml-1 tw:font-bold">
-                                        {{ prediction.outcome_label }}
-                                        {% if prediction.is_special %}*{% endif %}
-                                      </span>
-                                      {% if scoring_method == 'coefficient' %}
+                                    <span class="tw:ml-1 tw:font-bold">
+                                      {{ prediction.outcome_label }}
+                                      {% if prediction.is_special %}*{% endif %}
+                                    </span>
+                                    {% if scoring_method == 'coefficient' %}
+                                      {% if prediction.outcome %}
+                                        <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.outcome.coefficient }}</span>
+                                      {% elif prediction.handicap %}
+                                        <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.handicap.coefficient }}</span>
+                                      {% else %}
                                         {% with coefficient=match_coefficients|get_item:match.id|get_coefficient:prediction.predicted_result %}
                                           {% if coefficient %}
                                             <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ coefficient }}</span>
@@ -79,41 +83,28 @@
                                       {% endif %}
                                       {% if match.is_played %}
                                         <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
-                                          {% if prediction|prediction_is_correct %}
+                                          {% if prediction|prediction_is_void %}
+                                            <span class="tw:text-warning">=</span>
+                                          {% elif prediction|prediction_is_correct %}
                                             <span class="tw:text-success">✓</span>
                                           {% else %}
                                             <span class="tw:text-error">✗</span>
                                           {% endif %}
-                                          {% if scoring_method == 'coefficient' %}
-                                            <span class="tw:font-bold {% if prediction|prediction_is_correct %}tw:text-success{% else %}tw:text-error{% endif %}">
-                                              {{ prediction|get_prediction_points|format_points }}
-                                            </span>
-                                          {% endif %}
+                                          <span class="tw:font-bold {% if prediction|prediction_is_void %}tw:text-warning{% elif prediction|prediction_is_correct %}tw:text-success{% else %}tw:text-error{% endif %}">
+                                            {{ prediction|get_prediction_points|format_points }}
+                                          </span>
                                         </span>
                                       {% endif %}
+                                    {% elif match.is_played %}
+                                      <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
+                                        {% if prediction|prediction_is_correct %}
+                                          <span class="tw:text-success">✓</span>
+                                        {% else %}
+                                          <span class="tw:text-error">✗</span>
+                                        {% endif %}
+                                      </span>
                                     {% endif %}
                                   </div>
-                                  {% if prediction.handicap %}
-                                    <div class="tw:mt-1 tw:flex tw:items-center tw:gap-1.5 tw:pl-1">
-                                      <span class="tw:font-bold">{{ prediction.outcome_label }}</span>
-                                      <span class="tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.handicap.coefficient }}</span>
-                                      {% if prediction.is_special %}<span class="tw:font-bold">*</span>{% endif %}
-                                      {% if match.is_played %}
-                                        <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
-                                          {% if prediction|prediction_is_correct %}
-                                            <span class="tw:text-success">✓</span>
-                                          {% else %}
-                                            <span class="tw:text-error">✗</span>
-                                          {% endif %}
-                                          {% if scoring_method == 'coefficient' %}
-                                            <span class="tw:font-bold {% if prediction|prediction_is_correct %}tw:text-success{% else %}tw:text-error{% endif %}">
-                                              {{ prediction|get_prediction_points|format_points }}
-                                            </span>
-                                          {% endif %}
-                                        </span>
-                                      {% endif %}
-                                    </div>
-                                  {% endif %}
                                 </div>
                               {% endwith %}
                             {% endfor %}
