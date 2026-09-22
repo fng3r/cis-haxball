@@ -22,7 +22,6 @@ from .forms import (
     UserFilterForm,
 )
 from .models import (
-    MatchPredictionCoefficients,
     Prediction,
     PredictionsContestTournament,
     PredictionSubmission,
@@ -36,8 +35,6 @@ from .points_service import (
     get_teams_actual_positions,
 )
 from .utils import (
-    build_match_coefficients_map,
-    build_match_handicaps_map,
     build_match_outcome_groups_map,
     build_match_outcomes_map,
     calculate_tour_rewards,
@@ -272,22 +269,19 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
     selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
 
     user_predictions = {}
-    match_coefficients_by_tour = {}
-    match_handicaps_by_tour = {}
     match_outcomes_by_tour = {}
     match_outcome_groups_by_tour = {}
     is_tournament_ended = False
     if selected_tournament:
         tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
-            'tour_matches__prediction_coefficients__handicaps',
             'tour_matches__prediction_offer__outcomes',
         )
 
         submissions = (
             PredictionSubmission.objects.filter(user=request.user, tournament=selected_tournament)
             .select_related('tournament')
-            .prefetch_related('predictions__match__result', 'predictions__handicap', 'predictions__outcome__offer')
+            .prefetch_related('predictions__match__result', 'predictions__outcome__offer')
         )
 
         submissions_lookup = {sub.tour_id: sub for sub in submissions}
@@ -300,8 +294,6 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
             else:
                 user_predictions[tour.id] = {'submission': None, 'match_predictions': {}}
 
-            match_coefficients_by_tour[tour.id] = build_match_coefficients_map(tour)
-            match_handicaps_by_tour[tour.id] = build_match_handicaps_map(tour)
             match_outcomes_by_tour[tour.id] = build_match_outcomes_map(tour)
             match_outcome_groups_by_tour[tour.id] = build_match_outcome_groups_map(tour)
 
@@ -312,8 +304,6 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
         'selected_tournament': selected_tournament,
         'is_tournament_ended': is_tournament_ended,
         'user_predictions': user_predictions,
-        'match_coefficients_by_tour': match_coefficients_by_tour,
-        'match_handicaps_by_tour': match_handicaps_by_tour,
         'match_outcomes_by_tour': match_outcomes_by_tour,
         'match_outcome_groups_by_tour': match_outcome_groups_by_tour,
         'scoring_method': selected_tournament.scoring_method if selected_tournament else None,
@@ -358,7 +348,6 @@ def view_predictions_tab(request):
         user_form.fields['user'].queryset = users_with_predictions
 
     predictions_data = {}
-    match_coefficients = {}
     if selected_tournament and selected_user:
         tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
@@ -371,7 +360,6 @@ def view_predictions_tab(request):
                 'predictions__match__result__winner',
                 'predictions__match__team_home',
                 'predictions__match__team_guest',
-                'predictions__handicap',
                 'predictions__outcome__offer',
             )
         )
@@ -385,22 +373,12 @@ def view_predictions_tab(request):
             else:
                 predictions_data[tour.id] = None
 
-        match_ids = set()
-        for submission in predictions_data.values():
-            if submission:
-                match_ids.update(submission.predictions.values_list('match_id', flat=True))
-        match_coefficients = {
-            c.match_id: c
-            for c in MatchPredictionCoefficients.objects.filter(match_id__in=match_ids)
-        }
-
     context = {
         'tournament_form': tournament_form,
         'user_form': user_form,
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
         'predictions_data': predictions_data,
-        'match_coefficients': match_coefficients,
         'scoring_method': selected_tournament.scoring_method if selected_tournament else None,
     }
 
@@ -455,7 +433,6 @@ def tour_card(request, tour_id):
     tour = get_object_or_404(
         TourNumber.objects.select_related('league').prefetch_related(
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
-            'tour_matches__prediction_coefficients__handicaps',
             'tour_matches__prediction_offer__outcomes',
         ),
         id=tour_id,
@@ -472,7 +449,7 @@ def tour_card(request, tour_id):
             .select_related('tournament')
             .prefetch_related(
                 'predictions__match__result', 'predictions__match__team_home', 'predictions__match__team_guest',
-                'predictions__handicap', 'predictions__outcome__offer',
+                'predictions__outcome__offer',
             )
             .first()
         )
@@ -483,8 +460,6 @@ def tour_card(request, tour_id):
         'tour': tour,
         'submission': submission,
         'match_predictions': match_predictions,
-        'match_coefficients': build_match_coefficients_map(tour),
-        'match_handicaps': build_match_handicaps_map(tour),
         'match_outcomes': build_match_outcomes_map(tour),
         'match_outcome_groups': build_match_outcome_groups_map(tour),
         'scoring_method': scoring_method,
@@ -498,7 +473,6 @@ def edit_predictions(request, tour_id):
     tour = get_object_or_404(
         TourNumber.objects.select_related('league').prefetch_related(
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
-            'tour_matches__prediction_coefficients__handicaps',
             'tour_matches__prediction_offer__outcomes',
         ),
         id=tour_id,
@@ -519,8 +493,6 @@ def edit_predictions(request, tour_id):
 
     matches = tour.tour_matches.all().order_by('id')
 
-    match_coefficients = build_match_coefficients_map(tour)
-    match_handicaps = build_match_handicaps_map(tour)
     match_outcomes = build_match_outcomes_map(tour)
     match_outcome_groups = build_match_outcome_groups_map(tour)
     prediction_outcome_choices = get_prediction_outcome_choices(prediction_tournament)
@@ -537,13 +509,10 @@ def edit_predictions(request, tour_id):
             existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
 
             for match in matches:
-                # A match is open for coefficient predictions when it has a
-                # published unified offer; old coefficients rows are honored
-                # as fallback during the transition period.
-                offer_outcomes = match_outcomes.get(match.id, [])
-                offer_outcome_ids = {o.id for o in offer_outcomes}
-                has_any_market = bool(offer_outcomes) or match.id in match_coefficients
-                if uses_coefficients and not has_any_market:
+                # A match is open for coefficient predictions when its offer
+                # has published outcomes.
+                offer_outcome_ids = {o.id for o in match_outcomes.get(match.id, [])}
+                if uses_coefficients and not offer_outcome_ids:
                     existing_prediction = existing_predictions.get(match.id)
                     if existing_prediction:
                         existing_prediction.delete()
@@ -551,24 +520,15 @@ def edit_predictions(request, tour_id):
 
                 prediction_value = request.POST.get(f'prediction_{match.id}')
                 outcome_id = None
-                handicap_id = None
                 if prediction_value is None or prediction_value == '':
                     prediction_value = None
-                elif offer_outcome_ids and prediction_value.isdigit() and int(prediction_value) in offer_outcome_ids:
+                elif uses_coefficients:
                     # Unified path: a single outcome id for results/handicaps/totals.
-                    # Legacy columns stay empty; coefficient paths read outcome only.
-                    outcome_id = int(prediction_value)
+                    if prediction_value.isdigit() and int(prediction_value) in offer_outcome_ids:
+                        outcome_id = int(prediction_value)
                     prediction_value = None
-                    handicap_id = None
                 elif prediction_value in valid_outcome_codes:
                     pass
-                elif uses_coefficients:
-                    match_handicap_ids = {h.id for h in match_handicaps.get(match.id, [])}
-                    if prediction_value.isdigit() and int(prediction_value) in match_handicap_ids:
-                        handicap_id = int(prediction_value)
-                        prediction_value = Prediction.Result.HANDICAP
-                    else:
-                        prediction_value = None
                 else:
                     prediction_value = None
                 is_special = bool(request.POST.get(f'special_{match.id}'))
@@ -584,14 +544,12 @@ def edit_predictions(request, tour_id):
                         match=match,
                         defaults={
                             'predicted_result': prediction_value,
-                            'handicap_id': handicap_id,
                             'outcome_id': outcome_id,
                             'is_special': is_special,
                         },
                     )
                     if not created:
                         prediction.predicted_result = prediction_value
-                        prediction.handicap_id = handicap_id
                         prediction.outcome_id = outcome_id
                         prediction.is_special = is_special
                         prediction.save()
@@ -616,8 +574,6 @@ def edit_predictions(request, tour_id):
         'existing_predictions': existing_predictions,
         'submission': submission,
         'prediction_outcome_choices': prediction_outcome_choices,
-        'match_coefficients': match_coefficients,
-        'match_handicaps': match_handicaps,
         'match_outcomes': match_outcomes,
         'match_outcome_groups': match_outcome_groups,
         'uses_coefficients': uses_coefficients,

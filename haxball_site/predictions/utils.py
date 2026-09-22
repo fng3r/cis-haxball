@@ -8,37 +8,6 @@ from .models import MatchPredictionOutcome, PredictionSubmission
 from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
 
 
-def build_match_coefficients_map(tour):
-    """Return mapping {match_id: MatchPredictionCoefficients} for matches of a tour.
-
-    Uses the coefficients prefetched on tour's matches, so requires the queryset to
-    prefetch 'tour_matches__prediction_coefficients' to avoid N+1 queries.
-    """
-    coefficients = {}
-    for match in tour.tour_matches.all():
-        match_coefficients = getattr(match, 'prediction_coefficients', None)
-        if match_coefficients is not None:
-            coefficients[match.id] = match_coefficients
-    return coefficients
-
-
-def build_match_handicaps_map(tour):
-    """Return mapping {match_id: list of MatchPredictionHandicap} for matches of a tour.
-
-    Uses handicaps prefetched on tour's matches coefficients, so requires
-    prefetching 'tour_matches__prediction_coefficients__handicaps' to avoid N+1 queries.
-    """
-    handicaps = {}
-    for match in tour.tour_matches.all():
-        coefficients = getattr(match, 'prediction_coefficients', None)
-        if coefficients is None:
-            continue
-        match_handicaps = list(coefficients.handicaps.all())
-        if match_handicaps:
-            handicaps[match.id] = match_handicaps
-    return handicaps
-
-
 def build_match_offers_map(tour):
     """Return mapping {match_id: MatchPredictionOffer} for matches of a tour.
 

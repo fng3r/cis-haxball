@@ -86,15 +86,14 @@
               </div>
 
               {% with outcome_groups=match_outcome_groups|get_item:match.id %}
-              {% if uses_coefficients and not match_coefficients|get_item:match.id and not outcome_groups %}
+              {% if uses_coefficients and not outcome_groups %}
                   <div class="tw:flex tw:items-center tw:gap-2">
                     <span class="tw:badge tw:badge-warning tw:badge-sm">
                       <i class="fa fa-exclamation-triangle tw:mr-1"></i>
                       Нет коэффициентов
                     </span>
                   </div>
-                {% else %}
-                  {% if uses_coefficients and outcome_groups %}
+                {% elif uses_coefficients %}
                     {# Unified path: all markets (results, handicaps, totals) as outcome ids #}
                     <div class="tw:flex tw:flex-col tw:gap-1.5">
                       {% for market, outcomes in outcome_groups.items %}
@@ -119,58 +118,28 @@
                       {% endfor %}
                     </div>
                   {% else %}
+                  {# Legacy format: fixed П1/X/П2 codes #}
                   <div class="tw:flex tw:flex-col tw:gap-1.5">
 
                     <div class="tw:flex tw:flex-col tw:gap-2">
                       <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Основные исходы</span>
                       <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
-                        {% with coefficients=match_coefficients|get_item:match.id %}
-                          {% for value, label in prediction_outcome_choices %}
-                            {% with coefficient=coefficients|get_coefficient:value %}
-                              <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
-                                     title="{{ label }}{% if coefficient %} — коэффициент {{ coefficient }}{% endif %}">
-                                <input type="radio"
-                                       name="prediction_{{ match.id }}"
-                                       value="{{ value }}"
-                                       class="tw:peer tw:sr-only"
-                                       {% if existing_prediction.predicted_result == value %}checked{% endif %}
-                                       @change="hasPrediction = true">
-                                <span class="tw:text-sm tw:font-bold tw:leading-none tw:normal-case">{{ label }}</span>
-                                {% if coefficient %}<span class="tw:text-2xs tw:leading-none tw:opacity-80">{{ coefficient }}</span>{% endif %}
-                                </label>
-                              {% endwith %}
-                            {% endfor %}
-                          {% endwith %}
+                        {% for value, label in prediction_outcome_choices %}
+                          <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
+                                 title="{{ label }}">
+                            <input type="radio"
+                                   name="prediction_{{ match.id }}"
+                                   value="{{ value }}"
+                                   class="tw:peer tw:sr-only"
+                                   {% if existing_prediction.predicted_result == value %}checked{% endif %}
+                                   @change="hasPrediction = true">
+                            <span class="tw:text-sm tw:font-bold tw:leading-none tw:normal-case">{{ label }}</span>
+                            </label>
+                          {% endfor %}
                         </div>
                       </div>
-
-                      {% if uses_coefficients %}
-                        {% with match_handicaps_list=match_handicaps|get_item:match.id %}
-                          {% if match_handicaps_list %}
-                            <div class="tw:flex tw:flex-col tw:gap-2">
-                              <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Форы</span>
-                              <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
-                                {% for hcp in match_handicaps_list %}
-                                  <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
-                                         title="{{ hcp.display_label }} — коэффициент {{ hcp.coefficient }}">
-                                    <input type="radio"
-                                           name="prediction_{{ match.id }}"
-                                           value="{{ hcp.id }}"
-                                           class="tw:peer tw:sr-only"
-                                           {% if existing_prediction.handicap_id == hcp.id %}checked{% endif %}
-                                           @change="hasPrediction = true">
-                                    <span class="tw:text-sm tw:font-bold tw:leading-none tw:normal-case">{{ hcp.display_label }}</span>
-                                    <span class="tw:text-2xs tw:leading-none tw:opacity-80">{{ hcp.coefficient }}</span>
-                                  </label>
-                                {% endfor %}
-                              </div>
-                            </div>
-                          {% endif %}
-                        {% endwith %}
-                      {% endif %}
                     </div>
                   {% endif %}
-{% endif %}
                   {% endwith %}
                   </div>
                 </div>

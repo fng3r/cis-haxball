@@ -12,8 +12,6 @@ from tournament.models import Match
 
 from .models import (
     HandicapOutcome,
-    MatchPredictionCoefficients,
-    MatchPredictionHandicap,
     MatchPredictionOffer,
     MatchPredictionOutcome,
     Prediction,
@@ -31,7 +29,7 @@ class PredictionInline(UnfoldTabularInline):
     model = Prediction
     extra = 0
     readonly_fields = ['match']
-    fields = ['match', 'predicted_result', 'handicap', 'outcome', 'is_special']
+    fields = ['match', 'predicted_result', 'outcome', 'is_special']
 
 
 @admin.register(PredictionsContestTournament)
@@ -59,68 +57,6 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
     ordering = ['-id']
 
 
-class MatchPredictionHandicapInline(UnfoldTabularInline):
-    model = MatchPredictionHandicap
-    fk_name = 'coefficients'
-    extra = 0
-    fields = ('team', 'value', 'coefficient')
-
-
-@admin.register(MatchPredictionCoefficients)
-class MatchPredictionCoefficientsAdmin(UnfoldModelAdmin):
-    list_display = [
-        'match',
-        'home_win',
-        'home_win_or_draw',
-        'draw',
-        'away_win_or_draw',
-        'away_win',
-        'display_handicaps',
-    ]
-    list_filter = [
-        ('match__league', RelatedDropdownFilter),
-        ('match__numb_tour', RelatedDropdownFilter),
-    ]
-    list_filter_sheet = False
-    list_filter_submit = True
-    search_fields = ['match__team_home__title', 'match__team_guest__title']
-    ordering = ['-id']
-    inlines = [MatchPredictionHandicapInline]
-
-    fieldsets = (
-        (
-            None,
-            {
-                'fields': (
-                    'match',
-                    ('home_win', 'home_win_or_draw'),
-                    ('draw',),
-                    ('away_win_or_draw', 'away_win'),
-                )
-            },
-        ),
-    )
-
-    @display(description='Форы', dropdown=True)
-    def display_handicaps(self, model):
-        handicaps = list(model.handicaps.all())
-        return {
-            'title': len(handicaps),
-            'items': [{'title': f'{handicap.display_label} ×{handicap.coefficient}'} for handicap in handicaps],
-        }
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('handicaps')
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'match':
-            coefficient_tournament_leagues = PredictionsContestTournament.objects.filter(
-                scoring_method=PredictionsContestTournament.ScoringMethod.COEFFICIENT
-            ).values_list('league_id', flat=True)
-            kwargs['queryset'] = Match.objects.filter(league_id__in=coefficient_tournament_leagues)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
 STANDARD_RESULT_SELECTIONS = ['HW', 'HWD', 'D', 'AWD', 'AW']
 DEFAULT_RESULT_COEFFICIENT = Decimal('1.00')
 
@@ -128,7 +64,7 @@ DEFAULT_RESULT_COEFFICIENT = Decimal('1.00')
 def ensure_standard_result_outcomes(offer):
     """Create missing standard RESULT outcomes (П1/1Х/Х/Х2/П2) for an offer.
 
-    Returns the number of created rows. Never touches handicaps/totals and
+    Returns the number of created rows. Never touches HANDICAP/TOTAL markets and
     never duplicates existing selections.
     """
     existing = set(

@@ -120,7 +120,6 @@ class Prediction(models.Model):
         DRAW = 'D', 'X'
         AWAY_WIN_OR_DRAW = 'AWD', 'Х2'
         AWAY_WIN = 'AW', 'П2'
-        HANDICAP = 'FH', 'Фора'
 
     submission = models.ForeignKey(
         PredictionSubmission, verbose_name='Отправка', on_delete=models.CASCADE, related_name='predictions'
@@ -132,17 +131,8 @@ class Prediction(models.Model):
         choices=Result.choices,
         null=True,
         blank=True,
-        help_text='Только для legacy-конкурсов и старого формата коэффициентов. '
-        'Прогнозы через унифицированные исходы (outcome) оставляют поле пустым.',
-    )
-    handicap = models.ForeignKey(
-        'MatchPredictionHandicap',
-        verbose_name='Фора',
-        on_delete=models.CASCADE,
-        related_name='predictions',
-        null=True,
-        blank=True,
-        help_text='Заполняется, когда выбран исход "Фора" (старый формат, для legacy и переходного периода)',
+        help_text='Только для legacy-конкурсов. '
+        'Прогнозы формата "Коэффициенты" используют унифицированный исход (outcome).',
     )
     outcome = models.ForeignKey(
         'MatchPredictionOutcome',
@@ -160,8 +150,6 @@ class Prediction(models.Model):
     def outcome_label(self):
         if self.outcome_id and self.outcome is not None:
             return self.outcome.display_label
-        if self.handicap_id:
-            return self.handicap.display_label
         if self.predicted_result:
             return self.get_predicted_result_display()
         return ''
@@ -178,32 +166,25 @@ class Prediction(models.Model):
         if submission is None:
             return
         outcome = self.__dict__.get('outcome') or self.outcome
-        handicap = self.__dict__.get('handicap') or self.handicap
         tournament = submission.tournament
-        is_legacy = (
-            tournament.scoring_method == PredictionsContestTournament.ScoringMethod.LEGACY
-        )
+        is_legacy = tournament.scoring_method == PredictionsContestTournament.ScoringMethod.LEGACY
         if is_legacy:
             if outcome is not None:
                 raise ValidationError({'outcome': 'Legacy-конкурс использует только предсказанный результат'})
             if not self.predicted_result:
                 raise ValidationError({'predicted_result': 'Обязательное поле для legacy-конкурса'})
             if self.predicted_result not in (
-                self.Result.HOME_WIN, self.Result.DRAW, self.Result.AWAY_WIN,
+                self.Result.HOME_WIN,
+                self.Result.DRAW,
+                self.Result.AWAY_WIN,
             ):
                 raise ValidationError({'predicted_result': 'Legacy-конкурс допускает только П1/Х/П2'})
-            if handicap is not None:
-                raise ValidationError({'handicap': 'Legacy-конкурс не использует форы'})
         else:
             if outcome is None:
                 raise ValidationError({'outcome': 'Обязательное поле для формата "Коэффициенты"'})
             if self.predicted_result:
                 raise ValidationError(
                     {'predicted_result': 'Формат "Коэффициенты" использует только унифицированный исход'}
-                )
-            if handicap is not None:
-                raise ValidationError(
-                    {'handicap': 'Формат "Коэффициенты" использует только унифицированный исход'}
                 )
             if self.is_special:
                 raise ValidationError({'is_special': 'Особые прогнозы только для legacy-конкурсов'})
@@ -216,60 +197,9 @@ class Prediction(models.Model):
         verbose_name = 'Прогноз'
         verbose_name_plural = 'Прогнозы'
         unique_together = ['submission', 'match']
-        constraints = [
-            models.CheckConstraint(
-                condition=(
-                    Q(outcome__isnull=True, predicted_result__isnull=False)
-                    | Q(outcome__isnull=False, predicted_result__isnull=True, handicap__isnull=True)
-                ),
-                name='prediction_outcome_xor_legacy_result',
-            ),
-        ]
 
     def __str__(self):
         return f'{self.submission.user.username}: {self.match} - {self.outcome_label}'
-
-
-class MatchPredictionCoefficients(models.Model):
-    """Coefficients of prediction outcomes for a match.
-
-    A match is available for predictions in the "coefficients" format only
-    when this row exists for it.
-    """
-
-    match = models.OneToOneField(
-        Match,
-        verbose_name='Матч',
-        on_delete=models.CASCADE,
-        related_name='prediction_coefficients',
-    )
-    home_win = models.DecimalField('Коэффициент П1', max_digits=5, decimal_places=2)
-    home_win_or_draw = models.DecimalField('Коэффициент 1Х', max_digits=5, decimal_places=2)
-    draw = models.DecimalField('Коэффициент Х', max_digits=5, decimal_places=2)
-    away_win_or_draw = models.DecimalField('Коэффициент Х2', max_digits=5, decimal_places=2)
-    away_win = models.DecimalField('Коэффициент П2', max_digits=5, decimal_places=2)
-
-    COEFFICIENT_FIELD_BY_RESULT = {
-        Prediction.Result.HOME_WIN: 'home_win',
-        Prediction.Result.HOME_WIN_OR_DRAW: 'home_win_or_draw',
-        Prediction.Result.DRAW: 'draw',
-        Prediction.Result.AWAY_WIN_OR_DRAW: 'away_win_or_draw',
-        Prediction.Result.AWAY_WIN: 'away_win',
-    }
-
-    def coefficient_for(self, result_value):
-        """Return Decimal coefficient for a Prediction.Result value or None."""
-        field_name = self.COEFFICIENT_FIELD_BY_RESULT.get(result_value)
-        if field_name is None:
-            return None
-        return getattr(self, field_name)
-
-    def __str__(self):
-        return f'Коэффициенты: {self.match.team_home.short_title} - {self.match.team_guest.short_title}'
-
-    class Meta:
-        verbose_name = 'Коэффициенты прогноза на матч'
-        verbose_name_plural = 'Коэффициенты прогнозов на матчи'
 
 
 def format_handicap_value(value) -> str:
@@ -282,56 +212,9 @@ def format_handicap_value(value) -> str:
     return '0'
 
 
-class MatchPredictionHandicap(models.Model):
-    """A single handicap outcome (Ф1/Ф2 with a value and coefficient) for a match.
-
-    Handicaps belong to a MatchPredictionCoefficients row and are managed in
-    the admin as an inline of it. A match can have zero or more handicaps, each
-    becoming an extra outcome to predict on in the "coefficients" format.
-    """
-
-    class Team(models.TextChoices):
-        HOME = 'home', 'Ф1'
-        AWAY = 'away', 'Ф2'
-
-    coefficients = models.ForeignKey(
-        MatchPredictionCoefficients,
-        verbose_name='Коэффициенты матча',
-        on_delete=models.CASCADE,
-        related_name='handicaps',
-    )
-    team = models.CharField(
-        'Команда',
-        max_length=4,
-        choices=Team.choices,
-        default=Team.HOME,
-        help_text='Ф1 — хозяева, Ф2 — гости',
-    )
-    value = models.DecimalField(
-        'Значение форы',
-        max_digits=6,
-        decimal_places=2,
-        help_text='Со знаком: -5.5 для Ф1 (-5.5) или +5.5 для Ф2 (+5.5). '
-        'Прогноз верен, если счёт команды с форой больше счёта соперника.',
-    )
-    coefficient = models.DecimalField('Коэффициент', max_digits=5, decimal_places=2)
-
-    @property
-    def display_label(self):
-        return f'{self.get_team_display()} ({format_handicap_value(self.value)})'
-
-    def __str__(self):
-        return f'{self.coefficients.match}: {self.display_label}'
-
-    class Meta:
-        verbose_name = 'Фора на матч'
-        verbose_name_plural = 'Форы на матчи'
-
-
 def format_total_value(value) -> str:
     """Format a total line without sign, e.g. 5.5 / 5."""
-    decimal_value = Decimal(value).quantize(Decimal('0.1')).normalize()
-    return f'{decimal_value}'
+    return f'{Decimal(value).quantize(Decimal("0.1")).normalize()}'
 
 
 class MatchPredictionOffer(models.Model):

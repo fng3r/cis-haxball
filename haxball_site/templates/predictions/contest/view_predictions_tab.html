@@ -72,14 +72,6 @@
                                     {% if scoring_method == 'coefficient' %}
                                       {% if prediction.outcome %}
                                         <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.outcome.coefficient }}</span>
-                                      {% elif prediction.handicap %}
-                                        <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.handicap.coefficient }}</span>
-                                      {% else %}
-                                        {% with coefficient=match_coefficients|get_item:match.id|get_coefficient:prediction.predicted_result %}
-                                          {% if coefficient %}
-                                            <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ coefficient }}</span>
-                                          {% endif %}
-                                        {% endwith %}
                                       {% endif %}
                                       {% if match.is_played %}
                                         <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
