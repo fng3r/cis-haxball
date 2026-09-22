@@ -50,7 +50,7 @@ LEGACY_OUTCOME_CODES = {
 
 def get_prediction_outcome_choices(tournament):
     """Return ((value, label), ...) list of main outcomes available for a tournament format."""
-    choices = [choice for choice in Prediction.Result.choices if choice[0] != Prediction.Result.HANDICAP]
+    choices = list(Prediction.Result.choices)
     if tournament.scoring_method != PredictionsContestTournament.ScoringMethod.COEFFICIENT:
         choices = [choice for choice in choices if choice[0] in LEGACY_OUTCOME_CODES]
     return choices
