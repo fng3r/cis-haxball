@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django import forms
 from django.contrib import admin
 from django.forms.models import BaseInlineFormSet
@@ -58,31 +56,6 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
 
 
 STANDARD_RESULT_SELECTIONS = ['HW', 'HWD', 'D', 'AWD', 'AW']
-DEFAULT_RESULT_COEFFICIENT = Decimal('1.00')
-
-
-def ensure_standard_result_outcomes(offer):
-    """Create missing standard RESULT outcomes (П1/1Х/Х/Х2/П2) for an offer.
-
-    Returns the number of created rows. Never touches HANDICAP/TOTAL markets and
-    never duplicates existing selections.
-    """
-    existing = set(
-        offer.outcomes.filter(market=MatchPredictionOutcome.Market.RESULT).values_list('selection', flat=True)
-    )
-    missing = [
-        MatchPredictionOutcome(
-            offer=offer,
-            market=MatchPredictionOutcome.Market.RESULT,
-            selection=code,
-            line=None,
-            coefficient=DEFAULT_RESULT_COEFFICIENT,
-        )
-        for code in STANDARD_RESULT_SELECTIONS
-        if code not in existing
-    ]
-    MatchPredictionOutcome.objects.bulk_create(missing)
-    return len(missing)
 
 
 def outcome_form_for(fixed_market, selection_choices):
@@ -138,7 +111,7 @@ class ResultsInline(BaseOutcomeInline):
     formset = StandardResultsFormSet
     form = outcome_form_for(
         MatchPredictionOutcome.Market.RESULT,
-        [('HW', 'П1'), ('HWD', '1Х'), ('D', 'X'), ('AWD', 'Х2'), ('AW', 'П2')],
+        [('HW', 'П1'), ('HWD', '1X'), ('D', 'X'), ('AWD', 'X2'), ('AW', 'П2')],
     )
     fields = ('market', 'selection', 'coefficient')
     verbose_name = 'Основной исход'
@@ -184,7 +157,6 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     search_fields = ['match__team_home__title', 'match__team_guest__title']
     ordering = ['-id']
     inlines = [ResultsInline, HandicapsInline, TotalsInline]
-    actions = ['ensure_standard_results']
 
     @display(description='Исходы', dropdown=True)
     def display_results(self, model):
@@ -205,13 +177,6 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
             'title': len(outcomes),
             'items': [{'title': f'{o.display_label} ×{o.coefficient}'} for o in outcomes],
         }
-
-    @admin.action(description='Создать стандартные исходы (П1/1Х/Х/Х2/П2 ×1.00, если отсутствуют)')
-    def ensure_standard_results(self, request, queryset):
-        created = 0
-        for offer in queryset.prefetch_related('outcomes'):
-            created += ensure_standard_result_outcomes(offer)
-        self.message_user(request, f'Создано исходов: {created}')
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('outcomes')

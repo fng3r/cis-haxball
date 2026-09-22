@@ -116,9 +116,7 @@ class Prediction(models.Model):
 
     class Result(models.TextChoices):
         HOME_WIN = 'HW', 'П1'
-        HOME_WIN_OR_DRAW = 'HWD', '1Х'
         DRAW = 'D', 'X'
-        AWAY_WIN_OR_DRAW = 'AWD', 'Х2'
         AWAY_WIN = 'AW', 'П2'
 
     submission = models.ForeignKey(
@@ -273,9 +271,9 @@ class MatchPredictionOutcome(models.Model):
     class Selection(models.TextChoices):
         # RESULT market
         HOME_WIN = 'HW', 'П1'
-        HOME_WIN_OR_DRAW = 'HWD', '1Х'
+        HOME_WIN_OR_DRAW = 'HWD', '1X'
         DRAW = 'D', 'X'
-        AWAY_WIN_OR_DRAW = 'AWD', 'Х2'
+        AWAY_WIN_OR_DRAW = 'AWD', 'X2'
         AWAY_WIN = 'AW', 'П2'
         # HANDICAP market
         HOME_HANDICAP = 'F1', 'Ф1'
