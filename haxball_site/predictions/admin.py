@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.forms.models import BaseInlineFormSet
 
-from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter
+from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter, SingleNumericFilter
 from unfold.decorators import display
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
@@ -149,7 +149,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     list_display = ['match', 'is_published', 'display_results', 'display_handicaps', 'display_totals']
     list_filter = [
         ('match__league', RelatedDropdownFilter),
-        ('match__numb_tour', RelatedDropdownFilter),
+        ('match__numb_tour__number', SingleNumericFilter),
         'is_published',
     ]
     list_filter_sheet = False
