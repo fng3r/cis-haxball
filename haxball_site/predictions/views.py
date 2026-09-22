@@ -583,6 +583,7 @@ def edit_predictions(request, tour_id):
         'match_coefficients': match_coefficients,
         'match_handicaps': match_handicaps,
         'uses_coefficients': uses_coefficients,
+        'nominal_points': prediction_tournament.nominal_points if uses_coefficients else None,
     }
 
     return render(request, 'predictions/contest/edit_predictions.html', context)

@@ -1,12 +1,40 @@
+from decimal import Decimal
 from math import ceil
 
 from django import template
 from django.utils import timezone
 
 from .. import utils
-from ..points_service import is_prediction_correct
+from ..points_service import calculate_prediction_points, is_prediction_correct
 
 register = template.Library()
+
+
+@register.filter
+def get_prediction_points(prediction):
+    """Return points (positive or negative) earned for a single prediction, or 0."""
+    return calculate_prediction_points(prediction)
+
+
+@register.filter
+def net_win(nominal, coefficient):
+    """Return betting-style net win for a coefficient: nominal * (coefficient - 1)."""
+    if nominal is None or coefficient is None:
+        return None
+    return Decimal(nominal) * (Decimal(coefficient) - 1)
+
+
+@register.filter
+def format_points(value):
+    """Format points with an explicit sign: '+240' / '-100'."""
+    if value is None:
+        return ''
+    value = Decimal(value).quantize(Decimal('0.01'))
+    if value == value.to_integral_value():
+        value = value.quantize(Decimal('1'))
+    if value < 0:
+        return str(value)
+    return f'+{value}'
 
 
 @register.filter

@@ -73,11 +73,16 @@
                   {% endif %}
                 {% endif %}
                 {% if match.is_played %}
-                  <span class="tw:ml-1">
+                  <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
                     {% if prediction|prediction_is_correct %}
                       <span class="tw:text-success">✓</span>
                     {% else %}
                       <span class="tw:text-error">✗</span>
+                    {% endif %}
+                    {% if scoring_method == 'coefficient' %}
+                      <span class="tw:font-bold {% if prediction|prediction_is_correct %}tw:text-success{% else %}tw:text-error{% endif %}">
+                        {{ prediction|get_prediction_points|format_points }}
+                      </span>
                     {% endif %}
                   </span>
                 {% endif %}

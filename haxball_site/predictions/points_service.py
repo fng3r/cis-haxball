@@ -46,23 +46,28 @@ def calculate_prediction_points(prediction, tournament=None):
 
 
 def _calculate_handicap_prediction_points(prediction, tournament):
-    """Points for a handicap outcome: nominal points multiplied by its coefficient."""
-    if not is_handicap_correct(prediction):
-        return Decimal('0.00')
+    """Betting-style points for a handicap outcome.
 
-    return tournament.nominal_points * prediction.handicap.coefficient
+    Correct: nominal * (coefficient - 1). Incorrect: -nominal.
+    """
+    if is_handicap_correct(prediction):
+        return tournament.nominal_points * (prediction.handicap.coefficient - 1)
+    return -tournament.nominal_points
 
 
 def _calculate_coefficient_prediction_points(prediction, tournament):
-    """Points for coefficient format: nominal points multiplied by outcome coefficient."""
-    if not is_prediction_correct(prediction):
-        return Decimal('0.00')
+    """Betting-style points for a coefficient outcome.
 
+    Correct: nominal * (coefficient - 1). Incorrect: -nominal.
+    Returns 0 when no coefficient is set for the predicted outcome.
+    """
     coefficient = get_prediction_coefficient(prediction)
     if coefficient is None:
         return Decimal('0.00')
 
-    return tournament.nominal_points * coefficient
+    if is_prediction_correct(prediction):
+        return tournament.nominal_points * (coefficient - 1)
+    return -tournament.nominal_points
 
 
 def _calculate_legacy_prediction_points(prediction, tournament):
