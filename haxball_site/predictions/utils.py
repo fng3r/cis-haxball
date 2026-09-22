@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import MatchPredictionOutcome, PredictionSubmission
+from .models import PredictionSubmission
 from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
 
 
@@ -34,15 +34,7 @@ def build_match_outcomes_map(tour):
         offer = getattr(match, 'prediction_offer', None)
         if offer is None or not getattr(offer, 'is_published', True):
             continue
-        match_outcomes = sorted(
-            offer.outcomes.all(),
-            key=lambda o: (
-                MatchPredictionOutcome.MARKET_ORDER.get(o.market, 99),
-                o.selection,
-                o.line is None,
-                o.line or 0,
-            ),
-        )
+        match_outcomes = list(offer.outcomes.all())
         if match_outcomes:
             outcomes[match.id] = match_outcomes
     return outcomes

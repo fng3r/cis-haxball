@@ -173,7 +173,7 @@ class TotalsInline(BaseOutcomeInline):
 
 @admin.register(MatchPredictionOffer)
 class MatchPredictionOfferAdmin(UnfoldModelAdmin):
-    list_display = ['match', 'is_published', 'display_outcomes']
+    list_display = ['match', 'is_published', 'display_results', 'display_handicaps', 'display_totals']
     list_filter = [
         ('match__league', RelatedDropdownFilter),
         ('match__numb_tour', RelatedDropdownFilter),
@@ -186,12 +186,25 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     inlines = [ResultsInline, HandicapsInline, TotalsInline]
     actions = ['ensure_standard_results']
 
-    @display(description='Исходы')
-    def display_outcomes(self, model):
-        outcomes = list(model.outcomes.all().order_by('market', 'selection'))
-        return f'{len(outcomes)}: ' + ', '.join(
-            f'{o.display_label} ×{o.coefficient}' for o in outcomes
-        )
+    @display(description='Исходы', dropdown=True)
+    def display_results(self, model):
+        return self._market_dropdown(model, MatchPredictionOutcome.Market.RESULT)
+
+    @display(description='Форы', dropdown=True)
+    def display_handicaps(self, model):
+        return self._market_dropdown(model, MatchPredictionOutcome.Market.HANDICAP)
+
+    @display(description='Тоталы', dropdown=True)
+    def display_totals(self, model):
+        return self._market_dropdown(model, MatchPredictionOutcome.Market.TOTAL)
+
+    @staticmethod
+    def _market_dropdown(model, market):
+        outcomes = [o for o in model.outcomes.all() if o.market == market]
+        return {
+            'title': len(outcomes),
+            'items': [{'title': f'{o.display_label} ×{o.coefficient}'} for o in outcomes],
+        }
 
     @admin.action(description='Создать стандартные исходы (П1/1Х/Х/Х2/П2 ×1.00, если отсутствуют)')
     def ensure_standard_results(self, request, queryset):

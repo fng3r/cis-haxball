@@ -298,9 +298,6 @@ class MatchPredictionOutcome(models.Model):
         Market.TOTAL: {Selection.OVER, Selection.UNDER},
     }
 
-    # Display order of market groups in forms.
-    MARKET_ORDER = {Market.RESULT: 0, Market.HANDICAP: 1, Market.TOTAL: 2}
-
     offer = models.ForeignKey(
         MatchPredictionOffer,
         verbose_name='Исходы матча',
