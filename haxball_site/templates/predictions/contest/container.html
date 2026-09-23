@@ -114,6 +114,7 @@
         </div>
       </div>
 
+      {% if selected_tournament.scoring_method != 'coefficient' %}
       <label class="tw:tab" role="tab">
         <input type="radio"
                name="predictions-contest-tabs"
@@ -130,6 +131,7 @@
           <div class="tw:loading tw:loading-spinner tw:loading-lg"></div>
         </div>
       </div>
+      {% endif %}
     </div>
   {% endpartialdef %}
 </div>
