@@ -344,12 +344,15 @@ class MatchPredictionOutcome(models.Model):
     def settle(self, match) -> bool | None:
         """Settle the outcome against a played match.
 
-        Returns True (win), False (loss) or None (void/push: unsupported
-        result such as mutual tech defeat, or total exactly on the line).
+        Returns True (win), False (loss) or None (void/push, i.e. stake
+        refunded at coefficient 1.00: tech defeats, unsupported results,
+        or a total exactly on the line).
         """
         if not match.is_played:
             return None
         result_value = match.result.value if getattr(match, 'result', None) else None
+        if result_value in TECHNICAL_RESULTS:
+            return None
         if result_value not in RESULT_SELECTIONS_BY_MATCH_RESULT:
             return None
 
@@ -431,6 +434,13 @@ class MatchPredictionOutcome(models.Model):
                 name='outcome_line_required_by_market',
             ),
         ]
+
+
+TECHNICAL_RESULTS = {
+    MatchResult.HOME_DEF_WIN,
+    MatchResult.AWAY_DEF_WIN,
+    MatchResult.MUTUAL_TECH_DEFEAT,
+}
 
 
 # Maps a MatchResult value to the set of RESULT selections it satisfies.
