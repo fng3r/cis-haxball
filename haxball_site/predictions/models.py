@@ -265,7 +265,7 @@ class MatchPredictionOutcome(models.Model):
     """
 
     class Market(models.TextChoices):
-        RESULT = 'RESULT', 'Исход'
+        RESULT = 'RESULT', 'Исход матча'
         HANDICAP = 'HANDICAP', 'Фора'
         TOTAL = 'TOTAL', 'Тотал'
         INDIVIDUAL_TOTAL = 'ITOTAL', 'Инд. тотал'

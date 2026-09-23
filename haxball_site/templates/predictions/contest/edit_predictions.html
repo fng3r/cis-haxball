@@ -100,7 +100,7 @@
                         <div class="tw:flex tw:flex-col tw:gap-2">
                           <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm">
                             {% if market == 'RESULT' %}
-                              Основные исходы
+                              Исход матча
                             {% elif market == 'HANDICAP' %}
                               Форы
                             {% elif market == 'TOTAL' %}
@@ -111,7 +111,7 @@
                           </span>
                           <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
                             {% for outcome in outcomes %}
-                              <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
+                              <label class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
                                      title="{{ outcome.display_label }} — коэффициент {{ outcome.coefficient }}">
                                 <input type="radio"
                                        name="prediction_{{ match.id }}"
@@ -135,7 +135,7 @@
                         <span class="tw:label tw:text-base-content tw:font-bold tw:text-sm">Основные исходы</span>
                         <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-1.5">
                           {% for value, label in prediction_outcome_choices %}
-                            <label class="tw:flex tw:flex-col tw:items-center tw:gap-0.5 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
+                            <label class="tw:flex tw:flex-col tw:items-center tw:gap-1 tw:cursor-pointer tw:select-none tw:px-2.5 tw:py-1.5 tw:rounded-field tw:bg-base-200 tw:border tw:border-base-300 tw:has-[:checked]:border-primary tw:has-[:checked]:bg-primary tw:has-[:checked]:text-primary-content"
                                    title="{{ label }}">
                               <input type="radio"
                                      name="prediction_{{ match.id }}"
