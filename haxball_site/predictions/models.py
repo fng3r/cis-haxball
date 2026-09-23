@@ -270,6 +270,9 @@ class MatchPredictionOutcome(models.Model):
         TOTAL = 'TOTAL', 'Тотал'
         INDIVIDUAL_TOTAL = 'ITOTAL', 'Инд. тотал'
 
+    # Canonical market order: results, handicaps, totals, individual totals.
+    MARKET_ORDER = ['RESULT', 'HANDICAP', 'TOTAL', 'ITOTAL']
+
     MARKET_ORDER = ['RESULT', 'HANDICAP', 'TOTAL', 'ITOTAL']
 
     class Selection(models.TextChoices):

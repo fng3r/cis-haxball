@@ -18,15 +18,39 @@ def calculate_submission_total_points(submission):
 
 
 def calculate_submission_predictions_counts(submission):
-    """Return tuple of (correct_predictions, played_predictions) for submission."""
+    """Return tuple of (correct_predictions, played_predictions) for submission.
+
+    Voided predictions (tech defeats, totals on the line) are excluded:
+    a refunded stake is neither a hit nor a miss.
+    """
     predictions = 0
     correct_predictions = 0
     for prediction in submission.predictions.all():
         if prediction.match.is_played:
+            if is_prediction_void(prediction):
+                continue
             predictions += 1
             if is_prediction_correct(prediction):
                 correct_predictions += 1
     return correct_predictions, predictions
+
+
+def calculate_roi(total_points, nominal_points, played_predictions):
+    """Return ROI in percent: profit relative to total stake.
+
+    Each settled prediction stakes one nominal. Returns None when there is
+    nothing settled. Meaningful only for the coefficient format.
+    """
+    if not played_predictions:
+        return None
+    return total_points / (nominal_points * played_predictions) * 100
+
+
+def calculate_avg_coefficient(coefficient_sum, coefficient_count):
+    """Return mean selected coefficient, or None when no coefficients."""
+    if not coefficient_count:
+        return None
+    return coefficient_sum / coefficient_count
 
 
 def calculate_prediction_points(prediction, tournament=None):

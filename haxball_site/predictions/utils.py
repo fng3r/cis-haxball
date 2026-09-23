@@ -4,8 +4,14 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import MatchPredictionOutcome, PredictionSubmission
-from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
+from .models import MatchPredictionOutcome, PredictionsContestTournament, PredictionSubmission
+from .points_service import (
+    calculate_avg_coefficient,
+    calculate_roi,
+    calculate_submission_predictions_counts,
+    calculate_submission_total_points,
+    is_prediction_void,
+)
 
 
 def build_match_offers_map(tour):
@@ -119,7 +125,7 @@ def get_tournament_standings(tournament):
     all_submissions = (
         PredictionSubmission.objects.filter(tournament=tournament)
         .select_related('tournament')
-        .prefetch_related('predictions__match__result')
+        .prefetch_related('predictions__match__result', 'predictions__outcome')
     )
 
     submissions_by_user = {}
@@ -128,24 +134,47 @@ def get_tournament_standings(tournament):
             submissions_by_user[submission.user_id] = []
         submissions_by_user[submission.user_id].append(submission)
 
+    is_coefficient = (
+        tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT
+    )
     standings = []
     for user in users_with_predictions:
         user_submissions = submissions_by_user.get(user.id, [])
         total_points = 0
         total_correct_predictions = 0
         total_predictions = 0
+        coefficient_sum = Decimal('0')
+        decisive_predictions = 0
         for submission in user_submissions:
             total_points += calculate_submission_total_points(submission)
             correct_predictions, predictions = calculate_submission_predictions_counts(submission)
             total_correct_predictions += correct_predictions
             total_predictions += predictions
+            if is_coefficient:
+                for prediction in submission.predictions.all():
+                    # Voided stakes (tech defeats, totals on the line) are
+                    # refunded: excluded from both ROI turnover and avg coeff.
+                    if not prediction.match.is_played or not prediction.outcome_id:
+                        continue
+                    if is_prediction_void(prediction):
+                        continue
+                    coefficient_sum += prediction.outcome.coefficient
+                    decisive_predictions += 1
         accuracy = total_correct_predictions / total_predictions * 100 if total_predictions > 0 else 0
+        roi = (
+            calculate_roi(total_points, tournament.nominal_points, decisive_predictions)
+            if is_coefficient
+            else None
+        )
+        avg_coefficient = calculate_avg_coefficient(coefficient_sum, decisive_predictions)
 
         standings.append(
             {
                 'user': user,
                 'total_points': total_points,
                 'accuracy': accuracy,
+                'roi': roi,
+                'avg_coefficient': avg_coefficient,
             }
         )
 

@@ -26,6 +26,8 @@
                   <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
                 {% endfor %}
                 <td class="tw:text-center tw:font-bold">Точность</td>
+                <td class="tw:text-center tw:font-bold" title="Средний выбранный коэффициент (возвраты по техпоражениям и тоталам на линии исключены)">Ср. кэф</td>
+                <td class="tw:text-center tw:font-bold" title="Прибыль относительно поставленного номинала (возвраты исключены из оборота)">ROI</td>
                 <th class="tw:text-center tw:font-bold">Всего</th>
               </tr>
             </thead>
@@ -83,6 +85,20 @@
                     </td>
                   {% endfor %}
                   <td class="tw:text-center tw:font-bold">{{ standing.accuracy|floatformat:1 }}%</td>
+                  <td class="tw:text-center">
+                    {% if standing.avg_coefficient is not None %}
+                      <span class="tw:font-semibold">{{ standing.avg_coefficient|floatformat:2 }}</span>
+                    {% else %}
+                      <span class="tw:text-base-content/50">-</span>
+                    {% endif %}
+                  </td>
+                  <td class="tw:text-center">
+                    {% if standing.roi is not None %}
+                      <span class="tw:font-bold {% if standing.roi > 0 %}tw:text-success{% elif standing.roi < 0 %}tw:text-error{% endif %}">{{ standing.roi|floatformat:1 }}%</span>
+                    {% else %}
+                      <span class="tw:text-base-content/50">-</span>
+                    {% endif %}
+                  </td>
                   <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points|floatformat:-2 }}</th>
                 </tr>
               {% endfor %}
