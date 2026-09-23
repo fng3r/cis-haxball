@@ -270,6 +270,8 @@ class MatchPredictionOutcome(models.Model):
         TOTAL = 'TOTAL', 'Тотал'
         INDIVIDUAL_TOTAL = 'ITOTAL', 'Инд. тотал'
 
+    MARKET_ORDER = ['RESULT', 'HANDICAP', 'TOTAL', 'ITOTAL']
+
     class Selection(models.TextChoices):
         # RESULT market
         HOME_WIN = 'HW', 'П1'

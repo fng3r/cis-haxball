@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
+from django.db.models import Prefetch
 from django.forms.models import BaseInlineFormSet
 
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter, SingleNumericFilter
@@ -76,7 +78,30 @@ def outcome_form_for(fixed_market, selection_choices):
     return OutcomeInlineForm
 
 
-class StandardResultsFormSet(BaseInlineFormSet):
+class BaseOutcomeFormSet(BaseInlineFormSet):
+    """Reject duplicate outcomes within one submit as a form error, not a 500.
+
+    Per-form validation only sees the database, so two *new* identical rows
+    in one POST pass it and used to blow up in model save() after siblings
+    were already committed. This check runs before anything saves, so the
+    admin re-renders with input preserved.
+    """
+
+    def clean(self):
+        super().clean()
+        seen = set()
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data') or form.errors:
+                continue
+            if self._should_delete_form(form):
+                continue
+            key = (form.cleaned_data.get('selection'), form.cleaned_data.get('line'))
+            if key in seen:
+                raise ValidationError('Дублирующийся исход: такое сочетание исхода и линии уже указано выше.')
+            seen.add(key)
+
+
+class StandardResultsFormSet(BaseOutcomeFormSet):
     """Prefill the 5 standard RESULT rows on the Offer add page.
 
     Only the selection is preset; coefficient stays empty. The same initial
@@ -125,6 +150,7 @@ class ResultsInline(BaseOutcomeInline):
 
 class HandicapsInline(BaseOutcomeInline):
     model = HandicapOutcome
+    formset = BaseOutcomeFormSet
     form = outcome_form_for(
         MatchPredictionOutcome.Market.HANDICAP,
         [('F1', 'Ф1'), ('F2', 'Ф2')],
@@ -136,6 +162,7 @@ class HandicapsInline(BaseOutcomeInline):
 
 class TotalsInline(BaseOutcomeInline):
     model = TotalOutcome
+    formset = BaseOutcomeFormSet
     form = outcome_form_for(
         MatchPredictionOutcome.Market.TOTAL,
         [('OVER', 'ТБ'), ('UNDER', 'ТМ')],
@@ -147,6 +174,7 @@ class TotalsInline(BaseOutcomeInline):
 
 class IndividualTotalsInline(BaseOutcomeInline):
     model = IndividualTotalOutcome
+    formset = BaseOutcomeFormSet
     form = outcome_form_for(
         MatchPredictionOutcome.Market.INDIVIDUAL_TOTAL,
         [('HT_OVER', 'ИТБ1'), ('HT_UNDER', 'ИТМ1'), ('AT_OVER', 'ИТБ2'), ('AT_UNDER', 'ИТМ2')],
@@ -166,6 +194,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         'display_totals',
         'display_individual_totals',
     ]
+    list_editable = ['is_published']
     list_filter = [
         ('match__league', RelatedDropdownFilter),
         ('match__numb_tour__number', SingleNumericFilter),
@@ -202,7 +231,11 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         }
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('outcomes')
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(Prefetch('outcomes', queryset=MatchPredictionOutcome.objects.order_by('id')))
+        )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'match':

@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import PredictionSubmission
+from .models import MatchPredictionOutcome, PredictionSubmission
 from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
 
 
@@ -25,16 +25,24 @@ def build_match_offers_map(tour):
 def build_match_outcomes_map(tour):
     """Return mapping {match_id: list of MatchPredictionOutcome} for a tour.
 
-    Single unified map for all markets (results, handicaps, totals), ordered
-    by market group. Requires prefetching
-    'tour_matches__prediction_offer__outcomes' to avoid N+1 queries.
+    Single unified map for all markets, ordered by market group (results,
+    handicaps, totals, individual totals), id order within a group.
+    Requires prefetching 'tour_matches__prediction_offer__outcomes' to
+    avoid N+1 queries.
     """
+    order = MatchPredictionOutcome.MARKET_ORDER
     outcomes = {}
     for match in tour.tour_matches.all():
         offer = getattr(match, 'prediction_offer', None)
         if offer is None or not getattr(offer, 'is_published', True):
             continue
-        match_outcomes = list(offer.outcomes.all())
+        match_outcomes = sorted(
+            offer.outcomes.all(),
+            key=lambda o: (
+                order.index(o.market) if o.market in order else 99,
+                getattr(o, 'id', 0) or 0,
+            ),
+        )
         if match_outcomes:
             outcomes[match.id] = match_outcomes
     return outcomes
