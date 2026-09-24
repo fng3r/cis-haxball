@@ -2,6 +2,12 @@
 
 {% load static %}
 
+{% block title %}CIS-HAXBALL{% endblock %}
+
+{% block description %}
+  Главная страница портала CIS-HAXBALL: последние новости, результаты матчей, свежие трансферы и новые комментарии
+{% endblock %}
+
 {% block scripts %}
   {# Аякс-скрипт проставления лайков-дизлайков к постам #}
   <script type="text/javascript" src="{% static "core/js/like-dislike.js" %}"></script>

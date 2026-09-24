@@ -8,6 +8,8 @@
 
 {% block title %}Профиль {{ profile.name }} — CIS-HAXBALL{% endblock %}
 
+{% block description %}Редактирование профиля на портале CIS-HAXBALL: аватар, контакты и личные данные пользователя{% endblock %}
+
 {% block profile_of_user %}
   {% if user == profile.name %}
     {% include "core/profile/partials/edit_profile_form.html" %}

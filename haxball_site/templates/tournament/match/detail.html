@@ -51,6 +51,9 @@
 
 {% block title %}Чемпионат | {{ match }} — CIS-HAXBALL{% endblock %}
 
+{% block description %}
+  Матч {{ match.team_home.title }} — {{ match.team_guest.title }}: результат, составы команд, статистика и протокол игры{% endblock %}
+
 {% block main_content %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:shadow-lg">
     <div class="tw:card-body tw:p-4">

@@ -5,6 +5,8 @@
 
 {% block title %}Чемпионат | Рейтинг игроков — CIS-HAXBALL{% endblock %}
 
+{% block description %}Рейтинг игроков CIS-HAXBALL: топ игроков и история изменения рейтинга{% endblock %}
+
 {% block profile_of_user %}
   <div class="tw:card tw:bg-base-100 tw:rounded-lg">
 
@@ -139,9 +141,9 @@
                         class="tw:select"
                         @change="selectedSeason = $el.value; selectedSeasonIsPrimary = $el.options[$el.selectedIndex].dataset.isPrimary === 'true'">
                   {% for season in seasons %}
-                    <option value="{{ season.id }}" {% if forloop.first %}selected{% endif %} data-is-primary="{{ season.is_primary|yesno:'true,false' }}">
-                      {{ season.title }}
-                    </option>
+                    <option value="{{ season.id }}"
+                            {% if forloop.first %}selected{% endif %}
+                            data-is-primary="{{ season.is_primary|yesno:'true,false' }}">{{ season.title }}</option>
                   {% endfor %}
                 </select>
               </div>
