@@ -5,6 +5,15 @@
 
 {% block title %}{{ post.title }} — CIS-HAXBALL{% endblock %}
 
+{% block description %}
+  {{ post.title }} — статья на портале CIS-HAXBALL:
+  {% if post.description %}
+    {{ post.description }}
+  {% else %}
+    {{ post.body|striptags|truncatechars:140 }}
+  {% endif %}
+{% endblock %}
+
 {% block styles %}
   <link rel="stylesheet" type="text/css" href="{% static "ckeditor/ckeditor/plugins/spoiler/spoiler.css" %}">
 {% endblock %}
@@ -19,7 +28,7 @@
   <style>
     :where(.post-body) {
       font-family: ui-sans-serif, system-ui, sans-serif, "Noto Color Emoji Limited", "Apple Color Emoji",
-                   "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
       a {
         color: var(--color-primary);
