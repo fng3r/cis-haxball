@@ -10,6 +10,7 @@ from .points_service import (
     calculate_roi,
     calculate_submission_predictions_counts,
     calculate_submission_total_points,
+    is_prediction_correct,
     is_prediction_void,
 )
 
@@ -145,6 +146,8 @@ def get_tournament_standings(tournament):
         total_predictions = 0
         coefficient_sum = Decimal('0')
         decisive_predictions = 0
+        win_coefficient_sum = Decimal('0')
+        win_coefficient_count = 0
         for submission in user_submissions:
             total_points += calculate_submission_total_points(submission)
             correct_predictions, predictions = calculate_submission_predictions_counts(submission)
@@ -160,6 +163,9 @@ def get_tournament_standings(tournament):
                         continue
                     coefficient_sum += prediction.outcome.coefficient
                     decisive_predictions += 1
+                    if is_prediction_correct(prediction):
+                        win_coefficient_sum += prediction.outcome.coefficient
+                        win_coefficient_count += 1
         accuracy = total_correct_predictions / total_predictions * 100 if total_predictions > 0 else 0
         roi = (
             calculate_roi(total_points, tournament.nominal_points, decisive_predictions)
@@ -167,6 +173,7 @@ def get_tournament_standings(tournament):
             else None
         )
         avg_coefficient = calculate_avg_coefficient(coefficient_sum, decisive_predictions)
+        avg_win_coefficient = calculate_avg_coefficient(win_coefficient_sum, win_coefficient_count)
 
         standings.append(
             {
@@ -175,6 +182,7 @@ def get_tournament_standings(tournament):
                 'accuracy': accuracy,
                 'roi': roi,
                 'avg_coefficient': avg_coefficient,
+                'avg_win_coefficient': avg_win_coefficient,
             }
         )
 
