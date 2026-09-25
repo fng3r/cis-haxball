@@ -108,7 +108,7 @@ class Command(BaseCommand):
                     else:
                         ungrouped += 1
                         group_info = ' -> group NOT detected (teams in different/no groups)'
-                self.stdout.write(f'    {match.team_home_id}:{match.team_guest_id}{group_info}')
+                self.stdout.write(f'    {match.team_home.short_title}:{match.team_guest.short_title}{group_info}')
                 if not dry_run:
                     match.stage = dest
                     match.group = new_group
