@@ -59,7 +59,13 @@
         {% if stage.use_buchholz %}
           <td width="6%">{{ team.11 }}</td>
         {% endif %}
-        <td width="6%" class="tw:font-semibold">{{ team.8 }}</td>
+        <td width="6%" class="tw:font-semibold">
+          {% if team.12 %}
+            <span class="tw:tooltip tw:tooltip-top" data-tip="Очки с учетом округления после переноса с предыдущего этапа">{{ team.8 }}*</span>
+          {% else %}
+            {{ team.8 }}
+          {% endif %}
+        </td>
 
         {% if has_penalties %}
           <td width="3%" class="tw:text-center">

@@ -680,20 +680,45 @@ class PostponementAdmin(UnfoldModelAdmin):
         )
 
 
+def applicable_carryover_sources(league_id=None, before_order=None, exclude_id=None):
+    """Stages eligible as a points-carryover source: same tournament, earlier, not a playoff."""
+    queryset = TournamentStage.objects.exclude(type=TournamentStage.StageType.PLAYOFF).order_by('order')
+    if league_id is not None:
+        queryset = queryset.filter(league_id=league_id)
+    if before_order is not None:
+        queryset = queryset.filter(order__lt=before_order)
+    if exclude_id is not None:
+        queryset = queryset.exclude(pk=exclude_id)
+    return queryset
+
+
+class CarryoverSourceQuerysetMixin:
+    """Limit the carryover source dropdown to stages of the edited object's league."""
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'carryover_from':
+            resolved = resolve(request.path_info)
+            if 'object_id' in resolved.kwargs:
+                league = League.objects.filter(pk=resolved.kwargs['object_id']).first()
+                if league is not None:
+                    kwargs['queryset'] = applicable_carryover_sources(league_id=league.pk)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 class TournamentStageInline(StackedPolymorphicInline):
-    class RegularStageInline(StackedPolymorphicInline.Child, UnfoldStackedInline):
+    class RegularStageInline(CarryoverSourceQuerysetMixin, StackedPolymorphicInline.Child, UnfoldStackedInline):
         model = RegularStage
-        exclude = ('type', 'postponable')
+        exclude = ('type', 'postponable', 'carryover_from', 'carryover_scope', 'carryover_mode')
         filter_horizontal = ('teams',)
 
-    class GroupStageInline(StackedPolymorphicInline.Child, UnfoldStackedInline):
+    class GroupStageInline(CarryoverSourceQuerysetMixin, StackedPolymorphicInline.Child, UnfoldStackedInline):
         model = GroupStage
-        exclude = ('type', 'postponable')
+        exclude = ('type', 'postponable', 'carryover_from', 'carryover_scope', 'carryover_mode')
         filter_horizontal = ('teams',)
 
     class PlayOffStageInline(StackedPolymorphicInline.Child, UnfoldStackedInline):
         model = PlayOffStage
-        exclude = ('type', 'postponable', 'use_buchholz')
+        exclude = ('type', 'postponable', 'use_buchholz', 'carryover_from', 'carryover_scope', 'carryover_mode')
         filter_horizontal = ('teams',)
 
     model = TournamentStage
@@ -787,6 +812,15 @@ class TournamentStageChildBase(PolymorphicChildModelAdmin, UnfoldModelAdmin):
     readonly_fields = ('league',)
     filter_horizontal = ('teams',)
 
+    CARRYOVER_SECTION = (
+        'Перенос очков (формат со сплитом)',
+        {
+            'fields': ('carryover_from', 'carryover_mode', 'carryover_scope'),
+            'description': 'Второй этап стартует с бонусом за первый: укажите более ранний этап того же '
+            'турнира, режим пересчета очков и какие показатели переносятся.',
+        },
+    )
+
     def get_readonly_fields(self, request, obj=None):
         if obj:  # This is the case when object is already created
             return ['type', 'league']
@@ -803,6 +837,19 @@ class TournamentStageChildBase(PolymorphicChildModelAdmin, UnfoldModelAdmin):
             kwargs['queryset'] = stage.league.teams
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'carryover_from':
+            resolved = resolve(request.path_info)
+            if 'object_id' in resolved.kwargs:
+                stage = TournamentStage.objects.filter(pk=resolved.kwargs['object_id']).first()
+                if stage is not None:
+                    kwargs['queryset'] = applicable_carryover_sources(
+                        league_id=stage.league_id,
+                        before_order=stage.order,
+                        exclude_id=stage.pk,
+                    )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(RegularStage)
 class RegularStageAdmin(TournamentStageChildBase):
@@ -810,11 +857,41 @@ class RegularStageAdmin(TournamentStageChildBase):
     conditional_fields = {
         'round_robin_rounds': 'is_round_robin == true',
     }
+    fieldsets = (
+        (
+            'Основное',
+            {'fields': ('league', 'name', 'order', 'teams', 'postponable', 'use_buchholz')},
+        ),
+        (
+            'Регулярка',
+            {
+                'fields': (
+                    'awarded_count',
+                    'promoted_count',
+                    'relegated_count',
+                    'is_round_robin',
+                    'round_robin_rounds',
+                )
+            },
+        ),
+        TournamentStageChildBase.CARRYOVER_SECTION,
+    )
 
 
 @admin.register(GroupStage)
 class GroupStageAdmin(TournamentStageChildBase):
     inlines = [GroupInline, TourInline, TeamPenaltyPointsInline]
+    fieldsets = (
+        (
+            'Основное',
+            {'fields': ('league', 'name', 'order', 'teams', 'postponable', 'use_buchholz')},
+        ),
+        (
+            'Групповой этап',
+            {'fields': ('promoted_count', 'promoted_extra_count')},
+        ),
+        TournamentStageChildBase.CARRYOVER_SECTION,
+    )
 
 
 class PlayoffBracketSlotStubInline(UnfoldStackedInline):
@@ -832,7 +909,23 @@ class PlayoffBracketSlotStubInline(UnfoldStackedInline):
 @admin.register(PlayOffStage)
 class PlayOffStageAdmin(TournamentStageChildBase):
     inlines = [TourInline, PlayoffBracketSlotStubInline]
-    exclude = ('use_buchholz',)
+    fieldsets = (
+        (
+            'Основное',
+            {'fields': ('league', 'name', 'order', 'teams', 'postponable')},
+        ),
+        (
+            'Плей-офф',
+            {
+                'fields': (
+                    'playoff_type',
+                    'has_match_for_third_place',
+                    'show_bracket_slot_labels',
+                    'winner_determinator',
+                )
+            },
+        ),
+    )
 
 
 @admin.register(League)

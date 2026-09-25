@@ -1,4 +1,5 @@
 import datetime
+import math
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import groupby
@@ -1239,6 +1240,161 @@ def sort_teams(league: League):
     return [i[0] for i in lt]
 
 
+def _apply_carryover_mode(source_points: int, source_exact: float, mode: str) -> tuple[int, float, bool]:
+    """Convert source-stage total into (bonus_display, bonus_exact, was_rounded)."""
+    if mode == TournamentStage.CarryoverMode.FULL:
+        return source_points, source_exact, source_points != source_exact
+    if mode == TournamentStage.CarryoverMode.HALF_UP:
+        bonus_display = math.ceil(source_points / 2)
+        return bonus_display, source_points / 2, bonus_display != source_points / 2
+    if mode == TournamentStage.CarryoverMode.HALF_DOWN:
+        bonus_display = math.floor(source_points / 2)
+        return bonus_display, source_points / 2, bonus_display != source_points / 2
+    return 0, 0.0, False
+
+
+def _get_stage_direct_stats(
+    league: League,
+    source: TournamentStage,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+) -> dict[int, dict]:
+    """W/D/L and goals earned in `source` stage (all groups), without penalties or bonuses."""
+    stats = {}
+    for team in teams:
+        if prefetched_matches is None:
+            matches = Match.objects.filter(
+                Q(team_home=team) | Q(team_guest=team),
+                league=league,
+                stage=source,
+                is_played=True,
+            ).select_related('result__winner')
+            played = matches.count()
+        else:
+            matches = [
+                match
+                for match in prefetched_matches
+                if match.is_played
+                and match.stage_id == source.id
+                and team.id in (match.team_home_id, match.team_guest_id)
+            ]
+            played = len(matches)
+        wins_count = draws_count = losses_count = goals_scored = goals_conceded = 0
+        for match in matches:
+            goals_scored += match.scored_by(team)
+            goals_conceded += match.conceded_by(team)
+            if match.is_win(team):
+                wins_count += 1
+            elif match.is_draw():
+                draws_count += 1
+            else:
+                losses_count += 1
+        stats[team.id] = {
+            'played': played,
+            'wins': wins_count,
+            'draws': draws_count,
+            'losses': losses_count,
+            'scored': goals_scored,
+            'conceded': goals_conceded,
+        }
+    return stats
+
+
+def _get_stage_accumulated_stats(
+    league: League,
+    stage: TournamentStage,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+    _depth: int = 0,
+) -> dict[int, dict]:
+    """Stats accumulated up to and including `stage` (transitive through FULL_STATS carryovers)."""
+    accumulated = _get_stage_direct_stats(league, stage, teams, prefetched_matches)
+    if _depth > 5:
+        return accumulated
+    if not getattr(stage, 'has_carryover', False):
+        return accumulated
+    if getattr(stage, 'carryover_scope', None) != TournamentStage.CarryoverScope.FULL_STATS:
+        return accumulated
+    source = getattr(stage, 'carryover_from', None)
+    if source is None:
+        return accumulated
+    if isinstance(source, int):
+        source = TournamentStage.objects.filter(pk=source).first()
+        if source is None:
+            return accumulated
+    parent = _get_stage_accumulated_stats(league, source, teams, prefetched_matches, _depth + 1)
+    for team in teams:
+        inherited = parent.get(team.id)
+        if inherited is None:
+            continue
+        own = accumulated[team.id]
+        for key in ('played', 'wins', 'draws', 'losses', 'scored', 'conceded'):
+            own[key] += inherited[key]
+    return accumulated
+
+
+def _get_stage_base_points(
+    league: League,
+    source: TournamentStage,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+) -> dict[int, int]:
+    """Points earned in `source` stage (all groups), including that stage's penalties, excluding its own bonus."""
+    penalties_by_team = {
+        entry['team']: entry['penalty']
+        for entry in (
+            TeamPenaltyPoints.objects.filter(stage=source, team__in=teams)
+            .annotate(penalty=Sum('penalty_points'))
+            .values('team', 'penalty')
+        )
+    }
+    direct_stats = _get_stage_direct_stats(league, source, teams, prefetched_matches)
+    return {
+        team.id: direct_stats[team.id]['wins'] * 3 + direct_stats[team.id]['draws'] - penalties_by_team.get(team.id, 0)
+        for team in teams
+    }
+
+
+def _get_carryover_bonus(
+    league: League,
+    stage: TournamentStage | None,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+    _depth: int = 0,
+) -> dict[int, tuple[int, float, bool]]:
+    """Bonus points each team carries into `stage` from `stage.carryover_from`.
+
+    Returns {team_id: (bonus_display, bonus_exact, was_rounded)}. bonus_exact keeps
+    the unrounded value so that e.g. Belgium's halved-points tie-breaker
+    (larger pre-rounding total ranks higher) works as a secondary sort key.
+    """
+    if stage is None or _depth > 5:
+        return {}
+    if not getattr(stage, 'has_carryover', False):
+        return {}
+    source = getattr(stage, 'carryover_from', None)
+    if source is None:
+        return {}
+    if isinstance(source, int):
+        source = TournamentStage.objects.filter(pk=source).first()
+        if source is None:
+            return {}
+    mode = getattr(stage, 'carryover_mode', TournamentStage.CarryoverMode.NONE)
+    if mode == TournamentStage.CarryoverMode.NONE:
+        return {}
+
+    base_points = _get_stage_base_points(league, source, teams, prefetched_matches)
+    parent_bonus = _get_carryover_bonus(league, source, teams, prefetched_matches, _depth + 1)
+
+    result = {}
+    for team in teams:
+        parent_display, parent_exact, _ = parent_bonus.get(team.id, (0, 0.0, False))
+        source_total = base_points.get(team.id, 0) + parent_display
+        source_exact = float(base_points.get(team.id, 0)) + parent_exact
+        result[team.id] = _apply_carryover_mode(source_total, source_exact, mode)
+    return result
+
+
 def get_league_table(
     league: League,
     stage: TournamentStage = None,
@@ -1335,6 +1491,47 @@ def get_league_table(
         losses[i] = losses_count
         draws[i] = draws_count
 
+    # Points carried over from a previous stage (league-split format, e.g. Belgium/Austria).
+    # POINTS_ONLY scope: matches, wins and goals are computed from this stage's matches.
+    # FULL_STATS scope: И/В/Н/П/ЗМ/ПМ accumulate from the previous stage(s), only points are rebased.
+    # Applied to full-stage tables only, not to tour_range slices (1st/2nd half tabs).
+    # Form (last 5) always reflects this stage's matches.
+    carry_bonus = [0 for _ in range(teams_count)]
+    carry_rounded = [False for _ in range(teams_count)]
+    points_exact = [float(value) for value in points]
+    if tour_range is None:
+        carryover = _get_carryover_bonus(league, stage, teams, prefetched_matches)
+        for i, team in enumerate(teams):
+            bonus = carryover.get(team.id)
+            if bonus is None:
+                continue
+            bonus_display, bonus_exact, was_rounded = bonus
+            carry_bonus[i] = bonus_display
+            carry_rounded[i] = was_rounded
+            points[i] += bonus_display
+            points_exact[i] += bonus_exact
+        if (
+            stage is not None
+            and carryover
+            and getattr(stage, 'carryover_scope', None) == TournamentStage.CarryoverScope.FULL_STATS
+        ):
+            source = stage.carryover_from
+            if isinstance(source, int):
+                source = TournamentStage.objects.filter(pk=source).first()
+            if source is not None:
+                inherited = _get_stage_accumulated_stats(league, source, teams, prefetched_matches)
+                for i, team in enumerate(teams):
+                    base = inherited.get(team.id)
+                    if base is None:
+                        continue
+                    matches_played[i] += base['played']
+                    wins[i] += base['wins']
+                    draws[i] += base['draws']
+                    losses[i] += base['losses']
+                    scored[i] += base['scored']
+                    conceded[i] += base['conceded']
+                    goal_diff[i] = scored[i] - conceded[i]
+
     if stage is not None and stage.use_buchholz:
         buccholz = [0 for _ in range(teams_count)]
         for i, team in enumerate(teams):
@@ -1359,9 +1556,22 @@ def get_league_table(
         return sorted(table, key=lambda x: (x[8], x[11], x[7], x[5]), reverse=True)
 
     table = zip(
-        teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties
+        teams,
+        matches_played,
+        wins,
+        draws,
+        losses,
+        scored,
+        conceded,
+        goal_diff,
+        points,
+        last_matches,
+        penalties,
+        carry_bonus,
+        carry_rounded,
     )
-    sorted_table = sorted(table, key=lambda x: (x[8], x[7], x[5]), reverse=True)
+    exact_by_team_id = {team.id: exact for team, exact in zip(teams, points_exact)}
+    sorted_table = sorted(table, key=lambda x: (x[8], exact_by_team_id[x[0].id], x[7], x[5]), reverse=True)
     result = []
     i = 0
     while i < len(sorted_table) - 1:
@@ -1369,7 +1579,10 @@ def get_league_table(
         mini_res = [sorted_table[i]]
         k = i
         for j in range(i + 1, len(sorted_table)):
-            if sorted_table[i][8] == sorted_table[j][8]:
+            if (
+                sorted_table[i][8] == sorted_table[j][8]
+                and exact_by_team_id[sorted_table[i][0].id] == exact_by_team_id[sorted_table[j][0].id]
+            ):
                 mini_table.append(sorted_table[j][0])
                 mini_res.append(sorted_table[j])
                 k += 1

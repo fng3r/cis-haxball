@@ -310,6 +310,41 @@ class TournamentStage(PolymorphicModel):
     postponable = models.BooleanField('Можно ли переносить матчи этапа', default=False, blank=True)
     use_buchholz = models.BooleanField('Использовать коэффициент Бухгольца при равенстве очков', default=False)
 
+    class CarryoverMode(models.TextChoices):
+        NONE = 'NONE', 'Без переноса очков'
+        FULL = 'FULL', 'Полный перенос очков'
+        HALF_UP = 'HALF_UP', 'Половина очков с округлением вверх'
+        HALF_DOWN = 'HALF_DOWN', 'Половина очков с округлением вниз'
+
+    class CarryoverScope(models.TextChoices):
+        POINTS_ONLY = 'POINTS', 'Только очки (бельгийский формат)'
+        FULL_STATS = 'STATS', 'Все показатели (австрийский формат)'
+
+    carryover_from = models.ForeignKey(
+        'self',
+        verbose_name='Перенос с этапа',
+        related_name='carryover_targets',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text='Очки, набранные на указанном этапе, добавляются к очкам этого этапа '
+        '(формат лиги со сплитом: второй этап стартует с бонусом за первый)',
+    )
+    carryover_scope = models.CharField(
+        'Что переносится с предыдущего этапа',
+        max_length=10,
+        choices=CarryoverScope.choices,
+        default=CarryoverScope.POINTS_ONLY,
+        help_text='«Только очки»: матчи/голы считаются со второго этапа (Бельгия). '
+        '«Все показатели»: И/В/Н/П/ЗМ/ПМ копятся с первого этапа, пересчитываются только очки (Австрия).',
+    )
+    carryover_mode = models.CharField(
+        'Режим переноса очков',
+        max_length=10,
+        choices=CarryoverMode.choices,
+        default=CarryoverMode.NONE,
+    )
+
     @property
     def stage_name(self):
         return self.name or self.get_type_display()
@@ -334,6 +369,34 @@ class TournamentStage(PolymorphicModel):
             self.postponable = self._postponable
 
         super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if self.carryover_from_id is not None:
+            if isinstance(self, PlayOffStage) or self.type == self.StageType.PLAYOFF:
+                errors['carryover_from'] = 'Перенос очков доступен только для регулярки и группового этапа.'
+            if self.carryover_from_id == self.pk:
+                errors['carryover_from'] = 'Этап не может переносить очки сам с себя.'
+            elif self.carryover_from is not None and self.carryover_from.is_playoff:
+                errors['carryover_from'] = 'Нельзя переносить очки с этапа плей-офф.'
+            elif self.carryover_from is not None and self.league_id is not None:
+                if self.carryover_from.league_id != self.league_id:
+                    errors['carryover_from'] = 'Очки можно переносить только с этапа того же турнира.'
+                elif self.carryover_from.order >= self.order:
+                    errors['carryover_from'] = 'Очки можно переносить только с более раннего этапа.'
+            if self.carryover_mode == self.CarryoverMode.NONE:
+                errors['carryover_mode'] = 'Выберите режим переноса очков, отличный от «Без переноса».'
+            if self.use_buchholz:
+                errors['use_buchholz'] = 'Коэффициент Бухгольца несовместим с переносом очков.'
+        elif self.carryover_scope != self.CarryoverScope.POINTS_ONLY:
+            errors['carryover_scope'] = 'Перенос всех показателей требует указанного этапа для переноса очков.'
+        if errors:
+            raise ValidationError(errors)
+
+    @property
+    def has_carryover(self):
+        return self.carryover_from_id is not None and self.carryover_mode != self.CarryoverMode.NONE
 
     def __str__(self):
         return f'{self.league.title} – {self.stage_name}'
@@ -432,14 +495,14 @@ class PlayOffStage(TournamentStage):
         MATCHES = 'MATCHES', 'По сумме выигранных матчей'
 
     playoff_type = models.CharField('Формат', choices=PlayOffType.choices, default=PlayOffType.SE, max_length=10)
-    has_match_for_third_place = models.BooleanField('Есть матч за 3-е место', default=False)
-    show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
     winner_determinator = models.CharField(
-        'Как определяется победитель',
+        'Как определяется победитель серии',
         choices=WinnerDeterminator.choices,
         default=WinnerDeterminator.GOALS,
         max_length=15,
     )
+    has_match_for_third_place = models.BooleanField('Есть матч за 3-е место', default=False)
+    show_bracket_slot_labels = models.BooleanField('Показывать метки для слотов', default=False)
 
     def is_single_elimination(self):
         return self.playoff_type == PlayOffStage.PlayOffType.SE
