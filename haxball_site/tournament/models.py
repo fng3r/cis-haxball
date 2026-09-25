@@ -448,12 +448,12 @@ class GroupStage(TournamentStage):
 
     promoted_count = models.PositiveSmallIntegerField(
         'Кол-во команд, проходящих в следующий этап',
-        choices=[(i, i) for i in range(1, 11)],
-        default=2,
+        choices=[(i, i) for i in range(0, 16)],
+        default=0,
     )
     promoted_extra_count = models.PositiveSmallIntegerField(
         'Кол-во команд, дополнительно проходящих в следующий этап',
-        choices=[(i, i) for i in range(0, 11)],
+        choices=[(i, i) for i in range(0, 16)],
         default=0,
     )
 
