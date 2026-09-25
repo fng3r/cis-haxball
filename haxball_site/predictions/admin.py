@@ -44,6 +44,12 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
         'points_for_draw_prediction',
         'special_match_points_delta',
     ]
+    conditional_fields = {
+        'nominal_points': "scoring_method == 'coefficients'",
+        'points_for_win_prediction': "scoring_method == 'classic'",
+        'points_for_draw_prediction': "scoring_method == 'classic'",
+        'special_match_points_delta': "scoring_method == 'classic'",
+    }
     list_editable = [
         'is_active',
         'scoring_method',
