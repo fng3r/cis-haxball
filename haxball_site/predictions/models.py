@@ -13,8 +13,8 @@ class PredictionsContestTournament(models.Model):
     """Tournament that is available for predictions contest"""
 
     class ScoringMethod(models.TextChoices):
-        LEGACY = 'legacy', 'Классические очки'
-        COEFFICIENT = 'coefficient', 'Коэффициенты'
+        CLASSIC = 'classic', 'Классический'
+        COEFFICIENTS = 'coefficients', 'Коэффициенты'
 
     league = models.OneToOneField(
         League, verbose_name='Турнир', on_delete=models.CASCADE, related_name='predictions_contest_tournament'
@@ -24,7 +24,7 @@ class PredictionsContestTournament(models.Model):
         'Формат начисления очков',
         max_length=16,
         choices=ScoringMethod.choices,
-        default=ScoringMethod.LEGACY,
+        default=ScoringMethod.CLASSIC,
         help_text='"Классические очки" — прежний формат (1/3 очка, особые матчи). '
         '"Коэффициенты" — 5 исходов матча с коэффициентами, очки = номинал × (коэффициент − 1) '
         'за верный прогноз, −номинал за неверный',
@@ -129,7 +129,7 @@ class Prediction(models.Model):
         choices=Result.choices,
         null=True,
         blank=True,
-        help_text='Только для legacy-конкурсов. '
+        help_text='Только для турниров "Классического" формата. '
         'Прогнозы формата "Коэффициенты" используют унифицированный исход (outcome).',
     )
     outcome = models.ForeignKey(
@@ -140,7 +140,7 @@ class Prediction(models.Model):
         null=True,
         blank=True,
         help_text='Унифицированный исход (формат "Коэффициенты"): результат, фора или тотал. '
-        'Для legacy-конкурсов не используется',
+        'Для турниров "Классического" формата не используется',
     )
     is_special = models.BooleanField('Особый прогноз', default=False)
 
@@ -155,7 +155,7 @@ class Prediction(models.Model):
     def clean(self):
         """Enforce one prediction path depending on the contest format.
 
-        Legacy contests use `predicted_result` (П1/X/П2) only;
+        Classic contests use `predicted_result` (П1/X/П2) only;
         coefficient contests use `outcome` only.
         """
         # Assigned-but-unsaved relations (admin inlines, tests) live in the
@@ -165,18 +165,20 @@ class Prediction(models.Model):
             return
         outcome = self.__dict__.get('outcome') or self.outcome
         tournament = submission.tournament
-        is_legacy = tournament.scoring_method == PredictionsContestTournament.ScoringMethod.LEGACY
-        if is_legacy:
+        is_classic = tournament.scoring_method == PredictionsContestTournament.ScoringMethod.CLASSIC
+        if is_classic:
             if outcome is not None:
-                raise ValidationError({'outcome': 'Legacy-конкурс использует только предсказанный результат'})
+                raise ValidationError(
+                    {'outcome': 'Турниры "Классического" формата используют только предсказанный результат'}
+                )
             if not self.predicted_result:
-                raise ValidationError({'predicted_result': 'Обязательное поле для legacy-конкурса'})
+                raise ValidationError({'predicted_result': 'Обязательное поле для турнира "Классического" формата'})
             if self.predicted_result not in (
                 self.Result.HOME_WIN,
                 self.Result.DRAW,
                 self.Result.AWAY_WIN,
             ):
-                raise ValidationError({'predicted_result': 'Legacy-конкурс допускает только П1/Х/П2'})
+                raise ValidationError({'predicted_result': 'Турниры "Классического" формата допускают только П1/Х/П2'})
         else:
             if outcome is None:
                 raise ValidationError({'outcome': 'Обязательное поле для формата "Коэффициенты"'})
@@ -185,7 +187,7 @@ class Prediction(models.Model):
                     {'predicted_result': 'Формат "Коэффициенты" использует только унифицированный исход'}
                 )
             if self.is_special:
-                raise ValidationError({'is_special': 'Особые прогнозы только для legacy-конкурсов'})
+                raise ValidationError({'is_special': 'Особые прогнозы только для турниров "Классического" формата'})
 
     def save(self, *args, **kwargs):
         self.full_clean()

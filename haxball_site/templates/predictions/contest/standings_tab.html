@@ -26,7 +26,7 @@
                   <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
                 {% endfor %}
                 <td class="tw:text-center tw:font-bold">Точность</td>
-                {% if selected_tournament.scoring_method == 'coefficient' %}
+                {% if selected_tournament.scoring_method == 'coefficients' %}
                   <td class="tw:text-center tw:font-bold"
                       title="Средний коэффициент выбранных исходов (возвраты по тех. поражениям исключены)">Ср. кэф</td>
                   <td class="tw:text-center tw:font-bold" title="Средний коэффициент верных прогнозов">Ср. кэф+</td>
@@ -89,7 +89,7 @@
                     </td>
                   {% endfor %}
                   <td class="tw:text-center tw:font-bold">{{ standing.accuracy|floatformat:1 }}%</td>
-                  {% if selected_tournament.scoring_method == 'coefficient' %}
+                  {% if selected_tournament.scoring_method == 'coefficients' %}
                     <td class="tw:text-center">
                       {% if standing.avg_coefficient is not None %}
                         <span class="tw:font-semibold">{{ standing.avg_coefficient|floatformat:2 }}</span>

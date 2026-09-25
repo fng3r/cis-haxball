@@ -42,7 +42,7 @@ from .utils import (
     is_tour_open_for_predictions,
 )
 
-LEGACY_OUTCOME_CODES = {
+CLASSIC_OUTCOME_CODES = {
     Prediction.Result.HOME_WIN,
     Prediction.Result.DRAW,
     Prediction.Result.AWAY_WIN,
@@ -51,8 +51,8 @@ LEGACY_OUTCOME_CODES = {
 def get_prediction_outcome_choices(tournament):
     """Return ((value, label), ...) list of main outcomes available for a tournament format."""
     choices = list(Prediction.Result.choices)
-    if tournament.scoring_method != PredictionsContestTournament.ScoringMethod.COEFFICIENT:
-        choices = [choice for choice in choices if choice[0] in LEGACY_OUTCOME_CODES]
+    if tournament.scoring_method != PredictionsContestTournament.ScoringMethod.COEFFICIENTS:
+        choices = [choice for choice in choices if choice[0] in CLASSIC_OUTCOME_CODES]
     return choices
 
 
@@ -498,7 +498,7 @@ def edit_predictions(request, tour_id):
     prediction_outcome_choices = get_prediction_outcome_choices(prediction_tournament)
     valid_outcome_codes = {value for value, _ in prediction_outcome_choices}
     uses_coefficients = (
-        prediction_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT
+        prediction_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
     )
 
     if request.method == 'POST':

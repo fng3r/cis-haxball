@@ -63,10 +63,10 @@ def calculate_prediction_points(prediction, tournament=None):
 
     tournament = tournament or prediction.submission.tournament
 
-    if tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT:
+    if tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS:
         return _calculate_outcome_prediction_points(prediction, tournament)
 
-    return _calculate_legacy_prediction_points(prediction, tournament)
+    return _calculate_classic_prediction_points(prediction, tournament)
 
 
 def _calculate_outcome_prediction_points(prediction, tournament):
@@ -87,8 +87,8 @@ def _calculate_outcome_prediction_points(prediction, tournament):
     return -tournament.nominal_points
 
 
-def _calculate_legacy_prediction_points(prediction, tournament):
-    """Points for legacy format (fixed win/draw points and special bonus/penalty)."""
+def _calculate_classic_prediction_points(prediction, tournament):
+    """Points for classic format (fixed win/draw points and special bonus/penalty)."""
     is_correct = is_prediction_correct(prediction)
 
     points = Decimal('0.00')

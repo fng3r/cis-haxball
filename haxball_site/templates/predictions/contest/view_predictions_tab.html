@@ -69,7 +69,7 @@
                                       {{ prediction.outcome_label }}
                                       {% if prediction.is_special %}*{% endif %}
                                     </span>
-                                    {% if scoring_method == 'coefficient' %}
+                                    {% if scoring_method == 'coefficients' %}
                                       {% if prediction.outcome %}
                                         <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.outcome.coefficient }}</span>
                                       {% endif %}

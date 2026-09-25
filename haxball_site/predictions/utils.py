@@ -136,7 +136,7 @@ def get_tournament_standings(tournament):
         submissions_by_user[submission.user_id].append(submission)
 
     is_coefficient = (
-        tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENT
+        tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
     )
     standings = []
     for user in users_with_predictions:

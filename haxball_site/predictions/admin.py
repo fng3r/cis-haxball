@@ -240,7 +240,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'match':
             coefficient_tournament_leagues = PredictionsContestTournament.objects.filter(
-                scoring_method=PredictionsContestTournament.ScoringMethod.COEFFICIENT
+                scoring_method=PredictionsContestTournament.ScoringMethod.COEFFICIENTS
             ).values_list('league_id', flat=True)
             kwargs['queryset'] = Match.objects.filter(league_id__in=coefficient_tournament_leagues)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
