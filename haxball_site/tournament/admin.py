@@ -902,7 +902,7 @@ class CardInline(UnfoldStackedInline):
         if 'object_id' in resolved.kwargs:
             match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
         if db_field.name == 'team' and match is not None:
-            kwargs['queryset'] = Team.objects.filter(id__in=[match.team_home_id, match.team_guest_id])
+            kwargs['queryset'] = Team.objects.filter(leagues__championship=match.league.championship)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 

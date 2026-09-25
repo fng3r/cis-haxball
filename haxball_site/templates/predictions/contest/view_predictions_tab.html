@@ -66,11 +66,29 @@
                                       {% endif %}
                                     </div>
                                     <span class="tw:ml-1 tw:font-bold">
-                                      {{ prediction.get_predicted_result_display }}
+                                      {{ prediction.outcome_label }}
                                       {% if prediction.is_special %}*{% endif %}
                                     </span>
-                                    {% if match.is_played %}
-                                      <span class="tw:ml-1">
+                                    {% if scoring_method == 'coefficients' %}
+                                      {% if prediction.outcome %}
+                                        <span class="tw:ml-1 tw:badge tw:badge-sm tw:badge-ghost tw:font-semibold">×{{ prediction.outcome.coefficient }}</span>
+                                      {% endif %}
+                                      {% if match.is_played %}
+                                        <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
+                                          {% if prediction|prediction_is_void %}
+                                            <span class="tw:text-warning">=</span>
+                                          {% elif prediction|prediction_is_correct %}
+                                            <span class="tw:text-success">✓</span>
+                                          {% else %}
+                                            <span class="tw:text-error">✗</span>
+                                          {% endif %}
+                                          <span class="tw:font-bold {% if prediction|prediction_is_void %}tw:text-warning{% elif prediction|prediction_is_correct %}tw:text-success{% else %}tw:text-error{% endif %}">
+                                            {{ prediction|get_prediction_points|format_points }}
+                                          </span>
+                                        </span>
+                                      {% endif %}
+                                    {% elif match.is_played %}
+                                      <span class="tw:ml-1 tw:flex tw:items-center tw:gap-1">
                                         {% if prediction|prediction_is_correct %}
                                           <span class="tw:text-success">✓</span>
                                         {% else %}

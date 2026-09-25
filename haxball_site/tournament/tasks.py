@@ -202,7 +202,7 @@ def _create_replay_stats_from_part(
         stadium_name=stats.get('stadiumName', ''),
         red_team_nicks=[n.strip() for n in red_team_nicks],
         blue_team_nicks=[n.strip() for n in blue_team_nicks],
-        mvp_nick=player_ratings.get('mvpNick', '').strip(),
+        mvp_nick=(player_ratings.get('mvpNick') or '').strip(),
     )
 
     # Per-player (skip zero playtime and '* (own goal)' fake players)

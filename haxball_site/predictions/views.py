@@ -35,10 +35,25 @@ from .points_service import (
     get_teams_actual_positions,
 )
 from .utils import (
+    build_match_outcome_groups_map,
+    build_match_outcomes_map,
     calculate_tour_rewards,
     get_tournament_standings,
     is_tour_open_for_predictions,
 )
+
+CLASSIC_OUTCOME_CODES = {
+    Prediction.Result.HOME_WIN,
+    Prediction.Result.DRAW,
+    Prediction.Result.AWAY_WIN,
+}
+
+def get_prediction_outcome_choices(tournament):
+    """Return ((value, label), ...) list of main outcomes available for a tournament format."""
+    choices = list(Prediction.Result.choices)
+    if tournament.scoring_method != PredictionsContestTournament.ScoringMethod.COEFFICIENTS:
+        choices = [choice for choice in choices if choice[0] in CLASSIC_OUTCOME_CODES]
+    return choices
 
 
 def resolve_selected_season(request):
@@ -254,16 +269,19 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
     selected_tournament, tournament_form = resolve_selected_tournament(request, selected_tournament)
 
     user_predictions = {}
+    match_outcomes_by_tour = {}
+    match_outcome_groups_by_tour = {}
     is_tournament_ended = False
     if selected_tournament:
         tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
-            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
+            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
+            'tour_matches__prediction_offer__outcomes',
         )
 
         submissions = (
             PredictionSubmission.objects.filter(user=request.user, tournament=selected_tournament)
             .select_related('tournament')
-            .prefetch_related('predictions__match__result')
+            .prefetch_related('predictions__match__result', 'predictions__outcome__offer')
         )
 
         submissions_lookup = {sub.tour_id: sub for sub in submissions}
@@ -276,6 +294,9 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
             else:
                 user_predictions[tour.id] = {'submission': None, 'match_predictions': {}}
 
+            match_outcomes_by_tour[tour.id] = build_match_outcomes_map(tour)
+            match_outcome_groups_by_tour[tour.id] = build_match_outcome_groups_map(tour)
+
         is_tournament_ended = all(tour.is_ended for tour in tours)
 
     context = {
@@ -283,6 +304,9 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
         'selected_tournament': selected_tournament,
         'is_tournament_ended': is_tournament_ended,
         'user_predictions': user_predictions,
+        'match_outcomes_by_tour': match_outcomes_by_tour,
+        'match_outcome_groups_by_tour': match_outcome_groups_by_tour,
+        'scoring_method': selected_tournament.scoring_method if selected_tournament else None,
         'user': request.user,
     }
     if initial_context:
@@ -336,6 +360,7 @@ def view_predictions_tab(request):
                 'predictions__match__result__winner',
                 'predictions__match__team_home',
                 'predictions__match__team_guest',
+                'predictions__outcome__offer',
             )
         )
 
@@ -354,6 +379,7 @@ def view_predictions_tab(request):
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
         'predictions_data': predictions_data,
+        'scoring_method': selected_tournament.scoring_method if selected_tournament else None,
     }
 
     return render(request, 'predictions/contest/view_predictions_tab.html', context)
@@ -406,20 +432,24 @@ def tour_card(request, tour_id):
     """Render a single tour card"""
     tour = get_object_or_404(
         TourNumber.objects.select_related('league').prefetch_related(
-            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
+            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
+            'tour_matches__prediction_offer__outcomes',
         ),
         id=tour_id,
     )
 
     submission = None
     match_predictions = {}
+    scoring_method = None
     prediction_tournament = PredictionsContestTournament.objects.filter(league=tour.league).first()
     if prediction_tournament:
+        scoring_method = prediction_tournament.scoring_method
         submission = (
             PredictionSubmission.objects.filter(user=request.user, tour=tour, tournament=prediction_tournament)
             .select_related('tournament')
             .prefetch_related(
-                'predictions__match__result', 'predictions__match__team_home', 'predictions__match__team_guest'
+                'predictions__match__result', 'predictions__match__team_home', 'predictions__match__team_guest',
+                'predictions__outcome__offer',
             )
             .first()
         )
@@ -430,6 +460,9 @@ def tour_card(request, tour_id):
         'tour': tour,
         'submission': submission,
         'match_predictions': match_predictions,
+        'match_outcomes': build_match_outcomes_map(tour),
+        'match_outcome_groups': build_match_outcome_groups_map(tour),
+        'scoring_method': scoring_method,
     }
     return render(request, 'predictions/contest/tour_card.html', context)
 
@@ -439,7 +472,8 @@ def edit_predictions(request, tour_id):
     """Edit predictions for a specific tour"""
     tour = get_object_or_404(
         TourNumber.objects.select_related('league').prefetch_related(
-            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
+            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
+            'tour_matches__prediction_offer__outcomes',
         ),
         id=tour_id,
     )
@@ -457,33 +491,66 @@ def edit_predictions(request, tour_id):
             return tour_card(request, tour_id)
         return redirect('predictions:main')
 
-    submission, _ = PredictionSubmission.objects.get_or_create(
-        user=request.user, tour=tour, tournament=prediction_tournament
-    )
-
     matches = tour.tour_matches.all().order_by('id')
 
-    existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
+    match_outcomes = build_match_outcomes_map(tour)
+    match_outcome_groups = build_match_outcome_groups_map(tour)
+    prediction_outcome_choices = get_prediction_outcome_choices(prediction_tournament)
+    valid_outcome_codes = {value for value, _ in prediction_outcome_choices}
+    uses_coefficients = (
+        prediction_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
+    )
 
     if request.method == 'POST':
         with transaction.atomic():
+            submission, _ = PredictionSubmission.objects.get_or_create(
+                user=request.user, tour=tour, tournament=prediction_tournament
+            )
+            existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()}
+
             for match in matches:
+                # A match is open for coefficient predictions when its offer
+                # has published outcomes.
+                offer_outcome_ids = {o.id for o in match_outcomes.get(match.id, [])}
+                if uses_coefficients and not offer_outcome_ids:
+                    existing_prediction = existing_predictions.get(match.id)
+                    if existing_prediction:
+                        existing_prediction.delete()
+                    continue
+
                 prediction_value = request.POST.get(f'prediction_{match.id}')
+                outcome_id = None
+                if prediction_value is None or prediction_value == '':
+                    prediction_value = None
+                elif uses_coefficients:
+                    # Unified path: a single outcome id for results/handicaps/totals.
+                    if prediction_value.isdigit() and int(prediction_value) in offer_outcome_ids:
+                        outcome_id = int(prediction_value)
+                    prediction_value = None
+                elif prediction_value in valid_outcome_codes:
+                    pass
+                else:
+                    prediction_value = None
                 is_special = bool(request.POST.get(f'special_{match.id}'))
 
                 existing_prediction = existing_predictions.get(match.id)
 
-                if not prediction_value:
+                if not prediction_value and outcome_id is None:
                     if existing_prediction:
                         existing_prediction.delete()
                 else:
                     prediction, created = Prediction.objects.get_or_create(
                         submission=submission,
                         match=match,
-                        defaults={'predicted_result': prediction_value, 'is_special': is_special},
+                        defaults={
+                            'predicted_result': prediction_value,
+                            'outcome_id': outcome_id,
+                            'is_special': is_special,
+                        },
                     )
                     if not created:
                         prediction.predicted_result = prediction_value
+                        prediction.outcome_id = outcome_id
                         prediction.is_special = is_special
                         prediction.save()
 
@@ -494,11 +561,23 @@ def edit_predictions(request, tour_id):
 
         return redirect('predictions:main')
 
+    submission = (
+        PredictionSubmission.objects.filter(user=request.user, tour=tour, tournament=prediction_tournament)
+        .select_related('tournament')
+        .first()
+    )
+    existing_predictions = {pred.match_id: pred for pred in submission.predictions.all()} if submission else {}
+
     context = {
         'tour': tour,
         'matches': matches,
         'existing_predictions': existing_predictions,
         'submission': submission,
+        'prediction_outcome_choices': prediction_outcome_choices,
+        'match_outcomes': match_outcomes,
+        'match_outcome_groups': match_outcome_groups,
+        'uses_coefficients': uses_coefficients,
+        'nominal_points': prediction_tournament.nominal_points if uses_coefficients else None,
     }
 
     return render(request, 'predictions/contest/edit_predictions.html', context)

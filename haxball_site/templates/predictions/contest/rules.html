@@ -5,25 +5,131 @@
       <li>Прием прогнозов закрывается в 20:00 в день начала тура</li>
       <li>Вы можете изменять прогнозы сколько угодно раз до закрытия</li>
       <li>
-        За правильный прогноз начисляются очки:
+        Для каждого матча может быть доступно до 4 различных маркетов:
         <ul style="list-style-type: circle;">
-          <li>1 очко за угаданную победу</li>
-          <li>3 очка за угаданную ничью</li>
+          <li>
+            <strong>Исход матча</strong> - П1/1Х/X/X2/П2
+          </li>
+          <li>
+            <strong>Форы</strong> - Ф1/Ф2
+          </li>
+          <li>
+            <strong>Тоталы</strong> - ТБ/ТМ
+          </li>
+          <li>
+            <strong>Индивидуальные тоталы</strong> - ИТБ1/ИТМ1/ИТБ2/ИТМ2
+          </li>
+        </ul>
+        Набор доступных событий и коэффициентов на них определяется организатором
+      </li>
+      <li>В каждом матче можно выбрать только один исход</li>
+      <li>
+        Начисление очков проходит по "беттинговой" схеме:
+        <ul style="list-style-type: circle;">
+          <li>
+            <strong>N × (k − 1)</strong> за верный прогноз,
+          </li>
+          <li>
+            <strong>-N</strong> за неверный прогноз,
+          </li>
+        </ul>
+        где <strong>N</strong> - номинальная ставка (100), <strong>k</strong> - коэффициент выбранного исхода.
+        <br />
+        <div class="tw:mb-3">
+          Иными словами, вы получаете прибыль с выигранной ставки (за вычетом номинала) и теряете сумму ставки (номинал) с проигранной
+        </div>
+
+        Примеры:
+        <ul style="list-style-type: circle;">
+          <li>
+            Участник выбрал исход X с коэффициентом 2.5, и ставка сыграла.
+            <br />
+            В этом случае он получит 100 × (2.5 - 1) = 150 очков
+          </li>
+          <li>
+            Участник выбрал исход X, и ставка не сыграла.
+            <br />
+            В этом случае он потеряет 100 очков
+          </li>
         </ul>
       </li>
       <li>
-        В каждом туре можно выбрать до 2 "особых" матчей:
-        <ul style="list-style-type: circle;">
-          <li>За правильный прогноз в таком матче дополнительно начисляется 0.5 очков</li>
-          <li>За неправильный прогноз в таком матче отнимается 0.5 очков</li>
-        </ul>
+        Если в матче зафиксировано техническое поражение (одной из команд или обоюдное), все исходы рассчитываются с коэффициентом 1.00,
+        т.е очки не начисляются и не списываются
       </li>
+      <li>Победителем турнира считается участник с наибольшим итоговым балансом по его завершении</li>
     </ul>
   </span>
 
   <div class="tw:divider"></div>
 
   <h5 id="rules-updates" class="tw:mb-4!" x-intersect="if (isRulesModalOpen) updateLastSeenVersion()">История изменений</h5>
+
+  <div x-data="{version: 5}" class="tw:pl-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h6 class="tw:mb-0!">v2.3 (24.09.26)</h6>
+      <span x-show="lastSeenRulesVersion < version" class="tw:status tw:status-warning"></span>
+    </div>
+    <p>
+      <ul>
+        <li>Добавлены дополнительные показатели в лидерборд: средний коэффициент, средний коэффициент успешных прогнозов и ROI</li>
+      </ul>
+    </p>
+  </div>
+
+  <div x-data="{version: 4}" class="tw:pl-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h6 class="tw:mb-0!">v2.2 (23.09.26)</h6>
+      <span x-show="lastSeenRulesVersion < version" class="tw:status tw:status-warning"></span>
+    </div>
+    <p>
+      <ul>
+        <li>Технические поражения: все исходы таких матчей рассчитываются с коэффициентом 1.00</li>
+        <li>Добавлены тоталы (ТБ/ТМ) и индивидуальные тоталы команд (ИТБ1/ИТМ1/ИТБ2/ИТМ2)</li>
+      </ul>
+    </p>
+  </div>
+
+  <div x-data="{version: 3}" class="tw:pl-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h6 class="tw:mb-0!">v2.1 (22.09.26)</h6>
+      <span x-show="lastSeenRulesVersion < version" class="tw:status tw:status-warning"></span>
+    </div>
+    <p>
+      <ul>
+        <li>
+          Изменена схема начисления очков:
+          <ul style="list-style-type: circle;">
+            <li>
+              <strong>N × (k − 1)</strong> за верный прогноз,
+            </li>
+            <li>
+              <strong>-N</strong> за неверный прогноз
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </p>
+  </div>
+
+  <div x-data="{version: 2}" class="tw:pl-2">
+    <div class="tw:flex tw:items-center tw:gap-2">
+      <h6 class="tw:mb-0!">v2.0 (21.09.26)</h6>
+      <span x-show="lastSeenRulesVersion < version" class="tw:status tw:status-warning"></span>
+    </div>
+    <p>
+      <ul>
+        <li>
+          Новый формат начисления очков: вместо фиксированных очков каждый исход матча получил
+          коэффициент, очки = N × k (где N - номинальная ставка, k - коэффициент исхода)
+        </li>
+        <li>
+          Добавлены новые исходы: <strong>1X</strong>, <strong>X2</strong>, <strong>форы</strong>
+        </li>
+        <li>Упразднена механика "особых" матчей</li>
+      </ul>
+    </p>
+  </div>
 
   <div x-data="{version: 1}" class="tw:pl-2">
     <div class="tw:flex tw:items-center tw:gap-2">

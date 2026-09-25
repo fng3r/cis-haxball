@@ -4,8 +4,66 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import PredictionSubmission
-from .points_service import calculate_submission_predictions_counts, calculate_submission_total_points
+from .models import MatchPredictionOutcome, PredictionsContestTournament, PredictionSubmission
+from .points_service import (
+    calculate_avg_coefficient,
+    calculate_roi,
+    calculate_submission_predictions_counts,
+    calculate_submission_total_points,
+    is_prediction_correct,
+    is_prediction_void,
+)
+
+
+def build_match_offers_map(tour):
+    """Return mapping {match_id: MatchPredictionOffer} for matches of a tour.
+
+    Uses the offer prefetched on tour's matches, so requires the queryset to
+    prefetch 'tour_matches__prediction_offer' to avoid N+1 queries.
+    """
+    offers = {}
+    for match in tour.tour_matches.all():
+        offer = getattr(match, 'prediction_offer', None)
+        if offer is not None:
+            offers[match.id] = offer
+    return offers
+
+
+def build_match_outcomes_map(tour):
+    """Return mapping {match_id: list of MatchPredictionOutcome} for a tour.
+
+    Single unified map for all markets, ordered by market group (results,
+    handicaps, totals, individual totals), id order within a group.
+    Requires prefetching 'tour_matches__prediction_offer__outcomes' to
+    avoid N+1 queries.
+    """
+    order = MatchPredictionOutcome.MARKET_ORDER
+    outcomes = {}
+    for match in tour.tour_matches.all():
+        offer = getattr(match, 'prediction_offer', None)
+        if offer is None or not getattr(offer, 'is_published', True):
+            continue
+        match_outcomes = sorted(
+            offer.outcomes.all(),
+            key=lambda o: (
+                order.index(o.market) if o.market in order else 99,
+                getattr(o, 'id', 0) or 0,
+            ),
+        )
+        if match_outcomes:
+            outcomes[match.id] = match_outcomes
+    return outcomes
+
+
+def build_match_outcome_groups_map(tour):
+    """Return mapping {match_id: {market: [outcomes]}} for rendering grouped forms."""
+    groups = {}
+    for match_id, match_outcomes in build_match_outcomes_map(tour).items():
+        market_groups = {}
+        for outcome in match_outcomes:
+            market_groups.setdefault(outcome.market, []).append(outcome)
+        groups[match_id] = market_groups
+    return groups
 
 
 def is_tour_open_for_predictions(tour):
@@ -68,7 +126,7 @@ def get_tournament_standings(tournament):
     all_submissions = (
         PredictionSubmission.objects.filter(tournament=tournament)
         .select_related('tournament')
-        .prefetch_related('predictions__match__result')
+        .prefetch_related('predictions__match__result', 'predictions__outcome')
     )
 
     submissions_by_user = {}
@@ -77,24 +135,54 @@ def get_tournament_standings(tournament):
             submissions_by_user[submission.user_id] = []
         submissions_by_user[submission.user_id].append(submission)
 
+    is_coefficient = (
+        tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
+    )
     standings = []
     for user in users_with_predictions:
         user_submissions = submissions_by_user.get(user.id, [])
         total_points = 0
         total_correct_predictions = 0
         total_predictions = 0
+        coefficient_sum = Decimal('0')
+        decisive_predictions = 0
+        win_coefficient_sum = Decimal('0')
+        win_coefficient_count = 0
         for submission in user_submissions:
             total_points += calculate_submission_total_points(submission)
             correct_predictions, predictions = calculate_submission_predictions_counts(submission)
             total_correct_predictions += correct_predictions
             total_predictions += predictions
+            if is_coefficient:
+                for prediction in submission.predictions.all():
+                    # Voided stakes (tech defeats, totals on the line) are
+                    # refunded: excluded from both ROI turnover and avg coeff.
+                    if not prediction.match.is_played or not prediction.outcome_id:
+                        continue
+                    if is_prediction_void(prediction):
+                        continue
+                    coefficient_sum += prediction.outcome.coefficient
+                    decisive_predictions += 1
+                    if is_prediction_correct(prediction):
+                        win_coefficient_sum += prediction.outcome.coefficient
+                        win_coefficient_count += 1
         accuracy = total_correct_predictions / total_predictions * 100 if total_predictions > 0 else 0
+        roi = (
+            calculate_roi(total_points, tournament.nominal_points, decisive_predictions)
+            if is_coefficient
+            else None
+        )
+        avg_coefficient = calculate_avg_coefficient(coefficient_sum, decisive_predictions)
+        avg_win_coefficient = calculate_avg_coefficient(win_coefficient_sum, win_coefficient_count)
 
         standings.append(
             {
                 'user': user,
                 'total_points': total_points,
                 'accuracy': accuracy,
+                'roi': roi,
+                'avg_coefficient': avg_coefficient,
+                'avg_win_coefficient': avg_win_coefficient,
             }
         )
 

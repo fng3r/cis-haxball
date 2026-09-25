@@ -26,6 +26,12 @@
                   <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
                 {% endfor %}
                 <td class="tw:text-center tw:font-bold">Точность</td>
+                {% if selected_tournament.scoring_method == 'coefficients' %}
+                  <td class="tw:text-center tw:font-bold"
+                      title="Средний коэффициент выбранных исходов (возвраты по тех. поражениям исключены)">Ср. кэф</td>
+                  <td class="tw:text-center tw:font-bold" title="Средний коэффициент верных прогнозов">Ср. кэф+</td>
+                  <td class="tw:text-center tw:font-bold" title="Прибыль относительно поставленного номинала (возвраты исключены из оборота)">ROI</td>
+                {% endif %}
                 <th class="tw:text-center tw:font-bold">Всего</th>
               </tr>
             </thead>
@@ -76,14 +82,37 @@
                   {% for tour in selected_tournament.league.tours.all %}
                     <td class="tw:text-center">
                       {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
-                        <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id|floatformat:1 }}</span>
+                        <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id|floatformat:-2 }}</span>
                       {% else %}
                         <span class="tw:text-base-content/50">-</span>
                       {% endif %}
                     </td>
                   {% endfor %}
                   <td class="tw:text-center tw:font-bold">{{ standing.accuracy|floatformat:1 }}%</td>
-                  <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points|floatformat:1 }}</th>
+                  {% if selected_tournament.scoring_method == 'coefficients' %}
+                    <td class="tw:text-center">
+                      {% if standing.avg_coefficient is not None %}
+                        <span class="tw:font-semibold">{{ standing.avg_coefficient|floatformat:2 }}</span>
+                      {% else %}
+                        <span class="tw:text-base-content/50">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="tw:text-center">
+                      {% if standing.avg_win_coefficient is not None %}
+                        <span class="tw:font-semibold">{{ standing.avg_win_coefficient|floatformat:2 }}</span>
+                      {% else %}
+                        <span class="tw:text-base-content/50">-</span>
+                      {% endif %}
+                    </td>
+                    <td class="tw:text-center">
+                      {% if standing.roi is not None %}
+                        <span class="tw:font-bold {% if standing.roi > 0 %}tw:text-success{% elif standing.roi < 0 %}tw:text-error{% endif %}">{{ standing.roi|floatformat:1 }}%</span>
+                      {% else %}
+                        <span class="tw:text-base-content/50">-</span>
+                      {% endif %}
+                    </td>
+                  {% endif %}
+                  <th class="tw:text-center tw:font-bold tw:text-lg">{{ standing.total_points|floatformat:-2 }}</th>
                 </tr>
               {% endfor %}
             </tbody>
