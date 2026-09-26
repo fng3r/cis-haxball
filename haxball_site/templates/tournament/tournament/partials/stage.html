@@ -22,7 +22,7 @@
           <div class="tw:flex tw:flex-col">
             {% for group in stage.groups.all %}
               <div class="tw:text-center">
-                <h4 class="tw:text-lg">{{ group.name }}</h4>
+                <h4 class="tw:ml-1 tw:mb-1! tw:text-2xl! tw:text-left">{{ group.name }}</h4>
                 {% tournament_table league stage group stage_controlled=True %}
               </div>
 
