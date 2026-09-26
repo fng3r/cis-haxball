@@ -213,7 +213,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         ('match__numb_tour__number', SingleNumericFilter),
         'is_published',
     ]
-    list_filter_sheet = False
+    list_filter_sheet = True
     list_filter_submit = True
     search_fields = ['match__team_home__title', 'match__team_guest__title']
     ordering = ['-id']
