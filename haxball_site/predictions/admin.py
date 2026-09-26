@@ -201,7 +201,6 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         'display_status',
         'display_score',
         'display_outcomes_count',
-        'display_avg_coefficient',
         'display_picks',
         'display_results',
         'display_handicaps',
@@ -294,14 +293,6 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     @display(description='Исходов', label=True)
     def display_outcomes_count(self, model):
         return len(model.outcomes.all())
-
-    @display(description='Средний кэф')
-    def display_avg_coefficient(self, model):
-        outcomes = list(model.outcomes.all())
-        if not outcomes:
-            return '–'
-        avg = sum(o.coefficient for o in outcomes) / len(outcomes)
-        return f'×{avg:.2f}'
 
     @display(description='Ставок', label=True)
     def display_picks(self, model):
