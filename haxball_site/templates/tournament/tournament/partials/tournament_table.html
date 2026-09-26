@@ -48,13 +48,13 @@
              x-transition:leave-end="tw:opacity-0">
           {% if has_carryover and stage_only_table %}
             <div x-show="!stageOnly">
-              {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
+              {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties marker_classes=marker_classes marker_labels=marker_labels %}
             </div>
             <div x-show="stageOnly" x-cloak>
-              {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=stage_only_table stage=stage has_penalties=has_penalties %}
+              {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=stage_only_table stage=stage has_penalties=has_penalties marker_classes=marker_classes marker_labels=marker_labels %}
             </div>
           {% else %}
-            {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
+            {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties marker_classes=marker_classes marker_labels=marker_labels %}
           {% endif %}
         </div>
 
@@ -66,7 +66,7 @@
              x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
              x-transition:leave-start="tw:opacity-100"
              x-transition:leave-end="tw:opacity-0">
-          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=first_half_table stage=stage has_penalties=False %}
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=first_half_table stage=stage has_penalties=False marker_classes=marker_classes marker_labels=marker_labels %}
         </div>
 
         <div x-show="activeTab === 'second'"
@@ -77,18 +77,18 @@
              x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
              x-transition:leave-start="tw:opacity-100"
              x-transition:leave-end="tw:opacity-0">
-          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=second_half_table stage=stage has_penalties=False %}
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=second_half_table stage=stage has_penalties=False marker_classes=marker_classes marker_labels=marker_labels %}
         </div>
       {% else %}
         <div x-show="!stageOnly">
-          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties marker_classes=marker_classes marker_labels=marker_labels %}
         </div>
         <div x-show="stageOnly" x-cloak>
-          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=stage_only_table stage=stage has_penalties=has_penalties %}
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=stage_only_table stage=stage has_penalties=has_penalties marker_classes=marker_classes marker_labels=marker_labels %}
         </div>
       {% endif %}
     </div>
   </div>
 {% else %}
-  {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
+  {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties marker_classes=marker_classes marker_labels=marker_labels %}
 {% endif %}

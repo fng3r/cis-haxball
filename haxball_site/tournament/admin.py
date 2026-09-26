@@ -75,6 +75,7 @@ from .models import (
     Season,
     SeasonTeamRating,
     Substitution,
+    TableMarker,
     Team,
     TeamAchievement,
     TeamMedal,
@@ -851,9 +852,26 @@ class TournamentStageChildBase(PolymorphicChildModelAdmin, UnfoldModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class TableMarkerInline(UnfoldStackedInline):
+    model = TableMarker
+    extra = 0
+    tab = True
+
+    fields = (('group', 'place_from', 'place_to', 'color'), ('label',))
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'group':
+            resolved = resolve(request.path_info)
+            if 'object_id' in resolved.kwargs:
+                stage = TournamentStage.objects.filter(pk=resolved.kwargs['object_id']).first()
+                if stage is not None and hasattr(stage, 'groups'):
+                    kwargs['queryset'] = stage.groups.all()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 @admin.register(RegularStage)
 class RegularStageAdmin(TournamentStageChildBase):
-    inlines = [TourInline, TeamPenaltyPointsInline]
+    inlines = [TourInline, TeamPenaltyPointsInline, TableMarkerInline]
     conditional_fields = {
         'round_robin_rounds': 'is_round_robin == true',
     }
@@ -880,7 +898,7 @@ class RegularStageAdmin(TournamentStageChildBase):
 
 @admin.register(GroupStage)
 class GroupStageAdmin(TournamentStageChildBase):
-    inlines = [GroupInline, TourInline, TeamPenaltyPointsInline]
+    inlines = [GroupInline, TourInline, TeamPenaltyPointsInline, TableMarkerInline]
     fieldsets = (
         (
             'Основное',

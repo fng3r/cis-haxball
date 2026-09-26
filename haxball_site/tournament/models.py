@@ -476,6 +476,81 @@ class Group(models.Model):
     class Meta:
         verbose_name = 'Группа'
         verbose_name_plural = 'Группы'
+        ordering = ['id']
+
+
+class TableMarker(models.Model):
+    """Explicit accent bar for a range of table places.
+
+    Group-scoped markers take precedence over stage-wide markers place by place:
+    for each place the group marker wins if it covers the place, otherwise the
+    stage marker is used. When no markers are defined for a stage at all, tables
+    fall back to the legacy promoted/relegated-count logic.
+    """
+
+    class Color(models.TextChoices):
+        GREEN = 'GREEN', 'Зелёный'
+        YELLOW = 'YELLOW', 'Жёлтый'
+        RED = 'RED', 'Красный'
+
+    stage = models.ForeignKey(
+        TournamentStage,
+        verbose_name='Этап турнира',
+        related_name='table_markers',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
+    )
+    group = models.ForeignKey(
+        Group,
+        verbose_name='Группа (необязательно)',
+        related_name='table_markers',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        help_text='Если не указана, маркер действует на весь этап.',
+    )
+    place_from = models.PositiveSmallIntegerField('Места с')
+    place_to = models.PositiveSmallIntegerField('Места по')
+    color = models.CharField('Цвет', max_length=10, choices=Color.choices)
+    label = models.CharField(
+        'Подпись',
+        max_length=150,
+        null=True,
+        blank=True,
+        help_text='Показывается во всплывающей подсказке при наведении на маркер.',
+    )
+
+    def clean(self):
+        errors = {}
+        if self.place_from is not None and self.place_from < 1:
+            errors['place_from'] = 'Место должно быть не меньше 1.'
+        if self.place_from is not None and self.place_to is not None and self.place_to < self.place_from:
+            errors['place_to'] = 'Конечное место должно быть не меньше начального.'
+        if self.stage_id is not None and self.group_id is not None and self.group.stage_id != self.stage_id:
+            errors['group'] = 'Группа должна принадлежать указанному этапу.'
+        if not errors and self.stage_id is not None:
+            overlapping = TableMarker.objects.filter(
+                stage_id=self.stage_id,
+                group_id=self.group_id,
+                place_from__lte=self.place_to,
+                place_to__gte=self.place_from,
+            )
+            if self.pk is not None:
+                overlapping = overlapping.exclude(pk=self.pk)
+            if overlapping.exists():
+                errors['place_from'] = 'Диапазон мест пересекается с другим маркером этого этапа/группы.'
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self):
+        scope = f'{self.stage}, {self.group}' if self.group_id is not None else str(self.stage)
+        return f'{scope}: места {self.place_from}–{self.place_to} ({self.get_color_display()})'
+
+    class Meta:
+        verbose_name = 'Маркер таблицы'
+        verbose_name_plural = 'Маркеры таблицы'
+        ordering = ('stage', 'group', 'place_from')
 
 
 class PlayOffStage(TournamentStage):

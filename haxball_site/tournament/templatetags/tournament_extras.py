@@ -48,6 +48,7 @@ from ..models import (
     Postponement,
     Season,
     Substitution,
+    TableMarker,
     Team,
     TeamPenaltyPoints,
     TournamentStage,
@@ -524,6 +525,48 @@ def cup_round_name(tour: TourNumber):
     return round_name(tour, tour.stage.tours.filter(bracket=tour.bracket).count())
 
 
+@register.filter
+def at_index(values, index):
+    """values[int(index)] or '' — parallel-list lookup for marker classes per table row."""
+    try:
+        return values[int(index)]
+    except (IndexError, TypeError, ValueError):
+        return ''
+
+
+def get_table_marker_classes(stage: TournamentStage | None, group: Group | None, size: int):
+    """Accent-bar CSS classes and tooltip labels per table place (1-based).
+
+    Group-scoped markers take precedence place by place; stage-wide markers fill
+    the remaining places. (None, None) (→ legacy promoted/relegated-count
+    rendering) is returned only when the stage defines no markers at all.
+    """
+    if stage is None or size <= 0:
+        return None, None
+    stage_markers = list(TableMarker.objects.filter(stage=stage, group__isnull=True).order_by('place_from'))
+    group_markers = (
+        list(TableMarker.objects.filter(stage=stage, group=group).order_by('place_from')) if group is not None else []
+    )
+    if not stage_markers and not group_markers:
+        return None, None
+    classes = []
+    labels = []
+    for place in range(1, size + 1):
+        marker = next((m for m in group_markers if m.place_from <= place <= m.place_to), None)
+        if marker is None:
+            marker = next((m for m in stage_markers if m.place_from <= place <= m.place_to), None)
+        classes.append(TABLE_MARKER_CSS_CLASSES.get(marker.color, '') if marker is not None else '')
+        labels.append(marker.label or '' if marker is not None else '')
+    return classes, labels
+
+
+TABLE_MARKER_CSS_CLASSES = {
+    TableMarker.Color.GREEN.value: 'tw:bg-green-500',
+    TableMarker.Color.YELLOW.value: 'tw:bg-yellow-300',
+    TableMarker.Color.RED.value: 'tw:bg-red-500',
+}
+
+
 @register.inclusion_tag('tournament/tournament/partials/tournament_table.html', takes_context=True)
 def tournament_table(
     context, league: League, stage: TournamentStage, group: Group | None, stage_controlled: bool = False
@@ -541,6 +584,7 @@ def tournament_table(
 
     table = get_league_table(league, stage, group, carryover_cache=carryover_cache)
     has_penalties = any(x[10] > 0 for x in table)
+    marker_classes, marker_labels = get_table_marker_classes(stage, group, len(table))
 
     has_carryover = stage is not None and stage.has_carryover
     stage_only_table = None
@@ -564,6 +608,8 @@ def tournament_table(
         'table': table,
         'stage': stage,
         'has_penalties': has_penalties,
+        'marker_classes': marker_classes,
+        'marker_labels': marker_labels,
         'has_carryover': has_carryover,
         'stage_only_table': stage_only_table,
         'first_half_table': first_half_table,
