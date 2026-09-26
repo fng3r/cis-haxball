@@ -506,6 +506,11 @@ LOGGING = {
     },
 }
 
+
+def _can_view_prediction_offers(request):
+    return request.user.has_perm('predictions.view_matchpredictionoffer')
+
+
 UNFOLD = {
     'SITE_TITLE': 'CIS-HAXBALL',
     'SITE_HEADER': 'CIS-HAXBALL',
@@ -610,21 +615,13 @@ UNFOLD = {
                         'title': 'Букмекерская линия',
                         'icon': 'sports_soccer',
                         'link': '/admin/predictions/matchpredictionoffer/betting-board/',
+                        'permission': _can_view_prediction_offers,
                     },
                     {
                         'title': 'Исходы матчей',
                         'icon': 'list',
                         'link': reverse_lazy('admin:predictions_matchpredictionoffer_changelist'),
-                    },
-                    {
-                        'title': 'Турниры прогнозов',
-                        'icon': 'trophy',
-                        'link': reverse_lazy('admin:predictions_predictionscontesttournament_changelist'),
-                    },
-                    {
-                        'title': 'Отправки прогнозов',
-                        'icon': 'inbox',
-                        'link': reverse_lazy('admin:predictions_predictionsubmission_changelist'),
+                        'permission': _can_view_prediction_offers,
                     },
                 ],
             },
