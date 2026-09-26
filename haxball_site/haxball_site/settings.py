@@ -178,7 +178,8 @@ else:
 if DEBUG:
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+            # 'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
             'LOCATION': config('CACHE_LOCATION', default=os.path.join(BASE_DIR, '.site_cache')),
         }
     }
@@ -521,6 +522,24 @@ UNFOLD = {
     'SHOW_HISTORY': True,
     'SHOW_VIEW_ON_SITE': True,
     'SHOW_BACK_BUTTON': True,
+    'DASHBOARD_CALLBACK': 'predictions.admin_dashboard.predictions_dashboard_callback',
+    'TABS': [
+        {
+            'models': ['predictions.matchpredictionoffer'],
+            'items': [
+                {
+                    'title': 'Исходы матчей',
+                    'link': '/admin/predictions/matchpredictionoffer/',
+                    'icon': 'list',
+                },
+                {
+                    'title': 'Букмекерская линия',
+                    'link': '/admin/predictions/matchpredictionoffer/betting-board/',
+                    'icon': 'sports_soccer',
+                },
+            ],
+        },
+    ],
     'COMMAND': {
         'search_models': [
             'core.Profile',
@@ -580,6 +599,32 @@ UNFOLD = {
                         'title': 'Группы',
                         'icon': 'group',
                         'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': 'Прогнозы',
+                'icon': 'casino',
+                'items': [
+                    {
+                        'title': 'Букмекерская линия',
+                        'icon': 'sports_soccer',
+                        'link': '/admin/predictions/matchpredictionoffer/betting-board/',
+                    },
+                    {
+                        'title': 'Исходы матчей',
+                        'icon': 'list',
+                        'link': reverse_lazy('admin:predictions_matchpredictionoffer_changelist'),
+                    },
+                    {
+                        'title': 'Турниры прогнозов',
+                        'icon': 'trophy',
+                        'link': reverse_lazy('admin:predictions_predictionscontesttournament_changelist'),
+                    },
+                    {
+                        'title': 'Отправки прогнозов',
+                        'icon': 'inbox',
+                        'link': reverse_lazy('admin:predictions_predictionsubmission_changelist'),
                     },
                 ],
             },

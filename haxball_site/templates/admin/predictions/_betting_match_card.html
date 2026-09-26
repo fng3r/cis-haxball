@@ -1,0 +1,90 @@
+{# Betting-style match card for the admin betting board. #}
+{% load unfold predictions_extras %}
+{% with match=card.match offer=card.offer %}
+  <div class="bg-base-50 border border-base-200 rounded-default dark:bg-white/[.02] dark:border-base-800 overflow-hidden">
+    <div class="flex flex-col lg:flex-row lg:items-center gap-2 px-4 py-3 border-b border-base-200 dark:border-base-800">
+      <div class="flex items-center gap-2 grow min-w-0">
+        <span class="material-symbols-outlined text-primary-600">sports_soccer</span>
+        <span class="font-semibold truncate">{{ match.team_home.title }}</span>
+        {% if match.is_played %}
+          <span class="font-bold whitespace-nowrap">{{ match.score_home }}:{{ match.score_guest }}</span>
+        {% else %}
+          <span class="text-subtle whitespace-nowrap">vs</span>
+        {% endif %}
+        <span class="font-semibold truncate">{{ match.team_guest.title }}</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5">
+        {% if match.is_played %}
+          {% component "unfold/helpers/label.html" with variant="info" text="Сыгран" %}{% endcomponent %}
+        {% else %}
+          {% component "unfold/helpers/label.html" with variant="success" text="Не сыгран" %}{% endcomponent %}
+        {% endif %}
+
+        {% if offer %}
+          {% if offer.is_published %}
+            {% component "unfold/helpers/label.html" with variant="success" text="Опубликовано" %}{% endcomponent %}
+          {% else %}
+            {% component "unfold/helpers/label.html" with variant="warning" text="Скрыто" %}{% endcomponent %}
+          {% endif %}
+          {% component "unfold/helpers/label.html" with text=card.total_outcomes %}{% endcomponent %}
+          {% component "unfold/helpers/label.html" with variant="primary" text=card.total_picks %}{% endcomponent %}
+        {% else %}
+          {% component "unfold/helpers/label.html" with variant="danger" text="Нет линии" %}{% endcomponent %}
+        {% endif %}
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="/admin/tournament/match/{{ match.id }}/change/" class="text-xs text-primary-600 hover:underline whitespace-nowrap">Матч</a>
+        {% if offer %}
+          <a href="/admin/predictions/matchpredictionoffer/{{ offer.id }}/change/" class="text-xs text-primary-600 hover:underline whitespace-nowrap">Линия</a>
+        {% else %}
+          <a href="/admin/predictions/matchpredictionoffer/add/" class="text-xs text-primary-600 hover:underline whitespace-nowrap">+ Линия</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if card.groups %}
+      <div class="flex flex-col gap-3 p-4">
+        {% for market, outcomes in card.groups.items %}
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              {% if market == "RESULT" %}
+                <span class="material-symbols-outlined text-base-400 text-lg">sports_soccer</span>
+                <span class="text-xs font-semibold uppercase tracking-wide text-subtle">Исход матча</span>
+              {% elif market == "HANDICAP" %}
+                <span class="material-symbols-outlined text-base-400 text-lg">balance</span>
+                <span class="text-xs font-semibold uppercase tracking-wide text-subtle">Форы</span>
+              {% elif market == "TOTAL" %}
+                <span class="material-symbols-outlined text-base-400 text-lg">functions</span>
+                <span class="text-xs font-semibold uppercase tracking-wide text-subtle">Тоталы</span>
+              {% else %}
+                <span class="material-symbols-outlined text-base-400 text-lg">person</span>
+                <span class="text-xs font-semibold uppercase tracking-wide text-subtle">Инд. тоталы</span>
+              {% endif %}
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2">
+              {% for outcome in outcomes %}
+                <div class="flex flex-col items-center gap-0.5 px-2 py-2 rounded-default border border-base-200 bg-white dark:bg-base-900 dark:border-base-700">
+                  <span class="text-sm font-bold leading-none">{{ outcome.display_label }}</span>
+                  <span class="text-lg font-semibold leading-none {% if outcome.coefficient < 1.7 %}text-green-600{% elif outcome.coefficient < 2.5 %}text-blue-600{% elif outcome.coefficient < 4 %}text-orange-600{% else %}text-red-600{% endif %}">
+                    ×{{ outcome.coefficient }}
+                  </span>
+                  {% with picks=card.picks_by_outcome|get_item:outcome.id %}
+                    <span class="text-[11px] text-subtle leading-none">
+                      {% if picks %}{{ picks }} ст.{% else %}—{% endif %} · #{{ outcome.id }}
+                    </span>
+                  {% endwith %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="px-4 py-3 text-sm text-subtle">
+        Линия не задана. Откройте карточку оффера и добавьте исходы — матч появится здесь с коэффициентами.
+      </div>
+    {% endif %}
+  </div>
+{% endwith %}

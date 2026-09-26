@@ -1,15 +1,19 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 from django.db.models import Prefetch
 from django.forms.models import BaseInlineFormSet
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter, SingleNumericFilter
-from unfold.decorators import display
+from unfold.decorators import action, display
+from unfold.enums import ActionVariant
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
 from tournament.models import Match
 
+from .admin_dashboard import OfferBettingPreviewSection, PredictionsBettingBoardView
 from .models import (
     HandicapOutcome,
     IndividualTotalOutcome,
@@ -193,14 +197,17 @@ class IndividualTotalsInline(BaseOutcomeInline):
 @admin.register(MatchPredictionOffer)
 class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     list_display = [
-        'match',
-        'is_published',
+        'display_match',
+        'display_status',
+        'display_score',
+        'display_outcomes_count',
+        'display_avg_coefficient',
+        'display_picks',
         'display_results',
         'display_handicaps',
         'display_totals',
         'display_individual_totals',
     ]
-    list_editable = ['is_published']
     list_filter = [
         ('match__league', RelatedDropdownFilter),
         ('match__numb_tour__number', SingleNumericFilter),
@@ -211,6 +218,94 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     search_fields = ['match__team_home__title', 'match__team_guest__title']
     ordering = ['-id']
     inlines = [ResultsInline, HandicapsInline, TotalsInline, IndividualTotalsInline]
+    list_sections = [OfferBettingPreviewSection]
+    actions_list = ['open_betting_board']
+    actions_row = ['publish_offer', 'unpublish_offer']
+    actions_detail = ['open_betting_board', 'publish_offer', 'unpublish_offer']
+
+    def get_custom_urls(self):
+        return (
+            (
+                'betting-board/',
+                'predictions_matchpredictionoffer_betting_board',
+                PredictionsBettingBoardView.as_view(model_admin=self),
+            ),
+        )
+
+    @action(description='Букмекерская линия', url_path='open-betting-board', icon='sports_soccer')
+    def open_betting_board(self, request, object_id=None):
+        return HttpResponseRedirect(reverse('admin:predictions_matchpredictionoffer_betting_board'))
+
+    @action(
+        description='Опубликовать',
+        url_path='publish-offer',
+        icon='visibility',
+        variant=ActionVariant.SUCCESS,
+    )
+    def publish_offer(self, request, object_id=None):
+        if object_id is None:
+            self.message_user(request, 'Выберите конкретную линию в строке таблицы.', messages.ERROR)
+            redirect_to = request.META.get('HTTP_REFERER') or reverse(
+                'admin:predictions_matchpredictionoffer_changelist'
+            )
+            return HttpResponseRedirect(redirect_to)
+        updated = MatchPredictionOffer.objects.filter(pk=object_id).update(is_published=True)
+        self.message_user(request, f'Опубликовано линий: {updated}', messages.SUCCESS)
+        redirect_to = request.META.get('HTTP_REFERER') or reverse('admin:predictions_matchpredictionoffer_changelist')
+        return HttpResponseRedirect(redirect_to)
+
+    @action(
+        description='Скрыть',
+        url_path='unpublish-offer',
+        icon='visibility_off',
+        variant=ActionVariant.WARNING,
+    )
+    def unpublish_offer(self, request, object_id=None):
+        if object_id is None:
+            self.message_user(request, 'Выберите конкретную линию в строке таблицы.', messages.ERROR)
+            redirect_to = request.META.get('HTTP_REFERER') or reverse(
+                'admin:predictions_matchpredictionoffer_changelist'
+            )
+            return HttpResponseRedirect(redirect_to)
+        updated = MatchPredictionOffer.objects.filter(pk=object_id).update(is_published=False)
+        self.message_user(request, f'Скрыто линий: {updated}', messages.WARNING)
+        redirect_to = request.META.get('HTTP_REFERER') or reverse('admin:predictions_matchpredictionoffer_changelist')
+        return HttpResponseRedirect(redirect_to)
+
+    @display(description='Матч', header=True)
+    def display_match(self, model):
+        match = model.match
+        subtitle = f'{match.numb_tour.number} тур · {match.league.title}'
+        return [str(match), subtitle]
+
+    @display(description='Статус', label={True: 'success', False: 'warning'})
+    def display_status(self, model):
+        if model.is_published:
+            return (True, 'Опубликовано')
+        return (False, 'Скрыто')
+
+    @display(description='Счёт', label=True)
+    def display_score(self, model):
+        match = model.match
+        if match.is_played:
+            return f'{match.score_home}:{match.score_guest}'
+        return '–'
+
+    @display(description='Исходов', label=True)
+    def display_outcomes_count(self, model):
+        return len(model.outcomes.all())
+
+    @display(description='Средний кэф')
+    def display_avg_coefficient(self, model):
+        outcomes = list(model.outcomes.all())
+        if not outcomes:
+            return '–'
+        avg = sum(o.coefficient for o in outcomes) / len(outcomes)
+        return f'×{avg:.2f}'
+
+    @display(description='Ставок', label=True)
+    def display_picks(self, model):
+        return sum(1 for o in model.outcomes.all() for _ in o.predictions.all())
 
     @display(description='Исходы', dropdown=True)
     def display_results(self, model):
@@ -240,7 +335,16 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         return (
             super()
             .get_queryset(request)
-            .prefetch_related(Prefetch('outcomes', queryset=MatchPredictionOutcome.objects.order_by('id')))
+            .select_related(
+                'match__team_home',
+                'match__team_guest',
+                'match__league',
+                'match__numb_tour',
+            )
+            .prefetch_related(
+                Prefetch('outcomes', queryset=MatchPredictionOutcome.objects.order_by('id')),
+                Prefetch('outcomes__predictions'),
+            )
         )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
