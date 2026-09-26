@@ -11,55 +11,82 @@
   }
 </style>
 
-{% if stage.is_regular and first_half_table and second_half_table %}
-  <div x-data="{ activeTab: 'general' }">
-    <div class="tw:flex tw:gap-2 tw:ml-1">
-      <button x-data="{ tab: 'general'}"
-              @click="activeTab = tab"
-              class="tw:btn tw:btn-xs tw:btn-primary"
-              :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">Общая</button>
-      <button x-data="{ tab: 'first'}"
-              @click="activeTab = tab"
-              class="tw:btn tw:btn-xs tw:btn-outline"
-              :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">1 круг</button>
-      <button x-data="{ tab: 'second'}"
-              @click="activeTab = tab"
-              class="tw:btn tw:btn-xs tw:btn-outline"
-              :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">2 круг</button>
+{% if has_carryover and stage_only_table or stage.is_regular and first_half_table and second_half_table %}
+  <div x-data="{ activeTab: 'general'{% if not stage_controlled %}, stageOnly: false{% endif %} }">
+    <div class="tw:flex tw:gap-2 tw:ml-1 tw:items-center">
+      {% if stage.is_regular and first_half_table and second_half_table %}
+        <button x-data="{ tab: 'general'}"
+                @click="activeTab = tab"
+                class="tw:btn tw:btn-xs tw:btn-primary"
+                :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">Общая</button>
+        <button x-data="{ tab: 'first'}"
+                @click="activeTab = tab"
+                class="tw:btn tw:btn-xs tw:btn-outline"
+                :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">1 круг</button>
+        <button x-data="{ tab: 'second'}"
+                @click="activeTab = tab"
+                class="tw:btn tw:btn-xs tw:btn-outline"
+                :class="{ 'tw:btn-primary': activeTab === tab, 'tw:btn-outline': activeTab !== tab }">2 круг</button>
+      {% endif %}
+
+      {% if has_carryover and stage_only_table and not stage_controlled %}
+        <label class="tw:ml-auto tw:mr-1 tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
+          <span class="tw:text-sm tw:font-medium">Показывать только результаты данного этапа</span>
+          <input type="checkbox" x-model="stageOnly" class="tw:toggle tw:toggle-sm tw:toggle-primary">
+        </label>
+      {% endif %}
     </div>
 
     <div class="tw:relative">
-      <div x-show="activeTab === 'general'"
-           x-transition:enter="tw:transition-opacity tw:duration-200"
-           x-transition:enter-start="tw:opacity-0"
-           x-transition:enter-end="tw:opacity-100"
-           x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-           x-transition:leave-start="tw:opacity-100"
-           x-transition:leave-end="tw:opacity-0">
-        {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
-      </div>
+      {% if stage.is_regular and first_half_table and second_half_table %}
+        <div x-show="activeTab === 'general'"
+             x-transition:enter="tw:transition-opacity tw:duration-200"
+             x-transition:enter-start="tw:opacity-0"
+             x-transition:enter-end="tw:opacity-100"
+             x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+             x-transition:leave-start="tw:opacity-100"
+             x-transition:leave-end="tw:opacity-0">
+          {% if has_carryover and stage_only_table %}
+            <div x-show="!stageOnly">
+              {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
+            </div>
+            <div x-show="stageOnly" x-cloak>
+              {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=stage_only_table stage=stage has_penalties=has_penalties %}
+            </div>
+          {% else %}
+            {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
+          {% endif %}
+        </div>
 
-      <div x-show="activeTab === 'first'"
-           x-cloak
-           x-transition:enter="tw:transition-opacity tw:duration-200"
-           x-transition:enter-start="tw:opacity-0"
-           x-transition:enter-end="tw:opacity-100"
-           x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-           x-transition:leave-start="tw:opacity-100"
-           x-transition:leave-end="tw:opacity-0">
-        {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=first_half_table stage=stage has_penalties=False %}
-      </div>
+        <div x-show="activeTab === 'first'"
+             x-cloak
+             x-transition:enter="tw:transition-opacity tw:duration-200"
+             x-transition:enter-start="tw:opacity-0"
+             x-transition:enter-end="tw:opacity-100"
+             x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+             x-transition:leave-start="tw:opacity-100"
+             x-transition:leave-end="tw:opacity-0">
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=first_half_table stage=stage has_penalties=False %}
+        </div>
 
-      <div x-show="activeTab === 'second'"
-           x-cloak
-           x-transition:enter="tw:transition-opacity tw:duration-200"
-           x-transition:enter-start="tw:opacity-0"
-           x-transition:enter-end="tw:opacity-100"
-           x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
-           x-transition:leave-start="tw:opacity-100"
-           x-transition:leave-end="tw:opacity-0">
-        {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=second_half_table stage=stage has_penalties=False %}
-      </div>
+        <div x-show="activeTab === 'second'"
+             x-cloak
+             x-transition:enter="tw:transition-opacity tw:duration-200"
+             x-transition:enter-start="tw:opacity-0"
+             x-transition:enter-end="tw:opacity-100"
+             x-transition:leave="tw:transition-opacity tw:duration-200 tw:absolute tw:inset-0"
+             x-transition:leave-start="tw:opacity-100"
+             x-transition:leave-end="tw:opacity-0">
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=second_half_table stage=stage has_penalties=False %}
+        </div>
+      {% else %}
+        <div x-show="!stageOnly">
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=table stage=stage has_penalties=has_penalties %}
+        </div>
+        <div x-show="stageOnly" x-cloak>
+          {% include 'tournament/tournament/partials/tournament_table_content.html' with teams=stage_only_table stage=stage has_penalties=has_penalties %}
+        </div>
+      {% endif %}
     </div>
   </div>
 {% else %}

@@ -11,16 +11,37 @@
     {% endif %}
   {% else %}
     {% if stage.is_group_stage %}
-      <div class="tw:flex tw:flex-col">
-        {% for group in stage.groups.all %}
-          <div class="tw:text-center">
-            <h4 class="tw:text-lg">{{ group.name }}</h4>
-            {% tournament_table league stage group %}
+      {% if stage.has_carryover %}
+        <div x-data="{ stageOnly: false }">
+          <div class="tw:flex tw:justify-end tw:mb-1">
+            <label class="tw:mr-1 tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
+              <span class="tw:text-sm tw:font-medium">Показывать только результаты данного этапа</span>
+              <input type="checkbox" x-model="stageOnly" class="tw:toggle tw:toggle-sm tw:toggle-primary">
+            </label>
           </div>
+          <div class="tw:flex tw:flex-col">
+            {% for group in stage.groups.all %}
+              <div class="tw:text-center">
+                <h4 class="tw:text-lg">{{ group.name }}</h4>
+                {% tournament_table league stage group stage_controlled=True %}
+              </div>
 
-          {% if not forloop.last %}<div class="tw:divider tw:m-1"></div>{% endif %}
-        {% endfor %}
-      </div>
+              {% if not forloop.last %}<div class="tw:divider tw:m-1"></div>{% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <div class="tw:flex tw:flex-col">
+          {% for group in stage.groups.all %}
+            <div class="tw:text-center">
+              <h4 class="tw:text-lg">{{ group.name }}</h4>
+              {% tournament_table league stage group %}
+            </div>
+
+            {% if not forloop.last %}<div class="tw:divider tw:m-1"></div>{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
     {% else %}
       {% tournament_table league stage None %}
     {% endif %}
