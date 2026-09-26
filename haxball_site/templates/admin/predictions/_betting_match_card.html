@@ -1,5 +1,6 @@
 {# Betting-style match card for the admin betting board. #}
 {% load unfold predictions_extras %}
+
 {% with match=card.match offer=card.offer %}
   <div class="bg-base-50 border border-base-200 rounded-default dark:bg-white/[.02] dark:border-base-800 overflow-hidden">
     <div class="flex flex-col lg:flex-row lg:items-center gap-2 px-4 py-3 border-b border-base-200 dark:border-base-800">
@@ -35,9 +36,11 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <a href="/admin/tournament/match/{{ match.id }}/change/" class="text-xs text-primary-600 hover:underline whitespace-nowrap">Матч</a>
+        <a href="/admin/tournament/match/{{ match.id }}/change/"
+           class="text-xs text-primary-600 hover:underline whitespace-nowrap">Матч</a>
         {% if offer %}
-          <a href="/admin/predictions/matchpredictionoffer/{{ offer.id }}/change/" class="text-xs text-primary-600 hover:underline whitespace-nowrap">Линия</a>
+          <a href="/admin/predictions/matchpredictionoffer/{{ offer.id }}/change/"
+             class="text-xs text-primary-600 hover:underline whitespace-nowrap">Линия</a>
         {% else %}
           <a href="/admin/predictions/matchpredictionoffer/add/" class="text-xs text-primary-600 hover:underline whitespace-nowrap">+ Линия</a>
         {% endif %}
@@ -67,12 +70,14 @@
               {% for outcome in outcomes %}
                 <div class="flex flex-col items-center gap-0.5 px-2 py-2 rounded-default border border-base-200 bg-white dark:bg-base-900 dark:border-base-700">
                   <span class="text-sm font-bold leading-none">{{ outcome.display_label }}</span>
-                  <span class="text-lg font-semibold leading-none">
-                    ×{{ outcome.coefficient }}
-                  </span>
+                  <span class="text-lg font-semibold leading-none">×{{ outcome.coefficient }}</span>
                   {% with picks=card.picks_by_outcome|get_item:outcome.id %}
                     <span class="text-[11px] text-subtle leading-none">
-                      {% if picks %}{{ picks }} ст.{% else %}—{% endif %}
+                      {% if picks %}
+                        {{ picks }} ст.
+                      {% else %}
+                        —
+                      {% endif %}
                     </span>
                   {% endwith %}
                 </div>
@@ -111,15 +116,13 @@
                   {% endif %}
                 </span>
                 <span class="whitespace-nowrap">{{ pick.outcome_label }}</span>
-                {% if pick.coefficient %}
-                  <span class="whitespace-nowrap text-subtle">×{{ pick.coefficient }}</span>
-                {% endif %}
+                {% if pick.coefficient %}<span class="whitespace-nowrap text-subtle">×{{ pick.coefficient }}</span>{% endif %}
                 {% if match.is_played %}
                   {% if pick.is_void %}
                     {% component "unfold/helpers/label.html" with variant="warning" text="Возврат" %}{% endcomponent %}
                     <span class="font-bold whitespace-nowrap">=0</span>
                   {% elif pick.is_correct %}
-                    {% component "unfold/helpers/label.html" with variant="success" text="Зашел" %}{% endcomponent %}
+                    {% component "unfold/helpers/label.html" with variant="success" text="Зашло" %}{% endcomponent %}
                     <span class="font-bold whitespace-nowrap text-green-600">{{ pick.points|format_points }}</span>
                   {% else %}
                     {% component "unfold/helpers/label.html" with variant="danger" text="Мимо" %}{% endcomponent %}
