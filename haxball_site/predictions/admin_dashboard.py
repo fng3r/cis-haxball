@@ -139,6 +139,7 @@ def build_pick_details(match):
                 'user_id': user.pk if user is not None else None,
                 'username': user.username if user is not None else '—',
                 'avatar_url': avatar_url,
+                'outcome_id': prediction.outcome_id,
                 'outcome_label': prediction.outcome_label,
                 'coefficient': outcome.coefficient if outcome is not None else None,
                 'played': played,
@@ -149,6 +150,35 @@ def build_pick_details(match):
         )
     details.sort(key=lambda row: (row['outcome_label'].lower(), row['username'].lower()))
     return details
+
+
+def group_pick_details(pick_details):
+    """Group spoiler rows by chosen outcome, groups ordered by coefficient ascending."""
+    grouped = {}
+    for row in pick_details:
+        key = row['outcome_id'] if row['outcome_id'] is not None else ('label', row['outcome_label'])
+        entry = grouped.get(key)
+        if entry is None:
+            entry = {
+                'outcome_id': row['outcome_id'],
+                'outcome_label': row['outcome_label'],
+                'coefficient': row['coefficient'],
+                'played': row['played'],
+                'is_void': row['is_void'],
+                'is_correct': row['is_correct'],
+                'points': row['points'],
+                'players': [],
+            }
+            grouped[key] = entry
+        entry['players'].append(
+            {'user_id': row['user_id'], 'username': row['username'], 'avatar_url': row['avatar_url']}
+        )
+    groups = list(grouped.values())
+    for entry in groups:
+        entry['players'].sort(key=lambda player: player['username'].lower())
+        entry['count'] = len(entry['players'])
+    groups.sort(key=lambda entry: (entry['coefficient'] is None, entry['coefficient'] or 0))
+    return groups
 
 
 def build_match_cards(matches, *, only_published=True, only_with_line=False):
@@ -170,6 +200,7 @@ def build_match_cards(matches, *, only_published=True, only_with_line=False):
                     'total_picks': len(pick_details),
                     'picks_by_outcome': {},
                     'pick_details': pick_details,
+                    'pick_groups': group_pick_details(pick_details),
                     'is_published': False,
                     'has_line': False,
                 }
@@ -201,6 +232,7 @@ def build_match_cards(matches, *, only_published=True, only_with_line=False):
                 'total_picks': len(pick_details),
                 'picks_by_outcome': dict(picks_by_outcome),
                 'pick_details': pick_details,
+                'pick_groups': group_pick_details(pick_details),
                 'is_published': offer.is_published,
                 'has_line': bool(outcomes),
             }

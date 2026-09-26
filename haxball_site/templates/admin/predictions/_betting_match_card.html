@@ -29,7 +29,6 @@
             {% component "unfold/helpers/label.html" with variant="warning" text="Скрыто" %}{% endcomponent %}
           {% endif %}
           {% component "unfold/helpers/label.html" with text=card.total_outcomes %}{% endcomponent %}
-          {% component "unfold/helpers/label.html" with variant="primary" text=card.total_picks %}{% endcomponent %}
         {% else %}
           {% component "unfold/helpers/label.html" with variant="danger" text="Нет линии" %}{% endcomponent %}
         {% endif %}
@@ -100,35 +99,45 @@
             <span class="font-semibold">Прогнозы</span>
             {% component "unfold/helpers/label.html" with variant="primary" text=card.total_picks %}{% endcomponent %}
           </summary>
-          <div class="flex flex-col gap-1 px-4 pb-3">
-            {% for pick in card.pick_details %}
-              <div class="flex items-center gap-2 text-sm px-2 py-1.5 rounded-default bg-white border border-base-200 dark:bg-base-900 dark:border-base-700">
-                {% if pick.avatar_url %}
-                  <img src="{{ pick.avatar_url }}" alt="{{ pick.username }}" class="w-6 h-6 rounded-full object-cover shrink-0" loading="lazy" />
-                {% else %}
-                  <span class="w-6 h-6 rounded-full bg-base-200 dark:bg-base-700 text-subtle text-xs font-bold flex items-center justify-center shrink-0 uppercase">{{ pick.username|slice:":1" }}</span>
-                {% endif %}
-                <span class="font-semibold truncate grow min-w-0">
-                  {% if pick.user_id %}
-                    <a href="/admin/auth/user/{{ pick.user_id }}/change/" class="text-primary-600 hover:underline">{{ pick.username }}</a>
-                  {% else %}
-                    {{ pick.username }}
+          <div class="flex flex-col gap-1.5 px-4 pb-3">
+            {% for group in card.pick_groups %}
+              <div class="px-2 py-1.5 rounded-default bg-white border border-base-200 dark:bg-base-900 dark:border-base-700">
+                <div class="mb-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span class="font-bold">{{ group.outcome_label }}</span>
+                  {% if group.coefficient %}<span class="whitespace-nowrap text-subtle">×{{ group.coefficient }}</span>{% endif %}
+                  {% component "unfold/helpers/label.html" with variant="primary" text=group.count %}{% endcomponent %}
+                  {% if match.is_played %}
+                    {% if group.is_void %}
+                      {% component "unfold/helpers/label.html" with variant="warning" text="Возврат" %}{% endcomponent %}
+                      <span class="font-bold whitespace-nowrap">=0</span>
+                    {% elif group.is_correct %}
+                      {% component "unfold/helpers/label.html" with variant="success" text="Зашло" %}{% endcomponent %}
+                      <span class="font-bold whitespace-nowrap text-green-600">{{ group.points|format_points }}</span>
+                    {% else %}
+                      {% component "unfold/helpers/label.html" with variant="danger" text="Мимо" %}{% endcomponent %}
+                      <span class="font-bold whitespace-nowrap text-red-600">{{ group.points|format_points }}</span>
+                    {% endif %}
                   {% endif %}
-                </span>
-                <span class="whitespace-nowrap">{{ pick.outcome_label }}</span>
-                {% if pick.coefficient %}<span class="whitespace-nowrap text-subtle">×{{ pick.coefficient }}</span>{% endif %}
-                {% if match.is_played %}
-                  {% if pick.is_void %}
-                    {% component "unfold/helpers/label.html" with variant="warning" text="Возврат" %}{% endcomponent %}
-                    <span class="font-bold whitespace-nowrap">=0</span>
-                  {% elif pick.is_correct %}
-                    {% component "unfold/helpers/label.html" with variant="success" text="Зашло" %}{% endcomponent %}
-                    <span class="font-bold whitespace-nowrap text-green-600">{{ pick.points|format_points }}</span>
-                  {% else %}
-                    {% component "unfold/helpers/label.html" with variant="danger" text="Мимо" %}{% endcomponent %}
-                    <span class="font-bold whitespace-nowrap text-red-600">{{ pick.points|format_points }}</span>
-                  {% endif %}
-                {% endif %}
+                </div>
+                <div class="flex flex-wrap gap-1.5 mt-1.5">
+                  {% for player in group.players %}
+                    <span class="inline-flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-base-100 border border-base-200 dark:bg-white/[.04] dark:border-base-700 text-[13px]">
+                      {% if player.avatar_url %}
+                        <img src="{{ player.avatar_url }}"
+                             alt="{{ player.username }}"
+                             class="w-5 h-5 rounded-full object-cover shrink-0"
+                             loading="lazy" />
+                      {% else %}
+                        <span class="w-5 h-5 rounded-full bg-base-200 dark:bg-base-700 text-subtle text-[10px] font-bold flex items-center justify-center shrink-0 uppercase">{{ player.username|slice:":1" }}</span>
+                      {% endif %}
+                      {% if player.user_id %}
+                        <a href="/admin/auth/user/{{ player.user_id }}/change/" class="text-primary-600 hover:underline font-semibold">{{ player.username }}</a>
+                      {% else %}
+                        <span class="font-semibold">{{ player.username }}</span>
+                      {% endif %}
+                    </span>
+                  {% endfor %}
+                </div>
               </div>
             {% endfor %}
           </div>
