@@ -24,6 +24,7 @@ from unfold.widgets import UnfoldAdminSelectWidget, UnfoldAdminTextInputWidget
 from tournament.models import Match, TourNumber
 
 from .models import MatchPredictionOffer, MatchPredictionOutcome, Prediction, PredictionsContestTournament
+from .points_service import calculate_prediction_points, is_prediction_correct, is_prediction_void
 
 MARKET_LABELS = {
     MatchPredictionOutcome.Market.RESULT: 'Исход матча',
@@ -105,9 +106,49 @@ def get_board_queryset(*, tournament=None, tour=None, q='', hide_played=False, o
     return (
         Match.objects.filter(filters)
         .select_related('team_home', 'team_guest', 'result', 'numb_tour__league', 'league__championship')
-        .prefetch_related('prediction_offer__outcomes', 'predictions__outcome')
+        .prefetch_related(
+            'prediction_offer__outcomes',
+            'predictions__outcome',
+            'predictions__submission__user',
+            'predictions__submission__user__user_profile',
+            'predictions__submission__tournament',
+        )
         .order_by('numb_tour__number', 'id')
     )
+
+
+def build_pick_details(match):
+    """Build per-prediction rows for the match spoiler: user, outcome, settlement, P/L."""
+    details = []
+    for prediction in match.predictions.all():
+        submission = getattr(prediction, 'submission', None)
+        user = getattr(submission, 'user', None)
+        outcome = getattr(prediction, 'outcome', None)
+        played = match.is_played
+        void = is_prediction_void(prediction) if played else False
+        correct = is_prediction_correct(prediction) if played and not void else False
+        avatar_url = None
+        profile = getattr(user, 'user_profile', None)
+        if profile is not None:
+            try:
+                avatar_url = profile.avatar.url
+            except (AttributeError, ValueError):
+                avatar_url = None
+        details.append(
+            {
+                'user_id': user.pk if user is not None else None,
+                'username': user.username if user is not None else '—',
+                'avatar_url': avatar_url,
+                'outcome_label': prediction.outcome_label,
+                'coefficient': outcome.coefficient if outcome is not None else None,
+                'played': played,
+                'is_void': void,
+                'is_correct': correct,
+                'points': calculate_prediction_points(prediction) if played else None,
+            }
+        )
+    details.sort(key=lambda row: (row['outcome_label'].lower(), row['username'].lower()))
+    return details
 
 
 def build_match_cards(matches, *, only_published=True, only_with_line=False):
@@ -118,6 +159,7 @@ def build_match_cards(matches, *, only_published=True, only_with_line=False):
         if offer is None:
             if only_with_line:
                 continue
+            pick_details = build_pick_details(match)
             cards.append(
                 {
                     'match': match,
@@ -125,8 +167,9 @@ def build_match_cards(matches, *, only_published=True, only_with_line=False):
                     'groups': {},
                     'outcomes': [],
                     'total_outcomes': 0,
-                    'total_picks': 0,
+                    'total_picks': len(pick_details),
                     'picks_by_outcome': {},
+                    'pick_details': pick_details,
                     'is_published': False,
                     'has_line': False,
                 }
@@ -147,6 +190,7 @@ def build_match_cards(matches, *, only_published=True, only_with_line=False):
         for prediction in match.predictions.all():
             if prediction.outcome_id:
                 picks_by_outcome[prediction.outcome_id] += 1
+        pick_details = build_pick_details(match)
         cards.append(
             {
                 'match': match,
@@ -154,8 +198,9 @@ def build_match_cards(matches, *, only_published=True, only_with_line=False):
                 'groups': group_outcomes_by_market(outcomes),
                 'outcomes': outcomes,
                 'total_outcomes': len(outcomes),
-                'total_picks': sum(picks_by_outcome.values()),
+                'total_picks': len(pick_details),
                 'picks_by_outcome': dict(picks_by_outcome),
+                'pick_details': pick_details,
                 'is_published': offer.is_published,
                 'has_line': bool(outcomes),
             }
@@ -247,7 +292,10 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
 
         q = self.request.GET.get('q', '').strip()
         hide_played = self.request.GET.get('hide_played') == 'on'
-        only_published = self.request.GET.get('only_published', 'on') == 'on'
+        # Unchecked checkboxes are absent from GET, so defaulting to 'on'
+        # would re-enable the flag on every submit. Default to True only
+        # on the initial (unfiltered) load.
+        only_published = self.request.GET.get('only_published') == 'on' if form.is_bound else True
         only_with_line = self.request.GET.get('only_with_line') == 'on'
 
         matches = get_board_queryset(
@@ -264,15 +312,27 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
         for card in cards:
             cards_by_tour[card['match'].numb_tour_id].append(card)
         tours_map = {t.id: t for t in tours}
-        sections = [
-            {
-                'tour': tours_map.get(tour_id_key),
-                'tour_id': tour_id_key,
-                'cards': tour_cards,
-                'stats': build_board_stats(tour_cards),
+        sections = []
+        for tour_id_key, tour_cards in sorted(cards_by_tour.items()):
+            tour_obj = tours_map.get(tour_id_key)
+            if tour_obj is not None:
+                title = f'{tour_obj.number} тур · {tour_obj.date_from:%d.%m}–{tour_obj.date_to:%d.%m}'
+            else:
+                title = 'Без тура'
+            bettors = {
+                pick['user_id'] for card in tour_cards for pick in card['pick_details'] if pick['user_id'] is not None
             }
-            for tour_id_key, tour_cards in sorted(cards_by_tour.items())
-        ]
+            stats = build_board_stats(tour_cards)
+            stats['bettors'] = len(bettors)
+            sections.append(
+                {
+                    'tour': tour_obj,
+                    'tour_id': tour_id_key,
+                    'title': title,
+                    'cards': tour_cards,
+                    'stats': stats,
+                }
+            )
 
         context.update(
             {

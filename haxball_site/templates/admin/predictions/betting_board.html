@@ -118,17 +118,14 @@
 
     {% if sections %}
       {% for section in sections %}
-        {% component "unfold/components/card.html" with title="Тур" title_icon="event" class="mb-4" %}
+        {% component "unfold/components/card.html" with title=section.title title_icon="event" class="mb-4" %}
           <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
-            <span class="font-semibold">
-              {% if section.tour %}{{ section.tour.number }} тур · {{ section.tour.date_from|date:"d.m" }}–{{ section.tour.date_to|date:"d.m" }}{% else %}Без тура{% endif %}
-            </span>
             {% component "unfold/helpers/label.html" with text=section.stats.matches %}{% endcomponent %}
             <span class="text-xs text-subtle">матчей</span>
             {% component "unfold/helpers/label.html" with variant="info" text=section.stats.outcomes %}{% endcomponent %}
             <span class="text-xs text-subtle">исходов</span>
-            {% component "unfold/helpers/label.html" with variant="success" text=section.stats.picks %}{% endcomponent %}
-            <span class="text-xs text-subtle">ставок</span>
+            {% component "unfold/helpers/label.html" with variant="success" text=section.stats.bettors %}{% endcomponent %}
+            <span class="text-xs text-subtle">пользователей</span>
           </div>
 
           <div class="flex flex-col gap-4">

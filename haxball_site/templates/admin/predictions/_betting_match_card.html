@@ -67,12 +67,12 @@
               {% for outcome in outcomes %}
                 <div class="flex flex-col items-center gap-0.5 px-2 py-2 rounded-default border border-base-200 bg-white dark:bg-base-900 dark:border-base-700">
                   <span class="text-sm font-bold leading-none">{{ outcome.display_label }}</span>
-                  <span class="text-lg font-semibold leading-none {% if outcome.coefficient < 1.7 %}text-green-600{% elif outcome.coefficient < 2.5 %}text-blue-600{% elif outcome.coefficient < 4 %}text-orange-600{% else %}text-red-600{% endif %}">
+                  <span class="text-lg font-semibold leading-none">
                     ×{{ outcome.coefficient }}
                   </span>
                   {% with picks=card.picks_by_outcome|get_item:outcome.id %}
                     <span class="text-[11px] text-subtle leading-none">
-                      {% if picks %}{{ picks }} ст.{% else %}—{% endif %} · #{{ outcome.id }}
+                      {% if picks %}{{ picks }} ст.{% else %}—{% endif %}
                     </span>
                   {% endwith %}
                 </div>
@@ -84,6 +84,52 @@
     {% else %}
       <div class="px-4 py-3 text-sm text-subtle">
         Линия не задана. Откройте карточку оффера и добавьте исходы — матч появится здесь с коэффициентами.
+      </div>
+    {% endif %}
+
+    {% if card.pick_details %}
+      <div class="border-t border-base-200 dark:border-base-800">
+        <details class="group">
+          <summary class="flex items-center gap-2 px-4 py-2.5 text-sm cursor-pointer select-none hover:bg-base-100 dark:hover:bg-white/[.04]">
+            <span class="material-symbols-outlined text-base-400 text-lg transition-transform group-open:rotate-180">expand_more</span>
+            <span class="font-semibold">Прогнозы</span>
+            {% component "unfold/helpers/label.html" with variant="primary" text=card.total_picks %}{% endcomponent %}
+          </summary>
+          <div class="flex flex-col gap-1 px-4 pb-3">
+            {% for pick in card.pick_details %}
+              <div class="flex items-center gap-2 text-sm px-2 py-1.5 rounded-default bg-white border border-base-200 dark:bg-base-900 dark:border-base-700">
+                {% if pick.avatar_url %}
+                  <img src="{{ pick.avatar_url }}" alt="{{ pick.username }}" class="w-6 h-6 rounded-full object-cover shrink-0" loading="lazy" />
+                {% else %}
+                  <span class="w-6 h-6 rounded-full bg-base-200 dark:bg-base-700 text-subtle text-xs font-bold flex items-center justify-center shrink-0 uppercase">{{ pick.username|slice:":1" }}</span>
+                {% endif %}
+                <span class="font-semibold truncate grow min-w-0">
+                  {% if pick.user_id %}
+                    <a href="/admin/auth/user/{{ pick.user_id }}/change/" class="text-primary-600 hover:underline">{{ pick.username }}</a>
+                  {% else %}
+                    {{ pick.username }}
+                  {% endif %}
+                </span>
+                <span class="whitespace-nowrap">{{ pick.outcome_label }}</span>
+                {% if pick.coefficient %}
+                  <span class="whitespace-nowrap text-subtle">×{{ pick.coefficient }}</span>
+                {% endif %}
+                {% if match.is_played %}
+                  {% if pick.is_void %}
+                    {% component "unfold/helpers/label.html" with variant="warning" text="Возврат" %}{% endcomponent %}
+                    <span class="font-bold whitespace-nowrap">=0</span>
+                  {% elif pick.is_correct %}
+                    {% component "unfold/helpers/label.html" with variant="success" text="Зашел" %}{% endcomponent %}
+                    <span class="font-bold whitespace-nowrap text-green-600">{{ pick.points|format_points }}</span>
+                  {% else %}
+                    {% component "unfold/helpers/label.html" with variant="danger" text="Мимо" %}{% endcomponent %}
+                    <span class="font-bold whitespace-nowrap text-red-600">{{ pick.points|format_points }}</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </details>
       </div>
     {% endif %}
   </div>
