@@ -21,7 +21,7 @@ from unfold.sections import TemplateSection
 from unfold.views import UnfoldModelAdminViewMixin
 from unfold.widgets import UnfoldAdminSelectWidget, UnfoldAdminTextInputWidget
 
-from tournament.models import Match, TourNumber
+from tournament.models import Match, PlayOffStage, TourNumber
 
 from .models import MatchPredictionOffer, MatchPredictionOutcome, Prediction, PredictionsContestTournament
 from .points_service import calculate_prediction_points, is_prediction_correct, is_prediction_void
@@ -273,7 +273,12 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
 
         tours = TourNumber.objects.none()
         if tournament is not None:
-            tours = TourNumber.objects.filter(league=tournament.league).order_by('number')
+            playoff_stage_ids = PlayOffStage.objects.filter(league=tournament.league).values_list('pk', flat=True)
+            tours = (
+                TourNumber.objects.filter(league=tournament.league)
+                .exclude(stage_id__in=playoff_stage_ids)
+                .order_by('number')
+            )
         tour = None
         tour_id = self.request.GET.get('tour')
         if tour_id:
