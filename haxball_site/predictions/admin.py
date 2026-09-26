@@ -274,7 +274,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     @display(description='Матч', header=True)
     def display_match(self, model):
         match = model.match
-        subtitle = f'{match.numb_tour.number} тур · {match.league.title}'
+        subtitle = f'{match.league.title} · {match.numb_tour.number} тур'
         return [str(match), subtitle]
 
     @display(description='Статус', label={True: 'success', False: 'warning'})
@@ -331,6 +331,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
                 'match__team_guest',
                 'match__league',
                 'match__numb_tour',
+                'match__result',
             )
             .prefetch_related(
                 Prefetch('outcomes', queryset=MatchPredictionOutcome.objects.order_by('id')),

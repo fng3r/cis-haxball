@@ -374,10 +374,24 @@ class OfferBettingPreviewSection(TemplateSection):
                 o.id or 0,
             ),
         )
+        # Settle each outcome against a played match so the preview can
+        # highlight winning/losing/void outcomes.
+        tones = {}
+        match = offer.match
+        if match.is_played:
+            for outcome in outcomes:
+                result = outcome.settle(match)
+                if result is True:
+                    tones[outcome.id] = 'win'
+                elif result is False:
+                    tones[outcome.id] = 'loss'
+                else:
+                    tones[outcome.id] = 'void'
         return {
             'offer': offer,
-            'match': offer.match,
+            'match': match,
             'groups': group_outcomes_by_market(outcomes),
+            'tones': tones,
             'market_labels': MARKET_LABELS,
             'market_icons': MARKET_ICONS,
         }
