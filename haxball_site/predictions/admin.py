@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db.models import Prefetch
 from django.forms.models import BaseInlineFormSet
@@ -8,7 +8,6 @@ from django.urls import reverse
 
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter, SingleNumericFilter
 from unfold.decorators import action, display
-from unfold.enums import ActionVariant
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
 from tournament.models import Match
@@ -198,7 +197,7 @@ class IndividualTotalsInline(BaseOutcomeInline):
 class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     list_display = [
         'display_match',
-        'display_status',
+        'is_published',
         'display_score',
         'display_outcomes_count',
         'display_picks',
@@ -207,6 +206,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         'display_totals',
         'display_individual_totals',
     ]
+    list_editable = ['is_published']
     list_filter = [
         ('match__league', RelatedDropdownFilter),
         ('match__numb_tour__number', SingleNumericFilter),
@@ -219,8 +219,7 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     inlines = [ResultsInline, HandicapsInline, TotalsInline, IndividualTotalsInline]
     list_sections = [OfferBettingPreviewSection]
     actions_list = ['open_betting_board']
-    actions_row = ['publish_offer', 'unpublish_offer']
-    actions_detail = ['open_betting_board', 'publish_offer', 'unpublish_offer']
+    actions_detail = ['open_betting_board']
 
     def get_custom_urls(self):
         return (
@@ -235,53 +234,11 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     def open_betting_board(self, request, object_id=None):
         return HttpResponseRedirect(reverse('admin:predictions_matchpredictionoffer_betting_board'))
 
-    @action(
-        description='Опубликовать',
-        url_path='publish-offer',
-        icon='visibility',
-        variant=ActionVariant.SUCCESS,
-    )
-    def publish_offer(self, request, object_id=None):
-        if object_id is None:
-            self.message_user(request, 'Выберите конкретную линию в строке таблицы.', messages.ERROR)
-            redirect_to = request.META.get('HTTP_REFERER') or reverse(
-                'admin:predictions_matchpredictionoffer_changelist'
-            )
-            return HttpResponseRedirect(redirect_to)
-        updated = MatchPredictionOffer.objects.filter(pk=object_id).update(is_published=True)
-        self.message_user(request, f'Опубликовано линий: {updated}', messages.SUCCESS)
-        redirect_to = request.META.get('HTTP_REFERER') or reverse('admin:predictions_matchpredictionoffer_changelist')
-        return HttpResponseRedirect(redirect_to)
-
-    @action(
-        description='Скрыть',
-        url_path='unpublish-offer',
-        icon='visibility_off',
-        variant=ActionVariant.WARNING,
-    )
-    def unpublish_offer(self, request, object_id=None):
-        if object_id is None:
-            self.message_user(request, 'Выберите конкретную линию в строке таблицы.', messages.ERROR)
-            redirect_to = request.META.get('HTTP_REFERER') or reverse(
-                'admin:predictions_matchpredictionoffer_changelist'
-            )
-            return HttpResponseRedirect(redirect_to)
-        updated = MatchPredictionOffer.objects.filter(pk=object_id).update(is_published=False)
-        self.message_user(request, f'Скрыто линий: {updated}', messages.WARNING)
-        redirect_to = request.META.get('HTTP_REFERER') or reverse('admin:predictions_matchpredictionoffer_changelist')
-        return HttpResponseRedirect(redirect_to)
-
     @display(description='Матч', header=True)
     def display_match(self, model):
         match = model.match
         subtitle = f'{match.league.title} · {match.numb_tour.number} тур'
         return [str(match), subtitle]
-
-    @display(description='Статус', label={True: 'success', False: 'warning'})
-    def display_status(self, model):
-        if model.is_published:
-            return (True, 'Опубликовано')
-        return (False, 'Скрыто')
 
     @display(description='Счёт', label=True)
     def display_score(self, model):
