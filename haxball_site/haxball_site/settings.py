@@ -505,6 +505,11 @@ LOGGING = {
     },
 }
 
+
+def _can_view_prediction_offers(request):
+    return request.user.has_perm('predictions.view_matchpredictionoffer')
+
+
 UNFOLD = {
     'SITE_TITLE': 'CIS-HAXBALL',
     'SITE_HEADER': 'CIS-HAXBALL',
@@ -521,6 +526,24 @@ UNFOLD = {
     'SHOW_HISTORY': True,
     'SHOW_VIEW_ON_SITE': True,
     'SHOW_BACK_BUTTON': True,
+    'DASHBOARD_CALLBACK': 'predictions.admin_dashboard.predictions_dashboard_callback',
+    'TABS': [
+        {
+            'models': ['predictions.matchpredictionoffer'],
+            'items': [
+                {
+                    'title': 'Исходы матчей',
+                    'link': '/admin/predictions/matchpredictionoffer/',
+                    'icon': 'list',
+                },
+                {
+                    'title': 'Букмекерская линия',
+                    'link': '/admin/predictions/matchpredictionoffer/betting-board/',
+                    'icon': 'sports_soccer',
+                },
+            ],
+        },
+    ],
     'COMMAND': {
         'search_models': [
             'core.Profile',
@@ -580,6 +603,24 @@ UNFOLD = {
                         'title': 'Группы',
                         'icon': 'group',
                         'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': 'Прогнозы',
+                'icon': 'casino',
+                'items': [
+                    {
+                        'title': 'Букмекерская линия',
+                        'icon': 'sports_soccer',
+                        'link': '/admin/predictions/matchpredictionoffer/betting-board/',
+                        'permission': _can_view_prediction_offers,
+                    },
+                    {
+                        'title': 'Исходы матчей',
+                        'icon': 'list',
+                        'link': reverse_lazy('admin:predictions_matchpredictionoffer_changelist'),
+                        'permission': _can_view_prediction_offers,
                     },
                 ],
             },

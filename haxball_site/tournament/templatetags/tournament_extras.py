@@ -1,4 +1,5 @@
 import datetime
+import math
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import groupby
@@ -47,6 +48,7 @@ from ..models import (
     Postponement,
     Season,
     Substitution,
+    TableMarker,
     Team,
     TeamPenaltyPoints,
     TournamentStage,
@@ -523,10 +525,73 @@ def cup_round_name(tour: TourNumber):
     return round_name(tour, tour.stage.tours.filter(bracket=tour.bracket).count())
 
 
-@register.inclusion_tag('tournament/tournament/partials/tournament_table.html')
-def tournament_table(league: League, stage: TournamentStage, group: Group | None):
-    table = get_league_table(league, stage, group)
+@register.filter
+def at_index(values, index):
+    """values[int(index)] or '' — parallel-list lookup for marker classes per table row."""
+    try:
+        return values[int(index)]
+    except (IndexError, TypeError, ValueError):
+        return ''
+
+
+def get_table_marker_classes(stage: TournamentStage | None, group: Group | None, size: int):
+    """Accent-bar CSS classes and tooltip labels per table place (1-based).
+
+    Group-scoped markers take precedence place by place; stage-wide markers fill
+    the remaining places. (None, None) (→ legacy promoted/relegated-count
+    rendering) is returned only when the stage defines no markers at all.
+    """
+    if stage is None or size <= 0:
+        return None, None
+    stage_markers = list(TableMarker.objects.filter(stage=stage, group__isnull=True).order_by('place_from'))
+    group_markers = (
+        list(TableMarker.objects.filter(stage=stage, group=group).order_by('place_from')) if group is not None else []
+    )
+    if not stage_markers and not group_markers:
+        return None, None
+    classes = []
+    labels = []
+    for place in range(1, size + 1):
+        marker = next((m for m in group_markers if m.place_from <= place <= m.place_to), None)
+        if marker is None:
+            marker = next((m for m in stage_markers if m.place_from <= place <= m.place_to), None)
+        classes.append(TABLE_MARKER_CSS_CLASSES.get(marker.color, '') if marker is not None else '')
+        labels.append(marker.label or '' if marker is not None else '')
+    return classes, labels
+
+
+TABLE_MARKER_CSS_CLASSES = {
+    TableMarker.Color.GREEN.value: 'tw:bg-green-500',
+    TableMarker.Color.YELLOW.value: 'tw:bg-yellow-300',
+    TableMarker.Color.RED.value: 'tw:bg-red-500',
+}
+
+
+@register.inclusion_tag('tournament/tournament/partials/tournament_table.html', takes_context=True)
+def tournament_table(
+    context, league: League, stage: TournamentStage, group: Group | None, stage_controlled: bool = False
+):
+    # Request-scoped cache so that the carried-over stage is computed once
+    # no matter how many group tables (general + stage-only) share this page.
+    request = context.get('request')
+    if request is None:
+        carryover_cache = None
+    else:
+        carryover_cache = getattr(request, '_carryover_table_cache', None)
+        if carryover_cache is None:
+            carryover_cache = {}
+            request._carryover_table_cache = carryover_cache
+
+    table = get_league_table(league, stage, group, carryover_cache=carryover_cache)
     has_penalties = any(x[10] > 0 for x in table)
+    marker_classes, marker_labels = get_table_marker_classes(stage, group, len(table))
+
+    has_carryover = stage is not None and stage.has_carryover
+    stage_only_table = None
+    if has_carryover:
+        stage_only_table = get_league_table(
+            league, stage, group, include_carryover=False, carryover_cache=carryover_cache
+        )
 
     first_half_table = None
     second_half_table = None
@@ -543,8 +608,13 @@ def tournament_table(league: League, stage: TournamentStage, group: Group | None
         'table': table,
         'stage': stage,
         'has_penalties': has_penalties,
+        'marker_classes': marker_classes,
+        'marker_labels': marker_labels,
+        'has_carryover': has_carryover,
+        'stage_only_table': stage_only_table,
         'first_half_table': first_half_table,
         'second_half_table': second_half_table,
+        'stage_controlled': stage_controlled,
     }
 
 
@@ -1239,12 +1309,201 @@ def sort_teams(league: League):
     return [i[0] for i in lt]
 
 
+def _apply_carryover_mode(source_points: int, source_exact: float, mode: str) -> tuple[int, float, bool]:
+    """Convert source-stage total into (bonus_display, bonus_exact, was_rounded)."""
+    if mode == TournamentStage.CarryoverMode.FULL:
+        return source_points, source_exact, source_points != source_exact
+    if mode == TournamentStage.CarryoverMode.HALF_UP:
+        bonus_display = math.ceil(source_points / 2)
+        return bonus_display, source_points / 2, bonus_display != source_points / 2
+    if mode == TournamentStage.CarryoverMode.HALF_DOWN:
+        bonus_display = math.floor(source_points / 2)
+        return bonus_display, source_points / 2, bonus_display != source_points / 2
+    return 0, 0.0, False
+
+
+def _get_stage_direct_stats(
+    league: League,
+    source: TournamentStage,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+    cache: dict | None = None,
+) -> dict[int, dict]:
+    """W/D/L and goals earned in `source` stage (all groups), without penalties or bonuses.
+
+    DB path fetches all of the stage's matches in one query and aggregates in Python;
+    the result is shared through `cache` (request-scoped) so that every group table
+    on the page reuses it instead of recomputing.
+    """
+    cache_key = ('direct_stats', league.pk, source.pk)
+    if cache is not None and prefetched_matches is None and cache_key in cache:
+        full_stats = cache[cache_key]
+        return {team.id: dict(full_stats.get(team.id, _empty_stats())) for team in teams}
+
+    if prefetched_matches is None:
+        matches = list(
+            Match.objects.filter(league=league, stage=source, is_played=True).select_related(
+                'team_home', 'team_guest', 'result__winner'
+            )
+        )
+        aggregate_for = None
+    else:
+        matches = prefetched_matches
+        aggregate_for = {team.id for team in teams}
+
+    by_id: dict[int, dict] = {}
+
+    def stats_for(team_id: int) -> dict:
+        return by_id.setdefault(team_id, _empty_stats())
+
+    for match in matches:
+        if not match.is_played or match.stage_id != source.pk:
+            continue
+        home_id, guest_id = match.team_home_id, match.team_guest_id
+        if aggregate_for is not None and home_id not in aggregate_for and guest_id not in aggregate_for:
+            continue
+        home = match.team_home
+        guest = match.team_guest
+        for team_id, team in ((home_id, home), (guest_id, guest)):
+            if aggregate_for is not None and team_id not in aggregate_for:
+                continue
+            entry = stats_for(team_id)
+            entry['played'] += 1
+            entry['scored'] += match.scored_by(team)
+            entry['conceded'] += match.conceded_by(team)
+            if match.is_win(team):
+                entry['wins'] += 1
+            elif match.is_draw():
+                entry['draws'] += 1
+            else:
+                entry['losses'] += 1
+
+    if cache is not None and prefetched_matches is None:
+        cache[cache_key] = {team_id: dict(entry) for team_id, entry in by_id.items()}
+    return {team.id: by_id.get(team.id, _empty_stats()) for team in teams}
+
+
+def _empty_stats() -> dict:
+    return {'played': 0, 'wins': 0, 'draws': 0, 'losses': 0, 'scored': 0, 'conceded': 0}
+
+
+def _get_stage_penalties(source: TournamentStage, teams: list, cache: dict | None = None) -> dict[int, int]:
+    cache_key = ('penalties', source.pk)
+    if cache is not None and cache_key in cache:
+        full_penalties = cache[cache_key]
+        return {team.id: full_penalties.get(team.id, 0) for team in teams}
+    penalties_by_team = {
+        entry['team']: entry['penalty']
+        for entry in (
+            TeamPenaltyPoints.objects.filter(stage=source, team__in=teams)
+            .annotate(penalty=Sum('penalty_points'))
+            .values('team', 'penalty')
+        )
+    }
+    if cache is not None:
+        cache[cache_key] = dict(penalties_by_team)
+    return penalties_by_team
+
+
+def _get_stage_accumulated_stats(
+    league: League,
+    stage: TournamentStage,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+    _depth: int = 0,
+    cache: dict | None = None,
+) -> dict[int, dict]:
+    """Stats accumulated up to and including `stage` (transitive through FULL_STATS carryovers)."""
+    accumulated = _get_stage_direct_stats(league, stage, teams, prefetched_matches, cache)
+    if stage is None or _depth > 5:
+        return accumulated
+    if not stage.has_carryover:
+        return accumulated
+    if stage.carryover_scope != TournamentStage.CarryoverScope.FULL_STATS:
+        return accumulated
+    source = stage.carryover_from
+    if source is None:
+        return accumulated
+    if isinstance(source, int):
+        source = TournamentStage.objects.filter(pk=source).first()
+        if source is None:
+            return accumulated
+    parent = _get_stage_accumulated_stats(league, source, teams, prefetched_matches, _depth + 1, cache)
+    for team in teams:
+        inherited = parent.get(team.id)
+        if inherited is None:
+            continue
+        own = accumulated[team.id]
+        for key in ('played', 'wins', 'draws', 'losses', 'scored', 'conceded'):
+            own[key] += inherited[key]
+    return accumulated
+
+
+def _get_stage_base_points(
+    league: League,
+    source: TournamentStage,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+    cache: dict | None = None,
+) -> dict[int, int]:
+    """Points earned in `source` stage (all groups), including that stage's penalties, excluding its own bonus."""
+    penalties_by_team = _get_stage_penalties(source, teams, cache)
+    direct_stats = _get_stage_direct_stats(league, source, teams, prefetched_matches, cache)
+    return {
+        team.id: direct_stats[team.id]['wins'] * 3 + direct_stats[team.id]['draws'] - penalties_by_team.get(team.id, 0)
+        for team in teams
+    }
+
+
+def _get_carryover_bonus(
+    league: League,
+    stage: TournamentStage | None,
+    teams: list,
+    prefetched_matches: Iterable[Match] | None = None,
+    _depth: int = 0,
+    cache: dict | None = None,
+) -> dict[int, tuple[int, float, bool]]:
+    """Bonus points each team carries into `stage` from `stage.carryover_from`.
+
+    Returns {team_id: (bonus_display, bonus_exact, was_rounded)}. bonus_exact keeps
+    the unrounded value so that e.g. Belgium's halved-points tie-breaker
+    (larger pre-rounding total ranks higher) works as a secondary sort key.
+    """
+    if stage is None or _depth > 5:
+        return {}
+    if not stage.has_carryover:
+        return {}
+    source = stage.carryover_from
+    if source is None:
+        return {}
+    if isinstance(source, int):
+        source = TournamentStage.objects.filter(pk=source).first()
+        if source is None:
+            return {}
+    mode = stage.carryover_mode
+    if mode == TournamentStage.CarryoverMode.NONE:
+        return {}
+
+    base_points = _get_stage_base_points(league, source, teams, prefetched_matches, cache)
+    parent_bonus = _get_carryover_bonus(league, source, teams, prefetched_matches, _depth + 1, cache)
+
+    result = {}
+    for team in teams:
+        parent_display, parent_exact, _ = parent_bonus.get(team.id, (0, 0.0, False))
+        source_total = base_points.get(team.id, 0) + parent_display
+        source_exact = float(base_points.get(team.id, 0)) + parent_exact
+        result[team.id] = _apply_carryover_mode(source_total, source_exact, mode)
+    return result
+
+
 def get_league_table(
     league: League,
     stage: TournamentStage = None,
     group: Group = None,
     tour_range: tuple = None,
     prefetched_matches: Iterable[Match] | None = None,
+    include_carryover: bool = True,
+    carryover_cache: dict | None = None,
 ):
     always_true = ~Q(pk__in=[])
     stage_condition = Q(stages=stage) if stage is not None else always_true
@@ -1335,6 +1594,45 @@ def get_league_table(
         losses[i] = losses_count
         draws[i] = draws_count
 
+    # Points carried over from a previous stage (league-split format, e.g. Belgium/Austria).
+    # POINTS_ONLY scope: matches, wins and goals are computed from this stage's matches.
+    # FULL_STATS scope: И/В/Н/П/ЗМ/ПМ accumulate from the previous stage(s), only points are rebased.
+    # Applied to full-stage tables only, not to tour_range slices (1st/2nd half tabs).
+    # Form (last 5) always reflects this stage's matches.
+    carry_bonus = [0 for _ in range(teams_count)]
+    carry_rounded = [False for _ in range(teams_count)]
+    points_exact = [float(value) for value in points]
+    if tour_range is None and include_carryover:
+        carryover = _get_carryover_bonus(league, stage, teams, prefetched_matches, cache=carryover_cache)
+        for i, team in enumerate(teams):
+            bonus = carryover.get(team.id)
+            if bonus is None:
+                continue
+            bonus_display, bonus_exact, was_rounded = bonus
+            carry_bonus[i] = bonus_display
+            carry_rounded[i] = was_rounded
+            points[i] += bonus_display
+            points_exact[i] += bonus_exact
+        if stage is not None and carryover and stage.carryover_scope == TournamentStage.CarryoverScope.FULL_STATS:
+            source = stage.carryover_from
+            if isinstance(source, int):
+                source = TournamentStage.objects.filter(pk=source).first()
+            if source is not None:
+                inherited = _get_stage_accumulated_stats(
+                    league, source, teams, prefetched_matches, cache=carryover_cache
+                )
+                for i, team in enumerate(teams):
+                    base = inherited.get(team.id)
+                    if base is None:
+                        continue
+                    matches_played[i] += base['played']
+                    wins[i] += base['wins']
+                    draws[i] += base['draws']
+                    losses[i] += base['losses']
+                    scored[i] += base['scored']
+                    conceded[i] += base['conceded']
+                    goal_diff[i] = scored[i] - conceded[i]
+
     if stage is not None and stage.use_buchholz:
         buccholz = [0 for _ in range(teams_count)]
         for i, team in enumerate(teams):
@@ -1359,9 +1657,22 @@ def get_league_table(
         return sorted(table, key=lambda x: (x[8], x[11], x[7], x[5]), reverse=True)
 
     table = zip(
-        teams, matches_played, wins, draws, losses, scored, conceded, goal_diff, points, last_matches, penalties
+        teams,
+        matches_played,
+        wins,
+        draws,
+        losses,
+        scored,
+        conceded,
+        goal_diff,
+        points,
+        last_matches,
+        penalties,
+        carry_bonus,
+        carry_rounded,
     )
-    sorted_table = sorted(table, key=lambda x: (x[8], x[7], x[5]), reverse=True)
+    exact_by_team_id = {team.id: exact for team, exact in zip(teams, points_exact)}
+    sorted_table = sorted(table, key=lambda x: (x[8], exact_by_team_id[x[0].id], x[7], x[5]), reverse=True)
     result = []
     i = 0
     while i < len(sorted_table) - 1:
@@ -1369,7 +1680,10 @@ def get_league_table(
         mini_res = [sorted_table[i]]
         k = i
         for j in range(i + 1, len(sorted_table)):
-            if sorted_table[i][8] == sorted_table[j][8]:
+            if (
+                sorted_table[i][8] == sorted_table[j][8]
+                and exact_by_team_id[sorted_table[i][0].id] == exact_by_team_id[sorted_table[j][0].id]
+            ):
                 mini_table.append(sorted_table[j][0])
                 mini_res.append(sorted_table[j])
                 k += 1

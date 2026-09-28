@@ -15,6 +15,9 @@ from celery import shared_task
 
 from core.models import UserNicknameHistoryItem
 from tournament.models import (
+    Group,
+    GroupStage,
+    League,
     Match,
     MatchReplay,
     MatchReplayStats,
@@ -523,3 +526,52 @@ def sync_stats_achievements(dry_run: bool = False):
         'removed_medals': summary['removed'],
         'updated_award_dates': summary['updated_dates'],
     }
+
+
+@shared_task
+def sync_split_groups(league_id: int, group_names: list[str]):
+    """Fill split-stage groups from carryover-stage standings.
+
+    The split stage is the league's group stage with a configured carryover;
+    `group_names` gives the groups (created if missing) in the order teams are
+    dealt into them: table places of the carryover source stage (at run time)
+    go top-down, split as evenly as possible. Refuses to run once the stage has
+    played matches. Returns per-group team titles.
+    """
+    from tournament.templatetags.tournament_extras import get_league_table
+
+    league = League.objects.filter(pk=league_id).first()
+    if league is None:
+        return {'error': 'League not found', 'league_id': league_id}
+    if not group_names or len(set(group_names)) != len(group_names):
+        return {'error': 'Provide unique non-empty group names', 'league_id': league_id}
+
+    candidates = list(GroupStage.objects.filter(league=league, carryover_from__isnull=False).order_by('order'))
+    candidates = [stage for stage in candidates if stage.has_carryover]
+    if not candidates:
+        return {'error': 'League has no split stage with carryover', 'league_id': league_id}
+    if len(candidates) > 1:
+        return {'error': 'League has multiple split stages', 'league_id': league_id}
+    stage = candidates[0]
+
+    if Match.objects.filter(league=league, stage=stage, is_played=True).exists():
+        return {'error': 'Stage already started', 'league_id': league_id, 'stage_id': stage.pk}
+
+    groups = [Group.objects.get_or_create(stage=stage, name=name)[0] for name in group_names]
+    teams = [row[0] for row in get_league_table(league, stage.carryover_from, None)]
+    if not teams:
+        return {'error': 'Source table is empty', 'league_id': league_id, 'stage_id': stage.pk}
+
+    chunk, rest = divmod(len(teams), len(groups))
+    with transaction.atomic():
+        offset = 0
+        summary = {}
+        for i, group in enumerate(groups):
+            members = teams[offset : offset + chunk + (1 if i < rest else 0)]
+            offset += len(members)
+            group.teams.set(members)
+            summary[group.name] = [team.title for team in members]
+        stage.teams.set(teams)
+
+    logger.info('[league_id=%s] Synced %s teams into %s groups', league_id, len(teams), len(groups))
+    return {'league_id': league_id, 'stage_id': stage.pk, 'groups': summary}
