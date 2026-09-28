@@ -1932,8 +1932,15 @@ class PlayerTransfer(models.Model):
 
     tracker = FieldTracker(['to_team'])
 
+    def _should_sync_current_team(self):
+        # Historic (inactive-season) transfers must not rewrite Player.team,
+        # which always reflects the current-season roster.
+        if self.season_join_id is None:
+            return True
+        return Season.objects.filter(pk=self.season_join_id, is_active=True).exists()
+
     def save(self, *args, **kwargs):
-        if not self.pk or self.tracker.has_changed('to_team'):
+        if (not self.pk or self.tracker.has_changed('to_team')) and self._should_sync_current_team():
             if self.to_team:
                 self.trans_player.team = self.to_team
             else:
