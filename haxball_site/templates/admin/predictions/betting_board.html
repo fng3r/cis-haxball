@@ -1,0 +1,131 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n unfold %}
+
+{% block content %}
+  {% component "unfold/components/container.html" %}
+  <div class="flex flex-col gap-2 lg:flex-row lg:items-center mb-6">
+    <div class="grow">
+      {% component "unfold/components/title.html" %}
+      Букмекерская линия прогнозов
+    {% endcomponent %}
+    <p class="text-subtle mt-1">
+      Матчи с доступными исходами и коэффициентами.
+      {% if selected_tournament %}{{ selected_tournament.league.title }}{% endif %}
+      {% if selected_tour %}· {{ selected_tour.number }} тур{% endif %}
+    </p>
+  </div>
+  <div class="flex flex-row gap-2">
+    {% component "unfold/components/button.html" with href="/admin/predictions/matchpredictionoffer/" variant="default" icon="arrow_back" %}
+    К списку исходов
+  {% endcomponent %}
+  {% component "unfold/components/button.html" with href="/admin/predictions/matchpredictionoffer/add/" variant="primary" icon="add" %}
+  Добавить линию
+{% endcomponent %}
+</div>
+</div>
+
+{% component "unfold/components/card.html" with title="Участники по турам" description="Количество пользователей, сделавших прогнозы в каждом туре" title_icon="bar_chart" class="mb-6" %}
+{% component "unfold/components/chart/line.html" with data=bettors_chart_data height=260 %}{% endcomponent %}
+{% endcomponent %}
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+  <div class="xl:col-span-1">
+    {% component "unfold/components/card.html" with title="Рынки" description="Доля исходов по рынкам" title_icon="pie_chart" %}
+    <div class="flex flex-col gap-4">
+      {% for stat in market_stats %}
+        <div>
+          {% component "unfold/components/progress.html" with title=stat.label description=stat.count value=stat.share %}
+        {% endcomponent %}
+        <div class="flex items-center gap-2 mt-1 text-xs text-subtle">
+          <span class="material-symbols-outlined text-base">{{ stat.icon }}</span>
+          <span>{{ stat.count }} исх.</span>
+          {% if stat.avg %}<span>· средний ×{{ stat.avg|floatformat:2 }}</span>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endcomponent %}
+</div>
+
+<div class="xl:col-span-2">
+  {% component "unfold/components/card.html" with title="Фильтры линии" description="Турнир, тур и покрытие" title_icon="filter_alt" %}
+  <form method="get" class="flex flex-col gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs font-medium text-subtle">Турнир</label>
+        {{ filter_form.tournament }}
+      </div>
+      <div>
+        <label class="text-xs font-medium text-subtle">Тур</label>
+        {{ filter_form.tour }}
+      </div>
+    </div>
+    <div>
+      <label class="text-xs font-medium text-subtle">Команда</label>
+      {{ filter_form.q }}
+    </div>
+    <div class="flex flex-wrap items-center gap-4 text-sm">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="only_published" {% if only_published %}checked{% endif %} class="checkbox" />
+        Только опубликованные
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="hide_played" {% if hide_played %}checked{% endif %} class="checkbox" />
+        Скрыть сыгранные
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="only_with_line" {% if only_with_line %}checked{% endif %} class="checkbox" />
+        Только с линией
+      </label>
+    </div>
+    <div class="flex flex-row gap-2">
+      {% component "unfold/components/button.html" with submit=1 variant="primary" icon="search" %}
+      Показать
+    {% endcomponent %}
+    {% component "unfold/components/button.html" with href="/admin/predictions/matchpredictionoffer/betting-board/" variant="default" icon="restart_alt" %}
+    Сбросить
+  {% endcomponent %}
+</div>
+</form>
+{% endcomponent %}
+</div>
+</div>
+
+{% if sections %}
+  {% for section in sections %}
+    {% component "unfold/components/card.html" with title=section.title title_icon="event" class="mb-4" %}
+    <div class="flex flex-wrap items-center gap-2 mb-4 text-sm">
+      {% component "unfold/helpers/label.html" with text=section.stats.matches %}{% endcomponent %}
+      <span class="text-xs text-subtle">матчей</span>
+      {% component "unfold/helpers/label.html" with variant="info" text=section.stats.outcomes %}{% endcomponent %}
+      <span class="text-xs text-subtle">исходов</span>
+      {% component "unfold/helpers/label.html" with variant="success" text=section.stats.bettors %}{% endcomponent %}
+      <span class="text-xs text-subtle">пользователей</span>
+    </div>
+    <details {% if selected_tour %}open{% endif %} class="group">
+      <summary class="flex items-center gap-2 text-sm cursor-pointer select-none">
+        <span class="material-symbols-outlined text-base-400 text-lg transition-transform group-open:rotate-180">expand_more</span>
+        <span class="font-semibold">Матчи</span>
+        {% component "unfold/helpers/label.html" with variant="primary" text=section.stats.matches %}{% endcomponent %}
+      </summary>
+      <div class="flex flex-col gap-4 mt-3">
+        {% for card in section.cards %}
+          {% include "admin/predictions/_betting_match_card.html" with card=card %}
+        {% endfor %}
+      </div>
+    </details>
+  {% endcomponent %}
+{% endfor %}
+{% else %}
+{% component "unfold/components/card.html" with title="Нет матчей" title_icon="search_off" %}
+<p class="text-subtle">По выбранным фильтрам матчи не найдены. Измените фильтры или добавьте линию для матчей.</p>
+<div class="mt-3">
+  {% component "unfold/components/button.html" with href="/admin/predictions/matchpredictionoffer/add/" variant="primary" icon="add" %}
+  Добавить линию
+{% endcomponent %}
+</div>
+{% endcomponent %}
+{% endif %}
+{% endcomponent %}
+{% endblock %}

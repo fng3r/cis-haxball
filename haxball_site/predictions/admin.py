@@ -3,13 +3,16 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db.models import Prefetch
 from django.forms.models import BaseInlineFormSet
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from unfold.contrib.filters.admin import AutocompleteSelectFilter, RelatedDropdownFilter, SingleNumericFilter
-from unfold.decorators import display
+from unfold.decorators import action, display
 
 from haxball_site.admin import UnfoldModelAdmin, UnfoldTabularInline
 from tournament.models import Match
 
+from .admin_dashboard import OfferBettingPreviewSection, PredictionsBettingBoardView
 from .models import (
     HandicapOutcome,
     IndividualTotalOutcome,
@@ -193,8 +196,11 @@ class IndividualTotalsInline(BaseOutcomeInline):
 @admin.register(MatchPredictionOffer)
 class MatchPredictionOfferAdmin(UnfoldModelAdmin):
     list_display = [
-        'match',
+        'display_match',
         'is_published',
+        'display_score',
+        'display_outcomes_count',
+        'display_picks',
         'display_results',
         'display_handicaps',
         'display_totals',
@@ -206,11 +212,48 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         ('match__numb_tour__number', SingleNumericFilter),
         'is_published',
     ]
-    list_filter_sheet = False
+    list_filter_sheet = True
     list_filter_submit = True
     search_fields = ['match__team_home__title', 'match__team_guest__title']
     ordering = ['-id']
     inlines = [ResultsInline, HandicapsInline, TotalsInline, IndividualTotalsInline]
+    list_sections = [OfferBettingPreviewSection]
+    actions_list = ['open_betting_board']
+    actions_detail = ['open_betting_board']
+
+    def get_custom_urls(self):
+        return (
+            (
+                'betting-board/',
+                'predictions_matchpredictionoffer_betting_board',
+                PredictionsBettingBoardView.as_view(model_admin=self),
+            ),
+        )
+
+    @action(description='Букмекерская линия', url_path='open-betting-board', icon='sports_soccer')
+    def open_betting_board(self, request, object_id=None):
+        return HttpResponseRedirect(reverse('admin:predictions_matchpredictionoffer_betting_board'))
+
+    @display(description='Матч', header=True)
+    def display_match(self, model):
+        match = model.match
+        subtitle = f'{match.league.title} · {match.numb_tour.number} тур'
+        return [str(match), subtitle]
+
+    @display(description='Счёт', label=True)
+    def display_score(self, model):
+        match = model.match
+        if match.is_played:
+            return f'{match.score_home}:{match.score_guest}'
+        return '–'
+
+    @display(description='Исходов', label=True)
+    def display_outcomes_count(self, model):
+        return len(model.outcomes.all())
+
+    @display(description='Ставок', label=True)
+    def display_picks(self, model):
+        return sum(1 for o in model.outcomes.all() for _ in o.predictions.all())
 
     @display(description='Исходы', dropdown=True)
     def display_results(self, model):
@@ -240,7 +283,17 @@ class MatchPredictionOfferAdmin(UnfoldModelAdmin):
         return (
             super()
             .get_queryset(request)
-            .prefetch_related(Prefetch('outcomes', queryset=MatchPredictionOutcome.objects.order_by('id')))
+            .select_related(
+                'match__team_home',
+                'match__team_guest',
+                'match__league',
+                'match__numb_tour',
+                'match__result',
+            )
+            .prefetch_related(
+                Prefetch('outcomes', queryset=MatchPredictionOutcome.objects.order_by('id')),
+                Prefetch('outcomes__predictions'),
+            )
         )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

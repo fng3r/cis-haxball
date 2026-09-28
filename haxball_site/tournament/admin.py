@@ -376,6 +376,7 @@ class PlayerAdmin(UnfoldModelAdmin):
 class PlayerTransferAdmin(UnfoldModelAdmin):
     list_display = ('trans_player', 'display_from_team', 'display_to_team', 'date_join', 'season_join', 'is_technical')
     list_filter = (
+        ('season_join', RelatedDropdownFilter),
         ('trans_player', AutocompleteSelectFilter),
         ('from_team', RelatedDropdownFilter),
         ('to_team', RelatedDropdownFilter),
