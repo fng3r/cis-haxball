@@ -77,8 +77,7 @@ class BettingBoardFilterForm(forms.Form):
         queryset=PredictionsContestTournament.objects.filter(
             scoring_method=PredictionsContestTournament.ScoringMethod.COEFFICIENTS
         ).select_related('league__championship'),
-        required=False,
-        empty_label='Все турниры (коэффициенты)',
+        required=True,
         widget=UnfoldAdminSelectWidget,
     )
     tour = forms.ModelChoiceField(
