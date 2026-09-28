@@ -419,7 +419,6 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
                 'only_published': only_published,
                 'only_with_line': only_with_line,
                 'sections': sections,
-                'stats': build_board_stats(cards),
                 'market_stats': build_market_stats(cards),
                 'bettors_chart_data': build_bettors_chart_data(tournament, tours),
                 'market_labels': MARKET_LABELS,
