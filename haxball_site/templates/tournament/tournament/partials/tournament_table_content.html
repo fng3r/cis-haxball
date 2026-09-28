@@ -27,13 +27,14 @@
   </thead>
   <tbody>
     {% for team in teams %}
-      <tr class="team-rows tw:text-center {% if stage.type == 'REG' %} {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}tw:bg-[#ffd700]/80{% endif %} {% if forloop.counter == 2 and forloop.counter <= stage.awarded_count %}tw:bg-[#c0c0c0]/80{% endif %} {% if forloop.counter == 3 and forloop.counter <= stage.awarded_count %}tw:bg-[#ffa81c]/80{% endif %} {% endif %}">
+      <tr class="team-rows tw:text-center">
         <th scope="row" width="4%" class="tw:pl-1">
           <div class="tw:flex">
             {% if marker_classes %}
               {% with marker_class=marker_classes|at_index:forloop.counter0 marker_label=marker_labels|at_index:forloop.counter0 %}
                 {% if marker_label %}
-                  <span class="tw:tooltip tw:tooltip-right tw:mr-2 tw:my-n1 tw:w-1 tw:rounded-2xl {{ marker_class }}" data-tip="{{ marker_label }}"></span>
+                  <span class="tw:tooltip tw:tooltip-right tw:mr-2 tw:my-n1 tw:w-1 tw:rounded-2xl {{ marker_class }}"
+                        data-tip="{{ marker_label }}"></span>
                 {% else %}
                   <span class="tw:mr-2 tw:my-n1 tw:w-1 tw:rounded-2xl {{ marker_class }}"></span>
                 {% endif %}
@@ -56,6 +57,36 @@
             <img src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28" class="tw:size-7 tw:mr-2 tw:object-contain">
             {{ team.0.title|truncatechars:25 }}
           </a>
+          {% if stage.type == 'REG' %}
+            {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}
+              <span class="tw:ml-1 tw:inline-flex tw:align-middle" data-tip="1 место">
+                <svg class="tw:size-5.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 1h3.2L10 9H6.8L8 1Z" fill="#3b82f6" />
+                  <path d="M16 1h-3.2L14 9h3.2L16 1Z" fill="#ef4444" />
+                  <circle cx="12" cy="15.5" r="6.2" fill="#d4af37" stroke="#8a6d00" stroke-width="1.2" />
+                  <text x="12" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff">1</text>
+                </svg>
+              </span>
+            {% elif forloop.counter == 2 and forloop.counter <= stage.awarded_count %}
+              <span class="tw:ml-1 tw:inline-flex tw:align-middle" data-tip="2 место">
+                <svg class="tw:size-5.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 1h3.2L10 9H6.8L8 1Z" fill="#3b82f6" />
+                  <path d="M16 1h-3.2L14 9h3.2L16 1Z" fill="#ef4444" />
+                  <circle cx="12" cy="15.5" r="6.2" fill="#c0c0c0" stroke="#7d838c" stroke-width="1.2" />
+                  <text x="12" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff">2</text>
+                </svg>
+              </span>
+            {% elif forloop.counter == 3 and forloop.counter <= stage.awarded_count %}
+              <span class="tw:ml-1 tw:inline-flex tw:align-middle" data-tip="3 место">
+                <svg class="tw:size-5.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 1h3.2L10 9H6.8L8 1Z" fill="#3b82f6" />
+                  <path d="M16 1h-3.2L14 9h3.2L16 1Z" fill="#ef4444" />
+                  <circle cx="12" cy="15.5" r="6.2" fill="#cd7f32" stroke="#8a5220" stroke-width="1.2" />
+                  <text x="12" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff">3</text>
+                </svg>
+              </span>
+            {% endif %}
+          {% endif %}
         </td>
         <td width="6%">{{ team.1 }}</td>
         <td width="6%">{{ team.2 }}</td>
