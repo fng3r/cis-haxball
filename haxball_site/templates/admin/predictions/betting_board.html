@@ -103,12 +103,18 @@
       {% component "unfold/helpers/label.html" with variant="success" text=section.stats.bettors %}{% endcomponent %}
       <span class="text-xs text-subtle">пользователей</span>
     </div>
-
-    <div class="flex flex-col gap-4">
-      {% for card in section.cards %}
-        {% include "admin/predictions/_betting_match_card.html" with card=card %}
-      {% endfor %}
-    </div>
+    <details {% if selected_tour %}open{% endif %} class="group">
+      <summary class="flex items-center gap-2 text-sm cursor-pointer select-none">
+        <span class="material-symbols-outlined text-base-400 text-lg transition-transform group-open:rotate-180">expand_more</span>
+        <span class="font-semibold">Матчи</span>
+        {% component "unfold/helpers/label.html" with variant="primary" text=section.stats.matches %}{% endcomponent %}
+      </summary>
+      <div class="flex flex-col gap-4 mt-3">
+        {% for card in section.cards %}
+          {% include "admin/predictions/_betting_match_card.html" with card=card %}
+        {% endfor %}
+      </div>
+    </details>
   {% endcomponent %}
 {% endfor %}
 {% else %}

@@ -359,7 +359,7 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
             form.initial.update(
                 {
                     'tournament': tournament.pk if tournament else None,
-                    'only_published': True,
+                    'only_published': False,
                 }
             )
 
@@ -368,7 +368,7 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
         # Unchecked checkboxes are absent from GET, so defaulting to 'on'
         # would re-enable the flag on every submit. Default to True only
         # on the initial (unfiltered) load.
-        only_published = self.request.GET.get('only_published') == 'on' if form.is_bound else True
+        only_published = self.request.GET.get('only_published') == 'on' if form.is_bound else False
         only_with_line = self.request.GET.get('only_with_line') == 'on'
 
         matches = get_board_queryset(
@@ -388,15 +388,15 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
         sections = []
         for tour_id_key, tour_cards in sorted(cards_by_tour.items()):
             tour_obj = tours_map.get(tour_id_key)
-            if tour_obj is not None:
-                title = f'{tour_obj.number} тур · {tour_obj.date_from:%d.%m}–{tour_obj.date_to:%d.%m}'
-            else:
-                title = 'Без тура'
             bettors = {
                 pick['user_id'] for card in tour_cards for pick in card['pick_details'] if pick['user_id'] is not None
             }
             stats = build_board_stats(tour_cards)
             stats['bettors'] = len(bettors)
+            if tour_obj is not None:
+                title = f'{tour_obj.number} тур · {tour_obj.date_from:%d.%m}–{tour_obj.date_to:%d.%m}'
+            else:
+                title = 'Без тура'
             sections.append(
                 {
                     'tour': tour_obj,
