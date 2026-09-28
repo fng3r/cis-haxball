@@ -10,6 +10,7 @@ bookmaker-line layout, using django-unfold building blocks:
 - ``DASHBOARD_CALLBACK`` KPIs + ``TABS`` / ``SIDEBAR`` navigation
 """
 
+import json
 from collections import defaultdict
 from decimal import Decimal
 
@@ -23,7 +24,13 @@ from unfold.widgets import UnfoldAdminSelectWidget, UnfoldAdminTextInputWidget
 
 from tournament.models import Match, PlayOffStage, TourNumber
 
-from .models import MatchPredictionOffer, MatchPredictionOutcome, Prediction, PredictionsContestTournament
+from .models import (
+    MatchPredictionOffer,
+    MatchPredictionOutcome,
+    Prediction,
+    PredictionsContestTournament,
+    PredictionSubmission,
+)
 from .points_service import calculate_prediction_points, is_prediction_correct, is_prediction_void
 
 MARKET_LABELS = {
@@ -256,6 +263,35 @@ def build_board_stats(cards):
     }
 
 
+def build_bettors_chart_data(tournament, tours):
+    """Chart.js payload for the unfold bar chart: distinct bettors per tour."""
+    tour_list = list(tours)
+    labels = [f'{tour.number} тур' for tour in tour_list]
+    values = [0] * len(tour_list)
+    if tournament is not None and tour_list:
+        rows = (
+            PredictionSubmission.objects.filter(tournament=tournament, tour__in=tour_list)
+            .values('tour_id')
+            .annotate(bettors=Count('user_id', distinct=True))
+        )
+        bettors_by_tour = {row['tour_id']: row['bettors'] for row in rows}
+        values = [bettors_by_tour.get(tour.id, 0) for tour in tour_list]
+    return json.dumps(
+        {
+            'labels': labels,
+            'datasets': [
+                {
+                    'label': 'Пользователи',
+                    'data': values,
+                    'borderColor': 'var(--color-primary-500)',
+                    'backgroundColor': 'var(--color-primary-500)',
+                    'displayYAxis': True,
+                }
+            ],
+        }
+    )
+
+
 def build_market_stats(cards):
     """Per-market distribution for progress bars and charts."""
     per_market = defaultdict(list)
@@ -385,6 +421,7 @@ class PredictionsBettingBoardView(UnfoldModelAdminViewMixin, TemplateView):
                 'sections': sections,
                 'stats': build_board_stats(cards),
                 'market_stats': build_market_stats(cards),
+                'bettors_chart_data': build_bettors_chart_data(tournament, tours),
                 'market_labels': MARKET_LABELS,
                 'market_icons': MARKET_ICONS,
             }
