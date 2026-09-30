@@ -22,7 +22,7 @@
               <tr>
                 <th class="tw:text-center">Место</th>
                 <th>Пользователь</th>
-                {% for tour in selected_tournament.league.tours.all %}
+                {% for tour in tours %}
                   <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
                 {% endfor %}
                 <td class="tw:text-center tw:font-bold">Точность</td>
@@ -79,7 +79,7 @@
                       {% endif %}
                     </div>
                   </th>
-                  {% for tour in selected_tournament.league.tours.all %}
+                  {% for tour in tours %}
                     <td class="tw:text-center">
                       {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
                         <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id|floatformat:-2 }}</span>

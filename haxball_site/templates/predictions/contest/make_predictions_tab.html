@@ -19,7 +19,7 @@
           <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
             <div class="tw:text-xl tw:font-semibold">{{ selected_tournament.league.title }}</div>
 
-            {% if selected_tournament.league.tours.count > 0 and not is_tournament_ended %}
+            {% if tours|length > 0 and not is_tournament_ended %}
               <label class="tw:label tw:text-base-content/80">
                 Все туры
                 <input type="checkbox" x-model="showAllTours" class="tw:toggle tw:toggle-primary tw:toggle-sm">
@@ -28,8 +28,8 @@
           </div>
 
           <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
-            {% paired_tour_ids selected_tournament.league.tours.all as paired_tour_ids_map %}
-            {% for tour in selected_tournament.league.tours.all %}
+            {% paired_tour_ids tours as paired_tour_ids_map %}
+            {% for tour in tours %}
               <div x-data="{isActual: {{ tour|is_tour_actual|yesno:'true,false' }}}" x-show="isActual || showAllTours" x-cloak>
                 {% with prediction_data=user_predictions|get_item:tour.id %}
                   {% include "predictions/contest/tour_card.html" with tour=tour submission=prediction_data.submission match_predictions=prediction_data.match_predictions match_outcomes=match_outcomes_by_tour|get_item:tour.id match_outcome_groups=match_outcome_groups_by_tour|get_item:tour.id scoring_method=scoring_method is_paired_tour=paired_tour_ids_map|get_item:tour.id %}

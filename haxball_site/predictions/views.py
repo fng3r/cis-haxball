@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import F, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -13,7 +14,7 @@ from django.views.decorators.http import require_POST
 from django_htmx.http import trigger_client_event
 
 from fantasy_league.forms import TourFilterForm
-from tournament.models import Season, TourNumber
+from tournament.models import Season, TournamentStage, TourNumber
 
 from .forms import (
     PreseasonPredictionsTournamentFilterForm,
@@ -38,6 +39,7 @@ from .utils import (
     build_match_outcome_groups_map,
     build_match_outcomes_map,
     calculate_tour_rewards,
+    get_regular_tours,
     get_tournament_standings,
     is_tour_open_for_predictions,
 )
@@ -47,6 +49,7 @@ CLASSIC_OUTCOME_CODES = {
     Prediction.Result.DRAW,
     Prediction.Result.AWAY_WIN,
 }
+
 
 def get_prediction_outcome_choices(tournament):
     """Return ((value, label), ...) list of main outcomes available for a tournament format."""
@@ -141,7 +144,7 @@ def resolve_selected_tour(request, selected_tournament):
     tour = None
     tour_form = None
     if selected_tournament:
-        tour_qs = TourNumber.objects.filter(league=selected_tournament.league).order_by('number')
+        tour_qs = get_regular_tours(selected_tournament.league)
         initial_tour = None
         if request.GET.get('tour'):
             initial_tour = tour_qs.filter(pk=request.GET.get('tour')).first()
@@ -163,6 +166,7 @@ def resolve_selected_tour(request, selected_tournament):
             initial={'tour': initial_tour.pk if initial_tour else None},
             league=selected_tournament.league,
         )
+        tour_form.fields['tour'].queryset = tour_qs
 
     return tour, tour_form
 
@@ -272,9 +276,12 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
     match_outcomes_by_tour = {}
     match_outcome_groups_by_tour = {}
     is_tournament_ended = False
+    tours = []
     if selected_tournament:
-        tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
-            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
+        tours = get_regular_tours(selected_tournament.league).prefetch_related(
+            'tour_matches__team_home',
+            'tour_matches__team_guest',
+            'tour_matches__result',
             'tour_matches__prediction_offer__outcomes',
         )
 
@@ -302,6 +309,7 @@ def make_predictions_tab(request, initial_context=False, selected_tournament=Non
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
+        'tours': tours,
         'is_tournament_ended': is_tournament_ended,
         'user_predictions': user_predictions,
         'match_outcomes_by_tour': match_outcomes_by_tour,
@@ -348,8 +356,9 @@ def view_predictions_tab(request):
         user_form.fields['user'].queryset = users_with_predictions
 
     predictions_data = {}
+    tours = []
     if selected_tournament and selected_user:
-        tours = TourNumber.objects.filter(league=selected_tournament.league).prefetch_related(
+        tours = get_regular_tours(selected_tournament.league).prefetch_related(
             'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result'
         )
 
@@ -378,6 +387,7 @@ def view_predictions_tab(request):
         'user_form': user_form,
         'selected_tournament': selected_tournament,
         'selected_user': selected_user,
+        'tours': tours,
         'predictions_data': predictions_data,
         'scoring_method': selected_tournament.scoring_method if selected_tournament else None,
     }
@@ -395,10 +405,11 @@ def standings_tab(request):
     if selected_tournament:
         standings = get_tournament_standings(selected_tournament)
 
-        tours = TourNumber.objects.filter(league=selected_tournament.league)
+        tours = get_regular_tours(selected_tournament.league)
 
         all_submissions = (
             PredictionSubmission.objects.filter(tournament=selected_tournament)
+            .exclude(tour__stage__type=TournamentStage.StageType.PLAYOFF)
             .select_related('tournament')
             .prefetch_related('predictions__match__result')
         )
@@ -421,6 +432,7 @@ def standings_tab(request):
     context = {
         'tournament_form': tournament_form,
         'selected_tournament': selected_tournament,
+        'tours': tours if selected_tournament else [],
         'standings': standings,
         'tour_points': tour_points,
     }
@@ -432,11 +444,16 @@ def tour_card(request, tour_id):
     """Render a single tour card"""
     tour = get_object_or_404(
         TourNumber.objects.select_related('league').prefetch_related(
-            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
+            'tour_matches__team_home',
+            'tour_matches__team_guest',
+            'tour_matches__result',
             'tour_matches__prediction_offer__outcomes',
         ),
         id=tour_id,
     )
+
+    if tour.stage.type == TournamentStage.StageType.PLAYOFF:
+        raise Http404('Прогнозы на туры плей-офф недоступны.')
 
     submission = None
     match_predictions = {}
@@ -448,7 +465,9 @@ def tour_card(request, tour_id):
             PredictionSubmission.objects.filter(user=request.user, tour=tour, tournament=prediction_tournament)
             .select_related('tournament')
             .prefetch_related(
-                'predictions__match__result', 'predictions__match__team_home', 'predictions__match__team_guest',
+                'predictions__match__result',
+                'predictions__match__team_home',
+                'predictions__match__team_guest',
                 'predictions__outcome__offer',
             )
             .first()
@@ -472,11 +491,17 @@ def edit_predictions(request, tour_id):
     """Edit predictions for a specific tour"""
     tour = get_object_or_404(
         TourNumber.objects.select_related('league').prefetch_related(
-            'tour_matches__team_home', 'tour_matches__team_guest', 'tour_matches__result',
+            'tour_matches__team_home',
+            'tour_matches__team_guest',
+            'tour_matches__result',
             'tour_matches__prediction_offer__outcomes',
         ),
         id=tour_id,
     )
+
+    if tour.stage.type == TournamentStage.StageType.PLAYOFF:
+        messages.error(request, 'Прогнозы на туры плей-офф недоступны.')
+        return redirect('predictions:main')
 
     if not is_tour_open_for_predictions(tour):
         messages.error(request, 'Прогнозы для этого тура закрыты.')
@@ -497,9 +522,7 @@ def edit_predictions(request, tour_id):
     match_outcome_groups = build_match_outcome_groups_map(tour)
     prediction_outcome_choices = get_prediction_outcome_choices(prediction_tournament)
     valid_outcome_codes = {value for value, _ in prediction_outcome_choices}
-    uses_coefficients = (
-        prediction_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
-    )
+    uses_coefficients = prediction_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
 
     if request.method == 'POST':
         with transaction.atomic():

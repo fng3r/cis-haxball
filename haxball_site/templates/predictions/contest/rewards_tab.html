@@ -61,6 +61,10 @@
                       <th class="tw:text-center tw:w-5">#</th>
                       <th>Участник</th>
                       <th class="tw:text-center">Очки</th>
+                      {% if selected_tournament.scoring_method == 'coefficients' %}
+                        <th class="tw:text-center" title="Равная доля 25% призового фонда между всеми участниками тура">Награды за участие</th>
+                        <th class="tw:text-center" title="Доля 75% призового фонда за место среди участников с положительным балансом">Награды за место</th>
+                      {% endif %}
                       <th class="tw:text-center">Награды</th>
                     </tr>
                   </thead>
@@ -77,14 +81,22 @@
                           </div>
                         </td>
                         <td class="tw:text-center tw:font-bold">
-                          {{ reward.points }} (
-                          {% if tour_rewards_data.rewards.total_prize_pool > 0 %}
-                            {{ reward.reward_amount|mul:100|div:tour_rewards_data.rewards.total_prize_pool|floatformat:1 }}%
+                          {% if selected_tournament.scoring_method == 'coefficients' %}
+                            {{ reward.points|floatformat:0 }}
                           {% else %}
-                            0%
+                            {{ reward.points }} (
+                            {% if tour_rewards_data.rewards.total_prize_pool > 0 %}
+                              {{ reward.reward_amount|mul:100|div:tour_rewards_data.rewards.total_prize_pool|floatformat:1 }}%
+                            {% else %}
+                              0%
+                            {% endif %}
+                            )
                           {% endif %}
-                          )
                         </td>
+                        {% if selected_tournament.scoring_method == 'coefficients' %}
+                          <td class="tw:text-center tw:text-base-content/70">{{ reward.base_amount }} CC</td>
+                          <td class="tw:text-center tw:text-base-content/70">{{ reward.place_amount }} CC</td>
+                        {% endif %}
                         <td class="tw:text-center tw:font-bold tw:text-success">{{ reward.reward_amount }} CC</td>
                       </tr>
                     {% endfor %}
@@ -118,60 +130,168 @@
           <h5 class="tw:text-lg tw:font-semibold tw:mb-3">Как формируются награды</h5>
           <ol class="tw:space-y-2">
             <li>За каждого активного участника в общий призовой фонд тура добавляется 10 CC</li>
-            <li>Призовой фонд тура распределяется между всеми участниками пропорционально заработанным ими очкам</li>
+            {% if selected_tournament.scoring_method == 'coefficients' %}
+              <li>25% фонда делятся поровну между всеми участниками тура</li>
+              <li>
+                75% фонда делятся между участниками с положительным балансом за тур пропорционально
+                весу места (1-е место — вес 1, 2-е — 1/√2, 3-е — 1/√3 и так далее).
+                При равенстве очков места делят суммарный вес поровну
+              </li>
+            {% else %}
+              <li>Призовой фонд тура распределяется между всеми участниками пропорционально заработанным ими очкам</li>
+            {% endif %}
             <li>Начисление наград происходит раз в неделю (при условии, что все матчи тура уже были сыграны)</li>
           </ol>
         </div>
 
-        <div>
-          <h5 class="tw:text-lg tw:font-semibold tw:mb-3">Пример расчета</h5>
-          <div class="tw:space-y-2">
-            <p>Допустим, в туре приняли участие 5 человек:</p>
-            <ul>
-              <li>
-                <strong>Участник A:</strong> 10 очков
-              </li>
-              <li>
-                <strong>Участник B:</strong> 8 очков
-              </li>
-              <li>
-                <strong>Участник C:</strong> 6 очков
-              </li>
-              <li>
-                <strong>Участник D:</strong> 4 очка
-              </li>
-              <li>
-                <strong>Участник E:</strong> 2 очка
-              </li>
-            </ul>
-            <p class="tw:mb-2!">
-              <strong>Призовой фонд:</strong> 5 × 10 = 50 CC
-            </p>
-            <p class="tw:mb-2!">
-              <strong>Общие очки:</strong> 10 + 8 + 6 + 4 + 2 = 30 очков
-            </p>
-            <p class="tw:mb-0!">
-              <strong>Награды:</strong>
-            </p>
-            <ul>
-              <li>
-                <strong>Участник A:</strong> (10/30) × 50 = 16.67 CC
-              </li>
-              <li>
-                <strong>Участник B:</strong> (8/30) × 50 = 13.33 CC
-              </li>
-              <li>
-                <strong>Участник C:</strong> (6/30) × 50 = 10.00 CC
-              </li>
-              <li>
-                <strong>Участник D:</strong> (4/30) × 50 = 6.67 CC
-              </li>
-              <li>
-                <strong>Участник E:</strong> (2/30) × 50 = 3.33 CC
-              </li>
-            </ul>
+        {% if selected_tournament.scoring_method == 'coefficients' %}
+          <div>
+            <h5 class="tw:text-base! tw:mb-3!">Пример весов при 25 участниках с положительным балансом</h5>
+            <div class="tw:overflow-x-auto">
+              <table class="tw:table tw:table-zebra tw:table-sm">
+                <thead>
+                  <tr>
+                    <th class="tw:text-center">Место</th>
+                    <th class="tw:text-center">Вес</th>
+                    <th class="tw:text-center">Доля</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="tw:text-center">1</td>
+                    <td class="tw:text-center">1.0000</td>
+                    <td class="tw:text-center">11.57%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">2</td>
+                    <td class="tw:text-center">0.7071</td>
+                    <td class="tw:text-center">8.18%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">3</td>
+                    <td class="tw:text-center">0.5774</td>
+                    <td class="tw:text-center">6.68%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">4</td>
+                    <td class="tw:text-center">0.5000</td>
+                    <td class="tw:text-center">5.79%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">5</td>
+                    <td class="tw:text-center">0.4472</td>
+                    <td class="tw:text-center">5.18%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">6</td>
+                    <td class="tw:text-center">0.4082</td>
+                    <td class="tw:text-center">4.73%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">7</td>
+                    <td class="tw:text-center">0.3780</td>
+                    <td class="tw:text-center">4.37%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">8</td>
+                    <td class="tw:text-center">0.3536</td>
+                    <td class="tw:text-center">4.09%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">9</td>
+                    <td class="tw:text-center">0.3333</td>
+                    <td class="tw:text-center">3.86%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">10</td>
+                    <td class="tw:text-center">0.3162</td>
+                    <td class="tw:text-center">3.66%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">...</td>
+                    <td class="tw:text-center">...</td>
+                    <td class="tw:text-center">...</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">15</td>
+                    <td class="tw:text-center">0.2582</td>
+                    <td class="tw:text-center">2.99%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">...</td>
+                    <td class="tw:text-center">...</td>
+                    <td class="tw:text-center">...</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">20</td>
+                    <td class="tw:text-center">0.2236</td>
+                    <td class="tw:text-center">2.59%</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">...</td>
+                    <td class="tw:text-center">...</td>
+                    <td class="tw:text-center">...</td>
+                  </tr>
+                  <tr>
+                    <td class="tw:text-center">25</td>
+                    <td class="tw:text-center">0.2000</td>
+                    <td class="tw:text-center">2.31%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        {% else %}
+          <div>
+            <h5 class="tw:text-lg tw:font-semibold tw:mb-3">Пример расчета</h5>
+            <div class="tw:space-y-2">
+              <p>Допустим, в туре приняли участие 5 человек:</p>
+              <ul>
+                <li>
+                  <strong>Участник A:</strong> 10 очков
+                </li>
+                <li>
+                  <strong>Участник B:</strong> 8 очков
+                </li>
+                <li>
+                  <strong>Участник C:</strong> 6 очков
+                </li>
+                <li>
+                  <strong>Участник D:</strong> 4 очка
+                </li>
+                <li>
+                  <strong>Участник E:</strong> 2 очка
+                </li>
+              </ul>
+              <p class="tw:mb-2!">
+                <strong>Призовой фонд:</strong> 5 × 10 = 50 CC
+              </p>
+              <p class="tw:mb-2!">
+                <strong>Общие очки:</strong> 10 + 8 + 6 + 4 + 2 = 30 очков
+              </p>
+              <p class="tw:mb-0!">
+                <strong>Награды:</strong>
+              </p>
+              <ul>
+                <li>
+                  <strong>Участник A:</strong> (10/30) × 50 = 16.67 CC
+                </li>
+                <li>
+                  <strong>Участник B:</strong> (8/30) × 50 = 13.33 CC
+                </li>
+                <li>
+                  <strong>Участник C:</strong> (6/30) × 50 = 10.00 CC
+                </li>
+                <li>
+                  <strong>Участник D:</strong> (4/30) × 50 = 6.67 CC
+                </li>
+                <li>
+                  <strong>Участник E:</strong> (2/30) × 50 = 3.33 CC
+                </li>
+              </ul>
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
