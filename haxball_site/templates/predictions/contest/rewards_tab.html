@@ -62,8 +62,8 @@
                       <th>Участник</th>
                       <th class="tw:text-center">Очки</th>
                       {% if selected_tournament.scoring_method == 'coefficients' %}
-                        <th class="tw:text-center" title="Равная доля 25% призового фонда между всеми участниками тура">Награды за участие</th>
-                        <th class="tw:text-center" title="Доля 75% призового фонда за место среди участников с положительным балансом">Награды за место</th>
+                        <th class="tw:text-center">Награды за участие</th>
+                        <th class="tw:text-center">Награды за место</th>
                       {% endif %}
                       <th class="tw:text-center">Награды</th>
                     </tr>
@@ -129,12 +129,16 @@
         <div>
           <h5 class="tw:text-lg tw:font-semibold tw:mb-3">Как формируются награды</h5>
           <ol class="tw:space-y-2">
-            <li>За каждого активного участника в общий призовой фонд тура добавляется 10 CC</li>
+            <li>
+              За каждого активного участника в общий призовой фонд тура добавляется {{ selected_tournament.prize_pool_contribution|floatformat:0 }} CC
+            </li>
             {% if selected_tournament.scoring_method == 'coefficients' %}
-              <li>25% фонда делятся поровну между всеми участниками тура</li>
+              <li>50% фонда делятся поровну между всеми участниками тура</li>
               <li>
-                75% фонда делятся между участниками с положительным балансом за тур пропорционально
-                весу места (1-е место — вес 1, 2-е — 1/√2, 3-е — 1/√3 и так далее).
+                50% фонда делятся между участниками с положительным балансом за тур пропорционально весу места
+                <br />
+                <strong>w = 1 / √place</strong> (1-е место — вес 1, 2-е — 1/√2, 3-е — 1/√3 и так далее).
+                <br />
                 При равенстве очков места делят суммарный вес поровну
               </li>
             {% else %}
@@ -242,55 +246,57 @@
             </div>
           </div>
         {% else %}
-          <div>
-            <h5 class="tw:text-lg tw:font-semibold tw:mb-3">Пример расчета</h5>
-            <div class="tw:space-y-2">
-              <p>Допустим, в туре приняли участие 5 человек:</p>
-              <ul>
-                <li>
-                  <strong>Участник A:</strong> 10 очков
-                </li>
-                <li>
-                  <strong>Участник B:</strong> 8 очков
-                </li>
-                <li>
-                  <strong>Участник C:</strong> 6 очков
-                </li>
-                <li>
-                  <strong>Участник D:</strong> 4 очка
-                </li>
-                <li>
-                  <strong>Участник E:</strong> 2 очка
-                </li>
-              </ul>
-              <p class="tw:mb-2!">
-                <strong>Призовой фонд:</strong> 5 × 10 = 50 CC
-              </p>
-              <p class="tw:mb-2!">
-                <strong>Общие очки:</strong> 10 + 8 + 6 + 4 + 2 = 30 очков
-              </p>
-              <p class="tw:mb-0!">
-                <strong>Награды:</strong>
-              </p>
-              <ul>
-                <li>
-                  <strong>Участник A:</strong> (10/30) × 50 = 16.67 CC
-                </li>
-                <li>
-                  <strong>Участник B:</strong> (8/30) × 50 = 13.33 CC
-                </li>
-                <li>
-                  <strong>Участник C:</strong> (6/30) × 50 = 10.00 CC
-                </li>
-                <li>
-                  <strong>Участник D:</strong> (4/30) × 50 = 6.67 CC
-                </li>
-                <li>
-                  <strong>Участник E:</strong> (2/30) × 50 = 3.33 CC
-                </li>
-              </ul>
+          {% with pool=5|mul:selected_tournament.prize_pool_contribution %}
+            <div>
+              <h5 class="tw:text-lg tw:font-semibold tw:mb-3">Пример расчета</h5>
+              <div class="tw:space-y-2">
+                <p>Допустим, в туре приняли участие 5 человек:</p>
+                <ul>
+                  <li>
+                    <strong>Участник A:</strong> 10 очков
+                  </li>
+                  <li>
+                    <strong>Участник B:</strong> 8 очков
+                  </li>
+                  <li>
+                    <strong>Участник C:</strong> 6 очков
+                  </li>
+                  <li>
+                    <strong>Участник D:</strong> 4 очка
+                  </li>
+                  <li>
+                    <strong>Участник E:</strong> 2 очка
+                  </li>
+                </ul>
+                <p class="tw:mb-2!">
+                  <strong>Призовой фонд:</strong> 5 × {{ selected_tournament.prize_pool_contribution|floatformat:0 }} = {{ pool|floatformat:2 }} CC
+                </p>
+                <p class="tw:mb-2!">
+                  <strong>Общие очки:</strong> 10 + 8 + 6 + 4 + 2 = 30 очков
+                </p>
+                <p class="tw:mb-0!">
+                  <strong>Награды:</strong>
+                </p>
+                <ul>
+                  <li>
+                    <strong>Участник A:</strong> (10/30) × {{ pool|floatformat:2 }} = {{ pool|mul:10|div:30|floatformat:2 }} CC
+                  </li>
+                  <li>
+                    <strong>Участник B:</strong> (8/30) × {{ pool|floatformat:2 }} = {{ pool|mul:8|div:30|floatformat:2 }} CC
+                  </li>
+                  <li>
+                    <strong>Участник C:</strong> (6/30) × {{ pool|floatformat:2 }} = {{ pool|mul:6|div:30|floatformat:2 }} CC
+                  </li>
+                  <li>
+                    <strong>Участник D:</strong> (4/30) × {{ pool|floatformat:2 }} = {{ pool|mul:4|div:30|floatformat:2 }} CC
+                  </li>
+                  <li>
+                    <strong>Участник E:</strong> (2/30) × {{ pool|floatformat:2 }} = {{ pool|mul:2|div:30|floatformat:2 }} CC
+                  </li>
+                </ul>
+              </div>
             </div>
-          </div>
+          {% endwith %}
         {% endif %}
       </div>
     </div>

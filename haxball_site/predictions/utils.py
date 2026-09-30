@@ -217,7 +217,7 @@ def calculate_tour_rewards(tour, tournament):
         return {'total_participants': 0, 'total_prize_pool': 0, 'user_rewards': []}
 
     total_participants = submissions.count()
-    total_prize_pool = total_participants * 10
+    total_prize_pool = total_participants * tournament.prize_pool_contribution
 
     user_points = []
     for submission in submissions:
@@ -261,14 +261,14 @@ def _place_weight(rank):
     return Decimal(1) / Decimal(rank).sqrt()
 
 
-BASE_SLICE = Decimal('0.25')
-PLACE_SLICE = Decimal('0.75')
+BASE_SLICE = Decimal('0.5')
+PLACE_SLICE = Decimal('0.5')
 
 
 def _calculate_hybrid_tour_rewards(user_points, total_participants, total_prize_pool):
     """Hybrid split for coefficients tournaments.
 
-    25% of the pool is shared evenly among all participants; 75% goes to
+    50% of the pool is shared evenly among all participants; 50% goes to
     eligible users (strictly positive tour balance) by place weights,
     renormalized to the used weights. Tied users pool the occupied places'
     weights and split them evenly. Rounding remainder goes to 1st place.
