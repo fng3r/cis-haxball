@@ -23,8 +23,10 @@
         <table class="tw:table tw:table-fixed tw:mb-0">
           <tbody>
             {% for player in players %}
-              <tr class="{% if player.pk == user_player_pk %}user-row{% endif %}"
-                  {% if player.pk == user_player_pk %}:class="{ 'user-row-highlight': pinned }"{% endif %}>
+              {# NOTE: rendered inside a per-league cache block shared by all users. The row's pk #}
+              {# is the same for everyone, so this stays cache-safe; userPlayerId comes from the #}
+              {# uncached Alpine scope wrapping the cached block (see tournament_detail.html). #}
+              <tr :class="{ 'user-row': {{ player.pk }} === userPlayerId, 'user-row-highlight': {{ player.pk }} === userPlayerId && pinned }">
                 <td width="45px" class="tw:pl-3 tw:pr-2 tw:text-center">
                   <span class="tw:text-base tw:font-semibold">{{ forloop.counter }}</span>
                 </td>
@@ -68,30 +70,27 @@
 {% endpartialdef %}
 
 {% partialdef statistics-tab %}
-  {% if show_rounds or show_pin_toggle %}
-    <div class="tw:flex tw:gap-2 tw:mb-3">
-      {% if show_rounds %}
-        <button x-data="{ tab: 'general'}"
-                @click="activeRoundTab = tab"
-                class="tw:btn tw:btn-xs tw:btn-primary"
-                :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">Общая</button>
-        <button x-data="{ tab: 'first'}"
-                @click="activeRoundTab = tab"
-                class="tw:btn tw:btn-xs tw:btn-outline"
-                :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">1 круг</button>
-        <button x-data="{ tab: 'second'}"
-                @click="activeRoundTab = tab"
-                class="tw:btn tw:btn-xs tw:btn-outline"
-                :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">2 круг</button>
-      {% endif %}
-      {% if show_pin_toggle %}
-        <label class="tw:ml-auto tw:mr-1 tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
-          <span class="tw:text-sm tw:font-medium">Всегда показывать мою позицию</span>
-          <input type="checkbox" x-model="pinned" class="tw:toggle tw:toggle-sm tw:toggle-primary">
-        </label>
-      {% endif %}
-    </div>
-  {% endif %}
+  <div class="tw:flex tw:gap-2 tw:mb-3">
+    {% if show_rounds %}
+      <button x-data="{ tab: 'general'}"
+              @click="activeRoundTab = tab"
+              class="tw:btn tw:btn-xs tw:btn-primary"
+              :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">Общая</button>
+      <button x-data="{ tab: 'first'}"
+              @click="activeRoundTab = tab"
+              class="tw:btn tw:btn-xs tw:btn-outline"
+              :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">1 круг</button>
+      <button x-data="{ tab: 'second'}"
+              @click="activeRoundTab = tab"
+              class="tw:btn tw:btn-xs tw:btn-outline"
+              :class="{ 'tw:btn-primary': activeRoundTab === tab, 'tw:btn-outline': activeRoundTab !== tab }">2 круг</button>
+    {% endif %}
+
+    <label x-show="isUserAuthenticated" x-cloak class="tw:ml-auto tw:mr-1 tw:flex tw:items-center tw:gap-2 tw:cursor-pointer">
+      <span class="tw:text-sm tw:font-medium">Всегда показывать мою позицию</span>
+      <input type="checkbox" x-model="pinned" class="tw:toggle tw:toggle-sm tw:toggle-primary">
+    </label>
+  </div>
 
   <div class="tw:relative">
     <div x-show="activeRoundTab === 'general'"
@@ -146,9 +145,7 @@
   </div>
 {% endpartialdef %}
 
-<div x-data="{ activeRoundTab: 'general', pinned: $persist(true).as('cis_stats_pin_user_row') }"
-     x-init="$watch('pinned', v => window.setStatPinEnabled(v))"
-     class="tw:flex tw:flex-col tw:w-full">
+<div x-data="{ activeRoundTab: 'general' }" class="tw:flex tw:flex-col tw:w-full">
   <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg">
     <input type="radio"
            name="statistics-tabs"
@@ -159,7 +156,7 @@
     <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0 tw:p-2 tw:pt-3"
          role="tabpanel"
          aria-labelledby="general-stats-tab">
-      {% with show_rounds=stats_data.show_rounds show_pin_toggle=request.user.is_authenticated general_stats=stats_data.general_stats.total first_round_stats=stats_data.first_round_stats.total second_round_stats=stats_data.second_round_stats.total %}
+      {% with show_rounds=stats_data.show_rounds general_stats=stats_data.general_stats.total first_round_stats=stats_data.first_round_stats.total second_round_stats=stats_data.second_round_stats.total %}
         {% partial statistics-tab %}
       {% endwith %}
     </div>
@@ -172,7 +169,7 @@
     <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0 tw:p-2 tw:pt-3"
          role="tabpanel"
          aria-labelledby="avg-stats-tab">
-      {% with show_rounds=stats_data.show_rounds show_pin_toggle=request.user.is_authenticated general_stats=stats_data.general_stats.avg first_round_stats=stats_data.first_round_stats.avg second_round_stats=stats_data.second_round_stats.avg %}
+      {% with show_rounds=stats_data.show_rounds general_stats=stats_data.general_stats.avg first_round_stats=stats_data.first_round_stats.avg second_round_stats=stats_data.second_round_stats.avg %}
         {% partial statistics-tab %}
       {% endwith %}
     </div>
@@ -275,9 +272,4 @@
       else removeOnePin(ref);
     });
   };
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const raw = localStorage.getItem('cis_stats_pin_user_row');
-    window.setStatPinEnabled(raw !== 'false');
-  });
 </script>
