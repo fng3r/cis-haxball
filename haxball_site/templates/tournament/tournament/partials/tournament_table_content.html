@@ -57,8 +57,8 @@
             <img src="{{ team.0.logo.url }}" alt="{{ team.0.title }}" width="28" height="28" class="tw:size-7 tw:mr-2 tw:object-contain">
             {{ team.0.title|truncatechars:25 }}
           </a>
-          {% if stage.type == 'REG' %}
-            {% if forloop.counter == 1 and forloop.counter <= stage.awarded_count %}
+          {% if awarded_count %}
+            {% if forloop.counter == 1 and forloop.counter <= awarded_count %}
               <span class="tw:ml-1 tw:inline-flex tw:align-middle" data-tip="1 место">
                 <svg class="tw:size-5.5" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M8 1h3.2L10 9H6.8L8 1Z" fill="#3b82f6" />
@@ -67,7 +67,7 @@
                   <text x="12" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff">1</text>
                 </svg>
               </span>
-            {% elif forloop.counter == 2 and forloop.counter <= stage.awarded_count %}
+            {% elif forloop.counter == 2 and forloop.counter <= awarded_count %}
               <span class="tw:ml-1 tw:inline-flex tw:align-middle" data-tip="2 место">
                 <svg class="tw:size-5.5" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M8 1h3.2L10 9H6.8L8 1Z" fill="#3b82f6" />
@@ -76,7 +76,7 @@
                   <text x="12" y="18" text-anchor="middle" font-size="7" font-weight="bold" fill="#fff">2</text>
                 </svg>
               </span>
-            {% elif forloop.counter == 3 and forloop.counter <= stage.awarded_count %}
+            {% elif forloop.counter == 3 and forloop.counter <= awarded_count %}
               <span class="tw:ml-1 tw:inline-flex tw:align-middle" data-tip="3 место">
                 <svg class="tw:size-5.5" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M8 1h3.2L10 9H6.8L8 1Z" fill="#3b82f6" />
