@@ -15,125 +15,130 @@
 {% endblock %}
 
 {% block main_content %}
-  {% cache 60 tournament_page league.id %}
-    <div class="tw:card tw:bg-base-100 tw:rounded-lg">
-      <div class="tw:flex tw:items-stretch tw:gap-x-4 tw:bg-base-300/50 tw:rounded-t-lg tw:border-b tw:border-gray-300 tw:p-4">
-        <div class="tw:flex tw:items-center tw:py-1 tw:flex-shrink-0">
-          {% if league.logo %}
-            <img src="{{ league.logo.url }}"
-                 class="tw:bg-white tw:rounded-box tw:p-2 tw:shadow-lg tw:h-full tw:w-auto {% if league.championship.is_active %}tw:max-h-34{% else %}tw:max-h-24{% endif %}">
-          {% else %}
-            <img src="{% static "img/logo_try.png" %}"
-                 class="tw:bg-white tw:rounded-box tw:p-2 tw:shadow-lg tw:h-full tw:w-auto {% if league.championship.is_active %}tw:max-h-34{% else %}tw:max-h-24{% endif %}">
-          {% endif %}
-        </div>
-        <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:items-start tw:gap-y-2">
-          <div class="tw:flex tw:flex-col tw:gap-y-1">
-            <h3 class="tw:text-left tw:flex tw:items-center tw:justify-start tw:font-bold tw:mb-0!">{{ league.title }}</h3>
-            <div class="tw:flex tw:items-center tw:gap-2">
-              <span class="tw:text-lg tw:text-base-content/70 tw:font-semibold">{{ league.championship.short_title }}</span>
-              <button class="tw:btn tw:btn-xs tw:btn-outline" onclick="winner_archive_modal.showModal()">
-                <i class="fa fa-archive" aria-hidden="true"></i>
-                <span class="tw:hidden tw:sm:inline">Архив</span>
-              </button>
-            </div>
-            {% if quick_links %}
-              <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:text-sm tw:mt-1">
-                {% for quick_link in quick_links %}
-                  <a href="{{ quick_link.url }}"
-                     class="tw:btn tw:badge tw:badge-soft tw:font-semibold tw:hover:[background-color:color-mix(in_oklab,var(--badge-color,var(--color-base-content))_8%,var(--color-base-200))]">
-                    {{ quick_link.label }}
-                  </a>
-                {% endfor %}
-              </div>
+  {# Alpine scope for the user-dependent bits inside the cached block below. The cached HTML #}
+  {# stays identical for everyone; the per-request user pk / auth flag are provided here. #}
+  <div x-data="{ userPlayerId: {{ user_player_pk|default_if_none:'null' }}, isUserAuthenticated: {{ request.user.is_authenticated|yesno:'true,false' }}, pinned: $persist(true).as('cis_stats_pin_user_row') }"
+       x-init="$watch('pinned', v => window.setStatPinEnabled(v)); $nextTick(() => window.setStatPinEnabled(pinned))">
+    {% cache 60 tournament_page league.id %}
+      <div class="tw:card tw:bg-base-100 tw:rounded-lg">
+        <div class="tw:flex tw:items-stretch tw:gap-x-4 tw:bg-base-300/50 tw:rounded-t-lg tw:border-b tw:border-gray-300 tw:p-4">
+          <div class="tw:flex tw:items-center tw:py-1 tw:flex-shrink-0">
+            {% if league.logo %}
+              <img src="{{ league.logo.url }}"
+                   class="tw:bg-white tw:rounded-box tw:p-2 tw:shadow-lg tw:h-full tw:w-auto {% if league.championship.is_active %}tw:max-h-34{% else %}tw:max-h-24{% endif %}">
+            {% else %}
+              <img src="{% static "img/logo_try.png" %}"
+                   class="tw:bg-white tw:rounded-box tw:p-2 tw:shadow-lg tw:h-full tw:w-auto {% if league.championship.is_active %}tw:max-h-34{% else %}tw:max-h-24{% endif %}">
             {% endif %}
           </div>
-
-          {% if league.championship.is_active %}
-            {% tournament_timeline league as timeline %}
-            {% if timeline %}
-              <div class="tw:w-full tw:flex tw:flex-col tw:gap-1 tw:mt-2 tw:max-w-[500px]">
-                <div class="tw:mx-2.5 tw:relative tw:h-2 tw:bg-base-100">
-                  <div class="tw:h-full tw:bg-base-content tw:rounded-full" style="width: {{ timeline.progress }}%"></div>
-                  <div class="tw:absolute tw:left-0 tw:top-1/2 tw:-translate-y-1/2 tw:-translate-x-1/2 tw:size-5 tw:bg-base-content tw:border-3 tw:border-base-300 tw:rounded-full">
-                  </div>
-                  <div class="tw:absolute tw:right-0 tw:top-1/2 tw:-translate-y-1/2 tw:translate-x-1/2 tw:size-5 tw:bg-base-content tw:border-3 tw:border-base-300 tw:rounded-full tw:flex tw:items-center tw:justify-center">
-                    {% if timeline.progress == 100 %}<i class="fa fa-check tw:text-xs! tw:text-base-300" aria-hidden="true"></i>{% endif %}
-                  </div>
-                </div>
-                <div class="tw:flex tw:justify-between tw:mt-1">
-                  <span class="tw:text-sm">{{ timeline.start_date|date:"d.m" }}</span>
-                  <span class="tw:text-sm">{{ timeline.end_date|date:"d.m" }}</span>
-                </div>
+          <div class="tw:w-full tw:flex tw:flex-col tw:justify-center tw:items-start tw:gap-y-2">
+            <div class="tw:flex tw:flex-col tw:gap-y-1">
+              <h3 class="tw:text-left tw:flex tw:items-center tw:justify-start tw:font-bold tw:mb-0!">{{ league.title }}</h3>
+              <div class="tw:flex tw:items-center tw:gap-2">
+                <span class="tw:text-lg tw:text-base-content/70 tw:font-semibold">{{ league.championship.short_title }}</span>
+                <button class="tw:btn tw:btn-xs tw:btn-outline" onclick="winner_archive_modal.showModal()">
+                  <i class="fa fa-archive" aria-hidden="true"></i>
+                  <span class="tw:hidden tw:sm:inline">Архив</span>
+                </button>
               </div>
+              {% if quick_links %}
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2 tw:text-sm tw:mt-1">
+                  {% for quick_link in quick_links %}
+                    <a href="{{ quick_link.url }}"
+                       class="tw:btn tw:badge tw:badge-soft tw:font-semibold tw:hover:[background-color:color-mix(in_oklab,var(--badge-color,var(--color-base-content))_8%,var(--color-base-200))]">
+                      {{ quick_link.label }}
+                    </a>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            {% if league.championship.is_active %}
+              {% tournament_timeline league as timeline %}
+              {% if timeline %}
+                <div class="tw:w-full tw:flex tw:flex-col tw:gap-1 tw:mt-2 tw:max-w-[500px]">
+                  <div class="tw:mx-2.5 tw:relative tw:h-2 tw:bg-base-100">
+                    <div class="tw:h-full tw:bg-base-content tw:rounded-full" style="width: {{ timeline.progress }}%"></div>
+                    <div class="tw:absolute tw:left-0 tw:top-1/2 tw:-translate-y-1/2 tw:-translate-x-1/2 tw:size-5 tw:bg-base-content tw:border-3 tw:border-base-300 tw:rounded-full">
+                    </div>
+                    <div class="tw:absolute tw:right-0 tw:top-1/2 tw:-translate-y-1/2 tw:translate-x-1/2 tw:size-5 tw:bg-base-content tw:border-3 tw:border-base-300 tw:rounded-full tw:flex tw:items-center tw:justify-center">
+                      {% if timeline.progress == 100 %}<i class="fa fa-check tw:text-xs! tw:text-base-300" aria-hidden="true"></i>{% endif %}
+                    </div>
+                  </div>
+                  <div class="tw:flex tw:justify-between tw:mt-1">
+                    <span class="tw:text-sm">{{ timeline.start_date|date:"d.m" }}</span>
+                    <span class="tw:text-sm">{{ timeline.end_date|date:"d.m" }}</span>
+                  </div>
+                </div>
+              {% endif %}
             {% endif %}
-          {% endif %}
+          </div>
+        </div>
+
+        <div class="tw:tabs tw:tabs-box tw:px-0! tw:py-0! tw:bg-base-200! tw:rounded-b-lg" role="tablist">
+          <input type="radio"
+                 name="tournament-tabs"
+                 id="tournament-tab"
+                 class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
+                 aria-controls="tournament-panel"
+                 aria-label="Турнир"
+                 checked />
+          <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
+               id="tournament-panel"
+               role="tabpanel"
+               aria-labelledby="tournament-tab">
+            {% with stages=league.stages.all %}
+              {% if stages|length == 1 %}
+                {% with stage=stages.0 %}
+                  {% include 'tournament/tournament/partials/stage.html' %}
+                {% endwith %}
+              {% else %}
+                <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg" role="tablist">
+                  {% for stage in stages %}
+                    <input type="radio"
+                           name="stage-tabs"
+                           id="stage-{{ forloop.counter }}-tab"
+                           class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!"
+                           aria-controls="stage-{{ forloop.counter }}-panel"
+                           aria-label="{{ stage.stage_name }}"
+                           {% if stage == default_stage %}checked{% endif %} />
+                    <div id="stage-{{ forloop.counter }}-panel"
+                         class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0"
+                         role="tabpanel"
+                         aria-labelledby="stage-{{ forloop.counter }}-tab">{% include 'tournament/tournament/partials/stage.html' %}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+          </div>
+
+          <input type="radio"
+                 name="tournament-tabs"
+                 id="stats-tab"
+                 class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
+                 aria-controls="stats-panel"
+                 aria-label="Статистика" />
+          <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
+               id="stats-panel"
+               role="tabpanel"
+               aria-labelledby="stats-tab">{% include 'tournament/tournament/partials/tournament_stats.html' %}</div>
+
+          <input type="radio"
+                 name="tournament-tabs"
+                 id="matches-tab"
+                 class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
+                 aria-controls="matches-panel"
+                 aria-label="Матчи" />
+          <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
+               id="matches-panel"
+               role="tabpanel"
+               aria-labelledby="matches-tab">{% include 'tournament/tournament/partials/tournament_schedule.html' %}</div>
         </div>
       </div>
 
-      <div class="tw:tabs tw:tabs-box tw:px-0! tw:py-0! tw:bg-base-200! tw:rounded-b-lg" role="tablist">
-        <input type="radio"
-               name="tournament-tabs"
-               id="tournament-tab"
-               class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
-               aria-controls="tournament-panel"
-               aria-label="Турнир"
-               checked />
-        <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
-             id="tournament-panel"
-             role="tabpanel"
-             aria-labelledby="tournament-tab">
-          {% with stages=league.stages.all %}
-            {% if stages|length == 1 %}
-              {% with stage=stages.0 %}
-                {% include 'tournament/tournament/partials/stage.html' %}
-              {% endwith %}
-            {% else %}
-              <div class="tw:tabs tw:tabs-border tw:gap-x-2 tw:bg-base-100! tw:p-0! tw:tabs-lg tw:rounded-b-lg" role="tablist">
-                {% for stage in stages %}
-                  <input type="radio"
-                         name="stage-tabs"
-                         id="stage-{{ forloop.counter }}-tab"
-                         class="tw:tab tw:ml-1 tw:px-3! tw:shadow-none!"
-                         aria-controls="stage-{{ forloop.counter }}-panel"
-                         aria-label="{{ stage.stage_name }}"
-                         {% if stage == default_stage %}checked{% endif %} />
-                  <div id="stage-{{ forloop.counter }}-panel"
-                       class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg tw:border-0"
-                       role="tabpanel"
-                       aria-labelledby="stage-{{ forloop.counter }}-tab">{% include 'tournament/tournament/partials/stage.html' %}</div>
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endwith %}
-        </div>
-
-        <input type="radio"
-               name="tournament-tabs"
-               id="stats-tab"
-               class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
-               aria-controls="stats-panel"
-               aria-label="Статистика" />
-        <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
-             id="stats-panel"
-             role="tabpanel"
-             aria-labelledby="stats-tab">{% include 'tournament/tournament/partials/tournament_stats.html' %}</div>
-
-        <input type="radio"
-               name="tournament-tabs"
-               id="matches-tab"
-               class="tw:tab tw:w-1/3 tw:grow tw:font-semibold"
-               aria-controls="matches-panel"
-               aria-label="Матчи" />
-        <div class="tw:tab-content tw:bg-base-100 tw:border-base-300 tw:rounded-b-lg"
-             id="matches-panel"
-             role="tabpanel"
-             aria-labelledby="matches-tab">{% include 'tournament/tournament/partials/tournament_schedule.html' %}</div>
-      </div>
-    </div>
-
-    {% include 'tournament/tournament/partials/winner_archive_modal.html' %}
-  {% endcache %}
+      {% include 'tournament/tournament/partials/winner_archive_modal.html' %}
+    {% endcache %}
+  </div>
 {% endblock %}
 
 {% block comments %}

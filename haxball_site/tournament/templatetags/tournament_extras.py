@@ -584,6 +584,7 @@ def tournament_table(
 
     table = get_league_table(league, stage, group, carryover_cache=carryover_cache)
     has_penalties = any(x[10] > 0 for x in table)
+    awarded_count = group.awarded_count if group is not None else stage.awarded_count
     marker_classes, marker_labels = get_table_marker_classes(stage, group, len(table))
 
     has_carryover = stage is not None and stage.has_carryover
@@ -610,6 +611,7 @@ def tournament_table(
         'has_penalties': has_penalties,
         'marker_classes': marker_classes,
         'marker_labels': marker_labels,
+        'awarded_count': awarded_count,
         'has_carryover': has_carryover,
         'stage_only_table': stage_only_table,
         'first_half_table': first_half_table,

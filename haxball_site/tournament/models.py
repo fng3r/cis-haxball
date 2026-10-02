@@ -470,6 +470,12 @@ class Group(models.Model):
 
     name = models.CharField('Название группы', max_length=50)
 
+    awarded_count = models.PositiveSmallIntegerField(
+        'Кол-во команд, награждаемых медалями',
+        choices=[(i, i) for i in range(0, 4)],
+        default=0,
+    )
+
     def __str__(self):
         return self.name
 

@@ -739,7 +739,7 @@ class GroupInline(UnfoldStackedInline):
     model = Group
     tab = True
     extra = 1
-    fields = ('stage', 'name', 'teams')
+    fields = ('stage', 'name', 'awarded_count', 'teams')
     filter_horizontal = ('teams',)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
