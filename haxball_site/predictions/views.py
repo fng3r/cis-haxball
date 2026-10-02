@@ -39,6 +39,8 @@ from .utils import (
     build_match_outcome_groups_map,
     build_match_outcomes_map,
     calculate_tour_rewards,
+    collect_tour_prediction_stats,
+    collect_tours_overview,
     get_regular_tours,
     get_tournament_standings,
     is_tour_open_for_predictions,
@@ -813,3 +815,65 @@ def rewards_tab(request):
     }
 
     return render(request, 'predictions/contest/rewards_tab.html', context)
+
+
+def stats_tab(request):
+    """Stats tab for coefficient-based predictions: per-tour insights + overview."""
+    selected_tournament, tournament_form = resolve_selected_tournament(request)
+    selected_tour, tour_form = resolve_selected_tour(request, selected_tournament)
+
+    is_coefficients = (
+        selected_tournament is not None
+        and selected_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
+    )
+
+    tour_stats = None
+    tours_overview = []
+    stats_hidden = False
+
+    if selected_tournament and is_coefficients:
+        tours = list(
+            get_regular_tours(selected_tournament.league).prefetch_related(
+                'tour_matches__team_home',
+                'tour_matches__team_guest',
+                'tour_matches__result',
+                'tour_matches__prediction_offer__outcomes',
+            )
+        )
+
+        all_submissions = (
+            PredictionSubmission.objects.filter(tournament=selected_tournament)
+            .select_related('user', 'tournament', 'tour')
+            .prefetch_related(
+                'predictions__match__result',
+                'predictions__match__team_home',
+                'predictions__match__team_guest',
+                'predictions__outcome__offer',
+                'user__user_profile',
+            )
+        )
+        submissions_by_tour = defaultdict(list)
+        for submission in all_submissions:
+            submissions_by_tour[submission.tour_id].append(submission)
+
+        tours_overview = collect_tours_overview(selected_tournament, tours, submissions_by_tour)
+
+        if selected_tour:
+            tour_full = next((tour for tour in tours if tour.id == selected_tour.id), selected_tour)
+            matches = list(sorted(tour_full.tour_matches.all(), key=lambda match: match.id))
+            tour_submissions = submissions_by_tour.get(selected_tour.id, [])
+            stats_hidden = is_tour_open_for_predictions(selected_tour)
+            tour_stats = collect_tour_prediction_stats(selected_tour, selected_tournament, tour_submissions, matches)
+
+    context = {
+        'tournament_form': tournament_form,
+        'selected_tournament': selected_tournament,
+        'tour_form': tour_form,
+        'selected_tour': selected_tour,
+        'is_coefficients': is_coefficients,
+        'tour_stats': tour_stats,
+        'tours_overview': tours_overview,
+        'stats_hidden': stats_hidden,
+    }
+
+    return render(request, 'predictions/contest/stats_tab.html', context)

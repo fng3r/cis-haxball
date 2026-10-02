@@ -1,0 +1,328 @@
+{% load static %}
+{% load widget_tweaks %}
+
+<div class="tw:space-y-4">
+  {% if not selected_tournament %}
+    <div class="tw:text-center tw:text-base-content/70 tw:py-8">Данная секция будет доступна после запуска турниров</div>
+  {% elif not is_coefficients %}
+    <div class="tw:text-center tw:text-base-content/70 tw:py-8">Статистика доступна только для турниров в формате «Коэффициенты»</div>
+  {% else %}
+    {% if not selected_tour %}
+      <div class="tw:p-8 tw:text-center tw:text-base tw:text-base-content/70">В данном турнире еще не было сделано ни одного прогноза</div>
+    {% else %}
+      <form class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center"
+            hx-get="{% url 'predictions:stats_tab' %}?tournament={{ selected_tournament.pk }}"
+            hx-target="#stats-content"
+            hx-swap="innerHTML"
+            hx-trigger="change">
+        <div class="tw:flex tw:flex-col tw:gap-1">
+          <label class="tw:label tw:text-base-content tw:font-bold">Тур</label>
+          {{ tour_form.tour|add_class:"tw:select" }}
+        </div>
+      </form>
+
+      <div class="tw:[#stats-content:has(.htmx-request)_&]:opacity-50 tw:[#stats-content:has(.htmx-request)_&]:transition-opacity tw:space-y-4">
+        {% if tour_stats %}
+          <div class="tw:flex tw:justify-between tw:items-center">
+            <div class="tw:flex tw:items-center tw:gap-2">
+              <h4 class="tw:text-lg tw:font-semibold">{{ tour_stats.tour.number }} тур</h4>
+              {% if tour_stats.tour.is_started %}
+                <div class="tw:badge tw:badge-neutral">
+                  {% if tour_stats.tour.is_actual %}
+                    Не завершен
+                  {% else %}
+                    Завершен
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if stats_hidden %}
+            <div class="tw:alert tw:alert-warning tw:alert-soft">
+              <i class="fa fa-clock-o"></i>
+              <span>Детальная статистика тура появится после закрытия приёма прогнозов</span>
+            </div>
+          {% endif %}
+
+          {% if tour_stats.participants == 0 %}
+            <div class="tw:text-center tw:text-base-content/70 tw:py-4">Нет участников в этом туре</div>
+          {% else %}
+            <div class="tw:grid tw:grid-cols-2 tw:lg:grid-cols-5 tw:gap-4">
+              <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                <div class="tw:card-body tw:p-4">
+                  <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">Участники</h6>
+                  <div class="tw:text-2xl tw:font-bold">{{ tour_stats.participants }}</div>
+                  <div class="tw:text-xs tw:opacity-70">{{ tour_stats.total_predictions }} прогнозов</div>
+                </div>
+              </div>
+              <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                <div class="tw:card-body tw:p-4">
+                  <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">Точность прогнозов</h6>
+                  <div class="tw:text-2xl tw:font-bold">
+                    {% if tour_stats.accuracy is not None %}
+                      {{ tour_stats.accuracy|floatformat:1 }}%
+                    {% else %}
+                      -
+                    {% endif %}
+                  </div>
+                  <div class="tw:text-xs tw:opacity-70">
+                    {{ tour_stats.correct }} из {{ tour_stats.decisive }}
+                    {% if tour_stats.void_count %}· возвратов: {{ tour_stats.void_count }}{% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                <div class="tw:card-body tw:p-4">
+                  <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">Средний баланс</h6>
+                  <div class="tw:text-2xl tw:font-bold">
+                    {% if tour_stats.avg_points is not None %}
+                      {{ tour_stats.avg_points|floatformat:0 }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </div>
+                  <div class="tw:text-xs tw:opacity-70">номинал {{ selected_tournament.nominal_points|floatformat:0 }}</div>
+                </div>
+              </div>
+              <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                <div class="tw:card-body tw:p-4">
+                  <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">Лучший результат</h6>
+                  <div class="tw:text-2xl tw:font-bold">
+                    {% if tour_stats.best_points is not None %}
+                      <span class="{% if tour_stats.best_points > 0 %}tw:text-success{% elif tour_stats.best_points < 0 %}tw:text-error{% endif %}">
+                        {# djlint:off #}
+                        {% if tour_stats.best_points > 0 %}+{% endif %}{{ tour_stats.best_points|floatformat:0 }}
+                        {# djlint:on #}
+                      </span>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </div>
+                  <div class="tw:text-xs tw:opacity-70">
+                    {% for user in tour_stats.best_users|slice:":5" %}
+                      {{ user.username }}
+                      {% if not forloop.last %}·{% endif %}
+                    {% endfor %}
+                    {% if tour_stats.best_users|length > 5 %}+{{ tour_stats.best_users|length|add:"-5" }}{% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                <div class="tw:card-body tw:p-4">
+                  <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">Худший результат</h6>
+                  <div class="tw:text-2xl tw:font-bold">
+                    {% if tour_stats.worst_points is not None %}
+                      <span class="{% if tour_stats.worst_points > 0 %}tw:text-success{% elif tour_stats.worst_points < 0 %}tw:text-error{% endif %}">{{ tour_stats.worst_points|floatformat:0 }}</span>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </div>
+                  <div class="tw:text-xs tw:opacity-70">
+                    {% for user in tour_stats.worst_users|slice:":5" %}
+                      {{ user.username }}
+                      {% if not forloop.last %}·{% endif %}
+                    {% endfor %}
+                    {% if tour_stats.worst_users|length > 5 %}+{{ tour_stats.worst_users|length|add:"-5" }}{% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% if not stats_hidden %}
+              <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:xl:grid-cols-3 tw:gap-4">
+                <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                  <div class="tw:card-body tw:p-4">
+                    <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">
+                      <i class="fa fa-fire"></i> Крупнейший выигрыш
+                    </h6>
+                    {% if tour_stats.biggest_win %}
+                      <div class="tw:text-lg tw:font-bold tw:text-success">+{{ tour_stats.biggest_win.points|floatformat:0 }}</div>
+                      <div class="tw:text-sm">
+                        {% for user in tour_stats.biggest_win_users|slice:":5" %}
+                          {{ user.username }}
+                          {% if not forloop.last %}·{% endif %}
+                        {% endfor %}
+                        {% if tour_stats.biggest_win_users|length > 5 %}+{{ tour_stats.biggest_win_users|length|add:"-5" }}{% endif %}
+                      </div>
+                      <div class="tw:text-xs tw:opacity-70">
+                        {{ tour_stats.biggest_win.match.team_home.title }} – {{ tour_stats.biggest_win.match.team_guest.title }} · {{ tour_stats.biggest_win.outcome_label }} ×{{ tour_stats.biggest_win.coefficient }}
+                      </div>
+                    {% else %}
+                      <div class="tw:text-sm tw:opacity-60">Пока нет выигрышных прогнозов</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                  <div class="tw:card-body tw:p-4">
+                    <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">
+                      <i class="fa fa-line-chart"></i> Самый прибыльный матч
+                    </h6>
+                    {% if tour_stats.most_profitable_match %}
+                      <div class="tw:text-sm">
+                        {{ tour_stats.most_profitable_match.match.team_home.title }} – {{ tour_stats.most_profitable_match.match.team_guest.title }}
+                      </div>
+                      <div class="tw:text-lg tw:font-bold {% if tour_stats.most_profitable_match.avg_points > 0 %}tw:text-success{% elif tour_stats.most_profitable_match.avg_points < 0 %}tw:text-error{% endif %}">
+                        {# djlint:off #}
+                        {% if tour_stats.most_profitable_match.avg_points > 0 %}+{% endif %}{{ tour_stats.most_profitable_match.avg_points|floatformat:0 }}
+                        {# djlint:on #}
+                      </div>
+                      <div class="tw:text-xs tw:opacity-70">в среднем за прогноз · прогнозов: {{ tour_stats.most_profitable_match.total_picks }}</div>
+                    {% else %}
+                      <div class="tw:text-sm tw:opacity-60">Матчи тура ещё не сыграны</div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                  <div class="tw:card-body tw:p-4">
+                    <h6 class="tw:font-semibold tw:text-sm tw:opacity-70">
+                      <i class="fa fa-arrow-down"></i> Самый убыточный матч
+                    </h6>
+                    {% if tour_stats.least_profitable_match %}
+                      <div class="tw:text-sm">
+                        {{ tour_stats.least_profitable_match.match.team_home.title }} – {{ tour_stats.least_profitable_match.match.team_guest.title }}
+                      </div>
+                      <div class="tw:text-lg tw:font-bold {% if tour_stats.least_profitable_match.avg_points > 0 %}tw:text-success{% elif tour_stats.least_profitable_match.avg_points < 0 %}tw:text-error{% endif %}">
+                        {{ tour_stats.least_profitable_match.avg_points|floatformat:0 }}
+                      </div>
+                      <div class="tw:text-xs tw:opacity-70">в среднем за прогноз · прогнозов: {{ tour_stats.least_profitable_match.total_picks }}</div>
+                    {% else %}
+                      <div class="tw:text-sm tw:opacity-60">Матчи тура ещё не сыграны</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="tw:grid tw:grid-cols-1 tw:xl:grid-cols-2 tw:gap-4">
+                {% for m in tour_stats.matches %}
+                  <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+                    <div class="tw:card-body tw:p-4 tw:gap-2">
+                      <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                        <h6 class="tw:font-semibold tw:mb-0!">
+                          {{ m.match.team_home.title }} – {{ m.match.team_guest.title }}
+                          {% if m.match.is_played %}
+                            <span class="tw:badge tw:badge-sm tw:badge-neutral tw:ml-1">{{ m.match.score_home }}:{{ m.match.score_guest }}</span>
+                          {% endif %}
+                        </h6>
+                        <div class="tw:flex tw:items-center tw:gap-2 tw:text-xs tw:opacity-70">
+                          <span title="Прогнозов на матч">{{ m.total_picks }} <i class="fa fa-users"></i></span>
+                          {% if m.accuracy is not None %}
+                            <span class="tw:badge tw:badge-sm {% if m.accuracy >= 50 %}tw:badge-success{% else %}tw:badge-error{% endif %} tw:badge-soft">{{ m.accuracy|floatformat:0 }}% зашло</span>
+                          {% endif %}
+                          {% if m.avg_coefficient is not None %}
+                            <span title="Средний взятый коэффициент">ср. ×{{ m.avg_coefficient|floatformat:2 }}</span>
+                          {% endif %}
+                        </div>
+                      </div>
+                      {% if m.total_picks == 0 %}
+                        <div class="tw:text-sm tw:opacity-60">Прогнозов на матч нет</div>
+                      {% else %}
+                        <div class="tw:space-y-1.5">
+                          {% for row in m.outcomes %}
+                            {% if row.count > 0 %}
+                              <div class="tw:grid tw:grid-cols-[minmax(0,8rem)_3rem_minmax(0,1fr)_4.5rem] tw:items-center tw:gap-2 tw:text-sm">
+                                <span class="tw:font-medium tw:truncate">
+                                  {{ row.outcome.display_label }}
+                                  {% if m.match.is_played %}
+                                    {% if row.is_winning is True %}
+                                      <span class="tw:text-success tw:font-bold">✓</span>
+                                    {% elif row.is_winning is False %}
+                                      <span class="tw:text-error tw:font-bold">✗</span>
+                                    {% elif row.is_winning is None %}
+                                      <span class="tw:text-warning tw:font-bold" title="Возврат">=</span>
+                                    {% endif %}
+                                  {% endif %}
+                                </span>
+                                <span class="tw:badge tw:badge-xs tw:badge-ghost tw:justify-self-start tw:tabular-nums">×{{ row.outcome.coefficient }}</span>
+                                <div class="tw:h-2 tw:rounded tw:bg-base-300 tw:overflow-hidden">
+                                  <div class="tw:h-full tw:rounded {% if m.match.is_played %}{% if row.is_winning is True %}tw:bg-success{% elif row.is_winning is False %}tw:bg-error{% else %}tw:bg-warning{% endif %}{% else %}tw:bg-primary{% endif %}"
+                                       style="width: {{ row.pct|floatformat:0 }}%"></div>
+                                </div>
+                                <span class="tw:text-right tw:text-xs tw:opacity-70 tw:tabular-nums">{{ row.count }} ({{ row.pct|floatformat:0 }}%)</span>
+                              </div>
+                            {% endif %}
+                          {% endfor %}
+                        </div>
+                        {% if m.top_outcome %}
+                          <div class="tw:text-xs tw:opacity-70">
+                            Самый популярный: <strong>{{ m.top_outcome.outcome.display_label }}</strong> ×{{ m.top_outcome.outcome.coefficient }} — {{ m.top_outcome.pct|floatformat:0 }}% выборов
+                          </div>
+                        {% endif %}
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+
+        {% if tours_overview %}
+          <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+            <div class="tw:card-body tw:p-4">
+              <h5 class="tw:font-semibold">Обзор по турам</h5>
+              <div class="tw:overflow-x-auto">
+                <table class="tw:table tw:table-zebra tw:table-sm">
+                  <thead>
+                    <tr>
+                      <th class="tw:text-center">Тур</th>
+                      <th class="tw:text-center">Участники</th>
+                      <th class="tw:text-center">Точность</th>
+                      <th class="tw:text-center">Ср. баланс</th>
+                      <th>Лучший</th>
+                      <th>Худший</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in tours_overview %}
+                      <tr {% if selected_tour and row.tour.id == selected_tour.id %}class="tw:bg-primary/10"{% endif %}>
+                        <td class="tw:text-center tw:font-bold">{{ row.tour.number }}</td>
+                        <td class="tw:text-center">{{ row.participants }}</td>
+                        <td class="tw:text-center">
+                          {% if row.has_played_matches and row.accuracy is not None %}
+                            {{ row.accuracy|floatformat:1 }}%
+                          {% else %}
+                            <span class="tw:opacity-50">-</span>
+                          {% endif %}
+                        </td>
+                        <td class="tw:text-center">
+                          {% if row.has_played_matches and row.avg_points is not None %}
+                            {{ row.avg_points|floatformat:0 }}
+                          {% else %}
+                            <span class="tw:opacity-50">-</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if row.has_played_matches and row.best_points is not None %}
+                            {% for user in row.best_users %}
+                              {{ user.username }}
+                              {% if not forloop.last %}·{% endif %}
+                            {% endfor %}
+                            ({{ row.best_points|floatformat:0 }})
+                          {% else %}
+                            <span class="tw:opacity-50">-</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if row.has_played_matches and row.worst_points is not None %}
+                            {% for user in row.worst_users %}
+                              {{ user.username }}
+                              {% if not forloop.last %}·{% endif %}
+                            {% endfor %}
+                            ({{ row.worst_points|floatformat:0 }})
+                          {% else %}
+                            <span class="tw:opacity-50">-</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
