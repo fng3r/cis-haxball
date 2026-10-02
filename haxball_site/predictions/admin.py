@@ -46,25 +46,50 @@ class PredictionsContestTournamentAdmin(UnfoldModelAdmin):
         'points_for_win_prediction',
         'points_for_draw_prediction',
         'special_match_points_delta',
+        'prize_pool_contribution',
+        'first_place_prize',
+        'second_place_prize',
+        'third_place_prize',
     ]
     conditional_fields = {
-        'nominal_points': "scoring_method == 'coefficients'",
-        'points_for_win_prediction': "scoring_method == 'classic'",
-        'points_for_draw_prediction': "scoring_method == 'classic'",
-        'special_match_points_delta': "scoring_method == 'classic'",
+        'nominal_points': 'scoring_method == "coefficients"',
+        'points_for_win_prediction': 'scoring_method == "classic"',
+        'points_for_draw_prediction': 'scoring_method == "classic"',
+        'special_match_points_delta': 'scoring_method == "classic"',
     }
-    list_editable = [
+    list_editable = ['is_active']
+    list_filter = [
+        ('league__championship', RelatedDropdownFilter),
         'is_active',
-        'scoring_method',
-        'nominal_points',
-        'points_for_win_prediction',
-        'points_for_draw_prediction',
-        'special_match_points_delta',
     ]
-    list_filter = ['is_active']
-    list_filter_sheet = False
+    list_filter_sheet = True
     search_fields = ['league__title']
     ordering = ['-id']
+    fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'league',
+                    'is_active',
+                    'scoring_method',
+                    'nominal_points',
+                    'points_for_win_prediction',
+                    'points_for_draw_prediction',
+                    'special_match_points_delta',
+                )
+            },
+        ),
+        (
+            'Награды',
+            {
+                'fields': (
+                    'prize_pool_contribution',
+                    ('first_place_prize', 'second_place_prize', 'third_place_prize'),
+                )
+            },
+        ),
+    )
 
 
 STANDARD_RESULT_SELECTIONS = ['HW', 'HWD', 'D', 'AWD', 'AW']

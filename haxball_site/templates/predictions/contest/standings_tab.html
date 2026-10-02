@@ -22,7 +22,7 @@
               <tr>
                 <th class="tw:text-center">Место</th>
                 <th>Пользователь</th>
-                {% for tour in selected_tournament.league.tours.all %}
+                {% for tour in tours %}
                   <td class="tw:text-center" title="{{ tour.date_from|date:'d.m.y' }} – {{ tour.date_to|date:'d.m.y' }}">{{ tour.number }}</td>
                 {% endfor %}
                 <td class="tw:text-center tw:font-bold">Точность</td>
@@ -63,23 +63,23 @@
 
                       {% if standing.place == 1 %}
                         <span class="tw:ml-0.5 tw:badge tw:badge-sm tw:badge-primary tw:px-1.5 tw:gap-0.75">
-                          250
+                          {{ selected_tournament.first_place_prize|floatformat:0 }}
                           <img src="{% static 'img/cis-coin.png' %}" alt="CIS Coin" class="tw:size-4">
                         </span>
                       {% elif standing.place == 2 %}
                         <span class="tw:ml-0.5 tw:badge tw:badge-sm tw:badge-primary tw:px-1.5 tw:gap-0.75">
-                          150
+                          {{ selected_tournament.second_place_prize|floatformat:0 }}
                           <img src="{% static 'img/cis-coin.png' %}" alt="CIS Coin" class="tw:size-4">
                         </span>
                       {% elif standing.place == 3 %}
                         <span class="tw:ml-0.5 tw:badge tw:badge-sm tw:badge-primary tw:px-1.5 tw:gap-0.75">
-                          100
+                          {{ selected_tournament.third_place_prize|floatformat:0 }}
                           <img src="{% static 'img/cis-coin.png' %}" alt="CIS Coin" class="tw:size-4">
                         </span>
                       {% endif %}
                     </div>
                   </th>
-                  {% for tour in selected_tournament.league.tours.all %}
+                  {% for tour in tours %}
                     <td class="tw:text-center">
                       {% if tour_points|get_item:standing.user.id|get_item:tour.id is not None %}
                         <span class="tw:font-semibold">{{ tour_points|get_item:standing.user.id|get_item:tour.id|floatformat:-2 }}</span>

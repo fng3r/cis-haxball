@@ -38,14 +38,14 @@ class PredictionsContestTournament(models.Model):
         '−номинал за неверный',
     )
     points_for_win_prediction = models.DecimalField(
-        'Очки за верный прогноз победителя',
+        'Очки за угаданного победителя',
         default=1,
         max_digits=5,
         decimal_places=2,
         help_text='Для классического формата',
     )
     points_for_draw_prediction = models.DecimalField(
-        'Очки за верный прогноз ничьей',
+        'Очки за угаданную ничью',
         default=3,
         max_digits=5,
         decimal_places=2,
@@ -57,6 +57,31 @@ class PredictionsContestTournament(models.Model):
         max_digits=5,
         decimal_places=2,
         help_text='Для классического формата',
+    )
+    prize_pool_contribution = models.DecimalField(
+        'Вклад в призовой фонд',
+        default=10,
+        max_digits=7,
+        decimal_places=2,
+        help_text='Сколько CC добавляется в призовой фонд тура за каждого участника',
+    )
+    first_place_prize = models.DecimalField(
+        'Приз за 1-е место в турнире',
+        default=250,
+        max_digits=8,
+        decimal_places=2,
+    )
+    second_place_prize = models.DecimalField(
+        'Приз за 2-е место в турнире',
+        default=150,
+        max_digits=8,
+        decimal_places=2,
+    )
+    third_place_prize = models.DecimalField(
+        'Приз за 3-е место в турнире',
+        default=100,
+        max_digits=8,
+        decimal_places=2,
     )
 
     def __str__(self):

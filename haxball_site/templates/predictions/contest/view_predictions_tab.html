@@ -34,7 +34,7 @@
 
           {% if predictions_data %}
             <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 lg:tw:grid-cols-3 tw:gap-4">
-              {% for tour in selected_tournament.league.tours.all %}
+              {% for tour in tours %}
                 {% with is_open=tour|is_open_for_predictions is_closed=tour|is_closed_for_predictions submission=predictions_data|get_or_default:tour.id %}
                   {% if is_open or is_closed %}
                     <div class="tw:card tw:bg-base-200 tw:shadow-sm">
