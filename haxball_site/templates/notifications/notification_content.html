@@ -34,6 +34,17 @@ Parameters:
       по итогам матча
       <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">{{ notification.data.match_title }}</a>
     </div>
+  {% elif notification.data.type == 'reward' %}
+    <div class="tw:font-medium">
+      {{ notification.verb }}
+      {% if notification.data.amount %}
+        {% if notification.data.url %}
+          <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">+{{ notification.data.amount }} CC</a>
+        {% else %}
+          +{{ notification.data.amount }} CC
+        {% endif %}
+      {% endif %}
+    </div>
   {% elif notification.data.type == 'user_mention' %}
     <div class="tw:font-medium">
       {{ notification.actor.username }}
