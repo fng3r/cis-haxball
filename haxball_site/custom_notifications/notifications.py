@@ -12,6 +12,45 @@ from tournament.models import Disqualification, Match, Team
 logger = logging.getLogger('haxball_site')
 
 
+_notification_actor_cache = {'actor_id': None, 'resolved': False}
+
+
+def get_notification_actor(fallback=None):
+    """Resolve a system actor for automated notifications.
+
+    Prefers the 'admin' superuser (consistent with other notifiers),
+    then any staff/superuser, finally the given fallback user.
+    Result is cached per process to avoid extra queries in bulk sends.
+    """
+    if _notification_actor_cache['resolved']:
+        actor_id = _notification_actor_cache['actor_id']
+        if actor_id is not None:
+            try:
+                return User.objects.get(id=actor_id)
+            except User.DoesNotExist:
+                pass
+        return fallback
+
+    actor = None
+    try:
+        actor = User.objects.filter(username='admin').first()
+        if actor is None:
+            actor = User.objects.filter(is_staff=True).order_by('id').first()
+    except Exception as e:
+        logger.error(f'Error resolving notification actor: {e}', exc_info=True)
+
+    _notification_actor_cache['actor_id'] = actor.id if actor is not None else None
+    _notification_actor_cache['resolved'] = True
+
+    return actor if actor is not None else fallback
+
+
+def reset_notification_actor_cache():
+    """Reset cached notification actor (mainly for tests)."""
+    _notification_actor_cache['actor_id'] = None
+    _notification_actor_cache['resolved'] = False
+
+
 def notify_user(recipient, actor, verb, target=None, action_object=None, description=None, **kwargs):
     """
     Send a notification to a user.
@@ -223,3 +262,105 @@ def _get_team_executives(team: Team):
         result.add(team.captain_assistant.name)
 
     return result
+
+
+def notify_reward(recipient, amount, tour_number, activity_label, league_title, url=None, actor=None):
+    """Send notification about a single-tour reward payout.
+
+    Args:
+        recipient: User who received the payout
+        amount: Reward amount (Decimal)
+        tour_number: Tour number the reward was paid for
+        activity_label: Human-readable activity label (e.g. 'фэнтези')
+        league_title: League title for context
+        url: Optional URL to open on click (defaults to balance page)
+        actor: Optional actor User; resolved to system actor when omitted
+    """
+    try:
+        actor = actor or get_notification_actor(fallback=recipient)
+        if actor is None:
+            logger.error('Cannot send reward notification: no actor available')
+            return
+        if url is None:
+            url = _get_balance_url()
+
+        verb = f'Начислены награды за {tour_number} тур {activity_label}:'
+        description = f'Начислено {amount} CC за {tour_number} тур {activity_label} ({league_title}).'
+
+        notify_user(
+            recipient=recipient,
+            actor=actor,
+            verb=verb,
+            description=description,
+            type='reward',
+            url=url,
+            amount=str(amount),
+            tour_number=tour_number,
+            activity_label=activity_label,
+            league_title=league_title,
+        )
+        logger.debug(f'Reward notification sent to {recipient} for tour {tour_number}: +{amount}')
+    except Exception as e:
+        logger.error(f'Error sending reward notification: {e}', exc_info=True)
+
+
+def notify_combined_rewards(recipient, total_amount, tour_details, activity_label, league_title, url=None, actor=None):
+    """Send a single notification aggregating reward payouts across several tours.
+
+    Args:
+        recipient: User who received the payouts
+        total_amount: Total reward amount across all tours (Decimal)
+        tour_details: Iterable of dicts with keys 'tour_number' and 'amount'
+        activity_label: Human-readable activity label (e.g. 'фэнтези')
+        league_title: League title for context
+        url: Optional URL to open on click (defaults to balance page)
+        actor: Optional actor User; resolved to system actor when omitted
+    """
+    try:
+        details = list(tour_details)
+        if not details:
+            return
+        actor = actor or get_notification_actor(fallback=recipient)
+        if actor is None:
+            logger.error('Cannot send combined reward notification: no actor available')
+            return
+        if url is None:
+            url = _get_balance_url()
+
+        tour_numbers = sorted({item['tour_number'] for item in details})
+        if len(tour_numbers) == 1:
+            tours_str = f'{tour_numbers[0]} тур'
+        else:
+            tours_str = f'туры {", ".join(str(n) for n in tour_numbers)}'
+
+        verb = f'Начислены награды {activity_label} ({tours_str}):'
+        breakdown = '; '.join(
+            f'{item["tour_number"]} тур: +{item["amount"]} CC'
+            for item in sorted(details, key=lambda item: item['tour_number'])
+        )
+        description = f'Начислено {total_amount} CC за {tours_str} {activity_label} ({league_title}). {breakdown}.'
+
+        notify_user(
+            recipient=recipient,
+            actor=actor,
+            verb=verb,
+            description=description,
+            type='reward',
+            url=url,
+            amount=str(total_amount),
+            tour_numbers=tour_numbers,
+            activity_label=activity_label,
+            league_title=league_title,
+        )
+        logger.debug(f'Combined reward notification sent to {recipient}: +{total_amount} for tours {tour_numbers}')
+    except Exception as e:
+        logger.error(f'Error sending combined reward notification: {e}', exc_info=True)
+
+
+def _get_balance_url():
+    try:
+        from django.urls import reverse
+
+        return reverse('balance:balance')
+    except Exception:
+        return '/coins/balance/'
