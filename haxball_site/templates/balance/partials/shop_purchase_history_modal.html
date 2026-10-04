@@ -1,0 +1,18 @@
+<dialog id="shop-history-modal" class="tw:modal">
+  <div class="tw:modal-box tw:max-w-3xl tw:max-h-[80vh] tw:overflow-y-auto">
+    <h3 class="tw:font-bold tw:text-lg tw:mb-4">История покупок</h3>
+
+    <div id="shop-purchases-container" class="tw:flex tw:flex-col tw:gap-y-2">
+      {% include 'balance/partials/shop_purchase_history_list.html' with purchases=purchases has_more_purchases=has_more_purchases next_purchases_page=next_purchases_page %}
+    </div>
+
+    <div class="tw:modal-action">
+      <form method="dialog">
+        <button class="tw:btn">Закрыть</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="tw:modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

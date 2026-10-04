@@ -75,6 +75,54 @@ def _build_shop_item_context(
     }
 
 
+PURCHASES_PER_PAGE = 10
+
+
+def _get_user_purchases_page(user, page: int = 1):
+    purchases = ShopPurchase.objects.filter(user=user).select_related('item').order_by('-created_at')
+    paginator = Paginator(purchases, PURCHASES_PER_PAGE)
+    page_obj = paginator.get_page(page)
+    _attach_purchase_extras(list(page_obj.object_list))
+    return page_obj
+
+
+def _attach_purchase_extras(purchases: list[ShopPurchase]) -> None:
+    comment_ids = [purchase.metadata.get('comment_id') for purchase in purchases if purchase.metadata.get('comment_id')]
+    comments_by_id: dict[int, NewComment] = {}
+    if comment_ids:
+        for comment in NewComment.objects.filter(id__in=comment_ids):
+            comments_by_id[comment.id] = comment
+
+    for purchase in purchases:
+        purchase.details = _build_purchase_details(purchase)  # type: ignore[attr-defined]
+        comment_id = purchase.metadata.get('comment_id')
+        purchase.comment = comments_by_id.get(comment_id) if comment_id else None  # type: ignore[attr-defined]
+
+
+def _build_purchase_details(purchase: ShopPurchase) -> str:
+    metadata = purchase.metadata or {}
+    product_type = purchase.item.product_type
+    if product_type == ShopItem.ProductType.SUBSCRIPTION:
+        expires_at_raw = metadata.get('expires_at')
+        if expires_at_raw:
+            try:
+                expires_at = timezone.datetime.fromisoformat(expires_at_raw)
+                return f'Активна до {expires_at.strftime("%d.%m.%Y %H:%M")}'
+            except (ValueError, TypeError):
+                pass
+        return ''
+    if product_type == ShopItem.ProductType.CHANGE_USERNAME:
+        old_username = metadata.get('old_username')
+        new_username = metadata.get('new_username')
+        if old_username and new_username:
+            return f'{old_username} → {new_username}'
+        return str(new_username or '')
+    if product_type == ShopItem.ProductType.CHANGE_PUBLIC_ID:
+        new_public_id = metadata.get('new_public_id')
+        return f'Новый public id: {new_public_id}' if new_public_id else ''
+    return ''
+
+
 class ShopView(LoginRequiredMixin, TemplateView):
     template_name = 'balance/shop.html'
 
@@ -86,15 +134,36 @@ class ShopView(LoginRequiredMixin, TemplateView):
         items = ShopItem.objects.active().select_related(None)
         item_contexts = [_build_shop_item_context(item=item, user=user, balance_value=balance_value) for item in items]
 
+        purchases_page = _get_user_purchases_page(user, page=1)
+
         context.update(
             {
                 'current_balance': balance_value,
                 'items': item_contexts,
                 'is_htmx': False,
+                'purchases': purchases_page.object_list,
+                'has_more_purchases': purchases_page.has_next(),
+                'next_purchases_page': purchases_page.next_page_number() if purchases_page.has_next() else None,
             }
         )
 
         return context
+
+
+class ShopPurchaseHistoryView(LoginRequiredMixin, TemplateView):
+    template_name = 'balance/partials/shop_purchase_history_list.html'
+
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        page = int(request.GET.get('page', 1))
+        purchases_page = _get_user_purchases_page(request.user, page=page)
+
+        context = {
+            'purchases': purchases_page.object_list,
+            'has_more_purchases': purchases_page.has_next(),
+            'next_purchases_page': page + 1 if purchases_page.has_next() else None,
+        }
+
+        return render(request, self.template_name, context)
 
 
 class ShopPurchaseView(LoginRequiredMixin, View):
@@ -106,6 +175,7 @@ class ShopPurchaseView(LoginRequiredMixin, View):
 
         success_message = None
         error_message = None
+        comment = None
 
         try:
             purchase_metadata = {}
@@ -115,7 +185,6 @@ class ShopPurchaseView(LoginRequiredMixin, View):
                 purchase_metadata['new_public_id'] = request.POST.get('new_public_id', '').strip()
             purchase = ShopService.purchase_item(user, item, metadata=purchase_metadata)
             success_message = _build_success_message(purchase)
-            comment = None
             if purchase.metadata.get('comment_id'):
                 with suppress(NewComment.DoesNotExist):
                     comment = NewComment.objects.get(id=purchase.metadata['comment_id'])
@@ -154,6 +223,18 @@ class ShopPurchaseView(LoginRequiredMixin, View):
                 request=request,
             )
             response.write(f'<div id="shop-messages-container" hx-swap-oob="innerHTML">{messages_html}</div>')
+
+        purchases_page = _get_user_purchases_page(user, page=1)
+        purchases_html = render_to_string(
+            'balance/partials/shop_purchase_history_list.html',
+            {
+                'purchases': purchases_page.object_list,
+                'has_more_purchases': purchases_page.has_next(),
+                'next_purchases_page': purchases_page.next_page_number() if purchases_page.has_next() else None,
+            },
+            request=request,
+        )
+        response.write(f'<div id="shop-purchases-container" hx-swap-oob="innerHTML">{purchases_html}</div>')
 
         return response
 

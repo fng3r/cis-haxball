@@ -1,0 +1,51 @@
+{% load static %}
+
+{% for purchase in purchases %}
+  <div class="tw:card tw:bg-base-200 tw:shadow-sm">
+    <div class="tw:card-body tw:p-3">
+      <div class="tw:flex tw:items-center tw:justify-between tw:gap-3">
+        <div class="tw:flex tw:items-center tw:gap-3 tw:min-w-0">
+          <div class="tw:flex tw:items-center tw:justify-center tw:size-14 tw:p-1 tw:rounded-lg tw:bg-base-100 tw:shrink-0 tw:overflow-hidden">
+            {% if purchase.item.image %}
+              <img src="{{ purchase.item.image.url }}" alt="{{ purchase.item.name }}" class="tw:max-h-12 tw:w-auto tw:object-contain">
+            {% else %}
+              <img src="{% static 'img/cis-coin.png' %}" alt="{{ purchase.item.name }}" class="tw:max-h-12 tw:w-auto tw:object-contain">
+            {% endif %}
+          </div>
+          <div class="tw:min-w-0">
+            <div class="tw:font-medium tw:text-sm tw:truncate" title="{{ purchase.item.name }}">{{ purchase.item.name }}</div>
+            <div class="tw:text-xs tw:text-base-content/70">{{ purchase.item.get_product_type_display }}</div>
+            {% if purchase.details %}
+              <div class="tw:text-xs tw:text-base-content/70 tw:truncate" title="{{ purchase.details }}">{{ purchase.details }}</div>
+            {% endif %}
+            {% if purchase.comment %}
+              <a href="{{ purchase.comment.get_absolute_url }}" class="tw:link tw:link-primary tw:text-xs" target="_blank">Перейти к заявке</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="tw:text-right tw:shrink-0">
+          <div class="tw:font-bold tw:text-sm tw:text-error">-{{ purchase.amount|floatformat:0 }} CC</div>
+          <div class="tw:text-xs tw:text-base-content/70">{{ purchase.created_at|date:"d.m.y H:i" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% empty %}
+  <div class="tw:text-center tw:py-8 tw:text-base-content/60">
+    <i class="fa fa-shopping-bag tw:text-lg tw:mb-2"></i>
+    <p>Вы пока ничего не приобрели</p>
+  </div>
+{% endfor %}
+
+{% if has_more_purchases %}
+  <div id="purchases-load-more-btn" class="tw:text-center tw:pt-2">
+    <button class="tw:btn tw:btn-outline tw:btn-sm"
+            hx-get="{% url 'balance:shop_purchases' %}?page={{ next_purchases_page }}"
+            hx-target="#purchases-load-more-btn"
+            hx-swap="outerHTML"
+            hx-trigger="click">
+      <i class="fa fa-plus"></i> Загрузить еще
+    </button>
+    <img class="htmx-indicator tw:ml-2 tw:w-4" src="{% static 'img/svg-loaders/bars.svg' %}">
+  </div>
+{% endif %}
