@@ -9,6 +9,7 @@ from tournament.models import TournamentStage, TourNumber
 from .models import MatchPredictionOutcome, PredictionsContestTournament, PredictionSubmission
 from .points_service import (
     calculate_avg_coefficient,
+    calculate_prediction_points,
     calculate_roi,
     calculate_submission_predictions_counts,
     calculate_submission_total_points,
@@ -335,8 +336,287 @@ def _calculate_hybrid_tour_rewards(user_points, total_participants, total_prize_
         'user_rewards': user_rewards,
     }
 
+
+def collect_tour_prediction_stats(tour, tournament, submissions, matches):
+    """Aggregate per-tour statistics for coefficient-based predictions.
+
+    `submissions` — PredictionSubmission list for (tournament, tour) with
+    prefetched predictions__outcome and predictions__match.
+    `matches` — Match list of the tour with team_home/guest, result,
+    prediction_offer__outcomes prefetched.
+
+    Returns dict with tour-level aggregates (participants, accuracy,
+    best/worst user, biggest win, highest coefficients) and per-match
+    breakdowns (popularity, hit rate, avg coefficient).
+    """
+    matches_by_id = {match.id: match for match in matches}
+
+    user_points = []
+    for submission in submissions:
+        user_points.append({'user': submission.user, 'points': calculate_submission_total_points(submission)})
+    user_points.sort(key=lambda entry: entry['points'], reverse=True)
+
+    participants = len(submissions)
+    total_predictions = sum(len(list(sub.predictions.all())) for sub in submissions)
+
+    decisive = 0
+    correct = 0
+    void_count = 0
+
+    biggest_win = None
+    biggest_win_users = []
+    highest_coef_hit = None
+    highest_coef_picked = None
+
+    picks_by_match = {match_id: [] for match_id in matches_by_id}
+    for submission in submissions:
+        for prediction in submission.predictions.all():
+            match = getattr(prediction, 'match', None)
+            match_id = getattr(prediction, 'match_id', None) or (match.id if match else None)
+            if match_id not in picks_by_match:
+                continue
+            points = calculate_prediction_points(prediction, tournament=tournament)
+            picks_by_match[match_id].append({'prediction': prediction, 'points': points, 'user': submission.user})
+
+            outcome = getattr(prediction, 'outcome', None)
+            coefficient = outcome.coefficient if outcome is not None else None
+
+            if match is not None and match.is_played and outcome is not None:
+                if is_prediction_void(prediction):
+                    void_count += 1
+                else:
+                    decisive += 1
+                    if is_prediction_correct(prediction):
+                        correct += 1
+
+            if coefficient is not None:
+                label = outcome.display_label if outcome is not None else ''
+                if highest_coef_picked is None or coefficient > highest_coef_picked['coefficient']:
+                    highest_coef_picked = {
+                        'user': submission.user,
+                        'coefficient': coefficient,
+                        'outcome_label': label,
+                        'match': match,
+                        'is_correct': is_prediction_correct(prediction) if match and match.is_played else None,
+                    }
+                if (
+                    match is not None
+                    and match.is_played
+                    and is_prediction_correct(prediction)
+                    and (highest_coef_hit is None or coefficient > highest_coef_hit['coefficient'])
+                ):
+                    highest_coef_hit = {
+                        'user': submission.user,
+                        'coefficient': coefficient,
+                        'outcome_label': label,
+                        'match': match,
+                        'points': points,
+                    }
+
+            if (
+                points is not None
+                and match is not None
+                and match.is_played
+                and outcome is not None
+                and not is_prediction_void(prediction)
+                and points > 0
+            ):
+                if biggest_win is None or points > biggest_win['points']:
+                    biggest_win = {
+                        'user': submission.user,
+                        'points': points,
+                        'coefficient': coefficient,
+                        'outcome_label': outcome.display_label,
+                        'match': match,
+                    }
+                    biggest_win_users = [submission.user]
+                elif points == biggest_win['points']:
+                    biggest_win_users.append(submission.user)
+
+    accuracy = (correct / decisive * 100) if decisive else None
+    total_points = sum((entry['points'] for entry in user_points), Decimal('0'))
+    avg_points = (total_points / participants) if participants else None
+
+    if user_points:
+        best_points = user_points[0]['points']
+        worst_points = user_points[-1]['points']
+        best_users = [entry['user'] for entry in user_points if entry['points'] == best_points]
+        worst_users = [entry['user'] for entry in user_points if entry['points'] == worst_points]
+    else:
+        best_points = None
+        worst_points = None
+        best_users = []
+        worst_users = []
+
+    match_stats = []
+    for match in matches:
+        picks = picks_by_match.get(match.id, [])
+        total_picks = len(picks)
+
+        counts = {}
+        outcome_objs = {}
+        for entry in picks:
+            outcome = getattr(entry['prediction'], 'outcome', None)
+            if outcome is None:
+                continue
+            counts[outcome.id] = counts.get(outcome.id, 0) + 1
+            outcome_objs[outcome.id] = outcome
+
+        offer = getattr(match, 'prediction_offer', None)
+        if offer is not None:
+            try:
+                offer_outcomes = list(offer.outcomes.all())
+            except Exception:
+                offer_outcomes = []
+            for outcome in offer_outcomes:
+                outcome_objs.setdefault(outcome.id, outcome)
+                counts.setdefault(outcome.id, 0)
+
+        outcome_rows = []
+        match_correct = 0
+        match_decisive = 0
+        match_points_total = Decimal('0')
+        match_best_points = None
+        match_best_users = []
+        coef_sum = Decimal('0')
+        coef_count = 0
+        for outcome_id, outcome in outcome_objs.items():
+            count = counts.get(outcome_id, 0)
+            pct = (count / total_picks * 100) if total_picks else 0
+            settled = outcome.settle(match) if match.is_played else None
+            outcome_rows.append(
+                {
+                    'outcome': outcome,
+                    'count': count,
+                    'pct': pct,
+                    'is_winning': settled,
+                }
+            )
+            if outcome.coefficient is not None and count:
+                coef_sum += outcome.coefficient * count
+                coef_count += count
+
+        outcome_rows.sort(key=lambda row: (-row['count'], str(row['outcome'].display_label)))
+
+        for entry in picks:
+            prediction = entry['prediction']
+            if not match.is_played or not getattr(prediction, 'outcome_id', None):
+                continue
+            if is_prediction_void(prediction):
+                continue
+            match_decisive += 1
+            if is_prediction_correct(prediction):
+                match_correct += 1
+            match_points_total += entry['points']
+            if match_best_points is None or entry['points'] > match_best_points:
+                match_best_points = entry['points']
+                match_best_users = [entry['user']]
+            elif entry['points'] == match_best_points:
+                match_best_users.append(entry['user'])
+
+        match_stats.append(
+            {
+                'match': match,
+                'total_picks': total_picks,
+                'decisive': match_decisive,
+                'correct': match_correct,
+                'accuracy': (match_correct / match_decisive * 100) if match_decisive else None,
+                'avg_coefficient': (coef_sum / coef_count) if coef_count else None,
+                'avg_points': (match_points_total / match_decisive) if match_decisive else None,
+                'best_points': match_best_points,
+                'best_users': match_best_users,
+                'outcomes': outcome_rows,
+                'top_outcome': outcome_rows[0] if outcome_rows and total_picks else None,
+            }
+        )
+
+    decided = [m for m in match_stats if m['decisive']]
+    most_predictable = max(decided, key=lambda m: m['accuracy']) if decided else None
+    least_predictable = min(decided, key=lambda m: m['accuracy']) if decided else None
+    most_profitable_match = max(decided, key=lambda m: m['avg_points']) if decided else None
+    least_profitable_match = min(decided, key=lambda m: m['avg_points']) if decided else None
+
     return {
-        'total_participants': total_participants,
-        'total_prize_pool': total_prize_pool,
-        'user_rewards': user_rewards,
+        'tour': tour,
+        'participants': participants,
+        'total_predictions': total_predictions,
+        'decisive': decisive,
+        'correct': correct,
+        'void_count': void_count,
+        'accuracy': accuracy,
+        'total_points': total_points,
+        'avg_points': avg_points,
+        'best_points': best_points,
+        'best_users': best_users,
+        'worst_points': worst_points,
+        'worst_users': worst_users,
+        'user_points': user_points,
+        'biggest_win': biggest_win,
+        'biggest_win_users': biggest_win_users,
+        'highest_coef_hit': highest_coef_hit,
+        'highest_coef_picked': highest_coef_picked,
+        'matches': match_stats,
+        'most_predictable': most_predictable,
+        'least_predictable': least_predictable,
+        'most_profitable_match': most_profitable_match,
+        'least_profitable_match': least_profitable_match,
     }
+
+
+def collect_tours_overview(tournament, tours, submissions_by_tour):
+    """Light per-tour summary across the whole tournament for the stats tab.
+
+    `tours` should prefetch tour_matches (is_played is read to detect
+    whether the tour has started). Stats stay hidden until the first
+    match of the tour is played.
+    """
+    overview = []
+    for tour in tours:
+        submissions = submissions_by_tour.get(tour.id, [])
+        participants = len(submissions)
+        predictions = sum(len(list(sub.predictions.all())) for sub in submissions)
+        has_played_matches = any(match.is_played for match in tour.tour_matches.all())
+        decisive = 0
+        correct = 0
+        total_points = Decimal('0')
+        best_points = None
+        best_users = []
+        worst_points = None
+        worst_users = []
+        for submission in submissions:
+            points = calculate_submission_total_points(submission)
+            total_points += points
+            if best_points is None or points > best_points:
+                best_points = points
+                best_users = [submission.user]
+            elif points == best_points:
+                best_users.append(submission.user)
+            if worst_points is None or points < worst_points:
+                worst_points = points
+                worst_users = [submission.user]
+            elif points == worst_points:
+                worst_users.append(submission.user)
+            for prediction in submission.predictions.all():
+                match = getattr(prediction, 'match', None)
+                if match is not None and match.is_played and getattr(prediction, 'outcome_id', None):
+                    if is_prediction_void(prediction):
+                        continue
+                    decisive += 1
+                    if is_prediction_correct(prediction):
+                        correct += 1
+        overview.append(
+            {
+                'tour': tour,
+                'participants': participants,
+                'predictions': predictions,
+                'has_played_matches': has_played_matches,
+                'decisive': decisive,
+                'accuracy': (correct / decisive * 100) if decisive else None,
+                'avg_points': (total_points / participants) if participants else None,
+                'best_points': best_points,
+                'best_users': best_users,
+                'worst_points': worst_points,
+                'worst_users': worst_users,
+            }
+        )
+    return overview
