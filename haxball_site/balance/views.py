@@ -1,8 +1,10 @@
 from contextlib import suppress
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.db import models
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -295,6 +297,34 @@ def _build_success_message(purchase: ShopPurchase) -> str:
         return f'Подарок «{gift_name}» добавлен в вашу коллекцию.'
 
     return 'Покупка успешно завершена.'
+
+
+class UserSearchView(LoginRequiredMixin, View):
+    """Username autocomplete options for the gift recipient input."""
+
+    template_name = 'balance/partials/user_search_dropdown.html'
+
+    def get(self, request: HttpRequest) -> HttpResponse:
+        # htmx sends the input's own name (recipient_username), accept `q` too.
+        query = (request.GET.get('q', '').strip() or request.GET.get('recipient_username', '').strip())
+        users: list[User] = []
+        if query:
+            # Rank so an exact (then prefix) match is always on top:
+            # typing the full username guarantees surfacing that user.
+            users = list(
+                User.objects.filter(username__icontains=query)
+                .annotate(
+                    rank=models.Case(
+                        models.When(username__iexact=query, then=models.Value(0)),
+                        models.When(username__istartswith=query, then=models.Value(1)),
+                        default=models.Value(2),
+                        output_field=models.IntegerField(),
+                    )
+                )
+                .select_related('user_profile')
+                .order_by('rank', 'username')[:7]
+            )
+        return render(request, self.template_name, {'users': users, 'query': query})
 
 
 def _build_error_message(error: ValidationError) -> str:

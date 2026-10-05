@@ -178,8 +178,7 @@ else:
 if DEBUG:
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-            # 'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
             'LOCATION': config('CACHE_LOCATION', default=os.path.join(BASE_DIR, '.site_cache')),
         }
     }

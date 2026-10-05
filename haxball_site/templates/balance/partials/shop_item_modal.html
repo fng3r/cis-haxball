@@ -60,12 +60,20 @@
 
           <fieldset class="tw:fieldset" x-show="giftTarget === 'other'" x-cloak>
             <legend class="tw:fieldset-legend">Никнейм получателя</legend>
-            <input type="text"
-                   name="recipient_username"
-                   class="tw:input tw:w-full"
-                   placeholder="Введите никнейм получателя"
-                   :required="giftTarget === 'other'"
-                   :disabled="giftTarget !== 'other'">
+            <div class="tw:relative" data-recipient-picker hx-disinherit="hx-disabled-elt">
+              <input type="text"
+                     name="recipient_username"
+                     class="tw:input tw:w-full"
+                     placeholder="Введите никнейм получателя"
+                     autocomplete="off"
+                     hx-get="{% url 'balance:user_search' %}"
+                     hx-trigger="input changed delay:300ms"
+                     hx-target="#recipient-results-{{ item.pk }}"
+                     hx-swap="innerHTML"
+                     :required="giftTarget === 'other'"
+                     :disabled="giftTarget !== 'other'">
+              <div id="recipient-results-{{ item.pk }}" class="recipient-results"></div>
+            </div>
           </fieldset>
 
           <fieldset class="tw:fieldset tw:mt-2">
