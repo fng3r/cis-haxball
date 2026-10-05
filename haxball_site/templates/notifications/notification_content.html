@@ -45,6 +45,16 @@ Parameters:
         {% endif %}
       {% endif %}
     </div>
+  {% elif notification.data.type == 'gift_received' %}
+    <div class="tw:font-medium">
+      {{ notification.actor.username }}
+      отправил Вам
+      {% if notification.data.url %}
+        <a href="{{ notification.data.url }}" class="tw:link tw:link-primary tw:link-hover">подарок «{{ notification.data.gift_name }}»</a>
+      {% else %}
+        подарок «{{ notification.data.gift_name }}»
+      {% endif %}
+    </div>
   {% elif notification.data.type == 'user_mention' %}
     <div class="tw:font-medium">
       {{ notification.actor.username }}

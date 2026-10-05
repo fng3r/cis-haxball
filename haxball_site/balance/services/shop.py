@@ -58,6 +58,10 @@ class ShopService:
                     'recipient': gift_owner.username,
                     'message': user_gift.message,
                 }
+                if gift_owner != user:
+                    from custom_notifications.notifications import notify_gift_received
+
+                    notify_gift_received(user_gift)
             elif item.product_type == ShopItem.ProductType.SUBSCRIPTION:
                 subscription = ShopService._activate_subscription(user, item)
                 purchase_metadata = {

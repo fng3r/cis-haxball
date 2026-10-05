@@ -357,6 +357,46 @@ def notify_combined_rewards(recipient, total_amount, tour_details, activity_labe
         logger.error(f'Error sending combined reward notification: {e}', exc_info=True)
 
 
+def notify_gift_received(user_gift):
+    """Send notification to the gift recipient (skips self-gifts).
+
+    Args:
+        user_gift: UserGift instance that was just granted
+    """
+    try:
+        owner = user_gift.owner
+        buyer = user_gift.buyer
+        if owner is None or (buyer is not None and owner.id == buyer.id):
+            return
+
+        actor = buyer or get_notification_actor(fallback=owner)
+        if actor is None:
+            logger.error('Cannot send gift notification: no actor available')
+            return
+
+        actor_name = buyer.username if buyer is not None else 'Администрация'
+        gift_name = user_gift.gift.name
+        try:
+            profile_url = owner.user_profile.get_absolute_url()
+        except Exception:
+            profile_url = None
+
+        notify_user(
+            recipient=owner,
+            actor=actor,
+            verb=f'{actor_name} отправил Вам «{gift_name}»',
+            target=user_gift.gift,
+            action_object=user_gift,
+            description=user_gift.message or f'Подарок «{gift_name}» ждёт Вас в профиле.',
+            type='gift_received',
+            url=profile_url,
+            gift_name=gift_name,
+        )
+        logger.debug(f'Gift notification sent to {owner.username} for gift {gift_name}')
+    except Exception as e:
+        logger.error(f'Error sending gift notification: {e}', exc_info=True)
+
+
 def _get_balance_url():
     try:
         from django.urls import reverse
