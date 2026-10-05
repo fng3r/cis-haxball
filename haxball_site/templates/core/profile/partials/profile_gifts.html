@@ -5,7 +5,7 @@
     {% for user_gift in owned_gifts %}
       <div class="tw:card tw:bg-base-100 tw:shadow-sm tw:border tw:border-base-300 tw:overflow-hidden">
         <button type="button"
-                class="tw:aspect-square tw:w-full tw:cursor-zoom-in tw:overflow-hidden tw:bg-base-200 tw:p-0"
+                class="tw:aspect-square tw:w-full tw:cursor-zoom-in tw:overflow-hidden tw:bg-base-200 tw:p-0 tw:outline-none"
                 onclick="document.getElementById('gift-lightbox-{{ user_gift.pk }}').showModal()"
                 aria-label="Увеличить изображение подарка {{ user_gift.gift.name }}">
           {% if user_gift.gift.image %}
