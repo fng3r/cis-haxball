@@ -14,7 +14,7 @@ from balance.models import ShopPurchase
 from balance.services import ShopService
 from core.models import NewComment
 
-from .models import ShopItem, Transaction
+from .models import ShopCategory, ShopItem, Transaction
 
 
 class BalanceView(LoginRequiredMixin, TemplateView):
@@ -76,25 +76,33 @@ def _build_shop_item_context(
 
 
 def _build_shop_groups(user, balance_value) -> list[dict]:
-    """Active shop items grouped by active category (uncategorized first)."""
-    items = ShopItem.objects.active().select_related('gift', 'category')
+    """Active shop items grouped by active category (uncategorized first).
+
+    Every active category gets a section even when it has no active items,
+    so the template can render a fallback for empty categories.
+    """
+    groups_by_category_id: dict[int, dict] = {
+        category.id: {'category': category, 'items': []}
+        for category in ShopCategory.objects.filter(is_active=True)
+    }
 
     uncategorized: list[dict] = []
-    by_category: dict[int, dict] = {}
-    for item in items:
+    for item in ShopItem.objects.active().select_related('gift', 'category'):
         item_ctx = _build_shop_item_context(item=item, user=user, balance_value=balance_value)
         category = item.category
         if category is None or not category.is_active:
             uncategorized.append(item_ctx)
         else:
-            group = by_category.setdefault(category.id, {'category': category, 'items': []})
-            group['items'].append(item_ctx)
+            groups_by_category_id[category.id]['items'].append(item_ctx)
 
     groups = []
     if uncategorized:
         groups.append({'category': None, 'items': uncategorized})
     groups.extend(
-        sorted(by_category.values(), key=lambda group: (group['category'].position, group['category'].title))
+        sorted(
+            groups_by_category_id.values(),
+            key=lambda group: (group['category'].position, group['category'].title),
+        )
     )
     return groups
 

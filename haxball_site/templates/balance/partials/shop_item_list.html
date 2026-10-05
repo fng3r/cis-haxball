@@ -12,6 +12,12 @@
   {% endif %}
   {% for item_ctx in group.items %}
     {% include 'balance/partials/shop_item_card.html' with item=item_ctx.item can_afford=item_ctx.can_afford %}
+  {% empty %}
+    {% if group.category %}
+      <div class="tw:col-span-full tw:text-center tw:py-6 tw:bg-base-200/50 tw:rounded-lg">
+        <p class="tw:text-sm tw:text-base-content/60">В этой категории пока нет доступных товаров</p>
+      </div>
+    {% endif %}
   {% endfor %}
 {% empty %}
   <div class="tw:col-span-full tw:text-center tw:py-10 tw:bg-base-100 tw:rounded-lg">
