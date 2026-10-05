@@ -4,7 +4,10 @@
 {% for group in groups %}
   {% if group.category %}
     <div class="tw:col-span-full">
-      <h3 class="tw:text-xl tw:font-semibold tw:mt-2 tw:mb-0!">{{ group.category.title }}</h3>
+      <h3 class="tw:text-xl tw:font-semibold tw:mt-2 tw:mb-0!">
+        {{ group.category.title }}
+        {% if group.category.slug == 'gifts' %}<span class="tw:badge tw:badge-sm tw:badge-warning">НОВОЕ</span>{% endif %}
+      </h3>
       {% if group.category.description %}
         <div class="tw:text-sm tw:text-base-content/70 tw:mt-1">{{ group.category.description|linebreaksbr }}</div>
       {% endif %}
