@@ -158,7 +158,6 @@ class ShopItemAdmin(ModelAdmin):
     list_editable = ['position', 'is_active']
     list_filter = ['product_type', 'category', 'is_active']
     search_fields = ['name', 'slug']
-    ordering = ['position', 'name']
     readonly_fields = ['created_at', 'updated_at']
 
 

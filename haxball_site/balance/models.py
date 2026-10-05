@@ -254,7 +254,7 @@ class ShopItem(models.Model):
     class Meta:
         verbose_name = 'Товар магазина'
         verbose_name_plural = 'Товары магазина'
-        ordering = ['position', 'name']
+        ordering = ['category__position', 'position', 'name']
 
     def __str__(self):
         return self.name
