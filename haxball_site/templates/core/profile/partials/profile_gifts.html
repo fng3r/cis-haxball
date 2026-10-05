@@ -1,0 +1,69 @@
+{% load static %}
+
+{% if owned_gifts %}
+  <div class="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:lg:grid-cols-4 tw:gap-3 tw:p-1">
+    {% for user_gift in owned_gifts %}
+      <div class="tw:card tw:bg-base-100 tw:shadow-sm tw:border tw:border-base-300 tw:overflow-hidden">
+        <button type="button"
+                class="tw:aspect-square tw:w-full tw:cursor-zoom-in tw:overflow-hidden tw:bg-base-200 tw:p-0"
+                onclick="document.getElementById('gift-lightbox-{{ user_gift.pk }}').showModal()"
+                aria-label="Увеличить изображение подарка {{ user_gift.gift.name }}">
+          {% if user_gift.gift.image %}
+            <img src="{{ user_gift.gift.image.url }}" alt="{{ user_gift.gift.name }}" class="tw:h-full tw:w-full tw:object-cover">
+          {% else %}
+            <img src="{% static 'img/cis-coin.png' %}" alt="{{ user_gift.gift.name }}" class="tw:h-full tw:w-full tw:object-cover">
+          {% endif %}
+        </button>
+
+        <dialog id="gift-lightbox-{{ user_gift.pk }}" class="tw:modal">
+          <div class="tw:modal-box tw:max-w-3xl tw:w-full tw:p-4 tw:flex tw:flex-col tw:gap-3">
+            <div class="tw:flex tw:items-center tw:justify-between tw:gap-2">
+              <h3 class="tw:font-semibold tw:text-lg tw:truncate" title="{{ user_gift.gift.name }}">{{ user_gift.gift.name }}</h3>
+              <form method="dialog">
+                <button class="tw:btn tw:btn-sm tw:btn-circle tw:btn-ghost" aria-label="Закрыть">✕</button>
+              </form>
+            </div>
+            {% if user_gift.gift.image %}
+              <img src="{{ user_gift.gift.image.url }}"
+                   alt="{{ user_gift.gift.name }}"
+                   class="tw:w-full tw:h-auto tw:max-h-[75vh] tw:object-contain tw:rounded-lg tw:bg-base-200">
+            {% else %}
+              <img src="{% static 'img/cis-coin.png' %}"
+                   alt="{{ user_gift.gift.name }}"
+                   class="tw:w-full tw:h-auto tw:max-h-[75vh] tw:object-contain tw:rounded-lg tw:bg-base-200">
+            {% endif %}
+          </div>
+          <form method="dialog" class="tw:modal-backdrop">
+            <button>close</button>
+          </form>
+        </dialog>
+        <div class="tw:p-3 tw:flex tw:flex-col tw:gap-1">
+          <div class="tw:font-semibold tw:text-sm tw:truncate" title="{{ user_gift.gift.name }}">{{ user_gift.gift.name }}</div>
+          {% if user_gift.gift.description %}
+            <div class="tw:text-xs tw:text-base-content/60 tw:line-clamp-2">{{ user_gift.gift.description|striptags|truncatechars:100 }}</div>
+          {% endif %}
+          <div class="tw:text-xs tw:text-base-content/70">
+            {% if user_gift.buyer and user_gift.buyer_id != user_gift.owner_id %}
+              От <span class="tw:font-semibold">{{ user_gift.buyer.username }}</span>
+            {% else %}
+              Для себя
+            {% endif %}
+            · {{ user_gift.created_at|date:"d.m.Y" }}
+          </div>
+          {% if user_gift.message %}
+            <div class="tw:text-xs tw:italic tw:text-base-content/80 tw:truncate" title="{{ user_gift.message }}">«{{ user_gift.message }}»</div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="tw:flex tw:flex-col tw:items-center tw:justify-center tw:py-12 tw:gap-2 tw:text-base-content/60">
+    <i class="fa fa-gift tw:text-3xl"></i>
+    <div class="tw:font-semibold">Пока нет подарков</div>
+    <div class="tw:text-sm">Подарки из магазина будут отображаться здесь</div>
+    <a href="{% url 'balance:shop' %}" class="tw:btn tw:btn-primary tw:btn-sm tw:mt-2">
+      <i class="fa fa-shopping-bag"></i> Перейти в магазин
+    </a>
+  </div>
+{% endif %}

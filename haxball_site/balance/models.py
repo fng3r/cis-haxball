@@ -171,16 +171,45 @@ class ShopItemQuerySet(models.QuerySet):
         return self.filter(is_active=True)
 
 
+class Gift(models.Model):
+    """Коллекционный подарок. Продается как ShopItem с типом GIFT."""
+
+    slug = models.SlugField('Слаг', unique=True, max_length=128)
+    name = models.CharField('Название', max_length=255)
+    description = models.TextField('Описание', blank=True)
+    image = models.ImageField('Изображение', upload_to='gifts/', blank=True, null=True)
+    created_at = models.DateTimeField('Создан', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлен', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Подарок'
+        verbose_name_plural = 'Подарки'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class ShopItem(models.Model):
     class ProductType(models.TextChoices):
         STUB = 'stub', 'Заглушка'
         SUBSCRIPTION = 'subscription', 'Подписка'
         CHANGE_USERNAME = 'change_username', 'Смена никнейма'
         CHANGE_PUBLIC_ID = 'change_public_id', 'Смена public id'
+        GIFT = 'gift', 'Подарок'
 
     slug = models.SlugField('Слаг', unique=True, max_length=128)
     product_type = models.CharField(
         'Тип товара', max_length=32, choices=ProductType.choices, default=ProductType.SUBSCRIPTION
+    )
+    gift = models.ForeignKey(
+        Gift,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='shop_items',
+        verbose_name='Подарок',
+        help_text='Обязательно для товаров с типом «Подарок»',
     )
     name = models.CharField('Название', max_length=255)
     description = models.TextField('Описание', blank=True)
@@ -201,6 +230,12 @@ class ShopItem(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        if self.product_type == self.ProductType.GIFT and not self.gift_id:
+            raise ValidationError('Для товара с типом «Подарок» необходимо указать подарок')
+        if self.product_type != self.ProductType.GIFT and self.gift_id:
+            raise ValidationError('Подарок можно указать только для товара с типом «Подарок»')
 
     @property
     def subscription_tier(self):
@@ -233,3 +268,33 @@ class ShopPurchase(models.Model):
 
     def __str__(self):
         return f'{self.user.username} — {self.item.name} ({self.amount} CC)'
+
+
+class UserGift(models.Model):
+    """Экземпляр подарка, принадлежащий пользователю."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name='ID подарка')
+    gift = models.ForeignKey(Gift, on_delete=models.PROTECT, related_name='ownerships', verbose_name='Подарок')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_gifts', verbose_name='Владелец')
+    buyer = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name='sent_gifts', verbose_name='Даритель'
+    )
+    amount = models.DecimalField('Сумма списания', max_digits=10, decimal_places=2)
+    transaction = models.ForeignKey(
+        Transaction, on_delete=models.PROTECT, related_name='gift_purchases', verbose_name='Транзакция'
+    )
+    message = models.CharField('Сообщение', max_length=500, blank=True, default='')
+    created_at = models.DateTimeField('Дата дарения', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Подарок пользователя'
+        verbose_name_plural = 'Подарки пользователей'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['owner', 'created_at']),
+            models.Index(fields=['buyer', 'created_at']),
+        ]
+
+    def __str__(self):
+        buyer_name = self.buyer.username if self.buyer else '—'
+        return f'{self.gift.name} → {self.owner.username} (от {buyer_name})'

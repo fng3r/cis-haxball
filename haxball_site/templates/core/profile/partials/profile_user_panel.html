@@ -126,6 +126,20 @@
               {% endif %}
             </div>
           </div>
+
+          <input type="radio"
+                 name="profile-tabs"
+                 class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
+                 role="tab"
+                 aria-label="Подарки{% if owned_gifts %} ({{ owned_gifts|length }}){% endif %}" />
+          <div class="tw:tab-content tw:w-full">
+            <div class="tw:h-[600px] tw:overflow-x-hidden tw:overflow-y-auto tw:mt-0 tw:px-1"
+                 id="profile-gifts-panel"
+                 role="tabpanel"
+                 aria-labelledby="profile-gifts-tab">
+              {% include 'core/profile/partials/profile_gifts.html' with owned_gifts=owned_gifts %}
+            </div>
+          </div>
         </div>
       </div>
     </div>
