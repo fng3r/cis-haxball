@@ -112,7 +112,7 @@ class ShopService:
                 raise ValidationError(f'Пользователь «{recipient_username}» не найден')
         else:
             owner = buyer
-        message = str(metadata.get('message') or '').strip()[:500]
+        message = str(metadata.get('message') or '').strip()[:50]
         return owner, message
 
     @staticmethod

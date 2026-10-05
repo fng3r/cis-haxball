@@ -22,5 +22,5 @@ class GiftService:
             buyer=buyer,
             amount=amount,
             transaction=transaction_obj,
-            message=(message or '').strip()[:500],
+            message=(message or '').strip()[:50],
         )

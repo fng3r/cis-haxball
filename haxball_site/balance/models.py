@@ -322,7 +322,7 @@ class UserGift(models.Model):
     transaction = models.ForeignKey(
         Transaction, on_delete=models.PROTECT, related_name='gift_purchases', verbose_name='Транзакция'
     )
-    message = models.CharField('Сообщение', max_length=500, blank=True, default='')
+    message = models.CharField('Сообщение', max_length=50, blank=True, default='')
     created_at = models.DateTimeField('Дата дарения', auto_now_add=True)
 
     class Meta:
