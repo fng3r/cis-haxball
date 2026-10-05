@@ -75,6 +75,30 @@ def _build_shop_item_context(
     }
 
 
+def _build_shop_groups(user, balance_value) -> list[dict]:
+    """Active shop items grouped by active category (uncategorized first)."""
+    items = ShopItem.objects.active().select_related('gift', 'category')
+
+    uncategorized: list[dict] = []
+    by_category: dict[int, dict] = {}
+    for item in items:
+        item_ctx = _build_shop_item_context(item=item, user=user, balance_value=balance_value)
+        category = item.category
+        if category is None or not category.is_active:
+            uncategorized.append(item_ctx)
+        else:
+            group = by_category.setdefault(category.id, {'category': category, 'items': []})
+            group['items'].append(item_ctx)
+
+    groups = []
+    if uncategorized:
+        groups.append({'category': None, 'items': uncategorized})
+    groups.extend(
+        sorted(by_category.values(), key=lambda group: (group['category'].position, group['category'].title))
+    )
+    return groups
+
+
 PURCHASES_PER_PAGE = 10
 
 
@@ -134,15 +158,14 @@ class ShopView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         balance_value = user.balance.current_balance
 
-        items = ShopItem.objects.active().select_related('gift')
-        item_contexts = [_build_shop_item_context(item=item, user=user, balance_value=balance_value) for item in items]
+        groups = _build_shop_groups(user, balance_value)
 
         purchases_page = _get_user_purchases_page(user, page=1)
 
         context.update(
             {
                 'current_balance': balance_value,
-                'items': item_contexts,
+                'groups': groups,
                 'is_htmx': False,
                 'purchases': purchases_page.object_list,
                 'has_more_purchases': purchases_page.has_next(),
@@ -201,16 +224,13 @@ class ShopPurchaseView(LoginRequiredMixin, View):
         user.balance.refresh_from_db(fields=['current_balance', 'updated_at'])
         balance_value = user.balance.current_balance
 
-        items = ShopItem.objects.active().select_related('gift')
-        item_contexts = [
-            _build_shop_item_context(item=shop_item, user=user, balance_value=balance_value) for shop_item in items
-        ]
+        groups = _build_shop_groups(user, balance_value)
 
         list_html = render(
             request,
             self.template_name,
             {
-                'items': item_contexts,
+                'groups': groups,
                 'current_balance': balance_value,
                 'is_htmx': True,
             },

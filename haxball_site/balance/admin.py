@@ -13,7 +13,7 @@ from unfold.contrib.filters.admin import (
 
 from balance.services import BalanceService
 
-from .models import Balance, Gift, ShopItem, ShopPurchase, Transaction, UserGift
+from .models import Balance, Gift, ShopCategory, ShopItem, ShopPurchase, Transaction, UserGift
 
 
 @admin.register(Balance)
@@ -140,12 +140,23 @@ class ShopItemAdminForm(ModelForm):
     )
 
 
+@admin.register(ShopCategory)
+class ShopCategoryAdmin(ModelAdmin):
+    list_display = ['title', 'slug', 'position', 'is_active', 'updated_at']
+    list_editable = ['position', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['title', 'slug']
+    ordering = ['position', 'title']
+    readonly_fields = ['created_at', 'updated_at']
+    prepopulated_fields = {'slug': ('title',)}
+
+
 @admin.register(ShopItem)
 class ShopItemAdmin(ModelAdmin):
     form = ShopItemAdminForm
-    list_display = ['name', 'price', 'product_type', 'gift', 'position', 'is_active', 'updated_at']
+    list_display = ['name', 'price', 'product_type', 'gift', 'category', 'position', 'is_active', 'updated_at']
     list_editable = ['position', 'is_active']
-    list_filter = ['product_type', 'is_active']
+    list_filter = ['product_type', 'category', 'is_active']
     search_fields = ['name', 'slug']
     ordering = ['position', 'name']
     readonly_fields = ['created_at', 'updated_at']

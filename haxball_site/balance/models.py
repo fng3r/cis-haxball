@@ -166,6 +166,26 @@ class Transaction(models.Model):
         return self.transaction_type == self.TransactionType.TRANSFER_OUT
 
 
+class ShopCategory(models.Model):
+    """Категория товаров магазина для группировки."""
+
+    title = models.CharField('Название', max_length=255)
+    slug = models.SlugField('Слаг', unique=True, max_length=128)
+    description = models.TextField('Описание', blank=True)
+    position = models.PositiveIntegerField('Порядок отображения')
+    is_active = models.BooleanField('Активна', default=True)
+    created_at = models.DateTimeField('Создан', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлен', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Категория товаров'
+        verbose_name_plural = 'Категории товаров'
+        ordering = ['position', 'title']
+
+    def __str__(self):
+        return self.title
+
+
 class ShopItemQuerySet(models.QuerySet):
     def active(self):
         return self.filter(is_active=True)
@@ -210,6 +230,14 @@ class ShopItem(models.Model):
         related_name='shop_items',
         verbose_name='Подарок',
         help_text='Обязательно для товаров с типом «Подарок»',
+    )
+    category = models.ForeignKey(
+        ShopCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='shop_items',
+        verbose_name='Категория',
     )
     name = models.CharField('Название', max_length=255)
     description = models.TextField('Описание', blank=True)
