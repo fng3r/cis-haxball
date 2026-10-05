@@ -87,7 +87,7 @@ def _build_shop_groups(user, balance_value) -> list[dict]:
     }
 
     uncategorized: list[dict] = []
-    for item in ShopItem.objects.active().select_related('gift', 'category'):
+    for item in ShopItem.objects.active().available_to(user).select_related('gift', 'category'):
         item_ctx = _build_shop_item_context(item=item, user=user, balance_value=balance_value)
         category = item.category
         if category is None or not category.is_active:
@@ -205,7 +205,9 @@ class ShopPurchaseView(LoginRequiredMixin, View):
 
     def post(self, request: HttpRequest, slug: str) -> HttpResponse:
         user = request.user
-        item = get_object_or_404(ShopItem.objects.active().select_related('gift'), slug=slug)
+        item = get_object_or_404(
+            ShopItem.objects.active().available_to(user).select_related('gift'), slug=slug
+        )
 
         success_message = None
         error_message = None

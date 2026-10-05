@@ -159,6 +159,7 @@ class ShopItemAdmin(ModelAdmin):
     list_filter = ['product_type', 'category', 'is_active']
     search_fields = ['name', 'slug']
     readonly_fields = ['created_at', 'updated_at']
+    filter_horizontal = ['allowed_users']
 
 
 @admin.register(ShopPurchase)

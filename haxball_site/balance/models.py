@@ -190,6 +190,10 @@ class ShopItemQuerySet(models.QuerySet):
     def active(self):
         return self.filter(is_active=True)
 
+    def available_to(self, user: User):
+        """Items with no allowed users set are available to everyone."""
+        return self.filter(models.Q(allowed_users=user) | models.Q(allowed_users__isnull=True)).distinct()
+
 
 class Gift(models.Model):
     """Коллекционный подарок. Продается как ShopItem с типом GIFT."""
@@ -238,6 +242,13 @@ class ShopItem(models.Model):
         blank=True,
         related_name='shop_items',
         verbose_name='Категория',
+    )
+    allowed_users = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name='available_shop_items',
+        verbose_name='Доступен пользователям',
+        help_text='Если никто не выбран, товар доступен всем пользователям',
     )
     name = models.CharField('Название', max_length=255)
     description = models.TextField('Описание', blank=True)
