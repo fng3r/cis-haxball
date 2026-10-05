@@ -26,8 +26,31 @@
       </div>
 
       <form method="dialog" class="tw:modal-backdrop">
-        <button />
+        <button>close</button>
       </form>
+
+      {% if item.product_type == 'gift' %}
+        <dialog id="gift-lightbox-shop-{{ item.pk }}" class="tw:modal">
+          <div class="tw:modal-box tw:max-w-3xl tw:w-full tw:p-0 tw:overflow-hidden">
+            {% if item.image %}
+              <img src="{{ item.image.url }}"
+                   alt="{{ item.name }}"
+                   class="tw:w-full tw:max-h-[85vh] tw:object-cover">
+            {% elif item.gift and item.gift.image %}
+              <img src="{{ item.gift.image.url }}"
+                   alt="{{ item.name }}"
+                   class="tw:w-full tw:max-h-[85vh] tw:object-cover">
+            {% else %}
+              <img src="{% static 'img/cis-coin.png' %}"
+                   alt="{{ item.name }}"
+                   class="tw:w-full tw:max-h-[85vh] tw:object-cover">
+            {% endif %}
+          </div>
+          <form method="dialog" class="tw:modal-backdrop">
+            <button>close</button>
+          </form>
+        </dialog>
+      {% endif %}
     </dialog>
   {% endif %}
 
