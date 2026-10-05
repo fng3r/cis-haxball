@@ -207,13 +207,5 @@ class UserGiftAdmin(ModelAdmin):
     list_filter_submit = True
     search_fields = ['owner__username', 'buyer__username', 'gift__name']
     ordering = ['-created_at']
-    readonly_fields = ['gift', 'owner', 'buyer', 'amount', 'transaction', 'message', 'created_at']
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
+    autocomplete_fields = ['gift', 'owner', 'buyer', 'transaction']
+    readonly_fields = ['amount', 'transaction', 'created_at']
