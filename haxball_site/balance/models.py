@@ -276,6 +276,13 @@ class ShopItem(models.Model):
         if self.product_type != self.ProductType.GIFT and self.gift_id:
             raise ValidationError('Подарок можно указать только для товара с типом «Подарок»')
 
+    def save(self, *args, **kwargs):
+        if self.product_type == self.ProductType.GIFT and self.gift_id:
+            gift_image = Gift.objects.filter(pk=self.gift_id).values_list('image', flat=True).first()
+            if gift_image != (self.image.name if self.image else None):
+                self.image = gift_image
+        super().save(*args, **kwargs)
+
     @property
     def subscription_tier(self):
         if self.product_type != self.ProductType.SUBSCRIPTION:
