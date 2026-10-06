@@ -8,13 +8,18 @@
        {% if profile.background %}style="background-image:url({{ profile.background.url }});"{% endif %}>
     <div class="tw:rounded-b-lg tw:min-h-[39rem] tw:bg-base-100/35 tw:backdrop-blur-[1px]">
       <div class="tw:card tw:px-6 tw:pt-2 tw:pb-3">
-        <div class="tw:tabs tw:tabs-border tw:w-full tw:gap-x-2 tw:gap-y-3 tw:bg-transparent!" role="tablist">
+        <div class="tw:tabs tw:tabs-border tw:w-full tw:gap-x-2 tw:gap-y-3 tw:bg-transparent!"
+             role="tablist"
+             x-data="{ profileTab: ['achievements', 'gifts'].includes(new URLSearchParams(window.location.search).get('tab')) ? new URLSearchParams(window.location.search).get('tab') : 'main' }"
+             x-effect="const url = new URL(window.location.href); if (profileTab === 'main') { url.searchParams.delete('tab'); } else { url.searchParams.set('tab', profileTab); } history.replaceState(null, '', url);">
           <input type="radio"
                  name="profile-tabs"
+                 value="main"
+                 x-model="profileTab"
                  class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
                  role="tab"
                  aria-label="Основная информация"
-                 checked />
+                 {% if request.GET.tab != 'gifts' and request.GET.tab != 'achievements' %}checked{% endif %} />
           <div class="tw:tab-content tw:w-full">
             <div id="profile-info-panel" class="tw:sm:h-[600px]" role="tabpanel" aria-labelledby="profile-info-tab">
               <div class="tw:mb-[30px] tw:ml-0 tw:flex tw:w-full tw:flex-wrap tw:gap-y-2 tw:rounded-[10px] tw:px-4 tw:py-2 tw:shadow-[0_0_10px_#000]">
@@ -90,9 +95,12 @@
 
           <input type="radio"
                  name="profile-tabs"
+                 value="achievements"
+                 x-model="profileTab"
                  class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
                  role="tab"
-                 aria-label="Достижения" />
+                 aria-label="Достижения"
+                 {% if request.GET.tab == 'achievements' %}checked{% endif %} />
           <div class="tw:tab-content tw:w-full">
             <div class="tw:h-[600px] tw:overflow-x-hidden tw:overflow-y-auto tw:mt-0 tw:px-1"
                  id="profile-achievements-panel"
@@ -129,9 +137,12 @@
 
           <input type="radio"
                  name="profile-tabs"
+                 value="gifts"
+                 x-model="profileTab"
                  class="tw:tab tw:font-semibold tw:checked:bg-transparent! tw:shadow-none!"
                  role="tab"
-                 aria-label="Подарки{% if owned_gifts %} ({{ owned_gifts|length }}){% endif %}" />
+                 aria-label="Подарки{% if owned_gifts %} ({{ owned_gifts|length }}){% endif %}"
+                 {% if request.GET.tab == 'gifts' %}checked{% endif %} />
           <div class="tw:tab-content tw:w-full">
             <div class="tw:h-[600px] tw:overflow-x-hidden tw:overflow-y-auto tw:mt-0 tw:px-1"
                  id="profile-gifts-panel"

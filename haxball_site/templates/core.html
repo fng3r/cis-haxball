@@ -65,8 +65,14 @@
       {% include 'core/include/sidebar_for_online_users.html' %}
 
       {% block sidebar_last_activity %}
-        {% show_last_activity 12 %}
+        {% show_last_activity 10 %}
       {% endblock %}
+
+      {% if project_settings.SHOW_LAST_GIFTS %}
+        {% block sidebar_last_gifts %}
+          {% show_last_gifts 5 %}
+        {% endblock %}
+      {% endif %}
 
       {% block sidebar_top_comments %}
         {% show_top_comments 5 %}

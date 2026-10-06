@@ -1,0 +1,45 @@
+{% load static %}
+{% load cache %}
+{% load humanize %}
+{% load i18n %}
+
+{% cache 60 last_gifts_cache %}
+  <div class="tw:card tw:bg-base-100 tw:rounded-lg tw:shadow-sm tw:border tw:border-base-200">
+    <div class="tw:px-4 tw:py-3 tw:bg-base-200 tw:rounded-t-lg tw:border-b tw:border-base-300">
+      <h5 class="tw:text-sm tw:font-semibold tw:text-base-content/90 tw:flex tw:items-center tw:gap-2 tw:mb-0!">
+        <i class="fa fa-gift tw:text-primary" aria-hidden="true"></i>
+        Подарки
+      </h5>
+    </div>
+    <div class="tw:p-1.5 tw:space-y-1">
+      {% for user_gift in last_gifts %}
+        <a href="{{ user_gift.owner.user_profile.get_absolute_url }}?tab=gifts"
+           class="tw:flex tw:items-center tw:gap-2.5 tw:p-2 tw:rounded-lg tw:hover:bg-base-200 tw:active:translate-y-[0.5px] tw:transition-transform tw:group">
+          <span class="tw:flex tw:items-center tw:justify-center tw:size-8 tw:rounded-lg tw:shrink-0 tw:overflow-hidden tw:bg-base-200">
+            {% if user_gift.gift.image %}
+              <img src="{{ user_gift.gift.image.url }}" alt="{{ user_gift.gift.name }}" class="tw:size-8 tw:object-cover">
+            {% else %}
+              <img src="{% static 'img/cis-coin.png' %}" alt="{{ user_gift.gift.name }}" class="tw:size-8 tw:object-cover">
+            {% endif %}
+          </span>
+          <div class="tw:flex tw:flex-col tw:min-w-0 tw:flex-grow">
+            <span class="tw:truncate tw:text-sm tw:font-medium tw:group-hover:text-primary tw:transition-colors"
+                  title="{{ user_gift.gift.name }}">{{ user_gift.gift.name }}</span>
+            <span class="tw:text-xs tw:text-base-content/60 tw:truncate">
+              {% if user_gift.buyer and user_gift.buyer_id != user_gift.owner_id %}
+                {{ user_gift.buyer.username }} → {{ user_gift.owner.username }}
+              {% else %}
+                {{ user_gift.owner.username }}
+              {% endif %}
+              · {{ user_gift.created_at|naturalday:'j b.'|capfirst }}
+            </span>
+          </div>
+        </a>
+      {% empty %}
+        <div class="tw:text-center tw:py-4">
+          <p class="tw:text-sm tw:text-base-content/70">Пока никто не дарил подарки</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endcache %}

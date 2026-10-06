@@ -377,7 +377,7 @@ def notify_gift_received(user_gift):
         actor_name = buyer.username if buyer is not None else 'Администрация'
         gift_name = user_gift.gift.name
         try:
-            profile_url = owner.user_profile.get_absolute_url()
+            profile_url = f'{owner.user_profile.get_absolute_url()}?tab=gifts'
         except Exception:
             profile_url = None
 
