@@ -1,8 +1,10 @@
 from contextlib import suppress
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.db import models
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -14,7 +16,7 @@ from balance.models import ShopPurchase
 from balance.services import ShopService
 from core.models import NewComment
 
-from .models import ShopItem, Transaction
+from .models import ShopCategory, ShopItem, Transaction
 
 
 class BalanceView(LoginRequiredMixin, TemplateView):
@@ -75,11 +77,43 @@ def _build_shop_item_context(
     }
 
 
+def _build_shop_groups(user, balance_value) -> list[dict]:
+    """Active shop items grouped by active category (uncategorized first).
+
+    Every active category gets a section even when it has no active items,
+    so the template can render a fallback for empty categories.
+    """
+    groups_by_category_id: dict[int, dict] = {
+        category.id: {'category': category, 'items': []}
+        for category in ShopCategory.objects.filter(is_active=True)
+    }
+
+    uncategorized: list[dict] = []
+    for item in ShopItem.objects.active().available_to(user).select_related('gift', 'category'):
+        item_ctx = _build_shop_item_context(item=item, user=user, balance_value=balance_value)
+        category = item.category
+        if category is None or not category.is_active:
+            uncategorized.append(item_ctx)
+        else:
+            groups_by_category_id[category.id]['items'].append(item_ctx)
+
+    groups = []
+    if uncategorized:
+        groups.append({'category': None, 'items': uncategorized})
+    groups.extend(
+        sorted(
+            groups_by_category_id.values(),
+            key=lambda group: (group['category'].position, group['category'].title),
+        )
+    )
+    return groups
+
+
 PURCHASES_PER_PAGE = 10
 
 
 def _get_user_purchases_page(user, page: int = 1):
-    purchases = ShopPurchase.objects.filter(user=user).select_related('item').order_by('-created_at')
+    purchases = ShopPurchase.objects.filter(user=user).select_related('item__gift').order_by('-created_at')
     paginator = Paginator(purchases, PURCHASES_PER_PAGE)
     page_obj = paginator.get_page(page)
     _attach_purchase_extras(list(page_obj.object_list))
@@ -120,6 +154,9 @@ def _build_purchase_details(purchase: ShopPurchase) -> str:
     if product_type == ShopItem.ProductType.CHANGE_PUBLIC_ID:
         new_public_id = metadata.get('new_public_id')
         return f'Новый public id: {new_public_id}' if new_public_id else ''
+    if product_type == ShopItem.ProductType.GIFT:
+        recipient = metadata.get('recipient')
+        return f'Получатель: {recipient}' if recipient else ''
     return ''
 
 
@@ -131,15 +168,14 @@ class ShopView(LoginRequiredMixin, TemplateView):
         user = self.request.user
         balance_value = user.balance.current_balance
 
-        items = ShopItem.objects.active().select_related(None)
-        item_contexts = [_build_shop_item_context(item=item, user=user, balance_value=balance_value) for item in items]
+        groups = _build_shop_groups(user, balance_value)
 
         purchases_page = _get_user_purchases_page(user, page=1)
 
         context.update(
             {
                 'current_balance': balance_value,
-                'items': item_contexts,
+                'groups': groups,
                 'is_htmx': False,
                 'purchases': purchases_page.object_list,
                 'has_more_purchases': purchases_page.has_next(),
@@ -171,7 +207,9 @@ class ShopPurchaseView(LoginRequiredMixin, View):
 
     def post(self, request: HttpRequest, slug: str) -> HttpResponse:
         user = request.user
-        item = get_object_or_404(ShopItem.objects.active(), slug=slug)
+        item = get_object_or_404(
+            ShopItem.objects.active().available_to(user).select_related('gift'), slug=slug
+        )
 
         success_message = None
         error_message = None
@@ -183,6 +221,9 @@ class ShopPurchaseView(LoginRequiredMixin, View):
                 purchase_metadata['new_username'] = request.POST.get('new_username', '').strip()
             elif item.product_type == ShopItem.ProductType.CHANGE_PUBLIC_ID:
                 purchase_metadata['new_public_id'] = request.POST.get('new_public_id', '').strip()
+            elif item.product_type == ShopItem.ProductType.GIFT:
+                purchase_metadata['recipient_username'] = request.POST.get('recipient_username', '').strip()
+                purchase_metadata['message'] = request.POST.get('message', '').strip()
             purchase = ShopService.purchase_item(user, item, metadata=purchase_metadata)
             success_message = _build_success_message(purchase)
             if purchase.metadata.get('comment_id'):
@@ -195,16 +236,13 @@ class ShopPurchaseView(LoginRequiredMixin, View):
         user.balance.refresh_from_db(fields=['current_balance', 'updated_at'])
         balance_value = user.balance.current_balance
 
-        items = ShopItem.objects.active().select_related(None)
-        item_contexts = [
-            _build_shop_item_context(item=shop_item, user=user, balance_value=balance_value) for shop_item in items
-        ]
+        groups = _build_shop_groups(user, balance_value)
 
         list_html = render(
             request,
             self.template_name,
             {
-                'items': item_contexts,
+                'groups': groups,
                 'current_balance': balance_value,
                 'is_htmx': True,
             },
@@ -251,8 +289,42 @@ def _build_success_message(purchase: ShopPurchase) -> str:
         return 'Заявка на смену никнейма создана. Комментарий с заявкой автоматически добавлен в "Орг. раздел".'
     if purchase.item.product_type == ShopItem.ProductType.CHANGE_PUBLIC_ID:
         return 'Заявка на смену public id создана. Комментарий с заявкой автоматически добавлен в "Орг. раздел".'
+    if purchase.item.product_type == ShopItem.ProductType.GIFT:
+        recipient = purchase.metadata.get('recipient')
+        gift_name = purchase.item.gift.name if purchase.item.gift else purchase.item.name
+        if recipient and recipient != purchase.user.username:
+            return f'Подарок «{gift_name}» отправлен пользователю {recipient}.'
+        return f'Подарок «{gift_name}» добавлен в вашу коллекцию.'
 
     return 'Покупка успешно завершена.'
+
+
+class UserSearchView(LoginRequiredMixin, View):
+    """Username autocomplete options for the gift recipient input."""
+
+    template_name = 'balance/partials/user_search_dropdown.html'
+
+    def get(self, request: HttpRequest) -> HttpResponse:
+        # htmx sends the input's own name (recipient_username), accept `q` too.
+        query = (request.GET.get('q', '').strip() or request.GET.get('recipient_username', '').strip())
+        users: list[User] = []
+        if query:
+            # Rank so an exact (then prefix) match is always on top:
+            # typing the full username guarantees surfacing that user.
+            users = list(
+                User.objects.filter(username__icontains=query)
+                .annotate(
+                    rank=models.Case(
+                        models.When(username__iexact=query, then=models.Value(0)),
+                        models.When(username__istartswith=query, then=models.Value(1)),
+                        default=models.Value(2),
+                        output_field=models.IntegerField(),
+                    )
+                )
+                .select_related('user_profile')
+                .order_by('rank', 'username')[:7]
+            )
+        return render(request, self.template_name, {'users': users, 'query': query})
 
 
 def _build_error_message(error: ValidationError) -> str:

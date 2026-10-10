@@ -10,4 +10,5 @@ urlpatterns = [
     path('shop/', views.ShopView.as_view(), name='shop'),
     path('shop/purchases/', views.ShopPurchaseHistoryView.as_view(), name='shop_purchases'),
     path('shop/purchase/<slug:slug>/', views.ShopPurchaseView.as_view(), name='shop_purchase'),
+    path('user-search/', views.UserSearchView.as_view(), name='user_search'),
 ]

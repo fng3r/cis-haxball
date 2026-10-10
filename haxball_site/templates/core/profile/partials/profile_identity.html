@@ -5,11 +5,25 @@
   <div class="tw:card-body tw:flex tw:flex-col tw:gap-4 tw:p-4!">
     <div class="tw:flex tw:gap-4 tw:items-center tw:justify-between">
       <div class="tw:flex tw:min-w-0 tw:items-center tw:gap-4">
-        <div class="tw:avatar tw:shrink-0">
+        <button type="button"
+                class="tw:avatar tw:shrink-0 tw:cursor-zoom-in tw:bg-transparent tw:p-0 tw:outline-none"
+                onclick="document.getElementById('avatar-lightbox-{{ profile.id }}').showModal()"
+                aria-label="Увеличить аватар {{ profile.name.username }}">
           <div class="tw:size-20 tw:rounded-box tw:shadow-[0_6px_18px_rgba(0,0,0,0.4)] tw:sm:size-28 tw:ring-offset-2 tw:ring-offset-base-200{% if profile.avatar_frame and profile.name|can_use_premium_features %} tw:ring-2{% if profile.avatar_frame == 'yellow' %} tw:ring-yellow-400{% elif profile.avatar_frame == 'orange' %} tw:ring-orange-400{% elif profile.avatar_frame == 'blue' %} tw:ring-blue-500{% elif profile.avatar_frame == 'violet' %} tw:ring-violet-500{% elif profile.avatar_frame == 'rose' %} tw:ring-rose-500{% endif %}{% else %} tw:ring-1 tw:ring-base-content/30{% endif %}">
             <img src="{{ profile.avatar.url }}" alt="Аватар {{ profile.name.username }}">
           </div>
-        </div>
+        </button>
+
+        <dialog id="avatar-lightbox-{{ profile.id }}" class="tw:modal">
+          <div class="tw:modal-box tw:max-w-3xl tw:w-full tw:p-0 tw:overflow-hidden">
+            <img src="{{ profile.avatar.url }}"
+                 alt="Аватар {{ profile.name.username }}"
+                 class="tw:w-full tw:max-h-[85vh] tw:object-cover">
+          </div>
+          <form method="dialog" class="tw:modal-backdrop">
+            <button>close</button>
+          </form>
+        </dialog>
 
         <div class="tw:min-w-0 tw:flex-1 tw:flex tw:flex-col tw:gap-1.5">
           <div class="tw:flex tw:items-center tw:gap-2">

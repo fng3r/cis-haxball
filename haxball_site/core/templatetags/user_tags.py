@@ -133,6 +133,19 @@ def show_last_activity(count=15):
     return {'last_comments': last_comments}
 
 
+# Последние подаренные подарки для сайд-бара
+@register.inclusion_tag('core/include/sidebar_for_last_gifts.html')
+def show_last_gifts(count=5):
+    from balance.models import UserGift
+
+    last_gifts = (
+        UserGift.objects.select_related('gift', 'owner', 'owner__user_profile', 'buyer').order_by('-created_at')[
+            :count
+        ]
+    )
+    return {'last_gifts': last_gifts}
+
+
 # Топ лайков за ТЕКУЩИЙ день, неделя, месяц, год
 @register.inclusion_tag('core/include/sidebar_for_top_comments.html')
 def show_top_comments(count=5):

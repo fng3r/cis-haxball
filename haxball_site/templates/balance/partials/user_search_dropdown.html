@@ -1,0 +1,17 @@
+{% if query %}
+  <div class="tw:absolute tw:top-full tw:left-0 tw:right-0 tw:z-50 tw:mt-1 tw:overflow-hidden tw:rounded-lg tw:border tw:border-base-300 tw:bg-base-100 tw:shadow-lg">
+    {% for searched_user in users %}
+      <button type="button"
+              data-username="{{ searched_user.username }}"
+              onclick="const picker = this.closest('[data-recipient-picker]'); picker.querySelector('input[name=recipient_username]').value = this.dataset.username; picker.querySelector('.recipient-results').innerHTML = '';"
+              class="tw:flex tw:w-full tw:items-center tw:gap-2 tw:px-3 tw:py-2 tw:text-left tw:text-sm tw:hover:bg-base-200">
+        <img src="{{ searched_user.user_profile.avatar.url }}"
+             alt=""
+             class="tw:w-6 tw:h-6 tw:rounded-full tw:object-cover">
+        <span class="tw:font-medium tw:truncate">{{ searched_user.username }}</span>
+      </button>
+    {% empty %}
+      <div class="tw:px-3 tw:py-2 tw:text-sm tw:text-base-content/60">Пользователь не найден</div>
+    {% endfor %}
+  </div>
+{% endif %}

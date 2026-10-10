@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from balance.models import ShopItem, ShopPurchase
-from balance.services.balance import BalanceService
+from balance.services import BalanceService, GiftService
 from core.models import NewComment, Post, Subscription, UserIcon
 
 
@@ -24,16 +24,45 @@ class ShopService:
             metadata = {}
 
         with transaction.atomic():
+            gift_owner = None
+            gift_message = ''
+            if item.product_type == ShopItem.ProductType.GIFT:
+                if item.gift is None:
+                    raise ValidationError('Этот подарок недоступен для покупки')
+                gift_owner, gift_message = ShopService._resolve_gift_recipient(user, metadata)
+
             transaction_obj = BalanceService.subtract_coins(
                 user=user,
                 amount=item.price,
-                description=f'Покупка: {item.name}',
+                description=(
+                    f'Подарок: {item.gift.name} для {gift_owner.username}'
+                    if gift_owner is not None and gift_owner != user
+                    else f'Покупка: {item.name}'
+                ),
             )
 
             subscription = None
             purchase_metadata: dict[str, object] = {}
 
-            if item.product_type == ShopItem.ProductType.SUBSCRIPTION:
+            if item.product_type == ShopItem.ProductType.GIFT:
+                user_gift = GiftService.grant_gift(
+                    buyer=user,
+                    owner=gift_owner,
+                    gift=item.gift,
+                    transaction_obj=transaction_obj,
+                    amount=item.price,
+                    message=gift_message,
+                )
+                purchase_metadata = {
+                    'user_gift_id': str(user_gift.id),
+                    'recipient': gift_owner.username,
+                    'message': user_gift.message,
+                }
+                if gift_owner != user:
+                    from custom_notifications.notifications import notify_gift_received
+
+                    notify_gift_received(user_gift)
+            elif item.product_type == ShopItem.ProductType.SUBSCRIPTION:
                 subscription = ShopService._activate_subscription(user, item)
                 purchase_metadata = {
                     'subscription_id': subscription.id,
@@ -75,6 +104,20 @@ class ShopService:
                 purchase.save(update_fields=['metadata'])
 
             return purchase
+
+    @staticmethod
+    def _resolve_gift_recipient(buyer: User, metadata: dict[str, object]) -> tuple[User, str]:
+        """Resolve gift owner (buyer himself or another user) and optional message."""
+        recipient_username = str(metadata.get('recipient_username') or '').strip()
+        if recipient_username:
+            try:
+                owner = User.objects.get(username__iexact=recipient_username)
+            except User.DoesNotExist:
+                raise ValidationError(f'Пользователь «{recipient_username}» не найден')
+        else:
+            owner = buyer
+        message = str(metadata.get('message') or '').strip()[:50]
+        return owner, message
 
     @staticmethod
     def _create_service_comment(

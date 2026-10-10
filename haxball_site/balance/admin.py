@@ -13,7 +13,7 @@ from unfold.contrib.filters.admin import (
 
 from balance.services import BalanceService
 
-from .models import Balance, ShopItem, ShopPurchase, Transaction
+from .models import Balance, Gift, ShopCategory, ShopItem, ShopPurchase, Transaction, UserGift
 
 
 @admin.register(Balance)
@@ -140,15 +140,26 @@ class ShopItemAdminForm(ModelForm):
     )
 
 
+@admin.register(ShopCategory)
+class ShopCategoryAdmin(ModelAdmin):
+    list_display = ['title', 'slug', 'position', 'is_active', 'updated_at']
+    list_editable = ['position', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['title', 'slug']
+    ordering = ['position', 'title']
+    readonly_fields = ['created_at', 'updated_at']
+    prepopulated_fields = {'slug': ('title',)}
+
+
 @admin.register(ShopItem)
 class ShopItemAdmin(ModelAdmin):
     form = ShopItemAdminForm
-    list_display = ['name', 'price', 'product_type', 'position', 'is_active', 'updated_at']
+    list_display = ['name', 'price', 'product_type', 'gift', 'category', 'position', 'is_active', 'updated_at']
     list_editable = ['position', 'is_active']
-    list_filter = ['product_type', 'is_active']
+    list_filter = ['product_type', 'category', 'is_active']
     search_fields = ['name', 'slug']
-    ordering = ['position', 'name']
     readonly_fields = ['created_at', 'updated_at']
+    filter_horizontal = ['allowed_users']
 
 
 @admin.register(ShopPurchase)
@@ -167,3 +178,34 @@ class ShopPurchaseAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+class GiftAdminForm(ModelForm):
+    class Meta:
+        model = Gift
+        fields = '__all__'
+
+    description = forms.CharField(
+        label='Описание', widget=CKEditorUploadingWidget(config_name='default'), required=False
+    )
+
+
+@admin.register(Gift)
+class GiftAdmin(ModelAdmin):
+    form = GiftAdminForm
+    list_display = ['name', 'slug', 'updated_at']
+    search_fields = ['name', 'slug']
+    ordering = ['name']
+    readonly_fields = ['created_at', 'updated_at']
+    prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(UserGift)
+class UserGiftAdmin(ModelAdmin):
+    list_display = ['gift', 'owner', 'buyer', 'amount', 'created_at']
+    list_filter = [('owner', AutocompleteSelectFilter), ('buyer', AutocompleteSelectFilter)]
+    list_filter_submit = True
+    search_fields = ['owner__username', 'buyer__username', 'gift__name']
+    ordering = ['-created_at']
+    autocomplete_fields = ['gift', 'owner', 'buyer', 'transaction']
+    readonly_fields = ['amount', 'transaction', 'created_at']

@@ -1,8 +1,24 @@
 {% load mathfilters %}
 {% load static %}
 
-{% for item_ctx in items %}
-  {% include 'balance/partials/shop_item_card.html' with item=item_ctx.item can_afford=item_ctx.can_afford %}
+{% for group in groups %}
+  {% if group.category %}
+    <div class="tw:col-span-full">
+      <h3 class="tw:text-xl tw:font-semibold tw:mt-2 tw:mb-0!">{{ group.category.title }}</h3>
+      {% if group.category.description %}
+        <div class="tw:text-sm tw:text-base-content/70 tw:mt-1">{{ group.category.description|linebreaksbr }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% for item_ctx in group.items %}
+    {% include 'balance/partials/shop_item_card.html' with item=item_ctx.item can_afford=item_ctx.can_afford %}
+  {% empty %}
+    {% if group.category %}
+      <div class="tw:col-span-full tw:text-center tw:py-6 tw:bg-base-200/50 tw:rounded-lg">
+        <p class="tw:text-sm tw:text-base-content/60">В этой категории пока нет доступных товаров</p>
+      </div>
+    {% endif %}
+  {% endfor %}
 {% empty %}
   <div class="tw:col-span-full tw:text-center tw:py-10 tw:bg-base-100 tw:rounded-lg">
     <p class="tw:text-base tw:text-base-content/70">В магазине пока нет доступных товаров</p>

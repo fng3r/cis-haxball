@@ -270,6 +270,14 @@ class ProfileDetail(View):
             get_player_medals(player) if player else StructuredMedalCollection(categories=[], total_count=0)
         )
         context['previous_nicknames'] = UserNicknameHistoryItem.objects.filter(user=profile.name).order_by('-edited')
+        # Gifts owned by this user (NFT-like collectibles, stackable: each purchase = separate instance)
+        from balance.models import UserGift
+
+        context['owned_gifts'] = list(
+            UserGift.objects.filter(owner=profile.name)
+            .select_related('gift', 'buyer', 'owner')
+            .order_by('-created_at')
+        )
 
         if request.htmx:
             response = render(request, 'core/profile/profile_detail.html#profile-container', context)
