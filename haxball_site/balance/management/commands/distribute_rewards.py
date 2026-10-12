@@ -17,6 +17,33 @@ from predictions.models import PredictionsContestTournament
 from predictions.utils import calculate_tour_rewards as calculate_predictions_tour_rewards
 from tournament.models import League, Match, PlayerMatchStatistics, TourNumber
 
+
+def parse_tours_spec(raw):
+    """Parse '4' / '1-4' / '1,3,5-7' into a sorted set of tour numbers."""
+    numbers = set()
+    for part in raw.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        if '-' in part:
+            try:
+                start_raw, end_raw = part.split('-', 1)
+                start, end = int(start_raw), int(end_raw)
+            except ValueError as exc:
+                raise CommandError(f'Invalid tour range "{part}": expected like "1-4"') from exc
+            if start > end:
+                raise CommandError(f'Invalid tour range "{part}": start is greater than end')
+            numbers.update(range(start, end + 1))
+        else:
+            try:
+                numbers.add(int(part))
+            except ValueError as exc:
+                raise CommandError(f'Invalid tour number "{part}"') from exc
+    if not numbers:
+        raise CommandError('No tours specified')
+    return numbers
+
+
 MATCH_PARTICIPATION_REWARD = Decimal('10.00')
 MATCH_WIN_BONUS = Decimal('5.00')
 
@@ -90,8 +117,11 @@ class Command(BaseCommand):
             help='Режим начисления: fantasy, predictions или matches',
         )
         parser.add_argument('league_slug', type=str, help='Slug лиги')
-        parser.add_argument('--from', type=int, required=True, dest='tour_from', help='Начальный тур')
-        parser.add_argument('--to', type=int, dest='tour_to', help='Конечный тур (включительно)')
+        parser.add_argument(
+            '--tours',
+            required=True,
+            help='Номера туров, например "5", "1-4" или "1,3,5-7"',
+        )
         parser.add_argument(
             '--stage',
             type=int,
@@ -115,8 +145,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         activity = options['activity']
         league_slug = options['league_slug']
-        tour_from = options['tour_from']
-        tour_to = options['tour_to']
+        tour_numbers = parse_tours_spec(options['tours'])
         stage_order = options['stage']
         dry_run = options['dry_run']
         send_notifications, single_notification = self._parse_notification_modes(options['notifications'])
@@ -124,7 +153,7 @@ class Command(BaseCommand):
         config = self._get_mode_config(activity)
         tournament = self._get_tournament(config, league_slug, activity)
         league = tournament if activity == 'matches' else tournament.league
-        tours = self._get_tours(league, tour_from, tour_to, stage_order)
+        tours = self._get_tours(league, tour_numbers, stage_order)
 
         if dry_run:
             self._handle_dry_run(tournament, tours, config, send_notifications, single_notification, activity)
@@ -254,13 +283,7 @@ class Command(BaseCommand):
         except model.DoesNotExist as exc:
             raise CommandError(f'Турнир "{activity}" для лиги "{league_slug}" не найден') from exc
 
-    def _get_tours(self, league, tour_from, tour_to, stage_order):
-        if tour_to is None:
-            tour_to = tour_from
-
-        if tour_to < tour_from:
-            raise CommandError('tour_to не может быть меньше tour_from')
-
+    def _get_tours(self, league, tour_numbers, stage_order):
         stage = league.stages.filter(order=stage_order).first()
         if stage is None:
             available_orders = list(league.stages.order_by('order').values_list('order', flat=True))
@@ -270,16 +293,21 @@ class Command(BaseCommand):
             )
 
         tours = list(
-            TourNumber.objects.filter(
-                league=league, stage__order=stage_order, number__gte=tour_from, number__lte=tour_to
-            )
+            TourNumber.objects.filter(league=league, stage__order=stage_order, number__in=tour_numbers)
             .select_related('stage')
             .order_by('number', 'date_from', 'id')
         )
         if not tours:
             raise CommandError(
-                f'Не найдено туров для начисления в диапазоне {tour_from}-{tour_to} '
+                f'Не найдено туров для начисления среди {sorted(tour_numbers)} '
                 f'для этапа {stage_order} ({stage.stage_name})'
+            )
+
+        found_numbers = {tour.number for tour in tours}
+        missing = sorted(tour_numbers - found_numbers)
+        if missing:
+            self.stdout.write(
+                self.style.WARNING(f'Туры не найдены на этапе {stage_order} ({stage.stage_name}): {missing}, пропущены')
             )
 
         return tours
