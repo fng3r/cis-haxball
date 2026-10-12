@@ -6,24 +6,88 @@ from django.db import transaction
 from balance.services import BalanceService
 from custom_notifications.notifications import (
     get_notification_actor,
+    notify_combined_match_rewards,
     notify_combined_rewards,
+    notify_match_reward,
     notify_reward,
 )
 from fantasy_league.models import FantasyTournament
 from fantasy_league.utils import calculate_tour_rewards as calculate_fantasy_tour_rewards
 from predictions.models import PredictionsContestTournament
 from predictions.utils import calculate_tour_rewards as calculate_predictions_tour_rewards
-from tournament.models import TournamentStage, TourNumber
+from tournament.models import League, Match, PlayerMatchStatistics, TournamentStage, TourNumber
+
+MATCH_PARTICIPATION_REWARD = Decimal('10.00')
+MATCH_WIN_BONUS = Decimal('5.00')
+
+
+def calculate_match_tour_rewards(tour, league_or_tournament):
+    """Calculate payouts for played matches in a tour.
+
+    Grants MATCH_PARTICIPATION_REWARD for each played match a user took part in,
+    plus MATCH_WIN_BONUS for each win. Amounts are aggregated per user within
+    the tour so the command creates a single transaction per user per tour.
+
+    Accepts either a League or a tournament object with a ``league`` attribute
+    (to match the ``calculate_tour_rewards(tour, tournament)`` signature used
+    by the fantasy/predictions modes).
+    """
+    league = getattr(league_or_tournament, 'league', league_or_tournament)
+
+    matches = list(
+        Match.objects.filter(numb_tour=tour, is_played=True).select_related(
+            'team_home', 'team_guest', 'result', 'numb_tour'
+        )
+    )
+    if not matches:
+        return {'total_participants': 0, 'total_prize_pool': Decimal('0.00'), 'user_rewards': []}
+
+    stats = (
+        PlayerMatchStatistics.objects.filter(match__in=matches, league=league)
+        .select_related('player__name', 'team', 'match__result')
+        .order_by('match_id')
+    )
+
+    # user_id -> {'user': User, 'reward_amount': Decimal, 'matches_played': int, 'wins': int}
+    payouts: dict[int, dict] = {}
+    for stat in stats:
+        player = stat.player
+        user = getattr(player, 'name', None)
+        if user is None:
+            continue
+
+        amount = MATCH_PARTICIPATION_REWARD
+        wins = 0
+        winner_id = getattr(getattr(stat.match, 'result', None), 'winner_id', None)
+        if winner_id is not None and stat.team_id == winner_id:
+            amount += MATCH_WIN_BONUS
+            wins = 1
+
+        entry = payouts.setdefault(
+            user.id, {'user': user, 'reward_amount': Decimal('0.00'), 'matches_played': 0, 'wins': 0}
+        )
+        entry['reward_amount'] += amount
+        entry['matches_played'] += 1
+        entry['wins'] += wins
+
+    user_rewards = sorted(payouts.values(), key=lambda item: item['reward_amount'], reverse=True)
+    total_prize_pool = sum((item['reward_amount'] for item in user_rewards), Decimal('0.00'))
+
+    return {
+        'total_participants': len(user_rewards),
+        'total_prize_pool': total_prize_pool,
+        'user_rewards': user_rewards,
+    }
 
 
 class Command(BaseCommand):
-    help = 'Начислить монеты за награды фэнтези или турнира прогнозистов'
+    help = 'Начислить монеты за награды фэнтези, турнира прогнозистов или участие в матчах'
 
     def add_arguments(self, parser):
         parser.add_argument(
             'activity',
-            choices=['fantasy', 'predictions'],
-            help='Режим начисления: fantasy или predictions',
+            choices=['fantasy', 'predictions', 'matches'],
+            help='Режим начисления: fantasy, predictions или matches',
         )
         parser.add_argument('league_slug', type=str, help='Slug лиги')
         parser.add_argument('--from', type=int, required=True, dest='tour_from', help='Начальный тур')
@@ -51,11 +115,12 @@ class Command(BaseCommand):
         send_notifications, single_notification = self._parse_notification_modes(options['notifications'])
 
         config = self._get_mode_config(activity)
-        tournament = self._get_tournament(config['tournament_model'], league_slug, activity)
-        tours = self._get_tours(tournament, tour_from, tour_to)
+        tournament = self._get_tournament(config, league_slug, activity)
+        league = tournament if activity == 'matches' else tournament.league
+        tours = self._get_tours(league, tour_from, tour_to, include_playoffs=(activity == 'matches'))
 
         if dry_run:
-            self._handle_dry_run(tournament, tours, config, send_notifications, single_notification)
+            self._handle_dry_run(tournament, tours, config, send_notifications, single_notification, activity)
             return
 
         actor = get_notification_actor() if send_notifications else None
@@ -73,7 +138,7 @@ class Command(BaseCommand):
                 )
                 continue
 
-            description = self._build_description(tour, tournament, config['label'])
+            description = self._build_description(tour, tournament, config['label'], activity)
             rewards_data = config['calculate_tour_rewards'](tour, tournament)
 
             transactions_count = 0
@@ -93,7 +158,13 @@ class Command(BaseCommand):
                     )
                     transactions_count += 1
                     total_amount += amount
-                    tour_payouts.append((reward['user'], amount))
+                    extra = None
+                    if activity == 'matches':
+                        extra = {
+                            'matches_played': reward.get('matches_played', 0),
+                            'wins': reward.get('wins', 0),
+                        }
+                    tour_payouts.append((reward['user'], amount, extra))
 
             created_transactions_count += transactions_count
 
@@ -110,14 +181,14 @@ class Command(BaseCommand):
                         self._accumulate_payouts(combined_payouts, tour, tour_payouts)
                     else:
                         notifications_count += self._send_tour_notifications(
-                            tour, tour_payouts, tournament, config['label'], actor
+                            tour, tour_payouts, tournament, config['label'], actor, activity
                         )
             else:
                 self.stdout.write(f'Тур {tour.number}: нет положительных наград для начисления ("{description}")')
 
         if send_notifications and single_notification and combined_payouts:
             notifications_count += self._send_combined_notifications(
-                combined_payouts, tournament, config['label'], actor
+                combined_payouts, tournament, config['label'], actor, activity
             )
 
         self.stdout.write('')
@@ -147,26 +218,45 @@ class Command(BaseCommand):
                 'label': 'фэнтези',
             }
 
+        if activity == 'matches':
+            return {
+                'tournament_model': League,
+                'calculate_tour_rewards': calculate_match_tour_rewards,
+                'label': 'матчей',
+            }
+
         return {
             'tournament_model': PredictionsContestTournament,
             'calculate_tour_rewards': calculate_predictions_tour_rewards,
             'label': 'турнира прогнозистов',
         }
 
-    def _get_tournament(self, model, league_slug, activity):
+    def _get_tournament(self, config, league_slug, activity):
+        model = config['tournament_model']
+        if model is League:
+            try:
+                return League.objects.get(slug=league_slug)
+            except League.DoesNotExist as exc:
+                raise CommandError(f'Лига "{league_slug}" не найдена') from exc
         try:
             return model.objects.select_related('league').get(league__slug=league_slug)
         except model.DoesNotExist as exc:
             raise CommandError(f'Турнир "{activity}" для лиги "{league_slug}" не найден') from exc
 
-    def _get_tours(self, tournament, tour_from, tour_to):
+    def _get_tours(self, league, tour_from, tour_to, include_playoffs=False):
         if tour_to is None:
             tour_to = tour_from
 
         if tour_to < tour_from:
             raise CommandError('tour_to не может быть меньше tour_from')
 
-        tours_in_range = TourNumber.objects.filter(league=tournament.league, number__gte=tour_from, number__lte=tour_to)
+        tours_in_range = TourNumber.objects.filter(league=league, number__gte=tour_from, number__lte=tour_to)
+        if include_playoffs:
+            tours = list(tours_in_range.order_by('number', 'date_from', 'id'))
+            if not tours:
+                raise CommandError(f'Не найдено туров для начисления в диапазоне {tour_from}-{tour_to}')
+            return tours
+
         playoff_numbers = list(
             tours_in_range.filter(stage__type=TournamentStage.StageType.PLAYOFF)
             .order_by('number')
@@ -185,7 +275,9 @@ class Command(BaseCommand):
 
         return tours
 
-    def _handle_dry_run(self, tournament, tours, config, send_notifications=True, single_notification=False):
+    def _handle_dry_run(
+        self, tournament, tours, config, send_notifications=True, single_notification=False, activity=None
+    ):
         total_transactions_count = 0
         total_amount = Decimal('0.00')
 
@@ -196,7 +288,7 @@ class Command(BaseCommand):
                 )
                 continue
 
-            description = self._build_description(tour, tournament, config['label'])
+            description = self._build_description(tour, tournament, config['label'], activity)
             rewards_data = config['calculate_tour_rewards'](tour, tournament)
             positive_rewards = [reward for reward in rewards_data['user_rewards'] if reward['reward_amount'] > 0]
             tour_total_amount = sum((reward['reward_amount'] for reward in positive_rewards), Decimal('0.00'))
@@ -222,39 +314,66 @@ class Command(BaseCommand):
 
     @staticmethod
     def _accumulate_payouts(combined_payouts, tour, tour_payouts):
-        for user, amount in tour_payouts:
+        for payout in tour_payouts:
+            user, amount = payout[0], payout[1]
+            extra = payout[2] if len(payout) > 2 else None
             entry = combined_payouts.setdefault(user.id, {'user': user, 'total_amount': Decimal('0.00'), 'details': []})
             entry['total_amount'] += amount
-            entry['details'].append({'tour_number': tour.number, 'amount': amount})
+            detail = {'tour_number': tour.number, 'amount': amount}
+            if extra:
+                detail.update(extra)
+            entry['details'].append(detail)
 
-    def _send_tour_notifications(self, tour, tour_payouts, tournament, label, actor):
+    def _send_tour_notifications(self, tour, tour_payouts, tournament, label, actor, activity=None):
         count = 0
-        league_title = tournament.league.title
-        for user, amount in tour_payouts:
-            notify_reward(
-                recipient=user,
-                amount=amount,
-                tour_number=tour.number,
-                activity_label=label,
-                league_title=league_title,
-                actor=actor,
-            )
+        league_title = self._resolve_league_title(tournament)
+        for payout in tour_payouts:
+            user, amount = payout[0], payout[1]
+            extra = payout[2] if len(payout) > 2 else None
+            if activity == 'matches':
+                notify_match_reward(
+                    recipient=user,
+                    amount=amount,
+                    tour_number=tour.number,
+                    league_title=league_title,
+                    matches_played=(extra or {}).get('matches_played', 0),
+                    wins=(extra or {}).get('wins', 0),
+                    actor=actor,
+                )
+            else:
+                notify_reward(
+                    recipient=user,
+                    amount=amount,
+                    tour_number=tour.number,
+                    activity_label=label,
+                    league_title=league_title,
+                    actor=actor,
+                )
             count += 1
         self.stdout.write(f'Тур {tour.number}: отправлено {count} уведомлений')
         return count
 
-    def _send_combined_notifications(self, combined_payouts, tournament, label, actor):
+    def _send_combined_notifications(self, combined_payouts, tournament, label, actor, activity=None):
         count = 0
-        league_title = tournament.league.title
+        league_title = self._resolve_league_title(tournament)
         for entry in combined_payouts.values():
-            notify_combined_rewards(
-                recipient=entry['user'],
-                total_amount=entry['total_amount'],
-                tour_details=entry['details'],
-                activity_label=label,
-                league_title=league_title,
-                actor=actor,
-            )
+            if activity == 'matches':
+                notify_combined_match_rewards(
+                    recipient=entry['user'],
+                    total_amount=entry['total_amount'],
+                    tour_details=entry['details'],
+                    league_title=league_title,
+                    actor=actor,
+                )
+            else:
+                notify_combined_rewards(
+                    recipient=entry['user'],
+                    total_amount=entry['total_amount'],
+                    tour_details=entry['details'],
+                    activity_label=label,
+                    league_title=league_title,
+                    actor=actor,
+                )
             count += 1
         tour_numbers = sorted(
             {detail['tour_number'] for entry in combined_payouts.values() for detail in entry['details']}
@@ -262,8 +381,16 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Отправлено {count} объединённых уведомлений за туры {tour_numbers}'))
         return count
 
-    def _build_description(self, tour, tournament, label):
-        return f'Награды за {tour.number} тур {label} ({tournament.league.title})'
+    def _build_description(self, tour, tournament, label, activity=None):
+        league_title = self._resolve_league_title(tournament)
+        if activity == 'matches':
+            return f'Награды за участие в матче {tour.number} тура ({league_title})'
+        return f'Награды за {tour.number} тур {label} ({league_title})'
+
+    @staticmethod
+    def _resolve_league_title(tournament):
+        league = getattr(tournament, 'league', tournament)
+        return league.title if league is not None else str(tournament)
 
     def _is_tour_completed(self, tour):
         matches = tour.tour_matches.all()
