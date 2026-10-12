@@ -15,7 +15,7 @@ from fantasy_league.models import FantasyTournament
 from fantasy_league.utils import calculate_tour_rewards as calculate_fantasy_tour_rewards
 from predictions.models import PredictionsContestTournament
 from predictions.utils import calculate_tour_rewards as calculate_predictions_tour_rewards
-from tournament.models import League, Match, PlayerMatchStatistics, TournamentStage, TourNumber
+from tournament.models import League, Match, PlayerMatchStatistics, TourNumber
 
 MATCH_PARTICIPATION_REWARD = Decimal('10.00')
 MATCH_WIN_BONUS = Decimal('5.00')
@@ -92,6 +92,12 @@ class Command(BaseCommand):
         parser.add_argument('league_slug', type=str, help='Slug лиги')
         parser.add_argument('--from', type=int, required=True, dest='tour_from', help='Начальный тур')
         parser.add_argument('--to', type=int, dest='tour_to', help='Конечный тур (включительно)')
+        parser.add_argument(
+            '--stage',
+            type=int,
+            default=1,
+            help='Порядковый номер этапа турнира (по умолчанию 1)',
+        )
         parser.add_argument('--dry-run', action='store_true', help='Показать начисления без создания транзакций')
         parser.add_argument(
             '--notifications',
@@ -111,13 +117,14 @@ class Command(BaseCommand):
         league_slug = options['league_slug']
         tour_from = options['tour_from']
         tour_to = options['tour_to']
+        stage_order = options['stage']
         dry_run = options['dry_run']
         send_notifications, single_notification = self._parse_notification_modes(options['notifications'])
 
         config = self._get_mode_config(activity)
         tournament = self._get_tournament(config, league_slug, activity)
         league = tournament if activity == 'matches' else tournament.league
-        tours = self._get_tours(league, tour_from, tour_to, include_playoffs=(activity == 'matches'))
+        tours = self._get_tours(league, tour_from, tour_to, stage_order)
 
         if dry_run:
             self._handle_dry_run(tournament, tours, config, send_notifications, single_notification, activity)
@@ -132,9 +139,13 @@ class Command(BaseCommand):
         notifications_count = 0
 
         for tour in tours:
+            tour_display = self._tour_display(tour)
+            if not tour.tour_matches.exists():
+                self.stdout.write(f'{tour_display}: нет матчей, начисление наград пропущено')
+                continue
             if not self._is_tour_completed(tour):
                 self.stdout.write(
-                    self.style.WARNING(f'Тур {tour.number}: не все матчи сыграны, начисление наград пропущено')
+                    self.style.WARNING(f'{tour_display}: не все матчи сыграны, начисление наград пропущено')
                 )
                 continue
 
@@ -172,7 +183,7 @@ class Command(BaseCommand):
                 distributed_tours_count += 1
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'Тур {tour.number}: создано {transactions_count} транзакций '
+                        f'{tour_display}: создано {transactions_count} транзакций '
                         f'на сумму {total_amount} ("{description}")'
                     )
                 )
@@ -184,7 +195,7 @@ class Command(BaseCommand):
                             tour, tour_payouts, tournament, config['label'], actor, activity
                         )
             else:
-                self.stdout.write(f'Тур {tour.number}: нет положительных наград для начисления ("{description}")')
+                self.stdout.write(f'{tour_display}: нет положительных наград для начисления ("{description}")')
 
         if send_notifications and single_notification and combined_payouts:
             notifications_count += self._send_combined_notifications(
@@ -243,34 +254,32 @@ class Command(BaseCommand):
         except model.DoesNotExist as exc:
             raise CommandError(f'Турнир "{activity}" для лиги "{league_slug}" не найден') from exc
 
-    def _get_tours(self, league, tour_from, tour_to, include_playoffs=False):
+    def _get_tours(self, league, tour_from, tour_to, stage_order):
         if tour_to is None:
             tour_to = tour_from
 
         if tour_to < tour_from:
             raise CommandError('tour_to не может быть меньше tour_from')
 
-        tours_in_range = TourNumber.objects.filter(league=league, number__gte=tour_from, number__lte=tour_to)
-        if include_playoffs:
-            tours = list(tours_in_range.order_by('number', 'date_from', 'id'))
-            if not tours:
-                raise CommandError(f'Не найдено туров для начисления в диапазоне {tour_from}-{tour_to}')
-            return tours
-
-        playoff_numbers = list(
-            tours_in_range.filter(stage__type=TournamentStage.StageType.PLAYOFF)
-            .order_by('number')
-            .values_list('number', flat=True)
-        )
-        for number in playoff_numbers:
-            self.stdout.write(f'Тур {number}: этап плей-офф, начисление наград пропущено')
+        stage = league.stages.filter(order=stage_order).first()
+        if stage is None:
+            available_orders = list(league.stages.order_by('order').values_list('order', flat=True))
+            raise CommandError(
+                f'Этап с порядковым номером {stage_order} не найден '
+                f'(доступные этапы: {available_orders or "нет этапов"})'
+            )
 
         tours = list(
-            tours_in_range.exclude(stage__type=TournamentStage.StageType.PLAYOFF).order_by('number', 'date_from', 'id')
+            TourNumber.objects.filter(
+                league=league, stage__order=stage_order, number__gte=tour_from, number__lte=tour_to
+            )
+            .select_related('stage')
+            .order_by('number', 'date_from', 'id')
         )
         if not tours:
             raise CommandError(
-                f'Не найдено туров для начисления в диапазоне {tour_from}-{tour_to} (туры плей-офф исключаются)'
+                f'Не найдено туров для начисления в диапазоне {tour_from}-{tour_to} '
+                f'для этапа {stage_order} ({stage.stage_name})'
             )
 
         return tours
@@ -282,9 +291,13 @@ class Command(BaseCommand):
         total_amount = Decimal('0.00')
 
         for tour in tours:
+            tour_display = self._tour_display(tour)
+            if not tour.tour_matches.exists():
+                self.stdout.write(f'{tour_display}: нет матчей, начисление наград будет пропущено')
+                continue
             if not self._is_tour_completed(tour):
                 self.stdout.write(
-                    self.style.WARNING(f'Тур {tour.number}: не все матчи сыграны, начисление наград будет пропущено')
+                    self.style.WARNING(f'{tour_display}: не все матчи сыграны, начисление наград будет пропущено')
                 )
                 continue
 
@@ -297,7 +310,7 @@ class Command(BaseCommand):
             total_amount += tour_total_amount
 
             self.stdout.write(
-                f'Тур {tour.number}: транзакций={len(positive_rewards)}, сумма={tour_total_amount}, '
+                f'{tour_display}: транзакций={len(positive_rewards)}, сумма={tour_total_amount}, '
                 f'описание="{description}"'
             )
 
@@ -350,7 +363,7 @@ class Command(BaseCommand):
                     actor=actor,
                 )
             count += 1
-        self.stdout.write(f'Тур {tour.number}: отправлено {count} уведомлений')
+        self.stdout.write(f'{self._tour_display(tour)}: отправлено {count} уведомлений')
         return count
 
     def _send_combined_notifications(self, combined_payouts, tournament, label, actor, activity=None):
@@ -391,6 +404,10 @@ class Command(BaseCommand):
     def _resolve_league_title(tournament):
         league = getattr(tournament, 'league', tournament)
         return league.title if league is not None else str(tournament)
+
+    @staticmethod
+    def _tour_display(tour):
+        return f'Тур {tour.number} ({tour.stage.stage_name})'
 
     def _is_tour_completed(self, tour):
         matches = tour.tour_matches.all()
