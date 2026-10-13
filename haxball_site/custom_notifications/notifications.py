@@ -357,6 +357,104 @@ def notify_combined_rewards(recipient, total_amount, tour_details, activity_labe
         logger.error(f'Error sending combined reward notification: {e}', exc_info=True)
 
 
+def notify_match_reward(recipient, amount, tour_number, league_title, matches_played=0, wins=0, url=None, actor=None):
+    """Send notification about a single-tour payout for played matches.
+
+    Args:
+        recipient: User who received the payout
+        amount: Payout amount (Decimal)
+        tour_number: Tour number the payout was made for
+        league_title: League title for context
+        matches_played: Number of played matches counted in this tour
+        wins: Number of wins counted in this tour
+        url: Optional URL to open on click (defaults to balance page)
+        actor: Optional actor User; resolved to system actor when omitted
+    """
+    try:
+        actor = actor or get_notification_actor(fallback=recipient)
+        if actor is None:
+            logger.error('Cannot send match reward notification: no actor available')
+            return
+        if url is None:
+            url = _get_balance_url()
+
+        verb = f'Начислены выплаты за матчи турнира {league_title} ({tour_number} тур):'
+        description = f'Начислено {amount} CC за {tour_number} тур ({league_title}).'
+
+        notify_user(
+            recipient=recipient,
+            actor=actor,
+            verb=verb,
+            description=description,
+            type='reward',
+            url=url,
+            amount=str(amount),
+            tour_number=tour_number,
+            activity_label='матчей',
+            league_title=league_title,
+            matches_played=matches_played,
+            wins=wins,
+        )
+        logger.debug(f'Match reward notification sent to {recipient} for tour {tour_number}: +{amount}')
+    except Exception as e:
+        logger.error(f'Error sending match reward notification: {e}', exc_info=True)
+
+
+def notify_combined_match_rewards(recipient, total_amount, tour_details, league_title, url=None, actor=None):
+    """Send a single notification aggregating match payouts across several tours.
+
+    Args:
+        recipient: User who received the payouts
+        total_amount: Total payout amount across all tours (Decimal)
+        tour_details: Iterable of dicts with keys 'tour_number', 'amount',
+            'matches_played' and 'wins'
+        league_title: League title for context
+        url: Optional URL to open on click (defaults to balance page)
+        actor: Optional actor User; resolved to system actor when omitted
+    """
+    try:
+        details = list(tour_details)
+        if not details:
+            return
+        actor = actor or get_notification_actor(fallback=recipient)
+        if actor is None:
+            logger.error('Cannot send combined match reward notification: no actor available')
+            return
+        if url is None:
+            url = _get_balance_url()
+
+        tour_numbers = sorted({item['tour_number'] for item in details})
+        if len(tour_numbers) == 1:
+            tours_str = f'{tour_numbers[0]} тур'
+        else:
+            tours_str = f'туры {", ".join(str(n) for n in tour_numbers)}'
+
+        verb = f'Начислены выплаты за матчи турнира {league_title} ({tours_str}):'
+        breakdown = '; '.join(
+            f'{item["tour_number"]} тур: +{item["amount"]} CC'
+            for item in sorted(details, key=lambda item: item['tour_number'])
+        )
+        description = f'Начислено {total_amount} CC за {tours_str} ({league_title}). {breakdown}.'
+
+        notify_user(
+            recipient=recipient,
+            actor=actor,
+            verb=verb,
+            description=description,
+            type='reward',
+            url=url,
+            amount=str(total_amount),
+            tour_numbers=tour_numbers,
+            activity_label='матчей',
+            league_title=league_title,
+        )
+        logger.debug(
+            f'Combined match reward notification sent to {recipient}: +{total_amount} for tours {tour_numbers}'
+        )
+    except Exception as e:
+        logger.error(f'Error sending combined match reward notification: {e}', exc_info=True)
+
+
 def notify_gift_received(user_gift):
     """Send notification to the gift recipient (skips self-gifts).
 
