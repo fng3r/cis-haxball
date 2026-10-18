@@ -616,8 +616,8 @@ def _finalize_personal_stats_row(row, nominal_points):
     return row
 
 
-def collect_user_prediction_stats(tournament, submissions):
-    """Aggregate one user's coefficient predictions by betting market.
+def collect_prediction_market_stats(tournament, submissions):
+    """Aggregate coefficient predictions by betting market.
 
     The prediction count includes every pick. Performance metrics only use
     settled, non-void predictions, matching the tournament standings logic.
@@ -663,6 +663,11 @@ def collect_user_prediction_stats(tournament, submissions):
         'overall': _finalize_personal_stats_row(overall, tournament.nominal_points),
         'rows': [_finalize_personal_stats_row(row, tournament.nominal_points) for row in rows_by_key.values()],
     }
+
+
+def collect_user_prediction_stats(tournament, submissions):
+    """Aggregate one user's coefficient predictions by betting market."""
+    return collect_prediction_market_stats(tournament, submissions)
 
 
 def collect_tours_overview(tournament, tours, submissions_by_tour):

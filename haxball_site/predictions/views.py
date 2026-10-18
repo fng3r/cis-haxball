@@ -39,6 +39,7 @@ from .utils import (
     build_match_outcome_groups_map,
     build_match_outcomes_map,
     calculate_tour_rewards,
+    collect_prediction_market_stats,
     collect_tour_prediction_stats,
     collect_tours_overview,
     collect_user_prediction_stats,
@@ -831,6 +832,8 @@ def stats_tab(request):
     tour_stats = None
     tours_overview = []
     stats_hidden = False
+    selected_tour_market_stats = None
+    overall_market_stats = None
 
     if selected_tournament and is_coefficients:
         tours = list(
@@ -858,6 +861,14 @@ def stats_tab(request):
             submissions_by_tour[submission.tour_id].append(submission)
 
         tours_overview = collect_tours_overview(selected_tournament, tours, submissions_by_tour)
+        closed_tour_ids = {tour.id for tour in tours if not is_tour_open_for_predictions(tour)}
+        closed_tour_submissions = [
+            submission
+            for tour_id, submissions in submissions_by_tour.items()
+            if tour_id in closed_tour_ids
+            for submission in submissions
+        ]
+        overall_market_stats = collect_prediction_market_stats(selected_tournament, closed_tour_submissions)
 
         if selected_tour:
             tour_full = next((tour for tour in tours if tour.id == selected_tour.id), selected_tour)
@@ -865,6 +876,8 @@ def stats_tab(request):
             tour_submissions = submissions_by_tour.get(selected_tour.id, [])
             stats_hidden = is_tour_open_for_predictions(selected_tour)
             tour_stats = collect_tour_prediction_stats(selected_tour, selected_tournament, tour_submissions, matches)
+            if not stats_hidden:
+                selected_tour_market_stats = collect_prediction_market_stats(selected_tournament, tour_submissions)
 
     context = {
         'tournament_form': tournament_form,
@@ -875,6 +888,8 @@ def stats_tab(request):
         'tour_stats': tour_stats,
         'tours_overview': tours_overview,
         'stats_hidden': stats_hidden,
+        'selected_tour_market_stats': selected_tour_market_stats,
+        'overall_market_stats': overall_market_stats,
     }
 
     return render(request, 'predictions/contest/stats_tab.html', context)

@@ -250,6 +250,30 @@
       {% endif %}
     {% endif %}
 
+    {% if overall_market_stats %}
+      <section class="tw:rounded-box tw:bg-base-200 tw:p-4">
+        <h5 class="tw:mb-3 tw:font-semibold">Статистика по типам прогнозов</h5>
+        <div role="tablist" class="tw:tabs tw:tabs-box tw:tabs-sm tw:p-0">
+          <input type="radio" name="general-market-stats-tabs" class="tw:tab" aria-label="Выбранный тур" checked>
+          <div role="tabpanel" class="tw:tab-content tw:pt-3">
+            {% if stats_hidden %}
+              <div class="tw:alert tw:alert-warning tw:alert-soft">
+                <i class="fa fa-clock-o"></i>
+                <span>Статистика по типам прогнозов появится после закрытия приёма прогнозов</span>
+              </div>
+            {% elif selected_tour_market_stats %}
+              {% include 'predictions/contest/partials/market_stats_table.html' with market_stats=selected_tour_market_stats %}
+            {% endif %}
+          </div>
+
+          <input type="radio" name="general-market-stats-tabs" class="tw:tab" aria-label="Все туры">
+          <div role="tabpanel" class="tw:tab-content tw:pt-3">
+            {% include 'predictions/contest/partials/market_stats_table.html' with market_stats=overall_market_stats %}
+          </div>
+        </div>
+      </section>
+    {% endif %}
+
     {% if tours_overview %}
       <div class="tw:card tw:bg-base-200 tw:shadow-sm">
         <div class="tw:card-body tw:p-4">
