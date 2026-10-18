@@ -21,7 +21,17 @@
             </div>
           </th>
           <td class="tw:text-center tw:tabular-nums">
-            <div class="tw:font-semibold">{{ row.decisive }}</div>
+            <div class="tw:inline-flex tw:items-center tw:justify-center tw:gap-1.5 tw:font-semibold">
+              <span>{{ row.decisive }}</span>
+              {% if row.pending %}
+                <span class="tw:badge tw:badge-xs tw:badge-ghost tw:gap-1 tw:font-normal tw:text-base-content/60"
+                      title="В игре: {{ row.pending }}"
+                      aria-label="В игре: {{ row.pending }}">
+                  <i class="fa fa-clock-o" aria-hidden="true"></i>
+                  {{ row.pending }}
+                </span>
+              {% endif %}
+            </div>
           </td>
           <td class="tw:text-center tw:tabular-nums">
             {% if row.decisive %}
@@ -74,7 +84,17 @@
           </div>
         </th>
         <td class="tw:text-center tw:tabular-nums">
-          <div>{{ market_stats.overall.decisive }}</div>
+          <div class="tw:inline-flex tw:items-center tw:justify-center tw:gap-1.5">
+            <span>{{ market_stats.overall.decisive }}</span>
+            {% if market_stats.overall.pending %}
+              <span class="tw:badge tw:badge-xs tw:badge-ghost tw:gap-1 tw:font-normal tw:text-base-content/60"
+                    title="В игре: {{ market_stats.overall.pending }}"
+                    aria-label="В игре: {{ market_stats.overall.pending }}">
+                <i class="fa fa-clock-o" aria-hidden="true"></i>
+                {{ market_stats.overall.pending }}
+              </span>
+            {% endif %}
+          </div>
         </td>
         <td class="tw:text-center tw:tabular-nums">
           {% if market_stats.overall.decisive %}
