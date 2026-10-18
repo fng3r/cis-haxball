@@ -563,6 +563,108 @@ def collect_tour_prediction_stats(tour, tournament, submissions, matches):
     }
 
 
+PERSONAL_STATS_CATEGORIES = (
+    ('result', 'Исход матча', '1X2'),
+    ('total_over', 'Тотал — больше', 'ТБ'),
+    ('total_under', 'Тотал — меньше', 'ТМ'),
+    ('individual_total_over', 'Инд. тотал — больше', 'ИТБ'),
+    ('individual_total_under', 'Инд. тотал — меньше', 'ИТМ'),
+    ('handicap_positive', 'Фора — положительная', 'Ф+'),
+    ('handicap_negative', 'Фора — отрицательная', 'Ф−'),
+)
+
+
+def _personal_stats_category(outcome):
+    """Return the personal-statistics bucket for a coefficient outcome."""
+    if outcome.market == MatchPredictionOutcome.Market.RESULT:
+        return 'result'
+    if outcome.market == MatchPredictionOutcome.Market.TOTAL:
+        return 'total_over' if outcome.selection == MatchPredictionOutcome.Selection.OVER else 'total_under'
+    if outcome.market == MatchPredictionOutcome.Market.INDIVIDUAL_TOTAL:
+        over_selections = {
+            MatchPredictionOutcome.Selection.HOME_OVER,
+            MatchPredictionOutcome.Selection.AWAY_OVER,
+        }
+        return 'individual_total_over' if outcome.selection in over_selections else 'individual_total_under'
+    if outcome.market == MatchPredictionOutcome.Market.HANDICAP:
+        return 'handicap_positive' if outcome.line > 0 else 'handicap_negative'
+    return None
+
+
+def _empty_personal_stats_row(key='', label='', code=''):
+    return {
+        'key': key,
+        'label': label,
+        'code': code,
+        'predictions': 0,
+        'decisive': 0,
+        'correct': 0,
+        'losses': 0,
+        'void_count': 0,
+        'pending': 0,
+        'coefficient_sum': Decimal('0'),
+        'points': Decimal('0'),
+    }
+
+
+def _finalize_personal_stats_row(row, nominal_points):
+    row['resolved'] = row['decisive'] + row['void_count']
+    row['losses'] = row['decisive'] - row['correct']
+    row['accuracy'] = row['correct'] / row['decisive'] * 100 if row['decisive'] else None
+    row['avg_coefficient'] = calculate_avg_coefficient(row['coefficient_sum'], row['decisive'])
+    row['roi'] = calculate_roi(row['points'], nominal_points, row['decisive'])
+    return row
+
+
+def collect_user_prediction_stats(tournament, submissions):
+    """Aggregate one user's coefficient predictions by betting market.
+
+    The prediction count includes every pick. Performance metrics only use
+    settled, non-void predictions, matching the tournament standings logic.
+    """
+    rows_by_key = {
+        key: _empty_personal_stats_row(key, label, code) for key, label, code in PERSONAL_STATS_CATEGORIES
+    }
+    overall = _empty_personal_stats_row(label='Все прогнозы', code='Σ')
+
+    for submission in submissions:
+        for prediction in submission.predictions.all():
+            outcome = getattr(prediction, 'outcome', None)
+            if outcome is None:
+                continue
+            category = _personal_stats_category(outcome)
+            if category is None:
+                continue
+
+            targets = (overall, rows_by_key[category])
+            for row in targets:
+                row['predictions'] += 1
+
+            match = getattr(prediction, 'match', None)
+            if match is None or not match.is_played:
+                for row in targets:
+                    row['pending'] += 1
+                continue
+            if is_prediction_void(prediction):
+                for row in targets:
+                    row['void_count'] += 1
+                continue
+
+            points = calculate_prediction_points(prediction, tournament=tournament)
+            correct = is_prediction_correct(prediction)
+            for row in targets:
+                row['decisive'] += 1
+                row['coefficient_sum'] += outcome.coefficient
+                row['points'] += points
+                if correct:
+                    row['correct'] += 1
+
+    return {
+        'overall': _finalize_personal_stats_row(overall, tournament.nominal_points),
+        'rows': [_finalize_personal_stats_row(row, tournament.nominal_points) for row in rows_by_key.values()],
+    }
+
+
 def collect_tours_overview(tournament, tours, submissions_by_tour):
     """Light per-tour summary across the whole tournament for the stats tab.
 
