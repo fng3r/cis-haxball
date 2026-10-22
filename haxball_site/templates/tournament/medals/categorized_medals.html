@@ -2,8 +2,11 @@
   <div class="tw:flex tw:flex-col tw:gap-4">
     {% for group in categorized_medals.groups %}
       <section class="tw:flex tw:flex-col tw:gap-2" aria-labelledby="medal-category-{{ forloop.counter }}">
-        <h3 id="medal-category-{{ forloop.counter }}"
-            class="tw:text-xl! tw:mb-0! tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ group.title }}</h3>
+        <div class="tw:flex tw:items-center tw:gap-1">
+          <h3 id="medal-category-{{ forloop.counter }}"
+              class="tw:text-xl! tw:mb-0! tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ group.title }}</h3>
+          {% include 'tournament/medals/career_medal_reference.html' with career_medals=group.career_medals reference_prefix="career-reference-plain" %}
+        </div>
         <div class="tw:grid tw:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] tw:gap-1.5">
           {% for grant in group.grants %}
             <div class="tw:tooltip tw:tooltip-top tw:w-fit tw:cursor-help medal-anchor-tooltip"

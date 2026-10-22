@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from django.db.models import F, QuerySet
 
@@ -9,6 +9,7 @@ from tournament.models import MedalCategory, MedalType, Player, PlayerMedal, Sea
 class CategorizedMedalGroup:
     category: MedalCategory | None
     grants: list[PlayerMedal]
+    career_medals: list[MedalType] = field(default_factory=list)
 
     @property
     def title(self):
@@ -35,6 +36,7 @@ class StructuredMedalGroup:
 class StructuredMedalCategoryGroup:
     category: MedalCategory | None
     groups: list[StructuredMedalGroup]
+    career_medals: list[MedalType] = field(default_factory=list)
 
     @property
     def title(self):
@@ -102,6 +104,7 @@ def get_player_medals_by_category(player: Player) -> CategorizedMedalCollection:
             groups.append(current_group)
         current_group.grants.append(grant)
 
+    _add_career_medal_reference(groups)
     return CategorizedMedalCollection(groups=groups, total_count=sum(len(group.grants) for group in groups))
 
 
@@ -177,4 +180,22 @@ def _group_medals(grants: QuerySet[PlayerMedal] | QuerySet[TeamMedal]) -> Struct
             current_category.groups.append(current_group)
         current_group.grants.append(grant)
 
+    _add_career_medal_reference(categories)
     return StructuredMedalCollection(categories=categories, total_count=total_count)
+
+
+def _add_career_medal_reference(groups):
+    if not groups:
+        return
+    groups_by_category = {group.category.pk if group.category else None: group for group in groups}
+    unit_order = {
+        MedalType.Unit.MATCHES: 0,
+        MedalType.Unit.GOALS: 1,
+        MedalType.Unit.ASSISTS: 2,
+        MedalType.Unit.CLEAN_SHEETS: 3,
+    }
+    medals = MedalType.objects.filter(kind=MedalType.Kind.CAREER_MILESTONE).order_by('unit', 'threshold', 'pk')
+    for medal_type in sorted(medals, key=lambda medal: unit_order.get(medal.unit, len(unit_order))):
+        group = groups_by_category.get(medal_type.category_id)
+        if group is not None:
+            group.career_medals.append(medal_type)
