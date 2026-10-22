@@ -1,0 +1,96 @@
+{% load widget_tweaks %}
+
+<div class="tw:space-y-4 tw:[&:has(.htmx-request)]:opacity-60 tw:[&:has(.htmx-request)]:transition-opacity">
+  {% if not selected_tournament %}
+    <div class="tw:text-center tw:text-base-content/70 tw:py-8">Данная секция будет доступна после запуска турниров</div>
+  {% elif not is_coefficients %}
+    <div class="tw:text-center tw:text-base-content/70 tw:py-8">Личная статистика доступна только для турниров в формате «Коэффициенты»</div>
+  {% elif not selected_user %}
+    <div class="tw:text-center tw:text-base-content/70 tw:py-8">В этом турнире пока нет участников</div>
+  {% else %}
+    <form class="tw:flex tw:flex-wrap tw:items-end tw:gap-3"
+          hx-get="{% url 'predictions:personal_stats_tab' %}?tournament={{ selected_tournament.pk }}"
+          hx-target="#personal-stats-content"
+          hx-swap="innerHTML"
+          hx-trigger="change">
+      <div class="tw:flex tw:min-w-56 tw:flex-col tw:gap-1">
+        <label class="tw:label tw:px-0 tw:font-bold tw:text-base-content" for="id_user">Пользователь</label>
+        {{ user_form.user|add_class:"tw:select tw:w-full" }}
+      </div>
+    </form>
+
+    <section class="tw:card tw:border tw:border-base-300 tw:bg-base-100">
+      <div class="tw:card-body tw:gap-4 tw:p-4">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3">
+          <div class="tw:flex tw:items-center tw:gap-3">
+            {% if selected_user.user_profile.avatar %}
+              <div class="tw:avatar">
+                <div class="tw:w-10 tw:rounded-full">
+                  <img src="{{ selected_user.user_profile.avatar.url }}" alt="{{ selected_user.username }}">
+                </div>
+              </div>
+            {% endif %}
+            <div>
+              <h4 class="tw:text-lg tw:font-semibold tw:mb-0!">{{ selected_user.username }}</h4>
+              <p class="tw:text-xs tw:text-base-content/60 tw:mb-0!">{{ selected_tournament.league.title }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tw:grid tw:grid-cols-2 tw:gap-3 tw:lg:grid-cols-4">
+          <div class="tw:rounded-box tw:bg-base-200 tw:p-3">
+            <div class="tw:text-xs tw:text-base-content/60">Прогнозы</div>
+            <div class="tw:text-2xl tw:font-bold tw:tabular-nums">{{ personal_stats.overall.resolved }}</div>
+            <div class="tw:text-xs tw:text-base-content/60">и еще {{ personal_stats.overall.pending }} в игре</div>
+          </div>
+          <div class="tw:rounded-box tw:bg-base-200 tw:p-3">
+            <div class="tw:text-xs tw:text-base-content/60">Точность</div>
+            <div class="tw:text-2xl tw:font-bold tw:tabular-nums">
+              {% if personal_stats.overall.accuracy is not None %}
+                {{ personal_stats.overall.accuracy|floatformat:1 }}%
+              {% else %}
+                —
+              {% endif %}
+            </div>
+            <div class="tw:text-xs tw:text-base-content/60">
+              <span class="tw:text-success">{{ personal_stats.overall.correct }}</span><span class="tw:text-base-content/40">/</span><span class="tw:text-error">{{ personal_stats.overall.losses }}</span> по исходам
+            </div>
+          </div>
+          <div class="tw:rounded-box tw:bg-base-200 tw:p-3">
+            <div class="tw:text-xs tw:text-base-content/60">Ср. коэффициент</div>
+            <div class="tw:text-2xl tw:font-bold tw:tabular-nums">
+              {% if personal_stats.overall.avg_coefficient is not None %}
+                ×{{ personal_stats.overall.avg_coefficient|floatformat:2 }}
+              {% else %}
+                —
+              {% endif %}
+            </div>
+            <div class="tw:text-xs tw:text-base-content/60">по рассчитанным прогнозам</div>
+          </div>
+          <div class="tw:rounded-box tw:bg-base-200 tw:p-3">
+            <div class="tw:text-xs tw:text-base-content/60">ROI</div>
+            <div class="tw:text-2xl tw:font-bold tw:tabular-nums {% if personal_stats.overall.roi > 0 %}tw:text-success{% elif personal_stats.overall.roi < 0 %}tw:text-error{% endif %}">
+              {% if personal_stats.overall.roi is not None %}
+                {# djlint:off #}
+                {% if personal_stats.overall.roi > 0 %}+{% endif %}{{ personal_stats.overall.roi|floatformat:1 }}%
+                {# djlint:on #}
+              {% else %}
+                —
+              {% endif %}
+            </div>
+            <div class="tw:text-xs tw:text-base-content/60">
+              баланс
+              <span class="{% if personal_stats.overall.points > 0 %}tw:text-success{% elif personal_stats.overall.points < 0 %}tw:text-error{% endif %}">
+                {# djlint:off #}
+                {% if personal_stats.overall.points > 0 %}+{% endif %}{{ personal_stats.overall.points|floatformat:0 }}
+                {# djlint:on #}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% include 'predictions/contest/partials/market_stats_table.html' with market_stats=personal_stats %}
+  {% endif %}
+</div>

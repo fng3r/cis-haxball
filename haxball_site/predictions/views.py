@@ -39,8 +39,10 @@ from .utils import (
     build_match_outcome_groups_map,
     build_match_outcomes_map,
     calculate_tour_rewards,
+    collect_prediction_market_stats,
     collect_tour_prediction_stats,
     collect_tours_overview,
+    collect_user_prediction_stats,
     get_regular_tours,
     get_tournament_standings,
     is_tour_open_for_predictions,
@@ -830,6 +832,8 @@ def stats_tab(request):
     tour_stats = None
     tours_overview = []
     stats_hidden = False
+    selected_tour_market_stats = None
+    overall_market_stats = None
 
     if selected_tournament and is_coefficients:
         tours = list(
@@ -857,6 +861,14 @@ def stats_tab(request):
             submissions_by_tour[submission.tour_id].append(submission)
 
         tours_overview = collect_tours_overview(selected_tournament, tours, submissions_by_tour)
+        closed_tour_ids = {tour.id for tour in tours if not is_tour_open_for_predictions(tour)}
+        closed_tour_submissions = [
+            submission
+            for tour_id, submissions in submissions_by_tour.items()
+            if tour_id in closed_tour_ids
+            for submission in submissions
+        ]
+        overall_market_stats = collect_prediction_market_stats(selected_tournament, closed_tour_submissions)
 
         if selected_tour:
             tour_full = next((tour for tour in tours if tour.id == selected_tour.id), selected_tour)
@@ -864,6 +876,8 @@ def stats_tab(request):
             tour_submissions = submissions_by_tour.get(selected_tour.id, [])
             stats_hidden = is_tour_open_for_predictions(selected_tour)
             tour_stats = collect_tour_prediction_stats(selected_tour, selected_tournament, tour_submissions, matches)
+            if not stats_hidden:
+                selected_tour_market_stats = collect_prediction_market_stats(selected_tournament, tour_submissions)
 
     context = {
         'tournament_form': tournament_form,
@@ -874,6 +888,54 @@ def stats_tab(request):
         'tour_stats': tour_stats,
         'tours_overview': tours_overview,
         'stats_hidden': stats_hidden,
+        'selected_tour_market_stats': selected_tour_market_stats,
+        'overall_market_stats': overall_market_stats,
     }
 
     return render(request, 'predictions/contest/stats_tab.html', context)
+
+
+def personal_stats_tab(request):
+    """Personal coefficient statistics grouped by prediction market."""
+    selected_tournament, _ = resolve_selected_tournament(request)
+    is_coefficients = (
+        selected_tournament is not None
+        and selected_tournament.scoring_method == PredictionsContestTournament.ScoringMethod.COEFFICIENTS
+    )
+    users_with_predictions = get_users_with_predictions(selected_tournament).order_by('username')
+
+    selected_user = None
+    user_id = request.GET.get('user')
+    if user_id:
+        selected_user = users_with_predictions.filter(pk=user_id).first()
+    if selected_user is None and request.user.is_authenticated:
+        selected_user = users_with_predictions.filter(pk=request.user.pk).first()
+    if selected_user is None:
+        selected_user = users_with_predictions.first()
+
+    user_form = UserFilterForm(initial={'user': selected_user.pk if selected_user else None})
+    user_form.fields['user'].queryset = users_with_predictions
+
+    personal_stats = None
+    if selected_tournament and selected_user and is_coefficients:
+        submissions = (
+            PredictionSubmission.objects.filter(user=selected_user, tournament=selected_tournament)
+            .exclude(tour__stage__type=TournamentStage.StageType.PLAYOFF)
+            .select_related('tournament', 'tour')
+            .prefetch_related('predictions__match__result', 'predictions__outcome')
+        )
+        # Market splits reveal the direction of a pick (for example over vs
+        # under), so keep submissions private until their tour closes.
+        closed_tour_submissions = [
+            submission for submission in submissions if not is_tour_open_for_predictions(submission.tour)
+        ]
+        personal_stats = collect_user_prediction_stats(selected_tournament, closed_tour_submissions)
+
+    context = {
+        'selected_tournament': selected_tournament,
+        'selected_user': selected_user,
+        'user_form': user_form,
+        'personal_stats': personal_stats,
+        'is_coefficients': is_coefficients,
+    }
+    return render(request, 'predictions/contest/personal_stats_tab.html', context)

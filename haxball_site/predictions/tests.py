@@ -23,7 +23,12 @@ from .points_service import (
     is_prediction_correct,
     is_prediction_void,
 )
-from .utils import build_match_offers_map, build_match_outcome_groups_map, build_match_outcomes_map
+from .utils import (
+    build_match_offers_map,
+    build_match_outcome_groups_map,
+    build_match_outcomes_map,
+    collect_user_prediction_stats,
+)
 
 
 def make_outcome_match(*, score_home, score_guest, result_value, is_played=True):
@@ -279,6 +284,63 @@ class RoiAndAvgCoefficientTest(SimpleTestCase):
     def test_avg_coefficient_no_data_is_none(self):
         self.assertIsNone(calculate_avg_coefficient(Decimal('0'), 0))
 
+
+class PersonalPredictionStatsTest(SimpleTestCase):
+    def test_groups_markets_and_calculates_only_decisive_performance(self):
+        tournament = make_coefficient_tournament()
+        played = make_outcome_match(score_home=3, score_guest=2, result_value=MatchResult.HOME_WIN)
+        pending = make_outcome_match(
+            score_home=0,
+            score_guest=0,
+            result_value=MatchResult.DRAW,
+            is_played=False,
+        )
+        predictions = [
+            make_outcome_prediction(make_outcome(market='RESULT', selection='HW', coefficient='2.00'), played),
+            make_outcome_prediction(
+                make_outcome(market='TOTAL', selection='OVER', line='6.5', coefficient='2.00'), played
+            ),
+            make_outcome_prediction(
+                make_outcome(market='TOTAL', selection='UNDER', line='5.5', coefficient='1.80'), pending
+            ),
+            make_outcome_prediction(
+                make_outcome(market='ITOTAL', selection='HT_OVER', line='3', coefficient='1.90'), played
+            ),
+            make_outcome_prediction(
+                make_outcome(market='ITOTAL', selection='AT_UNDER', line='2.5', coefficient='3.00'), played
+            ),
+            make_outcome_prediction(
+                make_outcome(market='HANDICAP', selection='F1', line='1', coefficient='1.50'), played
+            ),
+            make_outcome_prediction(
+                make_outcome(market='HANDICAP', selection='F1', line='-2', coefficient='2.00'), played
+            ),
+        ]
+        submissions = [SimpleNamespace(predictions=SimpleNamespace(all=lambda: predictions))]
+
+        stats = collect_user_prediction_stats(tournament, submissions)
+        rows = {row['key']: row for row in stats['rows']}
+
+        self.assertEqual(rows['total_over']['predictions'], 1)
+        self.assertEqual(rows['total_over']['accuracy'], 0)
+        self.assertEqual(rows['total_over']['roi'], Decimal('-100'))
+        self.assertEqual(rows['total_under']['pending'], 1)
+        self.assertIsNone(rows['total_under']['roi'])
+        self.assertEqual(rows['individual_total_over']['void_count'], 1)
+        self.assertEqual(rows['individual_total_under']['accuracy'], 100)
+        self.assertEqual(rows['handicap_positive']['correct'], 1)
+        self.assertEqual(rows['handicap_negative']['losses'], 1)
+
+        overall = stats['overall']
+        self.assertEqual(overall['predictions'], 7)
+        self.assertEqual(overall['decisive'], 5)
+        self.assertEqual(overall['resolved'], 6)
+        self.assertEqual(overall['correct'], 3)
+        self.assertEqual(overall['pending'], 1)
+        self.assertEqual(overall['void_count'], 1)
+        self.assertEqual(overall['points'], Decimal('150.00'))
+        self.assertEqual(overall['avg_coefficient'], Decimal('2.10'))
+        self.assertEqual(overall['roi'], Decimal('30.0'))
 
 class BuildMatchOutcomesMapTest(SimpleTestCase):
     def test_maps_outcomes_by_match_grouped_by_market(self):
