@@ -13,8 +13,11 @@
     <div class="tw:flex tw:flex-col tw:gap-5">
       {% for category_group in structured_medals.categories %}
         <section class="tw:flex tw:flex-col tw:gap-2" aria-labelledby="structured-medal-category-{{ forloop.counter }}">
-          <h3 id="structured-medal-category-{{ forloop.counter }}"
-              class="tw:text-xl! tw:mb-0! tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ category_group.title }}</h3>
+          <div class="tw:flex tw:items-center tw:gap-1">
+            <h3 id="structured-medal-category-{{ forloop.counter }}"
+                class="tw:text-xl! tw:mb-0! tw:text-base-content/90 tw:font-semibold tw:tracking-wide">{{ category_group.title }}</h3>
+            {% include 'tournament/medals/career_medal_reference.html' with career_medals=category_group.career_medals reference_prefix="career-reference-grouped" %}
+          </div>
           <div class="structured-medals__grid">
             {% for group in category_group.groups %}
               {% include 'tournament/medals/structured_medal_card.html' %}

@@ -1,0 +1,49 @@
+{% if career_medals %}
+  <button type="button"
+          class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-circle tw:mt-1"
+          aria-label="Пороги наград"
+          title="Пороги наград"
+          aria-haspopup="dialog"
+          aria-controls="{{ reference_prefix }}-{{ forloop.counter }}"
+          onclick="document.getElementById('{{ reference_prefix }}-{{ forloop.counter }}').showModal()">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+  </button>
+  <dialog id="{{ reference_prefix }}-{{ forloop.counter }}"
+          class="tw:modal"
+          aria-labelledby="{{ reference_prefix }}-title-{{ forloop.counter }}">
+    <div class="tw:modal-box tw:w-11/12 tw:max-w-2xl">
+      <h3 id="{{ reference_prefix }}-title-{{ forloop.counter }}" class="tw:text-lg tw:font-semibold">Карьерные достижения</h3>
+      <p class="tw:mt-2 tw:text-sm tw:text-base-content/70">Медали за достижение указанных показателей в течение карьеры</p>
+      <div class="tw:overflow-x-auto tw:mt-4">
+        <table class="tw:table tw:table-sm">
+          <thead>
+            <tr>
+              <th scope="col">Показатель</th>
+              <th scope="col">Порог</th>
+              <th scope="col">Медаль</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for medal_type in career_medals %}
+              <tr>
+                <td>{{ medal_type.get_unit_display }}</td>
+                <td class="tw:tabular-nums">{{ medal_type.threshold }}</td>
+                <td>
+                  <div class="tw:flex tw:items-center tw:gap-3">
+                    {% if medal_type.image %}
+                      <img src="{{ medal_type.image.url }}" alt="" width="48" height="48" class="tw:size-12 tw:object-contain">
+                    {% endif %}
+                    <span>{{ medal_type.title }}</span>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <form method="dialog" class="tw:modal-backdrop">
+      <button aria-label="Закрыть справочник">Закрыть</button>
+    </form>
+  </dialog>
+{% endif %}
