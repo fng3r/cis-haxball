@@ -202,6 +202,7 @@ class Gift(models.Model):
     name = models.CharField('Название', max_length=255)
     description = models.TextField('Описание', blank=True)
     image = models.ImageField('Изображение', upload_to='gifts/', blank=True, null=True)
+    community_made = models.BooleanField('Создано сообществом', default=False)
     created_at = models.DateTimeField('Создан', auto_now_add=True)
     updated_at = models.DateTimeField('Обновлен', auto_now=True)
 
