@@ -72,12 +72,14 @@
                 <i class="fa fa-users" aria-hidden="true"></i>
               </span>
             {% endif %}
-            <span class="tw:badge tw:badge-sm tw:gap-1 tw:shadow-sm"
-                  title="Приобретено: {{ item.acquired_count }}"
-                  aria-label="Приобретено: {{ item.acquired_count }}">
-              <i class="fa fa-shopping-bag" aria-hidden="true"></i>
-              <span class="tw:tabular-nums">{{ item.acquired_count }}</span>
-            </span>
+            {% if item.acquired_count > 0 %}
+              <span class="tw:badge tw:badge-sm tw:gap-1 tw:shadow-sm"
+                    title="Приобретено: {{ item.acquired_count }}"
+                    aria-label="Приобретено: {{ item.acquired_count }}">
+                <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+                <span class="tw:tabular-nums">{{ item.acquired_count }}</span>
+              </span>
+            {% endif %}
           </div>
         </div>
       {% else %}
