@@ -1,11 +1,49 @@
+from contextlib import nullcontext
 from decimal import Decimal
+from io import StringIO
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
+from balance.management.commands.distribute_rewards import Command
 from balance.models import Gift, ShopCategory, ShopItem, Transaction, UserGift
 from balance.services import ShopService
 from balance.views import _build_shop_groups
+
+
+class MatchRewardDescriptionTests(SimpleTestCase):
+    def test_series_transactions_use_each_players_appearance_count(self):
+        command = Command(stdout=StringIO())
+        tour = SimpleNamespace(number=4, stage=SimpleNamespace(stage_name='Playoffs'), tour_matches=Mock())
+        tournament = SimpleNamespace(title='Test League')
+        rewards = [
+            {'user': 'single-match-player', 'reward_amount': Decimal('10'), 'matches_played': 1},
+            {'user': 'series-player', 'reward_amount': Decimal('30'), 'matches_played': 3},
+        ]
+        command._get_tournament = Mock(return_value=tournament)
+        command._get_tours = Mock(return_value=[tour])
+        command._is_tour_completed = Mock(return_value=True)
+        module = 'balance.management.commands.distribute_rewards'
+        with (
+            patch(f'{module}.calculate_match_tour_rewards', return_value={'user_rewards': rewards}),
+            patch(f'{module}.transaction.atomic', side_effect=nullcontext),
+            patch(f'{module}.BalanceService.add_coins') as add_coins,
+        ):
+            command.handle(
+                activity='matches', league_slug='test', tours='4', stage=1, dry_run=False, notifications=['off']
+            )
+
+        self.assertEqual(add_coins.call_count, 2)
+        self.assertEqual(
+            add_coins.call_args_list[0].kwargs['description'],
+            'Награды за участие в матче 4 тура (Test League)',
+        )
+        self.assertEqual(
+            add_coins.call_args_list[1].kwargs['description'],
+            'Награды за участие в матчах 4 тура (Test League)',
+        )
 
 
 class ShopGiftAcquiredCountTests(TestCase):

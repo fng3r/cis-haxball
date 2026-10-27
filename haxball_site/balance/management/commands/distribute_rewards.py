@@ -194,7 +194,9 @@ class Command(BaseCommand):
                     BalanceService.add_coins(
                         user=reward['user'],
                         amount=amount,
-                        description=description,
+                        description=self._build_description(
+                            tour, tournament, config['label'], activity, matches_played=reward.get('matches_played', 1)
+                        ),
                     )
                     transactions_count += 1
                     total_amount += amount
@@ -422,10 +424,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Отправлено {count} объединённых уведомлений за туры {tour_numbers}'))
         return count
 
-    def _build_description(self, tour, tournament, label, activity=None):
+    def _build_description(self, tour, tournament, label, activity=None, matches_played=1):
         league_title = self._resolve_league_title(tournament)
         if activity == 'matches':
-            return f'Награды за участие в матче {tour.number} тура ({league_title})'
+            match_label = 'матчах' if matches_played > 1 else 'матче'
+            return f'Награды за участие в {match_label} {tour.number} тура ({league_title})'
         return f'Награды за {tour.number} тур {label} ({league_title})'
 
     @staticmethod
