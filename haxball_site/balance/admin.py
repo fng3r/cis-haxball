@@ -193,7 +193,9 @@ class GiftAdminForm(ModelForm):
 @admin.register(Gift)
 class GiftAdmin(ModelAdmin):
     form = GiftAdminForm
-    list_display = ['name', 'slug', 'updated_at']
+    list_display = ['name', 'slug', 'community_made', 'updated_at']
+    list_editable = ['community_made']
+    list_filter = ['community_made']
     search_fields = ['name', 'slug']
     ordering = ['name']
     readonly_fields = ['created_at', 'updated_at']

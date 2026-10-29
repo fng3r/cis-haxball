@@ -89,7 +89,14 @@ def _build_shop_groups(user, balance_value) -> list[dict]:
     }
 
     uncategorized: list[dict] = []
-    for item in ShopItem.objects.active().available_to(user).select_related('gift', 'category'):
+    items = (
+        ShopItem.objects.active()
+        .available_to(user)
+        .select_related('gift', 'category')
+        .annotate(acquired_count=models.Count('gift__ownerships', distinct=True))
+        .order_by('category__position', 'position', 'name')
+    )
+    for item in items:
         item_ctx = _build_shop_item_context(item=item, user=user, balance_value=balance_value)
         category = item.category
         if category is None or not category.is_active:

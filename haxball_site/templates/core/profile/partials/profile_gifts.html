@@ -26,11 +26,11 @@
             {% if user_gift.gift.image %}
               <img src="{{ user_gift.gift.image.url }}"
                    alt="{{ user_gift.gift.name }}"
-                   class="tw:w-full tw:h-auto tw:max-h-[75vh] tw:object-contain tw:rounded-lg tw:bg-base-200">
+                   class="tw:w-full tw:h-auto tw:object-contain tw:rounded-lg tw:bg-base-200">
             {% else %}
               <img src="{% static 'img/cis-coin.png' %}"
                    alt="{{ user_gift.gift.name }}"
-                   class="tw:w-full tw:h-auto tw:max-h-[75vh] tw:object-contain tw:rounded-lg tw:bg-base-200">
+                   class="tw:w-full tw:h-auto tw:object-contain tw:rounded-lg tw:bg-base-200">
             {% endif %}
           </div>
           <form method="dialog" class="tw:modal-backdrop">

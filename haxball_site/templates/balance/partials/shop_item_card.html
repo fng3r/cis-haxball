@@ -14,7 +14,13 @@
           <div class="tw:modal-action tw:flex tw:gap-3 tw:justify-start tw:md:justify-end">
             <button type="submit" class="tw:btn tw:btn-primary tw:disabled:[&_img]:opacity-50" {% if not can_afford %}disabled{% endif %}>
               <span class="tw:flex tw:items-center tw:gap-2">
-                <span>{% if item.product_type == 'gift' %}Подарить{% else %}Купить{% endif %}</span>
+                <span>
+                  {% if item.product_type == 'gift' %}
+                    Подарить
+                  {% else %}
+                    Купить
+                  {% endif %}
+                </span>
                 <div class="tw:flex tw:items-center tw:gap-1">
                   <img src="{% static 'img/cis-coin.png' %}" alt="{{ item.name }}" class="tw:size-4">
                   <span class="tw:text-sm tw:opacity-80">{{ item.price|floatformat:0 }}</span>
@@ -33,17 +39,11 @@
         <dialog id="gift-lightbox-shop-{{ item.pk }}" class="tw:modal">
           <div class="tw:modal-box tw:max-w-3xl tw:w-full tw:p-0 tw:overflow-hidden">
             {% if item.image %}
-              <img src="{{ item.image.url }}"
-                   alt="{{ item.name }}"
-                   class="tw:w-full tw:max-h-[85vh] tw:object-cover">
+              <img src="{{ item.image.url }}" alt="{{ item.name }}" class="tw:w-full tw:max-h-[85vh] tw:object-cover">
             {% elif item.gift and item.gift.image %}
-              <img src="{{ item.gift.image.url }}"
-                   alt="{{ item.name }}"
-                   class="tw:w-full tw:max-h-[85vh] tw:object-cover">
+              <img src="{{ item.gift.image.url }}" alt="{{ item.name }}" class="tw:w-full tw:max-h-[85vh] tw:object-cover">
             {% else %}
-              <img src="{% static 'img/cis-coin.png' %}"
-                   alt="{{ item.name }}"
-                   class="tw:w-full tw:max-h-[85vh] tw:object-cover">
+              <img src="{% static 'img/cis-coin.png' %}" alt="{{ item.name }}" class="tw:w-full tw:max-h-[85vh] tw:object-cover">
             {% endif %}
           </div>
           <form method="dialog" class="tw:modal-backdrop">
@@ -58,7 +58,7 @@
        class="tw:w-full tw:card tw:bg-base-100 tw:shadow-sm tw:border tw:border-base-300 tw:cursor-pointer tw:transition tw:duration-200 tw:hover:-translate-y-1 tw:hover:shadow-lg">
     <div class="tw:flex tw:flex-col tw:h-full">
       {% if item.product_type == 'gift' %}
-        <div class="tw:aspect-square tw:w-full tw:overflow-hidden tw:bg-base-200 tw:rounded-t-[var(--radius-box)]">
+        <div class="tw:relative tw:aspect-square tw:w-full tw:overflow-hidden tw:bg-base-200 tw:rounded-t-[var(--radius-box)]">
           {% if item.image %}
             <img src="{{ item.image.url }}" alt="{{ item.name }}" class="tw:h-full tw:w-full tw:object-cover">
           {% elif item.gift and item.gift.image %}
@@ -66,6 +66,21 @@
           {% else %}
             <img src="{% static 'img/cis-coin.png' %}" alt="{{ item.name }}" class="tw:h-full tw:w-full tw:object-cover">
           {% endif %}
+          <div class="tw:absolute tw:top-2 tw:right-2 tw:flex tw:items-center tw:gap-1">
+            {% if item.gift.community_made %}
+              <span class="tw:badge tw:badge-sm tw:shadow-sm" title="Создано сообществом" aria-label="Создано сообществом">
+                <i class="fa fa-users" aria-hidden="true"></i>
+              </span>
+            {% endif %}
+            {% if item.acquired_count > 0 %}
+              <span class="tw:badge tw:badge-sm tw:gap-1 tw:shadow-sm"
+                    title="Приобретено: {{ item.acquired_count }}"
+                    aria-label="Приобретено: {{ item.acquired_count }}">
+                <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+                <span class="tw:tabular-nums">{{ item.acquired_count }}</span>
+              </span>
+            {% endif %}
+          </div>
         </div>
       {% else %}
         <div class="tw:h-40 tw:flex tw:items-center tw:justify-center tw:bg-base-200 tw:rounded-t-[var(--radius-box)]">
