@@ -47,3 +47,14 @@ it('preserves editing, button activation, modified shortcuts, and scrolling befo
     expect(dispatch).toHaveBeenCalledWith('backward');
   } finally { unmount(); container.remove(); }
 });
+
+it('suspends playback shortcuts while a workspace dialog is open', () => {
+  const dispatch = vi.fn();
+  const unmount = mountReplayHotkeys(window, dispatch);
+  const dialog = document.createElement('dialog'); dialog.open = true;
+  document.body.append(dialog);
+  try {
+    key(window, 'ArrowLeft'); key(window, ' ');
+    expect(dispatch).not.toHaveBeenCalled();
+  } finally { unmount(); dialog.remove(); }
+});

@@ -31,3 +31,10 @@ window.addEventListener('keydown', event => {
     parent.postMessage({ source: 'haxball-native-player', type: 'exit-focus' }, location.origin);
   }
 }, true);
+
+window.addEventListener('keydown', event => {
+  if (event.key !== '?' || event.ctrlKey || event.altKey || event.metaKey) return;
+  if (event.target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;
+  event.preventDefault(); event.stopImmediatePropagation();
+  parent.postMessage({ source: 'haxball-native-player', type: 'shortcuts' }, location.origin);
+}, true);

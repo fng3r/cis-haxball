@@ -242,3 +242,16 @@ and natural playback across game boundaries. During seeking, synchronization
 uses the destination rather than intermediate simulation ticks. Reset clears a
 pending seek before returning to the first game. Only game changes and explicit
 seeks notify React; playback does not send per-frame position updates.
+
+## Viewing controls
+
+Focus mode fills the viewport with the native player, hiding the app sidebar,
+outer scoreboard and player chat/buttons. Playback controls remain visible.
+The exit button or Escape restores the workspace without remounting the player.
+Escape from inside the iframe exits focus mode before the native menu handles it.
+
+The player card's ? button or the ? key opens a daisyUI shortcut reference, also
+available in focus mode. It lists seek, speed, playback and zoom keys. Native
+1–4 zoom keys require focus inside the player; 0 restores fit-pitch view.
+Playback shortcuts are suspended while a workspace dialog is open. Native chat
+instructions now describe replay controls instead of live-game movement keys.

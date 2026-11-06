@@ -34,6 +34,8 @@ export async function openNativeReplay(bytes) {
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
   mountFitPitch(nativeController);
+  const instructions = nativeController.j.g.querySelector('.chatbox-view [data-hook=log] > p');
+  if (instructions) instructions.textContent = 'Replay controls: Space — play/pause · ←/→ — seek 5s · ↑/↓ — speed · 0 — fit pitch · 1–4 — zoom · ? — shortcuts.';
   // Open each recording with the entire field visible. Native view shortcuts
   // and Settings still select the original fixed zoom modes.
   n.A.Tb.Xa(-1);

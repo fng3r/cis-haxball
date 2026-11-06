@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import NativePlayer from './components/NativePlayer.jsx';
 import ReplayLinkForm from './components/ReplayLinkForm.jsx';
+import KeyboardShortcuts from './components/KeyboardShortcuts.jsx';
 import PlayerMaps from './components/PlayerMaps.jsx';
 import ThirdsMap from './components/ThirdsMap.jsx';
 import { serializeStats } from './export-stats.js';
@@ -132,7 +133,7 @@ export default function App() {
     if (!focusMode) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const escape = event => { if (event.key === 'Escape') setFocusMode(false); };
+    const escape = event => { if (event.key === 'Escape' && !document.querySelector('dialog[open]')) setFocusMode(false); };
     window.addEventListener('keydown', escape);
     return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', escape); };
   }, [focusMode]);
@@ -224,6 +225,7 @@ export default function App() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-3 sm:px-7">
             <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 max-w-64 truncate text-sm font-semibold sm:max-w-96">{game ? filename : 'Every match has a story.'}</h2></div>
             <div className="flex items-center gap-2">
+              <KeyboardShortcuts />
               {recording && <button className="btn btn-sm" aria-pressed={focusMode} onClick={() => setFocusMode(value => !value)}>{focusMode ? 'Exit focus mode' : 'Focus mode'}</button>}
             {replay ? <button className="btn btn-sm" onClick={exportStats}>Export statistics ↓</button> : <span className="text-xs text-base-content/45">.hbr2 recordings</span>}
             </div>
