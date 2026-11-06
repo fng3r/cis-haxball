@@ -239,6 +239,7 @@ export default function App() {
           </div>
         </section>
         {game ? <section className="rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
+          <h2 className="mb-4 text-lg font-semibold">Game {gameIndex + 1}</h2>
           <div role="tablist" aria-label="Match information" className="tabs tabs-border mb-6">{['overview', 'players', 'goals'].map(name => <button key={name} role="tab" id={`tab-${name}`} aria-controls="match-panel" aria-selected={tab === name} className={`tab capitalize ${tab === name ? 'tab-active' : ''}`} onClick={() => setTab(name)}>{name}{name === 'goals' ? ` · ${game.goals.length}` : ''}</button>)}</div>
           <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>
             {tab === 'overview' && <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
