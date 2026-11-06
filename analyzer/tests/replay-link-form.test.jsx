@@ -31,7 +31,7 @@ it('downloads multiple unique links in order and queues each file, then closes',
   const onFiles = open();
   submit('https://replay.thehax.pl/first\nhttps://replay.thehax.pl/second\nhttps://replay.thehax.pl/first');
   await waitFor(() => expect(onFiles).toHaveBeenCalledTimes(2));
-  expect(onFiles.mock.calls).toEqual([[[first]], [[second]]]);
+  expect(onFiles.mock.calls).toEqual([[[first]], [[second], { selectFirst: false }]]);
   expect(fetchThehaxReplay).toHaveBeenCalledTimes(2);
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });

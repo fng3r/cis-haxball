@@ -258,16 +258,18 @@ describe('multiple recordings', () => {
     expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
   });
 
-  it('adds more files without replacing the selected recording or restarting its player', async () => {
+  it('selects the first newly added file while retaining earlier recordings', async () => {
     const view = render(<App />);
     const first = await addRecordings([recordingFile('first.hbr2')]);
     act(() => first.send({ type: 'result', result: { games: [game] } }));
     const frame = screen.getByTitle('Original HaxBall replay player');
-    const second = await addRecordings([recordingFile('second.hbr2')]);
+    const second = await addRecordings([recordingFile('second.hbr2'), recordingFile('third.hbr2')]);
     expect(FakeWorker.instances).toHaveLength(2);
-    expect(screen.getByTitle('Original HaxBall replay player')).toBe(frame);
-    expect(screen.getByRole('button', { name: 'Open recording first.hbr2' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /Game 1/ })).toBeInTheDocument();
+    expect(screen.getByTitle('Original HaxBall replay player')).not.toBe(frame);
+    expect(screen.getByRole('button', { name: 'Open recording first.hbr2' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Open recording second.hbr2' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Open recording third.hbr2' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
     view.unmount();
     expect(second.terminate).toHaveBeenCalled();
     act(() => second.send({ type: 'result', result: { games: [game] } }));

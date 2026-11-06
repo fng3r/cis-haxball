@@ -53,7 +53,7 @@ export function useReplayLibrary() {
     })();
   }, [recordings]);
 
-  function addFiles(files) {
+  function addFiles(files, { selectFirst = true } = {}) {
     const errors = [], added = [];
     for (const file of Array.from(files || [])) {
       if (!file.name.toLowerCase().endsWith('.hbr2')) {
@@ -66,7 +66,7 @@ export function useReplayLibrary() {
     }
     if (added.length) {
       setRecordings(items => [...items, ...added]);
-      setSelectedId(current => current || added[0].id);
+      setSelectedId(current => selectFirst ? added[0].id : current || added[0].id);
     }
     return errors;
   }

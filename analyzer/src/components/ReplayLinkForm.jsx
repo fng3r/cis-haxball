@@ -24,6 +24,7 @@ export default function ReplayLinkForm({ onFiles }) {
     request.current = controller;
     setBusy(true); setErrors([]);
     const failures = [];
+    let imported = false;
     try {
       for (const [index, link] of links.entries()) {
         if (controller.signal.aborted) return;
@@ -31,7 +32,9 @@ export default function ReplayLinkForm({ onFiles }) {
         try {
           const file = await fetchThehaxReplay(link, { signal: controller.signal });
           if (controller.signal.aborted) return;
-          onFiles([file]);
+          if (imported) onFiles([file], { selectFirst: false });
+          else onFiles([file]);
+          imported = true;
           setUrls(rows => {
             const remaining = rows.filter(row => row.value.trim() && row.value.trim() !== link);
             return remaining.length ? remaining : [{ id: nextId.current++, value: '' }];

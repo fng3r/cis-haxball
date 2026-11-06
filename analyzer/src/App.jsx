@@ -142,8 +142,8 @@ export default function App() {
     return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', escape); };
   }, [focusMode]);
 
-  function open(files) {
-    setError(addFiles(files).join(' '));
+  function open(files, options) {
+    setError(addFiles(files, options).join(' '));
   }
 
   function selectGame(index) {

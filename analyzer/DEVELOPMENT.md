@@ -167,7 +167,8 @@ there is no 15 fps playback cap in the application.
 
 The upload card offers “Use replay links” after an OR divider. It opens a modal
 accepting multiple links in separate inputs with add/remove controls. Downloads run sequentially; each successful
-download immediately enters the existing analysis queue. Failed links remain for
+download immediately enters the existing analysis queue. The first successful
+download is selected; subsequent downloads in that submission keep the selection. Failed links remain for
 retry, and closing/cancelling the modal aborts the current download and skips
 remaining links without removing files already queued. Duplicate links within a
 submission are downloaded once.
@@ -193,7 +194,7 @@ for the current integration. Expired/private links must be publicly accessible.
 ## Multiple recordings and limits
 
 The file picker and drop zone accept multiple recordings. Additional selections
-append to the current library without interrupting the selected replay. Analysis
+append to the current library and select the first valid file in the new batch. Analysis
 runs sequentially in disposable workers; only one native player is mounted.
 Results stay associated with their original file, and switching files reuses the
 cached statistics while restarting native playback at the beginning. Games and
