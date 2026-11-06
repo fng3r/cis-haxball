@@ -193,13 +193,13 @@ export default function App() {
 
   return <div className="min-h-screen">
     <header className="border-b border-base-300 bg-base-100">
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-5 lg:px-10">
+      <div className="flex items-center justify-between gap-4 px-4 py-5 sm:px-6">
         <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">LAB</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
         <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}><span aria-hidden="true">{theme === 'replay-dark' ? '☀' : '☾'}</span></button></div>
       </div>
     </header>
     <input ref={input} type="file" accept=".hbr2" aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files[0]); event.target.value = ''; }} />
-    <main className="mx-auto grid max-w-[1600px] gap-6 p-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:p-10">
+    <main className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="space-y-6">
         <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-base-content/50">Your recording</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Match room</h2></div>
         <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files[0]); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
