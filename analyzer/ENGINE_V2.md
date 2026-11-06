@@ -141,7 +141,7 @@ library. A valid explicit URL parameter still works when local storage is blocke
 V2 Overview emphasizes active time, loose/contested ball proximity, kicks,
 contacts, observed/progressive transfers and turnover proxies. Territory uses
 three equal pitch zones. Movement shows team distance and average width/depth.
-Partial recordings and unavailable goal geometry are explained inline.
+Statistics describe the captured play. Unavailable goal geometry is explained inline.
 
 V2 Players sorts goals, assists, kicks, transfers, receipts, turnovers, distance
 and active time, initially red then blue. Click-only player/map selection survives

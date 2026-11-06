@@ -72,9 +72,10 @@ it('adapts v2 goal scores to the existing timeline and seeks the native player',
   fireEvent.click(screen.getByRole('button', { name: new RegExp(`score ${goal.score[0]}–${goal.score[1]}$`) }));
   expect(post).toHaveBeenLastCalledWith({ type: 'seek-goal', tick: goal.tick }, location.origin);
 });
-it('explains partial recordings and missing geometry without showing a misleading pitch', () => {
+it('shows captured statistics without a coverage warning and handles missing geometry', () => {
   render(<V2Overview game={{ ...result.games[0], truncatedStart: true, territoryAvailable: false }} />);
-  expect(screen.getByText(/Partial recording:/)).toBeInTheDocument();
+  expect(screen.queryByText(/Partial recording:/)).not.toBeInTheDocument();
+  expect(screen.getByText('Active play')).toBeInTheDocument();
   expect(screen.getByText(/Territory is unavailable/)).toBeInTheDocument();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });

@@ -22,7 +22,6 @@ export function V2Overview({ game }) {
     && Math.abs((redGoal.p0[1] + redGoal.p1[1]) - (blueGoal.p0[1] + blueGoal.p1[1])) < 0.001;
   const buckets = [['red', 'Red in reach', 'bg-error/65'], ['blue', 'Blue in reach', 'bg-info/65'], ['contested', 'Both teams', 'bg-warning/65'], ['loose', 'Neither team', 'bg-base-content/20']];
   return <div className="space-y-6">
-    {(game.truncatedStart || game.truncatedEnd) && <p className="rounded-field bg-warning/10 p-3 text-sm text-base-content/75">Partial recording: statistics cover observed play only; the score may include earlier goals.</p>}
     <div className="stats stats-vertical w-full border border-base-300 bg-base-200 sm:stats-horizontal">
       {[['Active play', duration(game.activeTicks), 'Excludes pauses and resets'], ['Loose ball', percent(game.proximityTicks.loose, game.activeTicks), 'Neither team within reach'], ['Contested ball', percent(game.proximityTicks.contested, game.activeTicks), 'Both teams within reach']].map(([title, value, description]) => <div key={title} className="stat min-w-0">
         <div className="stat-title text-xs">{title}</div><div className="stat-value font-mono text-2xl">{value}</div><div className="stat-desc mt-1 text-xs">{description}</div>
