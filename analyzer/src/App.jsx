@@ -109,6 +109,7 @@ export default function App() {
   const [gameIndex, setGameIndex] = useState(0);
   const [recording, setRecording] = useState(null);
   const nativePlayer = useRef(null);
+  const playerCard = useRef(null), statsCard = useRef(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [tab, setTab] = useState('overview');
   const [busy, setBusy] = useState(false);
@@ -171,8 +172,17 @@ export default function App() {
     setGameIndex(index); setSelectedPlayer(null);
     nativePlayer.current?.seek(replay.games[index].startTick);
   }
+  function scrollToCard(card) {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    card.current?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+  }
+  function showStats() {
+    setTab('overview');
+    scrollToCard(statsCard);
+  }
   function seekGoal(tick) {
     nativePlayer.current?.seekGoal(tick);
+    scrollToCard(playerCard);
   }
   function onPlayerGoal(tick) {
     const index = replay?.games.findIndex(game => game.goals.some(goal => goal.tick === tick));
@@ -223,7 +233,7 @@ export default function App() {
           <div className="mb-3 flex items-center justify-between gap-4"><div><h2 className="font-semibold">Analyzing recording… {progress}%</h2><p className="mt-1 truncate text-xs text-base-content/60">{filename}</p></div><button className="btn btn-sm" onClick={cancel}>Cancel</button></div>
           <progress className="progress w-full" value={progress} max="100" />
         </section>}
-        <section className="overflow-hidden rounded-box border border-base-300 bg-base-100">
+        <section ref={playerCard} className="scroll-mt-4 overflow-hidden rounded-box border border-base-300 bg-base-100">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-4 sm:px-7">
             <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 max-w-64 truncate text-sm font-semibold sm:max-w-96">{game ? filename : 'Every match has a story.'}</h2></div>
             {replay ? <button className="btn btn-sm" onClick={exportStats}>Export statistics ↓</button> : <span className="text-xs text-base-content/45">.hbr2 recordings</span>}
@@ -234,11 +244,11 @@ export default function App() {
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
           <div className="px-3 pb-5 sm:px-5">
-            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={() => setTab('overview')} onClose={() => { cancel(); setRecording(null); setReplay(null); }} />
+            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { cancel(); setRecording(null); setReplay(null); }} />
               : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
           </div>
         </section>
-        {game ? <section className="rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
+        {game ? <section ref={statsCard} className="scroll-mt-4 rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
           <h2 className="mb-4 text-lg font-semibold">Game {gameIndex + 1}</h2>
           <div role="tablist" aria-label="Match information" className="tabs tabs-border mb-6">{['overview', 'players', 'goals'].map(name => <button key={name} role="tab" id={`tab-${name}`} aria-controls="match-panel" aria-selected={tab === name} className={`tab capitalize ${tab === name ? 'tab-active' : ''}`} onClick={() => setTab(name)}>{name}{name === 'goals' ? ` · ${game.goals.length}` : ''}</button>)}</div>
           <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>
