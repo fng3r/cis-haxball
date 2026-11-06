@@ -12,3 +12,6 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 
 // Keep the log usable without taking height away from the pitch.
 .game-view .chatbox-view { height: 96px; }
+
+.focus-mode .game-view > .bottom-section { display: none; }
+.focus-mode .game-view > .top-section { margin-bottom: 40px; }

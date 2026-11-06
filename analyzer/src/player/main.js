@@ -6,6 +6,7 @@ mountReplayHotkeys(window, replayHotkey);
 
 window.addEventListener('message', async event => {
   if (event.source !== parent || event.origin !== location.origin) return;
+  if (event.data?.type === 'focus-mode') document.documentElement.classList.toggle('focus-mode', Boolean(event.data.enabled));
   if (event.data?.type === 'hotkey') replayHotkey(event.data.action);
   if (event.data?.type === 'seek') seekNativeReplay(event.data.tick);
   if (event.data?.type === 'seek-goal') seekNativeGoal(event.data.tick);
@@ -23,3 +24,10 @@ window.addEventListener('message', async event => {
     parent.postMessage({ source: 'haxball-native-player', type: 'error', message }, location.origin);
   }
 });
+
+window.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.documentElement.classList.contains('focus-mode')) {
+    event.preventDefault(); event.stopImmediatePropagation();
+    parent.postMessage({ source: 'haxball-native-player', type: 'exit-focus' }, location.origin);
+  }
+}, true);

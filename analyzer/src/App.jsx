@@ -117,6 +117,7 @@ export default function App() {
   const playerCard = useRef(null), statsCard = useRef(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [tab, setTab] = useState('overview');
+  const [focusMode, setFocusMode] = useState(false);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
   const input = useRef(null);
@@ -125,6 +126,16 @@ export default function App() {
   useEffect(() => {
     setGameIndex(0); setSelectedPlayer(null); setTab('overview');
   }, [recording?.id]);
+
+  useEffect(() => { if (!recording) setFocusMode(false); }, [recording]);
+  useEffect(() => {
+    if (!focusMode) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const escape = event => { if (event.key === 'Escape') setFocusMode(false); };
+    window.addEventListener('keydown', escape);
+    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', escape); };
+  }, [focusMode]);
 
   function open(files) {
     setError(addFiles(files).join(' '));
@@ -139,8 +150,9 @@ export default function App() {
     card.current?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
   }
   function showStats() {
+    setFocusMode(false);
     setTab('overview');
-    scrollToCard(statsCard);
+    requestAnimationFrame(() => scrollToCard(statsCard));
   }
   function seekGoal(tick) {
     nativePlayer.current?.seekGoal(tick);
@@ -164,15 +176,15 @@ export default function App() {
   }
 
   return <div className="min-h-screen">
-    <header className="border-b border-base-300 bg-base-100">
+    <header className={focusMode ? 'hidden' : 'border-b border-base-300 bg-base-100'}>
       <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">LAB</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
         <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}><span aria-hidden="true">{theme === 'replay-dark' ? '☀' : '☾'}</span></button></div>
       </div>
     </header>
     <input ref={input} type="file" accept=".hbr2" multiple aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files); event.target.value = ''; }} />
-    <main className="grid gap-6 p-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto">
+    <main className={focusMode ? 'p-0' : 'grid gap-6 p-4 lg:grid-cols-[240px_minmax(0,1fr)]'}>
+      <aside className={focusMode ? 'hidden' : 'space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto'}>
         <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
           <h3 className="font-semibold">Bring your replays.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop .hbr2 files here, or choose recordings from your device.</p>
           <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recordings</button>
@@ -201,29 +213,32 @@ export default function App() {
         </section>}
         <div className="border-t border-base-300 pt-5 text-xs leading-relaxed text-base-content/50"><p className="font-semibold text-base-content/75">Keep the game in perspective.</p><p className="mt-2">Explore possession, passes, shots and the moments that changed the score.</p></div>
       </aside>
-      <div className="min-w-0 space-y-6">
-        {error && <div role="alert" className="alert alert-error"><span>{error}</span><button className="btn btn-sm" onClick={() => setError('')}>Dismiss</button></div>}
-        {recording?.status === 'error' && <div role="alert" className="alert alert-error"><span>{recording.file.name}: {recording.error}</span></div>}
-        {busy && <section className="rounded-box border border-base-300 bg-base-100 p-5" aria-live="polite" aria-busy="true">
+      <div className={focusMode ? 'min-w-0' : 'min-w-0 space-y-6'}>
+        {!focusMode && error && <div role="alert" className="alert alert-error"><span>{error}</span><button className="btn btn-sm" onClick={() => setError('')}>Dismiss</button></div>}
+        {!focusMode && recording?.status === 'error' && <div role="alert" className="alert alert-error"><span>{recording.file.name}: {recording.error}</span></div>}
+        {!focusMode && busy && <section className="rounded-box border border-base-300 bg-base-100 p-5" aria-live="polite" aria-busy="true">
           <div className="mb-3 flex items-center justify-between gap-4"><div><h2 className="font-semibold">Analyzing recording… {progress}%</h2><p className="mt-1 truncate text-xs text-base-content/60">{active.file.name} · {recordings.filter(item => item.status === 'queued').length} queued</p></div><button className="btn btn-sm" title="Cancel current and queued analyses" onClick={cancel}>Cancel</button></div>
           <progress className="progress w-full" value={progress} max="100" />
         </section>}
-        <section ref={playerCard} className="scroll-mt-4 overflow-hidden rounded-box border border-base-300 bg-base-100">
+        <section ref={playerCard} className={focusMode ? 'flex h-dvh flex-col overflow-hidden bg-base-100' : 'scroll-mt-4 overflow-hidden rounded-box border border-base-300 bg-base-100'}>
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-3 sm:px-7">
             <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 max-w-64 truncate text-sm font-semibold sm:max-w-96">{game ? filename : 'Every match has a story.'}</h2></div>
+            <div className="flex items-center gap-2">
+              {recording && <button className="btn btn-sm" aria-pressed={focusMode} onClick={() => setFocusMode(value => !value)}>{focusMode ? 'Exit focus mode' : 'Focus mode'}</button>}
             {replay ? <button className="btn btn-sm" onClick={exportStats}>Export statistics ↓</button> : <span className="text-xs text-base-content/45">.hbr2 recordings</span>}
+            </div>
           </div>
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sm:px-7">
+          <div className={focusMode ? 'hidden' : 'grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sm:px-7'}>
             <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div>Red team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Home side'}</p></div></div>
             <div className="text-center"><div className="flex items-center justify-center gap-4 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div><p className="mt-2 font-mono text-[11px] text-base-content/50">{game ? `GAME ${gameIndex + 1} · ${time(game.gameTicks)}` : 'READY WHEN YOU ARE'}</p></div>
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
-          <div className="px-3 pb-3">
-            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { setError(''); remove(recording.id); }} />
+          <div className={focusMode ? 'min-h-0 flex-1 p-2' : 'px-3 pb-3'}>
+            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} focusMode={focusMode} onExitFocus={() => setFocusMode(false)} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { setError(''); remove(recording.id); }} />
               : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
           </div>
         </section>
-        {game ? <section ref={statsCard} className="scroll-mt-4 rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
+        {!focusMode && (game ? <section ref={statsCard} className="scroll-mt-4 rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
           <h2 className="mb-4 text-lg font-semibold">Game {gameIndex + 1}</h2>
           <div role="tablist" aria-label="Match information" className="tabs tabs-border mb-6">{['overview', 'players', 'goals'].map(name => <button key={name} role="tab" id={`tab-${name}`} aria-controls="match-panel" aria-selected={tab === name} className={`tab capitalize ${tab === name ? 'tab-active' : ''}`} onClick={() => setTab(name)}>{name}{name === 'goals' ? ` · ${game.goals.length}` : ''}</button>)}</div>
           <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>
@@ -234,7 +249,7 @@ export default function App() {
             {tab === 'players' && <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} />}
             {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={game} onSeek={seekGoal} /></>}
           </div>
-        </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>}
+        </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>)}
       </div>
     </main>
   </div>;

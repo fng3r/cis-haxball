@@ -328,3 +328,22 @@ it('clears completed, active and queued recordings and ignores late results', as
   expect(FakeWorker.instances).toHaveLength(3);
   expect(screen.getByRole('button', { name: 'Open recording fresh.hbr2' })).toHaveAttribute('aria-pressed', 'true');
 });
+
+it('enters and exits focus mode without replacing the native player', async () => {
+  render(<App />);
+  const worker = await loadFile();
+  act(() => worker.send({ type: 'result', result: { games: [game] } }));
+  const frame = screen.getByTitle('Original HaxBall replay player');
+  fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
+  expect(screen.getByRole('button', { name: 'Exit focus mode' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByRole('tab', { name: 'overview' })).not.toBeInTheDocument();
+  expect(document.body.style.overflow).toBe('hidden');
+  expect(screen.getByTitle('Original HaxBall replay player')).toBe(frame);
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(screen.getByRole('tab', { name: 'overview' })).toBeInTheDocument();
+  expect(document.body.style.overflow).not.toBe('hidden');
+  fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
+  act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'exit-focus' } })));
+  expect(screen.getByRole('button', { name: 'Focus mode' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByTitle('Original HaxBall replay player')).toBe(frame);
+});
