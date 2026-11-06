@@ -136,9 +136,9 @@ preferences and the `engine` URL parameter; URL selection takes precedence.
 Switching engine navigates to a new document, clearing the session-only recording
 library. A valid explicit URL parameter still works when local storage is blocked.
 
-V2 Overview emphasizes loose/contested ball proximity, kicks,
-contacts, observed/progressive transfers and turnover proxies. Territory uses
-three equal pitch zones. Movement shows team distance and average width/depth.
+V2 Overview emphasizes kicks, contacts, observed/progressive transfers, turnover
+proxies and distance travelled. Territory uses three equal pitch zones. Proximity
+buckets and average team width/depth are not displayed as match-level insights.
 Statistics describe the captured play. Unavailable goal geometry is explained inline.
 
 V2 Players sorts goals, assists, kicks, transfers, receipts, turnovers, distance

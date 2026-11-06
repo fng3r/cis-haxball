@@ -20,36 +20,18 @@ export function V2Overview({ game }) {
   const blueGoal = game.stadium.goals.find(goal => goal.team === 'blue');
   const pitchAligned = redGoal && blueGoal && redGoal.p0[0] < blueGoal.p0[0]
     && Math.abs((redGoal.p0[1] + redGoal.p1[1]) - (blueGoal.p0[1] + blueGoal.p1[1])) < 0.001;
-  const buckets = [['red', 'Red in reach', 'bg-error/65'], ['blue', 'Blue in reach', 'bg-info/65'], ['contested', 'Both teams', 'bg-warning/65'], ['loose', 'Neither team', 'bg-base-content/20']];
   return <div className="space-y-6">
-    <div className="stats stats-vertical w-full border border-base-300 bg-base-200 sm:stats-horizontal">
-      {[['Loose ball', percent(game.proximityTicks.loose, game.activeTicks), 'Neither team within reach'], ['Contested ball', percent(game.proximityTicks.contested, game.activeTicks), 'Both teams within reach']].map(([title, value, description]) => <div key={title} className="stat min-w-0">
-        <div className="stat-title text-xs">{title}</div><div className="stat-value font-mono text-2xl">{value}</div><div className="stat-desc mt-1 text-xs">{description}</div>
-      </div>)}
-    </div>
     <div className="grid gap-8 xl:grid-cols-2">
-      <section aria-label="Team ball actions">
-        <div className="mb-1 flex justify-between text-xs font-semibold"><span className="text-error">Red team</span><h3 className="text-base-content">Ball actions</h3><span className="text-info">Blue team</span></div>
+      <section aria-label="Team statistics">
+        <div className="mb-1 flex justify-between text-xs font-semibold"><span className="text-error">Red team</span><h3 className="text-base-content">Team statistics</h3><span className="text-info">Blue team</span></div>
         {[['kicks', 'Successful kicks'], ['contacts', 'Contact episodes'], ['transfers', 'Observed transfers'], ['progressiveTransfers', 'Progressive transfers'], ['turnovers', 'Turnovers']].map(([key, label]) => <TeamMetric key={key} label={label} red={red[key]} blue={blue[key]} />)}
-        <p className="mt-3 text-xs leading-relaxed text-base-content/55">Transfers and turnovers follow the next distinct ball interaction after a kick. They do not establish pass intent or controlled possession.</p>
+        <TeamMetric label="Distance travelled" red={red.distance} blue={blue.distance} />
+        <p className="mt-3 text-xs leading-relaxed text-base-content/55">Transfers and turnovers follow the next distinct ball interaction after a kick. They do not establish pass intent or controlled possession. Distance is in world units.</p>
       </section>
       <section aria-label="Ball territory" className="min-w-0 xl:border-l xl:border-base-300 xl:pl-8">
         <h3 className="mb-4 text-sm font-semibold">Ball territory</h3>
         {game.territoryAvailable ? (pitchAligned ? <ThirdsMap game={game} /> : <div><p className="mb-3 text-xs text-base-content/55">Goal-axis thirds · nonstandard pitch orientation</p><dl className="grid grid-cols-3 gap-2">{['Red third', 'Middle', 'Blue third'].map((label, index) => <div key={label} className="rounded-field bg-base-200 p-4 text-center"><dt className="text-xs text-base-content/60">{label}</dt><dd className="mt-2 font-mono text-xl">{percent(game.thirds[index], game.activeTicks)}</dd></div>)}</dl></div>) : <p className="py-8 text-sm text-base-content/55">Territory is unavailable without two usable goals.</p>}
         <p className="mt-3 text-xs text-base-content/55">Ball time in three equal pitch regions.</p>
-      </section>
-      <section aria-label="Ball proximity">
-        <h3 className="mb-4 text-sm font-semibold">Ball proximity</h3>
-        <div className="flex h-3 overflow-hidden rounded-full" aria-hidden="true">{buckets.map(([key, , color]) => <div key={key} className={color} style={{ width: `${game.activeTicks ? game.proximityTicks[key] / game.activeTicks * 100 : 0}%` }} />)}</div>
-        <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">{buckets.map(([key, label, color]) => <div key={key} className="flex items-center gap-2"><span className={`size-2 rounded-full ${color}`} /><dt className="text-base-content/65">{label}</dt><dd className="ml-auto font-mono">{percent(game.proximityTicks[key], game.activeTicks)}</dd></div>)}</dl>
-        <p className="mt-3 text-xs text-base-content/55">Reach is player radius + ball radius + 4 units. This measures proximity, not possession.</p>
-      </section>
-      <section aria-label="Team movement" className="xl:border-l xl:border-base-300 xl:pl-8">
-        <h3 className="mb-1 text-sm font-semibold">Team movement</h3>
-        <TeamMetric label="Distance travelled" red={red.distance} blue={blue.distance} />
-        <TeamMetric label="Average width" red={red.averageWidth} blue={blue.averageWidth} digits={1} />
-        <TeamMetric label="Average depth" red={red.averageDepth} blue={blue.averageDepth} digits={1} />
-        <p className="mt-3 text-xs text-base-content/55">World units. Team shape includes every on-field player.</p>
       </section>
     </div>
   </div>;
