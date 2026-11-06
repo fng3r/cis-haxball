@@ -259,3 +259,8 @@ chat omits the introductory controls text; controls are listed in the reference.
 F toggles focus mode from the page or player. [ and ] activate the existing
 previous/next goal controls, including their eight-second lead-in and boundary
 handling. Holding F does not repeatedly toggle focus mode.
+
+The React UI uses named `lucide-react` icon imports for action buttons, theme,
+focus, sorting and keyboard help. Icons alongside text are decorative; icon-only
+buttons retain accessible labels. The custom brand mark and isolated legacy
+player keep their existing artwork.

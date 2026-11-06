@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { Keyboard } from 'lucide-react';
 
 const SHORTCUTS = [
   [['Space'], 'Pause / resume'],
@@ -32,10 +33,7 @@ export default function KeyboardShortcuts() {
   }, []);
   return <>
     <button type="button" className="btn btn-sm btn-square" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)" onClick={open}>
-      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 15h8" />
-      </svg>
+      <Keyboard className="size-5" aria-hidden="true" />
     </button>
     {createPortal(<dialog ref={dialog} className="modal" aria-labelledby="shortcuts-title">
       <div className="modal-box">

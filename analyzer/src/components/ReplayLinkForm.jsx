@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link, Plus, X } from 'lucide-react';
 import { fetchThehaxReplay } from '../external-replay.js';
 
 export default function ReplayLinkForm({ onFiles }) {
@@ -48,7 +49,7 @@ export default function ReplayLinkForm({ onFiles }) {
   }
   return <>
     <div className="divider my-3 text-[10px] text-base-content/45">OR</div>
-    <button type="button" className="btn btn-sm w-full" onClick={() => { setErrors([]); dialog.current.showModal(); }}>Use replay links</button>
+    <button type="button" className="btn btn-sm w-full" onClick={() => { setErrors([]); dialog.current.showModal(); }}><Link className="size-4 shrink-0" aria-hidden="true" />Use replay links</button>
     {createPortal(<dialog ref={dialog} className="modal" aria-labelledby="replay-links-title" onCancel={stop} onClose={stop}>
       <div className="modal-box">
         <h2 id="replay-links-title" className="text-lg font-semibold">Analyze replay links</h2>
@@ -61,9 +62,9 @@ export default function ReplayLinkForm({ onFiles }) {
             <button type="button" className="btn btn-ghost btn-square shrink-0" aria-label={`Remove link ${index + 1}`} disabled={busy} onClick={() => setUrls(rows => {
               const remaining = rows.filter(item => item.id !== row.id);
               return remaining.length ? remaining : [{ id: nextId.current++, value: '' }];
-            })}>×</button>
+            })}><X className="size-4" aria-hidden="true" /></button>
           </div>)}</div>
-          <button type="button" className="btn btn-sm btn-ghost mt-3" disabled={busy} onClick={() => setUrls(rows => [...rows, { id: nextId.current++, value: '' }])}>+ Add link</button>
+          <button type="button" className="btn btn-sm btn-ghost mt-3" disabled={busy} onClick={() => setUrls(rows => [...rows, { id: nextId.current++, value: '' }])}><Plus className="size-4" aria-hidden="true" />Add link</button>
           {errors.length > 0 && <div role="alert" className="mt-3 space-y-2 break-words text-sm text-error">{errors.map((error, index) => <p key={index}>{error}</p>)}</div>}
           {busy && <p role="status" className="mt-3 text-sm text-base-content/60">{progress}</p>}
           <div className="modal-action">

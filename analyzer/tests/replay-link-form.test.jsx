@@ -20,7 +20,7 @@ function open(onFiles = vi.fn()) {
 }
 function submit(value) {
   value.split('\n').forEach((link, index) => {
-    if (index) fireEvent.click(screen.getByRole('button', { name: '+ Add link' }));
+    if (index) fireEvent.click(screen.getByRole('button', { name: 'Add link' }));
     fireEvent.change(screen.getByLabelText(`Replay link ${index + 1}`), { target: { value: link } });
   });
   fireEvent.submit(screen.getByRole('form', { name: 'Open replay links' }));
@@ -63,7 +63,7 @@ it('rejects an empty submission without downloading', () => {
 it('adds and removes individual rows while preserving the other links', () => {
   open();
   fireEvent.change(screen.getByLabelText('Replay link 1'), { target: { value: 'https://replay.thehax.pl/first' } });
-  fireEvent.click(screen.getByRole('button', { name: '+ Add link' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add link' }));
   fireEvent.change(screen.getByLabelText('Replay link 2'), { target: { value: 'https://replay.thehax.pl/second' } });
   fireEvent.click(screen.getByRole('button', { name: 'Remove link 1' }));
   expect(screen.getByLabelText('Replay link 1')).toHaveValue('https://replay.thehax.pl/second');

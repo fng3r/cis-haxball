@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ArrowDown, ArrowUp, Download, FolderOpen, Maximize, Minimize, Moon, RotateCcw, Sun, Trash2, X } from 'lucide-react';
 import NativePlayer from './components/NativePlayer.jsx';
 import ReplayLinkForm from './components/ReplayLinkForm.jsx';
 import KeyboardShortcuts from './components/KeyboardShortcuts.jsx';
@@ -81,7 +82,7 @@ function PlayerTable({ game, selectedPlayer, onSelect }) {
     <table className="table table-sm">
       <caption className="sr-only">Player statistics. Select a player for their heatmap, or a statistic for its event map.</caption>
       <thead><tr><th className="min-w-40">Player</th>{columns.map(([key, label]) => <th key={key} className="text-right" aria-sort={sort?.key === key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}>
-        <button className="btn btn-ghost btn-xs whitespace-nowrap" aria-pressed={sort?.key === key} title={sort?.key !== key ? 'Sort descending' : sort.direction === 'desc' ? 'Sort ascending' : 'Reset to team order'} onClick={() => cycleSort(key)}>{label}{sort?.key === key ? (sort.direction === 'asc' ? ' ↑' : ' ↓') : ''}</button>
+        <button className="btn btn-ghost btn-xs whitespace-nowrap" aria-pressed={sort?.key === key} title={sort?.key !== key ? 'Sort descending' : sort.direction === 'desc' ? 'Sort ascending' : 'Reset to team order'} onClick={() => cycleSort(key)}>{label}{sort?.key === key && (sort.direction === 'asc' ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />)}</button>
       </th>)}</tr></thead>
       <tbody>{players.map(player => <tr key={player.id} className={selectedPlayer === player.id ? 'bg-base-200' : ''}>
         <th><button className="flex items-center gap-3 rounded-field py-2 text-left focus-visible:outline-2" aria-pressed={selectedPlayer === player.id} onMouseEnter={() => showMap(player, 'heatmap')} onFocus={() => showMap(player, 'heatmap')} onClick={() => showMap(player, 'heatmap')}>
@@ -180,7 +181,7 @@ export default function App() {
     <header className={focusMode ? 'hidden' : 'border-b border-base-300 bg-base-100'}>
       <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">LAB</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
-        <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}><span aria-hidden="true">{theme === 'replay-dark' ? '☀' : '☾'}</span></button></div>
+        <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}>{theme === 'replay-dark' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button></div>
       </div>
     </header>
     <input ref={input} type="file" accept=".hbr2" multiple aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files); event.target.value = ''; }} />
@@ -188,21 +189,21 @@ export default function App() {
       <aside className={focusMode ? 'hidden' : 'space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto'}>
         <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
           <h3 className="font-semibold">Bring your replays.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop .hbr2 files here, or choose recordings from your device.</p>
-          <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recordings</button>
+          <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}><FolderOpen className="size-4 shrink-0" aria-hidden="true" />Choose recordings</button>
           <ReplayLinkForm onFiles={open} />
           <p className="mt-3 text-center text-[11px] text-base-content/45">32 MB per file · Analyzed on your device</p>
         </div>
         {recordings.length > 0 && <section aria-label="Recordings">
-          <div className="mb-3 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Recordings · {recordings.length}</span><button className="btn btn-ghost btn-xs normal-case tracking-normal" aria-label="Clear all recordings" onClick={() => { setError(''); clear(); }}>Clear all</button></div>
+          <div className="mb-3 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Recordings · {recordings.length}</span><button className="btn btn-ghost btn-xs normal-case tracking-normal" aria-label="Clear all recordings" onClick={() => { setError(''); clear(); }}><Trash2 className="size-3.5 shrink-0" aria-hidden="true" />Clear all</button></div>
           <div className="space-y-2">{recordings.map(item => <div key={item.id} className={`rounded-box border p-3 ${recording?.id === item.id ? 'border-base-content/30 bg-base-100' : 'border-base-300'}`}>
             <div className="flex items-start gap-2">
               <button className="min-w-0 flex-1 rounded-field text-left focus-visible:outline-2" aria-label={`Open recording ${item.file.name}`} aria-pressed={recording?.id === item.id} onClick={() => { setError(''); select(item.id); }}>
                 <span className="block truncate text-xs font-semibold" title={item.file.name}>{item.file.name}</span>
                 <span className={`mt-1 block text-[11px] ${item.status === 'error' ? 'text-error' : 'text-base-content/55'}`}>{item.status === 'ready' ? `${item.result.games.length} games` : item.status === 'analyzing' ? `Analyzing… ${item.progress}%` : item.status === 'error' ? 'Analysis failed' : item.status === 'cancelled' ? 'Cancelled' : 'Queued'}</span>
               </button>
-              <button className="btn btn-ghost btn-xs btn-square shrink-0" aria-label={`Remove recording ${item.file.name}`} onClick={() => { setError(''); remove(item.id); }}>×</button>
+              <button className="btn btn-ghost btn-xs btn-square shrink-0" aria-label={`Remove recording ${item.file.name}`} onClick={() => { setError(''); remove(item.id); }}><X className="size-3.5" aria-hidden="true" /></button>
             </div>
-            {['error', 'cancelled'].includes(item.status) && <button className="btn btn-ghost btn-xs mt-2" aria-label={`Retry analysis of ${item.file.name}`} onClick={() => retry(item.id)}>Retry analysis</button>}
+            {['error', 'cancelled'].includes(item.status) && <button className="btn btn-ghost btn-xs mt-2" aria-label={`Retry analysis of ${item.file.name}`} onClick={() => retry(item.id)}><RotateCcw className="size-3" aria-hidden="true" />Retry analysis</button>}
           </div>)}</div>
         </section>}
         {replay && <section aria-label="Games in recording">
@@ -226,8 +227,8 @@ export default function App() {
             <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 max-w-64 truncate text-sm font-semibold sm:max-w-96">{game ? filename : 'Every match has a story.'}</h2></div>
             <div className="flex items-center gap-2">
               <KeyboardShortcuts />
-              {recording && <button className="btn btn-sm" aria-pressed={focusMode} onClick={() => setFocusMode(value => !value)}>{focusMode ? 'Exit focus mode' : 'Focus mode'}</button>}
-            {replay ? <button className="btn btn-sm" onClick={exportStats}>Export statistics ↓</button> : <span className="text-xs text-base-content/45">.hbr2 recordings</span>}
+              {recording && <button className="btn btn-sm" aria-pressed={focusMode} onClick={() => setFocusMode(value => !value)}>{focusMode ? <Minimize className="size-4" aria-hidden="true" /> : <Maximize className="size-4" aria-hidden="true" />}{focusMode ? 'Exit focus mode' : 'Focus mode'}</button>}
+            {replay ? <button className="btn btn-sm" onClick={exportStats}><Download className="size-4" aria-hidden="true" />Export statistics</button> : <span className="text-xs text-base-content/45">.hbr2 recordings</span>}
             </div>
           </div>
           <div className={focusMode ? 'hidden' : 'grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sm:px-7'}>
