@@ -275,3 +275,11 @@ The native player is covered by a themed loading screen during iframe/file
 initialization and recording switches. Its ready message reveals the same iframe
 without restarting playback. Errors or a 45-second initialization timeout show
 a retry action; retry mounts a fresh iframe without rerunning analysis.
+
+## Independent analysis engine v2
+
+An initial replacement engine lives in `src/engine-v2/`, alongside the unchanged
+original engine. It has its own runtime generator, named observations, metric
+collectors, versioned JSON schema, CLI and worker entry point. The existing UI
+still uses the original engine. See [ENGINE_V2.md](ENGINE_V2.md) for implemented
+metrics, definitions, limits, usage and validation.
