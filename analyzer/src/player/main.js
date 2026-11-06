@@ -1,8 +1,12 @@
-import { openNativeReplay, seekNativeReplay, setNativeGoals, setNativeGames, seekNativeGoal } from './vendor-player.js';
+import { openNativeReplay, seekNativeReplay, setNativeGoals, setNativeGames, seekNativeGoal, replayHotkey } from './vendor-player.js';
 import './player.scss';
+import { mountReplayHotkeys } from './hotkeys.js';
+
+mountReplayHotkeys(window, replayHotkey);
 
 window.addEventListener('message', async event => {
   if (event.source !== parent || event.origin !== location.origin) return;
+  if (event.data?.type === 'hotkey') replayHotkey(event.data.action);
   if (event.data?.type === 'seek') seekNativeReplay(event.data.tick);
   if (event.data?.type === 'seek-goal') seekNativeGoal(event.data.tick);
   if (event.data?.type === 'goals') {

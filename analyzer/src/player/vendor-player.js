@@ -12005,6 +12005,7 @@ export async function openNativeReplay(bytes) {
   nativeGameSync = mountGameSync(nativeController.je, replay, index => notify('game', index));
   nativeController.je.de = () => {
     nativeController.ia();
+    nativeController = null;
     x.Pg.replaceChildren();
     notify('closed');
   };
@@ -12027,4 +12028,15 @@ export function seekNativeReplay(tick) {
     controls.Vp();
     controls.el();
   }
+}
+
+export function replayHotkey(action) {
+  if (!nativeController) return false;
+  if (action === 'toggle') {
+    nativeController.je.g.querySelector('[data-hook=play]').click();
+  } else if (action === 'backward' || action === 'forward') {
+    const replay = nativeController.ya;
+    const position = (replay.Fd > 0 ? replay.Fd : replay.Qb) / replay.mh;
+    seekNativeReplay(position + (action === 'forward' ? 300 : -300));
+  } else return false;
 }

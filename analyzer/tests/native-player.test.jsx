@@ -56,3 +56,23 @@ it('ignores messages from other windows and accepts player errors from its own f
   act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data })));
   expect(onError).toHaveBeenCalledWith('Invalid replay');
 });
+
+it('forwards workspace shortcuts only when the replay is ready and removes them on unmount', () => {
+  const view = render(<NativePlayer file={{ arrayBuffer: vi.fn() }} onError={vi.fn()} onStats={vi.fn()} onClose={vi.fn()} />);
+  const frame = screen.getByTitle('Original HaxBall replay player');
+  const post = vi.spyOn(frame.contentWindow, 'postMessage').mockImplementation(() => {});
+  fireEvent.keyDown(window, { key: 'ArrowRight' });
+  expect(post).not.toHaveBeenCalled();
+  act(() => window.dispatchEvent(new MessageEvent('message', {
+    origin: location.origin, source: frame.contentWindow,
+    data: { source: 'haxball-native-player', type: 'ready' },
+  })));
+  post.mockClear();
+  for (const [key, action] of [['ArrowLeft', 'backward'], ['ArrowRight', 'forward'], [' ', 'toggle']]) {
+    fireEvent.keyDown(window, { key });
+    expect(post).toHaveBeenLastCalledWith({ type: 'hotkey', action }, location.origin);
+  }
+  view.unmount();
+  fireEvent.keyDown(window, { key: 'ArrowRight' });
+  expect(post).toHaveBeenCalledTimes(3);
+});

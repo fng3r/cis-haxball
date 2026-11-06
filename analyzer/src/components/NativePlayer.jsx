@@ -1,4 +1,5 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { mountReplayHotkeys } from '../player/hotkeys.js';
 
 export default function NativePlayer({ file, games, ref, onError, onStats, onClose, onGoal, onGame }) {
   const frame = useRef(null);
@@ -34,6 +35,11 @@ export default function NativePlayer({ file, games, ref, onError, onStats, onClo
     window.addEventListener('message', receive);
     return () => window.removeEventListener('message', receive);
   }, [games, onError, onStats, onClose, onGoal, onGame]);
+
+  useEffect(() => mountReplayHotkeys(window, action => {
+    if (!ready.current) return false;
+    frame.current?.contentWindow.postMessage({ type: 'hotkey', action }, location.origin);
+  }), []);
 
   async function load() {
     ready.current = false;
