@@ -306,3 +306,25 @@ it('times out only the active file and advances to the next recording', async ()
     expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
   } finally { cleanup(); vi.useRealTimers(); }
 });
+
+it('clears completed, active and queued recordings and ignores late results', async () => {
+  render(<App />);
+  const first = await addRecordings([recordingFile('done.hbr2'), recordingFile('active.hbr2'), recordingFile('queued.hbr2')]);
+  act(() => first.send({ type: 'result', result: { games: [game] } }));
+  await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
+  const active = FakeWorker.instances[1];
+  await waitFor(() => expect(active.postMessage).toHaveBeenCalled());
+  expect(screen.getByRole('button', { name: /Game 1/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Clear all recordings' }));
+  expect(active.terminate).toHaveBeenCalled();
+  expect(screen.queryByRole('region', { name: 'Recordings' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Open recording/ })).not.toBeInTheDocument();
+  expect(screen.queryByTitle('Original HaxBall replay player')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
+  act(() => active.send({ type: 'result', result: { games: [game] } }));
+  expect(FakeWorker.instances).toHaveLength(2);
+  expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
+  await addRecordings([recordingFile('fresh.hbr2')]);
+  expect(FakeWorker.instances).toHaveLength(3);
+  expect(screen.getByRole('button', { name: 'Open recording fresh.hbr2' })).toHaveAttribute('aria-pressed', 'true');
+});

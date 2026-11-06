@@ -74,6 +74,11 @@ export function useReplayLibrary() {
     stopJob();
     setRecordings(items => items.map(item => ['queued', 'analyzing'].includes(item.status) ? { ...item, status: 'cancelled' } : item));
   }
+  function clear() {
+    stopJob();
+    setRecordings([]);
+    setSelectedId(null);
+  }
   function remove(id) {
     if (running.current?.id === id) stopJob();
     setRecordings(items => items.filter(item => item.id !== id));
@@ -85,6 +90,6 @@ export function useReplayLibrary() {
   return {
     recordings, recording: recordings.find(item => item.id === selectedId) || null,
     active: recordings.find(item => item.status === 'analyzing'),
-    addFiles, cancel, remove, retry, select: setSelectedId,
+    addFiles, cancel, clear, remove, retry, select: setSelectedId,
   };
 }

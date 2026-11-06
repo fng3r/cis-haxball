@@ -107,7 +107,7 @@ export default function App() {
     if (meta) meta.content = theme === 'replay' ? '#f3f4f9' : '#171b29';
     try { localStorage.setItem('replay-theme', theme); } catch {}
   }, [theme]);
-  const { recordings, recording, active, addFiles, cancel, remove, retry, select } = useReplayLibrary();
+  const { recordings, recording, active, addFiles, cancel, clear, remove, retry, select } = useReplayLibrary();
   const replay = recording?.result;
   const filename = recording?.file.name || '';
   const busy = Boolean(active);
@@ -180,7 +180,7 @@ export default function App() {
           <p className="mt-3 text-center text-[11px] text-base-content/45">32 MB per file · Analyzed on your device</p>
         </div>
         {recordings.length > 0 && <section aria-label="Recordings">
-          <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Recordings</span><span>{recordings.length}</span></div>
+          <div className="mb-3 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Recordings · {recordings.length}</span><button className="btn btn-ghost btn-xs normal-case tracking-normal" aria-label="Clear all recordings" onClick={() => { setError(''); clear(); }}>Clear all</button></div>
           <div className="space-y-2">{recordings.map(item => <div key={item.id} className={`rounded-box border p-3 ${recording?.id === item.id ? 'border-base-content/30 bg-base-100' : 'border-base-300'}`}>
             <div className="flex items-start gap-2">
               <button className="min-w-0 flex-1 rounded-field text-left focus-visible:outline-2" aria-label={`Open recording ${item.file.name}`} aria-pressed={recording?.id === item.id} onClick={() => { setError(''); select(item.id); }}>
