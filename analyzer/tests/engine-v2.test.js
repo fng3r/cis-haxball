@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { analyzeReplay } from '../src/engine-v2/analyze.js';
 import { createCollector } from '../src/engine-v2/collector.js';
+import { MATCH_COUNTERS } from '../src/engine-v2/match-metrics.js';
 const single = readFileSync(new URL('./fixtures/big.hbr2', import.meta.url));
 const multiple = readFileSync(new URL('./fixtures/handball.hbr2', import.meta.url));
 const stadium = { width: 120, height: 70, goals: [{ team: 'red', p0: [-100, -20], p1: [-100, 20] }, { team: 'blue', p0: [100, -20], p1: [100, 20] }] };
@@ -24,13 +25,18 @@ describe('new standalone replay engine', () => {
       expect(game.thirds.reduce((a, b) => a + b, 0)).toBe(game.activeTicks);
       expect(Object.values(game.proximityTicks).reduce((a, b) => a + b, 0)).toBe(game.activeTicks);
       for (const team of ['red', 'blue']) {
-        for (const metric of ['kicks', 'contacts', 'transfers', 'received', 'turnovers', 'goals', 'ownGoals', 'assists']) {
+        for (const metric of ['kicks', 'contacts', 'transfers', 'received', 'turnovers', 'goals', 'ownGoals', 'assists', ...MATCH_COUNTERS]) {
           expect(game.players.filter(p => p.team === team).reduce((sum, p) => sum + p[metric], 0)).toBe(game.teams[team][metric]);
         }
         const t = game.teams[team]; expect(t.leadingTicks + t.drawingTicks + t.trailingTicks).toBe(game.activeTicks);
       }
       expect(game.transferNetwork.reduce((sum, edge) => sum + edge.count, 0)).toBe(game.teams.red.transfers + game.teams.blue.transfers);
+      expect(game.passNetwork.reduce((sum, edge) => sum + edge.count, 0)).toBe(game.teams.red.completedPasses + game.teams.blue.completedPasses);
+      expect(Object.values(game.possessionTicks).reduce((sum, ticks) => sum + ticks, 0)).toBe(game.activeTicks);
+      expect(game.teams.red.passesReceived).toBe(game.teams.red.completedPasses);
+      expect(game.teams.blue.passesReceived).toBe(game.teams.blue.completedPasses);
       for (const player of game.players) {
+        for (const metric of MATCH_COUNTERS) expect(player.maps[metric]).toHaveLength(player[metric]);
         expect(player.maps.heatmap.reduce((sum, cell) => sum + cell.ticks, 0)).toBe(player.activeTicks);
         expect(player).not.toHaveProperty('onFieldTicks');
         expect(player.peakSpeed).toBeGreaterThanOrEqual(player.averageSpeed);
@@ -39,6 +45,9 @@ describe('new standalone replay engine', () => {
     }
     expect(result.summary.observedGoals).toBe(6);
     expect(result.summary.activeTicks).toBe(result.games.reduce((sum, g) => sum + g.activeTicks, 0));
+    for (const team of ['red', 'blue']) for (const metric of [...MATCH_COUNTERS, 'possessionTicks']) {
+      expect(result.summary.teams[team][metric]).toBe(result.games.reduce((sum, g) => sum + g.teams[team][metric], 0));
+    }
     expect(result.games[1].startTick).toBeGreaterThan(result.games[0].startTick);
   });
 

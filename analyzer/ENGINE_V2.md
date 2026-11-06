@@ -33,8 +33,8 @@ ArrayBuffer, Uint8Array or sliced Node Buffer. Options:
 
 `src/engine-v2/analyze.worker.js` uses the same input/result/progress/error message
 contract as the original worker, but returns schema v2. The engine switcher selects
-the corresponding worker. Dedicated v2 views consume its fields directly rather
-than pretending they are the old possession, passing or shot definitions.
+the corresponding worker. Dedicated v2 views consume its fields directly with
+explicit possession, passing and shot definitions.
 A bundler can reference it with `new Worker(new URL('./engine-v2/analyze.worker.js',
 import.meta.url), { type: 'module' })` from a module in `src`.
 
@@ -50,7 +50,9 @@ import.meta.url), { type: 'module' })` from a module in `src`.
    records game boundaries, input changes, roster changes, kicks and contact
    episodes. Successful kicks capture immediate before/after ball velocity and a
    player-position freeze frame; goals also capture all player positions.
-4. `collector.js` consumes those observations and independently accumulates
+4. `match-metrics.js` classifies confirmed control, passing, shooting and control
+   changes independently of raw touches. `collector.js` consumes those observations
+   and independently accumulates
    per-game, per-team and per-player metrics. It can be tested on synthetic states
    independently of replay decoding. `analyze.js` provides input limits, iteration,
    recording-wide aggregates and the versioned output.
@@ -67,6 +69,14 @@ import.meta.url), { type: 'module' })` from a module in `src`.
 | On-field goal difference | Observed goals for minus against while each player is on the field, separate from scorer credit. |
 | Successful kicks | Actual kick impulses applied to disc 0, with actor ID/team, location and before/after velocity. Kick-button presses outside kicking range do not count. Only live-play kicks enter counters and maps, including a kickoff kick that activates play; all other phases remain raw events only. |
 | Contact episodes | Actual main-ball/player collision episodes, separate from kicks. Repeated collisions on consecutive simulation ticks count once; a gap of at least one non-contact tick opens another episode. Contact velocity-after is explicitly after the whole physics step. Only live-play episodes enter counters/maps; other phases remain raw events. |
+| Team possession | Last confirmed controller's team owns time, including ball flight, until another player establishes control or a phase/restart/roster change resets the chain. A successful kick establishes control immediately. A contact requires six consecutive uncontested ticks within player radius + ball radius + 4 units, with relative speed ≤2 units/tick. Unknown time remains `possessionTicks.unassigned`; UI percentages divide only by the two teams' attributed time. This is an explicit estimation rule, not pass intent or exact continuous ball control. |
+| Completed passes / passes received | Non-shot kick by A followed within 300 ticks by teammate B's confirmed control (another kick or a settled reception). The release is consumed once. Opponent deflections, ambiguous same-tick interactions, self-recovery, expiry, roster changes and phase boundaries break the candidate. Receptions without another kick are included. Maps retain linked raw event IDs and recording/game times. |
+| Progressive passes | Completed passes that reduce distance to the opposing goal centre by at least 10% of the distance between defended goal centres. Works for either direction and rotated goals; unavailable without usable goal geometry. |
+| Passing network | `passNetwork` sums directed completed-pass counts and displacement by native player ID/team. The older `transferNetwork` remains separate raw interaction telemetry. |
+| Recoveries | A player's confirmed control after an opposing controller. Deflections alone, initial unowned balls and restart touches are excluded. These are team regains, without claiming tackle or interception intent. |
+| Possession losses | Previous controller/releaser loses established team control to an opponent. Goal-bound shot releases are excluded, as are administrative changes/restarts and ambiguous touches without subsequent confirmed control. A shot followed by the shooter's settled self-recovery becomes ordinary possession again. |
+| Shots on target | Successful kicks projected directly through the opposing goal mouth, allowing for ball radius at the posts and dynamic ball damping. Velocity must point toward the opposing goal and its geometric damping reach must exceed the goal-line distance. A counterfactual, unobstructed projection, like the original analyzer's goal-bound-kick heuristic; does not simulate walls, bank shots, static obstacles or shot outcomes. Nonzero gravity/unsupported physics disable `shotsAvailable` so the UI shows unavailable rather than a misleading zero. It is not an all-attempts dataset: no shooting accuracy/conversion denominator is invented. |
+| Key passes | Final completed pass to a player who kicks a shot on target within 480 ticks, without an opposing touch or intervening confirmed recipient. A pass receives at most one key-pass credit. Map links pass → shooter → goal target; events reference the completed pass and shot. |
 | Observed transfers | Kick by A followed within 300 ticks (5 seconds) by the next distinct player interaction B on the same team. Reception can be a physical contact without a kick. Not an inference about intended passes or settled possession. |
 | Transfer receipts | Credit to B for the same linked event. Includes release/reception event IDs and times, endpoints, Euclidean displacement and progress toward the opposing goal. |
 | Turnover proxy | The same release-to-interaction sequence when B is an opponent. Not labelled a tackle, interception, or proven loss of controlled possession. |
@@ -75,7 +85,7 @@ import.meta.url), { type: 'module' })` from a module in `src`.
 | Distance travelled | Sum of before/after positions for active physics steps with the same disc instance. No cross-tick subtraction across administrative teleports; waiting-for-kickoff, goal/pause/ended phases are excluded. |
 | Average/peak speed | Mean/maximum native velocity magnitude during active ticks, converted to world units per second. Not metres or physical human exertion. |
 | Average position | Active-tick mean world position. |
-| Heatmaps | Active occupancy in 10-unit cells, with exact accumulated tick counts. Also event maps for kicks, contacts, transfers, receipts, turnovers, goals and assists. |
+| Heatmaps | Active occupancy in 10-unit cells, with exact accumulated tick counts. Also event maps for goals, own goals, assists, kicks, completed/received/progressive passes, key passes, shots on target, recoveries and losses, plus raw interaction maps. |
 | Kicks/minute | Successful kick count divided by active minutes; null if no active time. Numerator and denominator use the same live-play eligibility rule. |
 | Ball thirds | Three equal longitudinal regions between the centres of the red and blue defended goals, supporting rotated goals and reversed sides. Outer positions belong to the nearest end third. Unavailable if either goal is missing. |
 | Ball proximity | Active ticks with only red, only blue, both teams, or neither team within player radius + ball radius + 4 units. This is explicitly not possession. |
@@ -96,8 +106,11 @@ required for analysis.
   when multiple players physically contact the ball in the same tick. A later
   same-player contact ends the release candidate as a self-recovery.
 - The proximity buckets always sum to active game time. They do not assign a
-  last-touch owner to a distant ball. Actual controlled possession, recoveries,
-  carries, pressing, shot intent, saves/blocks and xG are deliberately deferred.
+  last-touch owner to a distant ball. Confirmed-control classifications are separate
+  from those buckets. Carries,
+  pressing, shot intent, saves/blocks and xG remain deferred. Saves require reliable
+  shot outcome and goalkeeper-role rules; defender deflections are not automatically
+  labelled saves or possession recoveries.
 - Only disc 0 is treated as the ball for interactions. Multi-ball/custom scoring
   maps require additional definitions. Native goal totals can include other
   scoring discs; their main-ball attribution should not be treated as reliable.
@@ -123,7 +136,13 @@ links, receipts, turnovers, expiry, contested contacts, rotated geometry and
 clipped games. Invariants check player/team count conservation, heatmap time,
 proximity/territory totals, score-state time, transfer-network totals, streaming
 versus retained results, deterministic repeated runs, sliced buffers and input
-validation. All existing legacy tests remain in the suite.
+validation. `tests/match-metrics.test.js` separately covers settled receptions, kicks,
+deflections, contested and ambiguous touches, self-recovery, pauses/expiry,
+progression in both directions and rotated pitches, control changes, flight
+possession, shot exclusions from losses, trajectory/radius/damping rules, key-pass
+links and expiry, and count/map/network conservation. UI tests exercise the
+passing/defence groups, clickable maps, sorting, click-only selection and exports.
+All existing legacy and native physics-equivalence tests remain in the suite.
 
 More recordings are valuable before calling classifications production-ready,
 especially mid-game starts/stops, substitutions, pauses, duplicate names and
@@ -136,19 +155,25 @@ preferences and the `engine` URL parameter; URL selection takes precedence.
 Switching engine navigates to a new document, clearing the session-only recording
 library. A valid explicit URL parameter still works when local storage is blocked.
 
-The UI focuses on familiar match statistics: goals, assists, own goals, kicks,
-played time and ball territory. Team goals count observed scoring events,
+The overview includes possession, goals, assists, own goals, kicks, shots on
+target, completed and progressive passes, key passes, recoveries and possession
+losses, alongside ball territory. Team goals count observed scoring events,
 including opponents' own goals. Player rows show individual scorer credit.
 
-Player selection is click-only, with sortable goals, assists, own goals, kicks
-and played time. The map selector offers movement heatmaps, goals, assists and
-kicks. Wide layouts show the player table and map side by side. Playtime and own
-goal totals are plain text rather than map buttons.
+Player selection remains click-only, with sortable columns and event-map buttons.
+Attack shows goals, assists, own goals, shots on target and kicks. Passing shows
+completed passes, passes received, progressive passes and key passes. Defence
+shows recoveries and possession losses. Played time appears in every group as
+plain text. Grouping keeps the table usable next to the map on wide screens.
+The map selector offers all those events plus the movement heatmap, regardless
+of which column group is selected. A counting guide explains the rules in plain
+language. Unsupported shooting/goal geometry produces unavailable values, not
+a false zero.
 
 Raw transfer/turnover proxies, contact episodes, proximity, team shape and
 unscaled distance/speed measurements remain available in the v2 API/export for
-research. They are not presented as end-user insights or relabelled as completed
-passes, possession or other established statistics.
+research. The new football-facing metrics have their own classifications, linked
+events and maps; raw transfer counters are not simply renamed.
 
 Goals retain the shared timeline and native player's eight-second lead-in. A
 view-only adapter reads scores from v2 goal arrays. Export preserves the original
@@ -157,5 +182,6 @@ v2 schema, summary, events, goal attribution and spatial maps.
 All displayed statistics use live-play time by default. V2 does not expose a
 separate active-time headline or accumulate all-phase on-field duration/phase-time
 metrics. Raw phases and recording timestamps remain decoder metadata needed for
-filtering and seeking. Metrics version 2 applies the same live-tick rule to time,
+filtering and seeking. Metrics version 3 adds the confirmed-control, passing and
+shooting definitions above while retaining the same live-tick rule for time,
 interactions, maps and movement, including the kickoff activation tick.

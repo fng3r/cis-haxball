@@ -1,9 +1,10 @@
-export const DEFAULT_OPTIONS = Object.freeze({ heatmapCellSize: 10, transferWindowTicks: 300, assistWindowTicks: 480, progressiveFraction: 0.1 });
+import { createMatchMetrics, MATCH_COUNTERS, MATCH_OPTIONS } from './match-metrics.js';
+export const DEFAULT_OPTIONS = Object.freeze({ heatmapCellSize: 10, transferWindowTicks: 300, assistWindowTicks: 480, progressiveFraction: 0.1, ...MATCH_OPTIONS });
 const point = value => ({ x: value.x, y: value.y });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const key = player => `${player.playerId}:${player.team}`;
 const playing = player => player.team === 'red' || player.team === 'blue';
-const counters = () => ({ kicks: 0, contacts: 0, transfers: 0, received: 0, progressiveTransfers: 0, turnovers: 0, goals: 0, ownGoals: 0, assists: 0 });
+const counters = () => ({ kicks: 0, contacts: 0, transfers: 0, received: 0, progressiveTransfers: 0, turnovers: 0, goals: 0, ownGoals: 0, assists: 0, ...Object.fromEntries(MATCH_COUNTERS.map(field => [field, 0])) });
 function geometry(stadium) {
   const red = stadium.goals.find(goal => goal.team === 'red');
   const blue = stadium.goals.find(goal => goal.team === 'blue');
@@ -15,9 +16,10 @@ function geometry(stadium) {
 export function createCollector({ includeEvents = true, onEvent = () => {}, ...settings } = {}) {
   const options = { ...DEFAULT_OPTIONS, ...settings }, games = new Map();
   for (const field of Object.keys(settings)) if (!(field in DEFAULT_OPTIONS)) throw new Error(`Unknown metric setting: ${field}.`);
-  for (const field of ['heatmapCellSize', 'transferWindowTicks', 'assistWindowTicks', 'progressiveFraction']) {
+  for (const field of Object.keys(DEFAULT_OPTIONS)) {
     if (!(Number.isFinite(options[field]) && options[field] > 0)) throw new Error(`Invalid ${field}.`);
   }
+  if (!Number.isInteger(options.controlTicks)) throw new Error('Invalid controlTicks.');
   function gameFor(frame, tick) {
     if (frame.gameId == null) return null;
     if (!games.has(frame.gameId)) games.set(frame.gameId, {
@@ -25,11 +27,13 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
       scoreRed: frame.score[0], scoreBlue: frame.score[1], initialScore: [...frame.score],
       activeTicks: 0, thirds: [0, 0, 0], territoryAvailable: Boolean(geometry(frame.stadium)),
       proximityTicks: { red: 0, blue: 0, contested: 0, loose: 0 },
-      teams: { red: { ...counters(), observedGoalsFor: 0, observedGoalsAgainst: 0, leadingTicks: 0, drawingTicks: 0, trailingTicks: 0, widthSum: 0, depthSum: 0, shapeTicks: 0 }, blue: { ...counters(), observedGoalsFor: 0, observedGoalsAgainst: 0, leadingTicks: 0, drawingTicks: 0, trailingTicks: 0, widthSum: 0, depthSum: 0, shapeTicks: 0 } },
+      teams: { red: { ...counters(), possessionTicks: 0, observedGoalsFor: 0, observedGoalsAgainst: 0, leadingTicks: 0, drawingTicks: 0, trailingTicks: 0, widthSum: 0, depthSum: 0, shapeTicks: 0 }, blue: { ...counters(), possessionTicks: 0, observedGoalsFor: 0, observedGoalsAgainst: 0, leadingTicks: 0, drawingTicks: 0, trailingTicks: 0, widthSum: 0, depthSum: 0, shapeTicks: 0 } },
       players: new Map(), events: [], goals: [], network: new Map(), release: null, interactions: [],
       geometry: geometry(frame.stadium), observedStart: false, observedEnd: false,
     });
-    return games.get(frame.gameId);
+    const game = games.get(frame.gameId);
+    game.matchMetrics ??= createMatchMetrics(game, { options, playerFor, count, record });
+    return game;
   }
   function playerFor(game, player) {
     if (!player || !playing(player)) return null;
@@ -37,7 +41,7 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
     if (!game.players.has(id)) game.players.set(id, {
       id, playerId: player.playerId, nick: player.nick, names: new Set(), team: player.team,
       ...counters(), activeTicks: 0, distance: 0, speedSum: 0, peakSpeed: 0,
-      xSum: 0, ySum: 0, cells: new Map(), maps: { kicks: [], contacts: [], transfers: [], received: [], turnovers: [], goals: [], assists: [] },
+      xSum: 0, ySum: 0, cells: new Map(), maps: { kicks: [], contacts: [], transfers: [], received: [], turnovers: [], goals: [], ownGoals: [], assists: [], ...Object.fromEntries(MATCH_COUNTERS.map(field => [field, []])) },
     });
     const item = game.players.get(id); item.names.add(player.nick); item.nick = player.nick;
     return item;
@@ -108,6 +112,7 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
   return {
     initial(frame) { const game = gameFor(frame, 0); if (game) game.truncatedStart = true; },
     consume({ tick, before, after, events }) {
+      events = events.map(event => ({ ...event, id: ++eventId }));
       const game = gameFor(before, tick) || gameFor(after, tick) || games.get(events.find(event => event.gameId != null)?.gameId);
       if (!game) return;
       game.endTick = before.gameId === game.id ? tick + 1 : tick;
@@ -125,10 +130,10 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
       for (const raw of events) {
         if (raw.gameId !== game.id) {
           const previous = games.get(raw.gameId);
-          if (previous && ['game_stop', 'game_end'].includes(raw.type)) { previous.observedEnd = true; previous.endTick = tick; record(previous, { ...raw, id: ++eventId }); }
+          if (previous && ['game_stop', 'game_end'].includes(raw.type)) { previous.observedEnd = true; previous.endTick = tick; record(previous, { ...raw }); }
           continue;
         }
-        let event = { ...raw, id: ++eventId };
+        let event = { ...raw };
         if (['game_start', 'restart', 'game_end', 'team_change', 'player_leave'].includes(event.type)) { game.release = null; game.interactions = []; }
         if (event.type === 'game_start') { game.observedStart = true; game.truncatedStart = false; }
         if (event.type === 'game_end' || event.type === 'game_stop') game.observedEnd = true;
@@ -140,6 +145,7 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
         if (event.type === 'goal' && active) event = goal(game, event, before.players);
         record(game, event);
       }
+      game.matchMetrics.consume({ tick, before, after, events }, active);
       if (before.gameId !== game.id || !active) return;
       if (active) {
         game.activeTicks++;
@@ -192,7 +198,8 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
           initialScore: game.initialScore, scoreRed: game.scoreRed, scoreBlue: game.scoreBlue,
           activeTicks: game.activeTicks, thirds: game.thirds, territoryAvailable: game.territoryAvailable,
           proximityTicks: game.proximityTicks, truncatedStart: Boolean(game.truncatedStart), truncatedEnd: !game.observedEnd,
-          teams, players, goals: game.goals, transferNetwork: [...game.network.values()], ...(includeEvents ? { events: game.events } : {}) };
+          possessionTicks: game.possessionTicks, shotsAvailable: game.shotsAvailable, teams, players, goals: game.goals,
+          passNetwork: [...game.passNetwork.values()], transferNetwork: [...game.network.values()], ...(includeEvents ? { events: game.events } : {}) };
       });
     },
   };

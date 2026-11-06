@@ -1,10 +1,11 @@
 import { Inflate } from 'pako';
 import { createRuntime } from './vendor-runtime.js';
 import { createCollector, DEFAULT_OPTIONS } from './collector.js';
+import { MATCH_COUNTERS } from './match-metrics.js';
 
 export const MAX_FILE_BYTES = 32 * 1024 * 1024;
 const MAX_INFLATED_BYTES = 128 * 1024 * 1024;
-const COUNT_FIELDS = ['kicks', 'contacts', 'transfers', 'received', 'progressiveTransfers', 'turnovers', 'goals', 'ownGoals', 'assists'];
+const COUNT_FIELDS = ['kicks', 'contacts', 'transfers', 'received', 'progressiveTransfers', 'turnovers', 'goals', 'ownGoals', 'assists', ...MATCH_COUNTERS];
 function inflateRaw(bytes) {
   const decoder = new Inflate({ raw: true }), chunks = [];
   let length = 0;
@@ -38,7 +39,7 @@ export function aggregateGames(games) {
         peakSpeed: Math.max(...items.map(p => p.peakSpeed)), onFieldGoalDifference: sum(items, 'onFieldGoalDifference') };
     }),
     teams: Object.fromEntries(['red', 'blue'].map(team => [team, Object.fromEntries(
-      [...COUNT_FIELDS, 'observedGoalsFor', 'observedGoalsAgainst', 'distance', 'leadingTicks', 'drawingTicks', 'trailingTicks'].map(field => [field, sum(games.map(g => g.teams[team]), field)]),
+      [...COUNT_FIELDS, 'possessionTicks', 'observedGoalsFor', 'observedGoalsAgainst', 'distance', 'leadingTicks', 'drawingTicks', 'trailingTicks'].map(field => [field, sum(games.map(g => g.teams[team]), field)]),
     )])),
   };
 }
@@ -77,9 +78,17 @@ export function analyzeReplay(input, { onProgress = () => {}, onEvent = () => {}
   const games = collector.finish();
   if (!games.length) throw new Error('No played games were found in this recording.');
   onProgress(100);
-  return { schemaVersion: 2, engine: 'replay-lab-v2', metricsVersion: 2, tickRate: 60, ticks,
+  return { schemaVersion: 2, engine: 'replay-lab-v2', metricsVersion: 3, tickRate: 60, ticks,
     definitions: { timeBasis: 'live-play-only-including-the-kickoff-activation-tick', ...DEFAULT_OPTIONS, ...metrics, territory: 'three-equal-zones-between-defended-goal-centres',
       transfers: 'next-distinct-ball-interaction-after-kick', proximity: 'within-player-and-ball-radii-plus-4-not-possession',
+      control: 'kick-or-uncontested-contact-settled-for-controlTicks-within-controlRelativeSpeed',
+      possession: 'last-confirmed-controller-team-including-ball-flight; percentages-exclude-unassigned-time',
+      completedPasses: 'kick-to-confirmed-teammate-control-within-transferWindowTicks; excludes-goal-bound-kicks-and-opponent-deflections',
+      progressivePasses: 'completed-pass-reducing-goal-centre-distance-by-progressiveFraction-of-pitch-length',
+      recoveries: 'confirmed-opponent-to-own-team-control; initial-unowned-ball-excluded',
+      possessionLosses: 'confirmed-control-lost-to-opponent; shot-releases-excluded',
+      shotsOnTarget: 'direct-unobstructed-goal-bound-kicks-with-damping-reach-and-ball-radius; excludes-bank-shots-and-gravity',
+      keyPasses: 'final-completed-pass-to-shooter-within-assistWindowTicks; one-credit-per-pass',
       goalAttribution: 'last-distinct-interactions-within-assistWindowTicks', velocityUnits: 'world-units-per-tick', speedUnits: 'world-units-per-second' },
     games, summary: aggregateGames(games), ...(includeTracking ? { trackingInterval, tracking } : {}) };
 }

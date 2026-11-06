@@ -2,10 +2,10 @@
 import React from 'react';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import App from '../src/App.jsx';
-import { V2Overview } from '../src/components/V2Stats.jsx';
+import { V2Overview, V2Players } from '../src/components/V2Stats.jsx';
 import { analyzeReplay } from '../src/engine-v2/analyze.js';
 import { serializeStats } from '../src/export-stats.js';
 const result = analyzeReplay(Uint8Array.from(readFileSync('tests/fixtures/big.hbr2')));
@@ -31,18 +31,46 @@ async function open() {
   act(() => worker.send({ type: 'result', result }));
   return worker;
 }
-it('uses the v2 worker and displays significant v2 metrics without legacy possession or shots', async () => {
+it('uses the v2 worker and restores baseline statistics alongside meaningful new metrics', async () => {
   const worker = await open();
   expect(worker.url.pathname).toMatch(/engine-v2\/analyze.worker.js$/);
   expect(screen.getByRole('combobox', { name: 'Analysis engine' })).toHaveValue('v2');
-  for (const label of ['Goals', 'Assists', 'Own goals', 'Kicks']) expect(screen.getByText(label)).toBeInTheDocument();
+  const teams = within(screen.getByRole('region', { name: 'Team statistics' }));
+  for (const label of ['Goals', 'Assists', 'Own goals', 'Kicks', 'Possession', 'Completed passes', 'Shots on target', 'Progressive passes', 'Key passes', 'Recoveries', 'Possession losses']) expect(teams.getByText(label)).toBeInTheDocument();
   for (const label of ['Loose ball', 'Contested ball', 'Ball proximity', 'Average width', 'Average depth', 'Observed transfers', 'Progressive transfers', 'Contact episodes', 'Turnovers', 'Distance travelled']) expect(screen.queryByText(label)).not.toBeInTheDocument();
-  expect(screen.queryByText('Possession')).not.toBeInTheDocument();
-  expect(screen.queryByText('Shots on goal')).not.toBeInTheDocument();
+  const { red, blue } = result.games[0].teams;
+  const share = Math.round(red.possessionTicks / (red.possessionTicks + blue.possessionTicks) * 100);
+  expect(screen.getByLabelText(`Possession: red ${share}%, blue ${100 - share}%`)).toBeInTheDocument();
   expect(screen.getByRole('img', { name: /^Ball territory:/ })).toBeInTheDocument();
   const exported = JSON.parse(serializeStats(result));
   expect(exported.schemaVersion).toBe(2); expect(exported.summary).toEqual(result.summary);
   expect(exported.games[0].events.length).toBeGreaterThan(0);
+  expect(exported.metricsVersion).toBe(3);
+  expect(exported.games[0].players[0].maps.completedPasses).toEqual(result.games[0].players[0].maps.completedPasses);
+});
+it('offers passing and defensive maps without changing the player on hover or highlighting played time', async () => {
+  await open(); fireEvent.click(screen.getByRole('tab', { name: 'players' }));
+  const player = result.games[0].players.find(p => p.team === 'red');
+  const name = screen.getByRole('button', { name: player.nick });
+  expect(name).toHaveAttribute('aria-pressed', 'true');
+  expect(within(name.closest('tr')).queryByRole('button', { name: /Played map/ })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('tab', { name: 'Passing' }));
+  for (const label of ['Completed passes', 'Passes received', 'Progressive passes', 'Key passes']) {
+    fireEvent.click(screen.getByRole('button', { name: `${label} map for ${player.nick}` }));
+    expect(screen.getByRole('img', { name: `${player.nick}: ${label}` })).toBeInTheDocument();
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Progressive passes' }));
+  expect(screen.getByRole('columnheader', { name: 'Progressive passes' })).toHaveAttribute('aria-sort', 'descending');
+  fireEvent.click(screen.getByRole('tab', { name: 'Defence' }));
+  for (const label of ['Recoveries', 'Possession losses']) {
+    fireEvent.click(screen.getByRole('button', { name: `${label} map for ${player.nick}` }));
+    expect(screen.getByRole('img', { name: `${player.nick}: ${label}` })).toBeInTheDocument();
+  }
+  fireEvent.click(screen.getByRole('tab', { name: 'Attack' }));
+  fireEvent.click(screen.getByRole('button', { name: `Shots on target map for ${player.nick}` }));
+  expect(screen.getByRole('img', { name: `${player.nick}: Shots on target` })).toBeInTheDocument();
+  fireEvent.click(screen.getByText('How these stats are counted'));
+  expect(screen.getByText(/A deflection alone does not count/)).toBeInTheDocument();
 });
 it('selects new event maps by click, retains them on hover, and sorts player metrics', async () => {
   await open(); fireEvent.click(screen.getByRole('tab', { name: 'players' }));
@@ -81,6 +109,17 @@ it('shows captured statistics without a coverage warning and handles missing geo
   expect(screen.getByText('Goals')).toBeInTheDocument();
   expect(screen.getByText(/Ball territory is unavailable/)).toBeInTheDocument();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
+});
+it('shows unavailable shooting values and omits their maps for unsupported pitches', () => {
+  const game = { ...result.games[0], shotsAvailable: false };
+  const { unmount } = render(<V2Overview game={game} />);
+  const row = within(screen.getByRole('region', { name: 'Team statistics' })).getByText('Shots on target').parentElement;
+  expect(within(row).getAllByText('—')).toHaveLength(2);
+  unmount();
+  render(<V2Players game={game} onSelect={vi.fn()} onStatistic={vi.fn()} mapStatistic="shotsOnTarget" />);
+  expect(screen.queryByRole('option', { name: 'Shots on target' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Shots on target map/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Map statistic' })).toHaveValue('heatmap');
 });
 
 it('does not overlay horizontal zones on a rotated goal axis', () => {
