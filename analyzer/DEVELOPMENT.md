@@ -166,7 +166,7 @@ there is no 15 fps playback cap in the application.
 ## External replay links
 
 The upload card offers “Use replay links” after an OR divider. It opens a modal
-accepting multiple links, one per line. Downloads run sequentially; each successful
+accepting multiple links in separate inputs with add/remove controls. Downloads run sequentially; each successful
 download immediately enters the existing analysis queue. Failed links remain for
 retry, and closing/cancelling the modal aborts the current download and skips
 remaining links without removing files already queued. Duplicate links within a

@@ -19,7 +19,10 @@ function open(onFiles = vi.fn()) {
   return onFiles;
 }
 function submit(value) {
-  fireEvent.change(screen.getByLabelText('Replay links'), { target: { value } });
+  value.split('\n').forEach((link, index) => {
+    if (index) fireEvent.click(screen.getByRole('button', { name: '+ Add link' }));
+    fireEvent.change(screen.getByLabelText(`Replay link ${index + 1}`), { target: { value: link } });
+  });
   fireEvent.submit(screen.getByRole('form', { name: 'Open replay links' }));
 }
 it('downloads multiple unique links in order and queues each file, then closes', async () => {
@@ -38,7 +41,7 @@ it('keeps failed links for retry without adding successful files again', async (
   const onFiles = open(); submit('https://replay.thehax.pl/bad\nhttps://replay.thehax.pl/good');
   await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Replay removed.'));
   expect(onFiles).toHaveBeenCalledWith([file]);
-  expect(screen.getByLabelText('Replay links')).toHaveValue('https://replay.thehax.pl/bad');
+  expect(screen.getByLabelText('Replay link 1')).toHaveValue('https://replay.thehax.pl/bad');
   fetchThehaxReplay.mockResolvedValueOnce(file);
   fireEvent.click(screen.getByRole('button', { name: 'Analyze' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -55,4 +58,16 @@ it('rejects an empty submission without downloading', () => {
   open(); submit('  ');
   expect(screen.getByRole('alert')).toHaveTextContent('Enter at least one replay link.');
   expect(fetchThehaxReplay).not.toHaveBeenCalled();
+});
+
+it('adds and removes individual rows while preserving the other links', () => {
+  open();
+  fireEvent.change(screen.getByLabelText('Replay link 1'), { target: { value: 'https://replay.thehax.pl/first' } });
+  fireEvent.click(screen.getByRole('button', { name: '+ Add link' }));
+  fireEvent.change(screen.getByLabelText('Replay link 2'), { target: { value: 'https://replay.thehax.pl/second' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Remove link 1' }));
+  expect(screen.getByLabelText('Replay link 1')).toHaveValue('https://replay.thehax.pl/second');
+  expect(screen.queryByLabelText('Replay link 2')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Remove link 1' }));
+  expect(screen.getByLabelText('Replay link 1')).toHaveValue('');
 });
