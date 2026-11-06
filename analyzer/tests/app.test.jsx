@@ -141,7 +141,7 @@ describe('local replay workspace', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /Game 2/ })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /Game 2/ }));
     expect(screen.getByTitle('Original HaxBall replay player')).toHaveAttribute('src', `${import.meta.env.BASE_URL}player.html`);
-    expect(document.querySelector('canvas')).toBeNull();
+    expect(screen.getByRole('img', { name: 'Ball territory: Red third 20%, Middle 30%, Blue third 50%' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'players' }));
     fireEvent.click(screen.getByRole('button', { name: 'Alice' }));
     expect(screen.getByRole('button', { name: 'Alice' })).toHaveAttribute('aria-pressed', 'true');

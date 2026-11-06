@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import NativePlayer from './components/NativePlayer.jsx';
 import PlayerMaps from './components/PlayerMaps.jsx';
+import ThirdsMap from './components/ThirdsMap.jsx';
 import { serializeStats } from './export-stats.js';
 import { MAX_FILE_BYTES } from './engine/analyze.js';
 
@@ -253,7 +254,7 @@ export default function App() {
           <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>
             {tab === 'overview' && <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
               <div className="space-y-6"><h3 className="text-sm font-semibold">The balance of play</h3><Comparison label="Possession" values={game.possession} percentage /><Comparison label="Kicks" values={game.kicks} /><Comparison label="Completed passes" values={game.passes} /><Comparison label="Shots on goal" values={game.shots} /></div>
-              <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><div className="flex h-24 overflow-hidden rounded-field bg-base-200">{game.thirds.map((count, i) => <div key={i} className={`flex min-w-0 flex-1 flex-col items-center justify-center ${i === 0 ? 'bg-error/15' : i === 2 ? 'bg-info/15' : 'bg-base-200'}`}><span className="font-mono text-xl">{Math.round(count / (game.thirds.reduce((a, b) => a + b, 0) || 1) * 100)}%</span><span className="mt-1 text-[10px] text-base-content/55">{['Red third', 'Middle', 'Blue third'][i]}</span></div>)}</div><p className="mt-4 text-xs leading-relaxed text-base-content/55">Where the ball spent its time during active play. Team colors follow the recording.</p><p className="mt-5 text-xs text-base-content/50">{game.spaceMode ? 'SpaceBounce rules detected.' : 'Standard kicking rules.'}</p></div>
+              <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><ThirdsMap game={game} /><p className="mt-4 text-xs leading-relaxed text-base-content/55">Where the ball spent its time during active play. Team colors follow the recording.</p><p className="mt-5 text-xs text-base-content/50">{game.spaceMode ? 'SpaceBounce rules detected.' : 'Standard kicking rules.'}</p></div>
             </div>}
             {tab === 'players' && <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} />}
             {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={game} onSeek={seekGoal} /></>}
