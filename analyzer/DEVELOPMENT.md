@@ -163,6 +163,26 @@ seek queue and message isolation. Browser checks cover native playback and goal
 seeking. The original canvas renderer was observed drawing at display cadence;
 there is no 15 fps playback cap in the application.
 
+## External replay links
+
+The sidebar accepts current `https://replay.thehax.pl/<id>` links (including
+`/<id>/download`), legacy `https://thehax.pl/forum/powtorki.php?nagranie=<id>`
+links, and VK away.php wrappers around those links. This follows the URL
+resolution in Django's `tournament/replay_stats_client.py`; other hosts are not
+yet supported. IDs are validated and downloads always use the fixed HTTPS URL
+`https://replay.thehax.pl/<id>/download` rather than fetching an arbitrary URL.
+
+The browser downloads directly with CORS and no credentials, with a 20-second
+timeout and a 32 MiB streaming size limit. The response must have an HBR2 header
+before it is queued as a local File for the existing analyzer and native player.
+Download cancellation is separate from analysis queue cancellation. A cancelled
+or failed download adds no recording; successful downloads remain session-only.
+
+The host currently permits cross-origin downloads. If its CORS policy changes,
+browser access may fail even if Django can still download server-side. The UI
+reports network/CORS failures; no Django proxy or deployment changes are needed
+for the current integration. Expired/private links must be publicly accessible.
+
 ## Multiple recordings and limits
 
 The file picker and drop zone accept multiple recordings. Additional selections

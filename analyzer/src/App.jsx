@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import NativePlayer from './components/NativePlayer.jsx';
+import ReplayLinkForm from './components/ReplayLinkForm.jsx';
 import PlayerMaps from './components/PlayerMaps.jsx';
 import ThirdsMap from './components/ThirdsMap.jsx';
 import { serializeStats } from './export-stats.js';
@@ -177,6 +178,7 @@ export default function App() {
           <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recordings</button>
           <p className="mt-3 text-center text-[11px] text-base-content/45">32 MB per file · Analyzed on your device</p>
         </div>
+        <ReplayLinkForm onFiles={open} />
         {recordings.length > 0 && <section aria-label="Recordings">
           <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Recordings</span><span>{recordings.length}</span></div>
           <div className="space-y-2">{recordings.map(item => <div key={item.id} className={`rounded-box border p-3 ${recording?.id === item.id ? 'border-base-content/30 bg-base-100' : 'border-base-300'}`}>
