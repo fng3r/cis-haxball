@@ -4,10 +4,12 @@ A local HaxBall replay analysis workspace built with React and Vite.
 
 ```sh
 npm ci
-npm start
+npm run dev
 ```
 
 Open **http://127.0.0.1:3000/** and choose an `.hbr2` recording.
+
+Use `npm run build` followed by `npm start` to serve the built app.
 
 Run `npm test` for checks, `npm run build` for a static production build, or
 `node scripts/analyze.mjs recording.hbr2` for standalone JSON analysis.

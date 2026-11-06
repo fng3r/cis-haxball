@@ -12,18 +12,22 @@ Requires Node 22.12 or newer.
 ```sh
 cd analyzer
 npm ci
-npm start
+npm run dev
 ```
 
 Open http://127.0.0.1:3000/. The dev server deliberately binds to IPv4 loopback.
-`npm run dev` is an alias for the same Vite server. Stop an existing CRA server
-before starting it; the port is strict so it will not silently change addresses.
+`npm run dev` launches the Vite development server with hot reload. The port is
+strict so it will not silently change addresses.
 
 ```sh
 npm test
 npm run build
-npm run preview
+npm start
 ```
+
+`npm start` serves the existing `dist/` build using Vite preview; it does not
+build the app or enable hot reload. `npm run preview` remains an equivalent alias.
+For the staging systemd service, use `npm start -- --host 127.0.0.1 --port 3001 --strictPort`.
 
 The production files are written to `dist/`. Deploy that directory to a static
 host. The old upstream publishing scripts and homepage configuration are absent.
