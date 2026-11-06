@@ -235,7 +235,6 @@ export default function App() {
             {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={game} onSeek={seekGoal} /></>}
           </div>
         </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>}
-        <footer className="flex flex-wrap justify-between gap-2 pb-4 text-[10px] text-base-content/40"><span>REPLAY LAB / HaxBall analysis workspace</span><span>Proof of concept · No account needed</span></footer>
       </div>
     </main>
   </div>;
