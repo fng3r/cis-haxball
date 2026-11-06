@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp } from 'lucide-react';
 import ThirdsMap from './ThirdsMap.jsx';
 import PlayerMaps from './PlayerMaps.jsx';
 
-export const V2_MAP_LABELS = { heatmap: 'Movement heatmap', goals: 'Goals', assists: 'Assists', kicks: 'Kicks', contacts: 'Contacts', transfers: 'Transfers', received: 'Receptions', turnovers: 'Turnovers' };
+export const V2_MAP_LABELS = { heatmap: 'Movement heatmap', goals: 'Goals', assists: 'Assists', kicks: 'Kicks' };
 const number = (value, digits = 0) => Number.isFinite(value) ? value.toLocaleString(undefined, { maximumFractionDigits: digits }) : '—';
 const duration = ticks => `${Math.floor(ticks / 3600)}:${String(Math.floor(ticks / 60) % 60).padStart(2, '0')}`;
 const percent = (value, total) => `${total ? Math.round(value / total * 100) : 0}%`;
@@ -24,13 +24,11 @@ export function V2Overview({ game }) {
     <div className="grid gap-8 xl:grid-cols-2">
       <section aria-label="Team statistics">
         <div className="mb-1 flex justify-between text-xs font-semibold"><span className="text-error">Red team</span><h3 className="text-base-content">Team statistics</h3><span className="text-info">Blue team</span></div>
-        {[['kicks', 'Successful kicks'], ['contacts', 'Contact episodes'], ['transfers', 'Observed transfers'], ['progressiveTransfers', 'Progressive transfers'], ['turnovers', 'Turnovers']].map(([key, label]) => <TeamMetric key={key} label={label} red={red[key]} blue={blue[key]} />)}
-        <TeamMetric label="Distance travelled" red={red.distance} blue={blue.distance} />
-        <p className="mt-3 text-xs leading-relaxed text-base-content/55">Transfers and turnovers follow the next distinct ball interaction after a kick. They do not establish pass intent or controlled possession. Distance is in world units.</p>
+        {[['observedGoalsFor', 'Goals'], ['assists', 'Assists'], ['ownGoals', 'Own goals'], ['kicks', 'Kicks']].map(([key, label]) => <TeamMetric key={key} label={label} red={red[key]} blue={blue[key]} />)}
       </section>
       <section aria-label="Ball territory" className="min-w-0 xl:border-l xl:border-base-300 xl:pl-8">
         <h3 className="mb-4 text-sm font-semibold">Ball territory</h3>
-        {game.territoryAvailable ? (pitchAligned ? <ThirdsMap game={game} /> : <div><p className="mb-3 text-xs text-base-content/55">Goal-axis thirds · nonstandard pitch orientation</p><dl className="grid grid-cols-3 gap-2">{['Red third', 'Middle', 'Blue third'].map((label, index) => <div key={label} className="rounded-field bg-base-200 p-4 text-center"><dt className="text-xs text-base-content/60">{label}</dt><dd className="mt-2 font-mono text-xl">{percent(game.thirds[index], game.activeTicks)}</dd></div>)}</dl></div>) : <p className="py-8 text-sm text-base-content/55">Territory is unavailable without two usable goals.</p>}
+        {game.territoryAvailable ? (pitchAligned ? <ThirdsMap game={game} /> : <div><p className="mb-3 text-xs text-base-content/55">Time in each third</p><dl className="grid grid-cols-3 gap-2">{['Red third', 'Middle', 'Blue third'].map((label, index) => <div key={label} className="rounded-field bg-base-200 p-4 text-center"><dt className="text-xs text-base-content/60">{label}</dt><dd className="mt-2 font-mono text-xl">{percent(game.thirds[index], game.activeTicks)}</dd></div>)}</dl></div>) : <p className="py-8 text-sm text-base-content/55">Ball territory is unavailable for this pitch.</p>}
         <p className="mt-3 text-xs text-base-content/55">Ball time in three equal pitch regions.</p>
       </section>
     </div>
@@ -39,31 +37,30 @@ export function V2Overview({ game }) {
 
 export function V2Players({ game, selectedPlayer, onSelect, mapStatistic, onStatistic }) {
   const [sort, setSort] = useState(null);
+  const visibleStatistic = Object.hasOwn(V2_MAP_LABELS, mapStatistic) ? mapStatistic : 'heatmap';
   const player = game.players.find(p => p.id === selectedPlayer) || game.players.find(p => p.team === 'red') || game.players[0];
   const players = [...game.players].sort((a, b) => sort
     ? (a[sort.key] - b[sort.key]) * (sort.direction === 'asc' ? 1 : -1) || a.nick.localeCompare(b.nick)
     : Number(a.team === 'blue') - Number(b.team === 'blue'));
   function show(item, statistic = 'heatmap') { onSelect(item.id); onStatistic(statistic); }
   function cycle(key) { setSort(current => current?.key !== key ? { key, direction: 'desc' } : current.direction === 'desc' ? { key, direction: 'asc' } : null); }
-  const columns = [['goals', 'Goals'], ['assists', 'Assists'], ['kicks', 'Kicks'], ['transfers', 'Transfers'], ['received', 'Received'], ['turnovers', 'Turnovers'], ['distance', 'Distance'], ['activeTicks', 'Played']];
+  const columns = [['goals', 'Goals'], ['assists', 'Assists'], ['ownGoals', 'Own goals'], ['kicks', 'Kicks'], ['activeTicks', 'Played']];
   return <div className="@container">
     <div className="grid items-start gap-6 @min-[80rem]:grid-cols-2">
       <div className="min-w-0">
         <div className="overflow-x-auto"><table className="table table-sm">
-          <caption className="sr-only">V2 player statistics. Click a row for its heatmap or a statistic for its event map.</caption>
-          <thead><tr><th className="min-w-40">Player</th>{columns.map(([key, label]) => <th key={key} className="text-right" aria-sort={sort?.key === key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}><button className="btn btn-ghost btn-xs whitespace-nowrap" title={key === 'turnovers' ? 'A kick followed by an opponent’s next distinct ball interaction.' : key === 'transfers' ? 'A kick followed by a teammate’s next distinct ball interaction.' : undefined} onClick={() => cycle(key)}>{label}{sort?.key === key && (sort.direction === 'asc' ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />)}</button></th>)}</tr></thead>
+          <caption className="sr-only">Player statistics. Click a row for its heatmap or a statistic for its event map.</caption>
+          <thead><tr><th className="min-w-40">Player</th>{columns.map(([key, label]) => <th key={key} className="text-right" aria-sort={sort?.key === key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}><button className="btn btn-ghost btn-xs whitespace-nowrap" onClick={() => cycle(key)}>{label}{sort?.key === key && (sort.direction === 'asc' ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />)}</button></th>)}</tr></thead>
           <tbody>{players.map(item => <tr key={item.id} onClick={() => show(item)} className={`cursor-pointer transition-colors ${player?.id === item.id ? 'bg-base-200 hover:bg-base-300/60' : 'hover:bg-base-200/70'}`}>
             <th><button className="flex items-center gap-3 rounded-field py-2 text-left focus-visible:outline-2" aria-pressed={player?.id === item.id}><span className={`size-2 shrink-0 rounded-full ${item.team === 'red' ? 'bg-error' : 'bg-info'}`} />{item.nick}</button></th>
-            {columns.map(([key, label]) => <td key={key} className="text-right font-mono">{key === 'activeTicks' ? <span className="px-2">{duration(item.activeTicks)}</span> : key === 'distance' ? <span className="px-2">{number(item.distance)}</span> : <button className="btn btn-ghost btn-xs font-mono" aria-label={`${label} map for ${item.nick}`} aria-pressed={player?.id === item.id && mapStatistic === key} onClick={event => { event.stopPropagation(); show(item, key); }}>{item[key]}</button>}</td>)}
+            {columns.map(([key, label]) => <td key={key} className="text-right font-mono">{key === 'activeTicks' ? <span className="px-2">{duration(item.activeTicks)}</span> : key === 'ownGoals' ? <span className="px-2">{item.ownGoals}</span> : <button className="btn btn-ghost btn-xs font-mono" aria-label={`${label} map for ${item.nick}`} aria-pressed={player?.id === item.id && mapStatistic === key} onClick={event => { event.stopPropagation(); show(item, key); }}>{item[key]}</button>}</td>)}
           </tr>)}</tbody>
         </table></div>
-        <p className="mt-4 text-xs leading-relaxed text-base-content/55">Click a row or statistic to select its map. Distance is in world units. Goal and assist credit uses recent ball interactions.</p>
+        <p className="mt-4 text-xs leading-relaxed text-base-content/55">Click a player to see their heatmap, or a statistic to see where it happened.</p>
       </div>
       <div className="min-w-0">
-        <PlayerMaps game={game} player={player} statistic={mapStatistic} onStatistic={onStatistic} labels={V2_MAP_LABELS} />
-        {player && <dl aria-label="Selected player movement and involvement" className="@min-[80rem]:ml-6 mt-5 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-base-300 pt-4 text-xs">{[
-          ['Contacts', number(player.contacts)], ['Progressive transfers', number(player.progressiveTransfers)], ['Distance', `${number(player.distance)} units`], ['Average speed', `${number(player.averageSpeed, 1)} units/s`], ['Peak speed', `${number(player.peakSpeed, 1)} units/s`], ['On-field goal difference', number(player.onFieldGoalDifference)],
-        ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-2"><dt className="text-base-content/60">{label}</dt><dd className="font-mono">{value}</dd></div>)}</dl>}
+        <PlayerMaps game={game} player={player} statistic={visibleStatistic} onStatistic={onStatistic} labels={V2_MAP_LABELS} />
+
       </div>
     </div>
   </div>;

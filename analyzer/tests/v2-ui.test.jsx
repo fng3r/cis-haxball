@@ -35,8 +35,8 @@ it('uses the v2 worker and displays significant v2 metrics without legacy posses
   const worker = await open();
   expect(worker.url.pathname).toMatch(/engine-v2\/analyze.worker.js$/);
   expect(screen.getByRole('combobox', { name: 'Analysis engine' })).toHaveValue('v2');
-  for (const label of ['Observed transfers', 'Progressive transfers', 'Distance travelled']) expect(screen.getByText(label)).toBeInTheDocument();
-  for (const label of ['Loose ball', 'Contested ball', 'Ball proximity', 'Average width', 'Average depth']) expect(screen.queryByText(label)).not.toBeInTheDocument();
+  for (const label of ['Goals', 'Assists', 'Own goals', 'Kicks']) expect(screen.getByText(label)).toBeInTheDocument();
+  for (const label of ['Loose ball', 'Contested ball', 'Ball proximity', 'Average width', 'Average depth', 'Observed transfers', 'Progressive transfers', 'Contact episodes', 'Turnovers', 'Distance travelled']) expect(screen.queryByText(label)).not.toBeInTheDocument();
   expect(screen.queryByText('Possession')).not.toBeInTheDocument();
   expect(screen.queryByText('Shots on goal')).not.toBeInTheDocument();
   expect(screen.getByRole('img', { name: /^Ball territory:/ })).toBeInTheDocument();
@@ -47,21 +47,22 @@ it('uses the v2 worker and displays significant v2 metrics without legacy posses
 it('selects new event maps by click, retains them on hover, and sorts player metrics', async () => {
   await open(); fireEvent.click(screen.getByRole('tab', { name: 'players' }));
   const player = result.games[0].players.find(p => p.team === 'red');
-  fireEvent.click(screen.getByRole('button', { name: `Transfers map for ${player.nick}` }));
-  expect(screen.getByRole('img', { name: `${player.nick}: Transfers` })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: `Kicks map for ${player.nick}` }));
+  expect(screen.getByRole('img', { name: `${player.nick}: Kicks` })).toBeInTheDocument();
   const other = result.games[0].players.find(p => p.id !== player.id);
   fireEvent.mouseEnter(screen.getByRole('button', { name: other.nick }));
-  expect(screen.getByRole('img', { name: `${player.nick}: Transfers` })).toBeInTheDocument();
-  fireEvent.change(screen.getByRole('combobox', { name: 'Map statistic' }), { target: { value: 'contacts' } });
-  expect(screen.getByRole('img', { name: `${player.nick}: Contacts` })).toBeInTheDocument();
-  expect(screen.getByText('Average speed')).toBeInTheDocument();
-  expect(screen.getByText('On-field goal difference')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Distance' }));
-  expect(screen.getByRole('columnheader', { name: 'Distance' })).toHaveAttribute('aria-sort', 'descending');
-  fireEvent.click(screen.getByRole('button', { name: 'Distance' }));
-  expect(screen.getByRole('columnheader', { name: 'Distance' })).toHaveAttribute('aria-sort', 'ascending');
-  fireEvent.click(screen.getByRole('button', { name: 'Distance' }));
-  expect(screen.getByRole('columnheader', { name: 'Distance' })).not.toHaveAttribute('aria-sort');
+  expect(screen.getByRole('img', { name: `${player.nick}: Kicks` })).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Map statistic' }), { target: { value: 'goals' } });
+  expect(screen.getByRole('img', { name: `${player.nick}: Goals` })).toBeInTheDocument();
+  expect(screen.queryByText('Average speed')).not.toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: 'Contacts' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: 'Transfers' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Kicks' }));
+  expect(screen.getByRole('columnheader', { name: 'Kicks' })).toHaveAttribute('aria-sort', 'descending');
+  fireEvent.click(screen.getByRole('button', { name: 'Kicks' }));
+  expect(screen.getByRole('columnheader', { name: 'Kicks' })).toHaveAttribute('aria-sort', 'ascending');
+  fireEvent.click(screen.getByRole('button', { name: 'Kicks' }));
+  expect(screen.getByRole('columnheader', { name: 'Kicks' })).not.toHaveAttribute('aria-sort');
 });
 it('adapts v2 goal scores to the existing timeline and seeks the native player', async () => {
   await open();
@@ -77,14 +78,14 @@ it('shows captured statistics without a coverage warning and handles missing geo
   render(<V2Overview game={{ ...result.games[0], truncatedStart: true, territoryAvailable: false }} />);
   expect(screen.queryByText(/Partial recording:/)).not.toBeInTheDocument();
   expect(screen.queryByText('Active play')).not.toBeInTheDocument();
-  expect(screen.getByText('Distance travelled')).toBeInTheDocument();
-  expect(screen.getByText(/Territory is unavailable/)).toBeInTheDocument();
+  expect(screen.getByText('Goals')).toBeInTheDocument();
+  expect(screen.getByText(/Ball territory is unavailable/)).toBeInTheDocument();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });
 
 it('does not overlay horizontal zones on a rotated goal axis', () => {
   const game = result.games[0];
   render(<V2Overview game={{ ...game, stadium: { ...game.stadium, goals: [{ team: 'red', p0: [-20,-100], p1: [20,-100] }, { team: 'blue', p0: [-20,100], p1: [20,100] }] } }} />);
-  expect(screen.getByText(/Goal-axis thirds/)).toBeInTheDocument();
+  expect(screen.getByText(/Time in each third/)).toBeInTheDocument();
   expect(screen.queryByRole('img', { name: /^Ball territory:/ })).not.toBeInTheDocument();
 });

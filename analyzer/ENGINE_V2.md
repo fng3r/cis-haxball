@@ -136,16 +136,19 @@ preferences and the `engine` URL parameter; URL selection takes precedence.
 Switching engine navigates to a new document, clearing the session-only recording
 library. A valid explicit URL parameter still works when local storage is blocked.
 
-V2 Overview emphasizes kicks, contacts, observed/progressive transfers, turnover
-proxies and distance travelled. Territory uses three equal pitch zones. Proximity
-buckets and average team width/depth are not displayed as match-level insights.
-Statistics describe the captured play. Unavailable goal geometry is explained inline.
+The UI focuses on familiar match statistics: goals, assists, own goals, kicks,
+played time and ball territory. Team goals count observed scoring events,
+including opponents' own goals. Player rows show individual scorer credit.
 
-V2 Players sorts goals, assists, kicks, transfers, receipts, turnovers, distance
-and active time, initially red then blue. Click-only player/map selection survives
-tab changes. The map selector adds contacts, transfers, receptions and turnovers;
-selected-player details show movement speed, contacts, progressive transfers and
-on-field goal difference. Wide layouts show table and maps side by side.
+Player selection is click-only, with sortable goals, assists, own goals, kicks
+and played time. The map selector offers movement heatmaps, goals, assists and
+kicks. Wide layouts show the player table and map side by side. Playtime and own
+goal totals are plain text rather than map buttons.
+
+Raw transfer/turnover proxies, contact episodes, proximity, team shape and
+unscaled distance/speed measurements remain available in the v2 API/export for
+research. They are not presented as end-user insights or relabelled as completed
+passes, possession or other established statistics.
 
 Goals retain the shared timeline and native player's eight-second lead-in. A
 view-only adapter reads scores from v2 goal arrays. Export preserves the original
