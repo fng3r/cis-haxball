@@ -1,7 +1,7 @@
 @use '../../legacy/src/App.scss';
 
 // Layout containment only: original player styles live inside their own frame.
-html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #1a2125; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .game-view { top: 0; height: 100vh; }
 .game-view > .top-section,
 .game-view > .bottom-section,
