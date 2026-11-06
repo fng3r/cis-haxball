@@ -6,6 +6,25 @@ import NativePlayer from '../src/components/NativePlayer.jsx';
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
+it('sends goals from every game and queues a timeline goal seek until the player is ready', () => {
+  const ref = createRef();
+  const props = { file: { arrayBuffer: vi.fn() }, onError: vi.fn(), onStats: vi.fn(), onClose: vi.fn() };
+  const games = [{ goals: [{ tick: 1200 }] }, { goals: [{ tick: 3600 }] }];
+  const view = render(<NativePlayer ref={ref} {...props} games={games} />);
+  const frame = screen.getByTitle('Original HaxBall replay player');
+  const post = vi.spyOn(frame.contentWindow, 'postMessage').mockImplementation(() => {});
+  ref.current.seekGoal(3600);
+  expect(post).not.toHaveBeenCalled();
+  act(() => window.dispatchEvent(new MessageEvent('message', {
+    origin: location.origin, source: frame.contentWindow,
+    data: { source: 'haxball-native-player', type: 'ready' },
+  })));
+  expect(post).toHaveBeenCalledWith({ type: 'goals', ticks: [1200, 3600] }, location.origin);
+  expect(post).toHaveBeenLastCalledWith({ type: 'seek-goal', tick: 3600 }, location.origin);
+  view.rerender(<NativePlayer ref={ref} {...props} games={[...games, { goals: [{ tick: 5000 }] }]} />);
+  expect(post).toHaveBeenLastCalledWith({ type: 'goals', ticks: [1200, 3600, 5000] }, location.origin);
+});
+
 it('passes the original recording to the player and queues seeks until it is ready', async () => {
   const ref = createRef();
   const buffer = new ArrayBuffer(16);

@@ -1,5 +1,6 @@
 let nativeController;
 let nativeResources;
+let nativeGoalControls;
 
 async function prepareNativeResources() {
   if (!nativeResources) {
@@ -32,6 +33,7 @@ export async function openNativeReplay(bytes) {
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
   setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
+  nativeGoalControls = mountGoalControls(nativeController.je, replay, seekNativeReplay, tick => notify('goal', tick));
   nativeController.je.de = () => {
     nativeController.ia();
     x.Pg.replaceChildren();
@@ -41,6 +43,9 @@ export async function openNativeReplay(bytes) {
   x.Pg.appendChild(nativeController.j.g);
   document.getElementById('status').hidden = true;
 }
+
+export function setNativeGoals(ticks) { nativeGoalControls?.setGoals(ticks); }
+export function seekNativeGoal(tick) { nativeGoalControls?.seekGoal(tick); }
 
 export function seekNativeReplay(tick) {
   if (!nativeController) return;

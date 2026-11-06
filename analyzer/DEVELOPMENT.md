@@ -48,6 +48,9 @@ host. The old upstream publishing scripts and homepage configuration are absent.
 - Sort player statistics; hover or select a player to view their movement heatmap.
 - Click goals, assists, kicks, passes or on-target shot values for their event maps.
 - Select goals to seek to the build-up, including assists and own goals.
+- Use the native player’s previous/next goal buttons to step through all games.
+  Both buttons and timeline clicks seek eight seconds before the goal. Buttons
+  disable at recording boundaries; scrubbing/reset recalculates their targets.
 - Export statistics as JSON; browser analysis does not produce playback frames.
 
 All required application resources are local. This proof of concept does not

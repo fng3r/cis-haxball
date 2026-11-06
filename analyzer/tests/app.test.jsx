@@ -41,6 +41,21 @@ async function loadFile() {
 }
 
 describe('local replay workspace', () => {
+  it('keeps game selection in sync when native goal navigation crosses games', async () => {
+    render(<App />);
+    const worker = await loadFile();
+    const second = { ...game, id: 1, goals: [{ ...game.goals[0], tick: 10000 }] };
+    act(() => worker.send({ type: 'result', result: { games: [game, second] } }));
+    const frame = screen.getByTitle('Original HaxBall replay player');
+    const secondButton = screen.getByRole('button', { name: /Game 2/ });
+    expect(secondButton).toHaveAttribute('aria-pressed', 'false');
+    act(() => window.dispatchEvent(new MessageEvent('message', {
+      origin: location.origin, source: frame.contentWindow,
+      data: { source: 'haxball-native-player', type: 'goal', message: 10000 },
+    })));
+    expect(secondButton).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('shows movement heatmaps on player selection and event maps on statistic clicks', async () => {
     render(<App />);
     const worker = await loadFile();
