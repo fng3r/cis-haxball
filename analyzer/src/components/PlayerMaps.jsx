@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { PinOff } from 'lucide-react';
 import { drawStadium } from './stadium.js';
 import { drawDensity, HEAT_COLORS } from './heatmap-density.js';
 
@@ -53,7 +52,7 @@ export function drawPlayerMap(canvas, stadium, player, statistic, color) {
   ctx.globalAlpha = 1;
 }
 
-export default function PlayerMaps({ game, player, statistic, onStatistic, pinned = false, onUnpin }) {
+export default function PlayerMaps({ game, player, statistic, onStatistic }) {
   const canvas = useRef(null);
   useEffect(() => {
     if (!player) return;
@@ -67,7 +66,6 @@ export default function PlayerMaps({ game, player, statistic, onStatistic, pinne
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div><h3 className="text-sm font-semibold">{player.nick} · {label}</h3><p className="mt-1 text-xs text-base-content/55">{game.stadium.name}</p></div>
       <div className="flex flex-wrap items-center gap-2">
-        {pinned && <button type="button" className="btn btn-sm" onClick={onUnpin}><PinOff className="size-4" aria-hidden="true" />Unpin player</button>}
       <label className="flex items-center gap-2 text-xs text-base-content/60">Map statistic<select className="select select-sm w-44" value={statistic} onChange={event => onStatistic(event.target.value)}>{Object.entries(MAP_LABELS).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
       </div>
     </div>

@@ -265,8 +265,7 @@ focus, sorting and keyboard help. Icons alongside text are decorative; icon-only
 buttons retain accessible labels. The custom brand mark and isolated legacy
 player keep their existing artwork.
 
-Player maps preview on hover/focus until a player row or statistic is clicked. Rows highlight on hover. A
-click pins that player and map, ignoring subsequent hover/focus previews. Click
-another row/statistic to replace the pin, or use Unpin player to resume
-previews. Pins and map selection survive stats-tab changes and reset when the
-selected game or recording changes.
+Player maps change only on explicit player-row or statistic clicks. Hovering
+highlights rows without replacing the selected map. Player/map selection survives
+stats-tab changes and resets on game/recording changes. Playtime is plain text,
+not an event-map button. There is no separate pin/unpin state.
