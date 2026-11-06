@@ -28,7 +28,7 @@ export function drawPlayerMap(canvas, stadium, player, statistic, color) {
   ctx.fillStyle = ctx.strokeStyle = color;
   ctx.lineWidth = 4;
   for (const event of player.maps?.[statistic] || []) {
-    if (statistic === 'kicks') {
+    if (statistic === 'kicks' || statistic === 'contacts') {
       if (!point(event)) continue;
       ctx.globalAlpha = 0.85;
       ctx.beginPath(); ctx.arc(event.x, event.y, 5, 0, Math.PI * 2); ctx.fill();
@@ -52,7 +52,7 @@ export function drawPlayerMap(canvas, stadium, player, statistic, color) {
   ctx.globalAlpha = 1;
 }
 
-export default function PlayerMaps({ game, player, statistic, onStatistic }) {
+export default function PlayerMaps({ game, player, statistic, onStatistic, labels = MAP_LABELS }) {
   const canvas = useRef(null);
   useEffect(() => {
     if (!player) return;
@@ -60,17 +60,17 @@ export default function PlayerMaps({ game, player, statistic, onStatistic }) {
     drawPlayerMap(canvas.current, game.stadium, player, statistic, color);
   }, [game.stadium, player, statistic]);
   if (!player) return null;
-  const label = MAP_LABELS[statistic];
+  const label = labels[statistic];
   const events = player.maps?.[statistic] || [];
   return <section aria-label="Player maps" className="min-w-0 border-t border-base-300 pt-5 @min-[80rem]:border-l @min-[80rem]:border-t-0 @min-[80rem]:pl-6 @min-[80rem]:pt-0">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div><h3 className="text-sm font-semibold">{player.nick} · {label}</h3><p className="mt-1 text-xs text-base-content/55">{game.stadium.name}</p></div>
       <div className="flex flex-wrap items-center gap-2">
-      <label className="flex items-center gap-2 text-xs text-base-content/60">Map statistic<select className="select select-sm w-44" value={statistic} onChange={event => onStatistic(event.target.value)}>{Object.entries(MAP_LABELS).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
+      <label className="flex items-center gap-2 text-xs text-base-content/60">Map statistic<select className="select select-sm w-44" value={statistic} onChange={event => onStatistic(event.target.value)}>{Object.entries(labels).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
       </div>
     </div>
     <canvas ref={canvas} width="1000" height="500" role="img" aria-label={`${player.nick}: ${label}`} className="mx-auto block h-auto w-full max-w-3xl rounded-box" />
     {statistic === 'heatmap' && events.length > 0 && <div className="mx-auto mt-4 flex max-w-3xl items-center justify-end gap-2 text-[11px] text-base-content/60" aria-label="Relative occupancy: blue is low, red is high"><span>Less time</span><span className="h-2 w-32 rounded-full" style={{ background: `linear-gradient(to right, ${HEAT_COLORS.join(', ')})` }} /><span>More time</span></div>}
-    <p className="mt-3 text-xs text-base-content/55">{!player.maps ? 'Reopen the recording to generate spatial data.' : !events.length ? `No mapped ${label.toLowerCase()} for this player.` : statistic === 'heatmap' ? 'Warm colors highlight the busiest areas. Density is relative to this player’s movement during active play.' : statistic === 'kicks' ? `${events.length} kick locations.` : statistic === 'assists' ? `${events.length} mapped assists. Lighter line: assist pass. Stronger arrow: shot.` : `${events.length} mapped events. Arrows show the direction of play.`}</p>
+    <p className="mt-3 text-xs text-base-content/55">{!player.maps ? 'Reopen the recording to generate spatial data.' : !events.length ? `No mapped ${label.toLowerCase()} for this player.` : statistic === 'heatmap' ? 'Warm colors highlight the busiest areas. Density is relative to this player’s movement during active play.' : ['kicks', 'contacts'].includes(statistic) ? `${events.length} ${statistic === 'kicks' ? 'kick' : 'contact'} locations.` : statistic === 'assists' ? `${events.length} mapped assists. Lighter line: assist pass. Stronger arrow: shot.` : `${events.length} mapped events. Arrows show the direction of play.`}</p>
   </section>;
 }

@@ -3,6 +3,9 @@ import { ArrowDown, ArrowUp, Download, FolderOpen, Maximize, Minimize, Moon, Rot
 import NativePlayer from './components/NativePlayer.jsx';
 import ReplayLinkForm from './components/ReplayLinkForm.jsx';
 import KeyboardShortcuts from './components/KeyboardShortcuts.jsx';
+import EngineSwitcher from './components/EngineSwitcher.jsx';
+import { V2Overview, V2Players } from './components/V2Stats.jsx';
+import { getEngine } from './engine-selection.js';
 import PlayerMaps from './components/PlayerMaps.jsx';
 import ThirdsMap from './components/ThirdsMap.jsx';
 import { serializeStats } from './export-stats.js';
@@ -111,8 +114,10 @@ export default function App() {
     if (meta) meta.content = theme === 'replay' ? '#f3f4f9' : '#171b29';
     try { localStorage.setItem('replay-theme', theme); } catch {}
   }, [theme]);
-  const { recordings, recording, active, addFiles, cancel, clear, remove, retry, select } = useReplayLibrary();
+  const [engine] = useState(getEngine);
+  const { recordings, recording, active, addFiles, cancel, clear, remove, retry, select } = useReplayLibrary({ engine });
   const replay = recording?.result;
+  const isV2 = replay?.schemaVersion === 2;
   const filename = recording?.file.name || '';
   const busy = Boolean(active);
   const progress = active?.progress || 0;
@@ -182,9 +187,9 @@ export default function App() {
 
   return <div className="min-h-screen">
     <header className={focusMode ? 'hidden' : 'border-b border-base-300 bg-base-100'}>
-      <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">LAB</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
-        <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}>{theme === 'replay-dark' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button></div>
+        <div className="flex items-center gap-2 sm:gap-5"><EngineSwitcher engine={engine} /><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}>{theme === 'replay-dark' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button></div>
       </div>
     </header>
     <input ref={input} type="file" accept=".hbr2" multiple aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files); event.target.value = ''; }} />
@@ -213,7 +218,7 @@ export default function App() {
           <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Games</span><span>{replay.games.length}</span></div>
           <div className="space-y-2">{replay.games.map((item, index) => <button key={item.id} aria-pressed={gameIndex === index} onClick={() => selectGame(index)} className={`w-full rounded-box border p-4 text-left ${gameIndex === index ? 'border-base-content/30 bg-base-100 shadow-sm' : 'border-transparent hover:bg-base-100/60'}`}>
             <div className="flex justify-between text-sm font-semibold"><span>Game {index + 1}</span><span className="font-mono"><span className="text-error">{item.scoreRed}</span><span className="px-2 text-base-content/30">:</span><span className="text-info">{item.scoreBlue}</span></span></div>
-            <p className="mt-2 truncate text-xs text-base-content/55">{time(item.gameTicks)} · {item.stadium.name}</p>
+            <p className="mt-2 truncate text-xs text-base-content/55">{time(item.gameTicks ?? item.activeTicks)} · {item.stadium.name}</p>
           </button>)}</div>
         </section>}
         <div className="border-t border-base-300 pt-5 text-xs leading-relaxed text-base-content/50"><p className="font-semibold text-base-content/75">Keep the game in perspective.</p><p className="mt-2">Explore possession, passes, shots and the moments that changed the score.</p></div>
@@ -236,7 +241,7 @@ export default function App() {
           </div>
           <div className={focusMode ? 'hidden' : 'grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sm:px-7'}>
             <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div>Red team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Home side'}</p></div></div>
-            <div className="text-center"><div className="flex items-center justify-center gap-4 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div><p className="mt-2 font-mono text-[11px] text-base-content/50">{game ? `GAME ${gameIndex + 1} · ${time(game.gameTicks)}` : 'READY WHEN YOU ARE'}</p></div>
+            <div className="text-center"><div className="flex items-center justify-center gap-4 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div><p className="mt-2 font-mono text-[11px] text-base-content/50">{game ? `GAME ${gameIndex + 1} · ${time(game.gameTicks ?? game.activeTicks)}` : 'READY WHEN YOU ARE'}</p></div>
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
           <div className={focusMode ? 'min-h-0 flex-1 p-2' : 'px-3 pb-3'}>
@@ -248,12 +253,12 @@ export default function App() {
           <h2 className="mb-4 text-lg font-semibold">Game {gameIndex + 1}</h2>
           <div role="tablist" aria-label="Match information" className="tabs tabs-border mb-6">{['overview', 'players', 'goals'].map(name => <button key={name} role="tab" id={`tab-${name}`} aria-controls="match-panel" aria-selected={tab === name} className={`tab capitalize ${tab === name ? 'tab-active' : ''}`} onClick={() => setTab(name)}>{name}{name === 'goals' ? ` · ${game.goals.length}` : ''}</button>)}</div>
           <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>
-            {tab === 'overview' && <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
+            {tab === 'overview' && (isV2 ? <V2Overview game={game} /> : <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
               <div className="space-y-6"><h3 className="text-sm font-semibold">The balance of play</h3><Comparison label="Possession" values={game.possession} percentage /><Comparison label="Kicks" values={game.kicks} /><Comparison label="Completed passes" values={game.passes} /><Comparison label="Shots on goal" values={game.shots} /></div>
               <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><ThirdsMap game={game} /><p className="mt-4 text-xs leading-relaxed text-base-content/55">Where the ball spent its time during active play. Team colors follow the recording.</p><p className="mt-5 text-xs text-base-content/50">{game.spaceMode ? 'SpaceBounce rules detected.' : 'Standard kicking rules.'}</p></div>
-            </div>}
-            {tab === 'players' && <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />}
-            {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={game} onSeek={seekGoal} /></>}
+            </div>)}
+            {tab === 'players' && (isV2 ? <V2Players game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} /> : <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />)}
+            {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={isV2 ? { ...game, goals: game.goals.map(goal => ({ ...goal, scoreRed: goal.score[0], scoreBlue: goal.score[1] })) } : game} onSeek={seekGoal} /></>}
           </div>
         </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>)}
       </div>

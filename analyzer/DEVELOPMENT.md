@@ -280,6 +280,6 @@ a retry action; retry mounts a fresh iframe without rerunning analysis.
 
 An initial replacement engine lives in `src/engine-v2/`, alongside the unchanged
 original engine. It has its own runtime generator, named observations, metric
-collectors, versioned JSON schema, CLI and worker entry point. The existing UI
-still uses the original engine. See [ENGINE_V2.md](ENGINE_V2.md) for implemented
+collectors, versioned JSON schema, CLI and worker entry point. The header engine switcher reloads the page and selects the original or v2
+worker; engine-specific views preserve their different metric definitions. See [ENGINE_V2.md](ENGINE_V2.md) for implemented
 metrics, definitions, limits, usage and validation.

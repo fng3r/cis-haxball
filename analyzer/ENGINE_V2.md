@@ -1,9 +1,9 @@
 # Replay analysis engine v2 — first implementation
 
 The original `src/engine/`, its generator, the pinned `legacy/` tree and native
-player are unchanged. The app still uses the original engine. V2 is a separate,
-standalone analysis API/CLI plus a worker entry point, intended for validating
-new metric definitions before connecting a new statistics UI.
+player are unchanged. The app defaults to the original engine and offers Engine v2
+through the header switcher. V2 also remains available as an independent API/CLI
+and worker entry point with its own definitions and statistics views.
 
 ## Run
 
@@ -32,8 +32,9 @@ ArrayBuffer, Uint8Array or sliced Node Buffer. Options:
 - `metrics`: override the explicitly versioned classification settings below.
 
 `src/engine-v2/analyze.worker.js` uses the same input/result/progress/error message
-contract as the original worker, but returns schema v2. It is not wired into the
-old UI: its fields intentionally do not pretend to be the old metric definitions.
+contract as the original worker, but returns schema v2. The engine switcher selects
+the corresponding worker. Dedicated v2 views consume its fields directly rather
+than pretending they are the old possession, passing or shot definitions.
 A bundler can reference it with `new Worker(new URL('./engine-v2/analyze.worker.js',
 import.meta.url), { type: 'module' })` from a module in `src`.
 
@@ -129,3 +130,25 @@ validation. All existing legacy tests remain in the suite.
 More recordings are valuable before calling classifications production-ready,
 especially mid-game starts/stops, substitutions, pauses, duplicate names and
 custom physics. See `METRICS_RESEARCH.md` for the broader unimplemented catalogue.
+
+## Web UI
+
+Choose Original or Engine v2 in the header. The choice is stored in browser
+preferences and the `engine` URL parameter; URL selection takes precedence.
+Switching engine navigates to a new document, clearing the session-only recording
+library. A valid explicit URL parameter still works when local storage is blocked.
+
+V2 Overview emphasizes active time, loose/contested ball proximity, kicks,
+contacts, observed/progressive transfers and turnover proxies. Territory uses
+three equal pitch zones. Movement shows team distance and average width/depth.
+Partial recordings and unavailable goal geometry are explained inline.
+
+V2 Players sorts goals, assists, kicks, transfers, receipts, turnovers, distance
+and active time, initially red then blue. Click-only player/map selection survives
+tab changes. The map selector adds contacts, transfers, receptions and turnovers;
+selected-player details show movement speed, contacts, progressive transfers and
+on-field goal difference. Wide layouts show table and maps side by side.
+
+Goals retain the shared timeline and native player's eight-second lead-in. A
+view-only adapter reads scores from v2 goal arrays. Export preserves the original
+v2 schema, summary, events, goal attribution and spatial maps.

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MAX_FILE_BYTES } from './engine/analyze.js';
 
-export function useReplayLibrary() {
+export function useReplayLibrary({ engine = 'legacy' } = {}) {
   const [recordings, setRecordings] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const running = useRef(null);
@@ -27,7 +27,9 @@ export function useReplayLibrary() {
     }
     update({ status: 'analyzing', progress: 0 });
     try {
-      job.worker = new Worker(new URL('./engine/analyze.worker.js', import.meta.url), { type: 'module' });
+      job.worker = engine === 'v2'
+        ? new Worker(new URL('./engine-v2/analyze.worker.js', import.meta.url), { type: 'module' })
+        : new Worker(new URL('./engine/analyze.worker.js', import.meta.url), { type: 'module' });
     } catch {
       finish({ status: 'error', error: 'The analyzer could not start. Use a browser with Web Worker support.' });
       return;
@@ -51,7 +53,7 @@ export function useReplayLibrary() {
         finish({ status: 'error', error: 'Could not read the recording. Choose the file again.' });
       }
     })();
-  }, [recordings]);
+  }, [recordings, engine]);
 
   function addFiles(files, { selectFirst = true } = {}) {
     const errors = [], added = [];
