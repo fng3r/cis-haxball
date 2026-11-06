@@ -3,9 +3,10 @@ import { inflateRaw } from 'pako';
 import { expect, it } from 'vitest';
 import { createRuntime as originalRuntime } from '../src/engine/vendor-runtime.js';
 import { createRuntime as nextRuntime } from '../src/engine-v2/vendor-runtime.js';
+import { replayCases } from './replay-fixtures.js';
 
-it('preserves the original simulated positions and velocities through the real replay', () => {
-  const bytes = Uint8Array.from(readFileSync(new URL('./fixtures/big.hbr2', import.meta.url)));
+it.each(replayCases)('preserves original simulation throughout $file', ({ file }) => {
+  const bytes = Uint8Array.from(readFileSync(new URL(`./fixtures/${file}`, import.meta.url)));
   const original = originalRuntime(inflateRaw), next = nextRuntime(inflateRaw);
   const ticks = original.load(bytes); next.load(bytes);
   for (let tick = 0; tick < ticks; tick++) {

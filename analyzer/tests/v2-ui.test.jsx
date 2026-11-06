@@ -8,7 +8,7 @@ import App from '../src/App.jsx';
 import { V2Overview, V2Players } from '../src/components/V2Stats.jsx';
 import { analyzeReplay } from '../src/engine-v2/analyze.js';
 import { serializeStats } from '../src/export-stats.js';
-const result = analyzeReplay(Uint8Array.from(readFileSync('tests/fixtures/big.hbr2')));
+const result = analyzeReplay(Uint8Array.from(readFileSync('tests/fixtures/cis5.hbr2')));
 class FakeWorker {
   static instances = [];
   constructor(url) { this.url = url; FakeWorker.instances.push(this); }
@@ -22,13 +22,13 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
-async function open() {
+async function open(analysis = result) {
   render(<App />);
   const file = new File(['replay'], 'fixture.hbr2'); file.arrayBuffer = async () => new ArrayBuffer(16);
   fireEvent.change(screen.getByLabelText('Open HaxBall replay'), { target: { files: [file] } });
   await waitFor(() => expect(FakeWorker.instances[0].postMessage).toHaveBeenCalled());
   const worker = FakeWorker.instances[0];
-  act(() => worker.send({ type: 'result', result }));
+  act(() => worker.send({ type: 'result', result: analysis }));
   return worker;
 }
 it('uses the v2 worker and restores baseline statistics alongside meaningful new metrics', async () => {
@@ -97,10 +97,28 @@ it('adapts v2 goal scores to the existing timeline and seeks the native player',
   const frame = screen.getByTitle('Original HaxBall replay player');
   const post = vi.spyOn(frame.contentWindow, 'postMessage').mockImplementation(() => {});
   act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'ready' } })));
-  fireEvent.click(screen.getByRole('tab', { name: 'goals · 3' }));
+  fireEvent.click(screen.getByRole('tab', { name: `goals · ${result.games[0].goals.length}` }));
   const goal = result.games[0].goals[0];
   fireEvent.click(screen.getByRole('button', { name: new RegExp(`score ${goal.score[0]}–${goal.score[1]}$`) }));
   expect(post).toHaveBeenLastCalledWith({ type: 'seek-goal', tick: goal.tick }, location.origin);
+});
+it('switches real futsal matches and seeks goals from the selected game', async () => {
+  const multi = analyzeReplay(Uint8Array.from(readFileSync('tests/fixtures/futsal-multi.hbr2')));
+  await open(multi);
+  const frame = screen.getByTitle('Original HaxBall replay player');
+  const post = vi.spyOn(frame.contentWindow, 'postMessage').mockImplementation(() => {});
+  act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'ready' } })));
+  const games = within(screen.getByRole('region', { name: 'Games in recording' }));
+  fireEvent.click(games.getByRole('button', { name: /^Game 2 / }));
+  expect(post).toHaveBeenLastCalledWith({ type: 'seek', tick: multi.games[1].startTick }, location.origin);
+  fireEvent.click(screen.getByRole('tab', { name: 'goals · 7' }));
+  expect(screen.getAllByRole('button', { name: /^Watch .* goal at/ })).toHaveLength(7);
+  const goal = multi.games[1].goals.at(-1);
+  fireEvent.click(screen.getByRole('button', { name: /score 7–0$/ }));
+  expect(post).toHaveBeenLastCalledWith({ type: 'seek-goal', tick: goal.tick }, location.origin);
+  fireEvent.click(games.getByRole('button', { name: /^Game 1 / }));
+  expect(post).toHaveBeenLastCalledWith({ type: 'seek', tick: multi.games[0].startTick }, location.origin);
+  expect(screen.getByRole('tab', { name: 'goals · 5' })).toBeInTheDocument();
 });
 it('shows captured statistics without a coverage warning and handles missing geometry', () => {
   render(<V2Overview game={{ ...result.games[0], truncatedStart: true, territoryAvailable: false }} />);

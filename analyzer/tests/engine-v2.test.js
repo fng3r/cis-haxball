@@ -3,8 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { analyzeReplay } from '../src/engine-v2/analyze.js';
 import { createCollector } from '../src/engine-v2/collector.js';
 import { MATCH_COUNTERS } from '../src/engine-v2/match-metrics.js';
-const single = readFileSync(new URL('./fixtures/big.hbr2', import.meta.url));
-const multiple = readFileSync(new URL('./fixtures/handball.hbr2', import.meta.url));
+import { replayCases } from './replay-fixtures.js';
+const single = readFileSync(new URL('./fixtures/cis5.hbr2', import.meta.url));
+const multiple = readFileSync(new URL('./fixtures/futsal-multi.hbr2', import.meta.url));
+// JSON has one zero; native physics can legitimately contain IEEE-754 negative zero.
+// Preserve every other value/type so missing properties and non-finite values fail.
+function normalizeSignedZero(value) {
+  if (typeof value === 'number') return value === 0 ? 0 : value;
+  if (Array.isArray(value)) return value.map(normalizeSignedZero);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeSignedZero(item)]));
+  return value;
+}
 const stadium = { width: 120, height: 70, goals: [{ team: 'red', p0: [-100, -20], p1: [-100, 20] }, { team: 'blue', p0: [100, -20], p1: [100, 20] }] };
 const member = (playerId, team, x = 0) => ({ playerId, nick: 'Same name', team, bodyId: playerId, x, y: 0, radius: 10, velocity: { x: 1, y: 0 }, input: 0 });
 const frame = (tick, players, changes = {}) => ({ tick, gameId: 0, phase: 'active', gameTick: tick, score: [0, 0], stadium, ball: { x: 0, y: 0, radius: 5, velocity: { x: 0, y: 0 } }, players, ...changes });
@@ -15,16 +24,40 @@ function feed(collector, tick, players, events = [], changes = {}, afterChanges 
 }
 
 describe('new standalone replay engine', () => {
-  it('reconstructs real game boundaries and scores without legacy aggregates', () => {
-    const result = analyzeReplay(multiple);
+  it.each(replayCases)('reconstructs games and conserves metrics for $file', fixture => {
+    const result = analyzeReplay(readFileSync(new URL(`./fixtures/${fixture.file}`, import.meta.url)));
+    expect(result.ticks).toBe(fixture.ticks);
     expect(result).toMatchObject({ schemaVersion: 2, engine: 'replay-lab-v2', tickRate: 60 });
-    expect(result.games.map(g => [g.scoreRed, g.scoreBlue])).toEqual([[2, 3], [0, 1]]);
-    expect(result.games.map(g => g.goals.length)).toEqual([5, 1]);
-    for (const game of result.games) {
-      expect(game.truncatedStart).toBe(false); expect(game.truncatedEnd).toBe(false);
+    expect(result.games.map(g => [g.scoreRed, g.scoreBlue])).toEqual(fixture.scores);
+    expect(result.games.map(g => g.goals.map(goal => goal.tick))).toEqual(fixture.goalTicks);
+    for (const [index, game] of result.games.entries()) {
+      expect(game.stadium.name).toBe(fixture.stadium);
+      expect(game.initialScore).toEqual([0, 0]);
+      if (index) expect(game.startTick).toBeGreaterThan(result.games[index - 1].endTick);
+      for (const goal of game.goals) {
+        expect(goal.tick).toBeGreaterThanOrEqual(game.startTick);
+        expect(goal.tick).toBeLessThan(game.endTick);
+      }
+      const eventsById = new Map(game.events.map(e => [e.id, e]));
+      for (const event of game.events) {
+        expect(event.gameId).toBe(game.id);
+        if (event.type === 'completed_pass') {
+          expect(eventsById.get(event.releaseEventId)).toMatchObject({ type: 'kick', playerId: event.playerId, team: event.team });
+          expect(eventsById.get(event.receptionEventId).playerId).toBe(event.receiverId);
+          expect(event.receiverTeam).toBe(event.team);
+          expect(event.releaseTick).toBeGreaterThanOrEqual(game.startTick);
+          expect(event.tick).toBeLessThan(game.endTick);
+        }
+        if (event.type === 'shot_on_target') expect(eventsById.get(event.sourceEventId).type).toBe('kick');
+        if (event.type === 'key_pass') {
+          expect(eventsById.get(event.passEventId).type).toBe('completed_pass');
+          expect(eventsById.get(event.shotEventId).type).toBe('shot_on_target');
+        }
+      }
       expect(game.thirds.reduce((a, b) => a + b, 0)).toBe(game.activeTicks);
       expect(Object.values(game.proximityTicks).reduce((a, b) => a + b, 0)).toBe(game.activeTicks);
       for (const team of ['red', 'blue']) {
+        for (const metric of MATCH_COUNTERS) expect(game.teams[team][metric], `${fixture.file}: ${team} ${metric}`).toBeGreaterThan(0);
         for (const metric of ['kicks', 'contacts', 'transfers', 'received', 'turnovers', 'goals', 'ownGoals', 'assists', ...MATCH_COUNTERS]) {
           expect(game.players.filter(p => p.team === team).reduce((sum, p) => sum + p[metric], 0)).toBe(game.teams[team][metric]);
         }
@@ -43,19 +76,33 @@ describe('new standalone replay engine', () => {
         expect(player.distance).toBeGreaterThanOrEqual(0);
       }
     }
-    expect(result.summary.observedGoals).toBe(6);
+    expect(result.summary.observedGoals).toBe(fixture.goalTicks.flat().length);
     expect(result.summary.activeTicks).toBe(result.games.reduce((sum, g) => sum + g.activeTicks, 0));
     for (const team of ['red', 'blue']) for (const metric of [...MATCH_COUNTERS, 'possessionTicks']) {
       expect(result.summary.teams[team][metric]).toBe(result.games.reduce((sum, g) => sum + g.teams[team][metric], 0));
     }
-    expect(result.games[1].startTick).toBeGreaterThan(result.games[0].startTick);
+  });
+
+  it('keeps substitutions, player time and metrics isolated between real games', () => {
+    const [first, second] = analyzeReplay(multiple).games;
+    expect(first.players.some(p => p.nick === 'карпен')).toBe(false);
+    const outgoing = second.players.find(p => p.nick === 'велосипедистка ленка');
+    const incoming = second.players.find(p => p.nick === 'карпен');
+    expect(outgoing.activeTicks).toBeGreaterThan(0);
+    expect(incoming.activeTicks).toBeGreaterThan(0);
+    expect(outgoing.activeTicks + incoming.activeTicks).toBe(second.activeTicks);
+    expect(first.players.find(p => p.nick === 'R3venGe-').maps.kicks.every(e => e.tick < second.startTick)).toBe(true);
+    expect(second.players.find(p => p.nick === 'R3venGe-').maps.kicks.every(e => e.tick >= second.startTick)).toBe(true);
+    expect(second.events.some(e => e.type === 'team_change' && e.nick === 'карпен' && e.team === 'red')).toBe(true);
+    const [bff] = analyzeReplay(readFileSync(new URL('./fixtures/cis4.hbr2', import.meta.url))).games;
+    expect(bff.players.find(p => p.nick === 'Murphy').activeTicks + bff.players.find(p => p.nick === 'Олег Монгол').activeTicks).toBe(bff.activeTicks);
   });
 
   it('extracts timestamped impulses and contact episodes, and offers optional tracking', () => {
     let frames = 0; const streamed = [], progress = [];
     const result = analyzeReplay(single, { includeTracking: true, onFrame: () => frames++, onEvent: e => streamed.push(e), onProgress: p => progress.push(p) });
     expect(frames).toBe(result.ticks);
-    expect(result.games[0].scoreRed).toBe(1); expect(result.games[0].scoreBlue).toBe(2);
+    expect(result.games[0].scoreRed).toBe(3); expect(result.games[0].scoreBlue).toBe(3);
     expect(progress.at(-1)).toBe(100);
     expect(result.tracking.length).toBeGreaterThan(1000);
     expect(result.tracking[0]).not.toHaveProperty('stadium');
@@ -67,8 +114,8 @@ describe('new standalone replay engine', () => {
     expect(kick).toMatchObject({ playerId: expect.any(Number), tick: expect.any(Number), velocityBefore: { x: expect.any(Number), y: expect.any(Number) }, velocityAfter: { x: expect.any(Number), y: expect.any(Number) } });
     expect(kick.velocityBefore).not.toEqual(kick.velocityAfter);
     expect(events.find(e => e.type === 'contact').velocityAfterStep).toBeDefined();
-    expect(JSON.parse(JSON.stringify(result))).toEqual(result);
-  });
+    expect(JSON.parse(JSON.stringify(result))).toStrictEqual(normalizeSignedZero(result));
+  }, 10000);
 
   it('isolates analyses, supports sliced buffers and optional event omission', () => {
     const first = analyzeReplay(single);
@@ -79,7 +126,7 @@ describe('new standalone replay engine', () => {
     expect(compact).not.toHaveProperty('tracking');
     expect(compact.games[0]).not.toHaveProperty('events');
     expect(compact.summary).toEqual(first.summary);
-  });
+  }, 10000);
 
   it('validates inputs and metric settings', () => {
     expect(() => analyzeReplay(new Uint8Array())).toThrow(/valid/);

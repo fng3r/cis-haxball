@@ -9,9 +9,9 @@ and worker entry point with its own definitions and statistics views.
 
 ```sh
 cd analyzer
-npm run --silent analyze:v2 -- tests/fixtures/big.hbr2 > /tmp/big-v2.json
-npm run --silent analyze:v2 -- tests/fixtures/handball.hbr2 --no-events > /tmp/handball-v2.json
-npm run --silent analyze:v2 -- tests/fixtures/big.hbr2 --tracking > /tmp/big-tracking-v2.json
+npm run --silent analyze:v2 -- tests/fixtures/cis5.hbr2 > /tmp/cis5-v2.json
+npm run --silent analyze:v2 -- tests/fixtures/futsal-multi.hbr2 --no-events > /tmp/futsal-v2.json
+npm run --silent analyze:v2 -- tests/fixtures/cis4.hbr2 --tracking > /tmp/cis4-tracking-v2.json
 npm run engine:v2:generate
 ```
 
@@ -130,8 +130,8 @@ required for analysis.
 
 ## Validation
 
-`tests/engine-v2.test.js` checks two real replay fixtures plus synthetic scenarios
-for name collisions, phase filtering, reset/teleport exclusion, timed transfer
+`tests/engine-v2.test.js` checks all four owner-supplied replay fixtures plus
+synthetic scenarios for name collisions, phase filtering, reset/teleport exclusion, timed transfer
 links, receipts, turnovers, expiry, contested contacts, rotated geometry and
 clipped games. Invariants check player/team count conservation, heatmap time,
 proximity/territory totals, score-state time, transfer-network totals, streaming
@@ -142,11 +142,14 @@ progression in both directions and rotated pitches, control changes, flight
 possession, shot exclusions from losses, trajectory/radius/damping rules, key-pass
 links and expiry, and count/map/network conservation. UI tests exercise the
 passing/defence groups, clickable maps, sorting, click-only selection and exports.
-All existing legacy and native physics-equivalence tests remain in the suite.
+Original-engine regression and native physics-equivalence tests run on all
+four recordings.
 
 More recordings are valuable before calling classifications production-ready,
-especially mid-game starts/stops, substitutions, pauses, duplicate names and
-custom physics. See `METRICS_RESEARCH.md` for the broader unimplemented catalogue.
+especially duplicate names and unusual custom physics. The current fixtures cover
+multiple games, substitutions, pauses and recordings without a game-end event;
+see `tests/fixtures/README.md` for provenance and validation limits.
+See `METRICS_RESEARCH.md` for the broader unimplemented catalogue.
 
 ## Web UI
 
