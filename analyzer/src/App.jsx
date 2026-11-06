@@ -74,7 +74,7 @@ function PlayerTable({ game, selectedPlayer, onSelect }) {
       : current.direction === 'desc' ? { key, direction: 'asc' } : null);
   }
   const columns = [['goals', 'Goals'], ['assists', 'Assists'], ['kicks', 'Kicks'], ['passes', 'Passes'], ['shots', 'On target'], ['playedTicks', 'Played']];
-  return <div><div className="overflow-x-auto">
+  return <div className="@container"><div className="grid items-start gap-6 @min-[80rem]:grid-cols-2"><div className="min-w-0"><div className="overflow-x-auto">
     <table className="table table-sm">
       <caption className="sr-only">Player statistics. Select a player for their heatmap, or a statistic for its event map.</caption>
       <thead><tr><th className="min-w-40">Player</th>{columns.map(([key, label]) => <th key={key} className="text-right" aria-sort={sort?.key === key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}>
@@ -89,8 +89,9 @@ function PlayerTable({ game, selectedPlayer, onSelect }) {
     </table>
     </div>
     <p className="mt-4 px-2 text-xs text-base-content/50">Hover or select a player for their heatmap. Select a statistic to map its events. Passes count completed passes; shots count shots on goal.</p>
+    </div>
     <PlayerMaps game={game} player={mappedPlayer} statistic={mapStatistic} onStatistic={setMapStatistic} />
-  </div>;
+  </div></div>;
 }
 
 export default function App() {

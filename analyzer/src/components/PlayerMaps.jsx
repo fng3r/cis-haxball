@@ -62,7 +62,7 @@ export default function PlayerMaps({ game, player, statistic, onStatistic }) {
   if (!player) return null;
   const label = MAP_LABELS[statistic];
   const events = player.maps?.[statistic] || [];
-  return <section aria-label="Player maps" className="mt-6 border-t border-base-300 pt-5">
+  return <section aria-label="Player maps" className="min-w-0 border-t border-base-300 pt-5 @min-[80rem]:border-l @min-[80rem]:border-t-0 @min-[80rem]:pl-6 @min-[80rem]:pt-0">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div><h3 className="text-sm font-semibold">{player.nick} · {label}</h3><p className="mt-1 text-xs text-base-content/55">{game.stadium.name}</p></div>
       <label className="flex items-center gap-2 text-xs text-base-content/60">Map statistic<select className="select select-sm w-44" value={statistic} onChange={event => onStatistic(event.target.value)}>{Object.entries(MAP_LABELS).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
