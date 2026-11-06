@@ -52,5 +52,6 @@
     "src/vendor/font/fontello.eot": "6efb93bd8e4729cee8b0d0a357aacd85eafae3cb1e5c980a32af597a7cd88052",
     "src/vendor/font/fontello.woff2": "a9b309fee670fb571a52bab21192d57bec0786e61413eaf51d07c5eeb3e38dc3",
     "src/vendor/pako-jszip.min.js": "b32f1855d1648684059969a40ddca7003d0cb8a0799a953c01cc9e7cc93cebc2"
-  }
+  },
+  "baseDirectory": "legacy"
 }
