@@ -211,7 +211,7 @@ export default function App() {
     </header>
     <input ref={input} type="file" accept=".hbr2" aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files[0]); event.target.value = ''; }} />
     <main className="grid gap-6 p-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="space-y-6">
+      <aside className="space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto">
         <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files[0]); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
           <h3 className="font-semibold">Bring your replay.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop an .hbr2 file here, or choose a recording from your device.</p>
           <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recording</button>
