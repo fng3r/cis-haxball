@@ -264,3 +264,9 @@ The React UI uses named `lucide-react` icon imports for action buttons, theme,
 focus, sorting and keyboard help. Icons alongside text are decorative; icon-only
 buttons retain accessible labels. The custom brand mark and isolated legacy
 player keep their existing artwork.
+
+Player maps preview on hover/focus until a player row or statistic is clicked. Rows highlight on hover. A
+click pins that player and map, ignoring subsequent hover/focus previews. Click
+another row/statistic to replace the pin, or use Unpin player to resume
+previews. Pins and map selection survive stats-tab changes and reset when the
+selected game or recording changes.

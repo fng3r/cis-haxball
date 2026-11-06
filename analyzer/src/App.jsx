@@ -63,12 +63,16 @@ function GoalList({ game, onSeek }) {
   </div>;
 }
 
-function PlayerTable({ game, selectedPlayer, onSelect }) {
+function PlayerTable({ game, selectedPlayer, onSelect, playerPinned, onPin, mapStatistic, onStatistic }) {
   const [sort, setSort] = useState(null);
-  const [mapStatistic, setMapStatistic] = useState('heatmap');
+  const setMapStatistic = onStatistic;
   const mappedPlayer = game.players.find(player => player.id === selectedPlayer)
     || game.players.find(player => player.team === 'red') || game.players[0];
-  function showMap(player, statistic) { onSelect(player.id); setMapStatistic(statistic); }
+  function showMap(player, statistic, pin = false) {
+    onSelect(player.id); setMapStatistic(statistic);
+    if (pin) onPin(true);
+  }
+  function preview(player) { if (!playerPinned) showMap(player, 'heatmap'); }
   const teamOrder = { red: 0, blue: 1 };
   const players = [...game.players].sort((a, b) => !sort
     ? teamOrder[a.team] - teamOrder[b.team]
@@ -84,17 +88,17 @@ function PlayerTable({ game, selectedPlayer, onSelect }) {
       <thead><tr><th className="min-w-40">Player</th>{columns.map(([key, label]) => <th key={key} className="text-right" aria-sort={sort?.key === key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}>
         <button className="btn btn-ghost btn-xs whitespace-nowrap" aria-pressed={sort?.key === key} title={sort?.key !== key ? 'Sort descending' : sort.direction === 'desc' ? 'Sort ascending' : 'Reset to team order'} onClick={() => cycleSort(key)}>{label}{sort?.key === key && (sort.direction === 'asc' ? <ArrowUp className="size-3" aria-hidden="true" /> : <ArrowDown className="size-3" aria-hidden="true" />)}</button>
       </th>)}</tr></thead>
-      <tbody>{players.map(player => <tr key={player.id} className={selectedPlayer === player.id ? 'bg-base-200' : ''}>
-        <th><button className="flex items-center gap-3 rounded-field py-2 text-left focus-visible:outline-2" aria-pressed={selectedPlayer === player.id} onMouseEnter={() => showMap(player, 'heatmap')} onFocus={() => showMap(player, 'heatmap')} onClick={() => showMap(player, 'heatmap')}>
+      <tbody>{players.map(player => <tr key={player.id} className={`cursor-pointer transition-colors ${selectedPlayer === player.id ? 'bg-base-200 hover:bg-base-300/60' : 'hover:bg-base-200/70'}`} onMouseEnter={() => preview(player)} onClick={() => showMap(player, 'heatmap', true)}>
+        <th><button className="flex items-center gap-3 rounded-field py-2 text-left focus-visible:outline-2" aria-pressed={selectedPlayer === player.id} onMouseEnter={() => preview(player)} onFocus={() => preview(player)}>
           <span className={`size-2 shrink-0 rounded-full ${player.team === 'red' ? 'bg-error' : 'bg-info'}`} />
           {player.nick}</button></th>
-        {columns.map(([key, label]) => <td key={key} className="text-right font-mono"><button className="btn btn-ghost btn-xs font-mono" aria-label={`${label} map for ${player.nick}`} aria-pressed={selectedPlayer === player.id && mapStatistic === (key === 'playedTicks' ? 'heatmap' : key)} onClick={() => showMap(player, key === 'playedTicks' ? 'heatmap' : key)}>{key === 'playedTicks' ? time(player[key]) : player[key]}</button></td>)}
+        {columns.map(([key, label]) => <td key={key} className="text-right font-mono"><button className="btn btn-ghost btn-xs font-mono" aria-label={`${label} map for ${player.nick}`} aria-pressed={selectedPlayer === player.id && mapStatistic === (key === 'playedTicks' ? 'heatmap' : key)} onClick={event => { event.stopPropagation(); showMap(player, key === 'playedTicks' ? 'heatmap' : key, true); }}>{key === 'playedTicks' ? time(player[key]) : player[key]}</button></td>)}
       </tr>)}</tbody>
     </table>
     </div>
-    <p className="mt-4 px-2 text-xs text-base-content/50">Hover or select a player for their heatmap. Select a statistic to map its events. Passes count completed passes; shots count shots on goal.</p>
+    <p className="mt-4 px-2 text-xs text-base-content/50">Hover to preview a heatmap. Click a row or statistic to pin their map; unpin to resume previews. Passes count completed passes; shots count shots on goal.</p>
     </div>
-    <PlayerMaps game={game} player={mappedPlayer} statistic={mapStatistic} onStatistic={setMapStatistic} />
+    <PlayerMaps game={game} player={mappedPlayer} statistic={mapStatistic} onStatistic={setMapStatistic} pinned={playerPinned} onUnpin={() => onPin(false)} />
   </div></div>;
 }
 
@@ -118,6 +122,8 @@ export default function App() {
   const nativePlayer = useRef(null);
   const playerCard = useRef(null), statsCard = useRef(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [playerPinned, setPlayerPinned] = useState(false);
+  const [mapStatistic, setMapStatistic] = useState('heatmap');
   const [tab, setTab] = useState('overview');
   const [focusMode, setFocusMode] = useState(false);
   const [error, setError] = useState('');
@@ -126,7 +132,7 @@ export default function App() {
   const game = replay?.games[gameIndex];
 
   useEffect(() => {
-    setGameIndex(0); setSelectedPlayer(null); setTab('overview');
+    setGameIndex(0); setSelectedPlayer(null); setPlayerPinned(false); setMapStatistic('heatmap'); setTab('overview');
   }, [recording?.id]);
 
   useEffect(() => { if (!recording) setFocusMode(false); }, [recording]);
@@ -144,7 +150,7 @@ export default function App() {
   }
 
   function selectGame(index) {
-    setGameIndex(index); setSelectedPlayer(null);
+    setGameIndex(index); setSelectedPlayer(null); setPlayerPinned(false); setMapStatistic('heatmap');
     nativePlayer.current?.seek(replay.games[index].startTick);
   }
   function scrollToCard(card) {
@@ -167,7 +173,7 @@ export default function App() {
   function onPlayerGame(index) {
     if (Number.isInteger(index) && index >= 0 && index < (replay?.games.length || 0) && index !== gameIndex) {
       setGameIndex(index);
-      setSelectedPlayer(null);
+      setSelectedPlayer(null); setPlayerPinned(false); setMapStatistic('heatmap');
     }
   }
   function exportStats() {
@@ -249,7 +255,7 @@ export default function App() {
               <div className="space-y-6"><h3 className="text-sm font-semibold">The balance of play</h3><Comparison label="Possession" values={game.possession} percentage /><Comparison label="Kicks" values={game.kicks} /><Comparison label="Completed passes" values={game.passes} /><Comparison label="Shots on goal" values={game.shots} /></div>
               <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><ThirdsMap game={game} /><p className="mt-4 text-xs leading-relaxed text-base-content/55">Where the ball spent its time during active play. Team colors follow the recording.</p><p className="mt-5 text-xs text-base-content/50">{game.spaceMode ? 'SpaceBounce rules detected.' : 'Standard kicking rules.'}</p></div>
             </div>}
-            {tab === 'players' && <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} />}
+            {tab === 'players' && <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} playerPinned={playerPinned} onPin={setPlayerPinned} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />}
             {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={game} onSeek={seekGoal} /></>}
           </div>
         </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>)}

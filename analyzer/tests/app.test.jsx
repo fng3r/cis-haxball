@@ -348,3 +348,30 @@ it('enters and exits focus mode without replacing the native player', async () =
   expect(screen.getByRole('button', { name: 'Focus mode' })).toHaveAttribute('aria-pressed', 'false');
   expect(screen.getByTitle('Original HaxBall replay player')).toBe(frame);
 });
+
+it('pins explicit player/statistic selections, preserves maps on hover and focus, and unpins', async () => {
+  render(<App />);
+  const worker = await loadFile();
+  const bob = { ...game.players[0], id: '2:blue', nick: 'Bob', team: 'blue' };
+  act(() => worker.send({ type: 'result', result: { games: [{ ...game, players: [...game.players, bob] }, { ...game, id: 1 }] } }));
+  fireEvent.click(screen.getByRole('tab', { name: 'players' }));
+  fireEvent.mouseEnter(screen.getByRole('button', { name: 'Bob' }));
+  expect(screen.getByRole('img', { name: 'Bob: Movement heatmap' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Kicks map for Alice' }));
+  fireEvent.mouseEnter(screen.getByRole('button', { name: 'Bob' }));
+  fireEvent.focus(screen.getByRole('button', { name: 'Bob' }));
+  fireEvent.mouseEnter(screen.getByRole('button', { name: 'Alice' }));
+  expect(screen.getByRole('img', { name: 'Alice: Kicks' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('tab', { name: 'overview' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'players' }));
+  fireEvent.mouseEnter(screen.getByRole('button', { name: 'Bob' }));
+  expect(screen.getByRole('img', { name: 'Alice: Kicks' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Bob' }).closest('tr'));
+  expect(screen.getByRole('img', { name: 'Bob: Movement heatmap' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Unpin player' }));
+  fireEvent.mouseEnter(screen.getByRole('button', { name: 'Alice' }));
+  expect(screen.getByRole('img', { name: 'Alice: Movement heatmap' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Alice' }));
+  fireEvent.click(screen.getByRole('button', { name: /Game 2/ }));
+  expect(screen.queryByRole('button', { name: 'Unpin player' })).not.toBeInTheDocument();
+});
