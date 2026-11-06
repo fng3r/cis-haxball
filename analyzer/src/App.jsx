@@ -1,0 +1,246 @@
+import { useEffect, useRef, useState } from 'react';
+import NativePlayer from './components/NativePlayer.jsx';
+import PlayerMaps from './components/PlayerMaps.jsx';
+import { serializeStats } from './export-stats.js';
+import { MAX_FILE_BYTES } from './engine/analyze.js';
+
+export function time(ticks = 0) {
+  const seconds = Math.max(0, Math.floor(ticks / 60));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+function Mark() {
+  return <svg viewBox="0 0 40 40" className="size-10" fill="none" aria-hidden="true">
+    <rect x="2" y="5" width="36" height="30" rx="8" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M20 5v30M2 14h5v12H2m36-12h-5v12h5" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="20" cy="20" r="6" stroke="currentColor" strokeWidth="1.5" />
+  </svg>;
+}
+
+function Comparison({ label, values, percentage = false }) {
+  const total = values[0] + values[1];
+  const fraction = total ? values[0] / total : 0.5;
+  const display = value => percentage ? `${total ? Math.round(value / total * 100) : 0}%` : value;
+  return <div className="space-y-2">
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <span className="w-12 font-mono font-semibold text-error">{display(values[0])}</span>
+      <span className="text-base-content/65">{label}</span>
+      <span className="w-12 text-right font-mono font-semibold text-info">{display(values[1])}</span>
+    </div>
+    <div className="flex h-1.5 gap-1 overflow-hidden rounded-full" aria-label={`${label}: red ${display(values[0])}, blue ${display(values[1])}`}>
+      <div className="rounded-full bg-error/65" style={{ width: `${fraction * 100}%` }} />
+      <div className="flex-1 rounded-full bg-info/65" />
+    </div>
+  </div>;
+}
+
+function GoalList({ game, onSeek }) {
+  if (!game.goals.length) return <p className="py-8 text-sm text-base-content/55">No goals in this game.</p>;
+  return <div className="mx-auto max-w-3xl">
+    <div className="mb-3 grid grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] items-center gap-2 text-xs font-semibold">
+      <span className="pr-3 text-right text-error">Red team</span>
+      <span className="text-center text-base-content/45">Score</span>
+      <span className="pl-3 text-info">Blue team</span>
+    </div>
+    <ol className="timeline timeline-vertical" aria-label="Goal timeline">
+      {game.goals.map((goal, i) => <li key={i} className="h-16 w-full">
+        {i > 0 && <hr />}
+        <button className={`${goal.team === 'red' ? 'timeline-start text-right hover:bg-error/10' : 'timeline-end text-left hover:bg-info/10'} min-w-0 max-w-full rounded-field px-3 py-2 focus-visible:outline-2`} onClick={() => onSeek(goal.tick)} aria-label={`Watch ${goal.scorer || 'unattributed'}${goal.ownGoal ? ' own' : ''} goal at ${time(goal.gameTick)}, score ${goal.scoreRed}–${goal.scoreBlue}`}>
+          <span title={`${goal.scorer || 'Unattributed goal'}${goal.ownGoal ? ' (own goal)' : ''}`} className={`block truncate text-sm font-semibold ${goal.team === 'red' ? 'text-error' : 'text-info'}`}>{goal.scorer || 'Unattributed goal'}{goal.ownGoal ? ' (own goal)' : ''}</span>
+          {goal.assist && <span title={`Assist · ${goal.assist}`} className="mt-1 block truncate text-xs text-base-content/55">Assist · {goal.assist}</span>}
+        </button>
+        <div className="timeline-middle flex w-20 flex-col items-center gap-1 rounded-field border border-base-300 bg-base-100 py-2">
+          <span className="font-mono text-sm font-semibold">{goal.scoreRed}:{goal.scoreBlue}</span>
+          <time className="font-mono text-[10px] text-base-content/50">{time(goal.gameTick)}</time>
+        </div>
+        {i < game.goals.length - 1 && <hr />}
+      </li>)}
+    </ol>
+  </div>;
+}
+
+function PlayerTable({ game, selectedPlayer, onSelect }) {
+  const [sort, setSort] = useState(null);
+  const [mapStatistic, setMapStatistic] = useState('heatmap');
+  const mappedPlayer = game.players.find(player => player.id === selectedPlayer)
+    || game.players.find(player => player.team === 'red') || game.players[0];
+  function showMap(player, statistic) { onSelect(player.id); setMapStatistic(statistic); }
+  const teamOrder = { red: 0, blue: 1 };
+  const players = [...game.players].sort((a, b) => !sort
+    ? teamOrder[a.team] - teamOrder[b.team]
+    : (a[sort.key] - b[sort.key]) * (sort.direction === 'asc' ? 1 : -1) || a.nick.localeCompare(b.nick));
+  function cycleSort(key) {
+    setSort(current => current?.key !== key ? { key, direction: 'desc' }
+      : current.direction === 'desc' ? { key, direction: 'asc' } : null);
+  }
+  const columns = [['goals', 'Goals'], ['assists', 'Assists'], ['kicks', 'Kicks'], ['passes', 'Passes'], ['shots', 'On target'], ['playedTicks', 'Played']];
+  return <div><div className="overflow-x-auto">
+    <table className="table table-sm">
+      <caption className="sr-only">Player statistics. Select a player for their heatmap, or a statistic for its event map.</caption>
+      <thead><tr><th className="min-w-40">Player</th>{columns.map(([key, label]) => <th key={key} className="text-right" aria-sort={sort?.key === key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}>
+        <button className="btn btn-ghost btn-xs whitespace-nowrap" aria-pressed={sort?.key === key} title={sort?.key !== key ? 'Sort descending' : sort.direction === 'desc' ? 'Sort ascending' : 'Reset to team order'} onClick={() => cycleSort(key)}>{label}{sort?.key === key ? (sort.direction === 'asc' ? ' ↑' : ' ↓') : ''}</button>
+      </th>)}</tr></thead>
+      <tbody>{players.map(player => <tr key={player.id} className={selectedPlayer === player.id ? 'bg-base-200' : ''}>
+        <th><button className="flex items-center gap-3 rounded-field py-2 text-left focus-visible:outline-2" aria-pressed={selectedPlayer === player.id} onMouseEnter={() => showMap(player, 'heatmap')} onFocus={() => showMap(player, 'heatmap')} onClick={() => showMap(player, 'heatmap')}>
+          <span className={`size-2 shrink-0 rounded-full ${player.team === 'red' ? 'bg-error' : 'bg-info'}`} />
+          {player.nick}</button></th>
+        {columns.map(([key, label]) => <td key={key} className="text-right font-mono"><button className="btn btn-ghost btn-xs font-mono" aria-label={`${label} map for ${player.nick}`} aria-pressed={selectedPlayer === player.id && mapStatistic === (key === 'playedTicks' ? 'heatmap' : key)} onClick={() => showMap(player, key === 'playedTicks' ? 'heatmap' : key)}>{key === 'playedTicks' ? time(player[key]) : player[key]}</button></td>)}
+      </tr>)}</tbody>
+    </table>
+    </div>
+    <p className="mt-4 px-2 text-xs text-base-content/50">Hover or select a player for their heatmap. Select a statistic to map its events. Passes count completed passes; shots count shots on goal.</p>
+    <PlayerMaps game={game} player={mappedPlayer} statistic={mapStatistic} onStatistic={setMapStatistic} />
+  </div>;
+}
+
+export default function App() {
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('replay-theme') === 'replay' ? 'replay' : 'replay-dark'; }
+    catch { return 'replay-dark'; }
+  });
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = theme === 'replay' ? '#f3f4f9' : '#171b29';
+    try { localStorage.setItem('replay-theme', theme); } catch {}
+  }, [theme]);
+  const [replay, setReplay] = useState(null);
+  const [filename, setFilename] = useState('');
+  const [gameIndex, setGameIndex] = useState(0);
+  const [recording, setRecording] = useState(null);
+  const nativePlayer = useRef(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [tab, setTab] = useState('overview');
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const input = useRef(null), worker = useRef(null), analysisTimeout = useRef(null);
+  const game = replay?.games[gameIndex];
+
+  useEffect(() => () => { worker.current?.terminate(); clearTimeout(analysisTimeout.current); }, []);
+
+  function cancel() {
+    clearTimeout(analysisTimeout.current);
+    worker.current?.terminate();
+    worker.current = null;
+    setBusy(false);
+  }
+
+  async function open(file) {
+    if (!file) return;
+    cancel();
+    setError('');
+    if (!file.name.toLowerCase().endsWith('.hbr2')) { setError('Choose a HaxBall recording with the .hbr2 extension.'); return; }
+    if (file.size > MAX_FILE_BYTES) { setError('Choose a recording smaller than 32 MB.'); return; }
+    setBusy(true); setProgress(0); setReplay(null); setFilename(file.name);
+    setRecording({ file, id: crypto.randomUUID() });
+    let instance;
+    try {
+      instance = new Worker(new URL('./engine/analyze.worker.js', import.meta.url), { type: 'module' });
+    } catch {
+      setError('The analyzer could not start. Use a browser with Web Worker support.');
+      setBusy(false);
+      return;
+    }
+    worker.current = instance;
+    const timeout = setTimeout(() => fail('Analysis took longer than two minutes. Try a shorter recording.'), 120_000);
+    analysisTimeout.current = timeout;
+    function finish() { clearTimeout(timeout); instance.terminate(); if (worker.current === instance) worker.current = null; }
+    function fail(message) {
+      if (worker.current !== instance) { finish(); return; }
+      setError(message); setBusy(false); finish();
+    }
+    instance.onmessage = ({ data }) => {
+      if (worker.current !== instance) return;
+      if (data.type === 'progress') setProgress(data.progress);
+      if (data.type === 'error') fail(data.message);
+      if (data.type === 'result') {
+        setReplay(data.result); setGameIndex(0); setSelectedPlayer(null);
+        setBusy(false); setTab('overview'); finish();
+      }
+    };
+    instance.onerror = event => { event.preventDefault(); fail('The analyzer could not start. Reload the page and try again.'); };
+    try {
+      const buffer = await file.arrayBuffer();
+      if (worker.current === instance) instance.postMessage(buffer, [buffer]);
+    } catch { fail('Could not read the recording. Choose the file again.'); }
+  }
+
+  function selectGame(index) {
+    setGameIndex(index); setSelectedPlayer(null);
+    nativePlayer.current?.seek(replay.games[index].startTick);
+  }
+  function seekGoal(tick) {
+    nativePlayer.current?.seek(Math.max(0, tick - 480));
+  }
+  function exportStats() {
+    const json = serializeStats(replay);
+    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+    const link = document.createElement('a'); link.href = url; link.download = `${filename.replace(/\.hbr2$/i, '')}-stats.json`; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  return <div className="min-h-screen">
+    <header className="border-b border-base-300 bg-base-100">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-5 lg:px-10">
+        <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">LAB</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
+        <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}><span aria-hidden="true">{theme === 'replay-dark' ? '☀' : '☾'}</span></button></div>
+      </div>
+    </header>
+    <input ref={input} type="file" accept=".hbr2" aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files[0]); event.target.value = ''; }} />
+    <main className="mx-auto grid max-w-[1600px] gap-6 p-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:p-10">
+      <aside className="space-y-6">
+        <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-base-content/50">Your recording</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Match room</h2></div>
+        <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files[0]); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
+          <div className="mb-5 text-3xl font-light text-base-content/40" aria-hidden="true">⇧</div>
+          <h3 className="font-semibold">Bring your replay.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop an .hbr2 file here, or choose a recording from your device.</p>
+          <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recording</button>
+          <p className="mt-3 text-center text-[11px] text-base-content/45">Up to 32 MB · Analyzed on your device</p>
+        </div>
+        {replay && <section aria-label="Games in recording">
+          <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Games</span><span>{replay.games.length}</span></div>
+          <div className="space-y-2">{replay.games.map((item, index) => <button key={item.id} aria-pressed={gameIndex === index} onClick={() => selectGame(index)} className={`w-full rounded-box border p-4 text-left ${gameIndex === index ? 'border-base-content/30 bg-base-100 shadow-sm' : 'border-transparent hover:bg-base-100/60'}`}>
+            <div className="flex justify-between text-sm font-semibold"><span>Game {index + 1}</span><span className="font-mono"><span className="text-error">{item.scoreRed}</span><span className="px-2 text-base-content/30">:</span><span className="text-info">{item.scoreBlue}</span></span></div>
+            <p className="mt-2 truncate text-xs text-base-content/55">{time(item.gameTicks)} · {item.stadium.name}</p>
+          </button>)}</div>
+        </section>}
+        <div className="border-t border-base-300 pt-5 text-xs leading-relaxed text-base-content/50"><p className="font-semibold text-base-content/75">Keep the game in perspective.</p><p className="mt-2">Explore possession, passes, shots and the moments that changed the score.</p></div>
+      </aside>
+      <div className="min-w-0 space-y-6">
+        {error && <div role="alert" className="alert alert-error"><span>{error}</span><button className="btn btn-sm" onClick={() => setError('')}>Dismiss</button></div>}
+        {busy && <section className="rounded-box border border-base-300 bg-base-100 p-5" aria-live="polite" aria-busy="true">
+          <div className="mb-3 flex items-center justify-between gap-4"><div><h2 className="font-semibold">Analyzing recording… {progress}%</h2><p className="mt-1 truncate text-xs text-base-content/60">{filename}</p></div><button className="btn btn-sm" onClick={cancel}>Cancel</button></div>
+          <progress className="progress w-full" value={progress} max="100" />
+        </section>}
+        <section className="overflow-hidden rounded-box border border-base-300 bg-base-100">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-4 sm:px-7">
+            <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 max-w-64 truncate text-sm font-semibold sm:max-w-96">{game ? filename : 'Every match has a story.'}</h2></div>
+            {replay ? <button className="btn btn-sm" onClick={exportStats}>Export statistics ↓</button> : <span className="text-xs text-base-content/45">.hbr2 recordings</span>}
+          </div>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-7 sm:px-10">
+            <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div>Red team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Home side'}</p></div></div>
+            <div className="text-center"><div className="flex items-center gap-4 font-mono text-4xl font-medium tracking-tight sm:text-5xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div><p className="mt-2 font-mono text-[11px] text-base-content/50">{game ? `GAME ${gameIndex + 1} · ${time(game.gameTicks)}` : 'READY WHEN YOU ARE'}</p></div>
+            <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
+          </div>
+          <div className="px-3 pb-5 sm:px-5">
+            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} onError={setError} onStats={() => setTab('overview')} onClose={() => { cancel(); setRecording(null); setReplay(null); }} />
+              : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
+          </div>
+        </section>
+        {game ? <section className="rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
+          <div role="tablist" aria-label="Match information" className="tabs tabs-border mb-6">{['overview', 'players', 'goals'].map(name => <button key={name} role="tab" id={`tab-${name}`} aria-controls="match-panel" aria-selected={tab === name} className={`tab capitalize ${tab === name ? 'tab-active' : ''}`} onClick={() => setTab(name)}>{name}{name === 'goals' ? ` · ${game.goals.length}` : ''}</button>)}</div>
+          <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>
+            {tab === 'overview' && <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
+              <div className="space-y-6"><h3 className="text-sm font-semibold">The balance of play</h3><Comparison label="Possession" values={game.possession} percentage /><Comparison label="Kicks" values={game.kicks} /><Comparison label="Completed passes" values={game.passes} /><Comparison label="Shots on goal" values={game.shots} /></div>
+              <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><div className="flex h-24 overflow-hidden rounded-field bg-base-200">{game.thirds.map((count, i) => <div key={i} className={`flex min-w-10 flex-col items-center justify-center ${i === 0 ? 'bg-error/15' : i === 2 ? 'bg-info/15' : 'bg-base-200'}`} style={{ flex: Math.max(1, count) }}><span className="font-mono text-xl">{Math.round(count / (game.thirds.reduce((a, b) => a + b, 0) || 1) * 100)}%</span><span className="mt-1 text-[10px] text-base-content/55">{['Red third', 'Middle', 'Blue third'][i]}</span></div>)}</div><p className="mt-4 text-xs leading-relaxed text-base-content/55">Where the ball spent its time during active play. Team colors follow the recording.</p><p className="mt-5 text-xs text-base-content/50">{game.spaceMode ? 'SpaceBounce rules detected.' : 'Standard kicking rules.'}</p></div>
+            </div>}
+            {tab === 'players' && <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} />}
+            {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={game} onSeek={seekGoal} /></>}
+          </div>
+        </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>}
+        <footer className="flex flex-wrap justify-between gap-2 pb-4 text-[10px] text-base-content/40"><span>REPLAY LAB / HaxBall analysis workspace</span><span>Proof of concept · No account needed</span></footer>
+      </div>
+    </main>
+  </div>;
+}

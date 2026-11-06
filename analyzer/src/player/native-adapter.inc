@@ -1,0 +1,55 @@
+let nativeController;
+let nativeResources;
+
+async function prepareNativeResources() {
+  if (!nativeResources) {
+    nativeResources = (async () => {
+      kc.fj();
+      const response = await fetch(`${import.meta.env.BASE_URL}player/res.dat`, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error('Could not load native replay player resources.');
+      const zip = new window.JSZip(await response.arrayBuffer());
+      n.Na = new Ub(zip);
+      [n.Ko, n.Vn, n.Tn, n.Dm] = await Promise.all(
+        ['grass', 'concrete', 'concrete2', 'typing'].map(name => x.Wg(zip.file(`images/${name}.png`).asArrayBuffer())),
+      );
+      await n.Na.ro;
+      document.addEventListener('pointerdown', () => n.Na.Tl(), { once: true });
+    })();
+  }
+  return nativeResources;
+}
+
+export async function openNativeReplay(bytes) {
+  await prepareNativeResources();
+  nativeController?.ia();
+  // Analysis happens in the separate worker. Playback must not collect stats
+  // or run the analyzer's old fast-forward/reset completion heuristic.
+  keepUpdating = false;
+  playSounds = true;
+  loading = { done: true };
+  x.Pg = document.getElementById('player');
+  x.Pg.replaceChildren();
+  const replay = new Jb(new Uint8Array(bytes), new fa, 3);
+  nativeController = new Vb(replay);
+  nativeController.je.g.querySelector('[data-hook=playicon]').textContent = '⏵';
+  nativeController.je.de = () => {
+    nativeController.ia();
+    x.Pg.replaceChildren();
+    notify('closed');
+  };
+  nativeController.j.me(false);
+  x.Pg.appendChild(nativeController.j.g);
+  document.getElementById('status').hidden = true;
+}
+
+export function seekNativeReplay(tick) {
+  if (!nativeController) return;
+  const replay = nativeController.ya;
+  replay.er(Math.max(0, Math.min(replay.mf, tick)) * replay.mh);
+  const controls = nativeController.je;
+  if (!controls.Wf) {
+    controls.Wf = true;
+    controls.Vp();
+    controls.el();
+  }
+}

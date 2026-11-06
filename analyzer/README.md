@@ -1,12 +1,18 @@
-# Standalone HaxBall replay analysis
+# Replay Lab
 
-Analyze local HBR2 recordings without a browser or external analysis service.
-The original upstream analyzer is preserved under `legacy/`.
+A local HaxBall replay analysis workspace built with React and Vite.
 
 ```sh
 npm ci
-npm test
-node scripts/analyze.mjs recording.hbr2 > stats.json
+npm start
 ```
 
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for the API and extraction notes.
+Open **http://127.0.0.1:3000/** and choose an `.hbr2` recording.
+
+Run `npm test` for checks, `npm run build` for a static production build, or
+`node scripts/analyze.mjs recording.hbr2` for standalone JSON analysis.
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for the shared engine API, architecture,
+supported features and proof-of-concept limits. The original upstream application
+is preserved in [legacy/](./legacy/README.md); its provenance is in
+[upstream.json](./upstream.json).

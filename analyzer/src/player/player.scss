@@ -1,0 +1,10 @@
+@use '../../legacy/src/App.scss';
+
+// Layout containment only: original player styles live inside their own frame.
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #1a2125; }
+.game-view { top: 0; height: 100vh; }
+.game-view > .top-section,
+.game-view > .bottom-section,
+.replay-controls-view { left: 0; }
+#status { position: absolute; inset: 0; display: grid; place-content: center; color: #eee; font: 14px sans-serif; }
+#status[hidden] { display: none; }

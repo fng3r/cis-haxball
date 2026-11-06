@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/haxball-replay-analyzer/haxball-replay-analyzer.github.io",
+  "commit": "8b2b97d7a753ae7422adaf19b010e91c3ed54327",
+  "path": "pliki/res.dat",
+  "sha256": "9484655836ae8f6f976cf5cce2c7394b2cf740ee51915c332d890a9fec4b826a",
+  "extractedTextures": {
+    "grass.png": "images/grass.png",
+    "concrete.png": "images/concrete.png"
+  }
+}
