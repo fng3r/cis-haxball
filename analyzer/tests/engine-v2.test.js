@@ -32,7 +32,7 @@ describe('new standalone replay engine', () => {
       expect(game.transferNetwork.reduce((sum, edge) => sum + edge.count, 0)).toBe(game.teams.red.transfers + game.teams.blue.transfers);
       for (const player of game.players) {
         expect(player.maps.heatmap.reduce((sum, cell) => sum + cell.ticks, 0)).toBe(player.activeTicks);
-        expect(player.onFieldTicks).toBeGreaterThanOrEqual(player.activeTicks);
+        expect(player).not.toHaveProperty('onFieldTicks');
         expect(player.peakSpeed).toBeGreaterThanOrEqual(player.averageSpeed);
         expect(player.distance).toBeGreaterThanOrEqual(0);
       }
@@ -94,8 +94,8 @@ describe('new event and metric definitions', () => {
     expect(game.players).toHaveLength(2);
     expect(game.players.map(p => p.id)).toEqual(['1:red', '2:red']);
     expect(game.players.map(p => p.distance)).toEqual([1, 1]);
-    expect(game.players[0]).toMatchObject({ onFieldTicks: 3, activeTicks: 1, averageSpeed: 60 });
-    expect(game.phaseTicks).toEqual({ active: 1, paused: 1, goal: 1 });
+    expect(game.players[0]).toMatchObject({ activeTicks: 1, averageSpeed: 60 });
+    expect(game).not.toHaveProperty('phaseTicks');
   });
 
   it('links kick-to-contact transfers, receptions, progression and opponent turnovers by ID', () => {
@@ -180,4 +180,21 @@ it('records a stop even if the next game starts in the same recording tick', () 
   expect(old.endTick).toBe(1); expect(old.truncatedEnd).toBe(false);
   expect(old.events.at(-1).type).toBe('game_stop');
   expect(next.truncatedStart).toBe(false);
+});
+
+it('uses live play as the only metric time basis, including the activating kickoff tick', () => {
+  const c = createCollector(), a = member(1, 'red'), b = member(2, 'red', 40);
+  for (const [tick, phase] of ['kickoff', 'paused', 'goal', 'ended'].entries()) {
+    feed(c, tick, [a,b], [{ ...interaction('kick', tick, a), phase }, { ...interaction('contact', tick, b), phase }], { phase });
+  }
+  feed(c, 4, [a,b], [{ ...interaction('kick', 4, a), phase: 'kickoff' }], { phase: 'kickoff' }, { phase: 'active' });
+  feed(c, 5, [a,b], [interaction('contact', 5, b)]);
+  const game = c.finish()[0];
+  expect(game.activeTicks).toBe(2);
+  expect(game.players.map(p => p.activeTicks)).toEqual([2,2]);
+  expect(game.teams.red).toMatchObject({ kicks: 1, contacts: 1, transfers: 1 });
+  expect(game.players.find(p => p.playerId === 1)).toMatchObject({ distance: 2, kicksPerMinute: 1800 });
+  expect(game.thirds.reduce((a,b) => a+b, 0)).toBe(2);
+  expect(game.events.filter(e => e.type === 'kick')).toHaveLength(5);
+  expect(game.players.find(p => p.playerId === 1).maps.kicks).toHaveLength(1);
 });

@@ -32,7 +32,7 @@ export function aggregateGames(games) {
     players: [...groups.values()].map(items => {
       const first = items[0], activeTicks = sum(items, 'activeTicks');
       return { id: first.id, playerId: first.playerId, team: first.team, names: [...new Set(items.flatMap(item => item.names))],
-        games: items.length, activeTicks, onFieldTicks: sum(items, 'onFieldTicks'), distance: sum(items, 'distance'),
+        games: items.length, activeTicks, distance: sum(items, 'distance'),
         ...Object.fromEntries(COUNT_FIELDS.map(field => [field, sum(items, field)])),
         averageSpeed: activeTicks ? items.reduce((sum, p) => sum + p.averageSpeed * p.activeTicks, 0) / activeTicks : 0,
         peakSpeed: Math.max(...items.map(p => p.peakSpeed)), onFieldGoalDifference: sum(items, 'onFieldGoalDifference') };
@@ -77,8 +77,8 @@ export function analyzeReplay(input, { onProgress = () => {}, onEvent = () => {}
   const games = collector.finish();
   if (!games.length) throw new Error('No played games were found in this recording.');
   onProgress(100);
-  return { schemaVersion: 2, engine: 'replay-lab-v2', metricsVersion: 1, tickRate: 60, ticks,
-    definitions: { ...DEFAULT_OPTIONS, ...metrics, territory: 'three-equal-zones-between-defended-goal-centres',
+  return { schemaVersion: 2, engine: 'replay-lab-v2', metricsVersion: 2, tickRate: 60, ticks,
+    definitions: { timeBasis: 'live-play-only-including-the-kickoff-activation-tick', ...DEFAULT_OPTIONS, ...metrics, territory: 'three-equal-zones-between-defended-goal-centres',
       transfers: 'next-distinct-ball-interaction-after-kick', proximity: 'within-player-and-ball-radii-plus-4-not-possession',
       goalAttribution: 'last-distinct-interactions-within-assistWindowTicks', velocityUnits: 'world-units-per-tick', speedUnits: 'world-units-per-second' },
     games, summary: aggregateGames(games), ...(includeTracking ? { trackingInterval, tracking } : {}) };

@@ -35,7 +35,7 @@ it('uses the v2 worker and displays significant v2 metrics without legacy posses
   const worker = await open();
   expect(worker.url.pathname).toMatch(/engine-v2\/analyze.worker.js$/);
   expect(screen.getByRole('combobox', { name: 'Analysis engine' })).toHaveValue('v2');
-  for (const label of ['Active play', 'Observed transfers', 'Progressive transfers', 'Ball proximity', 'Average width', 'Average depth']) expect(screen.getByText(label)).toBeInTheDocument();
+  for (const label of ['Loose ball', 'Observed transfers', 'Progressive transfers', 'Ball proximity', 'Average width', 'Average depth']) expect(screen.getByText(label)).toBeInTheDocument();
   expect(screen.queryByText('Possession')).not.toBeInTheDocument();
   expect(screen.queryByText('Shots on goal')).not.toBeInTheDocument();
   expect(screen.getByRole('img', { name: /^Ball territory:/ })).toBeInTheDocument();
@@ -75,7 +75,8 @@ it('adapts v2 goal scores to the existing timeline and seeks the native player',
 it('shows captured statistics without a coverage warning and handles missing geometry', () => {
   render(<V2Overview game={{ ...result.games[0], truncatedStart: true, territoryAvailable: false }} />);
   expect(screen.queryByText(/Partial recording:/)).not.toBeInTheDocument();
-  expect(screen.getByText('Active play')).toBeInTheDocument();
+  expect(screen.queryByText('Active play')).not.toBeInTheDocument();
+  expect(screen.getByText('Loose ball')).toBeInTheDocument();
   expect(screen.getByText(/Territory is unavailable/)).toBeInTheDocument();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });

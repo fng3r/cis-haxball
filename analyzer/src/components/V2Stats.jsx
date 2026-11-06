@@ -23,7 +23,7 @@ export function V2Overview({ game }) {
   const buckets = [['red', 'Red in reach', 'bg-error/65'], ['blue', 'Blue in reach', 'bg-info/65'], ['contested', 'Both teams', 'bg-warning/65'], ['loose', 'Neither team', 'bg-base-content/20']];
   return <div className="space-y-6">
     <div className="stats stats-vertical w-full border border-base-300 bg-base-200 sm:stats-horizontal">
-      {[['Active play', duration(game.activeTicks), 'Excludes pauses and resets'], ['Loose ball', percent(game.proximityTicks.loose, game.activeTicks), 'Neither team within reach'], ['Contested ball', percent(game.proximityTicks.contested, game.activeTicks), 'Both teams within reach']].map(([title, value, description]) => <div key={title} className="stat min-w-0">
+      {[['Loose ball', percent(game.proximityTicks.loose, game.activeTicks), 'Neither team within reach'], ['Contested ball', percent(game.proximityTicks.contested, game.activeTicks), 'Both teams within reach']].map(([title, value, description]) => <div key={title} className="stat min-w-0">
         <div className="stat-title text-xs">{title}</div><div className="stat-value font-mono text-2xl">{value}</div><div className="stat-desc mt-1 text-xs">{description}</div>
       </div>)}
     </div>
@@ -36,7 +36,7 @@ export function V2Overview({ game }) {
       <section aria-label="Ball territory" className="min-w-0 xl:border-l xl:border-base-300 xl:pl-8">
         <h3 className="mb-4 text-sm font-semibold">Ball territory</h3>
         {game.territoryAvailable ? (pitchAligned ? <ThirdsMap game={game} /> : <div><p className="mb-3 text-xs text-base-content/55">Goal-axis thirds · nonstandard pitch orientation</p><dl className="grid grid-cols-3 gap-2">{['Red third', 'Middle', 'Blue third'].map((label, index) => <div key={label} className="rounded-field bg-base-200 p-4 text-center"><dt className="text-xs text-base-content/60">{label}</dt><dd className="mt-2 font-mono text-xl">{percent(game.thirds[index], game.activeTicks)}</dd></div>)}</dl></div>) : <p className="py-8 text-sm text-base-content/55">Territory is unavailable without two usable goals.</p>}
-        <p className="mt-3 text-xs text-base-content/55">Active ball time in three equal pitch regions.</p>
+        <p className="mt-3 text-xs text-base-content/55">Ball time in three equal pitch regions.</p>
       </section>
       <section aria-label="Ball proximity">
         <h3 className="mb-4 text-sm font-semibold">Ball proximity</h3>
@@ -49,7 +49,7 @@ export function V2Overview({ game }) {
         <TeamMetric label="Distance travelled" red={red.distance} blue={blue.distance} />
         <TeamMetric label="Average width" red={red.averageWidth} blue={blue.averageWidth} digits={1} />
         <TeamMetric label="Average depth" red={red.averageDepth} blue={blue.averageDepth} digits={1} />
-        <p className="mt-3 text-xs text-base-content/55">World units during active play. Team shape includes every on-field player.</p>
+        <p className="mt-3 text-xs text-base-content/55">World units. Team shape includes every on-field player.</p>
       </section>
     </div>
   </div>;
@@ -75,7 +75,7 @@ export function V2Players({ game, selectedPlayer, onSelect, mapStatistic, onStat
             {columns.map(([key, label]) => <td key={key} className="text-right font-mono">{key === 'activeTicks' ? <span className="px-2">{duration(item.activeTicks)}</span> : key === 'distance' ? <span className="px-2">{number(item.distance)}</span> : <button className="btn btn-ghost btn-xs font-mono" aria-label={`${label} map for ${item.nick}`} aria-pressed={player?.id === item.id && mapStatistic === key} onClick={event => { event.stopPropagation(); show(item, key); }}>{item[key]}</button>}</td>)}
           </tr>)}</tbody>
         </table></div>
-        <p className="mt-4 text-xs leading-relaxed text-base-content/55">Click a row or statistic to select its map. Distance is in world units; played time is active play. Goal and assist credit uses recent ball interactions.</p>
+        <p className="mt-4 text-xs leading-relaxed text-base-content/55">Click a row or statistic to select its map. Distance is in world units. Goal and assist credit uses recent ball interactions.</p>
       </div>
       <div className="min-w-0">
         <PlayerMaps game={game} player={player} statistic={mapStatistic} onStatistic={onStatistic} labels={V2_MAP_LABELS} />

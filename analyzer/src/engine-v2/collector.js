@@ -23,7 +23,7 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
     if (!games.has(frame.gameId)) games.set(frame.gameId, {
       id: frame.gameId, startTick: tick, endTick: tick, stadium: frame.stadium,
       scoreRed: frame.score[0], scoreBlue: frame.score[1], initialScore: [...frame.score],
-      activeTicks: 0, phaseTicks: {}, thirds: [0, 0, 0], territoryAvailable: Boolean(geometry(frame.stadium)),
+      activeTicks: 0, thirds: [0, 0, 0], territoryAvailable: Boolean(geometry(frame.stadium)),
       proximityTicks: { red: 0, blue: 0, contested: 0, loose: 0 },
       teams: { red: { ...counters(), observedGoalsFor: 0, observedGoalsAgainst: 0, leadingTicks: 0, drawingTicks: 0, trailingTicks: 0, widthSum: 0, depthSum: 0, shapeTicks: 0 }, blue: { ...counters(), observedGoalsFor: 0, observedGoalsAgainst: 0, leadingTicks: 0, drawingTicks: 0, trailingTicks: 0, widthSum: 0, depthSum: 0, shapeTicks: 0 } },
       players: new Map(), events: [], goals: [], network: new Map(), release: null, interactions: [],
@@ -36,7 +36,7 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
     const id = key(player);
     if (!game.players.has(id)) game.players.set(id, {
       id, playerId: player.playerId, nick: player.nick, names: new Set(), team: player.team,
-      ...counters(), onFieldTicks: 0, activeTicks: 0, distance: 0, speedSum: 0, peakSpeed: 0,
+      ...counters(), activeTicks: 0, distance: 0, speedSum: 0, peakSpeed: 0,
       xSum: 0, ySum: 0, cells: new Map(), maps: { kicks: [], contacts: [], transfers: [], received: [], turnovers: [], goals: [], assists: [] },
     });
     const item = game.players.get(id); item.names.add(player.nick); item.nick = player.nick;
@@ -113,11 +113,12 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
       game.endTick = before.gameId === game.id ? tick + 1 : tick;
       const scoreFrame = after.gameId === game.id ? after : before;
       [game.scoreRed, game.scoreBlue] = scoreFrame.score;
+      const active = before.phase === 'active' || (before.phase === 'kickoff' && after.phase === 'active' && before.gameId === after.gameId);
       const priorPhase = previousPhase.get(game.id);
       if (priorPhase !== before.phase) {
         record(game, { id: ++eventId, type: 'phase', gameId: game.id, tick, gameTick: before.gameTick, phase: before.phase, previousPhase: priorPhase ?? null });
         // Phases interrupt candidate transfers, contact attribution and movement.
-        if (priorPhase !== undefined) { game.release = null; game.interactions = []; }
+        if (priorPhase !== undefined && !(priorPhase === 'kickoff' && before.phase === 'active')) { game.release = null; game.interactions = []; }
         previousPhase.set(game.id, before.phase);
       }
       const ambiguous = new Set(events.filter(e => e.type === 'contact').map(key)).size > 1;
@@ -133,15 +134,13 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
         if (event.type === 'game_end' || event.type === 'game_stop') game.observedEnd = true;
         if (event.type === 'kick' || event.type === 'contact') {
           record(game, event);
-          if (event.phase === 'active' || event.phase === 'kickoff') interact(game, event, ambiguous);
+          if (active && (event.phase === 'active' || event.phase === 'kickoff')) interact(game, event, ambiguous);
           continue;
         }
-        if (event.type === 'goal') event = goal(game, event, before.players);
+        if (event.type === 'goal' && active) event = goal(game, event, before.players);
         record(game, event);
       }
-      if (before.gameId !== game.id) return;
-      game.phaseTicks[before.phase] = (game.phaseTicks[before.phase] || 0) + 1;
-      const active = before.phase === 'active';
+      if (before.gameId !== game.id || !active) return;
       if (active) {
         game.activeTicks++;
         if (game.geometry && before.ball) {
@@ -153,8 +152,7 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
         game.proximityTicks[near.size > 1 ? 'contested' : near.size ? [...near][0] : 'loose']++;
       }
       for (const member of before.players.filter(p => p.bodyId && playing(p))) {
-        const player = playerFor(game, member); player.onFieldTicks++;
-        if (!active) continue;
+        const player = playerFor(game, member);
         player.activeTicks++;
         const end = after.players.find(p => p.bodyId === member.bodyId);
         if (end && after.gameId === before.gameId && after.phase !== 'kickoff') player.distance += distance(member, end);
@@ -192,7 +190,7 @@ export function createCollector({ includeEvents = true, onEvent = () => {}, ...s
         }]));
         return { id: game.id, startTick: game.startTick, endTick: game.endTick, stadium: game.stadium,
           initialScore: game.initialScore, scoreRed: game.scoreRed, scoreBlue: game.scoreBlue,
-          activeTicks: game.activeTicks, phaseTicks: game.phaseTicks, thirds: game.thirds, territoryAvailable: game.territoryAvailable,
+          activeTicks: game.activeTicks, thirds: game.thirds, territoryAvailable: game.territoryAvailable,
           proximityTicks: game.proximityTicks, truncatedStart: Boolean(game.truncatedStart), truncatedEnd: !game.observedEnd,
           teams, players, goals: game.goals, transferNetwork: [...game.network.values()], ...(includeEvents ? { events: game.events } : {}) };
       });

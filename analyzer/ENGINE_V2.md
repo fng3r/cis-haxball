@@ -60,25 +60,23 @@ import.meta.url), { type: 'module' })` from a module in `src`.
 | Measurement | Definition |
 |---|---|
 | Recording/game boundaries | Recording start/end ticks, initial score, final native score and observed starts/ends. `truncatedStart` means the game was already present in the initial state; `truncatedEnd` means no finish/stop was observed. |
-| Phase time | Ticks observed in kickoff, active play, pause/resume countdown, goal celebration and ended phases. Every tick is classified from its pre-physics state. |
-| On-field time | Presence of a playing-team disc during a game, including pauses, kickoff and celebration. Separate from active time. |
-| Active playtime | On-field ticks whose pre-physics phase is active, excluding pause and resets. Includes a tick that produces a goal/end. |
+| Played time | The default denominator for all statistics: live simulation ticks, including the kickoff tick that activates play and the tick that produces a goal/end. Pauses, waiting for kickoff, celebrations and ended phases do not contribute. |
 | Score-state time | Each team's active ticks leading, drawing and trailing. |
 | Goals | Authoritative native scoring events, their scoring team, score, game-clock tick and recording tick. Existing initial goals in clipped recordings are not invented as observed events. Team `observedGoalsFor/Against` counts the actual scoring events, including own goals; team `goals` is the sum of individual scorer credits. |
 | Goal attribution | Last distinct ball interaction within 480 ticks (8 seconds), own goal if that actor's team differs from the scoring team. Previous distinct teammate interaction in the same window is an assist. These are heuristics, not official intent/deflection adjudication. |
 | On-field goal difference | Observed goals for minus against while each player is on the field, separate from scorer credit. |
-| Successful kicks | Actual kick impulses applied to disc 0, with actor ID/team, location and before/after velocity. Kick-button presses outside kicking range do not count. Kickoff kicks are included; goal/ended-phase impulses remain raw events but are excluded from counters. |
-| Contact episodes | Actual main-ball/player collision episodes, separate from kicks. Repeated collisions on consecutive simulation ticks count once; a gap of at least one non-contact tick opens another episode. Contact velocity-after is explicitly after the whole physics step. Only kickoff/active episodes enter counters; other phases remain raw events. |
+| Successful kicks | Actual kick impulses applied to disc 0, with actor ID/team, location and before/after velocity. Kick-button presses outside kicking range do not count. Only live-play kicks enter counters and maps, including a kickoff kick that activates play; all other phases remain raw events only. |
+| Contact episodes | Actual main-ball/player collision episodes, separate from kicks. Repeated collisions on consecutive simulation ticks count once; a gap of at least one non-contact tick opens another episode. Contact velocity-after is explicitly after the whole physics step. Only live-play episodes enter counters/maps; other phases remain raw events. |
 | Observed transfers | Kick by A followed within 300 ticks (5 seconds) by the next distinct player interaction B on the same team. Reception can be a physical contact without a kick. Not an inference about intended passes or settled possession. |
 | Transfer receipts | Credit to B for the same linked event. Includes release/reception event IDs and times, endpoints, Euclidean displacement and progress toward the opposing goal. |
 | Turnover proxy | The same release-to-interaction sequence when B is an opponent. Not labelled a tackle, interception, or proven loss of controlled possession. |
 | Progressive transfers | Transfers reducing distance to the opponent's goal centre by at least 10% of goal-to-goal distance. |
 | Transfer network | Directed actor-to-receiver counts and total transfer displacement. |
-| Distance travelled | Sum of before/after positions for active physics steps with the same disc instance. No cross-tick subtraction across administrative teleports; kickoff/goal/pause phases are excluded. |
+| Distance travelled | Sum of before/after positions for active physics steps with the same disc instance. No cross-tick subtraction across administrative teleports; waiting-for-kickoff, goal/pause/ended phases are excluded. |
 | Average/peak speed | Mean/maximum native velocity magnitude during active ticks, converted to world units per second. Not metres or physical human exertion. |
 | Average position | Active-tick mean world position. |
 | Heatmaps | Active occupancy in 10-unit cells, with exact accumulated tick counts. Also event maps for kicks, contacts, transfers, receipts, turnovers, goals and assists. |
-| Kicks/minute | Successful kick count divided by active minutes; null if no active time. Kickoff kicks are included in numerator, so this is an exposure-normalized rate, not active-phase-only kicks. |
+| Kicks/minute | Successful kick count divided by active minutes; null if no active time. Numerator and denominator use the same live-play eligibility rule. |
 | Ball thirds | Three equal longitudinal regions between the centres of the red and blue defended goals, supporting rotated goals and reversed sides. Outer positions belong to the nearest end third. Unavailable if either goal is missing. |
 | Ball proximity | Active ticks with only red, only blue, both teams, or neither team within player radius + ball radius + 4 units. This is explicitly not possession. |
 | Team shape | Active-tick mean width/depth projected along/across the goal-to-goal axis. Includes all on-field players; unavailable without usable goal geometry. |
@@ -138,7 +136,7 @@ preferences and the `engine` URL parameter; URL selection takes precedence.
 Switching engine navigates to a new document, clearing the session-only recording
 library. A valid explicit URL parameter still works when local storage is blocked.
 
-V2 Overview emphasizes active time, loose/contested ball proximity, kicks,
+V2 Overview emphasizes loose/contested ball proximity, kicks,
 contacts, observed/progressive transfers and turnover proxies. Territory uses
 three equal pitch zones. Movement shows team distance and average width/depth.
 Statistics describe the captured play. Unavailable goal geometry is explained inline.
@@ -152,3 +150,9 @@ on-field goal difference. Wide layouts show table and maps side by side.
 Goals retain the shared timeline and native player's eight-second lead-in. A
 view-only adapter reads scores from v2 goal arrays. Export preserves the original
 v2 schema, summary, events, goal attribution and spatial maps.
+
+All displayed statistics use live-play time by default. V2 does not expose a
+separate active-time headline or accumulate all-phase on-field duration/phase-time
+metrics. Raw phases and recording timestamps remain decoder metadata needed for
+filtering and seeking. Metrics version 2 applies the same live-tick rule to time,
+interactions, maps and movement, including the kickoff activation tick.
