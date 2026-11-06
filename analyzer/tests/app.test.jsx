@@ -299,6 +299,8 @@ it('times out only the active file and advances to the next recording', async ()
     });
     expect(FakeWorker.instances).toHaveLength(1);
     const first = FakeWorker.instances[0];
+    const frame = screen.getByTitle('Original HaxBall replay player');
+    act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'ready' } })));
     await act(async () => vi.advanceTimersByTime(120_000));
     expect(first.terminate).toHaveBeenCalled();
     expect(FakeWorker.instances).toHaveLength(2);

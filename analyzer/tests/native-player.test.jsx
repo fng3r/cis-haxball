@@ -76,3 +76,41 @@ it('forwards workspace shortcuts only when the replay is ready and removes them 
   fireEvent.keyDown(window, { key: 'ArrowRight' });
   expect(post).toHaveBeenCalledTimes(8);
 });
+
+it('shows loading until its own player is ready, preserving the frame when loading finishes', () => {
+  render(<NativePlayer file={{ name: 'match.hbr2', arrayBuffer: vi.fn() }} onError={vi.fn()} onStats={vi.fn()} onClose={vi.fn()} />);
+  const frame = screen.getByTitle('Original HaxBall replay player');
+  expect(screen.getByRole('status').textContent).toContain('Preparing your replay');
+  expect(frame.getAttribute('aria-hidden')).toBe('true');
+  act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: window, data: { source: 'haxball-native-player', type: 'ready' } })));
+  expect(screen.getByRole('status')).toBeTruthy();
+  act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'ready' } })));
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.getByTitle('Original HaxBall replay player')).toBe(frame);
+  expect(frame.getAttribute('aria-hidden')).toBe('false');
+});
+
+it('offers a fresh player after an error rather than leaving the loading screen visible', () => {
+  const onError = vi.fn();
+  render(<NativePlayer file={{ name: 'match.hbr2', arrayBuffer: vi.fn() }} onError={onError} onStats={vi.fn()} onClose={vi.fn()} />);
+  const frame = screen.getByTitle('Original HaxBall replay player');
+  act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'error', message: 'Could not open replay.' } })));
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.getByRole('alert').textContent).toContain('Could not open replay.');
+  fireEvent.click(screen.getByRole('button', { name: 'Retry player' }));
+  expect(onError).toHaveBeenLastCalledWith('');
+  expect(screen.queryByRole('alert')).toBeNull();
+  expect(screen.getByRole('status')).toBeTruthy();
+  expect(screen.getByTitle('Original HaxBall replay player')).not.toBe(frame);
+});
+
+it('turns a stalled initialization into a retryable error', () => {
+  vi.useFakeTimers();
+  try {
+    render(<NativePlayer file={{ name: 'match.hbr2', arrayBuffer: vi.fn() }} onError={vi.fn()} onStats={vi.fn()} onClose={vi.fn()} />);
+    act(() => vi.advanceTimersByTime(45_000));
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('alert').textContent).toContain('too long to load');
+    expect(screen.getByRole('button', { name: 'Retry player' })).toBeTruthy();
+  } finally { cleanup(); vi.useRealTimers(); }
+});

@@ -270,3 +270,8 @@ Player maps change only on explicit player-row or statistic clicks. Hovering
 highlights rows without replacing the selected map. Player/map selection survives
 stats-tab changes and resets on game/recording changes. Playtime is plain text,
 not an event-map button. There is no separate pin/unpin state.
+
+The native player is covered by a themed loading screen during iframe/file
+initialization and recording switches. Its ready message reveals the same iframe
+without restarting playback. Errors or a 45-second initialization timeout show
+a retry action; retry mounts a fresh iframe without rerunning analysis.

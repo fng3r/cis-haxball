@@ -4,7 +4,7 @@
 @source "./main.jsx";
 @plugin "daisyui" {
   themes: false;
-  include: properties, rootcolor, rootscrolllock, svg, button, input, textarea, modal, divider, kbd, range, progress, tab, alert, select, table, timeline;
+  include: properties, rootcolor, rootscrolllock, svg, button, input, textarea, modal, divider, kbd, loading, range, progress, tab, alert, select, table, timeline;
   exclude: rootscrollgutter;
 }
 @plugin "daisyui/theme" {
