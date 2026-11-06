@@ -1,6 +1,7 @@
 // Generated from the original game2.js; see legacy/LICENSE.MD and upstream.json.
 import { setNativePlayIcon } from "./play-icon.js";
 import { mountGoalControls } from "./goal-controls.js";
+import { mountFitPitch } from "./viewport.js";
 import { mountGameSync } from "./game-sync.js";
 const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);
 const showStats = () => notify("stats");
@@ -633,7 +634,7 @@ function aa(a) {
   }
   null == a && (a = !1);
   var k = this;
-  aa.N = '<div class=\'dialog settings-view\'><h1>Settings</h1><button data-hook=\'close\'>Close</button><div class=\'tabs\'><button data-hook=\'soundbtn\'>Sound</button><button id=\'video_button\' data-hook=\'videobtn\'>Video</button><button data-hook=\'inputbtn\'>Input</button><button data-hook=\'miscbtn\'>Misc</button></div><div data-hook=\'presskey\' tabindex=\'-1\'><div>Press a key</div></div><div class=\'tabcontents\'><div class=\'section\' data-hook=\'miscsec\'><div class=\'loc\' data-hook=\'loc\'></div><div class=\'loc\' data-hook=\'loc-ovr\'></div><button data-hook=\'loc-ovr-btn\'></button></div><div class=\'section\' data-hook=\'soundsec\'><div data-hook="tsound-main">Sounds enabled</div><div data-hook="tsound-chat">Chat sound enabled</div><div data-hook="tsound-highlight">Nick highlight sound enabled</div><div data-hook="tsound-crowd">Crowd sound enabled</div></div><div class=\'section\' data-hook=\'inputsec\'></div><div class=\'section\' data-hook=\'videosec\'><div>Viewport Mode:<select data-hook=\'viewmode\'><option>Dynamic</option><option>Restricted 840x410</option><option>Full 1x Zoom</option><option>Full 1.25x Zoom</option><option>Full 1.5x Zoom</option><option>Full 1.75x Zoom</option><option>Full 2x Zoom</option><option>Full 2.25x Zoom</option><option>Full 2.5x Zoom</option></select></div><div>FPS Limit:<select data-hook=\'fps\'><option>None (Recommended)</option><option>30</option></select></div><div>Resolution Scaling:<select data-hook=\'resscale\'><option>100%</option><option>75%</option><option>50%</option><option>25%</option></select></div><div>Player To Follow:<select id="selectPlayerToFollow" >' + playersToFollowList() + '</select></div><div data-hook="tvideo-teamcol">Custom team colors enabled</div><div data-hook="tvideo-showindicators">Show chat indicators</div><div data-hook="tvideo-showavatars">Show player avatars</div></div></div></div>';
+  aa.N = '<div class=\'dialog settings-view\'><h1>Settings</h1><button data-hook=\'close\'>Close</button><div class=\'tabs\'><button data-hook=\'soundbtn\'>Sound</button><button id=\'video_button\' data-hook=\'videobtn\'>Video</button><button data-hook=\'inputbtn\'>Input</button><button data-hook=\'miscbtn\'>Misc</button></div><div data-hook=\'presskey\' tabindex=\'-1\'><div>Press a key</div></div><div class=\'tabcontents\'><div class=\'section\' data-hook=\'miscsec\'><div class=\'loc\' data-hook=\'loc\'></div><div class=\'loc\' data-hook=\'loc-ovr\'></div><button data-hook=\'loc-ovr-btn\'></button></div><div class=\'section\' data-hook=\'soundsec\'><div data-hook="tsound-main">Sounds enabled</div><div data-hook="tsound-chat">Chat sound enabled</div><div data-hook="tsound-highlight">Nick highlight sound enabled</div><div data-hook="tsound-crowd">Crowd sound enabled</div></div><div class=\'section\' data-hook=\'inputsec\'></div><div class=\'section\' data-hook=\'videosec\'><div>Viewport Mode:<select data-hook=\'viewmode\'><option>Fit pitch</option><option>Restricted 840x410</option><option>Full 1x Zoom</option><option>Full 1.25x Zoom</option><option>Full 1.5x Zoom</option><option>Full 1.75x Zoom</option><option>Full 2x Zoom</option><option>Full 2.25x Zoom</option><option>Full 2.5x Zoom</option></select></div><div>FPS Limit:<select data-hook=\'fps\'><option>None (Recommended)</option><option>30</option></select></div><div>Resolution Scaling:<select data-hook=\'resscale\'><option>100%</option><option>75%</option><option>50%</option><option>25%</option></select></div><div>Player To Follow:<select id="selectPlayerToFollow" >' + playersToFollowList() + '</select></div><div data-hook="tvideo-teamcol">Custom team colors enabled</div><div data-hook="tvideo-showindicators">Show chat indicators</div><div data-hook="tvideo-showavatars">Show player avatars</div></div></div></div>';
   this.g = v.Ga(aa.N);
   var l = v.Ea(this.g);
   // console.log(l, this.g)
@@ -9434,7 +9435,7 @@ da.prototype = C(m.prototype, {
         h = this.xf * this.zg,
         m = c.S.Ye,
         n = this.sa.width / k;
-      0 < m && n > m && (n = m, k = this.sa.width / m);
+      !this.fitPitch && 0 < m && n > m && (n = m, k = this.sa.width / m);
       m = (this.sa.height - h) / k;
       this.Mr(c, g, n, m, d);
       for (var p = 0, q = a.I; p < q.length;) {
@@ -12000,6 +12001,10 @@ export async function openNativeReplay(bytes) {
   x.Pg.replaceChildren();
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
+  mountFitPitch(nativeController);
+  // Open each recording with the entire field visible. Native view shortcuts
+  // and Settings still select the original fixed zoom modes.
+  n.A.Tb.Xa(-1);
   setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
   nativeGoalControls = mountGoalControls(nativeController.je, replay, seekNativeReplay, tick => notify('goal', tick));
   nativeGameSync = mountGameSync(nativeController.je, replay, index => notify('game', index));

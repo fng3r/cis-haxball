@@ -203,13 +203,13 @@ export default function App() {
 
   return <div className="min-h-screen">
     <header className="border-b border-base-300 bg-base-100">
-      <div className="flex items-center justify-between gap-4 px-4 py-5 sm:px-6">
+      <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">LAB</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
         <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}><span aria-hidden="true">{theme === 'replay-dark' ? '☀' : '☾'}</span></button></div>
       </div>
     </header>
     <input ref={input} type="file" accept=".hbr2" aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files[0]); event.target.value = ''; }} />
-    <main className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+    <main className="grid gap-6 p-4 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="space-y-6">
         <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files[0]); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
           <h3 className="font-semibold">Bring your replay.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop an .hbr2 file here, or choose a recording from your device.</p>
@@ -232,16 +232,16 @@ export default function App() {
           <progress className="progress w-full" value={progress} max="100" />
         </section>}
         <section ref={playerCard} className="scroll-mt-4 overflow-hidden rounded-box border border-base-300 bg-base-100">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-4 sm:px-7">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-3 sm:px-7">
             <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 max-w-64 truncate text-sm font-semibold sm:max-w-96">{game ? filename : 'Every match has a story.'}</h2></div>
             {replay ? <button className="btn btn-sm" onClick={exportStats}>Export statistics ↓</button> : <span className="text-xs text-base-content/45">.hbr2 recordings</span>}
           </div>
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-7 sm:px-10">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sm:px-7">
             <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div>Red team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Home side'}</p></div></div>
-            <div className="text-center"><div className="flex items-center gap-4 font-mono text-4xl font-medium tracking-tight sm:text-5xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div><p className="mt-2 font-mono text-[11px] text-base-content/50">{game ? `GAME ${gameIndex + 1} · ${time(game.gameTicks)}` : 'READY WHEN YOU ARE'}</p></div>
+            <div className="text-center"><div className="flex items-center gap-4 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div><p className="mt-2 font-mono text-[11px] text-base-content/50">{game ? `GAME ${gameIndex + 1} · ${time(game.gameTicks)}` : 'READY WHEN YOU ARE'}</p></div>
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
-          <div className="px-3 pb-5 sm:px-5">
+          <div className="px-3 pb-3">
             {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { cancel(); setRecording(null); setReplay(null); }} />
               : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
           </div>

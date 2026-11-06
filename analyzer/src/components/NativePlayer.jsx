@@ -53,6 +53,6 @@ export default function NativePlayer({ file, games, ref, onError, onStats, onClo
 
   return <div className="overflow-hidden rounded-box bg-neutral">
     {error && <p role="alert" className="p-4 text-sm text-neutral-content">{error}</p>}
-    <iframe ref={frame} title="Original HaxBall replay player" src={`${import.meta.env.BASE_URL}player.html`} className="block h-[max(420px,calc(100dvh-21rem))] w-full border-0" onLoad={load} allow="autoplay; fullscreen" />
+    <iframe ref={frame} title="Original HaxBall replay player" src={`${import.meta.env.BASE_URL}player.html`} className="block h-[max(420px,calc(100dvh-16rem))] w-full border-0" onLoad={load} allow="autoplay; fullscreen" />
   </div>;
 }

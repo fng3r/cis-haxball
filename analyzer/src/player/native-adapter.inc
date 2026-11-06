@@ -33,6 +33,10 @@ export async function openNativeReplay(bytes) {
   x.Pg.replaceChildren();
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
+  mountFitPitch(nativeController);
+  // Open each recording with the entire field visible. Native view shortcuts
+  // and Settings still select the original fixed zoom modes.
+  n.A.Tb.Xa(-1);
   setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
   nativeGoalControls = mountGoalControls(nativeController.je, replay, seekNativeReplay, tick => notify('goal', tick));
   nativeGameSync = mountGameSync(nativeController.je, replay, index => notify('game', index));

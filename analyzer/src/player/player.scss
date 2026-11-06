@@ -9,3 +9,6 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 #status { position: absolute; inset: 0; display: grid; place-content: center; color: #eee; font: 14px sans-serif; }
 #status[hidden] { display: none; }
 [data-hook="playicon"] { display: inline-flex; width: 12px; height: 12px; vertical-align: middle; }
+
+// Keep the log usable without taking height away from the pitch.
+.game-view .chatbox-view { height: 96px; }
