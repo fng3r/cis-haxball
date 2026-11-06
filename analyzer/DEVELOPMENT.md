@@ -250,8 +250,12 @@ outer scoreboard and player chat/buttons. Playback controls remain visible.
 The exit button or Escape restores the workspace without remounting the player.
 Escape from inside the iframe exits focus mode before the native menu handles it.
 
-The player card's ? button or the ? key opens a daisyUI shortcut reference, also
+The player card's keyboard button or the ? key opens a daisyUI shortcut reference, also
 available in focus mode. It lists seek, speed, playback and zoom keys. Native
 1–4 zoom keys require focus inside the player; 0 restores fit-pitch view.
-Playback shortcuts are suspended while a workspace dialog is open. Native chat
-instructions now describe replay controls instead of live-game movement keys.
+Playback shortcuts are suspended while a workspace dialog is open. The native
+chat omits the introductory controls text; controls are listed in the reference.
+
+F toggles focus mode from the page or player. [ and ] activate the existing
+previous/next goal controls, including their eight-second lead-in and boundary
+handling. Holding F does not repeatedly toggle focus mode.

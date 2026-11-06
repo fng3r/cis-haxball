@@ -14,7 +14,7 @@ it('opens the daisyUI reference from its button and the question mark key', () =
   const dialog = screen.getByRole('dialog', { name: 'Keyboard shortcuts' });
   expect(dialog).toHaveClass('modal');
   expect(screen.getByText('Pause / resume')).toBeInTheDocument();
-  expect(screen.getByText('Native zoom modes (player focused)')).toBeInTheDocument();
+  expect(screen.getByText('Native zoom modes')).toBeInTheDocument();
   dialog.open = false;
   fireEvent.keyDown(window, { key: '?', shiftKey: true });
   expect(dialog.open).toBe(true);

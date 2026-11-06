@@ -35,7 +35,7 @@ export async function openNativeReplay(bytes) {
   nativeController = new Vb(replay);
   mountFitPitch(nativeController);
   const instructions = nativeController.j.g.querySelector('.chatbox-view [data-hook=log] > p');
-  if (instructions) instructions.textContent = 'Replay controls: Space — play/pause · ←/→ — seek 5s · ↑/↓ — speed · 0 — fit pitch · 1–4 — zoom · ? — shortcuts.';
+  instructions?.remove();
   // Open each recording with the entire field visible. Native view shortcuts
   // and Settings still select the original fixed zoom modes.
   n.A.Tb.Xa(-1);
@@ -71,7 +71,11 @@ export function seekNativeReplay(tick) {
 
 export function replayHotkey(action) {
   if (!nativeController) return false;
-  if (action === 'reset-zoom') {
+  if (action === 'toggle-focus') {
+    notify('toggle-focus');
+  } else if (action === 'previous-goal' || action === 'next-goal') {
+    nativeController.je.g.querySelector(action === 'previous-goal' ? '[aria-label="Previous goal"]' : '[aria-label="Next goal"]').click();
+  } else if (action === 'reset-zoom') {
     n.A.Tb.Xa(-1);
   } else if (action === 'toggle') {
     nativeController.je.g.querySelector('[data-hook=play]').click();

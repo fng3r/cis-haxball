@@ -1,8 +1,10 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { mountReplayHotkeys } from '../player/hotkeys.js';
 
-export default function NativePlayer({ file, games, ref, focusMode = false, onExitFocus, onError, onStats, onClose, onGoal, onGame }) {
+export default function NativePlayer({ file, games, ref, focusMode = false, onExitFocus, onToggleFocus, onError, onStats, onClose, onGoal, onGame }) {
   const frame = useRef(null);
+  const toggleFocus = useRef(onToggleFocus);
+  toggleFocus.current = onToggleFocus;
   const pendingSeek = useRef(null);
   const ready = useRef(false);
   const [error, setError] = useState('');
@@ -28,6 +30,7 @@ export default function NativePlayer({ file, games, ref, focusMode = false, onEx
         }
       }
       if (event.data.type === 'error') { setError(event.data.message); onError(event.data.message); }
+      if (event.data.type === 'toggle-focus') onToggleFocus?.();
       if (event.data.type === 'exit-focus') onExitFocus?.();
       if (event.data.type === 'stats') onStats();
       if (event.data.type === 'closed') onClose();
@@ -36,9 +39,10 @@ export default function NativePlayer({ file, games, ref, focusMode = false, onEx
     };
     window.addEventListener('message', receive);
     return () => window.removeEventListener('message', receive);
-  }, [games, onError, onStats, onClose, onGoal, onGame, focusMode, onExitFocus]);
+  }, [games, onError, onStats, onClose, onGoal, onGame, focusMode, onExitFocus, onToggleFocus]);
 
   useEffect(() => mountReplayHotkeys(window, action => {
+    if (action === 'toggle-focus') { toggleFocus.current?.(); return; }
     if (!ready.current) return false;
     frame.current?.contentWindow.postMessage({ type: 'hotkey', action }, location.origin);
   }), []);

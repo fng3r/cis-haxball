@@ -18,13 +18,15 @@ it('handles arrows and Space, allows repeated seeks, and cleans up its listener'
     key(window, 'ArrowUp');
     key(window, 'ArrowDown');
     key(window, '0');
+    key(window, 'f'); key(window, 'F', { repeat: true });
+    key(window, '['); key(window, ']');
     for (const keyName of ['1', '2', '3', '4']) expect(key(window, keyName).defaultPrevented).toBe(false);
     key(window, ' ');
     key(window, ' ', { repeat: true });
-    expect(dispatch.mock.calls.flat()).toEqual(['backward', 'forward', 'forward', 'faster', 'slower', 'reset-zoom', 'toggle']);
+    expect(dispatch.mock.calls.flat()).toEqual(['backward', 'forward', 'forward', 'faster', 'slower', 'reset-zoom', 'toggle-focus', 'previous-goal', 'next-goal', 'toggle']);
     unmount();
     expect(key(window, 'ArrowLeft').defaultPrevented).toBe(false);
-    expect(dispatch).toHaveBeenCalledTimes(7);
+    expect(dispatch).toHaveBeenCalledTimes(10);
   } finally { unmount(); }
 });
 
@@ -38,7 +40,7 @@ it('preserves editing, button activation, modified shortcuts, and scrolling befo
     for (const element of container.querySelectorAll('input, textarea, select, span')) {
       expect(key(element, 'ArrowLeft').defaultPrevented).toBe(false);
       key(element, ' ');
-      key(element, '0');
+      key(element, '0'); key(element, 'f'); key(element, '['); key(element, ']');
     }
     key(container.querySelector('button'), ' ');
     for (const modifier of ['ctrlKey', 'metaKey', 'altKey', 'shiftKey']) key(window, 'ArrowRight', { [modifier]: true });

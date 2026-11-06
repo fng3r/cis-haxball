@@ -68,11 +68,11 @@ it('forwards workspace shortcuts only when the replay is ready and removes them 
     data: { source: 'haxball-native-player', type: 'ready' },
   })));
   post.mockClear();
-  for (const [key, action] of [['ArrowLeft', 'backward'], ['ArrowRight', 'forward'], ['ArrowUp', 'faster'], ['ArrowDown', 'slower'], [' ', 'toggle'], ['0', 'reset-zoom']]) {
+  for (const [key, action] of [['ArrowLeft', 'backward'], ['ArrowRight', 'forward'], ['ArrowUp', 'faster'], ['ArrowDown', 'slower'], [' ', 'toggle'], ['0', 'reset-zoom'], ['[', 'previous-goal'], [']', 'next-goal']]) {
     fireEvent.keyDown(window, { key });
     expect(post).toHaveBeenLastCalledWith({ type: 'hotkey', action }, location.origin);
   }
   view.unmount();
   fireEvent.keyDown(window, { key: 'ArrowRight' });
-  expect(post).toHaveBeenCalledTimes(6);
+  expect(post).toHaveBeenCalledTimes(8);
 });

@@ -334,7 +334,8 @@ it('enters and exits focus mode without replacing the native player', async () =
   const worker = await loadFile();
   act(() => worker.send({ type: 'result', result: { games: [game] } }));
   const frame = screen.getByTitle('Original HaxBall replay player');
-  fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
+  fireEvent.keyDown(window, { key: 'f' });
+  fireEvent.keyDown(window, { key: 'f', repeat: true });
   expect(screen.getByRole('button', { name: 'Exit focus mode' })).toHaveAttribute('aria-pressed', 'true');
   expect(screen.queryByRole('tab', { name: 'overview' })).not.toBeInTheDocument();
   expect(document.body.style.overflow).toBe('hidden');
@@ -343,7 +344,7 @@ it('enters and exits focus mode without replacing the native player', async () =
   expect(screen.getByRole('tab', { name: 'overview' })).toBeInTheDocument();
   expect(document.body.style.overflow).not.toBe('hidden');
   fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
-  act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'exit-focus' } })));
+  act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'toggle-focus' } })));
   expect(screen.getByRole('button', { name: 'Focus mode' })).toHaveAttribute('aria-pressed', 'false');
   expect(screen.getByTitle('Original HaxBall replay player')).toBe(frame);
 });

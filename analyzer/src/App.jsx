@@ -236,7 +236,7 @@ export default function App() {
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
           <div className={focusMode ? 'min-h-0 flex-1 p-2' : 'px-3 pb-3'}>
-            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} focusMode={focusMode} onExitFocus={() => setFocusMode(false)} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { setError(''); remove(recording.id); }} />
+            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} focusMode={focusMode} onExitFocus={() => setFocusMode(false)} onToggleFocus={() => setFocusMode(value => !value)} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { setError(''); remove(recording.id); }} />
               : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
           </div>
         </section>
