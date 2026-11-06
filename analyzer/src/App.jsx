@@ -211,9 +211,7 @@ export default function App() {
     <input ref={input} type="file" accept=".hbr2" aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files[0]); event.target.value = ''; }} />
     <main className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="space-y-6">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-base-content/50">Your recording</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Match room</h2></div>
         <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files[0]); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
-          <div className="mb-5 text-3xl font-light text-base-content/40" aria-hidden="true">⇧</div>
           <h3 className="font-semibold">Bring your replay.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop an .hbr2 file here, or choose a recording from your device.</p>
           <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recording</button>
           <p className="mt-3 text-center text-[11px] text-base-content/45">Up to 32 MB · Analyzed on your device</p>
