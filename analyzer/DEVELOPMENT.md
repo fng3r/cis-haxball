@@ -165,7 +165,14 @@ there is no 15 fps playback cap in the application.
 
 ## External replay links
 
-The sidebar accepts current `https://replay.thehax.pl/<id>` links (including
+The upload card offers “Use replay links” after an OR divider. It opens a modal
+accepting multiple links, one per line. Downloads run sequentially; each successful
+download immediately enters the existing analysis queue. Failed links remain for
+retry, and closing/cancelling the modal aborts the current download and skips
+remaining links without removing files already queued. Duplicate links within a
+submission are downloaded once.
+
+The modal accepts current `https://replay.thehax.pl/<id>` links (including
 `/<id>/download`), legacy `https://thehax.pl/forum/powtorki.php?nagranie=<id>`
 links, and VK away.php wrappers around those links. This follows the URL
 resolution in Django's `tournament/replay_stats_client.py`; other hosts are not
