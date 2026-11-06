@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:3000/. The dev server deliberately binds to IPv4 loopback.
+Open http://127.0.0.1:3000/analyzer/. The dev server deliberately binds to IPv4 loopback.
 `npm run dev` launches the Vite development server with hot reload. The port is
 strict so it will not silently change addresses.
 
@@ -28,6 +28,13 @@ npm start
 `npm start` serves the existing `dist/` build using Vite preview; it does not
 build the app or enable hot reload. `npm run preview` remains an equivalent alias.
 For the staging systemd service, use `npm start -- --host 127.0.0.1 --port 3001 --strictPort`.
+When using nvm, set the service PATH to include its Node bin directory; npm uses
+`/usr/bin/env node` and cannot find Node from its absolute npm path alone.
+
+Vite's base is configured as `/analyzer/` for development, builds, and preview.
+`npm run build` needs no extra `--base` flag. When proxying to the preview server,
+nginx must preserve that prefix: use `proxy_pass http://127.0.0.1:3001;` without a
+trailing slash inside the `/analyzer/` location.
 
 The production files are written to `dist/`. Deploy that directory to a static
 host. The old upstream publishing scripts and homepage configuration are absent.

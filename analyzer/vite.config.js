@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+  base: '/analyzer/',
   plugins: [react(), tailwindcss()],
   // Strip obsolete IE star-property hacks from the original player stylesheet.
   css: { lightningcss: { errorRecovery: true } },

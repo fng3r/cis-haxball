@@ -7,7 +7,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000/** and choose an `.hbr2` recording.
+Open **http://127.0.0.1:3000/analyzer/** and choose an `.hbr2` recording.
 
 Use `npm run build` followed by `npm start` to serve the built app.
 

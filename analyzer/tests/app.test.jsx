@@ -107,7 +107,7 @@ describe('local replay workspace', () => {
     worker.send({ type: 'result', result: { games: [game, { ...game, id: 1, stadium: { ...game.stadium, name: 'Second pitch' } }] } });
     await waitFor(() => expect(screen.getByRole('button', { name: /Game 2/ })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /Game 2/ }));
-    expect(screen.getByTitle('Original HaxBall replay player')).toHaveAttribute('src', '/player.html');
+    expect(screen.getByTitle('Original HaxBall replay player')).toHaveAttribute('src', `${import.meta.env.BASE_URL}player.html`);
     expect(document.querySelector('canvas')).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: 'players' }));
     fireEvent.click(screen.getByRole('button', { name: 'Alice' }));
