@@ -12037,7 +12037,9 @@ export function seekNativeReplay(tick) {
 
 export function replayHotkey(action) {
   if (!nativeController) return false;
-  if (action === 'toggle') {
+  if (action === 'reset-zoom') {
+    n.A.Tb.Xa(-1);
+  } else if (action === 'toggle') {
     nativeController.je.g.querySelector('[data-hook=play]').click();
   } else if (action === 'faster' || action === 'slower') {
     nativeController.je.g.querySelector(action === 'faster' ? '[data-hook=spdup]' : '[data-hook=spddn]').click();
