@@ -3,7 +3,7 @@ import NativePlayer from './components/NativePlayer.jsx';
 import PlayerMaps from './components/PlayerMaps.jsx';
 import ThirdsMap from './components/ThirdsMap.jsx';
 import { serializeStats } from './export-stats.js';
-import { MAX_FILE_BYTES } from './engine/analyze.js';
+import { useReplayLibrary } from './useReplayLibrary.js';
 
 export function time(ticks = 0) {
   const seconds = Math.max(0, Math.floor(ticks / 60));
@@ -106,68 +106,27 @@ export default function App() {
     if (meta) meta.content = theme === 'replay' ? '#f3f4f9' : '#171b29';
     try { localStorage.setItem('replay-theme', theme); } catch {}
   }, [theme]);
-  const [replay, setReplay] = useState(null);
-  const [filename, setFilename] = useState('');
+  const { recordings, recording, active, addFiles, cancel, remove, retry, select } = useReplayLibrary();
+  const replay = recording?.result;
+  const filename = recording?.file.name || '';
+  const busy = Boolean(active);
+  const progress = active?.progress || 0;
   const [gameIndex, setGameIndex] = useState(0);
-  const [recording, setRecording] = useState(null);
   const nativePlayer = useRef(null);
   const playerCard = useRef(null), statsCard = useRef(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [tab, setTab] = useState('overview');
-  const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
-  const input = useRef(null), worker = useRef(null), analysisTimeout = useRef(null);
+  const input = useRef(null);
   const game = replay?.games[gameIndex];
 
-  useEffect(() => () => { worker.current?.terminate(); clearTimeout(analysisTimeout.current); }, []);
+  useEffect(() => {
+    setGameIndex(0); setSelectedPlayer(null); setTab('overview');
+  }, [recording?.id]);
 
-  function cancel() {
-    clearTimeout(analysisTimeout.current);
-    worker.current?.terminate();
-    worker.current = null;
-    setBusy(false);
-  }
-
-  async function open(file) {
-    if (!file) return;
-    cancel();
-    setError('');
-    if (!file.name.toLowerCase().endsWith('.hbr2')) { setError('Choose a HaxBall recording with the .hbr2 extension.'); return; }
-    if (file.size > MAX_FILE_BYTES) { setError('Choose a recording smaller than 32 MB.'); return; }
-    setBusy(true); setProgress(0); setReplay(null); setFilename(file.name);
-    setRecording({ file, id: crypto.randomUUID() });
-    let instance;
-    try {
-      instance = new Worker(new URL('./engine/analyze.worker.js', import.meta.url), { type: 'module' });
-    } catch {
-      setError('The analyzer could not start. Use a browser with Web Worker support.');
-      setBusy(false);
-      return;
-    }
-    worker.current = instance;
-    const timeout = setTimeout(() => fail('Analysis took longer than two minutes. Try a shorter recording.'), 120_000);
-    analysisTimeout.current = timeout;
-    function finish() { clearTimeout(timeout); instance.terminate(); if (worker.current === instance) worker.current = null; }
-    function fail(message) {
-      if (worker.current !== instance) { finish(); return; }
-      setError(message); setBusy(false); finish();
-    }
-    instance.onmessage = ({ data }) => {
-      if (worker.current !== instance) return;
-      if (data.type === 'progress') setProgress(data.progress);
-      if (data.type === 'error') fail(data.message);
-      if (data.type === 'result') {
-        setReplay(data.result); setGameIndex(0); setSelectedPlayer(null);
-        setBusy(false); setTab('overview'); finish();
-      }
-    };
-    instance.onerror = event => { event.preventDefault(); fail('The analyzer could not start. Reload the page and try again.'); };
-    try {
-      const buffer = await file.arrayBuffer();
-      if (worker.current === instance) instance.postMessage(buffer, [buffer]);
-    } catch { fail('Could not read the recording. Choose the file again.'); }
+  function open(files) {
+    setError(addFiles(files).join(' '));
   }
 
   function selectGame(index) {
@@ -210,14 +169,27 @@ export default function App() {
         <div className="flex items-center gap-2 sm:gap-5"><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}><span aria-hidden="true">{theme === 'replay-dark' ? '☀' : '☾'}</span></button></div>
       </div>
     </header>
-    <input ref={input} type="file" accept=".hbr2" aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files[0]); event.target.value = ''; }} />
+    <input ref={input} type="file" accept=".hbr2" multiple aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files); event.target.value = ''; }} />
     <main className="grid gap-6 p-4 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="space-y-6 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto">
-        <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files[0]); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
-          <h3 className="font-semibold">Bring your replay.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop an .hbr2 file here, or choose a recording from your device.</p>
-          <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recording</button>
-          <p className="mt-3 text-center text-[11px] text-base-content/45">Up to 32 MB · Analyzed on your device</p>
+        <div onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); open(event.dataTransfer.files); }} className={`rounded-box border border-dashed p-5 ${dragging ? 'border-primary bg-primary/5' : 'border-base-content/25 bg-base-100/50'}`}>
+          <h3 className="font-semibold">Bring your replays.</h3><p className="mb-5 mt-2 text-xs leading-relaxed text-base-content/60">Drop .hbr2 files here, or choose recordings from your device.</p>
+          <button className="btn btn-primary btn-sm w-full" onClick={() => input.current.click()}>Choose recordings</button>
+          <p className="mt-3 text-center text-[11px] text-base-content/45">32 MB per file · Analyzed on your device</p>
         </div>
+        {recordings.length > 0 && <section aria-label="Recordings">
+          <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Recordings</span><span>{recordings.length}</span></div>
+          <div className="space-y-2">{recordings.map(item => <div key={item.id} className={`rounded-box border p-3 ${recording?.id === item.id ? 'border-base-content/30 bg-base-100' : 'border-base-300'}`}>
+            <div className="flex items-start gap-2">
+              <button className="min-w-0 flex-1 rounded-field text-left focus-visible:outline-2" aria-label={`Open recording ${item.file.name}`} aria-pressed={recording?.id === item.id} onClick={() => { setError(''); select(item.id); }}>
+                <span className="block truncate text-xs font-semibold" title={item.file.name}>{item.file.name}</span>
+                <span className={`mt-1 block text-[11px] ${item.status === 'error' ? 'text-error' : 'text-base-content/55'}`}>{item.status === 'ready' ? `${item.result.games.length} games` : item.status === 'analyzing' ? `Analyzing… ${item.progress}%` : item.status === 'error' ? 'Analysis failed' : item.status === 'cancelled' ? 'Cancelled' : 'Queued'}</span>
+              </button>
+              <button className="btn btn-ghost btn-xs btn-square shrink-0" aria-label={`Remove recording ${item.file.name}`} onClick={() => { setError(''); remove(item.id); }}>×</button>
+            </div>
+            {['error', 'cancelled'].includes(item.status) && <button className="btn btn-ghost btn-xs mt-2" aria-label={`Retry analysis of ${item.file.name}`} onClick={() => retry(item.id)}>Retry analysis</button>}
+          </div>)}</div>
+        </section>}
         {replay && <section aria-label="Games in recording">
           <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Games</span><span>{replay.games.length}</span></div>
           <div className="space-y-2">{replay.games.map((item, index) => <button key={item.id} aria-pressed={gameIndex === index} onClick={() => selectGame(index)} className={`w-full rounded-box border p-4 text-left ${gameIndex === index ? 'border-base-content/30 bg-base-100 shadow-sm' : 'border-transparent hover:bg-base-100/60'}`}>
@@ -229,8 +201,9 @@ export default function App() {
       </aside>
       <div className="min-w-0 space-y-6">
         {error && <div role="alert" className="alert alert-error"><span>{error}</span><button className="btn btn-sm" onClick={() => setError('')}>Dismiss</button></div>}
+        {recording?.status === 'error' && <div role="alert" className="alert alert-error"><span>{recording.file.name}: {recording.error}</span></div>}
         {busy && <section className="rounded-box border border-base-300 bg-base-100 p-5" aria-live="polite" aria-busy="true">
-          <div className="mb-3 flex items-center justify-between gap-4"><div><h2 className="font-semibold">Analyzing recording… {progress}%</h2><p className="mt-1 truncate text-xs text-base-content/60">{filename}</p></div><button className="btn btn-sm" onClick={cancel}>Cancel</button></div>
+          <div className="mb-3 flex items-center justify-between gap-4"><div><h2 className="font-semibold">Analyzing recording… {progress}%</h2><p className="mt-1 truncate text-xs text-base-content/60">{active.file.name} · {recordings.filter(item => item.status === 'queued').length} queued</p></div><button className="btn btn-sm" title="Cancel current and queued analyses" onClick={cancel}>Cancel</button></div>
           <progress className="progress w-full" value={progress} max="100" />
         </section>}
         <section ref={playerCard} className="scroll-mt-4 overflow-hidden rounded-box border border-base-300 bg-base-100">
@@ -244,7 +217,7 @@ export default function App() {
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
           <div className="px-3 pb-3">
-            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { cancel(); setRecording(null); setReplay(null); }} />
+            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { setError(''); remove(recording.id); }} />
               : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
           </div>
         </section>

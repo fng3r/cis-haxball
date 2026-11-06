@@ -41,7 +41,8 @@ host. The old upstream publishing scripts and homepage configuration are absent.
 
 ## Supported workflow
 
-- Choose or drop a local `.hbr2` recording, with progress, cancellation, and errors.
+- Choose or drop multiple local `.hbr2` recordings at once, with per-file progress and errors.
+- Switch between cached recordings, retry failed/cancelled analyses, and remove files.
 - Switch between games in a recording, including changes of red/blue sides.
 - Play/pause, restart, seek and change speed using the original HaxBall player.
 - Compare possession, kicks, completed passes, shots on goal and ball territory.
@@ -161,6 +162,33 @@ recorded alongside the recordings. UI tests run in jsdom. Native-player tests co
 seek queue and message isolation. Browser checks cover native playback and goal
 seeking. The original canvas renderer was observed drawing at display cadence;
 there is no 15 fps playback cap in the application.
+
+## Multiple recordings and limits
+
+The file picker and drop zone accept multiple recordings. Additional selections
+append to the current library without interrupting the selected replay. Analysis
+runs sequentially in disposable workers; only one native player is mounted.
+Results stay associated with their original file, and switching files reuses the
+cached statistics while restarting native playback at the beginning. Games and
+JSON export apply to the selected recording; recordings are not merged.
+
+A failed or timed-out file does not stop the queue. Cancel stops the current and
+all queued analyses, preserving completed results. Each cancelled or failed item
+can be retried. Removing an active item terminates its worker and advances the
+queue; removing any item releases its stored file/result references. Late worker
+messages and file reads cannot update a removed or cancelled job.
+
+Existing limits apply independently to each file:
+
+- At most 32 MiB compressed input and 128 MiB decompressed replay data.
+- Replay format version 3, with at most one hour of recording ticks.
+- Two-minute timeout per analysis, including reading the file.
+
+There is no fixed file-count limit. Analysis time grows with recording duration,
+player count and physics complexity. Retained results and the active player still
+consume browser memory; the decompressed-data limit is not a total memory bound.
+Remove recordings when finished to release their cached data. The library is
+session-only and disappears on refresh; files are not uploaded or persisted.
 
 ## Spatial analysis and exports
 

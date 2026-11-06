@@ -168,3 +168,141 @@ describe('local replay workspace', () => {
     expect(screen.getByText('Every match has a story.')).toBeInTheDocument();
   });
 });
+
+function recordingFile(name) {
+  const file = new File(['replay'], name);
+  file.arrayBuffer = vi.fn(async () => new ArrayBuffer(16));
+  return file;
+}
+async function addRecordings(files, drop = false) {
+  if (drop) fireEvent.drop(screen.getByText('Bring your replays.').parentElement, { dataTransfer: { files } });
+  else fireEvent.change(screen.getByLabelText('Open HaxBall replay'), { target: { files } });
+  await waitFor(() => expect(FakeWorker.instances.at(-1).postMessage).toHaveBeenCalled());
+  return FakeWorker.instances.at(-1);
+}
+
+describe('multiple recordings', () => {
+  it('analyzes one file at a time and switches cached results without mixing games', async () => {
+    render(<App />);
+    expect(screen.getByLabelText('Open HaxBall replay')).toHaveAttribute('multiple');
+    const first = await addRecordings([recordingFile('first.hbr2'), recordingFile('second.hbr2')]);
+    expect(FakeWorker.instances).toHaveLength(1);
+    act(() => first.send({ type: 'result', result: { games: [game, { ...game, id: 1 }] } }));
+    await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
+    const second = FakeWorker.instances[1];
+    await waitFor(() => expect(second.postMessage).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: /Game 2/ }));
+    act(() => second.send({ type: 'result', result: { games: [{ ...game, goals: [] }] } }));
+    expect(screen.getByRole('button', { name: /Game 2/ })).toHaveAttribute('aria-pressed', 'true');
+    const frame = screen.getByTitle('Original HaxBall replay player');
+    fireEvent.click(screen.getByRole('button', { name: 'Open recording second.hbr2' }));
+    expect(screen.queryByRole('button', { name: /Game 2/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'goals · 0' })).toBeInTheDocument();
+    expect(screen.getByTitle('Original HaxBall replay player')).not.toBe(frame);
+    fireEvent.click(screen.getByRole('button', { name: 'Open recording first.hbr2' }));
+    expect(screen.getByRole('button', { name: /Game 2/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'goals · 1' })).toBeInTheDocument();
+    expect(FakeWorker.instances).toHaveLength(2);
+    expect(screen.getAllByTitle('Original HaxBall replay player')).toHaveLength(1);
+  });
+
+  it('accepts multiple dropped files and continues after an individual analysis fails', async () => {
+    render(<App />);
+    const first = await addRecordings([recordingFile('broken.hbr2'), recordingFile('good.hbr2')], true);
+    act(() => first.send({ type: 'error', message: 'Damaged recording.' }));
+    await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
+    const second = FakeWorker.instances[1];
+    await waitFor(() => expect(second.postMessage).toHaveBeenCalled());
+    act(() => second.send({ type: 'result', result: { games: [game] } }));
+    expect(screen.getByRole('alert')).toHaveTextContent('broken.hbr2: Damaged recording.');
+    fireEvent.click(screen.getByRole('button', { name: 'Open recording good.hbr2' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Game 1/ })).toBeInTheDocument();
+  });
+
+  it('validates each file independently while retaining valid files from the batch', async () => {
+    render(<App />);
+    const large = recordingFile('large.hbr2');
+    Object.defineProperty(large, 'size', { value: 33 * 1024 * 1024 });
+    await addRecordings([recordingFile('notes.txt'), large, recordingFile('good.hbr2')]);
+    expect(screen.getByRole('alert')).toHaveTextContent('notes.txt:');
+    expect(screen.getByRole('alert')).toHaveTextContent('large.hbr2:');
+    expect(screen.getByRole('button', { name: 'Open recording good.hbr2' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open recording large.hbr2' })).not.toBeInTheDocument();
+    expect(FakeWorker.instances).toHaveLength(1);
+  });
+
+  it('cancels the queue, ignores late messages and can retry a cancelled recording', async () => {
+    render(<App />);
+    const first = await addRecordings([recordingFile('first.hbr2'), recordingFile('second.hbr2')]);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    act(() => first.send({ type: 'result', result: { games: [game] } }));
+    expect(first.terminate).toHaveBeenCalled();
+    expect(FakeWorker.instances).toHaveLength(1);
+    expect(screen.getAllByText('Cancelled')).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry analysis of second.hbr2' }));
+    await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
+    await waitFor(() => expect(FakeWorker.instances[1].postMessage).toHaveBeenCalled());
+  });
+
+  it('removes an active recording, advances the queue and ignores the removed result', async () => {
+    render(<App />);
+    const first = await addRecordings([recordingFile('first.hbr2'), recordingFile('second.hbr2')]);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove recording first.hbr2' }));
+    await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
+    expect(first.terminate).toHaveBeenCalled();
+    act(() => first.send({ type: 'result', result: { games: [game] } }));
+    expect(screen.queryByRole('button', { name: 'Open recording first.hbr2' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open recording second.hbr2' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
+  });
+
+  it('adds more files without replacing the selected recording or restarting its player', async () => {
+    const view = render(<App />);
+    const first = await addRecordings([recordingFile('first.hbr2')]);
+    act(() => first.send({ type: 'result', result: { games: [game] } }));
+    const frame = screen.getByTitle('Original HaxBall replay player');
+    const second = await addRecordings([recordingFile('second.hbr2')]);
+    expect(FakeWorker.instances).toHaveLength(2);
+    expect(screen.getByTitle('Original HaxBall replay player')).toBe(frame);
+    expect(screen.getByRole('button', { name: 'Open recording first.hbr2' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /Game 1/ })).toBeInTheDocument();
+    view.unmount();
+    expect(second.terminate).toHaveBeenCalled();
+    act(() => second.send({ type: 'result', result: { games: [game] } }));
+    expect(FakeWorker.instances).toHaveLength(2);
+  });
+});
+
+it('continues the batch after an unreadable file', async () => {
+  render(<App />);
+  const broken = recordingFile('unreadable.hbr2');
+  broken.arrayBuffer.mockRejectedValue(new Error('Read failed'));
+  await addRecordings([broken, recordingFile('good.hbr2')]);
+  await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
+  expect(FakeWorker.instances[0].terminate).toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('Could not read the recording.');
+  expect(FakeWorker.instances[1].postMessage).toHaveBeenCalled();
+});
+
+it('times out only the active file and advances to the next recording', async () => {
+  vi.useFakeTimers();
+  try {
+    render(<App />);
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Open HaxBall replay'), {
+        target: { files: [recordingFile('slow.hbr2'), recordingFile('next.hbr2')] },
+      });
+    });
+    expect(FakeWorker.instances).toHaveLength(1);
+    const first = FakeWorker.instances[0];
+    await act(async () => vi.advanceTimersByTime(120_000));
+    expect(first.terminate).toHaveBeenCalled();
+    expect(FakeWorker.instances).toHaveLength(2);
+    expect(FakeWorker.instances[1].postMessage).toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Analysis took longer than two minutes.');
+    act(() => first.send({ type: 'result', result: { games: [game] } }));
+    expect(screen.queryByRole('button', { name: /Game 1/ })).not.toBeInTheDocument();
+  } finally { cleanup(); vi.useRealTimers(); }
+});
