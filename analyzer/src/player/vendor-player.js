@@ -1,6 +1,7 @@
 // Generated from the original game2.js; see legacy/LICENSE.MD and upstream.json.
 import { setNativePlayIcon } from "./play-icon.js";
 import { mountGoalControls } from "./goal-controls.js";
+import { mountGameSync } from "./game-sync.js";
 const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);
 const showStats = () => notify("stats");
 const setGameStats = () => {}; const dispatchPlayerList = () => {}; const dispatchPlayerPos = () => {};
@@ -11967,6 +11968,7 @@ r.sn = {
 let nativeController;
 let nativeResources;
 let nativeGoalControls;
+let nativeGameSync;
 
 async function prepareNativeResources() {
   if (!nativeResources) {
@@ -12000,6 +12002,7 @@ export async function openNativeReplay(bytes) {
   nativeController = new Vb(replay);
   setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
   nativeGoalControls = mountGoalControls(nativeController.je, replay, seekNativeReplay, tick => notify('goal', tick));
+  nativeGameSync = mountGameSync(nativeController.je, replay, index => notify('game', index));
   nativeController.je.de = () => {
     nativeController.ia();
     x.Pg.replaceChildren();
@@ -12011,6 +12014,7 @@ export async function openNativeReplay(bytes) {
 }
 
 export function setNativeGoals(ticks) { nativeGoalControls?.setGoals(ticks); }
+export function setNativeGames(starts) { nativeGameSync?.setGames(starts); }
 export function seekNativeGoal(tick) { nativeGoalControls?.seekGoal(tick); }
 
 export function seekNativeReplay(tick) {

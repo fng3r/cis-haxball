@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-export default function NativePlayer({ file, games, ref, onError, onStats, onClose, onGoal }) {
+export default function NativePlayer({ file, games, ref, onError, onStats, onClose, onGoal, onGame }) {
   const frame = useRef(null);
   const pendingSeek = useRef(null);
   const ready = useRef(false);
@@ -10,7 +10,7 @@ export default function NativePlayer({ file, games, ref, onError, onStats, onClo
     else frame.current?.contentWindow.postMessage({ type, tick }, location.origin);
   }
   function sendGoals() {
-    frame.current?.contentWindow.postMessage({ type: 'goals', ticks: (games || []).flatMap(game => game.goals.map(goal => goal.tick)) }, location.origin);
+    frame.current?.contentWindow.postMessage({ type: 'goals', ticks: (games || []).flatMap(game => game.goals.map(goal => goal.tick)), starts: (games || []).map(game => game.startTick || 0) }, location.origin);
   }
   useImperativeHandle(ref, () => ({ seek: tick => sendSeek('seek', tick), seekGoal: tick => sendSeek('seek-goal', tick) }), []);
   useEffect(() => { if (ready.current) sendGoals(); }, [games]);
@@ -29,10 +29,11 @@ export default function NativePlayer({ file, games, ref, onError, onStats, onClo
       if (event.data.type === 'stats') onStats();
       if (event.data.type === 'closed') onClose();
       if (event.data.type === 'goal') onGoal?.(event.data.message);
+      if (event.data.type === 'game') onGame?.(event.data.message);
     };
     window.addEventListener('message', receive);
     return () => window.removeEventListener('message', receive);
-  }, [games, onError, onStats, onClose, onGoal]);
+  }, [games, onError, onStats, onClose, onGoal, onGame]);
 
   async function load() {
     ready.current = false;

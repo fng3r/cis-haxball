@@ -18,6 +18,7 @@ await writeFile(new URL('src/player/vendor-player.js', root),
   '// Generated from the original game2.js; see legacy/LICENSE.MD and upstream.json.\n' +
   'import { setNativePlayIcon } from "./play-icon.js";\n' +
   'import { mountGoalControls } from "./goal-controls.js";\n' +
+  'import { mountGameSync } from "./game-sync.js";\n' +
   'const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);\n' +
   'const showStats = () => notify("stats");\n' +
   'const setGameStats = () => {}; const dispatchPlayerList = () => {}; const dispatchPlayerPos = () => {};\n' +

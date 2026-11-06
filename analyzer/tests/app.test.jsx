@@ -41,6 +41,24 @@ async function loadFile() {
 }
 
 describe('local replay workspace', () => {
+  it('switches game statistics on native timeline seeks and back to the first game on reset', async () => {
+    render(<App />);
+    const worker = await loadFile();
+    act(() => worker.send({ type: 'result', result: { games: [game, { ...game, id: 1, startTick: 10000 }] } }));
+    const frame = screen.getByTitle('Original HaxBall replay player');
+    function playerGame(index) {
+      act(() => window.dispatchEvent(new MessageEvent('message', {
+        origin: location.origin, source: frame.contentWindow,
+        data: { source: 'haxball-native-player', type: 'game', message: index },
+      })));
+    }
+    playerGame(1);
+    expect(screen.getByRole('button', { name: /Game 2/ })).toHaveAttribute('aria-pressed', 'true');
+    playerGame(0);
+    expect(screen.getByRole('button', { name: /Game 1/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /Game 2/ })).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('keeps game selection in sync when native goal navigation crosses games', async () => {
     render(<App />);
     const worker = await loadFile();

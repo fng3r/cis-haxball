@@ -176,7 +176,10 @@ export default function App() {
   }
   function onPlayerGoal(tick) {
     const index = replay?.games.findIndex(game => game.goals.some(goal => goal.tick === tick));
-    if (index >= 0 && index !== gameIndex) {
+    onPlayerGame(index);
+  }
+  function onPlayerGame(index) {
+    if (Number.isInteger(index) && index >= 0 && index < (replay?.games.length || 0) && index !== gameIndex) {
       setGameIndex(index);
       setSelectedPlayer(null);
     }
@@ -231,7 +234,7 @@ export default function App() {
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
           <div className="px-3 pb-5 sm:px-5">
-            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onError={setError} onStats={() => setTab('overview')} onClose={() => { cancel(); setRecording(null); setReplay(null); }} />
+            {recording ? <NativePlayer key={recording.id} ref={nativePlayer} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={() => setTab('overview')} onClose={() => { cancel(); setRecording(null); setReplay(null); }} />
               : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
           </div>
         </section>

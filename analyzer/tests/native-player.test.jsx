@@ -19,10 +19,10 @@ it('sends goals from every game and queues a timeline goal seek until the player
     origin: location.origin, source: frame.contentWindow,
     data: { source: 'haxball-native-player', type: 'ready' },
   })));
-  expect(post).toHaveBeenCalledWith({ type: 'goals', ticks: [1200, 3600] }, location.origin);
+  expect(post).toHaveBeenCalledWith({ type: 'goals', ticks: [1200, 3600], starts: [0, 0] }, location.origin);
   expect(post).toHaveBeenLastCalledWith({ type: 'seek-goal', tick: 3600 }, location.origin);
   view.rerender(<NativePlayer ref={ref} {...props} games={[...games, { goals: [{ tick: 5000 }] }]} />);
-  expect(post).toHaveBeenLastCalledWith({ type: 'goals', ticks: [1200, 3600, 5000] }, location.origin);
+  expect(post).toHaveBeenLastCalledWith({ type: 'goals', ticks: [1200, 3600, 5000], starts: [0, 0, 0] }, location.origin);
 });
 
 it('passes the original recording to the player and queues seeks until it is ready', async () => {
