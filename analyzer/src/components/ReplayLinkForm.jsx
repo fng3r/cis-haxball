@@ -26,7 +26,7 @@ export default function ReplayLinkForm({ onFiles }) {
     try {
       for (const [index, link] of links.entries()) {
         if (controller.signal.aborted) return;
-        setProgress(`Downloading replay ${index + 1} of ${links.length}…`);
+        setProgress(`Downloading replays: ${index + 1} of ${links.length}…`);
         try {
           const file = await fetchThehaxReplay(link, { signal: controller.signal });
           if (controller.signal.aborted) return;
