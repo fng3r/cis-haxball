@@ -12034,6 +12034,8 @@ export function replayHotkey(action) {
   if (!nativeController) return false;
   if (action === 'toggle') {
     nativeController.je.g.querySelector('[data-hook=play]').click();
+  } else if (action === 'faster' || action === 'slower') {
+    nativeController.je.g.querySelector(action === 'faster' ? '[data-hook=spdup]' : '[data-hook=spddn]').click();
   } else if (action === 'backward' || action === 'forward') {
     const replay = nativeController.ya;
     const position = (replay.Fd > 0 ? replay.Fd : replay.Qb) / replay.mh;

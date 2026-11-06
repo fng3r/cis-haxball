@@ -3,7 +3,7 @@ export function mountReplayHotkeys(target, dispatch) {
   function onKeyDown(event) {
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
     if (event.target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="slider"], [role="textbox"]')) return;
-    const action = { ArrowLeft: 'backward', ArrowRight: 'forward', ' ': 'toggle' }[event.key];
+    const action = { ArrowLeft: 'backward', ArrowRight: 'forward', ArrowUp: 'faster', ArrowDown: 'slower', ' ': 'toggle' }[event.key];
     if (!action) return;
     // Let Space activate focused buttons and links normally.
     if (action === 'toggle' && event.target?.closest?.('button, a, [role="button"]')) return;

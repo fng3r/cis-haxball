@@ -15,12 +15,14 @@ it('handles arrows and Space, allows repeated seeks, and cleans up its listener'
     expect(key(window, 'ArrowLeft').defaultPrevented).toBe(true);
     key(window, 'ArrowRight');
     key(window, 'ArrowRight', { repeat: true });
+    key(window, 'ArrowUp');
+    key(window, 'ArrowDown');
     key(window, ' ');
     key(window, ' ', { repeat: true });
-    expect(dispatch.mock.calls.flat()).toEqual(['backward', 'forward', 'forward', 'toggle']);
+    expect(dispatch.mock.calls.flat()).toEqual(['backward', 'forward', 'forward', 'faster', 'slower', 'toggle']);
     unmount();
     expect(key(window, 'ArrowLeft').defaultPrevented).toBe(false);
-    expect(dispatch).toHaveBeenCalledTimes(4);
+    expect(dispatch).toHaveBeenCalledTimes(6);
   } finally { unmount(); }
 });
 
