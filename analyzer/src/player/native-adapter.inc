@@ -31,7 +31,7 @@ export async function openNativeReplay(bytes) {
   x.Pg.replaceChildren();
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
-  nativeController.je.g.querySelector('[data-hook=playicon]').textContent = '⏵';
+  setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
   nativeController.je.de = () => {
     nativeController.ia();
     x.Pg.replaceChildren();

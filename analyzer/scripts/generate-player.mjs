@@ -12,9 +12,11 @@ source = source.replace(/u\.qp\(\)\s*$/, '');
 // Only initialize the native transport at paused 1x. Leave its RAF loop,
 // interpolation, rendering, seek implementation, and controls unchanged.
 source = source.replace('var e = !0,\n    f = 8,', 'var e = !1,\n    f = 2,');
+source = source.replace("e ? k.innerHTML = '⏸' : k.innerHTML = '⏵';", 'setNativePlayIcon(k, e);');
 const adapter = await readFile(new URL('src/player/native-adapter.inc', root), 'utf8');
 await writeFile(new URL('src/player/vendor-player.js', root),
   '// Generated from the original game2.js; see legacy/LICENSE.MD and upstream.json.\n' +
+  'import { setNativePlayIcon } from "./play-icon.js";\n' +
   'const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);\n' +
   'const showStats = () => notify("stats");\n' +
   'const setGameStats = () => {}; const dispatchPlayerList = () => {}; const dispatchPlayerPos = () => {};\n' +

@@ -1,4 +1,5 @@
 // Generated from the original game2.js; see legacy/LICENSE.MD and upstream.json.
+import { setNativePlayIcon } from "./play-icon.js";
 const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);
 const showStats = () => notify("stats");
 const setGameStats = () => {}; const dispatchPlayerList = () => {}; const dispatchPlayerPos = () => {};
@@ -1012,7 +1013,7 @@ function ha(a) {
       a.toggle('icon-play', !e);
       a.toggle('icon-pause', e);
     */
-    e ? k.innerHTML = '⏸' : k.innerHTML = '⏵';
+    setNativePlayIcon(k, e);
     b()
   };
   d.get('spdup').onclick = function () {
@@ -11995,7 +11996,7 @@ export async function openNativeReplay(bytes) {
   x.Pg.replaceChildren();
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
-  nativeController.je.g.querySelector('[data-hook=playicon]').textContent = '⏵';
+  setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
   nativeController.je.de = () => {
     nativeController.ia();
     x.Pg.replaceChildren();
