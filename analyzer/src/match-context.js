@@ -37,7 +37,7 @@ export function contextURL(href = window.location.href) {
 
 export async function fetchMatchContext(url, signal) {
   const response = await fetch(url, { signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]), credentials: 'omit', referrerPolicy: 'no-referrer' });
-  if (response.status === 409) throw new Error('Django has not prepared this match yet. Retry after its statistics have been processed.');
+  if (response.status === 409) throw new Error('Match is not prepared yet. Retry after its statistics have been processed.');
   if (!response.ok) throw new Error(`Match context unavailable (HTTP ${response.status}).`);
   const reader = response.body?.getReader();
   if (!reader) throw new Error('Empty match context response.');
