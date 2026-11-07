@@ -1,6 +1,6 @@
-{% if current_replay_stats.recordings %}
+{% if current_replay_stats.recordings and replay_stats_status %}
   <div class="tw:mb-3 tw:flex tw:gap-2">
-    <a href="?stats=current#match-replay-stats" class="tw:btn tw:btn-sm">Replay Analyzer</a>
+    <a href="?stats=current#match-replay-stats" class="tw:btn tw:btn-sm">Текущая статистика</a>
     {% if replay_stats_status %}<a href="?stats=legacy#match-replay-stats" class="tw:btn tw:btn-sm">Архивная статистика</a>{% endif %}
   </div>
 {% endif %}

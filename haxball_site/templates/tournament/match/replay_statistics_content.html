@@ -50,7 +50,8 @@
       <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-x-2 tw:gap-y-1 tw:text-sm tw:text-base-content/80">
         <i class="fa fa-line-chart tw:text-primary" aria-hidden="true"></i>
         <span>
-          {% if agg.is_current %}Статистика Replay Analyzer · Original{% else %}
+          {% if agg.is_current %}Статистика построена на данных, полученных из
+          <a href="{{ analyzer_url }}" target="_blank" rel="noopener" class="tw:link tw:link-primary tw:no-underline">Replay Analyzer</a>{% else %}
           Статистика построена на данных, полученных из
           <a href="https://replay.hax.ma" target="_blank" rel="noopener" class="tw:link tw:link-primary tw:no-underline">Haxball Replay Analyzer v2.0</a>{% endif %}
         </span>
