@@ -161,7 +161,6 @@ export default function App() {
   }
   function showStats() {
     setFocusMode(false);
-    setTab('overview');
     requestAnimationFrame(() => scrollToCard(statsCard));
   }
   function seekGoal(tick) {
