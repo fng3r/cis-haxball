@@ -187,7 +187,7 @@ export default function App() {
   return <div className="min-h-screen">
     <header className={focusMode ? 'hidden' : 'border-b border-base-300 bg-base-100'}>
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">LAB</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
+        <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">ANALYZER</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
         <div className="flex items-center gap-2 sm:gap-5"><EngineSwitcher engine={engine} /><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}>{theme === 'replay-dark' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button></div>
       </div>
     </header>
