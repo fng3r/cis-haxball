@@ -323,12 +323,12 @@ export default function App() {
             {replay && <button className="btn btn-sm" onClick={exportStats}><Download className="size-4" aria-hidden="true" />Export statistics</button>}
             </div>
           </div>
-          <div className={focusMode ? 'hidden' : 'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3 sm:px-7'}>
+          <div className={focusMode ? 'hidden' : 'grid grid-cols-[minmax(0,1fr)_minmax(0,4fr)_minmax(0,1fr)] items-center gap-3 px-5 py-3 sm:px-7'}>
             <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div>Red team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Red side'}</p></div></div>
-            <div className="min-w-0 text-center" aria-label="Replay scoreboard"><div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
-              {redIdentity && <TeamIdentity team={redIdentity} logoAfter={redIdentity === activeMatchContext?.teams.away} className="max-w-full text-xl font-semibold sm:max-w-[35%] sm:text-3xl" logoClassName="size-7 sm:size-9" />}
-              <div className="flex shrink-0 items-center justify-center gap-3 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div>
-              {blueIdentity && <TeamIdentity team={blueIdentity} logoAfter={blueIdentity === activeMatchContext?.teams.away} className="max-w-full text-xl font-semibold sm:max-w-[35%] sm:text-3xl" logoClassName="size-7 sm:size-9" />}
+            <div className="min-w-0 text-center" aria-label="Replay scoreboard"><div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-5">
+              {redIdentity && <TeamIdentity team={redIdentity} logoAfter={redIdentity === activeMatchContext?.teams.away} className="max-w-full justify-self-end text-right text-xl font-semibold sm:text-3xl" logoClassName="size-7 sm:size-9" />}
+              <div className="col-start-2 flex items-center justify-center gap-3 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div>
+              {blueIdentity && <TeamIdentity team={blueIdentity} logoAfter={blueIdentity === activeMatchContext?.teams.away} className="max-w-full justify-self-start text-left text-xl font-semibold sm:text-3xl" logoClassName="size-7 sm:size-9" />}
             </div>{game && <p className="mt-2 font-mono text-[11px] text-base-content/50">{currentPart ? gameLabel : `GAME ${gameIndex + 1}`} · {time(game.gameTicks ?? game.activeTicks)}</p>}</div>
             <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Blue side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
