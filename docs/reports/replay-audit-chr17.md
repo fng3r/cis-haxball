@@ -13,6 +13,21 @@ Proposals: 231 retain, 14 exclusion candidates, 1 retain pending review.
 
 Observed major protocol mismatches: 0. That branch, split-half cases and golden-goal overtime are covered by synthetic tests but need real examples before claiming validation.
 
+## User review — 2026-11-08
+
+The findings below annotate the original read-only snapshot. They do not change saved inclusion decisions or ingestion policy.
+
+- **6864, recording 1 / game 2, part 50:** exclusion confirmed. The 2.70-second scored game is irrelevant.
+- **6922, recording 1 / game 2, part 108:** exclusion confirmed. The 143.57-second scored game between two full halves is irrelevant.
+- **6997:** retain both captured games. The first half was recorded after play had already started; the rest is valid. The duration and score gaps are explained by the missing beginning, not an irrelevant game.
+- **6883:** two fair-play goals confirmed; retain both games. The user's message says “6683”; this is interpreted as 6883 from the review list, pending any correction.
+- **6890:** two fair-play goals and one goal after the eight-minute half limit confirmed; retain both games. The diagnostic score already omits the late goal, leaving the fair-play difference.
+- **6944:** two fair-play goals confirmed; retain both games.
+- **7002:** two fair-play goals confirmed; retain both games.
+- **6913:** still awaiting confirmation of the extra goal for each team.
+
+These confirmations support the two newly proposed exclusions and the decision to retain plausible partial recordings. They also demonstrate why score equality must not determine game inclusion. Roster-mismatch, split-half and golden-goal rules still need real-case validation.
+
 ## How to read this experiment
 
 - Exclusion is a recommendation, never an applied edit. Raw results and historical data are untouched.
@@ -22,7 +37,7 @@ Observed major protocol mismatches: 0. That branch, split-half cases and golden-
 - When two full halves are absent, adjacent groups of 2–4 shorter games totaling 8:00±15s are possible continuations, retained for review. Missing halves never justify including an obviously unrelated game.
 - Only goal events through 8:00 per retained game enter the diagnostic score. Later goals do not. Fair-play goals can still differ from the report. Score mismatch requests review, never exclusion.
 - Source-list order is provisional across recordings. No native clock-offset/end-reason metadata is available in the stored export; continuation and golden-goal classification remain tentative. The score for split halves is also tentative because the eight-minute boundary spans segments.
-- Saved inclusion is shown separately: it may be a deliberate correction. No training labels or manual ground truth exist yet, so this is a consistency audit, not a measured accuracy claim.
+- Saved inclusion is shown separately: it may be a deliberate correction. The automated snapshot did not use reviewer labels; subsequent confirmations are recorded above. This remains a consistency audit, not a measured accuracy claim.
 - Technical results are exempt from score/coverage checks. Confirmed exclusions already matching saved decisions are listed in the exclusion appendix, not counted as outstanding review cases.
 
 ## Review index
