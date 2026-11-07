@@ -72,9 +72,7 @@ def statistics(match, request=None):
         )
     payload = MatchReplayStatsAggregator(match=match, parts=adapted).build()
     payload['is_current'] = True
-    payload['replay_links'] = [
-        {'label': 'Открыть весь матч в анализаторе', 'analyzer_url': analyzer_link(match, request)}
-    ]
+    payload['replay_links'] = [{'label': 'Открыть матч в анализаторе', 'analyzer_url': analyzer_link(match, request)}]
     for summary, part in zip(payload['parts_summary'], parts):
         summary['analyzer_url'] = analyzer_link(match, request, part)
         by_side = {row.side: row for row in part.game.team_stats.all()}
