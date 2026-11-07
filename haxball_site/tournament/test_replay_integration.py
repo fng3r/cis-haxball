@@ -557,3 +557,23 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertContains(response, 'Статистика загружена частично.')
         self.assertNotContains(response, 'Не удалось обновить одну из записей')
         self.assertNotContains(response, 'Нет выбранных частей с доступной статистикой')
+
+    def test_generated_overtime_parts_use_bracketed_duplicate_labels_in_both_apps(self):
+        raw = copy.deepcopy(self.result)
+        for game_id in (2, 3, 4):
+            raw['games'].append({**copy.deepcopy(raw['games'][0]), 'id': game_id})
+        self.seed(raw)
+        self.assertEqual(
+            [part.label for part in active_parts(self.match)],
+            ['1 тайм', '2 тайм', 'Доп. время [1]', 'Доп. время [2]', 'Доп. время [3]'],
+        )
+        expected = ['1 тайм', '2 тайм', 'Доп. время [1]', 'Доп. время [2]', 'Доп. время [3]']
+        self.assertEqual([part['part_label'] for part in statistics(self.match)['parts_summary']], expected)
+        data = self.client.get(reverse('tournament:analyzer_manifest', args=[self.match.pk])).json()
+        self.assertEqual([part['displayLabel'] for part in data['parts']], expected)
+        last = active_parts(self.match)[-1]
+        last.label_override = 'Custom overtime'
+        last.save()
+        reconcile_parts(self.match)
+        last.refresh_from_db()
+        self.assertEqual(last.label, 'Custom overtime')

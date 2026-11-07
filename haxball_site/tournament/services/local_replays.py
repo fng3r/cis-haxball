@@ -146,7 +146,7 @@ def reconcile_parts(match):
         part.generated_order = index
         if part.included:
             part.generated_label = (
-                f'{included_index + 1} тайм' if included_index < 2 else f'Доп. время {included_index - 1}'
+                f'{included_index + 1} тайм' if included_index < 2 else f'Доп. время [{included_index - 1}]'
             )
             included_index += 1
         else:
