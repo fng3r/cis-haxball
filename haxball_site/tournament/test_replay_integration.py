@@ -440,3 +440,84 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertEqual(data['match']['series']['matchNumber'], 2)
         Match.objects.filter(pk=self.match.pk).update(series=None)
         self.assertIsNone(self.client.get(endpoint).json()['match']['series'])
+
+    def test_replay_admin_models_are_deletable_and_parent_deletion_cascades(self):
+        from django.contrib import admin
+        from django.test import RequestFactory
+
+        self.seed()
+        user = User.objects.create_superuser('delete-editor', password='test')
+        self.client.force_login(user)
+        request = RequestFactory().get('/')
+        request.user = user
+        for model in (ReplayRecording, ReplayGame, ReplayMatchPart, ReplayTeamStats, ReplayPlayerStats):
+            model_admin = admin.site._registry[model]
+            self.assertTrue(model_admin.has_delete_permission(request))
+            self.assertIn('delete_selected', model_admin.get_actions(request))
+        game = ReplayGame.objects.first()
+        part_id = game.match_part.pk
+        endpoint = reverse('admin:tournament_replaygame_delete', args=[game.pk])
+        self.assertEqual(self.client.post(endpoint, {'post': 'yes'}).status_code, 302)
+        self.assertFalse(ReplayMatchPart.objects.filter(pk=part_id).exists())
+        self.assertFalse(ReplayTeamStats.objects.filter(game_id=game.pk).exists())
+        recording = ReplayRecording.objects.first()
+        endpoint = reverse('admin:tournament_replayrecording_delete', args=[recording.pk])
+        self.assertEqual(self.client.post(endpoint, {'post': 'yes'}).status_code, 302)
+        self.assertFalse(ReplayGame.objects.exists())
+        self.assertFalse(ReplayMatchPart.objects.exists())
+        self.assertFalse(ReplayPlayerStats.objects.exists())
+
+    def test_match_part_changelist_saves_all_overrides_and_inclusion(self):
+        self.seed()
+        editor = User.objects.create_superuser('list-editor', password='test')
+        self.client.force_login(editor)
+        endpoint = reverse('admin:tournament_replaymatchpart_changelist')
+        response = self.client.get(endpoint)
+        formset = response.context['cl'].formset
+        data = {f'{formset.prefix}-{key}': value for key, value in formset.management_form.initial.items()}
+        target_id = None
+        for index, form in enumerate(formset.forms):
+            part = form.instance
+            prefix = f'{formset.prefix}-{index}-'
+            data[prefix + 'id'] = part.pk
+            data[prefix + 'order_override'] = ''
+            data[prefix + 'label_override'] = ''
+            data[prefix + 'red_is_home_override'] = '1'
+            if index == 0:
+                target_id = part.pk
+                data[prefix + 'order_override'] = '7'
+                data[prefix + 'label_override'] = 'List correction'
+                data[prefix + 'red_is_home_override'] = '3'
+            else:
+                data[prefix + 'included'] = 'on'
+        data['_save'] = 'Save'
+        response = self.client.post(endpoint, data)
+        self.assertEqual(response.status_code, 302)
+        part = ReplayMatchPart.objects.get(pk=target_id)
+        self.assertFalse(part.included)
+        self.assertEqual(part.order, 7)
+        self.assertEqual(part.label, 'List correction')
+        self.assertFalse(part.red_is_home)
+
+    def test_exclusion_omits_all_team_player_and_comparison_statistics(self):
+        self.seed()
+        self.match.replay_parts.update(included=False)
+        payload = statistics(self.match)
+        self.assertFalse(payload['has_data'])
+        self.assertEqual(payload['team']['score_home'], 0)
+        self.assertEqual(payload['team']['passes_home'], 0)
+        self.assertEqual(payload['team']['duration_label'], '00:00')
+        self.assertEqual(payload['players'], [])
+        self.assertEqual(payload['parts_players'], [])
+        self.assertEqual(payload['players_comparison_data']['total'], {'home': [], 'guest': []})
+        self.assertEqual(payload['players_comparison_data']['parts'], [])
+        self.assertEqual(ReplayGame.objects.count(), len(self.result['games']))
+        self.assertTrue(ReplayPlayerStats.objects.exists())
+
+    def test_deleted_team_stats_do_not_break_the_match_statistics_page(self):
+        self.seed()
+        part = active_parts(self.match)[0]
+        part.game.team_stats.filter(side='red').delete()
+        payload = statistics(self.match)
+        self.assertTrue(payload['needs_review'])
+        self.assertEqual(len(payload['parts_summary']), 1)

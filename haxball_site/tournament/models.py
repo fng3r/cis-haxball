@@ -3161,7 +3161,7 @@ class ReplayMatchPart(models.Model):
     """Stable match-to-game association; nullable overrides distinguish corrections from generated values."""
 
     match = models.ForeignKey(Match, related_name='replay_parts', on_delete=models.CASCADE)
-    game = models.OneToOneField(ReplayGame, related_name='match_part', on_delete=models.RESTRICT)
+    game = models.OneToOneField(ReplayGame, related_name='match_part', on_delete=models.CASCADE)
     included = models.BooleanField('Учитывать в матче', default=True)
     generated_order = models.PositiveIntegerField(default=0)
     generated_label = models.CharField(max_length=100, blank=True)

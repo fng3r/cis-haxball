@@ -2044,9 +2044,6 @@ class ReplayGeneratedAdmin(UnfoldModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
     def get_readonly_fields(self, request, obj=None):
         return [field.name for field in self.model._meta.fields]
 
@@ -2076,7 +2073,21 @@ class ReplayGameAdmin(ReplayGeneratedAdmin):
 
 @admin.register(ReplayMatchPart)
 class ReplayMatchPartAdmin(UnfoldModelAdmin):
-    list_display = ('id', 'match', 'game', 'label', 'order', 'included', 'red_is_home', 'mapping_evidence')
+    list_display = (
+        'id',
+        'match',
+        'game',
+        'label',
+        'order',
+        'included',
+        'red_is_home',
+        'mapping_evidence',
+        'order_override',
+        'label_override',
+        'red_is_home_override',
+    )
+    list_display_links = ('id',)
+    list_editable = ('included', 'order_override', 'label_override', 'red_is_home_override')
     list_filter = ('included', 'mapping_evidence')
     search_fields = ('match__id', 'label_override', 'generated_label')
     readonly_fields = (
@@ -2091,9 +2102,6 @@ class ReplayMatchPartAdmin(UnfoldModelAdmin):
 
     def has_add_permission(self, request):
         return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False  # Exclude a part instead, so ingestion cannot recreate it.
 
     def save_model(self, request, obj, form, change):
         from django.db import transaction

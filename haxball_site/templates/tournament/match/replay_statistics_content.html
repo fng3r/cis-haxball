@@ -1,6 +1,6 @@
 {% if agg.is_current %}
   {% for recording in agg.recordings %}{% if recording.error_message %}<div class="tw:alert tw:mb-3" role="status">Не удалось обновить одну из записей. {% if recording.analyzed_at %}Показана последняя успешная статистика.{% endif %}</div>{% endif %}{% endfor %}
-  {% if agg.needs_review %}<div class="tw:alert tw:mb-3" role="status">Состав игр в записи изменился. Сопоставление частей требует проверки в Django.</div>{% endif %}
+  {% if agg.needs_review %}<div class="tw:alert tw:mb-3" role="status">Статистика некоторых частей требует проверки или повторного анализа.</div>{% endif %}
 {% endif %}
 {% if not agg.is_current or agg.has_data %}
     {{ agg.players_comparison_data|json_script:"players-comparison-data" }}

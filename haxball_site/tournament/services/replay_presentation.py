@@ -12,7 +12,9 @@ class Rows(list):
 
 
 def statistics(match, request=None):
-    parts = [part for part in active_parts(match) if part.included]
+    candidates = [part for part in active_parts(match) if part.included]
+    parts = [part for part in candidates if {row.side for row in part.game.team_stats.all()} == {'red', 'blue'}]
+    incomplete = len(parts) != len(candidates)
     adapted = []
     for index, part in enumerate(parts):
         teams = {stats.side: stats for stats in part.game.team_stats.all()}
@@ -119,7 +121,7 @@ def statistics(match, request=None):
     records = list(match.replay_recordings.filter(source_key__in=keys).defer('raw_response'))
     payload['recordings'] = records
     payload['has_data'] = bool(parts)
-    payload['needs_review'] = match.replay_parts.filter(
-        game__available=False, game__recording__source_key__in=keys
-    ).exists()
+    payload['needs_review'] = (
+        incomplete or match.replay_parts.filter(game__available=False, game__recording__source_key__in=keys).exists()
+    )
     return payload

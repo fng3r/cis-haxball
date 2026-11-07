@@ -69,9 +69,11 @@ rules. Admin overrides take precedence. Player associations use unique match
 roster aliases; ambiguous aliases are not attached to arbitrary accounts.
 
 Admin's tournament application index groups current replay models under
-“Реплеи и статистика” and legacy entries separately. Statistics are generated,
-read-only records. Match parts support rare corrections to inclusion, label,
-order and side mapping; normal admin history records these changes.
+“Реплеи и статистика” and legacy entries separately. Generated statistic fields are read-only, but all replay models can be deleted
+with the usual admin permissions. Deleting a recording or game cascades to its
+parts and statistics. Match parts support rare corrections to inclusion, label,
+order and side mapping, including changelist editing; normal admin history records
+these changes. Exclusion survives rebuilding; deletion can be recreated by ingestion.
 
 Explicit reanalysis is available through “Повторно проанализировать выбранные
 записи” in the recordings admin, or:
