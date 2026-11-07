@@ -83,6 +83,10 @@ def match_manifest(request, pk):
     tour = match.numb_tour
     tour.stage = tour.stage.get_real_instance()
     tour_label = cup_round_name(tour) if tour.stage.is_playoff else tour_name(tour)
+    series_context = None
+    if match.series_id:
+        position = Match.objects.filter(series_id=match.series_id, pk__lte=match.pk).count()
+        series_context = {'id': match.series_id, 'matchNumber': position}
 
     if len(recordings) > 128 or len(parts) > 2048:
         return JsonResponse({'error': 'Match context exceeds the supported limit'}, status=400)
@@ -109,6 +113,7 @@ def match_manifest(request, pk):
                 'stage': ref(stage),
                 'group': ref(match.group),
                 'tour': ref(tour, tour_label),
+                'series': series_context,
                 'date': str(match.match_date) if match.match_date else None,
                 'officialScore': [match.score_home, match.score_guest],
                 'isPlayed': match.is_played,

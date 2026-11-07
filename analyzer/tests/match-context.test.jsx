@@ -101,3 +101,12 @@ it('uses short team titles on small screens in every team identity, retaining fu
   expect(screen.getByText('A long away team name')).toBeInTheDocument();
   expect(screen.getByText('AWAY').parentElement.parentElement.lastElementChild).toHaveAttribute('src', '/away.png');
 });
+
+
+it('adds the series match number beside the tour while retaining the ordinary tour label outside a series', () => {
+  const match = { ...context.match, tour: { name: 'Финал' }, series: { id: 8, matchNumber: 2 } };
+  const { rerender } = render(<MatchContext context={{ ...context, match }} />);
+  expect(screen.getByText('ЧР #17 · Финал (2 матч)')).toBeInTheDocument();
+  rerender(<MatchContext context={{ ...context, match: { ...match, series: null } }} />);
+  expect(screen.getByText('ЧР #17 · Финал')).toBeInTheDocument();
+});

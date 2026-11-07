@@ -13,6 +13,9 @@ The match-page link supplies an absolute Django manifest URL:
 The manifest describes the whole match: competition hierarchy and official score,
 home/away teams and logos, all associated supported recordings, and saved match
 parts with labels, order, inclusion, engine game IDs and team-side mappings.
+For a match in a series, `match.series` supplies its ID and `matchNumber`, using
+the same ascending match-ID order as the Django match page. The header appends
+that number to the tour, e.g. `Финал (2 матч)`.
 An individual part link adds `part=<persistent ReplayMatchPart ID>` but still
 loads the whole match. Recording bytes are fetched separately through bounded
 Django endpoints, then analyzed using the existing original-engine worker library.
