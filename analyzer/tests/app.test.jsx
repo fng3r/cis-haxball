@@ -417,6 +417,11 @@ it.each([null, 100])('loads the whole match and selects the requested part %s by
     expect(matchIntegration.fetchMatchContext).toHaveBeenCalledWith(expect.objectContaining({ href: url }), expect.any(AbortSignal));
     expect(matchIntegration.fetchMatchRecording).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('button', { name: 'Warmup' })).toBeNull();
+    const contextInfo = screen.getByLabelText('Match context');
+    const header = contextInfo.parentElement.parentElement;
+    expect(within(header).getByLabelText('Replay controls')).toBeInTheDocument();
+    expect(within(header).queryByText('Replay workspace')).toBeNull();
+    expect(within(header).getByRole('button', { name: 'Export statistics' }).querySelector('svg')).toBeInTheDocument();
     const scoreboard = screen.getByLabelText('Replay scoreboard');
     const red = scoreboard.firstElementChild.firstElementChild;
     expect(document.querySelector('.bg-error').parentElement).toHaveTextContent('Red team');

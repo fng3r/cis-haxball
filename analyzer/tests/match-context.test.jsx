@@ -43,10 +43,15 @@ it('rejects malformed manifests and recording URLs outside the supplied Django o
 
 it('displays Django context and mappings read-only, without selectors or editing controls', () => {
   render(<MatchContext context={context} part={context.parts[0]} />);
-  expect(screen.getByRole('link', { name: /Back to match/ })).toHaveAttribute('href', context.match.url);
+  expect(screen.queryByRole('link', { name: /Back to match/ })).toBeNull();
   expect(screen.getByText(/ЧР #17/)).toBeInTheDocument();
-  expect(screen.getByText(/Official score 2:1/)).toBeInTheDocument();
-  expect(screen.getByText('Second half')).toBeInTheDocument();
+  const score = screen.getByText('2:1');
+  expect(score.previousElementSibling).toHaveTextContent('Home');
+  expect(score.nextElementSibling).toHaveTextContent('Away');
+  expect(screen.queryByText(/Official score/)).toBeNull();
+  expect(screen.queryByText('Second half')).toBeNull();
+  expect(screen.queryByText(/Replay statistics cover/)).toBeNull();
+  expect(screen.getByLabelText('Match context').querySelectorAll('img')).toHaveLength(2);
   expect(screen.queryByRole('combobox')).toBeNull();
 });
 
@@ -86,5 +91,13 @@ it('shows the concise season, league-stage and tour line without repeating the l
     season: { name: 'ЧР, 17 сезон' }, league: { name: 'Единая лига' }, stage: null, tour: { name: '1 тур' },
   } }} part={{ ...context.parts[0], label: 'Тайм', displayLabel: 'Тайм [2]' }} />);
   expect(screen.getByText('ЧР, 17 сезон · Единая лига · 1 тур')).toBeInTheDocument();
-  expect(screen.getByText('Тайм [2]')).toBeInTheDocument();
+  expect(screen.queryByText('Тайм [2]')).toBeNull();
+});
+
+
+it('uses short team titles on small screens in every team identity, retaining full titles on larger screens', () => {
+  render(<TeamIdentity team={{ name: 'A long away team name', shortName: 'AWAY', logo: '/away.png' }} logoAfter />);
+  expect(screen.getByText('AWAY')).toBeInTheDocument();
+  expect(screen.getByText('A long away team name')).toBeInTheDocument();
+  expect(screen.getByText('AWAY').parentElement.parentElement.lastElementChild).toHaveAttribute('src', '/away.png');
 });

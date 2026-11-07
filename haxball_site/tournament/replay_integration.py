@@ -91,7 +91,12 @@ def match_manifest(request, pk):
         return {'id': obj.pk, 'name': name if name is not None else str(obj)} if obj else None
 
     def team(obj):
-        return {'id': obj.pk, 'name': obj.title, 'logo': request.build_absolute_uri(obj.logo.url) if obj.logo else None}
+        return {
+            'id': obj.pk,
+            'name': obj.title,
+            'shortName': obj.short_title,
+            'logo': request.build_absolute_uri(obj.logo.url) if obj.logo else None,
+        }
 
     response = JsonResponse(
         {

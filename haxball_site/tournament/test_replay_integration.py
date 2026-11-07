@@ -366,6 +366,8 @@ class LocalReplayIntegrationTests(TestCase):
         endpoint = reverse('tournament:analyzer_manifest', args=[self.match.pk])
         data = self.client.get(endpoint).json()
         self.assertEqual(data['match']['league']['name'], self.league.title)
+        self.assertEqual(data['teams']['home']['shortName'], self.home.short_title)
+        self.assertEqual(data['teams']['away']['shortName'], self.away.short_title)
         self.assertIsNone(data['match']['stage'])
         self.assertEqual(data['match']['tour']['name'], '1 тур')
         self.assertEqual([p['displayLabel'] for p in data['parts']], ['Тайм [1]', 'Тайм [2]'])

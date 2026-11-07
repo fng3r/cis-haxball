@@ -307,7 +307,6 @@ export default function App() {
         </section>}
       </aside>
       <div className={focusMode ? 'min-w-0' : 'min-w-0 space-y-6'}>
-        {!focusMode && <MatchContext context={matchContext} loading={matchLoading} error={matchError} onRetry={() => setMatchAttempt(value => value + 1)} part={currentPart} />}
         {!focusMode && error && <div role="alert" className="alert alert-error"><span>{error}</span><button className="btn btn-sm" onClick={() => setError('')}>Dismiss</button></div>}
         {!focusMode && recording?.status === 'error' && <div role="alert" className="alert alert-error"><span>{recording.file.name}: {recording.error}</span></div>}
         {!focusMode && busy && <section className="rounded-box border border-base-300 bg-base-100 p-5" aria-live="polite" aria-busy="true">
@@ -315,12 +314,15 @@ export default function App() {
           <progress className="progress w-full" value={progress} max="100" />
         </section>}
         <section ref={playerCard} className={focusMode ? 'flex h-dvh flex-col overflow-hidden bg-base-100' : 'scroll-mt-4 overflow-hidden rounded-box border border-base-300 bg-base-100'}>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-3 sm:px-7">
-            <div><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 max-w-64 truncate text-sm font-semibold sm:max-w-96">{game ? filename : 'Every match has a story.'}</h2></div>
-            <div className="flex items-center gap-2">
+          <div className="flex items-start justify-between gap-3 border-b border-base-300 px-4 py-3 sm:px-7">
+            <div className="min-w-0 flex-1">{matchContext || matchLoading || matchError
+              ? <MatchContext context={matchContext} loading={matchLoading} error={matchError} onRetry={() => setMatchAttempt(value => value + 1)} />
+              : <><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 truncate text-sm font-semibold">{game ? filename : 'Every match has a story.'}</h2></>}
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2" aria-label="Replay controls">
               {recording && <KeyboardShortcuts />}
-              {recording && <button className="btn btn-sm" aria-pressed={focusMode} onClick={() => setFocusMode(value => !value)}>{focusMode ? <Minimize className="size-4" aria-hidden="true" /> : <Maximize className="size-4" aria-hidden="true" />}{focusMode ? 'Exit focus mode' : 'Focus mode'}</button>}
-            {replay && <button className="btn btn-sm" onClick={exportStats}><Download className="size-4" aria-hidden="true" />Export statistics</button>}
+              {recording && <button className="btn btn-sm btn-square sm:w-auto sm:px-3" aria-label={focusMode ? 'Exit focus mode' : 'Focus mode'} title={focusMode ? 'Exit focus mode' : 'Focus mode'} aria-pressed={focusMode} onClick={() => setFocusMode(value => !value)}>{focusMode ? <Minimize className="size-4" aria-hidden="true" /> : <Maximize className="size-4" aria-hidden="true" />}<span className="hidden sm:inline">{focusMode ? 'Exit focus mode' : 'Focus mode'}</span></button>}
+            {replay && <button className="btn btn-sm btn-square sm:w-auto sm:px-3" aria-label="Export statistics" title="Export statistics" onClick={exportStats}><Download className="size-4" aria-hidden="true" /><span className="hidden sm:inline">Export statistics</span></button>}
             </div>
           </div>
           <div className={focusMode ? 'hidden' : 'grid grid-cols-[minmax(0,1fr)_minmax(0,4fr)_minmax(0,1fr)] items-center gap-3 px-5 py-3 sm:px-7'}>
