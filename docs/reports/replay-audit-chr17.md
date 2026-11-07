@@ -24,7 +24,7 @@ The findings below annotate the original read-only snapshot. They do not change 
 - **6890:** two fair-play goals and one goal after the eight-minute half limit confirmed; retain both games. The diagnostic score already omits the late goal, leaving the fair-play difference.
 - **6944:** two fair-play goals confirmed; retain both games.
 - **7002:** two fair-play goals confirmed; retain both games.
-- **6913:** still awaiting confirmation of the extra goal for each team.
+- **6913:** two fair-play goals confirmed; retain both games. This resolves the last outstanding case from the automated review list.
 
 These confirmations support the two newly proposed exclusions and the decision to retain plausible partial recordings. They also demonstrate why score equality must not determine game inclusion. Roster-mismatch, split-half and golden-goal rules still need real-case validation.
 
