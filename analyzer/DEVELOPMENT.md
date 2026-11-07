@@ -276,6 +276,29 @@ initialization and recording switches. Its ready message reveals the same iframe
 without restarting playback. Errors or a 45-second initialization timeout show
 a retry action; retry mounts a fresh iframe without rerunning analysis.
 
+## Replay chat synchronization
+
+The native player indexes recorded chat, announcements and action notices once
+when opening a recording, by decoding actions without stepping match physics.
+This uses the decoder already present in the player and works independently of
+the statistics engine. No third production runtime is bundled.
+
+`src/player/chat-index.js` records messages with recording ticks, sender names and
+announcement styling. Recorded starts reset the indexing context between matches;
+a redundant start at tick zero retains the initial snapshot. Physics-generated
+result notices are not synthesized; recorded result announcements remain available.
+
+`src/player/chat-sync.js` shows the most recent 100 entries at or before the
+transport timestamp. Seeks use their destination while native physics catches up;
+reset returns to the beginning. Native append calls are suppressed to prevent
+duplicates. The log updates only when the message window changes, preserving
+scrolling during playback and scrolling to the latest message after seeks.
+Content uses text nodes, including announcements.
+
+Tests compare indexed messages with native physics playback on all four fixtures
+and cover paused seeks, backward/forward jumps, reset, repeated playback,
+same-tick messages, formatting, text safety and bounded DOM size.
+
 ## Independent analysis engine v2
 
 An initial replacement engine lives in `src/engine-v2/`, alongside the unchanged

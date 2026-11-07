@@ -31,6 +31,7 @@ export async function openNativeReplay(bytes) {
   loading = { done: true };
   x.Pg = document.getElementById('player');
   x.Pg.replaceChildren();
+  const chatEntries = indexReplayChat(new Jb(new Uint8Array(bytes), new fa, 3), action => action instanceof Ma);
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
   mountFitPitch(nativeController);
@@ -42,6 +43,7 @@ export async function openNativeReplay(bytes) {
   setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
   nativeGoalControls = mountGoalControls(nativeController.je, replay, seekNativeReplay, tick => notify('goal', tick));
   nativeGameSync = mountGameSync(nativeController.je, replay, index => notify('game', index));
+  mountChatSync(nativeController.je, replay, nativeController.j.Qa, chatEntries);
   nativeController.je.de = () => {
     nativeController.ia();
     nativeController = null;

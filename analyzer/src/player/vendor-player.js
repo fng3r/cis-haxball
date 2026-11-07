@@ -3,6 +3,8 @@ import { setNativePlayIcon } from "./play-icon.js";
 import { mountGoalControls } from "./goal-controls.js";
 import { mountFitPitch } from "./viewport.js";
 import { mountGameSync } from "./game-sync.js";
+import { indexReplayChat } from "./chat-index.js";
+import { mountChatSync } from "./chat-sync.js";
 const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);
 const showStats = () => notify("stats");
 const setGameStats = () => {}; const dispatchPlayerList = () => {}; const dispatchPlayerPos = () => {};
@@ -11999,6 +12001,7 @@ export async function openNativeReplay(bytes) {
   loading = { done: true };
   x.Pg = document.getElementById('player');
   x.Pg.replaceChildren();
+  const chatEntries = indexReplayChat(new Jb(new Uint8Array(bytes), new fa, 3), action => action instanceof Ma);
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
   nativeController = new Vb(replay);
   mountFitPitch(nativeController);
@@ -12010,6 +12013,7 @@ export async function openNativeReplay(bytes) {
   setNativePlayIcon(nativeController.je.g.querySelector('[data-hook=playicon]'), false);
   nativeGoalControls = mountGoalControls(nativeController.je, replay, seekNativeReplay, tick => notify('goal', tick));
   nativeGameSync = mountGameSync(nativeController.je, replay, index => notify('game', index));
+  mountChatSync(nativeController.je, replay, nativeController.j.Qa, chatEntries);
   nativeController.je.de = () => {
     nativeController.ia();
     nativeController = null;

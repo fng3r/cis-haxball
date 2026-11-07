@@ -23,6 +23,8 @@ await writeFile(new URL('src/player/vendor-player.js', root),
   'import { mountGoalControls } from "./goal-controls.js";\n' +
   'import { mountFitPitch } from "./viewport.js";\n' +
   'import { mountGameSync } from "./game-sync.js";\n' +
+  'import { indexReplayChat } from "./chat-index.js";\n' +
+  'import { mountChatSync } from "./chat-sync.js";\n' +
   'const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);\n' +
   'const showStats = () => notify("stats");\n' +
   'const setGameStats = () => {}; const dispatchPlayerList = () => {}; const dispatchPlayerPos = () => {};\n' +
