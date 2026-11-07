@@ -153,3 +153,32 @@ atomic failure, URL deduplication/removal/re-addition, public read-only manifest
 scoped CORS, existing statistics components and admin editing/grouping.
 Analyzer tests cover a distinct Django origin, binary downloads, standalone use,
 multiple recordings, game-ID selection, part order/exclusion, and team/logo mapping.
+
+## Experimental replay relevance audit
+
+`audit_replay_games` evaluates all stored original-engine games across a match's
+currently attached recordings. It does **not** change Celery's inclusion policy,
+saved parts, raw results or statistics. It performs no downloads/reanalysis and
+enforces a PostgreSQL repeatable-read, read-only transaction. Run against a local
+database with existing replay analyses:
+
+```sh
+cd haxball_site
+python manage.py audit_replay_games --season-id 30 --output /tmp/replay-audit-chr17
+python manage.py test tournament.test_replay_audit
+```
+
+The command writes a Markdown review report and a complete JSON evidence snapshot.
+The season ID is explicit; 30 is ЧР #17 in the development snapshot. Only played
+matches are assessed. `--required-players` defaults to 4; use the competition's
+format, not the stadium filename, for other seasons. Current rules and thresholds
+are documented in the generated report, including roster mismatches, possible
+split halves, technical results and score differences that never cause exclusion.
+Missing native clock offsets and overtime rules limit automatic classification;
+ambiguous short parts remain available for review. Inclusion differences are
+suggestions, since saved values may be deliberate manual corrections.
+
+The initial [ЧР #17 report](../docs/reports/replay-audit-chr17.md) records the actual
+development-database findings. It is a consistency check, not an accuracy estimate:
+validate the flagged games before adopting this policy in ingestion. No model or
+migration changes are required for the audit.
