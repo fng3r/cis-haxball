@@ -683,5 +683,15 @@ REPLAY_ANALYZER_CLI = config(
 REPLAY_ANALYZER_TIMEOUT = config('REPLAY_ANALYZER_TIMEOUT', default=120, cast=int)
 
 REPLAY_ANALYZER_URL = config(
-    'REPLAY_ANALYZER_URL', default=f'/{URL_PREFIX.strip("/") + "/" if URL_PREFIX else ""}analyzer/'
+    'REPLAY_ANALYZER_URL',
+    default='http://localhost:3000/analyzer/'
+    if DEBUG
+    else f'/{URL_PREFIX.strip("/") + "/" if URL_PREFIX else ""}analyzer/',
+)
+
+# Explicitly allow the standalone local analyzer to read public manifests/recordings.
+REPLAY_ANALYZER_ORIGINS = config(
+    'REPLAY_ANALYZER_ORIGINS',
+    default='http://localhost:3000,http://127.0.0.1:3000' if DEBUG else '',
+    cast=lambda value: [origin.strip() for origin in value.split(',') if origin.strip()],
 )

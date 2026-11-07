@@ -59,7 +59,7 @@ All required application resources are local. This proof of concept does not
 connect to the old replay catalogue, upload recordings, or load advertising and
 analytics. Catalogue browsing, team renaming, half merging, and stadium export
 have not been ported. Native player room/chat controls, settings, audio and
-transport are preserved. Django integration uses a separate local-results model and same-origin match manifests; see [DJANGO_INTEGRATION.md](DJANGO_INTEGRATION.md).
+transport are preserved. Django integration uses normalized Replay models and explicit read-only whole-match manifests; see [DJANGO_INTEGRATION.md](DJANGO_INTEGRATION.md).
 
 Playback uses the original renderer, interpolation and requestAnimationFrame loop
 from the pinned `game2.js`. React does not render playback frames or run a

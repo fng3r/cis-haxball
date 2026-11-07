@@ -386,30 +386,46 @@ it('changes player maps only on click and displays playtime as plain text', asyn
 });
 
 
-it('imports Django recordings into the worker library and applies per-game team identities', async () => {
+
+it.each([null, 100])('loads the whole match and selects the requested part %s by game ID', async requestedPart => {
   const previous = window.location.href;
-  window.history.replaceState({}, '', '/analyzer/?match=6862');
+  const url = 'https://django.test/championship/match/6862/analyzer';
+  window.history.replaceState({}, '', `/analyzer/?context=${encodeURIComponent(url)}${requestedPart ? `&part=${requestedPart}` : ''}`);
   const context = {
-    match: { id: 6862, url: '/championship/match/6862', season: { name: 'ЧР #17' }, officialScore: [2, 1] },
+    schemaVersion: 2,
+    match: { id: 6862, url: 'https://django.test/championship/match/6862', season: { name: 'ЧР #17' }, officialScore: [2, 1] },
     teams: { home: { name: 'Home', logo: '/home.png' }, away: { name: 'Away', logo: '/away.png' } },
-    rosters: { home: ['alice'], away: [] }, canMap: false,
-    recordings: [{ index: 0, name: 'match-6862-1.hbr2', url: '/recording', mappings: { '0': false, '1': true } }],
+    recordings: [{ id: 10, name: 'a.hbr2', url: 'https://django.test/a' }, { id: 11, name: 'b.hbr2', url: 'https://django.test/b' }],
+    parts: [{ id: 101, recordingId: 11, gameId: 0, order: 0, included: true, redIsHome: false, label: 'First half' },
+      { id: 100, recordingId: 10, gameId: 1, order: 1, included: true, redIsHome: true, label: 'Second half' },
+      { id: 102, recordingId: 10, gameId: 0, order: 2, included: false, redIsHome: true, label: 'Warmup' }],
   };
-  const file = new File(['HBR2'], 'match-6862-1.hbr2');
-  file.arrayBuffer = async () => new ArrayBuffer(16);
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => context }));
-  vi.spyOn(matchIntegration, 'fetchMatchRecording').mockResolvedValue(file);
+  vi.spyOn(matchIntegration, 'fetchMatchContext').mockResolvedValue(context);
+  vi.spyOn(matchIntegration, 'fetchMatchRecording').mockImplementation(async item => {
+    const file = new File(['HBR2'], item.name);
+    file.arrayBuffer = async () => new ArrayBuffer(16);
+    return file;
+  });
   try {
     render(<App />);
     await waitFor(() => expect(FakeWorker.instances.at(-1)?.postMessage).toHaveBeenCalled());
-    expect(matchIntegration.fetchMatchRecording).toHaveBeenCalledWith(context.recordings[0], expect.any(AbortSignal));
-    act(() => FakeWorker.instances.at(-1).send({ type: 'result', result: { games: [game, { ...game, id: 1 }] } }));
-    expect(screen.getByRole('button', { name: 'Open recording match-6862-1.hbr2' })).toHaveAttribute('aria-pressed', 'true');
+    act(() => FakeWorker.instances[0].send({ type: 'result', result: { games: [game, { ...game, id: 1, startTick: 1000 }] } }));
+    await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
+    await waitFor(() => expect(FakeWorker.instances[1].postMessage).toHaveBeenCalled());
+    act(() => FakeWorker.instances[1].send({ type: 'result', result: { games: [game] } }));
+    await waitFor(() => expect(screen.getByRole('button', { name: requestedPart ? 'Second half' : 'First half' })).toHaveAttribute('aria-pressed', 'true'));
+    expect(matchIntegration.fetchMatchContext).toHaveBeenCalledWith(expect.objectContaining({ href: url }), expect.any(AbortSignal));
+    expect(matchIntegration.fetchMatchRecording).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('button', { name: 'Warmup' })).toBeNull();
     const red = document.querySelector('.bg-error').parentElement;
-    expect(red).toHaveTextContent('Away');
-    expect(red.querySelector('img')).toHaveAttribute('src', '/away.png');
-    fireEvent.click(screen.getByRole('button', { name: /Game 2/ }));
-    expect(red).toHaveTextContent('Home');
-    expect(red.querySelector('img')).toHaveAttribute('src', '/home.png');
+    expect(red).toHaveTextContent(requestedPart ? 'Home' : 'Away');
+    expect(red.querySelector('img')).toHaveAttribute('src', requestedPart ? '/home.png' : '/away.png');
+    const destination = requestedPart ? 'First half' : 'Second half';
+    fireEvent.click(screen.getByRole('button', { name: destination }));
+    await waitFor(() => expect(red).toHaveTextContent(requestedPart ? 'Away' : 'Home'));
+    expect(screen.getByRole('button', { name: destination })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Open recording b.hbr2' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'First half' })).toHaveAttribute('aria-pressed', 'true'));
+    expect(screen.queryByRole('combobox', { name: 'Red side team' })).toBeNull();
   } finally { window.history.replaceState({}, '', previous); }
 });

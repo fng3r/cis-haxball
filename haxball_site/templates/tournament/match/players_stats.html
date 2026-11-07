@@ -9,11 +9,11 @@
                 statRows: [
                   { key: 'goals', label: 'Голы' },
                   { key: 'assists', label: 'Голевые передачи' },
-                  { key: 'shots_total', label: 'Удары' },
+                  {% if not agg.is_current %}{ key: 'shots_total', label: 'Удары' },{% endif %}
                   { key: 'shots_on_target', label: 'Удары в створ' },
                   { key: 'passes_completed', label: 'Передачи' },
                   { key: 'pass_accuracy', label: 'Передачи (%)' },
-                  { key: 'touches', label: 'Касания' },
+                  {% if agg.is_current %}{ key: 'kicks', label: 'Удары по мячу' },{% else %}{ key: 'touches', label: 'Касания' },{% endif %}
                   { key: 'saves', label: 'Сейвы' },
                   { key: 'rating', label: 'Рейтинг' }
                 ],
@@ -121,10 +121,10 @@
             <th>Г</th>
             <th>П</th>
             <th>Время</th>
-            <th>Удары</th>
+            <th>{% if agg.is_current %}В створ{% else %}Удары{% endif %}</th>
             <th>Передачи</th>
             <th>Передачи (%)</th>
-            <th>Касания</th>
+            <th>{% if agg.is_current %}Удары по мячу{% else %}Касания{% endif %}</th>
             <th>Сейвы</th>
             <th class="tw:text-center">Рейтинг</th>
           </tr>
@@ -156,7 +156,7 @@
               <td>{{ p.goals }}</td>
               <td>{{ p.assists }}</td>
               <td>{{ p.playtime }}</td>
-              <td>{{ p.shots_total }} ({{ p.shots_on_target }})</td>
+              <td>{% if agg.is_current %}{{ p.shots_on_target }}{% else %}{{ p.shots_total }} ({{ p.shots_on_target }}){% endif %}</td>
               <td>{{ p.passes_completed }}</td>
               <td>
                 {% if p.pass_accuracy is not None %}
@@ -165,8 +165,8 @@
                   —
                 {% endif %}
               </td>
-              <td>{{ p.touches }}</td>
-              <td>{{ p.saves }}</td>
+              <td>{% if agg.is_current %}{{ p.kicks }}{% else %}{{ p.touches }}{% endif %}</td>
+              <td>{{ p.saves|default_if_none:'—' }}</td>
               <td class="tw:text-center">
                 {% if p.rating %}
                   <span class="tw:badge tw:badge-sm tw:badge-primary tw:gap-1 tw:font-semibold">
@@ -212,7 +212,7 @@
                 <td>{{ p.goals }}</td>
                 <td>{{ p.assists }}</td>
                 <td>{{ p.playtime }}</td>
-                <td>{{ p.shots_total }} ({{ p.shots_on_target }})</td>
+                <td>{% if agg.is_current %}{{ p.shots_on_target }}{% else %}{{ p.shots_total }} ({{ p.shots_on_target }}){% endif %}</td>
                 <td>{{ p.passes_completed }}</td>
                 <td>
                   {% if p.pass_accuracy is not None %}
@@ -221,8 +221,8 @@
                     —
                   {% endif %}
                 </td>
-                <td>{{ p.touches }}</td>
-                <td>{{ p.saves }}</td>
+                <td>{% if agg.is_current %}{{ p.kicks }}{% else %}{{ p.touches }}{% endif %}</td>
+                <td>{{ p.saves|default_if_none:'—' }}</td>
                 <td>
                   {% if p.rating %}
                     <span class="tw:badge tw:badge-sm tw:badge-primary tw:font-semibold">{{ p.rating|floatformat:2 }}</span>

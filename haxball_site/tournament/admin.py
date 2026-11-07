@@ -50,7 +50,6 @@ from .models import (
     GroupStage,
     League,
     LegacyMedalMapping,
-    LocalReplayAnalysis,
     Match,
     MatchReplay,
     MatchReplayStats,
@@ -73,6 +72,11 @@ from .models import (
     Postponement,
     PostponementSlots,
     RegularStage,
+    ReplayGame,
+    ReplayMatchPart,
+    ReplayPlayerStats,
+    ReplayRecording,
+    ReplayTeamStats,
     Season,
     SeasonTeamRating,
     Substitution,
@@ -2036,24 +2040,86 @@ class AwardResultAdmin(UnfoldModelAdmin):
     )
 
 
-@admin.register(LocalReplayAnalysis)
-class LocalReplayAnalysisAdmin(UnfoldModelAdmin):
-    list_display = ('match_id', 'replay_url', 'engine_version', 'status', 'analyzed_at')
-    list_filter = ('status', 'engine_version')
-    search_fields = ('match__id', 'replay_url')
+class ReplayGeneratedAdmin(UnfoldModelAdmin):
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        return [field.name for field in self.model._meta.fields]
+
+
+@admin.action(description='Повторно проанализировать выбранные записи', permissions=['change'])
+def reanalyze_recordings(modeladmin, request, queryset):
+    from .tasks import reanalyze_replay_recordings
+
+    reanalyze_replay_recordings.delay(list(queryset.values_list('pk', flat=True)))
+    modeladmin.message_user(request, 'Повторный анализ поставлен в очередь Celery.')
+
+
+@admin.register(ReplayRecording)
+class ReplayRecordingAdmin(ReplayGeneratedAdmin):
+    list_display = ('match_id', 'source_key', 'status', 'analyzed_at')
+    list_filter = ('status',)
+    search_fields = ('match__id', 'replay_url', 'source_key')
+    actions = (reanalyze_recordings,)
+
+
+@admin.register(ReplayGame)
+class ReplayGameAdmin(ReplayGeneratedAdmin):
+    list_display = ('id', 'recording', 'engine_game_id', 'active_ticks', 'available')
+    list_filter = ('available',)
+    search_fields = ('recording__match__id',)
+
+
+@admin.register(ReplayMatchPart)
+class ReplayMatchPartAdmin(UnfoldModelAdmin):
+    list_display = ('id', 'match', 'game', 'label', 'order', 'included', 'red_is_home', 'mapping_evidence')
+    list_filter = ('included', 'mapping_evidence')
+    search_fields = ('match__id', 'label_override', 'generated_label')
     readonly_fields = (
         'match',
-        'replay_url',
-        'engine_version',
-        'result',
-        'inferred_sides',
-        'side_overrides',
-        'mapping_audit',
-        'content_sha256',
-        'status',
-        'error_message',
-        'analyzed_at',
+        'game',
+        'generated_order',
+        'generated_label',
+        'inferred_red_is_home',
+        'mapping_evidence',
     )
+    fields = readonly_fields + ('included', 'order_override', 'label_override', 'red_is_home_override')
 
     def has_add_permission(self, request):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # Exclude a part instead, so ingestion cannot recreate it.
+
+    def save_model(self, request, obj, form, change):
+        from django.db import transaction
+
+        with transaction.atomic():
+            Match.objects.select_for_update().get(pk=obj.match_id)
+            # Write only editorial fields; a task may have updated generated values since the form was opened.
+            ReplayMatchPart.objects.filter(pk=obj.pk).update(
+                included=obj.included,
+                order_override=obj.order_override,
+                label_override=obj.label_override,
+                red_is_home_override=obj.red_is_home_override,
+            )
+
+
+@admin.register(ReplayTeamStats)
+class ReplayTeamStatsAdmin(ReplayGeneratedAdmin):
+    list_display = ('game', 'side', 'goals', 'possession_ticks', 'kicks', 'passes_completed', 'shots_on_target')
+    search_fields = ('game__recording__match__id',)
+
+
+@admin.register(ReplayPlayerStats)
+class ReplayPlayerStatsAdmin(ReplayGeneratedAdmin):
+    list_display = ('game', 'nick', 'side', 'player', 'active_ticks', 'goals', 'assists')
+    search_fields = ('game__recording__match__id', 'nick')
+
+
+# Group the tournament application index itself, while retaining the same models and permissions.
+admin.site.app_index_template = 'admin/replay_app_index.html'

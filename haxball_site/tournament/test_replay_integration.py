@@ -1,5 +1,4 @@
 import copy
-import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,18 +10,29 @@ from django.urls import reverse
 from .local_replay_analyzer import analyze_local_replay
 from .models import (
     League,
-    LocalReplayAnalysis,
     Match,
     MatchReplay,
     MatchReplayStats,
     MatchReplayStatsPlayer,
     RegularStage,
+    ReplayGame,
+    ReplayMatchPart,
+    ReplayPlayerStats,
+    ReplayRecording,
+    ReplayTeamStats,
     Season,
     Team,
     TourNumber,
 )
-from .replay_stats_client import download_replay, get_replay_source_and_id
-from .services.local_replays import infer_mapping, ingest_match, match_recordings, match_statistics
+from .services.local_replays import (
+    active_parts,
+    analyzer_link,
+    infer_mapping,
+    ingest_match,
+    materialize,
+    reconcile_parts,
+)
+from .services.replay_presentation import statistics
 from .tasks import fetch_match_replay_stats
 
 
@@ -53,12 +63,21 @@ class LocalReplayIntegrationTests(TestCase):
             (Path(__file__).parents[2] / 'analyzer/tests/fixtures/futsal-multi.hbr2').read_bytes()
         )
 
-    def analysis(self, mappings=None):
-        return LocalReplayAnalysis.objects.create(
-            match=self.match, replay_url=self.url, result=self.result, inferred_sides=mappings or {}, status='ready'
+    def seed(self, result=None):
+        result = copy.deepcopy(result or self.result)
+        recording = ReplayRecording.objects.create(
+            match=self.match,
+            source_key='powtorki:test-recording',
+            replay_url=self.url,
+            raw_response=result,
+            status='ready',
         )
+        materialize(recording, result, {'home': set(), 'away': set()}, {})
+        self.match.replay_parts.update(included=True)
+        reconcile_parts(self.match)
+        return recording
 
-    def test_default_ingestion_preserves_all_legacy_rows_and_retries_are_idempotent(self):
+    def test_normalized_storage_and_legacy_preservation(self):
         legacy = MatchReplay.objects.create(
             match=self.match,
             replay_url=self.url,
@@ -67,160 +86,276 @@ class LocalReplayIntegrationTests(TestCase):
             status='ready',
         )
         part = MatchReplayStats.objects.create(match=self.match, match_replay=legacy, score_red=8)
-        player = MatchReplayStatsPlayer.objects.create(
-            replay_stats=part, nick='old player', rating=9.8, played_ticks=10
-        )
+        MatchReplayStatsPlayer.objects.create(replay_stats=part, nick='old player', rating=9.8, played_ticks=10)
         before = [list(model.objects.values()) for model in (MatchReplay, MatchReplayStats, MatchReplayStatsPlayer)]
         with (
             patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result) as engine,
         ):
-            first = fetch_match_replay_stats(self.match.pk)
-            second = fetch_match_replay_stats(self.match.pk)
-            self.assertEqual(first['created_games'], 2)
-            self.assertEqual(second['created_games'], 0)
+            self.assertEqual(fetch_match_replay_stats(self.match.pk)['created_games'], 2)
+            ids = list(ReplayMatchPart.objects.values_list('pk', flat=True))
+            self.assertEqual(fetch_match_replay_stats(self.match.pk)['created_games'], 0)
             self.assertEqual(engine.call_count, 1)
-        self.assertEqual(LocalReplayAnalysis.objects.count(), 1)
+        self.assertEqual(list(ReplayMatchPart.objects.values_list('pk', flat=True)), ids)
+        self.assertEqual(ReplayGame.objects.count(), 2)
+        self.assertEqual(ReplayTeamStats.objects.count(), 4)
+        self.assertEqual(ReplayPlayerStats.objects.count(), sum(len(g['players']) for g in self.result['games']))
         self.assertEqual(
             before, [list(model.objects.values()) for model in (MatchReplay, MatchReplayStats, MatchReplayStatsPlayer)]
         )
-        self.assertTrue(MatchReplayStatsPlayer.objects.filter(pk=player.pk, rating=9.8).exists())
 
-    def test_unknown_games_keep_every_metric_but_do_not_enter_team_totals(self):
-        analysis = self.analysis()
-        stats = match_statistics(self.match)
-        self.assertEqual(len(stats['games']), 2)
-        self.assertEqual(stats['unresolved'], 2)
-        self.assertEqual(stats['totals']['kicks'], [0, 0])
-        self.assertEqual(stats['games'][0]['game'], analysis.result['games'][0])
-        html = render_to_string('tournament/match/local_statistics.html', {'local': stats, 'match': self.match})
-        self.assertIn('стороны не определены', html)
-        self.assertIn(self.result['games'][0]['players'][0]['nick'], html)
-
-    def test_per_game_side_swaps_and_substitutions_use_roster_evidence(self):
-        roster = {'home': {'alice', 'sub'}, 'away': {'bob'}}
-        players = [
-            {'nick': 'Alice', 'team': 'red', 'playedTicks': 100},
-            {'nick': 'Sub', 'team': 'red', 'playedTicks': 10},
-            {'nick': 'Bob', 'team': 'blue', 'playedTicks': 100},
-        ]
-        self.assertIs(infer_mapping({'players': players}, roster), True)
-        swapped = [{**p, 'team': 'blue' if p['team'] == 'red' else 'red'} for p in players]
-        self.assertIs(infer_mapping({'players': swapped}, roster), False)
-        self.assertIsNone(infer_mapping({'players': players + swapped}, roster))
-        self.assertIsNone(infer_mapping({'players': []}, roster))
-        self.assertIsNone(
-            infer_mapping({'players': players}, {'home': {'alice', 'bob', 'sub'}, 'away': {'alice', 'bob', 'sub'}})
-        )
-        analysis = self.analysis({'0': True, '1': False})
-        stats = match_statistics(self.match)
-        expected = [
-            analysis.result['games'][0]['scoreRed'] + analysis.result['games'][1]['scoreBlue'],
-            analysis.result['games'][0]['scoreBlue'] + analysis.result['games'][1]['scoreRed'],
-        ]
-        self.assertEqual(stats['totals']['score'], expected)
-
-    def test_manifest_loads_real_recording_paths_and_hierarchy_without_arbitrary_urls(self):
-        self.analysis({'0': True, '1': False})
-        response = self.client.get(reverse('tournament:analyzer_manifest', args=[self.match.pk]))
-        data = response.json()
-        self.assertEqual(data['match']['season']['id'], self.season.pk)
-        self.assertEqual(data['match']['tour']['id'], self.tour.pk)
-        self.assertEqual(data['teams']['home']['id'], self.home.pk)
-        self.assertEqual(data['recordings'][0]['mappings'], {'0': True, '1': False})
-        self.assertFalse(data['canMap'])
-        with patch('tournament.replay_integration.download_replay', return_value=b'HBR2actual') as download:
-            response = self.client.get(data['recordings'][0]['url'])
-            self.assertEqual(response.content, b'HBR2actual')
-            download.assert_called_once_with(self.url)
-            self.assertEqual(self.client.get(data['recordings'][0]['url'] + '99').status_code, 404)
-
-    def test_authorized_mapping_is_persisted_and_metrics_and_other_games_unchanged(self):
-        analysis = self.analysis({'0': True, '1': False})
-        endpoint = reverse('tournament:analyzer_mapping', args=[self.match.pk, 0])
-        self.assertEqual(
-            self.client.post(
-                endpoint, json.dumps({'game': 0, 'redIsHome': False}), content_type='application/json'
-            ).status_code,
-            403,
-        )
-        editor = User.objects.create_superuser('editor', password='test')
-        self.client.force_login(editor)
-        before = copy.deepcopy(analysis.result)
-        for value in (False, False, None, True):
-            response = self.client.post(
-                endpoint, json.dumps({'game': 0, 'redIsHome': value}), content_type='application/json'
-            )
-            self.assertEqual(response.status_code, 200)
-            analysis.refresh_from_db()
-            self.assertIs(analysis.game_mapping(0), value)
-            self.assertIs(analysis.game_mapping(1), False)
-            self.assertEqual(analysis.result, before)
-        self.assertEqual(analysis.mapping_audit['0']['user'], editor.pk)
-        self.assertEqual(
-            self.client.post(
-                endpoint, json.dumps({'game': 99, 'redIsHome': True}), content_type='application/json'
-            ).status_code,
-            404,
-        )
-        self.assertEqual(
-            self.client.post(
-                endpoint, json.dumps({'game': True, 'redIsHome': 'yes'}), content_type='application/json'
-            ).status_code,
-            400,
-        )
-        csrf_client = Client(enforce_csrf_checks=True, HTTP_USER_AGENT='Replay integration tests')
-        csrf_client.force_login(editor)
-        self.assertEqual(
-            csrf_client.post(
-                endpoint, json.dumps({'game': 0, 'redIsHome': True}), content_type='application/json'
-            ).status_code,
-            403,
-        )
-        manifest = csrf_client.get(reverse('tournament:analyzer_manifest', args=[self.match.pk]))
-        token = manifest.cookies['csrftoken'].value
-        self.assertEqual(
-            csrf_client.post(
-                endpoint,
-                json.dumps({'game': 0, 'redIsHome': True}),
-                content_type='application/json',
-                HTTP_X_CSRFTOKEN=token,
-            ).status_code,
-            200,
-        )
-
-    def test_failed_recording_can_be_retried(self):
-        with patch('tournament.services.local_replays.download_replay', side_effect=TimeoutError('timeout')):
-            self.assertEqual(ingest_match(self.match.pk)['failed_recordings'], 1)
-        self.assertEqual(LocalReplayAnalysis.objects.get().status, 'failed')
+    def test_same_bytes_changed_output_refreshes_metrics_and_preserves_corrections(self):
+        recording = self.seed()
+        part = self.match.replay_parts.order_by('pk').first()
+        part.included = False
+        part.label_override = 'Исправленный тайм'
+        part.order_override = 42
+        part.red_is_home_override = False
+        part.save()
+        raw = copy.deepcopy(self.result)
+        raw['games'][0]['kicks'][0] += 17
         with (
             patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result),
         ):
-            ingest_match(self.match.pk)
-        self.assertEqual(LocalReplayAnalysis.objects.get().status, 'ready')
+            ingest_match(self.match.pk, force=True)
+        recording.refresh_from_db()
+        first_hash = recording.content_sha256
+        response_hash = recording.response_sha256
+        with (
+            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=raw) as engine,
+        ):
+            ingest_match(self.match.pk, force=True)
+            engine.assert_called_once()
+        recording.refresh_from_db()
+        part.refresh_from_db()
+        self.assertEqual(recording.content_sha256, first_hash)
+        self.assertNotEqual(recording.response_sha256, response_hash)
+        self.assertEqual(recording.raw_response, raw)
+        self.assertEqual(part.game.team_stats.get(side='red').kicks, raw['games'][0]['kicks'][0])
+        self.assertFalse(part.included)
+        self.assertEqual(part.label, 'Исправленный тайм')
+        self.assertEqual(part.order, 42)
+        self.assertFalse(part.red_is_home)
 
-    def test_unsupported_ids_and_download_redirects_are_rejected(self):
-        for url in [
-            'https://replay.thehax.pl/../secret',
-            'https://replay.thehax.pl/x?bad=1/../../',
-            'https://hax.saviola.de/r/?h=../../x',
-            'file:///etc/passwd',
-            'https://user@replay.thehax.pl/x',
-        ]:
-            if '?bad' not in url:
-                self.assertIsNone(get_replay_source_and_id(url))
-        with patch('tournament.replay_stats_client.requests.get') as get:
-            get.return_value.__enter__.return_value.status_code = 302
-            with self.assertRaises(ValueError):
-                download_replay(self.url)
-            self.assertFalse(get.call_args.kwargs['allow_redirects'])
+    def test_game_identity_is_engine_id_not_array_position_or_start_tick(self):
+        recording = self.seed()
+        ids = {p.game.engine_game_id: p.pk for p in active_parts(self.match)}
+        raw = copy.deepcopy(self.result)
+        raw['games'].reverse()
+        raw['games'][0]['startTick'] += 123
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        self.assertEqual({p.game.engine_game_id: p.pk for p in active_parts(self.match)}, ids)
 
-    def test_removed_links_are_archived_and_duplicate_recording_links_are_not_counted_twice(self):
-        analysis = self.analysis({'0': True, '1': False})
-        self.match.replays = [self.url, self.url + '/download']
-        self.assertEqual(len(match_recordings(self.match)), 1)
-        self.assertEqual(len(match_statistics(self.match)['games']), 2)
+    def test_disappeared_game_retains_editorial_record_and_returns_with_same_identity(self):
+        recording = self.seed()
+        part = active_parts(self.match)[1]
+        part.label_override = 'Keep me'
+        part.save()
+        raw = copy.deepcopy(self.result)
+        raw['games'] = raw['games'][:1]
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        part.refresh_from_db()
+        self.assertFalse(part.game.available)
+        self.assertTrue(statistics(self.match)['needs_review'])
+        self.assertNotIn(part.pk, [p.pk for p in active_parts(self.match)])
+        materialize(recording, self.result, {'home': set(), 'away': set()}, {})
+        part.refresh_from_db()
+        self.assertTrue(part.game.available)
+        self.assertEqual(part.label, 'Keep me')
+
+    def test_failed_reanalysis_does_not_publish_partial_metrics(self):
+        recording = self.seed()
+        before = list(ReplayTeamStats.objects.order_by('pk').values())
+        invalid = copy.deepcopy(self.result)
+        invalid['games'][1]['kicks'] = []
+        with (
+            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=invalid),
+        ):
+            self.assertEqual(ingest_match(self.match.pk, force=True)['failed_recordings'], 1)
+        recording.refresh_from_db()
+        self.assertEqual(recording.raw_response, self.result)
+        self.assertEqual(before, list(ReplayTeamStats.objects.order_by('pk').values()))
+        self.assertTrue(statistics(self.match)['has_data'])
+
+    def test_recognition_side_swaps_substitutions_and_default(self):
+        roster = {'home': {'alice', 'sub'}, 'away': {'bob'}}
+        players = [
+            {'nick': 'Alice', 'team': 'red', 'playedTicks': 100},
+            {'nick': 'sub', 'team': 'red', 'playedTicks': 5},
+            {'nick': 'Bob', 'team': 'blue', 'playedTicks': 100},
+        ]
+        self.assertEqual(infer_mapping({'players': players}, roster), (True, 'roster'))
+        swapped = [{**p, 'team': 'blue' if p['team'] == 'red' else 'red'} for p in players]
+        self.assertEqual(infer_mapping({'players': swapped}, roster), (False, 'roster'))
+        self.assertEqual(infer_mapping({'players': players + swapped}, roster), (True, 'conflict'))
+        self.assertEqual(infer_mapping({'players': []}, roster), (True, 'default'))
+
+    def test_removed_readded_and_alternate_urls_preserve_parts(self):
+        self.seed()
+        part = active_parts(self.match)[0]
+        part.included = False
+        part.save()
         self.match.replays = []
-        self.assertEqual(match_statistics(self.match)['games'], [])
-        self.assertTrue(LocalReplayAnalysis.objects.filter(pk=analysis.pk).exists())
+        self.assertEqual(active_parts(self.match), [])
+        self.match.replays = [self.url + '/download']
+        self.assertEqual(len(active_parts(self.match)), 2)
+        self.assertFalse(active_parts(self.match)[0].included)
+        Match.objects.filter(pk=self.match.pk).update(replays=[self.url + '/download', self.url])
+        with patch('tournament.services.local_replays.download_replay') as download:
+            ingest_match(self.match.pk)
+            download.assert_not_called()
+        self.assertEqual(ReplayRecording.objects.count(), 1)
+
+    def test_manifest_is_absolute_whole_match_read_only_and_cors_scoped(self):
+        recording = self.seed()
+        part = active_parts(self.match)[1]
+        part.order_override = 0
+        part.label_override = 'Custom'
+        part.red_is_home_override = False
+        part.save()
+        endpoint = reverse('tournament:analyzer_manifest', args=[self.match.pk])
+        response = self.client.get(endpoint, HTTP_ORIGIN='http://localhost:3000')
+        self.assertEqual(response['Access-Control-Allow-Origin'], 'http://localhost:3000')
+        data = response.json()
+        self.assertEqual(data['match']['season']['id'], self.season.pk)
+        self.assertEqual(len(data['parts']), 2)
+        self.assertEqual(data['parts'][1]['gameId'], part.game.engine_game_id)
+        self.assertEqual(data['recordings'][0]['id'], recording.pk)
+        self.assertTrue(data['recordings'][0]['url'].startswith('http://testserver/'))
+        self.assertTrue(data['teams']['home']['logo'].startswith('http://testserver/'))
+        self.assertNotIn('canMap', data)
+        self.assertNotIn('mappingUrl', data['recordings'][0])
+        self.assertEqual(self.client.post(endpoint).status_code, 405)
+        self.assertNotIn('Access-Control-Allow-Origin', self.client.get(endpoint, HTTP_ORIGIN='https://untrusted.test'))
+        with patch('tournament.replay_integration.download_replay', return_value=b'HBR2actual') as download:
+            binary = self.client.get(data['recordings'][0]['url'], HTTP_ORIGIN='http://localhost:3000')
+            self.assertEqual(binary.content, b'HBR2actual')
+            self.assertEqual(binary['Access-Control-Allow-Origin'], 'http://localhost:3000')
+            download.assert_called_once_with(self.url)
+        self.assertIn('context=', analyzer_link(self.match))
+        self.assertIn(f'part={part.pk}', analyzer_link(self.match, part=part))
+
+    def test_existing_statistics_design_uses_only_included_domain_parts(self):
+        self.seed()
+        part = active_parts(self.match)[0]
+        part.label_override = 'My half'
+        part.red_is_home_override = False
+        part.save()
+        stats = statistics(self.match)
+        self.assertEqual(stats['parts_summary'][0]['part_label'], 'My half')
+        self.assertEqual(stats['parts_summary'][0]['score_home'], part.game.team_stats.get(side='blue').goals)
+        self.assertIsNone(stats['players'][0]['shots_total'])
+        expected_passes = sum(row.passes_completed for row in ReplayTeamStats.objects.all())
+        self.assertEqual(stats['team']['passes_home'] + stats['team']['passes_guest'], expected_passes)
+        html = render_to_string('tournament/match/replay_statistics_content.html', {'match': self.match, 'agg': stats})
+        self.assertIn('Команды', html)
+        self.assertIn('Игроки', html)
+        self.assertIn('My half', html)
+        self.assertNotIn('Командные итоги для игр', html)
+        part.included = False
+        part.save()
+        self.assertEqual(len(statistics(self.match)['parts_summary']), 1)
+
+    def test_short_scoreless_restarts_are_excluded_once(self):
+        raw = copy.deepcopy(self.result)
+        raw['games'][0].update(gameTicks=1, scoreRed=0, scoreBlue=0)
+        recording = ReplayRecording.objects.create(
+            match=self.match, source_key='powtorki:test-recording', replay_url=self.url
+        )
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        part = ReplayMatchPart.objects.get(game__engine_game_id=raw['games'][0]['id'])
+        self.assertFalse(part.included)
+        part.included = True
+        part.save()
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        part.refresh_from_db()
+        self.assertTrue(part.included)
+
+    def test_admin_groups_and_rare_corrections(self):
+        self.seed()
+        user = User.objects.create_superuser('editor', password='test')
+        self.client.force_login(user)
+        response = self.client.get(reverse('admin:app_list', args=['tournament']))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Реплеи и статистика')
+        self.assertContains(response, 'Реплеи — архивная статистика')
+        part = active_parts(self.match)[0]
+        endpoint = reverse('admin:tournament_replaymatchpart_change', args=[part.pk])
+        response = self.client.post(
+            endpoint,
+            {
+                'included': 'on',
+                'order_override': '8',
+                'label_override': 'Fixed',
+                'red_is_home_override': 'False',
+                '_save': 'Save',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        part.refresh_from_db()
+        self.assertEqual(part.label, 'Fixed')
+        self.assertEqual(part.order, 8)
+        self.assertFalse(part.red_is_home)
+
+    def test_forced_command_queues_reanalysis_and_normal_command_reuses_results(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        with patch('tournament.tasks.fetch_match_replay_stats.delay') as queued:
+            call_command('build_match_stats', match_ids=[self.match.pk], reanalyze=True, stdout=StringIO())
+            queued.assert_called_once_with(self.match.pk, force=True)
+
+    def test_match_deletion_cascades_without_leaving_protected_part_dependencies(self):
+        self.seed()
+        self.match.delete()
+        self.assertFalse(ReplayRecording.objects.exists())
+        self.assertFalse(ReplayMatchPart.objects.exists())
+
+    def test_legacy_statistics_keep_the_existing_source_and_metrics(self):
+        from types import SimpleNamespace
+
+        from .services.replay_stats import MatchReplayStatsAggregator
+
+        recording = MatchReplay.objects.create(match=self.match, replay_url=self.url, analyzer_replay_id='legacy-id')
+        part = MatchReplayStats.objects.create(match=self.match, match_replay=recording, score_red=3)
+        MatchReplayStatsPlayer.objects.create(replay_stats=part, nick='Legacy player', rating=8.5, played_ticks=3600)
+        agg = MatchReplayStatsAggregator(self.match, [part]).build()
+        html = render_to_string(
+            'tournament/match/statistics.html',
+            {
+                'match': self.match,
+                'match_replay_stats_aggregated': agg,
+                'replay_stats_status': SimpleNamespace(status='success'),
+            },
+        )
+        self.assertIn('https://replay.hax.ma', html)
+        self.assertIn('Legacy player', html)
+        self.assertIn('Рейтинг', html)
+
+    def test_manifest_reports_unprepared_sources_without_silently_omitting_them(self):
+        endpoint = reverse('tournament:analyzer_manifest', args=[self.match.pk])
+        self.assertEqual(self.client.get(endpoint).status_code, 409)
+
+    def test_existing_legacy_screen_remains_default_until_current_data_is_ready(self):
+        from .models import MatchReplayStatsStatus
+
+        recording = MatchReplay.objects.create(match=self.match, replay_url=self.url)
+        part = MatchReplayStats.objects.create(match=self.match, match_replay=recording)
+        MatchReplayStatsPlayer.objects.create(replay_stats=part, nick='Preserved legacy player', played_ticks=3600)
+        MatchReplayStatsStatus.objects.create(match=self.match, status='success')
+        ReplayRecording.objects.create(
+            match=self.match,
+            source_key='powtorki:test-recording',
+            replay_url=self.url,
+            status='failed',
+            error_message='Node unavailable',
+        )
+        Match.objects.filter(pk=self.match.pk).update(is_played=True)
+        response = self.client.get(reverse('tournament:match_detail', args=[self.match.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['show_current_replay_stats'])
+        self.assertContains(response, 'Preserved legacy player')

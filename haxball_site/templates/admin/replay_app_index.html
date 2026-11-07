@@ -1,0 +1,6 @@
+{% extends "admin/app_index.html" %}
+{% load replay_admin %}
+{% block content %}
+  {% replay_admin_groups app_list as app_list %}
+  {{ block.super }}
+{% endblock %}

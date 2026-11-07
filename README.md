@@ -25,9 +25,12 @@
 - `cd haxball_site`
 - Подготавливаем БД
   - `python manage.py makemigrations`
+  - `python manage.py prepare_replay_upgrade`
   - `python manage.py migrate`
 - Создаем суперюзера `python manage.py createsuperuser`
 
 ### Запуск
 - Поднимаем development server - `python manage.py runserver`
 - Параллельно запускаем [vite](https://vite.dev/) dev server для сборки Tailwind'а и автоматического обновления при изменении шаблонов - `cd tailwind && npn run dev`
+
+Replay Analyzer: [integration, domain models and upgrade instructions](analyzer/DJANGO_INTEGRATION.md).

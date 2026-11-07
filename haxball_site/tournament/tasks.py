@@ -577,8 +577,17 @@ def sync_split_groups(league_id: int, group_names: list[str]):
 
 
 @shared_task
-def fetch_match_replay_stats(match_id: int):
-    """Default ingestion entry point. New results live exclusively in LocalReplayAnalysis."""
+def fetch_match_replay_stats(match_id: int, force: bool = False):
+    """Default ingestion entry point using normalized Replay models."""
     from tournament.services.local_replays import ingest_match
 
-    return ingest_match(match_id)
+    return ingest_match(match_id, force=force)
+
+
+@shared_task
+def reanalyze_replay_recordings(recording_ids):
+    from tournament.models import ReplayRecording
+    from tournament.services.local_replays import ingest_match
+
+    matches = ReplayRecording.objects.filter(pk__in=recording_ids).values_list('match_id', flat=True).distinct()
+    return [ingest_match(pk, force=True, recording_ids=recording_ids) for pk in matches]

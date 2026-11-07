@@ -1,119 +1,121 @@
-"""Same-origin, match-scoped integration; public reads follow the public match page."""
+"""Public, read-only manifests and bounded match-scoped replay downloads."""
 
-import json
+from functools import wraps
+from urllib.parse import urlparse
 
-from django.db import transaction
+from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils import timezone
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_GET, require_POST
+from django.utils.cache import patch_vary_headers
+from django.views.decorators.http import require_GET
 
-from .models import LocalReplayAnalysis, Match
+from .models import Match, ReplayRecording
 from .replay_stats_client import download_replay
-from .services.local_replays import match_recordings, match_rosters
+from .services.local_replays import active_parts, recording_sources
 
 
-def can_map(request):
-    return request.user.has_perm('tournament.change_localreplayanalysis')
+def analyzer_cors(view):
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        response = view(request, *args, **kwargs)
+        origin = request.headers.get('Origin')
+        configured_origin = urlparse(settings.REPLAY_ANALYZER_URL)
+        origins = set(settings.REPLAY_ANALYZER_ORIGINS)
+        if configured_origin.netloc:
+            origins.add(f'{configured_origin.scheme}://{configured_origin.netloc}')
+        patch_vary_headers(response, ['Origin'])
+        if origin in origins:
+            response['Access-Control-Allow-Origin'] = origin
+        return response
+
+    return wrapped
 
 
+@analyzer_cors
 @require_GET
-@ensure_csrf_cookie
 def match_manifest(request, pk):
     match = get_object_or_404(
-        Match.objects.select_related('league__championship', 'stage', 'numb_tour', 'group', 'team_home', 'team_guest'),
+        Match.objects.select_related('league__championship', 'stage', 'group', 'numb_tour', 'team_home', 'team_guest'),
         pk=pk,
     )
-
-    rosters = match_rosters(match)
+    records = {r.source_key: r for r in match.replay_recordings.defer('raw_response').all()}
     recordings = []
-    for index, url in match_recordings(match):
-        analysis = match.local_replay_analyses.filter(replay_url=url).first()
-        mappings = (
-            {str(i): analysis.game_mapping(i) for i in range(len(analysis.result.get('games', [])))} if analysis else {}
-        )
-        recordings.append(
-            {
-                'index': index,
-                'name': f'match-{pk}-{index + 1}.hbr2',
-                'url': reverse('tournament:analyzer_recording', args=[pk, index]),
-                'mappingUrl': reverse('tournament:analyzer_mapping', args=[pk, index]),
-                'mappings': mappings,
-                'sha256': analysis.content_sha256 if analysis else None,
-            }
-        )
+    for key, _ in recording_sources(match):
+        recording = records.get(key)
+        if recording is None:
+            return JsonResponse({'error': 'Match statistics have not been prepared yet'}, status=409)
+        if recording:
+            recordings.append(
+                {
+                    'id': recording.pk,
+                    'name': f'match-{pk}-replay-{recording.pk}.hbr2',
+                    'url': request.build_absolute_uri(
+                        reverse('tournament:analyzer_recording', args=[pk, recording.pk])
+                    ),
+                    'sha256': recording.content_sha256 or None,
+                }
+            )
+    parts = [
+        {
+            'id': part.pk,
+            'recordingId': part.game.recording_id,
+            'gameId': part.game.engine_game_id,
+            'label': part.label,
+            'order': part.order,
+            'included': part.included,
+            'redIsHome': part.red_is_home,
+            'startTick': part.game.start_tick,
+        }
+        for part in active_parts(match)
+    ]
+
+    if len(recordings) > 128 or len(parts) > 2048:
+        return JsonResponse({'error': 'Match context exceeds the supported limit'}, status=400)
+
+    def ref(obj):
+        return {'id': obj.pk, 'name': str(obj)} if obj else None
 
     def team(obj):
-        return {'id': obj.pk, 'name': obj.title, 'logo': obj.logo.url if obj.logo else None}
-
-    def reference(obj):
-        return {'id': obj.pk, 'name': str(obj)} if obj else None
+        return {'id': obj.pk, 'name': obj.title, 'logo': request.build_absolute_uri(obj.logo.url) if obj.logo else None}
 
     response = JsonResponse(
         {
-            'schemaVersion': 1,
+            'schemaVersion': 2,
             'match': {
-                'id': pk,
-                'url': match.get_absolute_url(),
-                'season': reference(match.league.championship),
-                'league': reference(match.league),
-                'stage': reference(match.stage),
-                'group': reference(match.group),
-                'tour': reference(match.numb_tour),
+                'id': match.pk,
+                'url': request.build_absolute_uri(match.get_absolute_url()),
+                'season': ref(match.league.championship),
+                'league': ref(match.league),
+                'stage': ref(match.stage),
+                'group': ref(match.group),
+                'tour': ref(match.numb_tour),
                 'date': str(match.match_date) if match.match_date else None,
                 'officialScore': [match.score_home, match.score_guest],
                 'isPlayed': match.is_played,
             },
             'teams': {'home': team(match.team_home), 'away': team(match.team_guest)},
-            'rosters': {key: sorted(value) for key, value in rosters.items()},
             'recordings': recordings,
-            'canMap': can_map(request),
+            'parts': parts,
         }
     )
-    response['Cache-Control'] = 'private, no-store'
+
+    response['Cache-Control'] = 'no-store'
     return response
 
 
+@analyzer_cors
 @require_GET
 def match_recording(request, pk, index):
     match = get_object_or_404(Match, pk=pk)
-    url = dict(match_recordings(match)).get(index)
-    if url is None:
-        return JsonResponse({'error': 'Recording not found'}, status=404)
+    keys = [key for key, _ in recording_sources(match)]
+    recording = get_object_or_404(ReplayRecording, pk=index, match=match, source_key__in=keys)
     try:
-        data = download_replay(url)
+        data = download_replay(recording.replay_url)
     except Exception:
-        return JsonResponse({'error': 'Could not download this recording. Please retry.'}, status=502)
+        return JsonResponse({'error': 'Could not download the recording. Please retry.'}, status=502)
     response = HttpResponse(data, content_type='application/octet-stream')
-    response['Content-Disposition'] = f'attachment; filename="match-{pk}-{index + 1}.hbr2"'
-    response['Cache-Control'] = 'private, max-age=300'
+    response['Content-Disposition'] = f'attachment; filename="match-{pk}-replay-{index}.hbr2"'
+    response['Cache-Control'] = 'public, max-age=300'
     response['X-Content-Type-Options'] = 'nosniff'
     return response
-
-
-@require_POST
-def match_mapping(request, pk, index):
-    if not can_map(request):
-        return JsonResponse({'error': 'Permission denied'}, status=403)
-    try:
-        if len(request.body) > 1024:
-            raise ValueError
-        body = json.loads(request.body)
-        game = body['game']
-        mapping = body['redIsHome']
-        if type(game) is not int or game < 0 or (mapping is not None and type(mapping) is not bool):
-            raise ValueError
-    except (ValueError, KeyError, TypeError):
-        return JsonResponse({'error': 'Expected game index and redIsHome boolean or null'}, status=400)
-    with transaction.atomic():
-        match = get_object_or_404(Match.objects.select_for_update(), pk=pk)
-        url = dict(match_recordings(match)).get(index)
-        analysis = get_object_or_404(LocalReplayAnalysis.objects.select_for_update(), match=match, replay_url=url)
-        if game >= len(analysis.result.get('games', [])):
-            return JsonResponse({'error': 'Game not found'}, status=404)
-        analysis.side_overrides[str(game)] = mapping
-        analysis.mapping_audit[str(game)] = {'user': request.user.pk, 'at': timezone.now().isoformat()}
-        analysis.save(update_fields=['side_overrides', 'mapping_audit'])
-    return JsonResponse({'redIsHome': mapping})

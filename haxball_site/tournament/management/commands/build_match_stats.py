@@ -9,6 +9,7 @@ class Command(BaseCommand):
     help = 'Build match stats'
 
     def add_arguments(self, parser):
+        parser.add_argument('--reanalyze', action='store_true', help='Reanalyze even successful, unchanged recordings')
         parser.add_argument(
             '--season',
             type=int,
@@ -35,4 +36,4 @@ class Command(BaseCommand):
 
         self.stdout.write(f'{matches.count()} matches will be processed')
         for match in matches:
-            fetch_match_replay_stats.delay(match.id)
+            fetch_match_replay_stats.delay(match.id, force=options['reanalyze'])

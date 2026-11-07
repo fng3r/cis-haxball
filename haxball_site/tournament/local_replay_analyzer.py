@@ -1,5 +1,6 @@
 """Boundary adapter for the original analyzer. Never applies to replay.hax.ma payloads."""
 
+import hashlib
 import json
 import subprocess
 import tempfile
@@ -27,3 +28,11 @@ def analyze_local_replay(data):
     if payload.get('schemaVersion') != 1 or payload.get('engine') != 'haxball-replay-analyzer-poc':
         raise ValueError('Unexpected local analyzer schema/engine')
     return payload
+
+
+def engine_revision():
+    root = Path(settings.REPLAY_ANALYZER_CLI).resolve().parent.parent
+    digest = hashlib.sha256()
+    for name in ('src/engine/analyze.js', 'src/engine/vendor-runtime.js', 'package-lock.json'):
+        digest.update((root / name).read_bytes())
+    return f'original-v1:{digest.hexdigest()[:16]}'

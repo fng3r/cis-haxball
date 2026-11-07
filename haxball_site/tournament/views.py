@@ -70,7 +70,8 @@ from .models import (
     TourNumber,
 )
 from .services.hall_of_fame import HallOfFameService
-from .services.local_replays import match_statistics
+from .services.local_replays import analyzer_link
+from .services.replay_presentation import statistics as replay_statistics
 from .services.replay_stats import MatchReplayStatsAggregator
 from .services.structured_medals import get_team_medals, get_team_medals_by_season
 from .services.team_results import get_team_results
@@ -661,10 +662,20 @@ class MatchDetail(DetailView):
         cards = match.cards.select_related('team', 'author__name__user_profile').order_by('team')
         context['cards'] = cards
 
-        context['analyzer_url'] = f'{settings.REPLAY_ANALYZER_URL}?match={match.pk}'
-        context['local_replay_statistics'] = match_statistics(match)
+        context['analyzer_url'] = analyzer_link(match, self.request)
+        context['current_replay_stats'] = replay_statistics(match, self.request)
+        requested_source = self.request.GET.get('stats')
+        context['show_current_replay_stats'] = bool(
+            context['current_replay_stats']['recordings']
+            and requested_source != 'legacy'
+            and (
+                context['current_replay_stats']['has_data']
+                or requested_source == 'current'
+                or not getattr(match, 'replay_stats_status', None)
+            )
+        )
         context['has_replay_statistics'] = bool(
-            context['local_replay_statistics']['analyses'] or getattr(match, 'replay_stats_status', None)
+            context['current_replay_stats']['recordings'] or getattr(match, 'replay_stats_status', None)
         )
 
         # Replay-based advanced stats (Haxball Analyzer)

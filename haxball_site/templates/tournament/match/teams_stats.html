@@ -25,6 +25,7 @@
   </div>
 </div>
 
+{% if not agg.is_current %}
 {% stats_percentage stats.shots_total_home stats.shots_total_guest as pct %}
 <div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
   <div class="tw:flex">
@@ -48,6 +49,7 @@
   </div>
 </div>
 
+{% endif %}
 {% stats_percentage stats.shots_home stats.shots_guest as pct %}
 <div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
   <div class="tw:flex">
@@ -99,7 +101,7 @@
   <div class="tw:flex">
     <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-start">{{ stats.kicks_home }}</div>
     <div class="tw:w-1/2 tw:flex tw:flex-col tw:justify-center">
-      <span class="tw:text-center tw:text-xl tw:font-semibold">Касания</span>
+      <span class="tw:text-center tw:text-xl tw:font-semibold">{% if agg.is_current %}Удары по мячу{% else %}Касания{% endif %}</span>
     </div>
     <div class="tw:w-1/4 tw:flex tw:flex-col tw:text-lg tw:font-semibold tw:items-end">{{ stats.kicks_guest }}</div>
   </div>
@@ -117,6 +119,7 @@
   </div>
 </div>
 
+{% if not agg.is_current %}
 {% stats_percentage stats.saves_home stats.saves_guest as pct %}
 <div class="tw:flex tw:w-full tw:flex-col tw:justify-center tw:mb-1">
   <div class="tw:flex">
@@ -140,6 +143,7 @@
   </div>
 </div>
 
+{% endif %}
 <div class="tw:mt-4 tw:mb-2 tw:grid tw:grid-cols-1 tw:md:grid-cols-12 tw:gap-3">
   <div class="tw:md:col-span-3 tw:flex tw:flex-col tw:gap-3 tw:md:h-44">
     <div class="tw:rounded-lg tw:border tw:border-base-300 tw:bg-base-200 tw:p-3 tw:flex-1 tw:min-h-0">
@@ -175,3 +179,5 @@
     </div>
   </div>
 </div>
+
+{% if agg.is_current and stats.analyzer_url %}<a href="{{ stats.analyzer_url }}" class="tw:btn tw:btn-sm tw:self-start">Открыть эту часть в анализаторе</a>{% endif %}

@@ -1,5 +1,5 @@
 import MatchContext, { TeamIdentity } from './components/MatchContext.jsx';
-import { matchId, inferMapping, fetchMatchRecording, saveMapping } from './match-context.js';
+import { contextURL, fetchMatchContext, fetchMatchRecording } from './match-context.js';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Download, FolderOpen, Maximize, Minimize, Moon, RotateCcw, Sun, Trash2, X } from 'lucide-react';
 import NativePlayer from './components/NativePlayer.jsx';
@@ -116,7 +116,7 @@ export default function App() {
     if (meta) meta.content = theme === 'replay' ? '#f3f4f9' : '#171b29';
     try { localStorage.setItem('replay-theme', theme); } catch {}
   }, [theme]);
-  const [engine] = useState(() => new URL(window.location.href).searchParams.has('match') ? 'legacy' : getEngine());
+  const [engine] = useState(() => new URL(window.location.href).searchParams.has('context') ? 'legacy' : getEngine());
   const { recordings, recording, active, addFiles, cancel, clear, remove, retry, select } = useReplayLibrary({ engine });
   const replay = recording?.result;
   const isV2 = replay?.schemaVersion === 2;
@@ -143,26 +143,28 @@ export default function App() {
   const loadedMatchRecordings = useRef(new Set());
   useEffect(() => {
     const controller = new AbortController();
-    let id;
-    try { id = matchId(); } catch (error) { setMatchError(error.message); return; }
-    if (!id) return;
+    let url;
+    try { url = contextURL(); } catch (error) { setMatchError(error.message); return; }
+    if (!url) return;
     setMatchLoading(true); setMatchError('');
     (async () => {
       try {
-        const response = await fetch(new URL(`../championship/match/${id}/analyzer`, window.location.href), { signal: controller.signal, credentials: 'same-origin' });
-        if (!response.ok) throw new Error(`Match context unavailable (HTTP ${response.status}).`);
-        const context = await response.json();
+        const context = await fetchMatchContext(url, controller.signal);
         if (controller.signal.aborted) return;
         setMatchContext(context);
         let first = loadedMatchRecordings.current.size === 0;
+        const selectInitial = first;
+        const requestedPart = Number(new URL(window.location.href).searchParams.get('part'));
+        const initialPart = context.parts.find(part => part.id === requestedPart && part.included) || context.parts.find(part => part.included);
+        if (first) pendingPart.current = initialPart || null;
         const failures = [];
         for (const item of context.recordings) {
-          if (loadedMatchRecordings.current.has(item.index)) continue;
+          if (loadedMatchRecordings.current.has(item.id)) continue;
           try {
             const file = await fetchMatchRecording(item, controller.signal);
             if (controller.signal.aborted) return;
-            addMatchFiles.current([file], { selectFirst: first, matchRecording: item });
-            loadedMatchRecordings.current.add(item.index); first = false;
+            addMatchFiles.current([file], { selectFirst: selectInitial && (initialPart ? initialPart.recordingId === item.id : first), matchRecording: item });
+            loadedMatchRecordings.current.add(item.id); first = false;
           } catch (error) {
             if (controller.signal.aborted) return;
             failures.push(`${item.name}: ${error.message}`);
@@ -176,25 +178,35 @@ export default function App() {
   }, [matchAttempt]);
   const matchRecording = recording?.matchRecording;
   const activeMatchContext = matchRecording ? matchContext : null;
-  const mappingKey = String(gameIndex);
-  const [savedMappings, setSavedMappings] = useState({});
-  const overrideKey = `${matchRecording?.index}:${gameIndex}`;
-  const mapping = Object.hasOwn(savedMappings, overrideKey) ? savedMappings[overrideKey]
-    : matchRecording && Object.hasOwn(matchRecording.mappings, mappingKey) ? matchRecording.mappings[mappingKey]
-    : inferMapping(game, activeMatchContext);
-  const redIdentity = activeMatchContext && mapping !== null ? activeMatchContext.teams[mapping ? 'home' : 'away'] : null;
-  const blueIdentity = activeMatchContext && mapping !== null ? activeMatchContext.teams[mapping ? 'away' : 'home'] : null;
-  async function updateMapping(value) {
-    try {
-      await saveMapping(matchRecording, gameIndex, value);
-      setSavedMappings(current => ({ ...current, [overrideKey]: value }));
-    } catch (error) { setError(error.message); }
+  const currentPart = activeMatchContext?.parts.find(part => part.recordingId === matchRecording.id && part.gameId === game?.id);
+  const mapping = currentPart?.redIsHome;
+  const redIdentity = activeMatchContext && mapping !== undefined ? activeMatchContext.teams[mapping ? 'home' : 'away'] : null;
+  const blueIdentity = activeMatchContext && mapping !== undefined ? activeMatchContext.teams[mapping ? 'away' : 'home'] : null;
+  const pendingPart = useRef(null);
+  function openPart(part) {
+    const target = recordings.find(item => item.matchRecording?.id === part.recordingId);
+    if (!target) return;
+    if (target.id === recording?.id && replay) {
+      const index = replay.games.findIndex(game => game.id === part.gameId);
+      if (index >= 0) selectGame(index);
+    } else { pendingPart.current = part; select(target.id); }
   }
-
+  useEffect(() => {
+    setGameIndex(0);
+    setSelectedPlayer(null); setMapStatistic('heatmap'); setTab('overview');
+  }, [recording?.id]);
 
   useEffect(() => {
-    setGameIndex(0); setSelectedPlayer(null); setMapStatistic('heatmap'); setTab('overview');
-  }, [recording?.id]);
+    const part = pendingPart.current;
+    if (!part || matchRecording?.id !== part.recordingId || !replay) return;
+    const index = replay.games.findIndex(item => item.id === part.gameId);
+    if (index < 0) { setError(`The recording no longer contains ${part.label}. Refresh its analysis in Django.`); pendingPart.current = null; return; }
+    setGameIndex(index);
+    nativePlayer.current?.seek(replay.games[index].startTick);
+    pendingPart.current = null;
+  }, [recording?.id, replay]);
+
+
 
   useEffect(() => { if (!recording) setFocusMode(false); }, [recording]);
   useEffect(() => {
@@ -247,7 +259,7 @@ export default function App() {
     <header className={focusMode ? 'hidden' : 'border-b border-base-300 bg-base-100'}>
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3"><Mark /><div><h1 className="text-xl font-extrabold tracking-tight">REPLAY<span className="ml-1 font-normal">ANALYZER</span></h1><p className="text-[10px] font-semibold tracking-[0.18em] text-base-content/50">HAXBALL MATCH ANALYSIS</p></div></div>
-        <div className="flex items-center gap-2 sm:gap-5"><EngineSwitcher engine={engine} /><button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}>{theme === 'replay-dark' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button></div>
+        <div className="flex items-center gap-2 sm:gap-5">{!new URL(window.location.href).searchParams.has('context') && <EngineSwitcher engine={engine} />}<button className="btn btn-sm btn-square" aria-label={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'replay-dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'replay-dark' ? 'replay' : 'replay-dark')}>{theme === 'replay-dark' ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button></div>
       </div>
     </header>
     <input ref={input} type="file" accept=".hbr2" multiple aria-label="Open HaxBall replay" className="sr-only" onChange={event => { open(event.target.files); event.target.value = ''; }} />
@@ -272,7 +284,8 @@ export default function App() {
             {['error', 'cancelled'].includes(item.status) && <button className="btn btn-ghost btn-xs mt-2" aria-label={`Retry analysis of ${item.file.name}`} onClick={() => retry(item.id)}><RotateCcw className="size-3" aria-hidden="true" />Retry analysis</button>}
           </div>)}</div>
         </section>}
-        {replay && <section aria-label="Games in recording">
+        {matchContext && <section aria-label="Match parts"><h3 className="mb-3 text-xs font-semibold text-base-content/60">Match parts</h3><div className="space-y-2">{matchContext.parts.filter(part => part.included).map(part => <button key={part.id} className="btn btn-sm w-full justify-start" disabled={!recordings.some(item => item.matchRecording?.id === part.recordingId && item.status === 'ready')} aria-pressed={currentPart?.id === part.id} onClick={() => openPart(part)}>{part.label}</button>)}</div></section>}
+        {replay && !matchRecording && <section aria-label="Games in recording">
           <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Games</span><span>{replay.games.length}</span></div>
           <div className="space-y-2">{replay.games.map((item, index) => <button key={item.id} aria-pressed={gameIndex === index} onClick={() => selectGame(index)} className={`w-full rounded-box border p-4 text-left ${gameIndex === index ? 'border-base-content/30 bg-base-100 shadow-sm' : 'border-transparent hover:bg-base-100/60'}`}>
             <div className="flex justify-between text-sm font-semibold"><span>Game {index + 1}</span><span className="font-mono"><span className="text-error">{item.scoreRed}</span><span className="px-2 text-base-content/30">:</span><span className="text-info">{item.scoreBlue}</span></span></div>
@@ -281,7 +294,7 @@ export default function App() {
         </section>}
       </aside>
       <div className={focusMode ? 'min-w-0' : 'min-w-0 space-y-6'}>
-        {!focusMode && <MatchContext context={matchContext} loading={matchLoading} error={matchError} onRetry={() => setMatchAttempt(value => value + 1)} mapping={mapping} onMapping={updateMapping} game={activeMatchContext && game} />}
+        {!focusMode && <MatchContext context={matchContext} loading={matchLoading} error={matchError} onRetry={() => setMatchAttempt(value => value + 1)} part={currentPart} />}
         {!focusMode && error && <div role="alert" className="alert alert-error"><span>{error}</span><button className="btn btn-sm" onClick={() => setError('')}>Dismiss</button></div>}
         {!focusMode && recording?.status === 'error' && <div role="alert" className="alert alert-error"><span>{recording.file.name}: {recording.error}</span></div>}
         {!focusMode && busy && <section className="rounded-box border border-base-300 bg-base-100 p-5" aria-live="polite" aria-busy="true">
@@ -307,7 +320,7 @@ export default function App() {
               : <div className="flex min-h-72 flex-col items-center justify-center rounded-box bg-neutral p-8 text-center text-neutral-content"><p className="text-sm">Open a recording to watch the replay.</p><p className="mt-3 text-xs opacity-60">The original HaxBall player handles playback.</p></div>}
           </div>
         </section>
-        {!focusMode && (game ? <section ref={statsCard} className="scroll-mt-4 rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
+        {!focusMode && (game && (!matchRecording || currentPart?.included) ? <section ref={statsCard} className="scroll-mt-4 rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2"><h2 className="text-lg font-semibold">Game {gameIndex + 1}</h2><p className="text-sm text-base-content/55">{game.stadium.name}</p></div>
           <div role="tablist" aria-label="Match information" className="tabs tabs-border mb-6">{['overview', 'players', 'goals'].map(name => <button key={name} role="tab" id={`tab-${name}`} aria-controls="match-panel" aria-selected={tab === name} className={`tab capitalize ${tab === name ? 'tab-active' : ''}`} onClick={() => setTab(name)}>{name}{name === 'goals' ? ` · ${game.goals.length}` : ''}</button>)}</div>
           <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>

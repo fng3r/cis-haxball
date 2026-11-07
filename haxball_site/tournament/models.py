@@ -3107,40 +3107,138 @@ class LegacyMedalMapping(models.Model):
         verbose_name_plural = 'Связи со старыми медалями'
 
 
-class LocalReplayAnalysis(models.Model):
-    """Original local-engine results. Independent of all legacy replay statistics.
-
-    Games and players retain engine schema v1; unavailable metrics have no columns.
-    Mapping keys are zero-based game positions, never assumed half numbers.
-    """
+class ReplayRecording(models.Model):
+    """Source recording and raw original-engine analysis; no editorial part configuration."""
 
     class Status(models.TextChoices):
         PENDING = 'pending', 'Ожидание'
         READY = 'ready', 'Готово'
         FAILED = 'failed', 'Ошибка'
 
-    match = models.ForeignKey(Match, related_name='local_replay_analyses', on_delete=models.CASCADE)
+    match = models.ForeignKey(Match, related_name='replay_recordings', on_delete=models.CASCADE)
+    source_key = models.CharField(max_length=160)
     replay_url = models.URLField(max_length=512)
-    engine_version = models.CharField(max_length=64, default='original-v1')
-    result = models.JSONField(default=dict, blank=True)
-    inferred_sides = models.JSONField(default=dict, blank=True)
-    side_overrides = models.JSONField(default=dict, blank=True)
-    # Who resolved each game, and when. Inference never replaces manual choices.
-    mapping_audit = models.JSONField(default=dict, blank=True)
     content_sha256 = models.CharField(max_length=64, blank=True)
+    response_sha256 = models.CharField(max_length=64, blank=True)
+    raw_response = models.JSONField(default=dict, blank=True)
+    engine_version = models.CharField(max_length=80, blank=True)
+    schema_version = models.PositiveSmallIntegerField(default=1)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
     error_message = models.TextField(blank=True)
     analyzed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['id']
-        constraints = [models.UniqueConstraint(fields=['match', 'replay_url'], name='local_replay_match_url_unique')]
-        verbose_name = 'Локальная статистика реплея'
-        verbose_name_plural = 'Локальная статистика реплеев'
-
-    def game_mapping(self, index):
-        key = str(index)
-        return self.side_overrides.get(key, self.inferred_sides.get(key))
+        constraints = [models.UniqueConstraint(fields=['match', 'source_key'], name='replay_recording_source_unique')]
+        verbose_name = 'Запись реплея'
+        verbose_name_plural = 'Записи реплеев'
 
     def __str__(self):
-        return f'{self.match_id}: {self.replay_url} ({self.engine_version})'
+        return f'{self.match_id}: {self.source_key}'
+
+
+class ReplayGame(models.Model):
+    recording = models.ForeignKey(ReplayRecording, related_name='games', on_delete=models.CASCADE)
+    engine_game_id = models.PositiveIntegerField()
+    start_tick = models.PositiveIntegerField(default=0)
+    stadium_name = models.CharField(max_length=255, blank=True)
+    active_ticks = models.PositiveIntegerField(default=0)
+    available = models.BooleanField(default=True, help_text='Игра присутствует в последнем результате анализа')
+
+    class Meta:
+        ordering = ['recording_id', 'engine_game_id']
+        constraints = [
+            models.UniqueConstraint(fields=['recording', 'engine_game_id'], name='replay_game_identity_unique')
+        ]
+        verbose_name = 'Игра в реплее'
+        verbose_name_plural = 'Игры в реплеях'
+
+    def __str__(self):
+        return f'{self.recording} / игра {self.engine_game_id}'
+
+
+class ReplayMatchPart(models.Model):
+    """Stable match-to-game association; nullable overrides distinguish corrections from generated values."""
+
+    match = models.ForeignKey(Match, related_name='replay_parts', on_delete=models.CASCADE)
+    game = models.OneToOneField(ReplayGame, related_name='match_part', on_delete=models.RESTRICT)
+    included = models.BooleanField('Учитывать в матче', default=True)
+    generated_order = models.PositiveIntegerField(default=0)
+    generated_label = models.CharField(max_length=100, blank=True)
+    inferred_red_is_home = models.BooleanField(default=True)
+    mapping_evidence = models.CharField(max_length=24, default='default')
+    order_override = models.PositiveIntegerField('Порядок (исправление)', null=True, blank=True)
+    label_override = models.CharField('Название (исправление)', max_length=100, null=True, blank=True)
+    red_is_home_override = models.BooleanField('Красные = хозяева (исправление)', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Часть матча по реплею'
+        verbose_name_plural = 'Части матчей по реплеям'
+
+    @property
+    def order(self):
+        return self.order_override if self.order_override is not None else self.generated_order
+
+    @property
+    def label(self):
+        return self.label_override if self.label_override is not None else self.generated_label
+
+    @property
+    def red_is_home(self):
+        return self.red_is_home_override if self.red_is_home_override is not None else self.inferred_red_is_home
+
+    def clean(self):
+        super().clean()
+        if self.game_id and self.match_id != self.game.recording.match_id:
+            raise ValidationError({'game': 'Игра и часть должны принадлежать одному матчу.'})
+
+    def __str__(self):
+        return f'{self.match_id}: {self.label}'
+
+
+class ReplayTeamStats(models.Model):
+    class Side(models.TextChoices):
+        RED = 'red', 'Red'
+        BLUE = 'blue', 'Blue'
+
+    game = models.ForeignKey(ReplayGame, related_name='team_stats', on_delete=models.CASCADE)
+    side = models.CharField(max_length=4, choices=Side.choices)
+    goals = models.PositiveIntegerField(default=0)
+    possession_ticks = models.PositiveIntegerField(default=0)
+    kicks = models.PositiveIntegerField(default=0)
+    passes_completed = models.PositiveIntegerField(default=0)
+    shots_on_target = models.PositiveIntegerField(default=0)
+    territory_ticks = models.PositiveIntegerField(default=0)
+    middle_ticks = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['game', 'side'], name='replay_team_side_unique')]
+        verbose_name = 'Статистика стороны реплея'
+        verbose_name_plural = 'Статистика сторон реплеев'
+
+    def __str__(self):
+        return f'{self.game_id}: {self.side}'
+
+
+class ReplayPlayerStats(models.Model):
+    game = models.ForeignKey(ReplayGame, related_name='player_stats', on_delete=models.CASCADE)
+    replay_player_id = models.CharField(max_length=80)
+    side = models.CharField(max_length=4, choices=ReplayTeamStats.Side.choices)
+    nick = models.CharField(max_length=150)
+    player = models.ForeignKey(Player, null=True, blank=True, on_delete=models.SET_NULL)
+    active_ticks = models.PositiveIntegerField(default=0)
+    goals = models.PositiveIntegerField(default=0)
+    assists = models.PositiveIntegerField(default=0)
+    kicks = models.PositiveIntegerField(default=0)
+    passes_completed = models.PositiveIntegerField(default=0)
+    shots_on_target = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['game', 'replay_player_id'], name='replay_player_identity_unique')
+        ]
+        verbose_name = 'Статистика игрока в реплее'
+        verbose_name_plural = 'Статистика игроков в реплеях'
+
+    def __str__(self):
+        return f'{self.game_id}: {self.nick} ({self.side})'
