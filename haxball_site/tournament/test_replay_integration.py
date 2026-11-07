@@ -359,3 +359,39 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['show_current_replay_stats'])
         self.assertContains(response, 'Preserved legacy player')
+
+    def test_manifest_context_titles_single_stage_and_duplicate_part_labels(self):
+        self.seed()
+        self.match.replay_parts.update(label_override='Тайм')
+        endpoint = reverse('tournament:analyzer_manifest', args=[self.match.pk])
+        data = self.client.get(endpoint).json()
+        self.assertEqual(data['match']['league']['name'], self.league.title)
+        self.assertIsNone(data['match']['stage'])
+        self.assertEqual(data['match']['tour']['name'], '1 тур')
+        self.assertEqual([p['displayLabel'] for p in data['parts']], ['Тайм [1]', 'Тайм [2]'])
+        self.assertEqual([p['label'] for p in data['parts']], ['Тайм', 'Тайм'])
+        from .models import PlayOffStage
+
+        PlayOffStage.objects.create(league=self.league, order=2)
+        data = self.client.get(endpoint).json()
+        self.assertEqual(data['match']['stage']['name'], str(self.stage))
+        first = active_parts(self.match)[0]
+        first.included = False
+        first.save()
+        data = self.client.get(endpoint).json()
+        self.assertEqual([p['displayLabel'] for p in data['parts']], ['Тайм', 'Тайм'])
+
+    def test_manifest_playoff_round_names_and_explicit_tour_name(self):
+        from .models import PlayOffStage
+
+        self.seed()
+        stage = PlayOffStage.objects.create(league=self.league, order=2)
+        final_tour = TourNumber.objects.create(league=self.league, stage=stage, number=2)
+        semifinal = TourNumber.objects.create(league=self.league, stage=stage, number=1)
+        Match.objects.filter(pk=self.match.pk).update(stage=stage, numb_tour=semifinal)
+        endpoint = reverse('tournament:analyzer_manifest', args=[self.match.pk])
+        self.assertEqual(self.client.get(endpoint).json()['match']['tour']['name'], '1/2 Финала')
+        Match.objects.filter(pk=self.match.pk).update(numb_tour=final_tour)
+        self.assertEqual(self.client.get(endpoint).json()['match']['tour']['name'], 'Финал')
+        TourNumber.objects.filter(pk=final_tour.pk).update(name='Grand Final')
+        self.assertEqual(self.client.get(endpoint).json()['match']['tour']['name'], 'Grand Final')

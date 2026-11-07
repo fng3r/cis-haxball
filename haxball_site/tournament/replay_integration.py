@@ -1,5 +1,6 @@
 """Public, read-only manifests and bounded match-scoped replay downloads."""
 
+from collections import Counter
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -13,6 +14,7 @@ from django.views.decorators.http import require_GET
 from .models import Match, ReplayRecording
 from .replay_stats_client import download_replay
 from .services.local_replays import active_parts, recording_sources
+from .templatetags.tournament_extras import cup_round_name, tour_name
 
 
 def analyzer_cors(view):
@@ -70,11 +72,23 @@ def match_manifest(request, pk):
         for part in active_parts(match)
     ]
 
+    totals = Counter(part['label'] for part in parts if part['included'])
+    seen = Counter()
+    for part in parts:
+        label = part['label']
+        if part['included']:
+            seen[label] += 1
+        part['displayLabel'] = f'{label} [{seen[label]}]' if part['included'] and totals[label] > 1 else label
+    stage = match.stage if match.stage_id and match.league.is_multistage_league() else None
+    tour = match.numb_tour
+    tour.stage = tour.stage.get_real_instance()
+    tour_label = cup_round_name(tour) if tour.stage.is_playoff else tour_name(tour)
+
     if len(recordings) > 128 or len(parts) > 2048:
         return JsonResponse({'error': 'Match context exceeds the supported limit'}, status=400)
 
-    def ref(obj):
-        return {'id': obj.pk, 'name': str(obj)} if obj else None
+    def ref(obj, name=None):
+        return {'id': obj.pk, 'name': name if name is not None else str(obj)} if obj else None
 
     def team(obj):
         return {'id': obj.pk, 'name': obj.title, 'logo': request.build_absolute_uri(obj.logo.url) if obj.logo else None}
@@ -86,10 +100,10 @@ def match_manifest(request, pk):
                 'id': match.pk,
                 'url': request.build_absolute_uri(match.get_absolute_url()),
                 'season': ref(match.league.championship),
-                'league': ref(match.league),
-                'stage': ref(match.stage),
+                'league': ref(match.league, match.league.title),
+                'stage': ref(stage),
                 'group': ref(match.group),
-                'tour': ref(match.numb_tour),
+                'tour': ref(tour, tour_label),
                 'date': str(match.match_date) if match.match_date else None,
                 'officialScore': [match.score_home, match.score_guest],
                 'isPlayed': match.is_played,

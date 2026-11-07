@@ -73,3 +73,18 @@ it('loads actual HBR2 bytes with size and fingerprint checks', async () => {
   fetch.mockResolvedValue(new Response(bytes, { headers: { 'content-length': String(33 * 1024 * 1024) } }));
   await expect(fetchMatchRecording(recording, new AbortController().signal)).rejects.toThrow('32 MiB');
 });
+
+
+it('shows the concise season, league-stage and tour line without repeating the league or group', () => {
+  const { rerender } = render(<MatchContext context={{ ...context, match: { ...context.match,
+    season: { name: 'ЧР, 17 сезон' }, league: { name: 'Единая лига' },
+    stage: { name: 'Единая лига – Регулярка' }, group: { name: 'Группа A' }, tour: { name: '1 тур' },
+  } }} />);
+  expect(screen.getByText('ЧР, 17 сезон · Единая лига – Регулярка · 1 тур')).toBeInTheDocument();
+  expect(screen.queryByText(/Группа A/)).toBeNull();
+  rerender(<MatchContext context={{ ...context, match: { ...context.match,
+    season: { name: 'ЧР, 17 сезон' }, league: { name: 'Единая лига' }, stage: null, tour: { name: '1 тур' },
+  } }} part={{ ...context.parts[0], label: 'Тайм', displayLabel: 'Тайм [2]' }} />);
+  expect(screen.getByText('ЧР, 17 сезон · Единая лига · 1 тур')).toBeInTheDocument();
+  expect(screen.getByText('Тайм [2]')).toBeInTheDocument();
+});

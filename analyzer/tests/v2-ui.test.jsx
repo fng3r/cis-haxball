@@ -110,14 +110,14 @@ it('switches real futsal matches and seeks goals from the selected game', async 
   const post = vi.spyOn(frame.contentWindow, 'postMessage').mockImplementation(() => {});
   act(() => window.dispatchEvent(new MessageEvent('message', { origin: location.origin, source: frame.contentWindow, data: { source: 'haxball-native-player', type: 'ready' } })));
   const games = within(screen.getByRole('region', { name: 'Games in recording' }));
-  fireEvent.click(games.getByRole('button', { name: /^Game 2 / }));
+  fireEvent.click(games.getByRole('button', { name: /^Game 2$/ }));
   expect(post).toHaveBeenLastCalledWith({ type: 'seek', tick: multi.games[1].startTick }, location.origin);
   fireEvent.click(screen.getByRole('tab', { name: 'goals · 7' }));
   expect(screen.getAllByRole('button', { name: /^Watch .* goal at/ })).toHaveLength(7);
   const goal = multi.games[1].goals.at(-1);
   fireEvent.click(screen.getByRole('button', { name: /score 7–0$/ }));
   expect(post).toHaveBeenLastCalledWith({ type: 'seek-goal', tick: goal.tick }, location.origin);
-  fireEvent.click(games.getByRole('button', { name: /^Game 1 / }));
+  fireEvent.click(games.getByRole('button', { name: /^Game 1$/ }));
   expect(post).toHaveBeenLastCalledWith({ type: 'seek', tick: multi.games[0].startTick }, location.origin);
   expect(screen.getByRole('tab', { name: 'goals · 5' })).toBeInTheDocument();
 });

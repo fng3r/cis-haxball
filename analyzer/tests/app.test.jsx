@@ -396,8 +396,8 @@ it.each([null, 100])('loads the whole match and selects the requested part %s by
     match: { id: 6862, url: 'https://django.test/championship/match/6862', season: { name: 'ЧР #17' }, officialScore: [2, 1] },
     teams: { home: { name: 'Home', logo: '/home.png' }, away: { name: 'Away', logo: '/away.png' } },
     recordings: [{ id: 10, name: 'a.hbr2', url: 'https://django.test/a' }, { id: 11, name: 'b.hbr2', url: 'https://django.test/b' }],
-    parts: [{ id: 101, recordingId: 11, gameId: 0, order: 0, included: true, redIsHome: false, label: 'First half' },
-      { id: 100, recordingId: 10, gameId: 1, order: 1, included: true, redIsHome: true, label: 'Second half' },
+    parts: [{ id: 101, recordingId: 11, gameId: 0, order: 0, included: true, redIsHome: false, label: 'Half', displayLabel: 'Half [1]' },
+      { id: 100, recordingId: 10, gameId: 1, order: 1, included: true, redIsHome: true, label: 'Half', displayLabel: 'Half [2]' },
       { id: 102, recordingId: 10, gameId: 0, order: 2, included: false, redIsHome: true, label: 'Warmup' }],
   };
   vi.spyOn(matchIntegration, 'fetchMatchContext').mockResolvedValue(context);
@@ -413,19 +413,32 @@ it.each([null, 100])('loads the whole match and selects the requested part %s by
     await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
     await waitFor(() => expect(FakeWorker.instances[1].postMessage).toHaveBeenCalled());
     act(() => FakeWorker.instances[1].send({ type: 'result', result: { games: [game] } }));
-    await waitFor(() => expect(screen.getByRole('button', { name: requestedPart ? 'Second half' : 'First half' })).toHaveAttribute('aria-pressed', 'true'));
+    await waitFor(() => expect(screen.getByRole('button', { name: requestedPart ? 'Half [2]' : 'Half [1]' })).toHaveAttribute('aria-pressed', 'true'));
     expect(matchIntegration.fetchMatchContext).toHaveBeenCalledWith(expect.objectContaining({ href: url }), expect.any(AbortSignal));
     expect(matchIntegration.fetchMatchRecording).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('button', { name: 'Warmup' })).toBeNull();
-    const red = document.querySelector('.bg-error').parentElement;
+    const scoreboard = screen.getByLabelText('Replay scoreboard');
+    const red = scoreboard.firstElementChild.firstElementChild;
+    expect(document.querySelector('.bg-error').parentElement).toHaveTextContent('Red team');
+    const away = within(scoreboard).getByText('Away').parentElement;
+    expect(away.lastElementChild.tagName).toBe('IMG');
     expect(red).toHaveTextContent(requestedPart ? 'Home' : 'Away');
     expect(red.querySelector('img')).toHaveAttribute('src', requestedPart ? '/home.png' : '/away.png');
-    const destination = requestedPart ? 'First half' : 'Second half';
+    const destination = requestedPart ? 'Half [1]' : 'Half [2]';
     fireEvent.click(screen.getByRole('button', { name: destination }));
-    await waitFor(() => expect(red).toHaveTextContent(requestedPart ? 'Away' : 'Home'));
+    await waitFor(() => expect(scoreboard.firstElementChild.firstElementChild).toHaveTextContent(requestedPart ? 'Away' : 'Home'));
     expect(screen.getByRole('button', { name: destination })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Open recording b.hbr2' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'First half' })).toHaveAttribute('aria-pressed', 'true'));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Half [1]' })).toHaveAttribute('aria-pressed', 'true'));
+    const partCard = screen.getByRole('button', { name: 'Half [1]' });
+    expect(partCard).toHaveTextContent('Big');
+    expect(partCard).toHaveTextContent('1:0');
+    expect(screen.getByRole('heading', { name: 'Half [1]' })).toBeInTheDocument();
+    expect(scoreboard).toHaveTextContent('Half [1]');
+    fireEvent.click(screen.getByRole('tab', { name: 'players' }));
+    const playerButton = screen.getByRole('button', { name: 'Away Alice' });
+    expect(playerButton.querySelector('img')).toHaveAttribute('src', '/away.png');
+    expect(playerButton.querySelector('img').nextSibling.textContent).toContain('Alice');
     expect(screen.queryByRole('combobox', { name: 'Red side team' })).toBeNull();
   } finally { window.history.replaceState({}, '', previous); }
 });

@@ -43,13 +43,20 @@ function Comparison({ label, values, percentage = false }) {
   </div>;
 }
 
-function GoalList({ game, onSeek, redIdentity, blueIdentity }) {
+function GameCard({ game, label, selected, disabled, onSelect }) {
+  return <button aria-label={label} aria-pressed={selected} disabled={disabled} onClick={onSelect} className={`w-full rounded-box border p-4 text-left disabled:opacity-50 ${selected ? 'border-base-content/30 bg-base-100 shadow-sm' : 'border-transparent hover:bg-base-100/60'}`}>
+    <div className="flex justify-between gap-2 text-sm font-semibold"><span>{label}</span><span className="shrink-0 font-mono"><span className="text-error">{game?.scoreRed ?? '—'}</span><span className="px-2 text-base-content/30">:</span><span className="text-info">{game?.scoreBlue ?? '—'}</span></span></div>
+    <p className="mt-2 truncate text-xs text-base-content/55">{game ? `${time(game.gameTicks ?? game.activeTicks)} · ${game.stadium.name}` : 'Analyzing…'}</p>
+  </button>;
+}
+
+function GoalList({ game, onSeek, redIdentity, blueIdentity, awayTeam }) {
   if (!game.goals.length) return <p className="py-8 text-sm text-base-content/55">No goals in this game.</p>;
   return <div className="mx-auto max-w-3xl">
     <div className="mb-3 grid grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] items-center gap-2 text-xs font-semibold">
-      <span className="pr-3 text-right text-error"><TeamIdentity team={redIdentity} fallback="Red team" /></span>
+      <span className="pr-3 text-right text-error"><TeamIdentity team={redIdentity} fallback="Red team" logoAfter={redIdentity === awayTeam} /></span>
       <span className="text-center text-base-content/45">Score</span>
-      <span className="pl-3 text-info"><TeamIdentity team={blueIdentity} fallback="Blue team" /></span>
+      <span className="pl-3 text-info"><TeamIdentity team={blueIdentity} fallback="Blue team" logoAfter={blueIdentity === awayTeam} /></span>
     </div>
     <ol className="timeline timeline-vertical" aria-label="Goal timeline">
       {game.goals.map((goal, i) => <li key={i} className="h-16 w-full">
@@ -68,7 +75,7 @@ function GoalList({ game, onSeek, redIdentity, blueIdentity }) {
   </div>;
 }
 
-function PlayerTable({ game, selectedPlayer, onSelect, mapStatistic, onStatistic }) {
+function PlayerTable({ game, selectedPlayer, onSelect, mapStatistic, onStatistic, redIdentity, blueIdentity }) {
   const [sort, setSort] = useState(null);
   const setMapStatistic = onStatistic;
   const mappedPlayer = game.players.find(player => player.id === selectedPlayer)
@@ -94,6 +101,7 @@ function PlayerTable({ game, selectedPlayer, onSelect, mapStatistic, onStatistic
       <tbody>{players.map(player => <tr key={player.id} className={`cursor-pointer transition-colors ${mappedPlayer?.id === player.id ? 'bg-base-200 hover:bg-base-300/60' : 'hover:bg-base-200/70'}`} onClick={() => showMap(player, 'heatmap')}>
         <th><button className="flex items-center gap-3 rounded-field py-2 text-left focus-visible:outline-2" aria-pressed={mappedPlayer?.id === player.id}>
           <span className={`size-2 shrink-0 rounded-full ${player.team === 'red' ? 'bg-error' : 'bg-info'}`} />
+          {(player.team === 'red' ? redIdentity : blueIdentity)?.logo && <img src={(player.team === 'red' ? redIdentity : blueIdentity).logo} alt={(player.team === 'red' ? redIdentity : blueIdentity).name} className="size-5 shrink-0 object-contain" />}
           {player.nick}</button></th>
         {columns.map(([key, label]) => <td key={key} className="text-right font-mono">{key === 'playedTicks' ? <span className="inline-block px-2">{time(player[key])}</span> : <button className="btn btn-ghost btn-xs font-mono" aria-label={`${label} map for ${player.nick}`} aria-pressed={mappedPlayer?.id === player.id && mapStatistic === key} onClick={event => { event.stopPropagation(); showMap(player, key); }}>{player[key]}</button>}</td>)}
       </tr>)}</tbody>
@@ -179,6 +187,7 @@ export default function App() {
   const matchRecording = recording?.matchRecording;
   const activeMatchContext = matchRecording ? matchContext : null;
   const currentPart = activeMatchContext?.parts.find(part => part.recordingId === matchRecording.id && part.gameId === game?.id);
+  const gameLabel = currentPart?.displayLabel || currentPart?.label || `Game ${gameIndex + 1}`;
   const mapping = currentPart?.redIsHome;
   const redIdentity = activeMatchContext && mapping !== undefined ? activeMatchContext.teams[mapping ? 'home' : 'away'] : null;
   const blueIdentity = activeMatchContext && mapping !== undefined ? activeMatchContext.teams[mapping ? 'away' : 'home'] : null;
@@ -284,13 +293,17 @@ export default function App() {
             {['error', 'cancelled'].includes(item.status) && <button className="btn btn-ghost btn-xs mt-2" aria-label={`Retry analysis of ${item.file.name}`} onClick={() => retry(item.id)}><RotateCcw className="size-3" aria-hidden="true" />Retry analysis</button>}
           </div>)}</div>
         </section>}
-        {matchContext && <section aria-label="Match parts"><h3 className="mb-3 text-xs font-semibold text-base-content/60">Match parts</h3><div className="space-y-2">{matchContext.parts.filter(part => part.included).map(part => <button key={part.id} className="btn btn-sm w-full justify-start" disabled={!recordings.some(item => item.matchRecording?.id === part.recordingId && item.status === 'ready')} aria-pressed={currentPart?.id === part.id} onClick={() => openPart(part)}>{part.label}</button>)}</div></section>}
+        {matchContext && <section aria-label="Match parts">
+          <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Match parts</span><span>{matchContext.parts.filter(part => part.included).length}</span></div>
+          <div className="space-y-2">{matchContext.parts.filter(part => part.included).map(part => {
+            const source = recordings.find(item => item.matchRecording?.id === part.recordingId);
+            const partGame = source?.result?.games.find(item => item.id === part.gameId);
+            return <GameCard key={part.id} label={part.displayLabel || part.label} game={partGame} selected={currentPart?.id === part.id} disabled={!partGame} onSelect={() => openPart(part)} />;
+          })}</div>
+        </section>}
         {replay && !matchRecording && <section aria-label="Games in recording">
           <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Games</span><span>{replay.games.length}</span></div>
-          <div className="space-y-2">{replay.games.map((item, index) => <button key={item.id} aria-pressed={gameIndex === index} onClick={() => selectGame(index)} className={`w-full rounded-box border p-4 text-left ${gameIndex === index ? 'border-base-content/30 bg-base-100 shadow-sm' : 'border-transparent hover:bg-base-100/60'}`}>
-            <div className="flex justify-between text-sm font-semibold"><span>Game {index + 1}</span><span className="font-mono"><span className="text-error">{item.scoreRed}</span><span className="px-2 text-base-content/30">:</span><span className="text-info">{item.scoreBlue}</span></span></div>
-            <p className="mt-2 truncate text-xs text-base-content/55">{time(item.gameTicks ?? item.activeTicks)} · {item.stadium.name}</p>
-          </button>)}</div>
+          <div className="space-y-2">{replay.games.map((item, index) => <GameCard key={item.id} label={`Game ${index + 1}`} game={item} selected={gameIndex === index} onSelect={() => selectGame(index)} />)}</div>
         </section>}
       </aside>
       <div className={focusMode ? 'min-w-0' : 'min-w-0 space-y-6'}>
@@ -310,10 +323,14 @@ export default function App() {
             {replay && <button className="btn btn-sm" onClick={exportStats}><Download className="size-4" aria-hidden="true" />Export statistics</button>}
             </div>
           </div>
-          <div className={focusMode ? 'hidden' : 'grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sm:px-7'}>
-            <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div><TeamIdentity team={redIdentity} fallback="Red team" /><p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Red side'}</p></div></div>
-            <div className="text-center"><div className="flex items-center justify-center gap-4 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div>{game && <p className="mt-2 font-mono text-[11px] text-base-content/50">GAME {gameIndex + 1} · {time(game.gameTicks ?? game.activeTicks)}</p>}</div>
-            <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div><TeamIdentity team={blueIdentity} fallback="Blue team" /><p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Blue side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
+          <div className={focusMode ? 'hidden' : 'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3 sm:px-7'}>
+            <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div>Red team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Red side'}</p></div></div>
+            <div className="min-w-0 text-center" aria-label="Replay scoreboard"><div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
+              {redIdentity && <TeamIdentity team={redIdentity} logoAfter={redIdentity === activeMatchContext?.teams.away} className="max-w-full text-xl font-semibold sm:max-w-[35%] sm:text-3xl" logoClassName="size-7 sm:size-9" />}
+              <div className="flex shrink-0 items-center justify-center gap-3 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div>
+              {blueIdentity && <TeamIdentity team={blueIdentity} logoAfter={blueIdentity === activeMatchContext?.teams.away} className="max-w-full text-xl font-semibold sm:max-w-[35%] sm:text-3xl" logoClassName="size-7 sm:size-9" />}
+            </div>{game && <p className="mt-2 font-mono text-[11px] text-base-content/50">{currentPart ? gameLabel : `GAME ${gameIndex + 1}`} · {time(game.gameTicks ?? game.activeTicks)}</p>}</div>
+            <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Blue side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
           <div className={focusMode ? 'min-h-0 flex-1 p-2' : 'px-3 pb-3'}>
             {recording ? <NativePlayer key={recording.id} ref={nativePlayer} focusMode={focusMode} onExitFocus={() => setFocusMode(false)} onToggleFocus={() => setFocusMode(value => !value)} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { setError(''); remove(recording.id); }} />
@@ -321,15 +338,15 @@ export default function App() {
           </div>
         </section>
         {!focusMode && (game && (!matchRecording || currentPart?.included) ? <section ref={statsCard} className="scroll-mt-4 rounded-box border border-base-300 bg-base-100 p-5 sm:p-7">
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2"><h2 className="text-lg font-semibold">Game {gameIndex + 1}</h2><p className="text-sm text-base-content/55">{game.stadium.name}</p></div>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2"><h2 className="text-lg font-semibold">{gameLabel}</h2><p className="text-sm text-base-content/55">{game.stadium.name}</p></div>
           <div role="tablist" aria-label="Match information" className="tabs tabs-border mb-6">{['overview', 'players', 'goals'].map(name => <button key={name} role="tab" id={`tab-${name}`} aria-controls="match-panel" aria-selected={tab === name} className={`tab capitalize ${tab === name ? 'tab-active' : ''}`} onClick={() => setTab(name)}>{name}{name === 'goals' ? ` · ${game.goals.length}` : ''}</button>)}</div>
           <div role="tabpanel" id="match-panel" aria-labelledby={`tab-${tab}`}>
             {tab === 'overview' && (isV2 ? <V2Overview game={game} /> : <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
               <div className="space-y-6"><h3 className="text-sm font-semibold">The balance of play</h3><Comparison label="Possession" values={game.possession} percentage /><Comparison label="Goals" values={[game.scoreRed, game.scoreBlue]} /><Comparison label="Kicks" values={game.kicks} /><Comparison label="Completed passes" values={game.passes} /><Comparison label="Shots on goal" values={game.shots} /></div>
               <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><ThirdsMap game={game} /></div>
             </div>)}
-            {tab === 'players' && (isV2 ? <V2Players game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} /> : <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />)}
-            {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList redIdentity={redIdentity} blueIdentity={blueIdentity} game={isV2 ? { ...game, goals: game.goals.map(goal => ({ ...goal, scoreRed: goal.score[0], scoreBlue: goal.score[1] })) } : game} onSeek={seekGoal} /></>}
+            {tab === 'players' && (isV2 ? <V2Players game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} /> : <PlayerTable redIdentity={redIdentity} blueIdentity={blueIdentity} game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />)}
+            {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList awayTeam={activeMatchContext?.teams.away} redIdentity={redIdentity} blueIdentity={blueIdentity} game={isV2 ? { ...game, goals: game.goals.map(goal => ({ ...goal, scoreRed: goal.score[0], scoreBlue: goal.score[1] })) } : game} onSeek={seekGoal} /></>}
           </div>
         </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>)}
       </div>
