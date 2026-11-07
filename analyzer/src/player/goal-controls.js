@@ -1,11 +1,11 @@
 export const GOAL_LEAD_IN_TICKS = 8 * 60;
-export const goalSeekTick = tick => Math.max(0, tick - GOAL_LEAD_IN_TICKS);
+export const goalSeekTick = (tick, previousGoal = -1) => Math.max(0, tick - GOAL_LEAD_IN_TICKS, previousGoal + 1);
 
 export function adjacentGoal(goals, position, direction, anchor = null) {
   const index = goals.indexOf(anchor);
   // While watching a selected goal's build-up, repeated clicks move to the
   // adjacent goal rather than seeking to the same upcoming goal again.
-  if (index >= 0 && position >= goalSeekTick(anchor) - 1 && position <= anchor + 1) {
+  if (index >= 0 && position >= goalSeekTick(anchor, goals[index - 1]) - 1 && position <= anchor + 1) {
     return goals[index + direction];
   }
   return direction > 0 ? goals.find(tick => tick > position + 1) : goals.findLast(tick => tick < position - 1);
@@ -34,7 +34,8 @@ export function mountGoalControls(controls, replay, seek, onGoal = () => {}) {
     if (next.disabled !== nextDisabled) next.disabled = nextDisabled;
   }
   function seekGoal(tick) {
-    seek(goalSeekTick(tick));
+    const previousGoal = goals.findLast(goal => goal < tick);
+    seek(goalSeekTick(tick, previousGoal));
     anchor = tick;
     update();
     onGoal(tick);
