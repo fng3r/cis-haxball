@@ -61,8 +61,29 @@ A normal run reuses successful analyses; new/failed recordings are analyzed.
 Removed sources retain their stored data and part corrections, but cease to
 contribute to the active match. Re-adding a source reuses the same identities.
 Generated order follows the replay list and game IDs; explicit overrides survive.
-The existing short scoreless-restart filter is applied when a part is first
-created. Subsequent imports preserve its inclusion decision.
+After all recording updates, the shared match-level relevance evaluator classifies
+all available games across currently attached recordings, including cached results.
+Strong roster problems and short extra games beside two full halves are excluded;
+ambiguous partial games, continuations and possible golden-goal overtime remain
+included. Score differences never exclude a game. Raw and domain statistics for
+excluded games remain stored, while existing presentation/aggregation excludes them.
+
+`ReplayMatchPart.auto_included` stores the automatic decision; `included_override`
+is a nullable manual correction and `included` is the effective persisted value.
+`exclusion_reason` contains a readable explanation when effectively excluded,
+including manual exclusion, and is empty when included. Admin shows the reason
+and automatic decision read-only. Changing the inclusion checkbox pins a manual
+override; clearing “Учитывать (исправление)” to “Неизвестно” resumes automatic
+classification immediately. Reanalysis preserves overrides, labels and order.
+
+Existing current-model parts initially have `auto_included=NULL`. On their first
+classification, saved decisions differing from the former short-scoreless filter
+are preserved as overrides; unchanged old defaults adopt the new policy. There
+was no provenance for decisions equal to the old default. Set an explicit override
+before processing if such a value must be pinned. Legacy `MatchReplay*` rows are
+not classified or changed. `REPLAY_REQUIRED_PLAYERS` defaults to 4; other competition
+formats require the matching Django setting. No bulk classification runs on migration;
+the next ordinary ingestion classifies cached recordings without running the engine.
 
 Team recognition uses actual match participants and nickname history separately
 for every game. Unambiguous roster evidence can reverse sides. Missing or
@@ -157,8 +178,8 @@ multiple recordings, game-ID selection, part order/exclusion, and team/logo mapp
 ## Experimental replay relevance audit
 
 `audit_replay_games` evaluates all stored original-engine games across a match's
-currently attached recordings. It does **not** change Celery's inclusion policy,
-saved parts, raw results or statistics. It performs no downloads/reanalysis and
+currently attached recordings using the same evaluator as Celery ingestion. The
+audit command does **not** change saved parts, raw results or statistics. It performs no downloads/reanalysis and
 enforces a PostgreSQL repeatable-read, read-only transaction. Run against a local
 database with existing replay analyses:
 
@@ -179,6 +200,7 @@ ambiguous short parts remain available for review. Inclusion differences are
 suggestions, since saved values may be deliberate manual corrections.
 
 The initial [ЧР #17 report](../docs/reports/replay-audit-chr17.md) records the actual
-development-database findings. It is a consistency check, not an accuracy estimate:
-validate the flagged games before adopting this policy in ingestion. No model or
-migration changes are required for the audit.
+development-database findings and subsequent user confirmations. It is a consistency
+check, not an accuracy estimate. The audit itself requires no extra schema beyond
+the current ingestion models; generate/apply ordinary migrations for the relevance
+fields before running updated Django/Celery code.

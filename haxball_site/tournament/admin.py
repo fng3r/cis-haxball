@@ -2080,6 +2080,7 @@ class ReplayMatchPartAdmin(UnfoldModelAdmin):
         'label',
         'order',
         'included',
+        'exclusion_reason',
         'red_is_home',
         'mapping_evidence',
         'order_override',
@@ -2097,8 +2098,16 @@ class ReplayMatchPartAdmin(UnfoldModelAdmin):
         'generated_label',
         'inferred_red_is_home',
         'mapping_evidence',
+        'auto_included',
+        'exclusion_reason',
     )
-    fields = readonly_fields + ('included', 'order_override', 'label_override', 'red_is_home_override')
+    fields = readonly_fields + (
+        'included',
+        'included_override',
+        'order_override',
+        'label_override',
+        'red_is_home_override',
+    )
 
     def has_add_permission(self, request):
         return False
@@ -2106,15 +2115,39 @@ class ReplayMatchPartAdmin(UnfoldModelAdmin):
     def save_model(self, request, obj, form, change):
         from django.db import transaction
 
+        from tournament.services.local_replays import classify_parts, reconcile_parts
+
         with transaction.atomic():
-            Match.objects.select_for_update().get(pk=obj.match_id)
+            match = Match.objects.select_for_update().get(pk=obj.match_id)
+            current = ReplayMatchPart.objects.get(pk=obj.pk)
+            override = current.included_override
+            if 'included_override' in form.changed_data:
+                override = obj.included_override
+            elif 'included' in form.changed_data:
+                override = obj.included
+            included = override if override is not None else current.auto_included
+            if included is None:
+                included = current.included
             # Write only editorial fields; a task may have updated generated values since the form was opened.
-            ReplayMatchPart.objects.filter(pk=obj.pk).update(
-                included=obj.included,
-                order_override=obj.order_override,
-                label_override=obj.label_override,
-                red_is_home_override=obj.red_is_home_override,
+            changes = {
+                field: getattr(obj, field)
+                for field in ('order_override', 'label_override', 'red_is_home_override')
+                if field in form.changed_data
+            }
+            changes.update(
+                included=included,
+                included_override=override,
+                exclusion_reason=''
+                if included
+                else 'Исключена вручную.'
+                if override is False
+                else current.exclusion_reason,
             )
+            ReplayMatchPart.objects.filter(pk=obj.pk).update(**changes)
+            reset_ids = [obj.pk] if 'included_override' in form.changed_data and override is None else []
+            classify_parts(match, reset_override_ids=reset_ids)
+            reconcile_parts(match)
+            obj.refresh_from_db()
 
 
 @admin.register(ReplayTeamStats)

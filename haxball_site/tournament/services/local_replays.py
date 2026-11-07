@@ -19,6 +19,8 @@ from tournament.models import (
     ReplayTeamStats,
 )
 from tournament.replay_stats_client import download_replay, get_replay_source_and_id
+from tournament.services.replay_audit import evaluate_match, exclusion_description
+from tournament.services.replay_rosters import player_aliases, protocol_players
 
 
 def recording_sources(match):
@@ -95,11 +97,11 @@ def materialize(recording, result, rosters, players):
             },
         )
         mapping, evidence = infer_mapping(raw, rosters)
-        part, created = ReplayMatchPart.objects.get_or_create(match=recording.match, game=game)
+        part, _ = ReplayMatchPart.objects.get_or_create(
+            match=recording.match, game=game, defaults={'auto_included': True}
+        )
         part.inferred_red_is_home, part.mapping_evidence = mapping, evidence
-        if created and raw['gameTicks'] < 3600 and not (raw['scoreRed'] or raw['scoreBlue']):
-            part.included = False  # Existing short scoreless-restart filter; decision is persisted.
-        part.save()
+        part.save(update_fields=['inferred_red_is_home', 'mapping_evidence'])
         for index, side in enumerate(('red', 'blue')):
             ReplayTeamStats.objects.update_or_create(
                 game=game,
@@ -134,6 +136,69 @@ def materialize(recording, result, rosters, players):
                 },
             )
         game.player_stats.exclude(replay_player_id__in=seen_players).delete()
+
+
+def classify_parts(match, reset_override_ids=()):
+    """Caller holds the match lock. Reevaluate all current games without rebuilding raw statistics."""
+    recordings = {r.source_key: r for r in match.replay_recordings.exclude(raw_response={}).prefetch_related('games')}
+    parts = {p.game_id: p for p in match.replay_parts.all()}
+    inputs = []
+    for key, _ in recording_sources(match):
+        recording = recordings.get(key)
+        if recording is None:
+            continue
+        stored = {g.engine_game_id: g for g in recording.games.all() if g.available}
+        for raw in sorted(recording.raw_response['games'], key=lambda g: g['id']):
+            game = stored.get(raw['id'])
+            part = parts.get(game.pk) if game else None
+            if part is not None:
+                # Old rows have no provenance. Preserve detectable corrections
+                # relative to the former short-scoreless filter.
+                previous_auto = part.auto_included
+                if previous_auto is None:
+                    previous_auto = not (raw['gameTicks'] < 3600 and not (raw['scoreRed'] or raw['scoreBlue']))
+                if (
+                    part.pk not in reset_override_ids
+                    and part.included_override is None
+                    and part.included != previous_auto
+                ):
+                    part.included_override = part.included
+                inputs.append(
+                    {
+                        'raw': raw,
+                        'part_id': part.pk,
+                        'red_is_home_override': part.red_is_home_override,
+                        'included_override': part.included_override,
+                    }
+                )
+    if not inputs:
+        return
+    result = evaluate_match(
+        inputs,
+        protocol_players(match),
+        player_aliases(),
+        playoff=bool(match.stage_id and match.stage.type == 'PO'),
+        duration_seconds=match.duration.total_seconds(),
+        required_players=getattr(settings, 'REPLAY_REQUIRED_PLAYERS', 4),
+    )
+    by_id = {p.pk: p for p in parts.values()}
+    for source, decision in zip(inputs, result['games'], strict=True):
+        part = by_id[source['part_id']]
+        part.auto_included = decision['recommendation'] != 'exclude'
+        part.included = part.included_override if part.included_override is not None else part.auto_included
+        part.exclusion_reason = (
+            ''
+            if part.included
+            else 'Исключена вручную.'
+            if part.included_override is False
+            else exclusion_description(decision)
+        )
+        ReplayMatchPart.objects.filter(pk=part.pk).update(
+            auto_included=part.auto_included,
+            included_override=part.included_override,
+            included=part.included,
+            exclusion_reason=part.exclusion_reason,
+        )
 
 
 def reconcile_parts(match):
@@ -206,6 +271,7 @@ def ingest_match(match_id, force=False, recording_ids=None):
                 recording.error_message = f'{type(exc).__name__}: {exc}'[:2000]
                 recording.save(update_fields=['status', 'error_message'])
                 errors += 1
+        classify_parts(match)
         reconcile_parts(match)
     return {'match_id': match_id, 'created_games': created, 'failed_recordings': errors}
 

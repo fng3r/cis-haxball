@@ -27,6 +27,7 @@ from .models import (
 from .services.local_replays import (
     active_parts,
     analyzer_link,
+    classify_parts,
     infer_mapping,
     ingest_match,
     materialize,
@@ -76,6 +77,162 @@ class LocalReplayIntegrationTests(TestCase):
         self.match.replay_parts.update(included=True)
         reconcile_parts(self.match)
         return recording
+
+    def regulation_with_restart(self):
+        """Two full 4v4 halves with a scored extra game; all metrics remain in raw/domain storage."""
+        result = copy.deepcopy(self.result)
+        template = result['games'][0]
+        result['games'] = [copy.deepcopy(template) for _ in range(3)]
+        for index, game in enumerate(result['games']):
+            game.update(id=index, gameTicks=28800 if index != 1 else 8614, scoreRed=0, scoreBlue=0, goals=[])
+            player_template = game['players'][0]
+            game['players'] = [
+                {
+                    **copy.deepcopy(player_template),
+                    'id': f'{n}:{side}',
+                    'nick': f'{side}-{n}',
+                    'team': side,
+                    'playedTicks': game['gameTicks'],
+                }
+                for side in ('red', 'blue')
+                for n in range(4)
+            ]
+        result['games'][1].update(scoreRed=1, kicks=[1000, 1000])
+        return result
+
+    def test_ingestion_classifies_scored_restart_and_keeps_raw_and_domain_statistics(self):
+        raw = self.regulation_with_restart()
+        with (
+            patch('tournament.services.local_replays.download_replay', return_value=b'recording'),
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=raw),
+        ):
+            ingest_match(self.match.pk)
+        parts = active_parts(self.match)
+        self.assertEqual([p.included for p in parts], [True, False, True])
+        self.assertEqual([p.label for p in parts if p.included], ['1 тайм', '2 тайм'])
+        self.assertIn('двух полных таймов', parts[1].exclusion_reason)
+        self.assertFalse(parts[1].auto_included)
+        self.assertIsNone(parts[1].included_override)
+        self.assertEqual(ReplayRecording.objects.get(match=self.match).raw_response, raw)
+        self.assertEqual(parts[1].game.team_stats.get(side='red').kicks, 1000)
+        self.assertEqual(parts[1].game.player_stats.count(), 8)
+        self.assertEqual(len(statistics(self.match)['parts_summary']), 2)
+        before = [(p.pk, p.included, p.exclusion_reason, p.label) for p in parts]
+        with patch('tournament.services.local_replays.analyze_local_replay') as engine:
+            ingest_match(self.match.pk)
+            engine.assert_not_called()
+        self.assertEqual([(p.pk, p.included, p.exclusion_reason, p.label) for p in active_parts(self.match)], before)
+
+    def test_cached_parts_are_reclassified_when_other_recordings_are_added_or_removed(self):
+        raw = self.regulation_with_restart()
+        short = {**copy.deepcopy(raw), 'games': [raw['games'][1]]}
+        self.seed(short)
+        classify_parts(self.match)
+        part = active_parts(self.match)[0]
+        self.assertTrue(part.included)  # Not enough context to call it a restart yet.
+        other_url = 'https://replay.thehax.pl/second-recording'
+        self.match.replays = [self.url, other_url]
+        self.match.save(update_fields=['replays'])
+        full = {**copy.deepcopy(raw), 'games': [raw['games'][0], raw['games'][2]]}
+        with (
+            patch('tournament.services.local_replays.download_replay', return_value=b'full'),
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=full),
+        ):
+            ingest_match(self.match.pk)
+        part.refresh_from_db()
+        self.assertFalse(part.included)
+        self.match.replays = [self.url]
+        self.match.save(update_fields=['replays'])
+        ingest_match(self.match.pk)
+        part.refresh_from_db()
+        self.assertTrue(part.included)
+        self.assertEqual(part.exclusion_reason, '')
+
+    def test_reclassification_preserves_manual_exclusion_and_manual_inclusion(self):
+        self.seed(self.regulation_with_restart())
+        classify_parts(self.match)
+        parts = active_parts(self.match)
+        parts[0].included = False
+        parts[0].save(update_fields=['included'])
+        parts[1].included = True
+        parts[1].save(update_fields=['included'])
+        ingest_match(self.match.pk)
+        parts = active_parts(self.match)
+        self.assertFalse(parts[0].included_override)
+        self.assertEqual(parts[0].exclusion_reason, 'Исключена вручную.')
+        self.assertTrue(parts[1].included_override)
+        self.assertTrue(parts[1].included)
+        self.assertEqual(parts[1].exclusion_reason, '')
+
+    def test_legacy_current_part_decisions_bootstrap_against_previous_filter(self):
+        raw = self.regulation_with_restart()
+        raw['games'][1].update(gameTicks=10, scoreRed=0, scoreBlue=0)
+        self.seed(raw)
+        self.match.replay_parts.update(auto_included=None)
+        # Formerly excluded short scoreless game was explicitly included by an editor.
+        classify_parts(self.match)
+        part = self.match.replay_parts.get(game__engine_game_id=1)
+        self.assertTrue(part.included_override)
+        self.assertTrue(part.included)
+        # Ordinary previously-included scored warmup adopts the new evaluator.
+        raw['games'][1].update(gameTicks=8614, scoreRed=1)
+        ReplayRecording.objects.filter(match=self.match).update(raw_response=raw)
+        ReplayMatchPart.objects.filter(pk=part.pk).update(auto_included=None, included_override=None)
+        classify_parts(self.match)
+        part.refresh_from_db()
+        self.assertFalse(part.included)
+        self.assertIsNone(part.included_override)
+
+    def test_manually_excluded_full_game_cannot_make_other_game_a_restart(self):
+        self.seed(self.regulation_with_restart())
+        part = self.match.replay_parts.get(game__engine_game_id=0)
+        part.included_override = False
+        part.save(update_fields=['included_override'])
+        classify_parts(self.match)
+        short = self.match.replay_parts.get(game__engine_game_id=1)
+        self.assertTrue(short.included)
+        self.assertEqual(short.exclusion_reason, '')
+
+    def test_admin_manual_override_can_be_cleared_to_restore_automatic_decision(self):
+        self.seed(self.regulation_with_restart())
+        classify_parts(self.match)
+        part = self.match.replay_parts.get(game__engine_game_id=1)
+        editor = User.objects.create_superuser('inclusion-editor', password='test')
+        self.client.force_login(editor)
+        endpoint = reverse('admin:tournament_replaymatchpart_change', args=[part.pk])
+        self.assertEqual(
+            self.client.post(
+                endpoint,
+                {
+                    'included': 'on',
+                    'included_override': 'True',
+                    'red_is_home_override': '',
+                    '_save': 'Save',
+                },
+            ).status_code,
+            302,
+        )
+        part.refresh_from_db()
+        self.assertTrue(part.included)
+        ingest_match(self.match.pk)
+        part.refresh_from_db()
+        self.assertTrue(part.included)
+        self.assertEqual(
+            self.client.post(
+                endpoint,
+                {
+                    'included': 'on',
+                    'included_override': '',
+                    'red_is_home_override': '',
+                    '_save': 'Save',
+                },
+            ).status_code,
+            302,
+        )
+        part.refresh_from_db()
+        self.assertFalse(part.included)
+        self.assertIsNone(part.included_override)
+        self.assertIn('двух полных таймов', part.exclusion_reason)
 
     def test_normalized_storage_and_legacy_preservation(self):
         legacy = MatchReplay.objects.create(
@@ -269,20 +426,28 @@ class LocalReplayIntegrationTests(TestCase):
         part.save()
         self.assertEqual(len(statistics(self.match)['parts_summary']), 1)
 
-    def test_short_scoreless_restarts_are_excluded_once(self):
-        raw = copy.deepcopy(self.result)
-        raw['games'][0].update(gameTicks=1, scoreRed=0, scoreBlue=0)
+    def test_manual_reinclusion_survives_reclassification(self):
+        raw = self.regulation_with_restart()
+        raw['games'][1].update(gameTicks=1, scoreRed=0, scoreBlue=0)
         recording = ReplayRecording.objects.create(
-            match=self.match, source_key='powtorki:test-recording', replay_url=self.url
+            match=self.match,
+            source_key='powtorki:test-recording',
+            replay_url=self.url,
+            raw_response=raw,
+            status='ready',
         )
         materialize(recording, raw, {'home': set(), 'away': set()}, {})
-        part = ReplayMatchPart.objects.get(game__engine_game_id=raw['games'][0]['id'])
+        classify_parts(self.match)
+        part = ReplayMatchPart.objects.get(game__engine_game_id=raw['games'][1]['id'])
         self.assertFalse(part.included)
         part.included = True
         part.save()
         materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        classify_parts(self.match)
         part.refresh_from_db()
         self.assertTrue(part.included)
+        self.assertTrue(part.included_override)
+        self.assertEqual(part.exclusion_reason, '')
 
     def test_admin_groups_and_rare_corrections(self):
         self.seed()

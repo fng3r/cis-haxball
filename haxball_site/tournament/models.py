@@ -3163,6 +3163,14 @@ class ReplayMatchPart(models.Model):
     match = models.ForeignKey(Match, related_name='replay_parts', on_delete=models.CASCADE)
     game = models.OneToOneField(ReplayGame, related_name='match_part', on_delete=models.CASCADE)
     included = models.BooleanField('Учитывать в матче', default=True)
+    auto_included = models.BooleanField('Автоматически учитывать', null=True, default=None, editable=False)
+    included_override = models.BooleanField(
+        'Учитывать (исправление)',
+        null=True,
+        blank=True,
+        help_text='Неизвестно — автоматическое решение; Да/Нет — ручное исправление, сохраняемое при обработке.',
+    )
+    exclusion_reason = models.TextField('Причина исключения', blank=True, default='', editable=False)
     generated_order = models.PositiveIntegerField(default=0)
     generated_label = models.CharField(max_length=100, blank=True)
     inferred_red_is_home = models.BooleanField(default=True)

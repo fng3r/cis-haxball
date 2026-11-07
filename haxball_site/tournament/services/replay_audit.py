@@ -1,10 +1,29 @@
-"""Experimental, read-only match-level relevance recommendations. Not ingestion policy."""
+"""Match-level relevance policy shared by ingestion and read-only audits."""
 
 from collections import Counter
 
 TICKS_PER_SECOND = 60
 HALF_SECONDS = 480
 FULL_PART_SECONDS = 450  # Recognition tolerance, never an official playing-time cutoff.
+
+
+def exclusion_description(decision):
+    """Describe strong exclusion evidence; review-only signals never become exclusions."""
+    reasons = []
+    roster = decision['roster']
+    if 'fewer_than_required_players' in decision['reasons']:
+        reasons.append(
+            'Недостаточный состав за всю игру '
+            f'(красные: {roster["sides"]["red"]["total"]}, синие: {roster["sides"]["blue"]["total"]}).'
+        )
+    if 'major_protocol_mismatch' in decision['reasons']:
+        reasons.append('Состав игроков существенно отличается от участников протокола матча.')
+    if 'short_extra_beside_two_full_halves' in decision['reasons']:
+        seconds = round(decision['seconds'])
+        reasons.append(
+            f'Короткая дополнительная игра ({seconds // 60}:{seconds % 60:02}) при наличии двух полных таймов.'
+        )
+    return ' '.join(reasons)
 
 
 def normalize_nick(nick):
@@ -111,8 +130,16 @@ def evaluate_match(games, protocol, aliases, *, playoff=False, duration_seconds=
             result['reasons'].append('mostly_unresolved_nicknames')
         results.append(result)
 
-    candidates = [i for i, r in enumerate(results) if r['recommendation'] != 'exclude']
-    anchors = [i for i in candidates if results[i]['seconds'] >= FULL_PART_SECONDS]
+    candidates = [
+        i
+        for i, r in enumerate(results)
+        if r['recommendation'] != 'exclude' and games[i].get('included_override') is not False
+    ]
+    anchors = [
+        i
+        for i in candidates
+        if results[i]['seconds'] >= FULL_PART_SECONDS and games[i].get('included_override') is not False
+    ]
     for n, index in enumerate(anchors):
         results[index]['role'] = (
             'regulation_candidate' if n < 2 else 'overtime_candidate' if playoff else 'extra_full_game'
@@ -161,7 +188,7 @@ def evaluate_match(games, protocol, aliases, *, playoff=False, duration_seconds=
             r['recommendation'] = 'review'
             r['reasons'].append('short_game_without_clear_role')
 
-    retained = [r for r in results if r['recommendation'] != 'exclude']
+    retained = [r for r in results if r['recommendation'] != 'exclude' and r.get('included_override') is not False]
     if len(retained) < 2:
         issues.append('fewer_than_two_plausible_games')
     if len(anchors) < 2:
@@ -178,7 +205,7 @@ def evaluate_match(games, protocol, aliases, *, playoff=False, duration_seconds=
     # exceptions. Do not solve subset selection by forcing official-score equality.
     score = [0, 0]
     for game, result in zip(games, results, strict=True):
-        if result['recommendation'] == 'exclude':
+        if result['recommendation'] == 'exclude' or game.get('included_override') is False:
             continue
         red_is_home = game.get('red_is_home_override')
         if red_is_home is None:

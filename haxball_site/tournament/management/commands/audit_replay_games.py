@@ -1,7 +1,7 @@
 """Offline relevance experiment. No ingestion, downloads or database updates."""
 
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -9,42 +9,11 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
 
-from tournament.models import Match, Player, Season
+from tournament.models import Match, Season
 from tournament.replay_stats_client import get_replay_source_and_id
 from tournament.services.local_replays import recording_sources
-from tournament.services.replay_audit import evaluate_match, normalize_nick
-
-
-def player_aliases():
-    aliases = defaultdict(set)
-    for player in Player.objects.select_related('name').prefetch_related('name__usernicknamehistoryitem_set'):
-        names = [player.nickname]
-        if player.name_id:
-            names.extend(h.nickname for h in player.name.usernicknamehistoryitem_set.all())
-        for name in names:
-            if name and name.strip():
-                aliases[normalize_nick(name)].add(player.pk)
-    return aliases
-
-
-def protocol_players(match):
-    """Use the full protocol, not current team membership or only starting players."""
-    home = set(match.team_home_start.values_list('pk', flat=True))
-    away = set(match.team_guest_start.values_list('pk', flat=True))
-    for player_id, team_id in match.match_participants.through.objects.filter(match=match).values_list(
-        'player_id', 'team_id'
-    ):
-        if team_id == match.team_home_id:
-            home.add(player_id)
-        elif team_id == match.team_guest_id:
-            away.add(player_id)
-    for sub in match.match_substitutions.all():
-        target = home if sub.team_id == match.team_home_id else away if sub.team_id == match.team_guest_id else None
-        if target is not None:
-            target.update(pk for pk in (sub.player_in_id, sub.player_out_id) if pk is not None)
-    # Contradictory protocol identities cannot safely resolve side evidence.
-    overlap = home & away
-    return {'home': home - overlap, 'away': away - overlap}
+from tournament.services.replay_audit import evaluate_match
+from tournament.services.replay_rosters import player_aliases, protocol_players
 
 
 def audit_match(match, aliases, required_players):
@@ -78,6 +47,7 @@ def audit_match(match, aliases, required_players):
                     'part_id': part.pk if part else None,
                     'label': part.label if part else '',
                     'saved_included': part.included if part else None,
+                    'included_override': part.included_override if part else None,
                     'red_is_home_override': part.red_is_home_override if part else None,
                     'source_url': url,
                 }
