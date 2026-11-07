@@ -55,7 +55,7 @@ export function useReplayLibrary({ engine = 'legacy' } = {}) {
     })();
   }, [recordings, engine]);
 
-  function addFiles(files, { selectFirst = true } = {}) {
+  function addFiles(files, { selectFirst = true, matchRecording = null } = {}) {
     const errors = [], added = [];
     for (const file of Array.from(files || [])) {
       if (!file.name.toLowerCase().endsWith('.hbr2')) {
@@ -63,7 +63,7 @@ export function useReplayLibrary({ engine = 'legacy' } = {}) {
       } else if (file.size > MAX_FILE_BYTES) {
         errors.push(`${file.name}: choose a recording smaller than 32 MB.`);
       } else {
-        added.push({ id: crypto.randomUUID(), file, status: 'queued', progress: 0 });
+        added.push({ id: crypto.randomUUID(), matchRecording, file, status: 'queued', progress: 0 });
       }
     }
     if (added.length) {

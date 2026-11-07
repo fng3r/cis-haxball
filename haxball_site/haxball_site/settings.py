@@ -674,3 +674,14 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 ALLAUTH_TRUSTED_CLIENT_IP_HEADER = 'X-Real-IP'
 if DEBUG:
     ACCOUNT_RATE_LIMITS = False
+
+# The original standalone engine runs in Celery, independently of the static Vite UI.
+REPLAY_ANALYZER_NODE = config('REPLAY_ANALYZER_NODE', default='node')
+REPLAY_ANALYZER_CLI = config(
+    'REPLAY_ANALYZER_CLI', default=os.path.join(BASE_DIR, '..', 'analyzer', 'scripts', 'analyze.mjs')
+)
+REPLAY_ANALYZER_TIMEOUT = config('REPLAY_ANALYZER_TIMEOUT', default=120, cast=int)
+
+REPLAY_ANALYZER_URL = config(
+    'REPLAY_ANALYZER_URL', default=f'/{URL_PREFIX.strip("/") + "/" if URL_PREFIX else ""}analyzer/'
+)

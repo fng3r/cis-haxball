@@ -1,7 +1,6 @@
-"""
-Celery tasks for tournament app. fetch_match_replay_stats: pull replays from Powtorki,
-upload to Haxball Analyzer, store raw response in MatchReplay; rebuild MatchReplayStats
-and MatchReplayStatsPlayer from raw every run.
+"""Tournament tasks. Default replay ingestion uses the original local engine.
+
+Legacy ingestion, polling and aggregation remain isolated for archived external statistics.
 """
 
 import logging
@@ -370,7 +369,7 @@ def _update_match_replay_stats_status(match: Match) -> MatchReplayStatsStatus:
 
 
 @shared_task
-def fetch_match_replay_stats(match_id: int):
+def fetch_legacy_match_replay_stats(match_id: int):
     """
     For a Match: cleanup stats for removed replays; for each replay URL that we don't
     have yet, download from Powtorki, upload to Haxball Analyzer, poll for stats,
@@ -575,3 +574,11 @@ def sync_split_groups(league_id: int, group_names: list[str]):
 
     logger.info('[league_id=%s] Synced %s teams into %s groups', league_id, len(teams), len(groups))
     return {'league_id': league_id, 'stage_id': stage.pk, 'groups': summary}
+
+
+@shared_task
+def fetch_match_replay_stats(match_id: int):
+    """Default ingestion entry point. New results live exclusively in LocalReplayAnalysis."""
+    from tournament.services.local_replays import ingest_match
+
+    return ingest_match(match_id)

@@ -1,3 +1,5 @@
+import MatchContext, { TeamIdentity } from './components/MatchContext.jsx';
+import { matchId, inferMapping, fetchMatchRecording, saveMapping } from './match-context.js';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Download, FolderOpen, Maximize, Minimize, Moon, RotateCcw, Sun, Trash2, X } from 'lucide-react';
 import NativePlayer from './components/NativePlayer.jsx';
@@ -41,13 +43,13 @@ function Comparison({ label, values, percentage = false }) {
   </div>;
 }
 
-function GoalList({ game, onSeek }) {
+function GoalList({ game, onSeek, redIdentity, blueIdentity }) {
   if (!game.goals.length) return <p className="py-8 text-sm text-base-content/55">No goals in this game.</p>;
   return <div className="mx-auto max-w-3xl">
     <div className="mb-3 grid grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] items-center gap-2 text-xs font-semibold">
-      <span className="pr-3 text-right text-error">Red team</span>
+      <span className="pr-3 text-right text-error"><TeamIdentity team={redIdentity} fallback="Red team" /></span>
       <span className="text-center text-base-content/45">Score</span>
-      <span className="pl-3 text-info">Blue team</span>
+      <span className="pl-3 text-info"><TeamIdentity team={blueIdentity} fallback="Blue team" /></span>
     </div>
     <ol className="timeline timeline-vertical" aria-label="Goal timeline">
       {game.goals.map((goal, i) => <li key={i} className="h-16 w-full">
@@ -114,7 +116,7 @@ export default function App() {
     if (meta) meta.content = theme === 'replay' ? '#f3f4f9' : '#171b29';
     try { localStorage.setItem('replay-theme', theme); } catch {}
   }, [theme]);
-  const [engine] = useState(getEngine);
+  const [engine] = useState(() => new URL(window.location.href).searchParams.has('match') ? 'legacy' : getEngine());
   const { recordings, recording, active, addFiles, cancel, clear, remove, retry, select } = useReplayLibrary({ engine });
   const replay = recording?.result;
   const isV2 = replay?.schemaVersion === 2;
@@ -132,6 +134,63 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const input = useRef(null);
   const game = replay?.games[gameIndex];
+  const [matchContext, setMatchContext] = useState(null);
+  const [matchError, setMatchError] = useState('');
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matchAttempt, setMatchAttempt] = useState(0);
+  const addMatchFiles = useRef(addFiles);
+  addMatchFiles.current = addFiles;
+  const loadedMatchRecordings = useRef(new Set());
+  useEffect(() => {
+    const controller = new AbortController();
+    let id;
+    try { id = matchId(); } catch (error) { setMatchError(error.message); return; }
+    if (!id) return;
+    setMatchLoading(true); setMatchError('');
+    (async () => {
+      try {
+        const response = await fetch(new URL(`../championship/match/${id}/analyzer`, window.location.href), { signal: controller.signal, credentials: 'same-origin' });
+        if (!response.ok) throw new Error(`Match context unavailable (HTTP ${response.status}).`);
+        const context = await response.json();
+        if (controller.signal.aborted) return;
+        setMatchContext(context);
+        let first = loadedMatchRecordings.current.size === 0;
+        const failures = [];
+        for (const item of context.recordings) {
+          if (loadedMatchRecordings.current.has(item.index)) continue;
+          try {
+            const file = await fetchMatchRecording(item, controller.signal);
+            if (controller.signal.aborted) return;
+            addMatchFiles.current([file], { selectFirst: first, matchRecording: item });
+            loadedMatchRecordings.current.add(item.index); first = false;
+          } catch (error) {
+            if (controller.signal.aborted) return;
+            failures.push(`${item.name}: ${error.message}`);
+          }
+        }
+        if (failures.length) throw new Error(failures.join(' '));
+      } catch (error) { if (!controller.signal.aborted) setMatchError(error.message); }
+      finally { if (!controller.signal.aborted) setMatchLoading(false); }
+    })();
+    return () => controller.abort();
+  }, [matchAttempt]);
+  const matchRecording = recording?.matchRecording;
+  const activeMatchContext = matchRecording ? matchContext : null;
+  const mappingKey = String(gameIndex);
+  const [savedMappings, setSavedMappings] = useState({});
+  const overrideKey = `${matchRecording?.index}:${gameIndex}`;
+  const mapping = Object.hasOwn(savedMappings, overrideKey) ? savedMappings[overrideKey]
+    : matchRecording && Object.hasOwn(matchRecording.mappings, mappingKey) ? matchRecording.mappings[mappingKey]
+    : inferMapping(game, activeMatchContext);
+  const redIdentity = activeMatchContext && mapping !== null ? activeMatchContext.teams[mapping ? 'home' : 'away'] : null;
+  const blueIdentity = activeMatchContext && mapping !== null ? activeMatchContext.teams[mapping ? 'away' : 'home'] : null;
+  async function updateMapping(value) {
+    try {
+      await saveMapping(matchRecording, gameIndex, value);
+      setSavedMappings(current => ({ ...current, [overrideKey]: value }));
+    } catch (error) { setError(error.message); }
+  }
+
 
   useEffect(() => {
     setGameIndex(0); setSelectedPlayer(null); setMapStatistic('heatmap'); setTab('overview');
@@ -222,6 +281,7 @@ export default function App() {
         </section>}
       </aside>
       <div className={focusMode ? 'min-w-0' : 'min-w-0 space-y-6'}>
+        {!focusMode && <MatchContext context={matchContext} loading={matchLoading} error={matchError} onRetry={() => setMatchAttempt(value => value + 1)} mapping={mapping} onMapping={updateMapping} game={activeMatchContext && game} />}
         {!focusMode && error && <div role="alert" className="alert alert-error"><span>{error}</span><button className="btn btn-sm" onClick={() => setError('')}>Dismiss</button></div>}
         {!focusMode && recording?.status === 'error' && <div role="alert" className="alert alert-error"><span>{recording.file.name}: {recording.error}</span></div>}
         {!focusMode && busy && <section className="rounded-box border border-base-300 bg-base-100 p-5" aria-live="polite" aria-busy="true">
@@ -238,9 +298,9 @@ export default function App() {
             </div>
           </div>
           <div className={focusMode ? 'hidden' : 'grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sm:px-7'}>
-            <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div>Red team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Home side'}</p></div></div>
+            <div className="flex items-center gap-3 text-sm font-semibold"><span className="h-8 w-1 rounded-full bg-error" /><div><TeamIdentity team={redIdentity} fallback="Red team" /><p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'red').length} players` : 'Red side'}</p></div></div>
             <div className="text-center"><div className="flex items-center justify-center gap-4 font-mono text-3xl font-medium tracking-tight sm:text-4xl"><span>{game ? game.scoreRed : '—'}</span><span className="text-2xl text-base-content/25">:</span><span>{game ? game.scoreBlue : '—'}</span></div>{game && <p className="mt-2 font-mono text-[11px] text-base-content/50">GAME {gameIndex + 1} · {time(game.gameTicks ?? game.activeTicks)}</p>}</div>
-            <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div>Blue team<p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Away side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
+            <div className="flex items-center justify-end gap-3 text-right text-sm font-semibold"><div><TeamIdentity team={blueIdentity} fallback="Blue team" /><p className="mt-1 text-[11px] font-normal text-base-content/45">{game ? `${game.players.filter(p => p.team === 'blue').length} players` : 'Blue side'}</p></div><span className="h-8 w-1 rounded-full bg-info" /></div>
           </div>
           <div className={focusMode ? 'min-h-0 flex-1 p-2' : 'px-3 pb-3'}>
             {recording ? <NativePlayer key={recording.id} ref={nativePlayer} focusMode={focusMode} onExitFocus={() => setFocusMode(false)} onToggleFocus={() => setFocusMode(value => !value)} file={recording.file} games={replay?.games} onGoal={onPlayerGoal} onGame={onPlayerGame} onError={setError} onStats={showStats} onClose={() => { setError(''); remove(recording.id); }} />
@@ -256,7 +316,7 @@ export default function App() {
               <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><ThirdsMap game={game} /></div>
             </div>)}
             {tab === 'players' && (isV2 ? <V2Players game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} /> : <PlayerTable game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />)}
-            {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList game={isV2 ? { ...game, goals: game.goals.map(goal => ({ ...goal, scoreRed: goal.score[0], scoreBlue: goal.score[1] })) } : game} onSeek={seekGoal} /></>}
+            {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList redIdentity={redIdentity} blueIdentity={blueIdentity} game={isV2 ? { ...game, goals: game.goals.map(goal => ({ ...goal, scoreRed: goal.score[0], scoreBlue: goal.score[1] })) } : game} onSeek={seekGoal} /></>}
           </div>
         </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>)}
       </div>

@@ -5,6 +5,7 @@ Client for fetching replay files and uploading them to Haxball Analyzer.
 - Haxball Analyzer (replay.hax.ma): POST /save-replay with raw bytes, poll GET /stats/<id>.json
 """
 
+import re
 import time
 from urllib.parse import parse_qs, urlparse
 
@@ -24,7 +25,7 @@ def is_powtorki_url(url: str) -> bool:
     return get_replay_source_and_id(url) is not None
 
 
-def get_powtorki_replay_id(url: str) -> str | None:
+def get_powtorki_replay_id(url: str, depth=0) -> str | None:
     """
     Extract replay id from supported Powtorki URLs.
     Examples:
@@ -32,7 +33,11 @@ def get_powtorki_replay_id(url: str) -> str | None:
     - https://thehax.pl/forum/powtorki.php?nagranie=7fa610525dbe630c8bd68dd55c266b4f -> 7fa610525dbe630c8bd68dd55c266b4f
     """
     try:
+        if depth > 3:
+            return None
         parsed = urlparse(url)
+        if parsed.scheme not in {'http', 'https'} or parsed.username or parsed.password or parsed.port:
+            return None
         host = (parsed.netloc or '').lower()
 
         if host == 'replay.thehax.pl':
@@ -40,25 +45,26 @@ def get_powtorki_replay_id(url: str) -> str | None:
             if not path:
                 return None
             # id is the first path segment (ignore e.g. /download)
-            return path.split('/')[0] or None
+            match = re.fullmatch(r'([a-zA-Z0-9_-]{1,128})(?:/download)?', path)
+            return match[1] if match else None
 
         if host in {'thehax.pl', 'www.thehax.pl'} and parsed.path == '/forum/powtorki.php':
             nagranie = parse_qs(parsed.query).get('nagranie', [None])[0]
-            return (nagranie or '').strip() or None
+            return nagranie if nagranie and re.fullmatch(r'[a-zA-Z0-9_-]{1,128}', nagranie) else None
 
         # VK external redirect wrapper:
         # https://vk.com/away.php?to=<urlencoded_powtorki_url>&utf=1
         if host in {'vk.com', 'www.vk.com'} and parsed.path.startswith('/away.php'):
             target_url = parse_qs(parsed.query).get('to', [None])[0]
             if target_url and target_url != url:
-                return get_powtorki_replay_id(target_url)
+                return get_powtorki_replay_id(target_url, depth + 1)
 
         return None
     except Exception:
         return None
 
 
-def get_saviola_replay_id(url: str) -> str | None:
+def get_saviola_replay_id(url: str, depth=0) -> str | None:
     """
     Extract replay id from supported Saviola links.
     Examples:
@@ -66,7 +72,11 @@ def get_saviola_replay_id(url: str) -> str | None:
     - https://www.haxball.com/replay?v=3#https://hax.saviola.de/r/?h=882e0d590580b32138704d5cb3f1fecf.hbr2
     """
     try:
+        if depth > 3:
+            return None
         parsed = urlparse(url)
+        if parsed.scheme not in {'http', 'https'} or parsed.username or parsed.password or parsed.port:
+            return None
         host = (parsed.netloc or '').lower()
 
         if host in {'hax.saviola.de', 'www.hax.saviola.de'} and parsed.path == '/r/':
@@ -76,13 +86,13 @@ def get_saviola_replay_id(url: str) -> str | None:
             replay_id = replay_id.strip()
             if replay_id.lower().endswith('.hbr2'):
                 replay_id = replay_id[:-5]
-            return replay_id or None
+            return replay_id if re.fullmatch(r'[a-zA-Z0-9_-]{1,128}', replay_id) else None
 
         if host in {'haxball.com', 'www.haxball.com'} and parsed.path == '/replay' and parsed.fragment:
             inner = parsed.fragment
             if not inner.startswith('http'):
                 return None
-            return get_saviola_replay_id(inner)
+            return get_saviola_replay_id(inner, depth + 1)
 
         return None
     except Exception:
@@ -124,9 +134,26 @@ def download_replay(url: str) -> bytes | None:
     else:
         return None
 
-    resp = requests.get(download_url, timeout=DOWNLOAD_TIMEOUT)
-    resp.raise_for_status()
-    return resp.content
+    # Fixed hosts only; redirects could otherwise turn this into an open proxy.
+    with requests.get(download_url, timeout=DOWNLOAD_TIMEOUT, stream=True, allow_redirects=False) as resp:
+        if resp.status_code != 200:
+            raise ValueError(f'Replay host returned HTTP {resp.status_code}')
+        limit = 32 * 1024 * 1024
+        if int(resp.headers.get('Content-Length', 0)) > limit:
+            raise ValueError('Replay exceeds 32 MiB')
+        chunks, size = [], 0
+        deadline = time.monotonic() + DOWNLOAD_TIMEOUT
+        for chunk in resp.iter_content(65536):
+            if time.monotonic() > deadline:
+                raise TimeoutError('Replay download timed out')
+            size += len(chunk)
+            if size > limit:
+                raise ValueError('Replay exceeds 32 MiB')
+            chunks.append(chunk)
+        data = b''.join(chunks)
+        if len(data) < 12 or data[:4] != b'HBR2':
+            raise ValueError('Replay host did not return HBR2 data')
+        return data
 
 
 def upload_replay_to_analyzer(data: bytes) -> str:

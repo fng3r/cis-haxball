@@ -50,6 +50,7 @@ from .models import (
     GroupStage,
     League,
     LegacyMedalMapping,
+    LocalReplayAnalysis,
     Match,
     MatchReplay,
     MatchReplayStats,
@@ -1014,9 +1015,7 @@ class CardInline(UnfoldStackedInline):
         if 'object_id' in resolved.kwargs:
             match = self.parent_model.objects.get(id=resolved.kwargs['object_id'])
         if db_field.name == 'team' and match is not None:
-            kwargs['queryset'] = Team.objects.filter(
-                leagues__championship=match.league.championship
-            ).distinct()
+            kwargs['queryset'] = Team.objects.filter(leagues__championship=match.league.championship).distinct()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -2035,3 +2034,26 @@ class AwardResultAdmin(UnfoldModelAdmin):
         'final_rank',
         'last_calculated_at',
     )
+
+
+@admin.register(LocalReplayAnalysis)
+class LocalReplayAnalysisAdmin(UnfoldModelAdmin):
+    list_display = ('match_id', 'replay_url', 'engine_version', 'status', 'analyzed_at')
+    list_filter = ('status', 'engine_version')
+    search_fields = ('match__id', 'replay_url')
+    readonly_fields = (
+        'match',
+        'replay_url',
+        'engine_version',
+        'result',
+        'inferred_sides',
+        'side_overrides',
+        'mapping_audit',
+        'content_sha256',
+        'status',
+        'error_message',
+        'analyzed_at',
+    )
+
+    def has_add_permission(self, request):
+        return False

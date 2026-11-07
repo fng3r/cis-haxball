@@ -3105,3 +3105,42 @@ class LegacyMedalMapping(models.Model):
         indexes = [models.Index(fields=['source_model', 'source_id'], name='legacy_medal_source_idx')]
         verbose_name = 'Связь со старой медалью'
         verbose_name_plural = 'Связи со старыми медалями'
+
+
+class LocalReplayAnalysis(models.Model):
+    """Original local-engine results. Independent of all legacy replay statistics.
+
+    Games and players retain engine schema v1; unavailable metrics have no columns.
+    Mapping keys are zero-based game positions, never assumed half numbers.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Ожидание'
+        READY = 'ready', 'Готово'
+        FAILED = 'failed', 'Ошибка'
+
+    match = models.ForeignKey(Match, related_name='local_replay_analyses', on_delete=models.CASCADE)
+    replay_url = models.URLField(max_length=512)
+    engine_version = models.CharField(max_length=64, default='original-v1')
+    result = models.JSONField(default=dict, blank=True)
+    inferred_sides = models.JSONField(default=dict, blank=True)
+    side_overrides = models.JSONField(default=dict, blank=True)
+    # Who resolved each game, and when. Inference never replaces manual choices.
+    mapping_audit = models.JSONField(default=dict, blank=True)
+    content_sha256 = models.CharField(max_length=64, blank=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    error_message = models.TextField(blank=True)
+    analyzed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['id']
+        constraints = [models.UniqueConstraint(fields=['match', 'replay_url'], name='local_replay_match_url_unique')]
+        verbose_name = 'Локальная статистика реплея'
+        verbose_name_plural = 'Локальная статистика реплеев'
+
+    def game_mapping(self, index):
+        key = str(index)
+        return self.side_overrides.get(key, self.inferred_sides.get(key))
+
+    def __str__(self):
+        return f'{self.match_id}: {self.replay_url} ({self.engine_version})'

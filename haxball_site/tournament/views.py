@@ -70,6 +70,7 @@ from .models import (
     TourNumber,
 )
 from .services.hall_of_fame import HallOfFameService
+from .services.local_replays import match_statistics
 from .services.replay_stats import MatchReplayStatsAggregator
 from .services.structured_medals import get_team_medals, get_team_medals_by_season
 from .services.team_results import get_team_results
@@ -659,6 +660,12 @@ class MatchDetail(DetailView):
 
         cards = match.cards.select_related('team', 'author__name__user_profile').order_by('team')
         context['cards'] = cards
+
+        context['analyzer_url'] = f'{settings.REPLAY_ANALYZER_URL}?match={match.pk}'
+        context['local_replay_statistics'] = match_statistics(match)
+        context['has_replay_statistics'] = bool(
+            context['local_replay_statistics']['analyses'] or getattr(match, 'replay_stats_status', None)
+        )
 
         # Replay-based advanced stats (Haxball Analyzer)
         replay_status = getattr(match, 'replay_stats_status', None)

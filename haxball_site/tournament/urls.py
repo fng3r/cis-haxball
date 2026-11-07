@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .replay_integration import match_manifest, match_mapping, match_recording
 from .views import (
     ArchiveView,
     AwardVotingView,
@@ -42,6 +43,9 @@ from .views import (
 app_name = 'tournament'
 
 urlpatterns = [
+    path('match/<int:pk>/analyzer', match_manifest, name='analyzer_manifest'),
+    path('match/<int:pk>/analyzer/recordings/<int:index>', match_recording, name='analyzer_recording'),
+    path('match/<int:pk>/analyzer/recordings/<int:index>/mapping', match_mapping, name='analyzer_mapping'),
     path('compare_players', ComparePlayersView.as_view(), name='compare_players'),
     path('compare_teams', CompareTeamsView.as_view(), name='compare_teams'),
     path('hall_of_fame', hall_of_fame, name='hall_of_fame'),

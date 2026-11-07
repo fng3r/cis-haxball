@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import App from '../src/App.jsx';
+import * as matchIntegration from '../src/match-context.js';
 
 class FakeWorker {
   static instances = [];
@@ -382,4 +383,33 @@ it('changes player maps only on click and displays playtime as plain text', asyn
   fireEvent.click(screen.getByRole('button', { name: 'Alice' }));
   fireEvent.click(screen.getByRole('button', { name: /Game 2/ }));
   expect(screen.queryByRole('button', { name: 'Unpin player' })).not.toBeInTheDocument();
+});
+
+
+it('imports Django recordings into the worker library and applies per-game team identities', async () => {
+  const previous = window.location.href;
+  window.history.replaceState({}, '', '/analyzer/?match=6862');
+  const context = {
+    match: { id: 6862, url: '/championship/match/6862', season: { name: 'ЧР #17' }, officialScore: [2, 1] },
+    teams: { home: { name: 'Home', logo: '/home.png' }, away: { name: 'Away', logo: '/away.png' } },
+    rosters: { home: ['alice'], away: [] }, canMap: false,
+    recordings: [{ index: 0, name: 'match-6862-1.hbr2', url: '/recording', mappings: { '0': false, '1': true } }],
+  };
+  const file = new File(['HBR2'], 'match-6862-1.hbr2');
+  file.arrayBuffer = async () => new ArrayBuffer(16);
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => context }));
+  vi.spyOn(matchIntegration, 'fetchMatchRecording').mockResolvedValue(file);
+  try {
+    render(<App />);
+    await waitFor(() => expect(FakeWorker.instances.at(-1)?.postMessage).toHaveBeenCalled());
+    expect(matchIntegration.fetchMatchRecording).toHaveBeenCalledWith(context.recordings[0], expect.any(AbortSignal));
+    act(() => FakeWorker.instances.at(-1).send({ type: 'result', result: { games: [game, { ...game, id: 1 }] } }));
+    expect(screen.getByRole('button', { name: 'Open recording match-6862-1.hbr2' })).toHaveAttribute('aria-pressed', 'true');
+    const red = document.querySelector('.bg-error').parentElement;
+    expect(red).toHaveTextContent('Away');
+    expect(red.querySelector('img')).toHaveAttribute('src', '/away.png');
+    fireEvent.click(screen.getByRole('button', { name: /Game 2/ }));
+    expect(red).toHaveTextContent('Home');
+    expect(red.querySelector('img')).toHaveAttribute('src', '/home.png');
+  } finally { window.history.replaceState({}, '', previous); }
 });

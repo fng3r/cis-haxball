@@ -1,0 +1,34 @@
+<section class="tw:space-y-3 tw:mb-6" aria-label="Replay Analyzer Original">
+  <a href="{{ analyzer_url }}" class="tw:btn tw:btn-sm">Replay Analyzer · Original v1</a>
+  <p class="tw:text-sm">Статистика записанных игровых отрезков · активное время сопоставленных игр {{ local.duration }}. Официальный счёт: {{ match.score_home }}:{{ match.score_guest }}.</p>
+  {% for analysis in local.analyses %}
+    {% if analysis.status == 'failed' %}<p role="alert" class="tw:alert">Не удалось обработать запись. Повторная загрузка статистики повторит попытку.</p>{% endif %}
+    {% if analysis.status == 'pending' %}<p role="status">Запись ожидает обработки.</p>{% endif %}
+  {% endfor %}
+  {% if local.unresolved %}<p role="status" class="tw:alert">Стороны {{ local.unresolved }} игр не определены. Статистика сохранена, командные итоги этих игр не учтены. Редактор может установить стороны в анализаторе.</p>{% endif %}
+  <div class="tw:overflow-x-auto">
+    <table class="tw:table tw:table-sm">
+      <caption>Командные итоги для игр с установленными сторонами</caption>
+      <thead><tr><th>{{ match.team_home.title }}</th><th>Показатель</th><th>{{ match.team_guest.title }}</th></tr></thead>
+      <tbody>
+        <tr><td>{{ local.totals.score.0 }}</td><th>Голы</th><td>{{ local.totals.score.1 }}</td></tr>
+        <tr><td>{{ local.possession_pct.0 }}%</td><th>Владение</th><td>{{ local.possession_pct.1 }}%</td></tr>
+        <tr><td>{{ local.totals.shots.0 }}</td><th>Удары в створ</th><td>{{ local.totals.shots.1 }}</td></tr>
+        <tr><td>{{ local.totals.passes.0 }}</td><th>Точные передачи</th><td>{{ local.totals.passes.1 }}</td></tr>
+        <tr><td>{{ local.totals.kicks.0 }}</td><th>Удары по мячу</th><td>{{ local.totals.kicks.1 }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  {% for item in local.games %}
+    <details class="tw:collapse tw:collapse-arrow tw:border tw:border-base-300">
+      <summary class="tw:collapse-title">Запись {{ item.analysis.pk }}, игра {{ item.index|add:1 }} · {{ item.game.stadium.name }} · Red {{ item.game.scoreRed }}:{{ item.game.scoreBlue }} Blue · {{ item.duration }} · {% if item.red_is_home is None %}стороны не определены{% elif item.red_is_home %}Red: {{ match.team_home.title }}{% else %}Red: {{ match.team_guest.title }}{% endif %}</summary>
+      <div class="tw:collapse-content tw:overflow-x-auto">
+        <p class="tw:text-sm">Red / Blue · Владение (тики): {{ item.game.possession.0 }} / {{ item.game.possession.1 }} · Удары в створ: {{ item.game.shots.0 }} / {{ item.game.shots.1 }} · Точные передачи: {{ item.game.passes.0 }} / {{ item.game.passes.1 }} · Удары по мячу: {{ item.game.kicks.0 }} / {{ item.game.kicks.1 }}</p>
+        <table class="tw:table tw:table-sm">
+          <thead><tr><th>Игрок</th><th>Сторона</th><th>Голы</th><th>Голевые пасы</th><th>Удары по мячу</th><th>В створ</th><th>Точные передачи</th><th>Активное время</th></tr></thead>
+          <tbody>{% for p in item.players %}<tr><td>{{ p.nick }}</td><td>{{ p.team }}</td><td>{{ p.goals }}</td><td>{{ p.assists }}</td><td>{{ p.kicks }}</td><td>{{ p.shots }}</td><td>{{ p.passes }}</td><td>{{ p.playtime }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    </details>
+  {% endfor %}
+</section>
