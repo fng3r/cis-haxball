@@ -10,8 +10,8 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 #status[hidden] { display: none; }
 [data-hook="playicon"] { display: inline-flex; width: 12px; height: 12px; vertical-align: middle; }
 
-// Keep the log usable without taking height away from the pitch.
-.game-view .chatbox-view { height: 96px; }
+// Five rows at the native 1.3 line-height, plus four 3px gaps between rows.
+.game-view .chatbox-view { height: calc(6.5em + 12px); }
 
 .focus-mode .game-view > .bottom-section { display: none; }
 .focus-mode .game-view > .top-section { margin-bottom: 40px; }
