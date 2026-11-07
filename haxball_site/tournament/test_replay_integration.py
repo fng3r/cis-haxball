@@ -326,7 +326,6 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertFalse(ReplayMatchPart.objects.exists())
 
     def test_legacy_statistics_keep_the_existing_source_and_metrics(self):
-        from types import SimpleNamespace
 
         from .services.replay_stats import MatchReplayStatsAggregator
 
@@ -338,8 +337,8 @@ class LocalReplayIntegrationTests(TestCase):
             'tournament/match/statistics.html',
             {
                 'match': self.match,
-                'match_replay_stats_aggregated': agg,
-                'replay_stats_status': SimpleNamespace(status='success'),
+                'selected_replay_stats': agg,
+                'selected_replay_status': 'success',
             },
         )
         self.assertIn('https://replay.hax.ma', html)
@@ -521,3 +520,40 @@ class LocalReplayIntegrationTests(TestCase):
         payload = statistics(self.match)
         self.assertTrue(payload['needs_review'])
         self.assertEqual(len(payload['parts_summary']), 1)
+
+    def test_current_statistics_take_precedence_even_with_legacy_query_parameter(self):
+        from .models import MatchReplayStatsStatus
+
+        self.seed()
+        old = MatchReplay.objects.create(match=self.match, replay_url=self.url)
+        MatchReplayStats.objects.create(match=self.match, match_replay=old, score_red=99)
+        MatchReplayStatsStatus.objects.create(match=self.match, status='success')
+        Match.objects.filter(pk=self.match.pk).update(is_played=True)
+        endpoint = reverse('tournament:match_detail', args=[self.match.pk])
+        for query in ('', '?stats=legacy', '?stats=current'):
+            response = self.client.get(endpoint + query)
+            self.assertTrue(response.context['show_current_replay_stats'])
+            self.assertEqual(response.context['selected_replay_status'], 'success')
+            self.assertTrue(response.context['selected_replay_stats']['is_current'])
+
+    def test_current_statuses_use_existing_failure_pending_and_partial_ui(self):
+        record = ReplayRecording.objects.create(
+            match=self.match, source_key='powtorki:test-recording', replay_url=self.url
+        )
+        endpoint = reverse('tournament:match_detail', args=[self.match.pk])
+        Match.objects.filter(pk=self.match.pk).update(is_played=True)
+        response = self.client.get(endpoint)
+        self.assertEqual(response.context['selected_replay_status'], 'pending')
+        self.assertContains(response, 'Реплей обрабатывается.')
+        record.status = 'failed'
+        record.save()
+        response = self.client.get(endpoint)
+        self.assertEqual(response.context['selected_replay_status'], 'failed')
+        self.assertContains(response, 'Статистика для данного матча недоступна')
+        materialize(record, self.result, {'home': set(), 'away': set()}, {})
+        self.match.replay_parts.update(included=True)
+        response = self.client.get(endpoint)
+        self.assertEqual(response.context['selected_replay_status'], 'partial')
+        self.assertContains(response, 'Статистика загружена частично.')
+        self.assertNotContains(response, 'Не удалось обновить одну из записей')
+        self.assertNotContains(response, 'Нет выбранных частей с доступной статистикой')

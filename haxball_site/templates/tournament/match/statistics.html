@@ -1,9 +1,4 @@
-{% if show_current_replay_stats %}
-  {% with agg=current_replay_stats status='success' %}
-    {% include 'tournament/match/replay_statistics_content.html' %}
-  {% endwith %}
-{% elif replay_stats_status %}
-  {% with agg=match_replay_stats_aggregated status=replay_stats_status.status %}
+{% with agg=selected_replay_stats status=selected_replay_status %}
     {% if status == 'failed' %}
       <div class="tw:py-12 tw:px-6 tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:gap-2">
         <i class="fa fa-ban tw:text-4xl! tw:text-error" aria-hidden="true"></i>
@@ -19,6 +14,4 @@
     {% elif agg %}
       {% include 'tournament/match/replay_statistics_content.html' %}
     {% endif %}
-  {% endwith %}
-
-{% endif %}
+{% endwith %}

@@ -49,8 +49,10 @@ Legacy `MatchReplay*` models and their stored results remain independent.
 Raw goals, event locations and maps remain in the raw engine response. Domain
 models do not invent xG, ratings, saves, pass attempts or other unavailable data.
 The established match statistics components render current metrics through a
-presentation adapter. When both sources exist, current and archived statistics
-can be selected separately; their metric definitions are never combined.
+presentation adapter. Current statistics are shown automatically when usable;
+legacy statistics are a fallback when current results are unavailable. There is
+no source selector, and query parameters cannot override this choice. Both sources
+use the same pending, failed and partial-result UI; their metrics are never combined.
 
 ## Ingestion and editing
 

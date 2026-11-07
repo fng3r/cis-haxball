@@ -1,8 +1,3 @@
-{% if agg.is_current %}
-  {% for recording in agg.recordings %}{% if recording.error_message %}<div class="tw:alert tw:mb-3" role="status">Не удалось обновить одну из записей. {% if recording.analyzed_at %}Показана последняя успешная статистика.{% endif %}</div>{% endif %}{% endfor %}
-  {% if agg.needs_review %}<div class="tw:alert tw:mb-3" role="status">Статистика некоторых частей требует проверки или повторного анализа.</div>{% endif %}
-{% endif %}
-{% if not agg.is_current or agg.has_data %}
     {{ agg.players_comparison_data|json_script:"players-comparison-data" }}
     {% if status == 'partial' %}
       <div class="tw:alert tw:alert-warning tw:mt-1 tw:mb-2 tw:text-sm">
@@ -71,5 +66,3 @@
         </div>
       {% endif %}
     </div>
-
-{% else %}<p class="tw:py-8 tw:text-center tw:text-base-content/70">Нет выбранных частей с доступной статистикой.</p>{% endif %}

@@ -664,16 +664,6 @@ class MatchDetail(DetailView):
 
         context['analyzer_url'] = analyzer_link(match, self.request)
         context['current_replay_stats'] = replay_statistics(match, self.request)
-        requested_source = self.request.GET.get('stats')
-        context['show_current_replay_stats'] = bool(
-            context['current_replay_stats']['recordings']
-            and requested_source != 'legacy'
-            and (
-                context['current_replay_stats']['has_data']
-                or requested_source == 'current'
-                or not getattr(match, 'replay_stats_status', None)
-            )
-        )
         context['has_replay_statistics'] = bool(
             context['current_replay_stats']['recordings'] or getattr(match, 'replay_stats_status', None)
         )
@@ -686,9 +676,20 @@ class MatchDetail(DetailView):
             MatchReplayStatsStatus.Status.PARTIAL,
         }:
             parts = list(match.replay_stats.all())
-            context['match_replay_stats_aggregated'] = MatchReplayStatsAggregator(match=match, parts=parts).build()
+            context['match_replay_stats_aggregated'] = (
+                MatchReplayStatsAggregator(match=match, parts=parts).build() if parts else None
+            )
         else:
             context['match_replay_stats_aggregated'] = None
+
+        current = context['current_replay_stats']
+        legacy = context['match_replay_stats_aggregated']
+        use_current = bool(current['has_data'] or (current['recordings'] and not legacy))
+        context['show_current_replay_stats'] = use_current
+        context['selected_replay_stats'] = current if use_current else legacy
+        context['selected_replay_status'] = (
+            current['status'] if use_current else replay_status.status if replay_status else None
+        )
 
         if all_matches_between.count() == 0:
             context['no_history'] = True

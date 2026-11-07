@@ -2,6 +2,8 @@
 
 from types import SimpleNamespace
 
+from tournament.models import MatchReplayStatsStatus, ReplayRecording
+
 from .local_replays import active_parts, analyzer_link, recording_sources
 from .replay_stats import MatchReplayStatsAggregator
 
@@ -124,4 +126,11 @@ def statistics(match, request=None):
     payload['needs_review'] = (
         incomplete or match.replay_parts.filter(game__available=False, game__recording__source_key__in=keys).exists()
     )
+    states = MatchReplayStatsStatus.Status
+    waiting = len(records) < len(keys) or any(record.status == ReplayRecording.Status.PENDING for record in records)
+    failed = any(record.status == ReplayRecording.Status.FAILED for record in records)
+    if payload['has_data']:
+        payload['status'] = states.PARTIAL if waiting or failed or payload['needs_review'] else states.SUCCESS
+    else:
+        payload['status'] = states.PENDING if waiting else states.FAILED
     return payload
