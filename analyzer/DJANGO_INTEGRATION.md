@@ -87,7 +87,7 @@ mappings for different content. Recording source corrections should use the corr
 immutable host recording ID. Normal retries and reanalysis serialize with admin
 part edits using a match lock. Separate matches can run on separate workers.
 
-## Runtime, schema upgrade and deployment
+## Runtime and deployment
 
 Celery needs Node >=22.12, the analyzer source and installed npm dependencies.
 It invokes `scripts/analyze.mjs` as a bounded subprocess, independent of Vite.
@@ -100,18 +100,14 @@ Before applying schema changes, run:
 
 ```sh
 cd haxball_site
-python manage.py prepare_replay_upgrade
+python manage.py makemigrations tournament
 python manage.py migrate
 ```
 
-The preparation command generates the new schema migration. For installations
-with the first experimental `LocalReplayAnalysis` model, it inserts a historical
-ORM data transfer **before** that model's fields/table are removed. Existing raw
-results, native game identities, metrics and boolean mapping overrides are copied
-into the five models. Fresh installations simply create the new domain models.
-The legacy `MatchReplay*` tables are never transformed or backfilled.
-For a fresh checkout also generate the other applications' migrations following
-the repository's existing setup instructions.
+These are ordinary Django schema migrations for the five current `Replay*` models.
+There is no transitional data-transfer command. The legacy `MatchReplay*` tables
+are never transformed or backfilled. For a fresh checkout also generate the other
+applications' migrations following the repository's existing setup instructions.
 
 Configuration:
 
