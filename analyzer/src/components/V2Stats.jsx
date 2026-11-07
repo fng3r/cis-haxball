@@ -65,7 +65,6 @@ export function V2Overview({ game }) {
       <section aria-label="Ball territory" className="min-w-0 xl:border-l xl:border-base-300 xl:pl-8">
         <h3 className="mb-4 text-sm font-semibold">Ball territory</h3>
         {game.territoryAvailable ? (pitchAligned ? <ThirdsMap game={game} /> : <div><p className="mb-3 text-xs text-base-content/55">Time in each third</p><dl className="grid grid-cols-3 gap-2">{['Red third', 'Middle', 'Blue third'].map((label, index) => <div key={label} className="rounded-field bg-base-200 p-4 text-center"><dt className="text-xs text-base-content/60">{label}</dt><dd className="mt-2 font-mono text-xl">{percent(game.thirds[index], game.activeTicks)}</dd></div>)}</dl></div>) : <p className="py-8 text-sm text-base-content/55">Ball territory is unavailable for this pitch.</p>}
-        <p className="mt-3 text-xs text-base-content/55">Ball time in three equal pitch regions.</p>
       </section>
     </div>
     <MetricGuide />
