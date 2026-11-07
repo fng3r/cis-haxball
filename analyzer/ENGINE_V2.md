@@ -1,8 +1,8 @@
 # Replay analysis engine v2 — first implementation
 
 The original `src/engine/`, its generator, the pinned `legacy/` tree and native
-player are unchanged. The app defaults to the original engine and offers Engine v2
-through the header switcher. V2 also remains available as an independent API/CLI
+player are unchanged. The app uses the original engine; Engine v2 and its header
+switcher are hidden behind a disabled-by-default feature flag. V2 remains available as an independent API/CLI
 and worker entry point with its own definitions and statistics views.
 
 ## Run
@@ -153,7 +153,13 @@ See `METRICS_RESEARCH.md` for the broader unimplemented catalogue.
 
 ## Web UI
 
-Choose Original or Engine v2 in the header. The choice is stored in browser
+Set `VITE_ENABLE_ENGINE_V2=true` in `.env.local` and restart the dev server (or
+set it when building) to enable experimental v2 access. With the flag unset or
+false, the switcher is hidden and the original engine is always used, including
+when a URL or saved browser preference requests v2. The standalone API/CLI remains
+available independently of this web flag.
+
+When enabled, choose Original or Engine v2 in the header. The choice is stored in browser
 preferences and the `engine` URL parameter; URL selection takes precedence.
 Switching engine navigates to a new document, clearing the session-only recording
 library. A valid explicit URL parameter still works when local storage is blocked.

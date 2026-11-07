@@ -16,12 +16,13 @@ class FakeWorker {
   send(data) { this.onmessage({ data }); }
 }
 beforeEach(() => {
+  vi.stubEnv('VITE_ENABLE_ENGINE_V2', 'true');
   localStorage.clear(); localStorage.setItem('replay-engine', 'v2'); FakeWorker.instances = [];
   vi.stubGlobal('Worker', FakeWorker);
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   Element.prototype.scrollIntoView = vi.fn();
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 async function open(analysis = result) {
   render(<App />);
   const file = new File(['replay'], 'fixture.hbr2'); file.arrayBuffer = async () => new ArrayBuffer(16);

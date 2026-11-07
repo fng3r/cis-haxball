@@ -5,8 +5,20 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import * as selection from '../src/engine-selection.js';
 import EngineSwitcher from '../src/components/EngineSwitcher.jsx';
-beforeEach(() => localStorage.clear());
-afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+beforeEach(() => { localStorage.clear(); vi.stubEnv('VITE_ENABLE_ENGINE_V2', 'true'); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
+it.each([undefined, 'false', '1'])('hides v2 and ignores saved/URL choices when the flag is %s', flag => {
+  vi.stubEnv('VITE_ENABLE_ENGINE_V2', flag);
+  localStorage.setItem('replay-engine', 'v2');
+  expect(selection.getEngine()).toBe('legacy');
+  expect(selection.getEngine('https://example.com/analyzer/?engine=v2')).toBe('legacy');
+  const navigate = vi.fn();
+  selection.changeEngine('v2', { navigate });
+  expect(navigate).not.toHaveBeenCalled();
+  render(<EngineSwitcher engine="legacy" />);
+  expect(screen.queryByRole('combobox', { name: 'Analysis engine' })).not.toBeInTheDocument();
+  expect(screen.queryByText('Engine v2')).not.toBeInTheDocument();
+});
 it('defaults to the original engine, restores saved choices and allows URL overrides', () => {
   expect(selection.getEngine()).toBe('legacy');
   localStorage.setItem('replay-engine', 'v2');
