@@ -255,6 +255,16 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertIn('Игроки', html)
         self.assertIn('My half', html)
         self.assertNotIn('Командные итоги для игр', html)
+        for unsupported in (
+            'Поз.',
+            'Передачи (%)',
+            'Сейвы',
+            'Рейтинг',
+            "key: 'pass_accuracy'",
+            "key: 'saves'",
+            "key: 'rating'",
+        ):
+            self.assertNotIn(unsupported, html)
         part.included = False
         part.save()
         self.assertEqual(len(statistics(self.match)['parts_summary']), 1)

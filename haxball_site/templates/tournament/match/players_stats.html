@@ -12,10 +12,10 @@
                   {% if not agg.is_current %}{ key: 'shots_total', label: 'Удары' },{% endif %}
                   { key: 'shots_on_target', label: 'Удары в створ' },
                   { key: 'passes_completed', label: 'Передачи' },
-                  { key: 'pass_accuracy', label: 'Передачи (%)' },
+                  {% if not agg.is_current %}{ key: 'pass_accuracy', label: 'Передачи (%)' },{% endif %}
                   {% if agg.is_current %}{ key: 'kicks', label: 'Удары по мячу' },{% else %}{ key: 'touches', label: 'Касания' },{% endif %}
-                  { key: 'saves', label: 'Сейвы' },
-                  { key: 'rating', label: 'Рейтинг' }
+                  {% if not agg.is_current %}{ key: 'saves', label: 'Сейвы' },{% endif %}
+                  {% if not agg.is_current %}{ key: 'rating', label: 'Рейтинг' }{% endif %}
                 ],
                 pct(a, b) { const x = Number(a) || 0, y = Number(b) || 0; const t = x + y; return t ? Math.round(100 * x / t) : 50; },
                 barPct(key) {
@@ -116,29 +116,29 @@
       <table class="tw:table tw:table-zebra tw:min-w-full">
         <thead>
           <tr>
-            <th class="tw:text-center tw:pr-0">Поз.</th>
+            {% if not agg.is_current %}<th class="tw:text-center tw:pr-0">Поз.</th>{% endif %}
             <th>Игрок</th>
             <th>Г</th>
             <th>П</th>
             <th>Время</th>
             <th>{% if agg.is_current %}В створ{% else %}Удары{% endif %}</th>
             <th>Передачи</th>
-            <th>Передачи (%)</th>
+            {% if not agg.is_current %}<th>Передачи (%)</th>{% endif %}
             <th>{% if agg.is_current %}Удары по мячу{% else %}Касания{% endif %}</th>
-            <th>Сейвы</th>
-            <th class="tw:text-center">Рейтинг</th>
+            {% if not agg.is_current %}<th>Сейвы</th>{% endif %}
+            {% if not agg.is_current %}<th class="tw:text-center">Рейтинг</th>{% endif %}
           </tr>
         </thead>
         <tbody x-show="view === 'total'" x-cloak>
           {% for p in agg.players %}
             <tr>
-              <td class="tw:text-center tw:pr-0">
+              {% if not agg.is_current %}<td class="tw:text-center tw:pr-0">
                 {% if p.position_label %}
                   <span class="tw:badge tw:badge-outline tw:badge-xs tw:font-semibold">{{ p.position_label }}</span>
                 {% else %}
                   —
                 {% endif %}
-              </td>
+              </td>{% endif %}
               <td class="tw:flex tw:items-center tw:gap-2">
                 {% if p.team_obj %}
                   <img src="{{ p.team_obj.logo.url }}"
@@ -158,16 +158,16 @@
               <td>{{ p.playtime }}</td>
               <td>{% if agg.is_current %}{{ p.shots_on_target }}{% else %}{{ p.shots_total }} ({{ p.shots_on_target }}){% endif %}</td>
               <td>{{ p.passes_completed }}</td>
-              <td>
+              {% if not agg.is_current %}<td>
                 {% if p.pass_accuracy is not None %}
                   {{ p.pass_accuracy }}%
                 {% else %}
                   —
                 {% endif %}
-              </td>
+              </td>{% endif %}
               <td>{% if agg.is_current %}{{ p.kicks }}{% else %}{{ p.touches }}{% endif %}</td>
-              <td>{{ p.saves|default_if_none:'—' }}</td>
-              <td class="tw:text-center">
+              {% if not agg.is_current %}<td>{{ p.saves|default_if_none:'—' }}</td>{% endif %}
+              {% if not agg.is_current %}<td class="tw:text-center">
                 {% if p.rating %}
                   <span class="tw:badge tw:badge-sm tw:badge-primary tw:gap-1 tw:font-semibold">
                     {{ p.rating|floatformat:2 }}
@@ -176,7 +176,7 @@
                 {% else %}
                   —
                 {% endif %}
-              </td>
+              </td>{% endif %}
             </tr>
           {% endfor %}
         </tbody>
@@ -184,13 +184,13 @@
           <tbody x-show="view === {{ part_data.index }}" x-cloak>
             {% for p in part_data.players %}
               <tr>
-                <td class="tw:text-center tw:pr-0">
+                {% if not agg.is_current %}<td class="tw:text-center tw:pr-0">
                   {% if p.position_label %}
                     <span class="tw:badge tw:badge-outline tw:badge-xs tw:font-semibold">{{ p.position_label }}</span>
                   {% else %}
                     —
                   {% endif %}
-                </td>
+                </td>{% endif %}
                 <td class="tw:flex tw:items-center tw:gap-2">
                   {% if p.team_obj %}
                     <img src="{{ p.team_obj.logo.url }}"
@@ -214,22 +214,22 @@
                 <td>{{ p.playtime }}</td>
                 <td>{% if agg.is_current %}{{ p.shots_on_target }}{% else %}{{ p.shots_total }} ({{ p.shots_on_target }}){% endif %}</td>
                 <td>{{ p.passes_completed }}</td>
-                <td>
+                {% if not agg.is_current %}<td>
                   {% if p.pass_accuracy is not None %}
                     {{ p.pass_accuracy }}%
                   {% else %}
                     —
                   {% endif %}
-                </td>
+                </td>{% endif %}
                 <td>{% if agg.is_current %}{{ p.kicks }}{% else %}{{ p.touches }}{% endif %}</td>
-                <td>{{ p.saves|default_if_none:'—' }}</td>
-                <td>
+                {% if not agg.is_current %}<td>{{ p.saves|default_if_none:'—' }}</td>{% endif %}
+                {% if not agg.is_current %}<td>
                   {% if p.rating %}
                     <span class="tw:badge tw:badge-sm tw:badge-primary tw:font-semibold">{{ p.rating|floatformat:2 }}</span>
                   {% else %}
                     —
                   {% endif %}
-                </td>
+                </td>{% endif %}
               </tr>
             {% endfor %}
           </tbody>
