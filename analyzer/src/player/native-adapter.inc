@@ -3,6 +3,22 @@ let nativeResources;
 let nativeGoalControls;
 let nativeGameSync;
 
+function saveNativeCheckpoint(replay) {
+  const writer = w.ha();
+  replay.T.ga(writer);
+  return { tick: replay.Y, data: Uint8Array.from(writer.Sb()),
+    offset: replay.checkpointEventOffset, baseTick: replay.checkpointEventBaseTick };
+}
+
+function restoreNativeCheckpoint(replay, checkpoint) {
+  const data = checkpoint.data;
+  replay.T.ja(new F(new DataView(data.buffer, data.byteOffset, data.byteLength)));
+  replay.Y = checkpoint.tick;
+  replay.Lc.a = checkpoint.offset;
+  replay.hg = checkpoint.baseTick;
+  replay.Dl();
+}
+
 async function prepareNativeResources() {
   if (!nativeResources) {
     nativeResources = (async () => {
@@ -27,12 +43,17 @@ export async function openNativeReplay(bytes) {
   // Analysis happens in the separate worker. Playback must not collect stats
   // or run the analyzer's old fast-forward/reset completion heuristic.
   keepUpdating = false;
-  playSounds = true;
+  playSounds = false;
   loading = { done: true };
   x.Pg = document.getElementById('player');
   x.Pg.replaceChildren();
-  const chatEntries = indexReplayChat(new Jb(new Uint8Array(bytes), new fa, 3), action => action instanceof Ma);
   const replay = new Jb(new Uint8Array(bytes), new fa, 3);
+  const { checkpoints, chatEntries } = prepareReplayCheckpoints(replay, saveNativeCheckpoint);
+  restoreNativeCheckpoint(replay, checkpoints[0]);
+  replay.Qb = replay.sk = 0;
+  replay.Wh = window.performance.now();
+  mountCheckpointSeek(replay, checkpoints, restoreNativeCheckpoint);
+  playSounds = true;
   nativeController = new Vb(replay);
   mountFitPitch(nativeController);
   const instructions = nativeController.j.g.querySelector('.chatbox-view [data-hook=log] > p');

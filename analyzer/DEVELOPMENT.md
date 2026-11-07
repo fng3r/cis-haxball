@@ -276,28 +276,41 @@ initialization and recording switches. Its ready message reveals the same iframe
 without restarting playback. Errors or a 45-second initialization timeout show
 a retry action; retry mounts a fresh iframe without rerunning analysis.
 
-## Replay chat synchronization
+## Replay preparation, checkpoints and chat
 
-The native player indexes recorded chat, announcements and action notices once
-when opening a recording, by decoding actions without stepping match physics.
-This uses the decoder already present in the player and works independently of
-the statistics engine. No third production runtime is bundled.
+The shared native player runs one preprocessing simulation when opening a
+recording. It builds native binary state checkpoints every 900 recording ticks
+(15 seconds at 60 Hz) and indexes chat, announcements and system notices during
+that same pass. It then restores the initial snapshot before showing the player.
+Neither statistics engine is involved or changed.
 
-`src/player/chat-index.js` records messages with recording ticks, sender names and
-announcement styling. Recorded starts reset the indexing context between matches;
-a redundant start at tick zero retains the initial snapshot. Physics-generated
-result notices are not synthesized; recorded result announcements remain available.
+Each checkpoint stores complete native serialized game state, the recording tick,
+and the decoder cursor/base tick **before** decoding the pending action. Restoring
+that cursor and decoding again preserves same-tick action ordering, player input,
+kick cooldowns, scores, pauses, stadium state and lobby/match boundaries. Binary
+buffers are copied to their exact size and discarded with the recording/player.
 
-`src/player/chat-sync.js` shows the most recent 100 entries at or before the
-transport timestamp. Seeks use their destination while native physics catches up;
-reset returns to the beginning. Native append calls are suppressed to prevent
-duplicates. The log updates only when the message window changes, preserving
-scrolling during playback and scrolling to the latest message after seeks.
-Content uses text nodes, including announcements.
+`src/player/checkpoints.js` replaces the shared replay seek entry point. Backward
+seeks restore the nearest checkpoint at or before the destination. Forward seeks
+restore only when a checkpoint is ahead of the actual simulation position; short
+forward jumps keep the current state. Native fast-forward then simulates less than
+15 seconds, normally completing within one or two animation frames. Playback
+speed and paused state are preserved. Reset retains the native initial-state path.
+Timeline clicks, goal controls, game selection and hotkeys all use this seek entry.
 
-Tests compare indexed messages with native physics playback on all four fixtures
-and cover paused seeks, backward/forward jumps, reset, repeated playback,
-same-tick messages, formatting, text safety and bounded DOM size.
+`src/player/chat-index.js` captures messages during preprocessing, including
+physics-generated match results. `chat-sync.js` shows the most recent 100 entries
+at or before the transport timestamp. During seeks it uses the destination while
+physics catches up. Native append calls are suppressed to prevent duplicates.
+The log updates only when the message window changes, preserves scrolling during
+playback, and scrolls to the latest message after seeks. All content uses text
+nodes, including announcements.
+
+Tests compare complete serialized state with uninterrupted native playback on
+all four recordings. They exercise both directions, checkpoint/goal boundaries,
+substitutions, pauses, match transitions, end-of-file, reset, paused seeks and
+subsequent simulation after restoration. Chat tests verify the captured timeline,
+repeated playback, formatting, text safety and bounded DOM size.
 
 ## Independent analysis engine v2
 

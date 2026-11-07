@@ -9,8 +9,11 @@ if (createHash('sha256').update(source).digest('hex') !== 'c5047a4f807a9130bd985
 source = source.replace("import './vendor/pako-jszip.min.js';", "import '../../legacy/src/vendor/pako-jszip.min.js';");
 source = source.replace(/^import .* from '\.\/components\/(Home|Modal)(\.js)?';$/gm, '');
 source = source.replace(/u\.qp\(\)\s*$/, '');
+const cursorHook = '  Dl: function () {\n    var a = this.Lc;';
+if (source.split(cursorHook).length !== 2) throw new Error('Review native replay event cursor instrumentation.');
+source = source.replace(cursorHook, '  Dl: function () {\n    this.checkpointEventOffset = this.Lc.a;\n    this.checkpointEventBaseTick = this.hg;\n    var a = this.Lc;');
 // Only initialize the native transport at paused 1x. Leave its RAF loop,
-// interpolation, rendering, seek implementation, and controls unchanged.
+// interpolation, rendering, and controls unchanged. Seeking uses checkpoints.
 source = source.replace('var e = !0,\n    f = 8,', 'var e = !1,\n    f = 2,');
 source = source.replace("e ? k.innerHTML = '⏸' : k.innerHTML = '⏵';", 'setNativePlayIcon(k, e);');
 // Fit-pitch mode must ignore a stadium's optional client camera width limit.
@@ -23,7 +26,7 @@ await writeFile(new URL('src/player/vendor-player.js', root),
   'import { mountGoalControls } from "./goal-controls.js";\n' +
   'import { mountFitPitch } from "./viewport.js";\n' +
   'import { mountGameSync } from "./game-sync.js";\n' +
-  'import { indexReplayChat } from "./chat-index.js";\n' +
+  'import { prepareReplayCheckpoints, mountCheckpointSeek } from "./checkpoints.js";\n' +
   'import { mountChatSync } from "./chat-sync.js";\n' +
   'const notify = (type, message) => parent.postMessage({ source: "haxball-native-player", type, message }, location.origin);\n' +
   'const showStats = () => notify("stats");\n' +

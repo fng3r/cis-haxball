@@ -1,4 +1,4 @@
-// Capture recorded chat without stepping physics or depending on either stats engine.
+// Capture chat during the shared player's preprocessing pass, independent of stats.
 export function captureChat(state, currentTick) {
   const entries = [];
   const add = (type, text, extra = {}) => entries.push({ tick: currentTick(), type, text, ...extra });
@@ -12,23 +12,11 @@ export function captureChat(state, currentTick) {
   state.ii = (actor, player) => notice(`${player.w}${player.cb ? ' was given admin rights' : "'s admin rights were taken away"}${by(actor)}`);
   state.xl = (actor, player, team) => { if (state.K) notice(`${player.w} was moved to ${team.w}${by(actor)}`); };
   state.Ki = actor => notice(`Game started${by(actor)}`);
+  state.Oi = team => notice(`${team.w} team won the match`);
   state.ml = (actor, paused, alreadyPaused) => { if (paused && !alreadyPaused) notice(`Game paused${by(actor)}`); };
   state.Ii = (actor, stadium) => { if (!stadium.Pe()) notice(`Stadium "${stadium.w}" loaded${by(actor)}`); };
   state.vf = actor => { if (actor) notice(`Game stopped${by(actor)}`); };
   state.sl = player => notice(`${player.w} ${player.Ld ? 'has desynchronized' : 'is back in sync'}`);
   state.Hk = (actor, min, rate, burst) => notice(`Kick Rate Limit set to (min: ${min}, rate: ${rate}, burst: ${burst})${by(actor)}`);
-  return entries;
-}
-
-export function indexReplayChat(replay, isGameStart) {
-  const entries = captureChat(replay.T, () => replay.hg);
-  while (replay.gg && replay.hg < replay.mf) {
-    replay.Y = replay.hg;
-    // Automatic game stops normally happen in physics. A recorded start is
-    // authoritative when indexing actions only, including multi-match files.
-    if (replay.hg > 0 && isGameStart(replay.gg)) replay.T.K = null;
-    replay.gg.apply(replay.T);
-    replay.Dl();
-  }
   return entries;
 }
