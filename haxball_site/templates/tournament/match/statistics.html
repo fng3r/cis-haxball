@@ -1,30 +1,24 @@
-{% if current_replay_stats.recordings and replay_stats_status %}
-  <div class="tw:mb-3 tw:flex tw:gap-2">
-    <a href="?stats=current#match-replay-stats" class="tw:btn tw:btn-sm">Текущая статистика</a>
-    {% if replay_stats_status %}<a href="?stats=legacy#match-replay-stats" class="tw:btn tw:btn-sm">Архивная статистика</a>{% endif %}
-  </div>
-{% endif %}
 {% if show_current_replay_stats %}
   {% with agg=current_replay_stats status='success' %}
     {% include 'tournament/match/replay_statistics_content.html' %}
   {% endwith %}
 {% elif replay_stats_status %}
-{% with agg=match_replay_stats_aggregated status=replay_stats_status.status %}
-  {% if status == 'failed' %}
-    <div class="tw:py-12 tw:px-6 tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:gap-2">
-      <i class="fa fa-ban tw:text-4xl! tw:text-error" aria-hidden="true"></i>
-      <div class="tw:text-xl tw:text-base-content/80 tw:font-semibold">Статистика для данного матча недоступна</div>
-    </div>
-  {% elif status == 'pending' %}
-    <div class="tw:py-12 tw:px-6 tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:gap-2">
-      <i class="fa fa-clock-o tw:text-4xl! tw:text-warning" aria-hidden="true"></i>
-      <div class="tw:text-xl tw:text-base-content/80 tw:font-semibold">
-        <span>Реплей обрабатывается. Cтатистика будет доступна позже</span>
+  {% with agg=match_replay_stats_aggregated status=replay_stats_status.status %}
+    {% if status == 'failed' %}
+      <div class="tw:py-12 tw:px-6 tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:gap-2">
+        <i class="fa fa-ban tw:text-4xl! tw:text-error" aria-hidden="true"></i>
+        <div class="tw:text-xl tw:text-base-content/80 tw:font-semibold">Статистика для данного матча недоступна</div>
       </div>
-    </div>
-  {% elif agg %}
-    {% include 'tournament/match/replay_statistics_content.html' %}
-  {% endif %}
-{% endwith %}
+    {% elif status == 'pending' %}
+      <div class="tw:py-12 tw:px-6 tw:min-h-50 tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:gap-2">
+        <i class="fa fa-clock-o tw:text-4xl! tw:text-warning" aria-hidden="true"></i>
+        <div class="tw:text-xl tw:text-base-content/80 tw:font-semibold">
+          <span>Реплей обрабатывается. Cтатистика будет доступна позже</span>
+        </div>
+      </div>
+    {% elif agg %}
+      {% include 'tournament/match/replay_statistics_content.html' %}
+    {% endif %}
+  {% endwith %}
 
 {% endif %}
