@@ -1268,6 +1268,122 @@
       ],
       "outcome": "main_role_confirmed_legacy_label_incorrect",
       "note": "Explicitly played ST for the entire half. The inferred brief AM period remains a disagreement."
+    },
+    {
+      "reviewed_at": "2026-11-08",
+      "source": "user_match_review",
+      "match_id": 6515,
+      "recording_id": 234,
+      "nick": "Max_Verstappen",
+      "game_ids": [
+        0
+      ],
+      "legacy_position": "DM",
+      "inferred_main_position": null,
+      "confirmed_roles": [
+        "ST",
+        "DM"
+      ],
+      "reported_sequence": [
+        {
+          "roles": [
+            "ST"
+          ],
+          "timing": "approximately first half of appearance"
+        },
+        {
+          "roles": [
+            "DM"
+          ],
+          "timing": "approximately second half of appearance"
+        }
+      ],
+      "outcome": "genuine_mixed_roles_no_dominant_role_supported",
+      "note": "Inferred equal ST/DM shares agree with the approximate review. Individual window transitions remain unverified."
+    },
+    {
+      "reviewed_at": "2026-11-08",
+      "source": "user_match_review",
+      "match_id": 6485,
+      "recording_id": 231,
+      "nick": "RichVladimirKC",
+      "game_ids": [
+        0
+      ],
+      "legacy_position": "DM",
+      "inferred_main_position": null,
+      "confirmed_roles": [
+        "GK",
+        "DM"
+      ],
+      "reported_sequence": [
+        {
+          "roles": [
+            "GK"
+          ],
+          "approx_duration_seconds": 180
+        },
+        {
+          "roles": [
+            "DM"
+          ],
+          "timing": "remainder"
+        }
+      ],
+      "outcome": "false_absence_of_dominant_dm_role",
+      "note": "First six GK windows agree. Later AM/ST assignments are errors; the reported DM remainder should dominate."
+    },
+    {
+      "reviewed_at": "2026-11-08",
+      "source": "user_match_review",
+      "match_id": 6519,
+      "recording_id": 66,
+      "nick": "nezent",
+      "game_ids": [
+        1
+      ],
+      "legacy_position": "GK",
+      "inferred_main_position": null,
+      "confirmed_roles": [
+        "GK",
+        "ST",
+        "AM"
+      ],
+      "reported_sequence": [
+        {
+          "roles": [
+            "GK"
+          ],
+          "approx_duration_seconds": 210
+        },
+        {
+          "roles": [
+            "ST",
+            "AM"
+          ],
+          "timing": "remainder; exact split unspecified"
+        }
+      ],
+      "outcome": "keeper_phase_confirmed_later_dm_assignments_incorrect",
+      "note": "First seven GK windows agree. Subsequent DM windows are errors. Dominance of an exact attacking role is unverified."
+    },
+    {
+      "reviewed_at": "2026-11-08",
+      "source": "user_match_review",
+      "match_id": 6585,
+      "recording_id": 360,
+      "nick": "ромчик",
+      "game_ids": [
+        1
+      ],
+      "legacy_position": "AM",
+      "inferred_main_position": null,
+      "confirmed_roles": [
+        "ST",
+        "AM"
+      ],
+      "outcome": "attacking_roles_supported_dm_assignments_incorrect",
+      "note": "ST/AM time split and ordering were not supplied; exact-role dominance remains unverified."
     }
   ]
 }

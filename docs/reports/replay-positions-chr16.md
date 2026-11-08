@@ -97,9 +97,39 @@ The user confirmed these roles on 2026-11-08:
   The detector's brief AM period is still a disagreement with the confirmed
   whole-half role.
 
-These confirmations support the new main roles in these specific cases. The
-historical comparison counts above remain unchanged: they measure agreement with
-the saved labels, not accuracy against the manual reviews. Review annotations are
+These three confirmations support the new main roles in those specific cases.
+
+### Review of examples with no dominant inferred role
+
+The user also reviewed four full-length appearances on 2026-11-08. Their feedback
+distinguishes genuine mixed roles from classifier errors:
+
+- Match **6515**, recording **234**, game **0**, `Max_Verstappen`: approximately
+  equal time as ST at the start and DM at the end. This supports the inferred
+  equal role shares and the absence of a dominant role. Rechecking the period
+  output shows the same broad ordering, but also a later ST window; the aggregate
+  match does not establish that every individual window is correct.
+- Match **6485**, recording **231**, game **0**, `RichVladimirKC`: GK for the first
+  three minutes, then DM for the remainder. The six initial GK windows are
+  correct. Subsequent AM and ST windows are misclassifications. The confirmed
+  longer DM phase should make DM dominant under the existing threshold, so this
+  is a **false absence of a main role**, not genuinely ambiguous play.
+- Match **6519**, recording **66**, game **1**, `nezent`: GK for the first three
+  and a half minutes, then ST/AM. The seven initial GK windows are correct; the
+  subsequent DM windows are misclassifications. The review does not specify the
+  ST/AM split, so it cannot establish whether either exact role should dominate.
+- Match **6585**, recording **360**, game **1**, `ромчик`: played ST/AM. The
+  inferred attacking roles are consistent with that account, but the DM windows
+  are errors. No exact ST/AM time split was supplied, so a missing dominant exact
+  role is not itself confirmed or disproved.
+
+These reviews confirm useful goalkeeper-phase detection and expose weaknesses in
+outfield-role classification. In particular, a null main position must not be
+presented as evidence of a genuine role change. Classifier instability can hide
+an actual dominant role, as with RichVladimirKC.
+
+Historical comparison counts above remain unchanged: they measure agreement with
+saved legacy labels, not accuracy against these reviews. Review annotations are
 stored separately in the validation snapshot; no classifier rules or database
 statistics were changed.
 
