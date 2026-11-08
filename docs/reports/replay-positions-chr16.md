@@ -82,12 +82,29 @@ That is compatible with the supplied GK–DM–two-ST reference, but does not pr
 every changed label is correct. Only three legacy AM entries stay AM; identifying
 real AM/ST distinctions needs manually reviewed examples before stronger claims.
 
-There are also genuine-looking difficult cases worth reviewing:
+### Confirmed by match review
 
-- Match **6534**, recording **71**, `kenas`: legacy GK → DM.
-- Match **6540**, recording **45**, `zxz`: legacy GK → DM in both games.
-- Match **6281**, recording **50**, `Фурри`: legacy GK → ST. This is a particularly
-  large disagreement, not one to hide inside the attacking-role aggregate.
+The user confirmed these roles on 2026-11-08:
+
+- Match **6534**, recording **71**, `kenas`: played DM and also ST for part of the
+  match. The inferred main role DM is consistent with that account; the old GK
+  label is incorrect. Exact role-change timestamps have not been annotated, so
+  this does not validate the detector's individual periods.
+- Match **6540**, recording **45**, `zxz`: played DM. The new DM classification
+  agrees with the review; the old GK labels are incorrect.
+- Match **6281**, recording **50**, `Фурри`: explicitly played ST throughout the
+  half. The new main role ST agrees with the review; the old GK label is incorrect.
+  The detector's brief AM period is still a disagreement with the confirmed
+  whole-half role.
+
+These confirmations support the new main roles in these specific cases. The
+historical comparison counts above remain unchanged: they measure agreement with
+the saved labels, not accuracy against the manual reviews. Review annotations are
+stored separately in the validation snapshot; no classifier rules or database
+statistics were changed.
+
+### Remaining cases worth reviewing
+
 - Match **6335**, recording **217**, `black`, and match **6533**, recording **77**,
   `bonusbuychik`: approximately 14-second appearances, legacy GK → DM. Very short
   evidence is still capable of producing a misleading main role.
@@ -117,7 +134,7 @@ only reads models and produces local files. It never calls ingestion or saves
 analyzer output to the database.
 
 The committed [validation snapshot](replay-positions-chr16.json) contains the
-engine revision, aggregate confusion matrices, recording IDs, source URLs,
+engine revision, aggregate confusion matrices, manual review annotations, recording IDs, source URLs,
 downloaded-byte SHA-256 checksums, matched game IDs and skipped cases. The command's
 full JSON output additionally includes each player's prediction and role shares.
 No replay bytes or legacy raw responses are copied into this report.

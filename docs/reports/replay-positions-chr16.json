@@ -1215,5 +1215,59 @@
         1
       ]
     }
+  ],
+  "manual_reviews": [
+    {
+      "reviewed_at": "2026-11-08",
+      "source": "user_match_review",
+      "match_id": 6534,
+      "recording_id": 71,
+      "nick": "kenas",
+      "game_ids": [
+        0
+      ],
+      "legacy_position": "GK",
+      "inferred_main_position": "DM",
+      "confirmed_roles": [
+        "DM",
+        "ST"
+      ],
+      "outcome": "main_role_consistent_legacy_label_incorrect",
+      "note": "Played DM and ST for part of the match. Role-change timestamps were not annotated."
+    },
+    {
+      "reviewed_at": "2026-11-08",
+      "source": "user_match_review",
+      "match_id": 6540,
+      "recording_id": 45,
+      "nick": "zxz",
+      "game_ids": [
+        0,
+        1
+      ],
+      "legacy_position": "GK",
+      "inferred_main_position": "DM",
+      "confirmed_roles": [
+        "DM"
+      ],
+      "outcome": "main_role_confirmed_legacy_label_incorrect"
+    },
+    {
+      "reviewed_at": "2026-11-08",
+      "source": "user_match_review",
+      "match_id": 6281,
+      "recording_id": 50,
+      "nick": "Фурри",
+      "game_ids": [
+        0
+      ],
+      "legacy_position": "GK",
+      "inferred_main_position": "ST",
+      "confirmed_roles": [
+        "ST"
+      ],
+      "outcome": "main_role_confirmed_legacy_label_incorrect",
+      "note": "Explicitly played ST for the entire half. The inferred brief AM period remains a disagreement."
+    }
   ]
 }
