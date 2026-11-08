@@ -98,6 +98,13 @@ parts and statistics. Match parts support rare corrections to inclusion, label,
 order and side mapping, including changelist editing; normal admin history records
 these changes. Exclusion survives rebuilding; deletion can be recreated by ingestion.
 
+All current and legacy replay admin lists provide competition/match filters plus
+their relevant processing, inclusion, side and player-resolution filters. Their
+querysets explicitly load displayed relations and defer raw analyzer payloads;
+legacy tour/stage labels are prefetched in batches. See the
+[admin performance profile](../docs/reports/replay-admin-performance.md) for measured
+results and regression checks. No schema changes are needed for these admin changes.
+
 Explicit reanalysis is available through “Повторно проанализировать выбранные
 записи” in the recordings admin, or:
 

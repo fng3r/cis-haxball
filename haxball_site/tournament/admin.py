@@ -1381,10 +1381,64 @@ class MatchSeriesAdmin(UnfoldModelAdmin):
         return super().get_queryset(request).select_related('tour__league', 'tour__stage', 'team_home', 'team_guest')
 
 
+class ReplayLeagueFilter(RelatedDropdownFilter):
+    """League labels include their season; load it once for the complete choice list."""
+
+    def field_choices(self, field, request, model_admin):
+        return [(league.pk, str(league)) for league in League.objects.select_related('championship')]
+
+
+class ReplayPlayerResolutionFilter(admin.SimpleListFilter):
+    title = 'Сопоставление игрока'
+    parameter_name = 'player_resolution'
+
+    def lookups(self, request, model_admin):
+        return (('resolved', 'Игрок определён'), ('unresolved', 'Игрок не определён'))
+
+    def queryset(self, request, queryset):
+        if self.value() in {'resolved', 'unresolved'}:
+            return queryset.filter(player__isnull=self.value() == 'unresolved')
+        return queryset
+
+
+class MatchIdFilter(SingleNumericFilter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = 'ID матча'
+
+
+def replay_match_filters(match_path):
+    return (
+        (f'{match_path}__league__championship', RelatedDropdownFilter),
+        (f'{match_path}__league', ReplayLeagueFilter),
+        (f'{match_path}__stage__type', ChoicesDropdownFilter),
+        (f'{match_path}__numb_tour__number', SingleNumericFilter),
+        (f'{match_path}__id', MatchIdFilter),
+    )
+
+
+class ReplayAdminQuerysetMixin:
+    # Disable Django's implicit select_related(), which joins every non-null FK
+    # and drags large raw responses into each game/statistics row.
+    list_select_related = ()
+    list_filter_submit = True
+    replay_select_related = ()
+    replay_prefetch_related = ()
+    replay_defer = ()
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if self.replay_select_related:
+            queryset = queryset.select_related(*self.replay_select_related)
+        if self.replay_prefetch_related:
+            queryset = queryset.prefetch_related(*self.replay_prefetch_related)
+        return queryset.defer(*self.replay_defer)
+
+
 @admin.register(MatchReplayStatsStatus)
-class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
+class MatchReplayStatsStatusAdmin(ReplayAdminQuerysetMixin, UnfoldModelAdmin):
     list_display = ('match_id', 'display_status', 'fetched_at', 'error_message')
-    list_filter = ('status',)
+    list_filter = replay_match_filters('match') + ('status', 'fetched_at')
     search_fields = ('match__id',)
     ordering = ('-fetched_at',)
     readonly_fields = ('match', 'fetched_at')
@@ -1406,9 +1460,11 @@ class MatchReplayStatsStatusAdmin(UnfoldModelAdmin):
 
 
 @admin.register(MatchReplay)
-class MatchReplayAdmin(UnfoldModelAdmin):
+class MatchReplayAdmin(ReplayAdminQuerysetMixin, UnfoldModelAdmin):
     list_display = ('match_id', 'match', 'display_status', 'replay_url', 'analyzer_replay_id', 'fetched_at')
-    list_filter = (('match__league', RelatedDropdownFilter), 'status', ('match__id', SingleNumericFilter))
+    replay_select_related = ('match__team_home', 'match__team_guest', 'match__numb_tour')
+    replay_defer = ('raw_stats_json',)
+    list_filter = replay_match_filters('match') + ('status', 'fetched_at')
     list_filter_submit = True
     search_fields = ('match__id', 'replay_url', 'analyzer_replay_id')
     ordering = ('match_id', 'replay_url')
@@ -1429,7 +1485,7 @@ class MatchReplayAdmin(UnfoldModelAdmin):
 
 
 @admin.register(MatchReplayStats)
-class MatchReplayStatsAdmin(UnfoldModelAdmin):
+class MatchReplayStatsAdmin(ReplayAdminQuerysetMixin, UnfoldModelAdmin):
     list_display = (
         'match_id',
         'match',
@@ -1443,23 +1499,18 @@ class MatchReplayStatsAdmin(UnfoldModelAdmin):
         'poss_red',
         'poss_blue',
     )
-    list_filter = (('match__league', RelatedDropdownFilter), ('match__id', SingleNumericFilter))
+    replay_select_related = ('match__team_home', 'match__team_guest', 'match__numb_tour', 'match_replay')
+    replay_defer = ('match_replay__raw_stats_json',)
+    list_filter = replay_match_filters('match') + ('part_label', 'red_is_home', 'stadium_name')
     list_filter_submit = True
     search_fields = ('match__id', 'match_replay__replay_url', 'match_replay__analyzer_replay_id')
     ordering = ('match_id', 'part_order')
     raw_id_fields = ('match', 'match_replay')
     readonly_fields = ('match_replay', 'part_order')
 
-    def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .select_related('match', 'match__team_home', 'match__team_guest', 'match_replay')
-        )
-
 
 @admin.register(MatchReplayStatsPlayer)
-class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
+class MatchReplayStatsPlayerAdmin(ReplayAdminQuerysetMixin, UnfoldModelAdmin):
     list_display = (
         'match_id',
         'replay_stats',
@@ -1472,7 +1523,23 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
         'rating',
     )
     list_editable = ('position', 'played_ticks', 'rating')
-    list_filter = (('team', RelatedDropdownFilter), ('replay_stats__match__id', SingleNumericFilter))
+    replay_select_related = (
+        'replay_stats__match__team_home',
+        'replay_stats__match__team_guest',
+        'replay_stats__match__numb_tour__league',
+        'player',
+        'team',
+    )
+    replay_prefetch_related = (
+        'replay_stats__match__numb_tour__stage',
+        'replay_stats__match__numb_tour__league__stages',
+    )
+    list_filter = replay_match_filters('replay_stats__match') + (
+        ('team', AutocompleteSelectFilter),
+        ('player', AutocompleteSelectFilter),
+        ReplayPlayerResolutionFilter,
+        'position',
+    )
     search_fields = ('nick', 'player__nickname')
     ordering = ('-replay_stats__match_replay__id', 'replay_stats__part_order')
     raw_id_fields = ('replay_stats', 'player', 'team')
@@ -1481,15 +1548,6 @@ class MatchReplayStatsPlayerAdmin(UnfoldModelAdmin):
     @display(description='ID матча')
     def match_id(self, model):
         return model.replay_stats.match_id
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('replay_stats__match', 'player', 'team')
-
-
-class MatchIdFilter(SingleNumericFilter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.title = 'ID матча'
 
 
 @admin.register(Goal)
@@ -2040,7 +2098,7 @@ class AwardResultAdmin(UnfoldModelAdmin):
     )
 
 
-class ReplayGeneratedAdmin(UnfoldModelAdmin):
+class ReplayGeneratedAdmin(ReplayAdminQuerysetMixin, UnfoldModelAdmin):
     def has_add_permission(self, request):
         return False
 
@@ -2059,7 +2117,8 @@ def reanalyze_recordings(modeladmin, request, queryset):
 @admin.register(ReplayRecording)
 class ReplayRecordingAdmin(ReplayGeneratedAdmin):
     list_display = ('match_id', 'source_key', 'status', 'analyzed_at')
-    list_filter = ('status',)
+    replay_defer = ('raw_response',)
+    list_filter = replay_match_filters('match') + ('status', 'analyzed_at')
     search_fields = ('match__id', 'replay_url', 'source_key')
     actions = (reanalyze_recordings,)
 
@@ -2067,12 +2126,14 @@ class ReplayRecordingAdmin(ReplayGeneratedAdmin):
 @admin.register(ReplayGame)
 class ReplayGameAdmin(ReplayGeneratedAdmin):
     list_display = ('id', 'recording', 'engine_game_id', 'active_ticks', 'available')
-    list_filter = ('available',)
+    replay_select_related = ('recording',)
+    replay_defer = ('recording__raw_response',)
+    list_filter = replay_match_filters('recording__match') + ('available', 'recording__status', 'stadium_name')
     search_fields = ('recording__match__id',)
 
 
 @admin.register(ReplayMatchPart)
-class ReplayMatchPartAdmin(UnfoldModelAdmin):
+class ReplayMatchPartAdmin(ReplayAdminQuerysetMixin, UnfoldModelAdmin):
     list_display = (
         'id',
         'match',
@@ -2089,7 +2150,15 @@ class ReplayMatchPartAdmin(UnfoldModelAdmin):
     )
     list_display_links = ('id',)
     list_editable = ('included', 'order_override', 'label_override', 'red_is_home_override')
-    list_filter = ('included', 'mapping_evidence')
+    replay_select_related = ('match__team_home', 'match__team_guest', 'match__numb_tour', 'game__recording')
+    replay_defer = ('game__recording__raw_response',)
+    list_filter = replay_match_filters('match') + (
+        'included',
+        'auto_included',
+        'included_override',
+        'mapping_evidence',
+        'game__available',
+    )
     search_fields = ('match__id', 'label_override', 'generated_label')
     readonly_fields = (
         'match',
@@ -2154,12 +2223,27 @@ class ReplayMatchPartAdmin(UnfoldModelAdmin):
 class ReplayTeamStatsAdmin(ReplayGeneratedAdmin):
     list_display = ('game', 'side', 'goals', 'possession_ticks', 'kicks', 'passes_completed', 'shots_on_target')
     search_fields = ('game__recording__match__id',)
+    replay_select_related = ('game__recording',)
+    replay_defer = ('game__recording__raw_response',)
+    list_filter = replay_match_filters('game__recording__match') + (
+        'side',
+        'game__match_part__included',
+        'game__available',
+    )
 
 
 @admin.register(ReplayPlayerStats)
 class ReplayPlayerStatsAdmin(ReplayGeneratedAdmin):
     list_display = ('game', 'nick', 'side', 'player', 'active_ticks', 'goals', 'assists')
-    search_fields = ('game__recording__match__id', 'nick')
+    search_fields = ('game__recording__match__id', 'nick', 'player__nickname')
+    replay_select_related = ('game__recording', 'player')
+    replay_defer = ('game__recording__raw_response',)
+    list_filter = replay_match_filters('game__recording__match') + (
+        'side',
+        ('player', AutocompleteSelectFilter),
+        ReplayPlayerResolutionFilter,
+        'game__match_part__included',
+    )
 
 
 # Group the tournament application index itself, while retaining the same models and permissions.
