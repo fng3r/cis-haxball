@@ -540,6 +540,7 @@ class MatchReplayStatsAggregator:
         return {
             'i': index,
             'name': (player.get('player') and player['player'].nickname) or player.get('nick') or '—',
+            'position_label': player.get('position_label'),
             'goals': player.get('goals', 0),
             'assists': player.get('assists', 0),
             'shots_total': player.get('shots_total', 0),
