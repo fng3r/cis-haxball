@@ -71,10 +71,10 @@ def compare_games(legacy, current):
                     'side': player['team'],
                     'ticks': player['playedTicks'],
                     'legacy_position': old_player['position'],
-                    'position': player.get('primaryPosition', player.get('position')),
-                    'primary_position': player.get('primaryPosition', player.get('position')),
+                    'position': player['primaryPosition'],
+                    'primary_position': player['primaryPosition'],
                     'secondary_position': player.get('secondaryPosition'),
-                    'confidence': player.get('primaryPositionConfidence', player.get('positionConfidence', 0)),
+                    'confidence': player['primaryPositionConfidence'],
                     'secondary_confidence': player.get('secondaryPositionConfidence', 0),
                     'roles': player['positionRoles'],
                 }

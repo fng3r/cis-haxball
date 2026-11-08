@@ -116,7 +116,7 @@
       <table class="tw:table tw:table-zebra tw:min-w-full">
         <thead>
           <tr>
-            {% if not agg.is_current %}<th class="tw:text-center tw:pr-0">Поз.</th>{% endif %}
+            <th class="tw:text-center tw:pr-0">Поз.</th>
             <th>Игрок</th>
             <th>Г</th>
             <th>П</th>
@@ -146,15 +146,13 @@
         <tbody x-show="view === 'total'" x-cloak>
           {% for p in agg.players %}
             <tr>
-              {% if not agg.is_current %}
-                <td class="tw:text-center tw:pr-0">
-                  {% if p.position_label %}
-                    <span class="tw:badge tw:badge-outline tw:badge-xs tw:font-semibold">{{ p.position_label }}</span>
-                  {% else %}
-                    —
-                  {% endif %}
-                </td>
-              {% endif %}
+              <td class="tw:text-center tw:pr-0">
+                {% if p.position_label %}
+                  <span class="tw:badge tw:badge-outline tw:badge-xs tw:font-semibold">{{ p.position_label }}</span>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
               <td class="tw:flex tw:items-center tw:gap-2">
                 {% if p.team_obj %}
                   <img src="{{ p.team_obj.logo.url }}"
@@ -216,15 +214,13 @@
           <tbody x-show="view === {{ part_data.index }}" x-cloak>
             {% for p in part_data.players %}
               <tr>
-                {% if not agg.is_current %}
-                  <td class="tw:text-center tw:pr-0">
-                    {% if p.position_label %}
-                      <span class="tw:badge tw:badge-outline tw:badge-xs tw:font-semibold">{{ p.position_label }}</span>
-                    {% else %}
-                      —
-                    {% endif %}
-                  </td>
-                {% endif %}
+                <td class="tw:text-center tw:pr-0">
+                  {% if p.position_label %}
+                    <span class="tw:badge tw:badge-outline tw:badge-xs tw:font-semibold">{{ p.position_label }}</span>
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
                 <td class="tw:flex tw:items-center tw:gap-2">
                   {% if p.team_obj %}
                     <img src="{{ p.team_obj.logo.url }}"

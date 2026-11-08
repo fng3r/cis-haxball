@@ -198,8 +198,8 @@ decoded game:
   unchanged; this is a new summary policy, not an accuracy improvement.
 
 The engine exports `primaryPosition`, `secondaryPosition` and confidence for each.
-Existing `position` and `positionConfidence` fields are compatibility aliases for
-the primary. The read-only audit records both positions and compares the primary
+Version 3 retained interim `position`/`positionConfidence` aliases; version 4 removes
+them. The read-only audit records both explicit positions and compares the primary
 with legacy labels. Original audit measurements are retained separately.
 
 On the same development recordings, Max_Verstappen's equal-time DM/ST evidence
@@ -210,6 +210,21 @@ the previously reviewed outfield errors remain unresolved by this summary change
 
 Version-3 results and selected examples are appended to the JSON snapshot. All
 169 analyzer tests, six read-only comparison tests and the production build passed.
+
+### Django integration
+
+The production engine now includes observed role ticks and unrounded confidence
+evidence in its version-4 output. Django stores primary/secondary roles and their
+evidence on current player-statistic rows. Match totals select the primary from
+actual time in each role across included parts, with the same policy as the engine.
+Excluded games do not contribute. Saved side mappings and resolved player identities
+are respected, including changed native IDs and nicknames between parts.
+
+Only primary positions are displayed. The existing legacy table column, badge
+style and role interpretation are reused: GK → ГК, DM → ОП, all attacking roles →
+НАП. Secondary positions remain data only. Legacy statistics and their existing
+aggregation behavior remain unchanged. Existing current recordings need explicit
+reanalysis to obtain missing position data.
 
 ## Reproduce
 

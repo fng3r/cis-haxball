@@ -3,6 +3,8 @@ from typing import TypedDict
 
 from tournament.models import Match, MatchReplayStats
 
+from .replay_positions import select_positions
+
 
 class PlayerRow(TypedDict):
     player: object | None
@@ -143,6 +145,7 @@ def _position_sort_order(position: str | None) -> int:
 class MatchReplayStatsAggregator:
     match: Match
     parts: list[MatchReplayStats]
+    inferred_positions: bool = False
     part_display_labels: dict[int, str] = field(init=False)
 
     def __post_init__(self):
@@ -335,6 +338,8 @@ class MatchReplayStatsAggregator:
                         'goals': 0,
                         'assists': 0,
                         'position_ticks': {},
+                        'position_evidence': {},
+                        'position_observed_ticks': 0,
                         'played_ticks': 0,
                         'rating_weighted_sum': 0.0,
                         'rating_weights_sum': 0,
@@ -354,7 +359,15 @@ class MatchReplayStatsAggregator:
                 acc['goals'] += player_stat.goals
                 acc['assists'] += player_stat.assists
                 acc['played_ticks'] += player_stat.played_ticks
-                if player_stat.position and player_stat.played_ticks > 0:
+                if self.inferred_positions:
+                    acc['position_observed_ticks'] += player_stat.position_observed_ticks or 0
+                    for role in player_stat.position_roles:
+                        evidence = acc['position_evidence'].setdefault(
+                            role['position'], {'position': role['position'], 'ticks': 0, 'confidenceTicks': 0}
+                        )
+                        evidence['ticks'] += role['ticks']
+                        evidence['confidenceTicks'] += role.get('confidenceTicks', 0)
+                elif player_stat.position and player_stat.played_ticks > 0:
                     position_ticks = acc['position_ticks']
                     position_ticks[player_stat.position] = (
                         position_ticks.get(player_stat.position, 0) + player_stat.played_ticks
@@ -377,7 +390,11 @@ class MatchReplayStatsAggregator:
         for acc in player_aggregate.values():
             rating = (acc['rating_weighted_sum'] / acc['rating_weights_sum']) if acc['rating_weights_sum'] else None
             dominant_position = None
-            if acc['position_ticks']:
+            if self.inferred_positions:
+                dominant_position = select_positions(acc['position_evidence'].values(), acc['position_observed_ticks'])[
+                    'primary_position'
+                ]
+            elif acc['position_ticks']:
                 dominant_position = max(
                     acc['position_ticks'].items(),
                     key=lambda item: (item[1], 1 if item[0] == 'GK' else 0, 1 if item[0] == 'DM' else 0),

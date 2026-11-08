@@ -14,6 +14,7 @@ from .models import (
     MatchReplay,
     MatchReplayStats,
     MatchReplayStatsPlayer,
+    Player,
     RegularStage,
     ReplayGame,
     ReplayMatchPart,
@@ -33,7 +34,9 @@ from .services.local_replays import (
     materialize,
     reconcile_parts,
 )
+from .services.replay_positions import select_positions
 from .services.replay_presentation import statistics
+from .services.replay_stats import MatchReplayStatsAggregator
 from .tasks import fetch_match_replay_stats
 
 
@@ -85,7 +88,11 @@ class LocalReplayIntegrationTests(TestCase):
         result['games'] = [copy.deepcopy(template) for _ in range(3)]
         for index, game in enumerate(result['games']):
             game.update(id=index, gameTicks=28800 if index != 1 else 8614, scoreRed=0, scoreBlue=0, goals=[])
-            player_template = game['players'][0]
+            player_template = {
+                key: value
+                for key, value in game['players'][0].items()
+                if not key.startswith(('position', 'primaryPosition', 'secondaryPosition'))
+            }
             game['players'] = [
                 {
                     **copy.deepcopy(player_template),
@@ -305,6 +312,168 @@ class LocalReplayIntegrationTests(TestCase):
         materialize(recording, raw, {'home': set(), 'away': set()}, {})
         self.assertEqual({p.game.engine_game_id: p.pk for p in active_parts(self.match)}, ids)
 
+    def test_real_engine_positions_are_persisted_and_use_legacy_badges_and_order(self):
+        self.seed()
+        for game in self.result['games']:
+            for player in game['players']:
+                stored = ReplayPlayerStats.objects.get(game__engine_game_id=game['id'], replay_player_id=player['id'])
+                self.assertEqual(stored.primary_position, player['primaryPosition'])
+                self.assertEqual(stored.secondary_position, player['secondaryPosition'])
+                self.assertEqual(stored.primary_position_confidence, player['primaryPositionConfidence'])
+                self.assertEqual(stored.position_observed_ticks, player['positionObservedTicks'])
+                self.assertEqual(
+                    sum(role['ticks'] for role in stored.position_roles),
+                    sum(role['ticks'] for role in player['positionRoles']),
+                )
+        stats = statistics(self.match)
+        html = render_to_string('tournament/match/players_stats.html', {'agg': stats})
+        self.assertIn('Поз.', html)
+        for label in ('ГК', 'ОП', 'НАП'):
+            self.assertIn(f'>{label}</span>', html)
+        for role in ('GK', 'DM', 'AM', 'ST'):
+            self.assertNotIn(f'>{role}</span>', html)
+        order = {'ГК': 0, 'ОП': 1, 'НАП': 2, None: 3}
+        for team in (self.home, self.away):
+            labels = [row['position_label'] for row in stats['players'] if row['team_obj'] == team]
+            self.assertEqual(labels, sorted(labels, key=lambda label: order[label]))
+
+    @staticmethod
+    def position_player(template, *, identity, nick, side, seconds_by_role):
+        roles = [
+            {'position': role, 'ticks': seconds * 60, 'confidenceTicks': seconds * 60 * 0.8}
+            for role, seconds in seconds_by_role
+        ]
+        observed = sum(role['ticks'] for role in roles)
+        selected = select_positions(roles, observed)
+        return {
+            **copy.deepcopy(template),
+            'id': identity,
+            'nick': nick,
+            'team': side,
+            'playedTicks': observed,
+            'primaryPosition': selected['primary_position'],
+            'secondaryPosition': selected['secondary_position'],
+            'primaryPositionConfidence': selected['primary_position_confidence'],
+            'secondaryPositionConfidence': selected['secondary_position_confidence'],
+            'positionObservedTicks': observed,
+            'positionRoles': roles,
+        }
+
+    def test_match_roles_use_actual_role_time_resolve_identity_and_exclude_unselected_parts(self):
+        raw = copy.deepcopy(self.result)
+        template = raw['games'][0]['players'][0]
+        raw['games'] = [copy.deepcopy(raw['games'][0]) for _ in range(3)]
+        specifications = [
+            ([('ST', 250), ('DM', 230)], 'red', 'first alias'),
+            ([('DM', 240), ('ST', 60)], 'blue', 'second alias'),
+            ([('GK', 1000)], 'red', 'excluded alias'),
+        ]
+        for index, (roles, side, nick) in enumerate(specifications):
+            raw['games'][index]['id'] = index
+            raw['games'][index]['players'] = [
+                self.position_player(template, identity=f'{index}:{side}', nick=nick, side=side, seconds_by_role=roles)
+            ]
+        recording = self.seed(raw)
+        player = Player.objects.create(nickname='Resolved player')
+        recording.games.all().get(engine_game_id=0).player_stats.update(player=player)
+        recording.games.all().get(engine_game_id=1).player_stats.update(player=player)
+        recording.games.all().get(engine_game_id=2).player_stats.update(player=player)
+        parts = active_parts(self.match)
+        parts[1].red_is_home_override = False
+        parts[1].save()
+        parts[2].included = False
+        parts[2].save()
+        stats = statistics(self.match)
+        self.assertEqual(len(stats['players']), 1)
+        row = stats['players'][0]
+        self.assertEqual(row['player'], player)
+        self.assertEqual(row['team_obj'], self.home)
+        self.assertEqual(row['position'], 'DM')  # 470s DM versus 310s ST, not entire-half labels.
+        self.assertEqual(row['position_label'], 'ОП')
+        self.assertEqual(row['played_ticks'], 780 * 60)
+        self.assertEqual([part['players'][0]['position_label'] for part in stats['parts_players']], ['НАП', 'ОП'])
+
+    def test_secondary_is_stored_but_never_rendered_in_player_table(self):
+        raw = copy.deepcopy(self.result)
+        raw['games'] = raw['games'][:1]
+        raw['games'][0]['players'] = [
+            self.position_player(
+                raw['games'][0]['players'][0],
+                identity='only:red',
+                nick='Only player',
+                side='red',
+                seconds_by_role=[('GK', 300), ('DM', 180)],
+            )
+        ]
+        self.seed(raw)
+        stored = ReplayPlayerStats.objects.get()
+        self.assertEqual(stored.primary_position, 'GK')
+        self.assertEqual(stored.secondary_position, 'DM')
+        stats = statistics(self.match)
+        html = render_to_string('tournament/match/players_stats.html', {'agg': stats})
+        self.assertIn('>ГК</span>', html)
+        self.assertNotIn('>ОП</span>', html)
+        self.assertNotIn('Дополнительная', html)
+        self.assertNotIn('secondary_position', html)
+
+    def test_reanalysis_updates_positions_without_recreating_parts_or_changing_overrides(self):
+        recording = self.seed()
+        part = active_parts(self.match)[0]
+        part.label_override = 'Preserved'
+        part.red_is_home_override = False
+        part.save()
+        row = part.game.player_stats.first()
+        raw = copy.deepcopy(self.result)
+        player = next(p for p in raw['games'][0]['players'] if p['id'] == row.replay_player_id)
+        updated = self.position_player(
+            player,
+            identity=player['id'],
+            nick=player['nick'],
+            side=player['team'],
+            seconds_by_role=[('AM', 300), ('GK', 180)],
+        )
+        player.update(updated)
+        with (
+            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=raw),
+        ):
+            ingest_match(self.match.pk, force=True)
+        row.refresh_from_db()
+        part.refresh_from_db()
+        self.assertEqual(row.primary_position, 'AM')
+        self.assertEqual(row.secondary_position, 'GK')
+        self.assertEqual(part.label, 'Preserved')
+        self.assertFalse(part.red_is_home)
+        self.assertEqual(ReplayRecording.objects.get(pk=recording.pk).raw_response, raw)
+
+    def test_old_cached_response_clears_unavailable_position_fields(self):
+        recording = self.seed()
+        raw = copy.deepcopy(self.result)
+        for game in raw['games']:
+            for player in game['players']:
+                for key in list(player):
+                    if key.startswith(('position', 'primaryPosition', 'secondaryPosition')):
+                        player.pop(key)
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        self.assertFalse(ReplayPlayerStats.objects.exclude(primary_position=None).exists())
+        self.assertFalse(ReplayPlayerStats.objects.exclude(position_observed_ticks=None).exists())
+        self.assertTrue(all(row['position_label'] is None for row in statistics(self.match)['players']))
+
+    def test_legacy_primary_interpretation_and_short_historical_labels_are_unchanged(self):
+        recording = MatchReplay.objects.create(match=self.match, replay_url=self.url, status='ready')
+        part = MatchReplayStats.objects.create(match=self.match, match_replay=recording)
+        for nick, position in [('attacker', 'AM'), ('keeper', 'GK'), ('defender', 'DM')]:
+            MatchReplayStatsPlayer.objects.create(
+                replay_stats=part, nick=nick, team=self.home, position=position, played_ticks=100
+            )
+        result = MatchReplayStatsAggregator(match=self.match, parts=[part]).build()
+        self.assertEqual([p['position_label'] for p in result['players']], ['ГК', 'ОП', 'НАП'])
+        self.assertEqual([p['nick'] for p in result['players']], ['keeper', 'defender', 'attacker'])
+        html = render_to_string('tournament/match/players_stats.html', {'agg': result})
+        self.assertIn('>ГК</span>', html)
+        self.assertIn('>ОП</span>', html)
+        self.assertIn('>НАП</span>', html)
+
     def test_disappeared_game_retains_editorial_record_and_returns_with_same_identity(self):
         recording = self.seed()
         part = active_parts(self.match)[1]
@@ -413,7 +582,6 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertIn('My half', html)
         self.assertNotIn('Командные итоги для игр', html)
         for unsupported in (
-            'Поз.',
             'Передачи (%)',
             'Сейвы',
             'Рейтинг',
@@ -422,6 +590,7 @@ class LocalReplayIntegrationTests(TestCase):
             "key: 'rating'",
         ):
             self.assertNotIn(unsupported, html)
+        self.assertIn('Поз.', html)
         part.included = False
         part.save()
         self.assertEqual(len(statistics(self.match)['parts_summary']), 1)

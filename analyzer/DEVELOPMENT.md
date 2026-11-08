@@ -152,16 +152,18 @@ positions from live movement; the pinned upstream engine remains untouched.
 
 ## Inferred playing positions
 
-The active engine emits `positionVersion: 3` and adds these fields to each player:
+The active engine emits `positionVersion: 4` and adds these fields to each player:
 
 - `primaryPosition`: the best-supported `GK`, `DM`, `AM`, or `ST` over the
   entire decoded game; null when there is insufficient role evidence.
 - `secondaryPosition`: a sufficiently supported alternative; null otherwise.
 - `primaryPositionConfidence` and `secondaryPositionConfidence`: 0–1 evidence
   consistency, **not probabilities of correctness**.
-- `position` and `positionConfidence`: compatibility aliases for the primary
-  position and its confidence. Consumers should prefer the explicit new names.
-- `positionRoles`: `{position, ticks, share}` entries for observed roles.
+- `positionObservedTicks`: active time used for role inference, including time
+  whose role is unclassified.
+- `positionRoles`: `{position, ticks, share, confidenceTicks}` entries for observed
+  roles. `confidenceTicks` retains the unrounded accumulated window evidence so
+  Django can combine games without losing confidence tie-break information.
 - `positionPeriods`: `{startTick, endTick, observedTicks, position, confidence}`
   entries. Bounds are recording ticks, end-exclusive; the player need not have
   been on the field throughout that interval. `observedTicks` is their live play
@@ -205,9 +207,17 @@ not exact transition timestamps. Unsupported/multi-goal pitch layouts remain
 unclassified. Roles are estimates of movement patterns, not declared assignments.
 
 These fields are shared by the browser worker and original-engine CLI/export.
-Engine v2 remains parked. No position column or Django domain field is added by
-this change. New/reanalyzed `ReplayRecording.raw_response` values contain the
-fields automatically; cached successful analyses require explicit reanalysis.
+There are no single-position `position`/`positionConfidence` aliases in the current
+player output. Engine v2 remains parked.
+
+Django materializes primary/secondary positions, confidence and role evidence on
+`ReplayPlayerStats`. Match summaries combine actual role ticks across included
+parts using the same selection policy, instead of assigning all of a half's time
+to its primary role. The match table displays **only the primary** through the
+established labels and badges: GK → ГК, DM → ОП, AM/LW/RW/ST → НАП. Secondary
+positions remain stored. Old legacy records and their aggregation are untouched.
+Cached successful analyses require explicit reanalysis to acquire missing roles;
+older responses without computed positions remain unavailable, not invented zeroes.
 
 Validation and repeatable read-only audit instructions:
 [ЧР #16 position comparison](../docs/reports/replay-positions-chr16.md).

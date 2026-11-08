@@ -2234,12 +2234,13 @@ class ReplayTeamStatsAdmin(ReplayGeneratedAdmin):
 
 @admin.register(ReplayPlayerStats)
 class ReplayPlayerStatsAdmin(ReplayGeneratedAdmin):
-    list_display = ('game', 'nick', 'side', 'player', 'active_ticks', 'goals', 'assists')
+    list_display = ('game', 'nick', 'side', 'player', 'primary_position', 'active_ticks', 'goals', 'assists')
     search_fields = ('game__recording__match__id', 'nick', 'player__nickname')
     replay_select_related = ('game__recording', 'player')
     replay_defer = ('game__recording__raw_response',)
     list_filter = replay_match_filters('game__recording__match') + (
         'side',
+        'primary_position',
         ('player', AutocompleteSelectFilter),
         ReplayPlayerResolutionFilter,
         'game__match_part__included',

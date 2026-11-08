@@ -36,7 +36,9 @@ def statistics(match, request=None):
                     played_ticks=row.active_ticks,
                     shots_on_target=row.shots_on_target,
                     passes_completed=row.passes_completed,
-                    position=None,
+                    position=row.primary_position,
+                    position_observed_ticks=row.position_observed_ticks,
+                    position_roles=row.position_roles,
                     rating=None,
                     shots_total=0,
                     pass_attempts=0,
@@ -74,7 +76,7 @@ def statistics(match, request=None):
                 match_replay=SimpleNamespace(analyzer_replay_id=''),
             )
         )
-    payload = MatchReplayStatsAggregator(match=match, parts=adapted).build()
+    payload = MatchReplayStatsAggregator(match=match, parts=adapted, inferred_positions=True).build()
     payload['is_current'] = True
     payload['replay_links'] = [{'label': 'Открыть матч в анализаторе', 'analyzer_url': analyzer_link(match, request)}]
     for summary, part in zip(payload['parts_summary'], parts):

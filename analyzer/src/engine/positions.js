@@ -1,6 +1,6 @@
 // Role inference uses live movement, not nicknames, actions or a prescribed lineup.
 // Coordinates are relative to the goal a replay side defends, never Django home/away.
-export const POSITION_VERSION = 3;
+export const POSITION_VERSION = 4;
 export const POSITION_WINDOW_TICKS = 30 * 60;
 export const MIN_POSITION_TICKS = 15 * 60;
 export const MIN_SECONDARY_SHARE = 0.25;
@@ -25,12 +25,11 @@ export function selectGamePositions(roles, observedTicks) {
   const primaryPosition = primary?.[0] || null;
   const primaryPositionConfidence = confidence(primary);
   return {
+    positionObservedTicks: observedTicks,
     primaryPosition, secondaryPosition: secondary?.[0] || null,
     primaryPositionConfidence, secondaryPositionConfidence: confidence(secondary),
-    // Preserve the original fields for CLI/export consumers; they now alias primary.
-    position: primaryPosition, positionConfidence: primaryPositionConfidence,
     positionRoles: enoughPlay ? ranked.map(([position, role]) => ({
-      position, ticks: role.ticks, share: round(role.ticks / observedTicks),
+      position, ticks: role.ticks, share: round(role.ticks / observedTicks), confidenceTicks: role.confidence,
     })) : [],
   };
 }

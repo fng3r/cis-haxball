@@ -3240,6 +3240,16 @@ class ReplayPlayerStats(models.Model):
     kicks = models.PositiveIntegerField(default=0)
     passes_completed = models.PositiveIntegerField(default=0)
     shots_on_target = models.PositiveIntegerField(default=0)
+    primary_position = models.CharField(
+        'Основная позиция', max_length=2, choices=MatchReplayStatsPlayer.Position.choices, null=True, blank=True
+    )
+    secondary_position = models.CharField(
+        'Дополнительная позиция', max_length=2, choices=MatchReplayStatsPlayer.Position.choices, null=True, blank=True
+    )
+    primary_position_confidence = models.FloatField(null=True, blank=True)
+    secondary_position_confidence = models.FloatField(null=True, blank=True)
+    position_observed_ticks = models.PositiveIntegerField(null=True, blank=True)
+    position_roles = models.JSONField(default=list, blank=True)
 
     class Meta:
         constraints = [

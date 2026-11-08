@@ -19,7 +19,7 @@ that number to the tour, e.g. `Финал (2 матч)`.
 An individual part link adds `part=<persistent ReplayMatchPart ID>` but still
 loads the whole match. Recording bytes are fetched separately through bounded
 Django endpoints, then analyzed using the existing original-engine worker library.
-Neither the original engine nor native playback/checkpoint/chat code is modified.
+Native playback/checkpoint/chat code and the pinned simulation runtime remain unchanged.
 
 The analyzer is **read-only** with respect to Django. There are no mapping-save
 endpoints, editor controls, or credential-bearing cross-origin requests. Local
@@ -45,6 +45,8 @@ Legacy `MatchReplay*` models and their stored results remain independent.
   possession ticks, kicks, completed passes, on-target shots and territory ticks.
 - `ReplayPlayerStats`: one row per game/replay player identity (including side),
   with recorded nickname, optional resolved Django player and supported metrics.
+  Stores nullable primary/secondary positions and confidence, observed role ticks,
+  and bounded per-role time/confidence evidence for whole-match aggregation.
 
 Raw goals, event locations and maps remain in the raw engine response. Domain
 models do not invent xG, ratings, saves, pass attempts or other unavailable data.
@@ -53,6 +55,42 @@ presentation adapter. Current statistics are shown automatically when usable;
 legacy statistics are a fallback when current results are unavailable. There is
 no source selector, and query parameters cannot override this choice. Both sources
 use the same pending, failed and partial-result UI; their metrics are never combined.
+
+## Playing positions
+
+The actual original-engine worker and server CLI infer positions during replay
+decoding. `positionVersion: 4` exports explicit `primaryPosition` and
+`secondaryPosition` fields with their confidence, `positionObservedTicks`, and
+per-role ticks/share/unrounded `confidenceTicks`. It does not export interim
+single-position aliases. Engine v2 is not involved.
+
+Celery materializes those fields atomically with the other current statistics.
+Reanalysis updates the same player/game/part identities and preserves part
+corrections. Responses from before position inference leave the new fields null;
+ordinary successful-cache reuse does not fabricate or calculate missing positions.
+Use explicit reanalysis after migration to populate existing recordings.
+
+Per-part presentation uses the engine's primary position. For match totals, the
+adapter combines actual per-role ticks and confidence across **included** parts,
+using resolved player identities and the saved red/blue mappings. The selection
+policy matches the engine: at least fifteen seconds of role evidence, rank by
+active time then confidence, and stable first-observed order for remaining ties.
+The optional stored secondary also requires at least 25% of observed play. Missing
+context remains in the denominator; short appearances do not acquire invented roles.
+
+The public match table renders **only the primary position**, using exactly the
+legacy interpretation, outline badges and ordering:
+
+- GK → **ГК**, first.
+- DM → **ОП**, second.
+- AM/LW/RW/ST → **НАП**, then sort by nickname.
+- Unavailable position → **—**, after known positions.
+
+The same column works for match totals and individual parts. Secondary positions
+are stored but have no public badge, column or tooltip. Legacy `MatchReplay*`
+records and their existing position weighting, labels and short historical
+appearances are unchanged. Current-model player admin lists expose the primary
+position and a matching filter; generated fields remain read-only.
 
 ## Ingestion and editing
 
@@ -179,6 +217,10 @@ legacy preservation, automatic recognition/defaults, explicit reanalysis with
 changed output for identical input, editorial preservation, unavailable games,
 atomic failure, URL deduplication/removal/re-addition, public read-only manifests,
 scoped CORS, existing statistics components and admin editing/grouping.
+Position tests exercise the production CLI on real futsal/BFF recordings, exact
+engine/Django summary-policy agreement, role materialization and reanalysis,
+actual role-time aggregation across side swaps and changed player aliases,
+excluded-part handling, legacy labels/order and primary-only badge rendering.
 Analyzer tests cover a distinct Django origin, binary downloads, standalone use,
 multiple recordings, game-ID selection, part order/exclusion, and team/logo mapping.
 

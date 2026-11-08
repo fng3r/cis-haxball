@@ -20,6 +20,7 @@ from tournament.models import (
 )
 from tournament.replay_stats_client import download_replay, get_replay_source_and_id
 from tournament.services.replay_audit import evaluate_match, exclusion_description
+from tournament.services.replay_positions import player_position_fields
 from tournament.services.replay_rosters import player_aliases, protocol_players
 
 
@@ -133,6 +134,7 @@ def materialize(recording, result, rosters, players):
                     'kicks': p['kicks'],
                     'passes_completed': p['passes'],
                     'shots_on_target': p['shots'],
+                    **player_position_fields(p),
                 },
             )
         game.player_stats.exclude(replay_player_id__in=seen_players).delete()
