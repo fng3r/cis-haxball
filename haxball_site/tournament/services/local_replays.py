@@ -231,13 +231,15 @@ def ingest_match(match_id, force=False, recording_ids=None):
         match = Match.objects.select_for_update().get(pk=match_id)
         rosters, players = match_rosters(match), resolve_players(match)
         sources = list(recording_sources(match))
-        if force and recording_ids is not None:
-            current_keys = [key for key, _ in sources]
-            sources.extend(
-                match.replay_recordings.filter(pk__in=recording_ids)
-                .exclude(source_key__in=current_keys)
-                .values_list('source_key', 'replay_url')
+        if recording_ids is not None:
+            selected = list(
+                match.replay_recordings.filter(pk__in=recording_ids).values_list('source_key', 'replay_url')
             )
+            selected_keys = {key for key, _ in selected}
+            sources = [(key, url) for key, url in sources if key in selected_keys]
+            if force:
+                current_keys = {key for key, _ in sources}
+                sources.extend((key, url) for key, url in selected if key not in current_keys)
         for key, url in sources:
             recording, _ = ReplayRecording.objects.get_or_create(
                 match=match, source_key=key, defaults={'replay_url': url}

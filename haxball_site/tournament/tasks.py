@@ -589,5 +589,10 @@ def reanalyze_replay_recordings(recording_ids):
     from tournament.models import ReplayRecording
     from tournament.services.local_replays import ingest_match
 
-    matches = ReplayRecording.objects.filter(pk__in=recording_ids).values_list('match_id', flat=True).distinct()
+    matches = (
+        ReplayRecording.objects.filter(pk__in=recording_ids)
+        .order_by('match_id')
+        .values_list('match_id', flat=True)
+        .distinct()
+    )
     return [ingest_match(pk, force=True, recording_ids=recording_ids) for pk in matches]

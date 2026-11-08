@@ -1,8 +1,11 @@
 import copy
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.template.loader import render_to_string
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -37,7 +40,7 @@ from .services.local_replays import (
 from .services.replay_positions import select_positions
 from .services.replay_presentation import statistics
 from .services.replay_stats import MatchReplayStatsAggregator
-from .tasks import fetch_match_replay_stats
+from .tasks import fetch_match_replay_stats, reanalyze_replay_recordings
 
 
 class LocalReplayIntegrationTests(TestCase):
@@ -665,13 +668,94 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertFalse(part.red_is_home)
 
     def test_forced_command_queues_reanalysis_and_normal_command_reuses_results(self):
-        from io import StringIO
-
-        from django.core.management import call_command
-
         with patch('tournament.tasks.fetch_match_replay_stats.delay') as queued:
             call_command('build_match_stats', match_ids=[self.match.pk], reanalyze=True, stdout=StringIO())
             queued.assert_called_once_with(self.match.pk, force=True)
+
+    def test_reanalyze_all_queues_existing_recordings_once_per_match_including_removed_sources(self):
+        current = self.seed()
+        archived = ReplayRecording.objects.create(
+            match=self.match,
+            source_key='powtorki:archived',
+            replay_url='https://replay.thehax.pl/archived',
+            status='failed',
+        )
+        other_match = Match.objects.create(
+            league=self.league,
+            stage=self.stage,
+            numb_tour=self.tour,
+            team_home=self.home,
+            team_guest=self.away,
+            replays=['https://replay.thehax.pl/not-stored'],
+        )
+        other = ReplayRecording.objects.create(
+            match=other_match,
+            source_key='powtorki:other',
+            replay_url='https://replay.thehax.pl/other',
+            status='pending',
+        )
+        output = StringIO()
+        with (
+            patch('tournament.tasks.reanalyze_replay_recordings.delay') as queued,
+            patch('tournament.tasks.fetch_match_replay_stats.delay') as normal,
+        ):
+            call_command('build_match_stats', reanalyze_all=True, stdout=output)
+            self.assertEqual([call.args[0] for call in queued.call_args_list], [[current.pk, archived.pk], [other.pk]])
+            normal.assert_not_called()
+        self.assertIn('Queued reanalysis for 3 recordings across 2 matches', output.getvalue())
+        self.assertEqual(ReplayRecording.objects.count(), 3)
+
+    def test_reanalyze_all_handles_empty_recording_store(self):
+        output = StringIO()
+        with patch('tournament.tasks.reanalyze_replay_recordings.delay') as queued:
+            call_command('build_match_stats', reanalyze_all=True, stdout=output)
+            queued.assert_not_called()
+        self.assertIn('0 recordings across 0 matches', output.getvalue())
+
+    def test_reanalyze_all_rejects_season_and_match_filters_before_queueing(self):
+        for filters in ({'season': self.season.number}, {'match_ids': [self.match.pk]}):
+            with (
+                self.subTest(filters=filters),
+                patch('tournament.tasks.reanalyze_replay_recordings.delay') as queued,
+                self.assertRaises(CommandError),
+            ):
+                call_command('build_match_stats', reanalyze_all=True, stdout=StringIO(), **filters)
+            queued.assert_not_called()
+
+    def test_recording_task_does_not_reanalyze_the_same_match_multiple_times(self):
+        current = self.seed()
+        archived = ReplayRecording.objects.create(
+            match=self.match,
+            source_key='powtorki:archived',
+            replay_url='https://replay.thehax.pl/archived',
+        )
+        ids = [current.pk, archived.pk]
+        with patch('tournament.services.local_replays.ingest_match', return_value={'ok': True}) as ingest:
+            result = reanalyze_replay_recordings.run(ids)
+        ingest.assert_called_once_with(self.match.pk, force=True, recording_ids=ids)
+        self.assertEqual(result, [{'ok': True}])
+
+    def test_selected_recording_reanalysis_does_not_create_unrelated_new_sources(self):
+        current = self.seed()
+        archived = ReplayRecording.objects.create(
+            match=self.match,
+            source_key='powtorki:archived',
+            replay_url='https://replay.thehax.pl/archived',
+        )
+        self.match.replays = [self.url, 'https://replay.thehax.pl/not-stored']
+        self.match.save(update_fields=['replays'])
+        with (
+            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture') as download,
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result),
+        ):
+            result = reanalyze_replay_recordings.run([archived.pk])
+        download.assert_called_once_with(archived.replay_url)
+        self.assertEqual(result[0]['failed_recordings'], 0)
+        self.assertEqual(ReplayRecording.objects.count(), 2)
+        self.assertEqual(archived.games.count(), len(self.result['games']))
+        current.refresh_from_db()
+        self.assertIsNone(current.analyzed_at)
+        self.assertTrue(all(part.game.recording_id == current.pk for part in active_parts(self.match)))
 
     def test_match_deletion_cascades_without_leaving_protected_part_dependencies(self):
         self.seed()

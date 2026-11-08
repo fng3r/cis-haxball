@@ -154,6 +154,23 @@ Explicit reanalysis is available through “Повторно проанализ�
 python manage.py build_match_stats --match-ids 6862 6867 --reanalyze
 ```
 
+To reanalyze **all stored current recordings**, without specifying seasons or matches:
+
+```sh
+python manage.py build_match_stats --reanalyze-all
+```
+
+This includes successful, failed and pending `ReplayRecording` rows, including
+stored sources removed from a match's replay list. It queues one Celery task per
+match, containing only that match's existing recording IDs. It does not discover
+new replay links or call the historical external analyzer. Do not combine it with
+`--season` or `--match-ids`; `--reanalyze` is implied. The command reports how many
+recordings and matches were queued; processing continues in the workers.
+
+The existing unfiltered `--reanalyze` path processes all matches' currently attached
+replay links. The new option specifically targets stored recordings, including
+removed sources. Removed sources still do not contribute to active match totals.
+
 Reanalysis **always invokes the engine**, even for identical file bytes. Changed
 output replaces raw and extracted statistics atomically; editorial part records
 keep their IDs and corrections. A failed run keeps the previous successful raw
