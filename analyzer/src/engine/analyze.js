@@ -43,7 +43,11 @@ function playerMaps(game, player, cells) {
 function normalizeGame(game, index, frames, roster, startTick, includeFrames, heatmaps, positions) {
   const players = [...roster.values()].map(player => ({
     ...player,
-    ...(positions?.get(player.id) || { position: null, positionConfidence: 0, positionRoles: [], positionPeriods: [] }),
+    ...(positions?.get(player.id) || {
+      primaryPosition: null, secondaryPosition: null,
+      primaryPositionConfidence: 0, secondaryPositionConfidence: 0,
+      position: null, positionConfidence: 0, positionRoles: [], positionPeriods: [],
+    }),
     goals: game.goals.filter(g => !g.ownGoal && g.scorer === player.nick && g.team === player.team).length,
     assists: game.goals.filter(g => g.assist === player.nick && g.team === player.team).length,
     kicks: game.kicks.filter(k => k.player === player.nick).length,

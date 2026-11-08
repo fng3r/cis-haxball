@@ -52,6 +52,21 @@ class ReplayPositionComparisonTests(SimpleTestCase):
         self.assertEqual(rows, [])
         self.assertEqual(len(skipped), 1)
 
+    def test_reports_explicit_primary_and_secondary_fields(self):
+        self.game['players'][0].update(
+            primaryPosition='DM',
+            secondaryPosition='GK',
+            primaryPositionConfidence=0.6,
+            secondaryPositionConfidence=0.3,
+        )
+        rows, skipped = compare_games(self.legacy, {'games': [self.game]})
+        self.assertEqual(skipped, [])
+        self.assertEqual(rows[0]['position'], 'DM')
+        self.assertEqual(rows[0]['primary_position'], 'DM')
+        self.assertEqual(rows[0]['secondary_position'], 'GK')
+        self.assertEqual(rows[0]['confidence'], 0.6)
+        self.assertEqual(rows[0]['secondary_confidence'], 0.3)
+
     def test_keeps_unknowns_in_the_comparison_denominator(self):
         result = summarize(
             [

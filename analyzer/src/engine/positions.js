@@ -1,12 +1,39 @@
 // Role inference uses live movement, not nicknames, actions or a prescribed lineup.
 // Coordinates are relative to the goal a replay side defends, never Django home/away.
-export const POSITION_VERSION = 2;
+export const POSITION_VERSION = 3;
 export const POSITION_WINDOW_TICKS = 30 * 60;
 export const MIN_POSITION_TICKS = 15 * 60;
+export const MIN_SECONDARY_SHARE = 0.25;
 const SAMPLE_TICKS = 6;
 const MIN_WINDOW_TICKS = 10 * 60;
 const clamp = value => Math.max(0, Math.min(1, value));
 const round = value => Math.round(value * 1000) / 1000;
+
+/** Summarize the entire player's observed game, rather than requiring a majority. */
+export function selectGamePositions(roles, observedTicks) {
+  // Equal time is not evidence that either role dominated. Break ties using
+  // accumulated confidence, then stable first-observed order for equal evidence.
+  const ranked = [...roles].sort((a, b) => b[1].ticks - a[1].ticks || b[1].confidence - a[1].confidence);
+  const enoughPlay = observedTicks >= MIN_POSITION_TICKS;
+  const supported = enoughPlay ? ranked.filter(([, role]) => role.ticks >= MIN_POSITION_TICKS) : [];
+  const primary = supported[0];
+  const runnerUp = supported[1];
+  // Include unclassified time in the denominator: a few labelled samples do
+  // not turn into a substantial secondary role just because context is missing.
+  const secondary = runnerUp && runnerUp[1].ticks / observedTicks >= MIN_SECONDARY_SHARE ? runnerUp : null;
+  const confidence = role => role ? round(role[1].confidence / observedTicks) : 0;
+  const primaryPosition = primary?.[0] || null;
+  const primaryPositionConfidence = confidence(primary);
+  return {
+    primaryPosition, secondaryPosition: secondary?.[0] || null,
+    primaryPositionConfidence, secondaryPositionConfidence: confidence(secondary),
+    // Preserve the original fields for CLI/export consumers; they now alias primary.
+    position: primaryPosition, positionConfidence: primaryPositionConfidence,
+    positionRoles: enoughPlay ? ranked.map(([position, role]) => ({
+      position, ticks: role.ticks, share: round(role.ticks / observedTicks),
+    })) : [],
+  };
+}
 
 export function positionGeometry(stadium) {
   const center = team => {
@@ -114,17 +141,11 @@ export function createPositionTracker(stadium) {
     finish() {
       flush();
       return new Map([...totals].map(([id, total]) => {
-        const roles = [...total.roles].sort((a, b) => b[1].ticks - a[1].ticks);
-        const dominant = roles[0];
-        // Confidence is evidence consistency, not a calibrated probability.
-        const share = dominant ? dominant[1].ticks / total.ticks : 0;
         const enoughPlay = total.ticks >= MIN_POSITION_TICKS;
-        const position = enoughPlay && share >= 0.55 ? dominant[0] : null;
-        return [id, { position,
-          positionConfidence: position ? round(share * dominant[1].confidence / dominant[1].ticks) : 0,
+        return [id, {
+          ...selectGamePositions(total.roles, total.ticks),
           // A very short appearance cannot support a position estimate. Do not
           // leave speculative labels in its breakdown after clearing the main role.
-          positionRoles: enoughPlay ? roles.map(([position, role]) => ({ position, ticks: role.ticks, share: round(role.ticks / total.ticks) })) : [],
           positionPeriods: enoughPlay ? total.periods : total.periods.map(period => ({ ...period, position: null, confidence: 0 })),
         }];
       }));

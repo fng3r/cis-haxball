@@ -1,7 +1,8 @@
 # Position inference — ЧР #16
 
-Snapshot: 2026-11-08. Initial audit: `positionVersion: 1`. The current
-`positionVersion: 2` minimum-playtime follow-up is documented below.
+Snapshot: 2026-11-08. Initial audit: `positionVersion: 1`. Subsequent minimum-playtime
+(`positionVersion: 2`) and primary/secondary (`positionVersion: 3`) follow-ups are
+documented below.
 
 Position inference is now part of the active original-engine adapter. It adds
 estimated roles without modifying the pinned legacy runtime, engine v2, existing
@@ -169,7 +170,7 @@ Rechecking the same 80 recordings confirmed that all changed main-role predictio
 belong to appearances shorter than fifteen seconds; both reviewed examples are
 unclassified. All 163 analyzer tests and the production build passed.
 
-The current follow-up has 1,075 assigned main roles and 86 unclassified entries:
+The version-2 follow-up has 1,075 assigned main roles and 86 unclassified entries:
 43 are below the minimum playtime, and 43 have enough total playtime but no main
 role assigned. The latter group must not automatically be called genuinely mixed
 roles: the reviewed RichVladimirKC example demonstrates a classification error.
@@ -177,6 +178,38 @@ roles: the reviewed RichVladimirKC example demonstrates a classification error.
 Current strengths are recognizing stable goalkeepers and defensive midfielders,
 allowing two forwards without a prescribed formation, and retaining uncertainty.
 The output is suitable for experimentation, not automatic enforcement of lineups.
+
+### Primary and secondary positions
+
+`positionVersion: 3` introduces two summary positions for each player's complete
+decoded game:
+
+- **Primary position:** the role with the most inferred active time, provided that
+  role has at least fifteen seconds of evidence. It no longer needs a majority.
+- **Secondary position:** the runner-up, populated only when it accounts for at
+  least **25% of all observed active play** and at least fifteen seconds of role
+  evidence. Otherwise it is null. Unclassified time remains in the denominator.
+- Equal-time roles use accumulated confidence as a tie-breaker, then first-observed
+  order if that also ties. The primary/secondary order does not establish that
+  one equal-time role was genuinely more prevalent. These scores are not calibrated
+  probabilities.
+- Short appearances still have no positions. All roles and period estimates remain
+  available for sufficiently long appearances. The spatial classifier itself is
+  unchanged; this is a new summary policy, not an accuracy improvement.
+
+The engine exports `primaryPosition`, `secondaryPosition` and confidence for each.
+Existing `position` and `positionConfidence` fields are compatibility aliases for
+the primary. The read-only audit records both positions and compares the primary
+with legacy labels. Original audit measurements are retained separately.
+
+On the same development recordings, Max_Verstappen's equal-time DM/ST evidence
+now produces primary DM and secondary ST; ромчик produces primary AM and secondary
+ST. Both reviewed short appearances remain unclassified. RichVladimirKC still
+produces primary GK/secondary DM, and nezent still has an incorrect DM secondary:
+the previously reviewed outfield errors remain unresolved by this summary change.
+
+Version-3 results and selected examples are appended to the JSON snapshot. All
+169 analyzer tests, six read-only comparison tests and the production build passed.
 
 ## Reproduce
 

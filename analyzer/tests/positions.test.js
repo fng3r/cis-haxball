@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { analyzeReplay } from '../src/engine/analyze.js';
-import { createPositionTracker, positionGeometry, POSITION_WINDOW_TICKS, MIN_POSITION_TICKS } from '../src/engine/positions.js';
+import { createPositionTracker, positionGeometry, selectGamePositions, POSITION_WINDOW_TICKS, MIN_POSITION_TICKS } from '../src/engine/positions.js';
 import { replayCases } from './replay-fixtures.js';
 
 const stadium = { goals: [
@@ -65,14 +65,16 @@ describe('movement-based position inference', () => {
     expect(result.get('replacement').positionRoles[0].ticks).toBe(900);
   });
 
-  it('retains role changes instead of inventing a stable role from a whole-game average', () => {
+  it('retains equal-time role changes as primary and secondary positions', () => {
     const tracker = createPositionTracker(stadium);
     observe(tracker, red(lineup));
     const changed = lineup.map(p => p.id === 'keeper' ? { ...p, x: 180, y: -180 }
       : p.id === 'top' ? { ...p, x: -500, y: 0 } : p);
     observe(tracker, red(changed), POSITION_WINDOW_TICKS, POSITION_WINDOW_TICKS + 500);
     const keeper = tracker.finish().get('keeper');
-    expect(keeper.position).toBeNull();
+    expect(keeper.primaryPosition).toBe('GK');
+    expect(keeper.secondaryPosition).toBe('ST');
+    expect(keeper.position).toBe(keeper.primaryPosition);
     expect(keeper.positionRoles.map(p => p.position).sort()).toEqual(['GK', 'ST']);
     expect(keeper.positionPeriods.map(p => p.startTick)).toEqual([0, POSITION_WINDOW_TICKS + 500]);
     expect(keeper.positionRoles.reduce((sum, p) => sum + p.ticks, 0)).toBe(POSITION_WINDOW_TICKS * 2);
@@ -88,7 +90,11 @@ describe('movement-based position inference', () => {
   it.each([600, 818, 869, MIN_POSITION_TICKS - 1])('suppresses all speculative roles for a %i-tick appearance', ticks => {
     for (const player of infer(red(lineup), ticks).values()) {
       expect(player.position).toBeNull();
+      expect(player.primaryPosition).toBeNull();
+      expect(player.secondaryPosition).toBeNull();
       expect(player.positionConfidence).toBe(0);
+      expect(player.primaryPositionConfidence).toBe(0);
+      expect(player.secondaryPositionConfidence).toBe(0);
       expect(player.positionRoles).toEqual([]);
       expect(player.positionPeriods.every(period => period.position === null && period.confidence === 0)).toBe(true);
       expect(player.positionPeriods.reduce((sum, period) => sum + period.observedTicks, 0)).toBe(ticks);
@@ -122,9 +128,18 @@ describe('movement-based position inference', () => {
 
   it.each(replayCases)('exports bounded, deterministic role evidence for $file', fixture => {
     const result = analyzeReplay(readFileSync(new URL(`./fixtures/${fixture.file}`, import.meta.url)));
-    expect(result.positionVersion).toBe(2);
+    expect(result.positionVersion).toBe(3);
     for (const game of result.games) for (const player of game.players) {
       expect([null, 'GK', 'DM', 'AM', 'ST']).toContain(player.position);
+      expect([null, 'GK', 'DM', 'AM', 'ST']).toContain(player.secondaryPosition);
+      expect(player.position).toBe(player.primaryPosition);
+      expect(player.positionConfidence).toBe(player.primaryPositionConfidence);
+      if (player.secondaryPosition) {
+        expect(player.secondaryPosition).not.toBe(player.primaryPosition);
+        const role = player.positionRoles.find(p => p.position === player.secondaryPosition);
+        expect(role.ticks).toBeGreaterThanOrEqual(MIN_POSITION_TICKS);
+        expect(role.ticks / player.positionPeriods.reduce((sum, p) => sum + p.observedTicks, 0)).toBeGreaterThanOrEqual(0.25);
+      }
       expect(player.positionConfidence).toBeGreaterThanOrEqual(0);
       expect(player.positionConfidence).toBeLessThanOrEqual(1);
       const observed = player.positionPeriods.reduce((sum, p) => sum + p.observedTicks, 0);
@@ -136,5 +151,58 @@ describe('movement-based position inference', () => {
         expect(period.endTick).toBeLessThanOrEqual(result.ticks);
       }
     }
+  });
+});
+
+// Tick counts represent observed time; confidence is the existing accumulated
+// per-window evidence, not a probability that the label is correct.
+function evidence(entries) {
+  return new Map(entries.map(([position, seconds, confidence = 0.8]) => [position, {
+    ticks: seconds * 60, confidence: seconds * 60 * confidence,
+  }]));
+}
+
+describe('whole-game primary and secondary position selection', () => {
+  it('selects the largest time share without requiring a majority', () => {
+    const result = selectGamePositions(evidence([['ST', 40, 0.6], ['DM', 35, 0.9], ['AM', 25]]), 100 * 60);
+    expect(result.primaryPosition).toBe('ST');
+    expect(result.secondaryPosition).toBe('DM');
+    expect(result.positionRoles).toHaveLength(3);
+  });
+
+  it('leaves the secondary null for a single role or an incidental alternative', () => {
+    expect(selectGamePositions(evidence([['GK', 480]]), 480 * 60).secondaryPosition).toBeNull();
+    expect(selectGamePositions(evidence([['ST', 420], ['DM', 60]]), 480 * 60).secondaryPosition).toBeNull();
+  });
+
+  it('requires an unrounded twenty-five percent share for a secondary', () => {
+    expect(selectGamePositions(evidence([['ST', 360], ['DM', 120]]), 480 * 60).secondaryPosition).toBe('DM');
+    const result = selectGamePositions(evidence([['ST', 360 + 1 / 60], ['DM', 120 - 1 / 60]]), 480 * 60);
+    expect(result.positionRoles[1].share).toBe(0.25);
+    expect(result.secondaryPosition).toBeNull();
+  });
+
+  it('requires fifteen seconds of evidence for each reported position', () => {
+    const result = selectGamePositions(evidence([['ST', 20], ['DM', 14]]), 34 * 60);
+    expect(result.primaryPosition).toBe('ST');
+    expect(result.secondaryPosition).toBeNull();
+    expect(selectGamePositions(evidence([['ST', 10], ['DM', 10]]), 30 * 60).primaryPosition).toBeNull();
+    expect(selectGamePositions(evidence([['ST', 30], ['DM', 15]]), 45 * 60).secondaryPosition).toBe('DM');
+  });
+
+  it('includes unclassified time in secondary shares and confidence', () => {
+    const result = selectGamePositions(evidence([['ST', 60], ['DM', 20]]), 100 * 60);
+    expect(result.primaryPosition).toBe('ST');
+    expect(result.secondaryPosition).toBeNull();
+    expect(result.primaryPositionConfidence).toBe(0.48);
+  });
+
+  it('breaks equal-time ties by confidence and then first-observed order', () => {
+    const unequal = selectGamePositions(evidence([['ST', 240, 0.7], ['DM', 240, 0.8]]), 480 * 60);
+    expect(unequal.primaryPosition).toBe('DM');
+    expect(unequal.secondaryPosition).toBe('ST');
+    const equal = selectGamePositions(evidence([['ST', 240], ['DM', 240]]), 480 * 60);
+    expect(equal.primaryPosition).toBe('ST');
+    expect(equal.secondaryPosition).toBe('DM');
   });
 });

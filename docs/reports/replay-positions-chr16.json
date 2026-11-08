@@ -1695,6 +1695,207 @@
         "below_minimum_active_play": 43,
         "at_least_minimum_but_no_main_role": 43
       }
+    },
+    {
+      "snapshot_date": "2026-11-08",
+      "position_version": 3,
+      "engine_revision": "original-v1:9519b08dc70be5be",
+      "minimum_appearance_active_ticks": 900,
+      "minimum_role_active_ticks": 900,
+      "minimum_secondary_share": 0.25,
+      "ranking": "inferred_active_time_then_accumulated_confidence_then_first_observed_order",
+      "cohort": "validation",
+      "summary": {
+        "players": 1161,
+        "classified": 1118,
+        "exact_agreement": 810,
+        "role_family_agreement": 1066,
+        "confusion": {
+          "AM->AM": 8,
+          "AM->DM": 24,
+          "AM->ST": 236,
+          "AM->unknown": 2,
+          "DM->DM": 257,
+          "DM->GK": 6,
+          "DM->ST": 13,
+          "DM->unknown": 17,
+          "GK->DM": 5,
+          "GK->GK": 271,
+          "GK->ST": 2,
+          "GK->unknown": 13,
+          "LW->ST": 9,
+          "RW->DM": 1,
+          "RW->ST": 11,
+          "ST->DM": 1,
+          "ST->ST": 274,
+          "ST->unknown": 11
+        }
+      },
+      "primary_positions_assigned": 1118,
+      "secondary_positions_assigned": 126,
+      "selected_examples": [
+        {
+          "match_id": 6515,
+          "recording_id": 234,
+          "game_id": 0,
+          "stadium": "Futsal 3x3 4x4",
+          "nick": "Max_Verstappen",
+          "side": "blue",
+          "ticks": 28803,
+          "legacy_position": "DM",
+          "position": "DM",
+          "primary_position": "DM",
+          "secondary_position": "ST",
+          "confidence": 0.409,
+          "secondary_confidence": 0.36,
+          "roles": [
+            {
+              "position": "DM",
+              "ticks": 14400,
+              "share": 0.5
+            },
+            {
+              "position": "ST",
+              "ticks": 14400,
+              "share": 0.5
+            }
+          ]
+        },
+        {
+          "match_id": 6585,
+          "recording_id": 360,
+          "game_id": 1,
+          "stadium": "BFF Big v4",
+          "nick": "ромчик",
+          "side": "red",
+          "ticks": 28783,
+          "legacy_position": "AM",
+          "position": "AM",
+          "primary_position": "AM",
+          "secondary_position": "ST",
+          "confidence": 0.321,
+          "secondary_confidence": 0.297,
+          "roles": [
+            {
+              "position": "AM",
+              "ticks": 12600,
+              "share": 0.438
+            },
+            {
+              "position": "ST",
+              "ticks": 12582,
+              "share": 0.437
+            },
+            {
+              "position": "DM",
+              "ticks": 3600,
+              "share": 0.125
+            }
+          ]
+        },
+        {
+          "match_id": 6485,
+          "recording_id": 231,
+          "game_id": 0,
+          "stadium": "Futsal 3x3 4x4",
+          "nick": "RichVladimirKC",
+          "side": "red",
+          "ticks": 28801,
+          "legacy_position": "DM",
+          "position": "GK",
+          "primary_position": "GK",
+          "secondary_position": "DM",
+          "confidence": 0.34,
+          "secondary_confidence": 0.25,
+          "roles": [
+            {
+              "position": "GK",
+              "ticks": 10800,
+              "share": 0.375
+            },
+            {
+              "position": "DM",
+              "ticks": 9000,
+              "share": 0.313
+            },
+            {
+              "position": "AM",
+              "ticks": 7200,
+              "share": 0.25
+            },
+            {
+              "position": "ST",
+              "ticks": 1800,
+              "share": 0.063
+            }
+          ]
+        },
+        {
+          "match_id": 6519,
+          "recording_id": 66,
+          "game_id": 1,
+          "stadium": "BFF Big v3 from HaxMaps",
+          "nick": "nezent",
+          "side": "blue",
+          "ticks": 28801,
+          "legacy_position": "GK",
+          "position": "GK",
+          "primary_position": "GK",
+          "secondary_position": "DM",
+          "confidence": 0.432,
+          "secondary_confidence": 0.317,
+          "roles": [
+            {
+              "position": "GK",
+              "ticks": 12600,
+              "share": 0.438
+            },
+            {
+              "position": "DM",
+              "ticks": 12600,
+              "share": 0.438
+            },
+            {
+              "position": "ST",
+              "ticks": 3600,
+              "share": 0.125
+            }
+          ]
+        },
+        {
+          "match_id": 6335,
+          "recording_id": 217,
+          "game_id": 1,
+          "stadium": "Futsal 3x3 4x4",
+          "nick": "black",
+          "side": "blue",
+          "ticks": 818,
+          "legacy_position": "GK",
+          "position": null,
+          "primary_position": null,
+          "secondary_position": null,
+          "confidence": 0,
+          "secondary_confidence": 0,
+          "roles": []
+        },
+        {
+          "match_id": 6533,
+          "recording_id": 77,
+          "game_id": 1,
+          "stadium": "BFF Big v4",
+          "nick": "bonusbuychik",
+          "side": "red",
+          "ticks": 869,
+          "legacy_position": "GK",
+          "position": null,
+          "primary_position": null,
+          "secondary_position": null,
+          "confidence": 0,
+          "secondary_confidence": 0,
+          "roles": []
+        }
+      ],
+      "note": "Same development recording sample and replay bytes; spatial role evidence is unchanged. Position summaries now use primary and optional secondary roles, and agreement compares the primary with legacy labels. Known spatial-classification errors remain."
     }
   ],
   "validation_limitations": {

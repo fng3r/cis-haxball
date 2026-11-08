@@ -152,10 +152,15 @@ positions from live movement; the pinned upstream engine remains untouched.
 
 ## Inferred playing positions
 
-The active engine emits `positionVersion: 2` and adds these fields to each player:
+The active engine emits `positionVersion: 3` and adds these fields to each player:
 
-- `position`: `GK`, `DM`, `AM`, `ST`, or `null` when no role dominates.
-- `positionConfidence`: 0–1 evidence consistency, **not a probability of correctness**.
+- `primaryPosition`: the best-supported `GK`, `DM`, `AM`, or `ST` over the
+  entire decoded game; null when there is insufficient role evidence.
+- `secondaryPosition`: a sufficiently supported alternative; null otherwise.
+- `primaryPositionConfidence` and `secondaryPositionConfidence`: 0–1 evidence
+  consistency, **not probabilities of correctness**.
+- `position` and `positionConfidence`: compatibility aliases for the primary
+  position and its confidence. Consumers should prefer the explicit new names.
 - `positionRoles`: `{position, ticks, share}` entries for observed roles.
 - `positionPeriods`: `{startTick, endTick, observedTicks, position, confidence}`
   entries. Bounds are recording ticks, end-exclusive; the player need not have
@@ -178,13 +183,24 @@ team, or an AM/ST split. It deliberately does not call a wide striker LW/RW.
 
 Substitutions use native player ID plus replay side, not nicknames. No role is
 reported until a player has at least **15 seconds of observed active play** in
-that replay game. Shorter appearances have a null main role, zero confidence,
+that replay game. Shorter appearances have null primary/secondary roles, zero confidence,
 an empty role breakdown and unclassified periods retaining their observed time.
 Paused or off-field time does not qualify. A local window still needs ten seconds
 of evidence per player and two eligible players on that side, so substitutions
 crossing a window boundary can contribute to a sufficiently long appearance.
-The main role must cover at least 55% of observed play; otherwise it is null
-while the breakdown remains available. Role changes have 30-second resolution,
+
+Summary positions are ranked by inferred active time, with accumulated confidence
+breaking exact time ties and first-observed order breaking remaining ties. Each
+reported summary position needs at least **15 seconds of evidence for that role**.
+The primary does not require an absolute majority. The secondary must additionally
+cover at least **25% of all the player's observed active time**, including
+unclassified time in the denominator. Thresholds use unrounded values. Only the
+runner-up can become secondary; other roles remain in the full breakdown.
+Equal-time roles can therefore have both positions populated; their ordering does
+not imply a true majority. This replaces the former 55% main-role rule.
+
+Both positions summarize the complete decoded replay game. Role periods retain
+30-second resolution,
 not exact transition timestamps. Unsupported/multi-goal pitch layouts remain
 unclassified. Roles are estimates of movement patterns, not declared assignments.
 
