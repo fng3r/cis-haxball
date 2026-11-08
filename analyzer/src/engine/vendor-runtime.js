@@ -11663,7 +11663,7 @@ return {
       players: state.I.filter(item => item.H != null).map(item => ({
         id: item.V, nick: item.w, team: item.ea.$,
         x: item.H.a.x, y: item.H.a.y, radius: item.H.Z,
-        avatar: item.sh || '',
+        avatar: item.Jd ?? item.Xb ?? null,
       })),
     };
   },

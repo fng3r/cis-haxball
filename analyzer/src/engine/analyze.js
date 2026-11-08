@@ -96,6 +96,9 @@ export function analyzeReplay(input, { onProgress = () => {}, includeFrames = fa
         const key = `${item.V}:${team}`;
         const player = roster.get(key) || { id: key, nick: item.w, team, playedTicks: 0 };
         player.playedTicks++;
+        // Match native display precedence and retain the last value used in play,
+        // including an explicitly cleared or blank avatar.
+        player.avatar = item.Jd ?? item.Xb ?? null;
         roster.set(key, player);
         livePositions.push({ id: key, team, x: item.H.a.x, y: item.H.a.y });
         // Accumulate occupancy at every active tick; no playback sampling and

@@ -127,6 +127,7 @@ def materialize(recording, result, rosters, players):
                 defaults={
                     'side': p['team'],
                     'nick': p['nick'],
+                    'avatar': p.get('avatar'),
                     'player_id': players.get(p['nick'].strip().casefold()),
                     'active_ticks': p['playedTicks'],
                     'goals': p['goals'],

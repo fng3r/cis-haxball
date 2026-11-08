@@ -3233,6 +3233,7 @@ class ReplayPlayerStats(models.Model):
     replay_player_id = models.CharField(max_length=80)
     side = models.CharField(max_length=4, choices=ReplayTeamStats.Side.choices)
     nick = models.CharField(max_length=150)
+    avatar = models.CharField('Аватар в реплее', max_length=2, null=True, blank=True)
     player = models.ForeignKey(Player, null=True, blank=True, on_delete=models.SET_NULL)
     active_ticks = models.PositiveIntegerField(default=0)
     goals = models.PositiveIntegerField(default=0)

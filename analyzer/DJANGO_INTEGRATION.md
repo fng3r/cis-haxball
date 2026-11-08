@@ -45,6 +45,10 @@ Legacy `MatchReplay*` models and their stored results remain independent.
   possession ticks, kicks, completed passes, on-target shots and territory ticks.
 - `ReplayPlayerStats`: one row per game/replay player identity (including side),
   with recorded nickname, optional resolved Django player and supported metrics.
+  Its nullable `avatar` contains the recording's last active custom avatar for
+  that game: short text/emoji, not a profile-image URL. Room overrides precede
+  player-selected avatars; clear/blank values are preserved. The public UI is
+  unchanged by this metadata addition.
   Stores nullable primary/secondary positions and confidence, observed role ticks,
   and bounded per-role time/confidence evidence for whole-match aggregation.
 

@@ -108,6 +108,16 @@ not a replacement for the old replay.hax.ma response format. The standalone
 function is synchronous; CPU-bound server usage should run it in a subprocess or
 worker. The browser has a two-minute analysis timeout.
 
+Each game's player rows include `avatar`: the last effective custom text/emoji
+observed while that player was on the field during active play. Room overrides
+take precedence over player-selected avatars, matching native rendering. An
+explicit empty avatar remains `""`; no custom avatar is `null` (the native player
+may draw its default player number). Changes after leaving play or during the
+final celebration do not rewrite that game's avatar. Different games and replay
+sides retain their own values. Django stores this metadata on `ReplayPlayerStats`;
+it is separate from a website profile image. Cached analyses need reanalysis to
+populate missing avatar metadata.
+
 Proof-of-concept limits are replay format 3, 32 MB input, one hour of recording
 time and 128 MB decompressed payload. The UI supports retry after an error.
 

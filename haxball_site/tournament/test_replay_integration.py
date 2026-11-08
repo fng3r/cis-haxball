@@ -318,6 +318,7 @@ class LocalReplayIntegrationTests(TestCase):
             for player in game['players']:
                 stored = ReplayPlayerStats.objects.get(game__engine_game_id=game['id'], replay_player_id=player['id'])
                 self.assertEqual(stored.primary_position, player['primaryPosition'])
+                self.assertEqual(stored.avatar, player['avatar'])
                 self.assertEqual(stored.secondary_position, player['secondaryPosition'])
                 self.assertEqual(stored.primary_position_confidence, player['primaryPositionConfidence'])
                 self.assertEqual(stored.position_observed_ticks, player['positionObservedTicks'])
@@ -458,6 +459,25 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertFalse(ReplayPlayerStats.objects.exclude(primary_position=None).exists())
         self.assertFalse(ReplayPlayerStats.objects.exclude(position_observed_ticks=None).exists())
         self.assertTrue(all(row['position_label'] is None for row in statistics(self.match)['players']))
+
+    def test_reanalysis_materializes_avatar_changes_clearing_and_missing_metadata(self):
+        recording = self.seed()
+        row = ReplayPlayerStats.objects.get(game__engine_game_id=0, nick='R3venGe-')
+        self.assertEqual(row.avatar, 'R3')
+        raw = copy.deepcopy(self.result)
+        player = next(p for p in raw['games'][0]['players'] if p['nick'] == 'R3venGe-')
+        player['avatar'] = '😀'
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        row.refresh_from_db()
+        self.assertEqual(row.avatar, '😀')
+        player['avatar'] = None
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        row.refresh_from_db()
+        self.assertIsNone(row.avatar)
+        player.pop('avatar')
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        row.refresh_from_db()
+        self.assertIsNone(row.avatar)
 
     def test_legacy_primary_interpretation_and_short_historical_labels_are_unchanged(self):
         recording = MatchReplay.objects.create(match=self.match, replay_url=self.url, status='ready')

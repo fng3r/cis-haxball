@@ -47,6 +47,15 @@ describe.each(replayCases)('original engine: $file', fixture => {
 });
 
 describe('standalone replay analysis', () => {
+  it('extracts native custom avatars and preserves their absence in real replay games', () => {
+    const [first, second] = analyzeReplay(multiple).games;
+    expect(first.players.find(p => p.nick === 'R3venGe-').avatar).toBe('R3');
+    expect(first.players.find(p => p.nick === 'Dantes').avatar).toBe('6♢');
+    expect(first.players.find(p => p.nick === 'аутяга').avatar).toBeNull();
+    expect(second.players.find(p => p.nick === 'карпен').avatar).toBe('Kz');
+    expect(JSON.parse(serializeStats({ games: [first, second] })).games[0].players
+      .find(p => p.nick === 'R3venGe-').avatar).toBe('R3');
+  });
   it('keeps substitutions and own-goal credits separate between matches', () => {
     const [first, second] = analyzeReplay(multiple).games;
     expect(first.goals.some(g => g.ownGoal)).toBe(true);
