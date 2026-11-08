@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="278" viewBox="0 0 840 278" role="img" aria-labelledby="title description">
+  <title id="title">Agreement with saved legacy position labels</title>
+  <desc id="description">Independent validation of 1161 player-game-side entries. GK agreement 92.1 percent, DM 88.1 percent, broad role 90.1 percent, exact position 68.8 percent. These are comparisons with another heuristic, not ground-truth accuracy. Unknown predictions are included in denominators.</desc>
+  <rect width="840" height="278" rx="12" fill="#f8fafc"/>
+  <g font-family="system-ui, sans-serif" fill="#172033">
+    <text x="24" y="31" font-size="18" font-weight="600">Agreement with saved legacy labels</text>
+    <text x="24" y="53" font-size="12" fill="#526174">Independent sample · 80 recordings · unknowns included in all denominators</text>
+    <g font-size="14">
+      <text x="24" y="91">GK → GK</text>
+      <rect x="220" y="74" width="500" height="24" rx="4" fill="#e2e8f0"/>
+      <rect x="220" y="74" width="460.5" height="24" rx="4" fill="#3156a3"/>
+      <text x="737" y="91">92.1%</text>
+      <text x="24" y="128">DM → DM</text>
+      <rect x="220" y="111" width="500" height="24" rx="4" fill="#e2e8f0"/>
+      <rect x="220" y="111" width="440.5" height="24" rx="4" fill="#3156a3"/>
+      <text x="737" y="128">88.1%</text>
+      <text x="24" y="165">Broad role</text>
+      <rect x="220" y="148" width="500" height="24" rx="4" fill="#e2e8f0"/>
+      <rect x="220" y="148" width="450.5" height="24" rx="4" fill="#3156a3"/>
+      <text x="737" y="165">90.1%</text>
+      <text x="24" y="202">Exact position</text>
+      <rect x="220" y="185" width="500" height="24" rx="4" fill="#e2e8f0"/>
+      <rect x="220" y="185" width="344" height="24" rx="4" fill="#7889a8"/>
+      <text x="737" y="202">68.8%</text>
+    </g>
+    <text x="24" y="239" font-size="12" fill="#526174">Broad role groups AM, ST, LW and RW together; it does not validate their exact positions.</text>
+    <text x="24" y="259" font-size="12" fill="#526174">Legacy labels are inferred too. These percentages are agreement, not verified accuracy.</text>
+  </g>
+</svg>

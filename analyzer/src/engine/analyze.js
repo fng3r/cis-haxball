@@ -1,5 +1,6 @@
 import { Inflate } from 'pako';
 import { createRuntime } from './vendor-runtime.js';
+import { createPositionTracker, POSITION_VERSION } from './positions.js';
 
 export const MAX_FILE_BYTES = 32 * 1024 * 1024;
 const MAX_INFLATED_BYTES = 128 * 1024 * 1024;
@@ -39,9 +40,10 @@ function playerMaps(game, player, cells) {
   };
 }
 
-function normalizeGame(game, index, frames, roster, startTick, includeFrames, heatmaps) {
+function normalizeGame(game, index, frames, roster, startTick, includeFrames, heatmaps, positions) {
   const players = [...roster.values()].map(player => ({
     ...player,
+    ...(positions?.get(player.id) || { position: null, positionConfidence: 0, positionRoles: [], positionPeriods: [] }),
     goals: game.goals.filter(g => !g.ownGoal && g.scorer === player.nick && g.team === player.team).length,
     assists: game.goals.filter(g => g.assist === player.nick && g.team === player.team).length,
     kicks: game.kicks.filter(k => k.player === player.nick).length,
@@ -71,7 +73,7 @@ export function analyzeReplay(input, { onProgress = () => {}, includeFrames = fa
   const ticks = header.getUint32(8);
   if (!ticks || ticks > MAX_TICKS) throw new Error('Choose a non-empty recording up to one hour long.');
   const runtime = createRuntime(inflateRaw);
-  const frameSets = [], rosters = [], starts = [], heatmaps = [];
+  const frameSets = [], rosters = [], starts = [], heatmaps = [], positionTrackers = [];
   try {
     runtime.load(Uint8Array.from(bytes));
     onProgress(0);
@@ -80,6 +82,8 @@ export function analyzeReplay(input, { onProgress = () => {}, includeFrames = fa
       const index = runtime.currentMatch;
       if (runtime.state.K && starts[index] == null) starts[index] = tick;
       const roster = rosters[index] ||= new Map();
+      const live = runtime.state.K?.Bb === 1 && !(runtime.state.K?.Oa > 0);
+      const livePositions = [];
       // Track playtime at full tick resolution, independently of native playback.
       for (const item of runtime.state.I) {
         if (!item.H || !item.ea.$ || runtime.state.K?.Bb !== 1 || runtime.state.K?.Oa > 0) continue;
@@ -88,6 +92,7 @@ export function analyzeReplay(input, { onProgress = () => {}, includeFrames = fa
         const player = roster.get(key) || { id: key, nick: item.w, team, playedTicks: 0 };
         player.playedTicks++;
         roster.set(key, player);
+        livePositions.push({ id: key, team, x: item.H.a.x, y: item.H.a.y });
         // Accumulate occupancy at every active tick; no playback sampling and
         // no unbounded per-tick position arrays are needed for a density map.
         const cells = heatmaps[index] ||= new Map();
@@ -100,6 +105,10 @@ export function analyzeReplay(input, { onProgress = () => {}, includeFrames = fa
         positions.set(positionKey, cell);
         cells.set(key, positions);
       }
+      if (live && runtime.matches[index]?.stadium) {
+        const tracker = positionTrackers[index] ||= createPositionTracker(runtime.matches[index]?.stadium);
+        tracker.observe(livePositions, tick);
+      }
       if (includeFrames && (tick % SAMPLE_INTERVAL === 0 || tick === ticks - 1)) {
         const frame = runtime.frame();
         if (frame) (frameSets[index] ||= []).push(frame);
@@ -111,8 +120,8 @@ export function analyzeReplay(input, { onProgress = () => {}, includeFrames = fa
     throw new Error('The recording is damaged or uses unsupported replay data.');
   }
   const games = runtime.matches.flatMap((game, i) => game.stadium && game.gameTicks >= 0
-    ? [normalizeGame(game, i, frameSets[i] || [], rosters[i] || new Map(), starts[i] || 0, includeFrames, heatmaps[i])] : []);
+    ? [normalizeGame(game, i, frameSets[i] || [], rosters[i] || new Map(), starts[i] || 0, includeFrames, heatmaps[i], positionTrackers[i]?.finish())] : []);
   if (!games.length) throw new Error('No played games were found in this recording.');
   onProgress(100);
-  return { schemaVersion: 1, engine: 'haxball-replay-analyzer-poc', ticks, sampleInterval: SAMPLE_INTERVAL, games };
+  return { schemaVersion: 1, engine: 'haxball-replay-analyzer-poc', positionVersion: POSITION_VERSION, ticks, sampleInterval: SAMPLE_INTERVAL, games };
 }

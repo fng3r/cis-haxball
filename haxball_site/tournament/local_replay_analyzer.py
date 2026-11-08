@@ -33,6 +33,11 @@ def analyze_local_replay(data):
 def engine_revision():
     root = Path(settings.REPLAY_ANALYZER_CLI).resolve().parent.parent
     digest = hashlib.sha256()
-    for name in ('src/engine/analyze.js', 'src/engine/vendor-runtime.js', 'package-lock.json'):
+    for name in (
+        'src/engine/analyze.js',
+        'src/engine/positions.js',
+        'src/engine/vendor-runtime.js',
+        'package-lock.json',
+    ):
         digest.update((root / name).read_bytes())
     return f'original-v1:{digest.hexdigest()[:16]}'

@@ -147,7 +147,49 @@ Identical names or switching sides during a game can make individual event
 attribution ambiguous. Playtime is tracked by player ID and side. At a new game,
 the adapter resets kicker/toucher history so passes and assists do not leak
 between games; this can remove a spurious cross-game pass counted by upstream.
-Ratings, positions, xG and other enriched metrics have not been added.
+Ratings and xG have not been added. The standalone adapter adds inferred playing
+positions from live movement; the pinned upstream engine remains untouched.
+
+## Inferred playing positions
+
+The active engine emits `positionVersion: 1` and adds these fields to each player:
+
+- `position`: `GK`, `DM`, `AM`, `ST`, or `null` when no role dominates.
+- `positionConfidence`: 0–1 evidence consistency, **not a probability of correctness**.
+- `positionRoles`: `{position, ticks, share}` entries for observed roles.
+- `positionPeriods`: `{startTick, endTick, observedTicks, position, confidence}`
+  entries. Bounds are recording ticks, end-exclusive; the player need not have
+  been on the field throughout that interval. `observedTicks` is their live play
+  within the window. Unclassified time remains in the share denominator.
+
+`src/engine/positions.js` samples movement at 10 Hz during live play and counts
+player presence at full tick resolution. Windows contain 30 seconds of live play,
+so pauses and goal celebrations do not consume evidence. The upstream adapter
+publishes stadium geometry after play begins; its first transition tick may be
+absent from position evidence. Existing playtime and metric counters are unchanged.
+
+Depth and lateral position are projected onto the axis between the side's own goal
+and its opponent's goal. Translation, rotation, scaling, and red/blue changes
+therefore preserve roles. GK requires sustained positioning behind contemporaneous
+teammates with separation from them; it does not require staying in the goalmouth.
+Outfield depth groups identify DM, AM and ST. Similar-depth forwards on opposite
+flanks can both be ST. The detector does not prescribe four players, one role per
+team, or an AM/ST split. It deliberately does not call a wide striker LW/RW.
+
+Substitutions use native player ID plus replay side, not nicknames. A window needs
+at least ten seconds of evidence per player and two eligible players on that
+side. The main role must cover at least 55% of observed play; otherwise it is null
+while the breakdown remains available. Role changes have 30-second resolution,
+not exact transition timestamps. Unsupported/multi-goal pitch layouts remain
+unclassified. Roles are estimates of movement patterns, not declared assignments.
+
+These fields are shared by the browser worker and original-engine CLI/export.
+Engine v2 remains parked. No position column or Django domain field is added by
+this change. New/reanalyzed `ReplayRecording.raw_response` values contain the
+fields automatically; cached successful analyses require explicit reanalysis.
+
+Validation and repeatable read-only audit instructions:
+[ЧР #16 position comparison](../docs/reports/replay-positions-chr16.md).
 
 The upstream MIT notice is preserved in `LICENSE.MD` and `legacy/LICENSE.MD`.
 The provenance of apparent incorporated HaxBall client code has not been

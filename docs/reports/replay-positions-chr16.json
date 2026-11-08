@@ -1,0 +1,1219 @@
+{
+  "season": "ЧР, 16 сезон",
+  "season_id": 28,
+  "snapshot_date": "2026-11-08",
+  "position_version": 1,
+  "engine_revision": "original-v1:7d38017ca511ae7e",
+  "cohort": "validation",
+  "summary": {
+    "players": 1161,
+    "classified": 1091,
+    "exact_agreement": 799,
+    "role_family_agreement": 1046,
+    "confusion": {
+      "AM->AM": 3,
+      "AM->DM": 19,
+      "AM->ST": 227,
+      "AM->unknown": 21,
+      "DM->DM": 258,
+      "DM->GK": 5,
+      "DM->ST": 12,
+      "DM->unknown": 18,
+      "GK->DM": 7,
+      "GK->GK": 268,
+      "GK->ST": 1,
+      "GK->unknown": 15,
+      "LW->ST": 9,
+      "RW->DM": 1,
+      "RW->ST": 10,
+      "RW->unknown": 1,
+      "ST->AM": 1,
+      "ST->ST": 270,
+      "ST->unknown": 15
+    }
+  },
+  "matched_games": 157,
+  "matches": 76,
+  "by_stadium": {
+    "futsal": {
+      "players": 532,
+      "classified": 495,
+      "exact_agreement": 356,
+      "role_family_agreement": 466,
+      "confusion": {
+        "AM->AM": 2,
+        "AM->DM": 13,
+        "AM->ST": 98,
+        "AM->unknown": 11,
+        "DM->DM": 112,
+        "DM->GK": 3,
+        "DM->ST": 9,
+        "DM->unknown": 9,
+        "GK->DM": 3,
+        "GK->GK": 122,
+        "GK->ST": 1,
+        "GK->unknown": 8,
+        "LW->ST": 5,
+        "RW->ST": 7,
+        "ST->ST": 120,
+        "ST->unknown": 9
+      }
+    },
+    "bff": {
+      "players": 629,
+      "classified": 596,
+      "exact_agreement": 443,
+      "role_family_agreement": 580,
+      "confusion": {
+        "AM->AM": 1,
+        "AM->DM": 6,
+        "AM->ST": 129,
+        "AM->unknown": 10,
+        "DM->DM": 146,
+        "DM->GK": 2,
+        "DM->ST": 3,
+        "DM->unknown": 9,
+        "GK->DM": 4,
+        "GK->GK": 146,
+        "GK->unknown": 7,
+        "LW->ST": 4,
+        "RW->DM": 1,
+        "RW->ST": 3,
+        "RW->unknown": 1,
+        "ST->AM": 1,
+        "ST->ST": 150,
+        "ST->unknown": 6
+      }
+    }
+  },
+  "recordings": [
+    {
+      "recording_id": 286,
+      "match_id": 6575,
+      "source": "https://replay.thehax.pl/9079090f-ff9b-45d1-a70f-0d27aebae6e3?t=534",
+      "sha256": "9c31f0ff4ef47f4e649b44cbfb00936cccd5613b88109fe35754c1aba35a8b5d",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 10,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 245,
+      "match_id": 6544,
+      "source": "https://replay.thehax.pl/9527bc38-b2e8-485b-bf21-8bda485882c0",
+      "sha256": "7117607a4a2ab00cae8fa602487f9f057cb412a1d8a8b988c2883beaeccace4e",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 32,
+      "matched_game_ids": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "recording_id": 374,
+      "match_id": 6210,
+      "source": "https://replay.thehax.pl/79e7d79b-2d37-4080-996b-d3424926da47",
+      "sha256": "3cb79511c93d338ca5283af408d5bc74aef36209a2c80998a8da0504d21fdb05",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        },
+        {
+          "legacy_index": 1,
+          "nick": "laamb",
+          "reason": "ambiguous_player_identity"
+        }
+      ],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 178,
+      "match_id": 6548,
+      "source": "https://replay.thehax.pl/2afa67e5-af7d-4be7-babf-e854b663f4f4",
+      "sha256": "56a8d247e83a23b9c481f4489b58e2485ead4defd221e3c405e0b9b71f03af9b",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 327,
+      "match_id": 6284,
+      "source": "https://replay.thehax.pl/bf2cbafb-1f39-4b18-ac16-b8cf210fa031?t=0",
+      "sha256": "85c843110090e64546410b99261031a8fe286a182022b044c3b61446f9c9580b",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 356,
+      "match_id": 6586,
+      "source": "https://replay.thehax.pl/1e4fa54b-3bdd-4683-8a29-e03ec45dfa91",
+      "sha256": "4477f63103c02c3960185bb31d35bf85a512cb4de83882b61c5cf33dbf7f2ac0",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        }
+      ],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 55,
+      "match_id": 6365,
+      "source": "https://replay.thehax.pl/23a34722-8ab0-4079-b152-51b8c7394a1a",
+      "sha256": "fe8102127b85f74f4584cf14796a41432745b231fdcd239f66239470174fb941",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 146,
+      "match_id": 6520,
+      "source": "https://replay.thehax.pl/639218af-603a-44c6-9e9d-78c3b8c3d03d",
+      "sha256": "10abeb705c8cc6fffb19b199a26240e6e086a201924933992c30200e561ea42f",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 2,
+          "nick": "alery",
+          "reason": "ambiguous_player_identity"
+        },
+        {
+          "legacy_index": 2,
+          "nick": "aesqq",
+          "reason": "ambiguous_player_identity"
+        }
+      ],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 51,
+      "match_id": 6275,
+      "source": "https://replay.thehax.pl/bb137890-e652-494f-8c2e-476943a98694",
+      "sha256": "187af894dd154a62fa1657ba309dad0b65d0e7f293dc9cbf9de7bd07b0e9425c",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 324,
+      "match_id": 6566,
+      "source": "https://replay.thehax.pl/737cd5ce-8fd6-4c8f-a642-16c03c351577?t=0",
+      "sha256": "c17e2c0344ff9c3f01297eb8a4a54023dc8bf8d98b268d851861920303bccd98",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 152,
+      "match_id": 6432,
+      "source": "https://replay.thehax.pl/2fd9d0d1-43de-41ee-be5c-c4b1b252ce53",
+      "sha256": "9f1e85264afa678bd9c8d64b8c2949ef8a1af80b30a9f9c7c9433f4b8bf37711",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 17,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 147,
+      "match_id": 6532,
+      "source": "https://replay.thehax.pl/6a784287-0418-4a06-8b8e-79c77076a767",
+      "sha256": "846d6a6d2fd8e854c0149ac8a7ee65a2114c4e239b3f113d9c00c82240c90f4e",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 351,
+      "match_id": 6607,
+      "source": "https://replay.thehax.pl/5c32cca6-b76c-46b1-9075-bcea1a9dbb8c?t=0",
+      "sha256": "2f9d32f1054ddbb09923c0ac28e12dc7b660ac11b3c340fe5a1b37cc819f7f6a",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 91,
+      "match_id": 6525,
+      "source": "https://replay.thehax.pl/0615b51c-2b31-4d9e-ab24-45d48703571f?t=0",
+      "sha256": "6255f316a3a7cd05a9efbd07aeda7ff6fc02b4f3c8a968fc96493f5e209d7ab4",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 394,
+      "match_id": 6320,
+      "source": "https://replay.thehax.pl/b5e5bbf5-2d45-4343-a2cf-1639db86c7a3?t=0",
+      "sha256": "5b3d01d004f6c24ace4e90931ac78d2f28c37a8735862e7aa6f2d7ea886a6bb9",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 19,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 277,
+      "match_id": 6564,
+      "source": "https://replay.thehax.pl/fa629dde-28fc-4875-adaf-3f588f9a38c1",
+      "sha256": "d5c6c5f6226df612d16fe69a3d8483498af768c1e48a222c6c59e10526ffbef8",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 334,
+      "match_id": 6597,
+      "source": "https://replay.thehax.pl/8a0a8002-9538-43cd-b3eb-e695cdd7a279",
+      "sha256": "0fd4ed06dc7bdeed4625264ed650bddaac94bd7442358ff55ddd462aeae72b2e",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 3,
+          "nick": "The End",
+          "reason": "ambiguous_player_identity"
+        }
+      ],
+      "compared_players": 32,
+      "matched_game_ids": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "recording_id": 357,
+      "match_id": 6605,
+      "source": "https://replay.thehax.pl/bc55052f-5e46-4b00-b0da-5d6e6a5b1556",
+      "sha256": "69c244ebf4dba386271ecc03d851732ab2be4b91b25f3407a516dee2898dd81a",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 367,
+      "match_id": 6382,
+      "source": "https://replay.thehax.pl/e503a206-42ec-4904-b851-a56d619c368d",
+      "sha256": "0dc14a2b459c8a825ee68739f0b23d0fadd9dfa337733a6884dc87a18fe4d2f9",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 4,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 323,
+      "match_id": 6562,
+      "source": "https://replay.thehax.pl/1f784fb6-1cba-4592-b38a-57e81842103e?t=0",
+      "sha256": "7b6585029a0a16b6dfa25ab3128f11a7db227267b6a32e604188f53780ce0187",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 329,
+      "match_id": 6300,
+      "source": "https://replay.thehax.pl/e386c67a-5249-4e94-8321-9c751b1de7a6",
+      "sha256": "f5066cce4e8a93c5c0032f0cb24158f5a551abbdd8f6838213adfb5089c0b3e1",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 66,
+      "match_id": 6519,
+      "source": "https://replay.thehax.pl/7ec56755-b326-453e-b403-54e9da44349c",
+      "sha256": "f9baa5a6cf3f7dabcdf51bd0b66e10edcf26d8df747fb09a8ea44d95012d667c",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 34,
+      "matched_game_ids": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "recording_id": 229,
+      "match_id": 6337,
+      "source": "https://replay.thehax.pl/65fddb90-fe93-4ed0-94ca-7b555b775a5d",
+      "sha256": "347191760f2cc6caf3a65b3467928a4a1d70bc4b36078e18e2e4026f37e56bb6",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        }
+      ],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 163,
+      "match_id": 6556,
+      "source": "https://replay.thehax.pl/d0fc0b00-7c5e-4524-bd17-439a7db630a5",
+      "sha256": "f69d0921c569fb5bf65c44ce00968ff1b41cc1768fca9b475d66ffa6fef28d4c",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 305,
+      "match_id": 6194,
+      "source": "https://replay.thehax.pl/131c0bae-a738-4dc9-83ba-7368234ebb80?t=0",
+      "sha256": "becbbfe6e389ca48eebc81c92fe1e73e0457d97ad57b46edf5168a21c9de82b0",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 10,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 84,
+      "match_id": 6524,
+      "source": "https://replay.thehax.pl/76d32708-f321-4566-aa33-68c8c05c28a3",
+      "sha256": "95f8d5b6a66b061aef393c2a3b654b86075dd71865800137ac6d6a9c6ee10275",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 19,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 211,
+      "match_id": 6327,
+      "source": "https://replay.thehax.pl/22c27607-3338-4b8d-835b-fe95204e4069",
+      "sha256": "8d27f2832e0feea89567ab793968da48be7766439aef47668c350b2a0f33c3c1",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 20,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 80,
+      "match_id": 6529,
+      "source": "https://replay.thehax.pl/abedecbf-ed5a-490b-8fd3-d9fe327bb648",
+      "sha256": "77ac5a24719fd7f423de73de6bcadfae0f82103c4043326e60860c604fd7feb7",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 290,
+      "match_id": 6578,
+      "source": "https://replay.thehax.pl/cd67e825-c1e0-4fed-8e88-b7bce7f4fa30",
+      "sha256": "82355a87e0e7e857f0be7fe949fd4b09da5b68dc24c0f3465c90af99bda01e85",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 67,
+      "match_id": 6531,
+      "source": "https://replay.thehax.pl/7ec56755-b326-453e-b403-54e9da44349c",
+      "sha256": "f9baa5a6cf3f7dabcdf51bd0b66e10edcf26d8df747fb09a8ea44d95012d667c",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 34,
+      "matched_game_ids": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "recording_id": 235,
+      "match_id": 6231,
+      "source": "https://replay.thehax.pl/94378567-6288-4ea3-8bf6-b9895dac9554?t=3",
+      "sha256": "ebb13409309813ff968ab5a67ad8a9ef946d9fa8bd639492f1a25ab3bcdf5600",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 223,
+      "match_id": 6546,
+      "source": "https://replay.thehax.pl/4596117a-7f22-42dd-8e4f-7a9fc4626897",
+      "sha256": "c0975d60631bd097af3514cf900f7b9deaee88a56ddadf118bbe8e36cdc9b37a",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 331,
+      "match_id": 6304,
+      "source": "https://replay.thehax.pl/9013e55b-2193-4e11-8b78-62ad6adf5535",
+      "sha256": "e769263e33131fc08da698c9a67d91b0adcb06bc7c1221ad3a550218add0924b",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 181,
+      "match_id": 6550,
+      "source": "https://replay.thehax.pl/500f19de-a885-476d-b5bc-bc567da9f6e2",
+      "sha256": "58c64959d6500c4679d075e4d56ecb61690b2c56dcedf507fec2119fd347e8fb",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 425,
+      "match_id": 6276,
+      "source": "https://replay.thehax.pl/0a8dcf63-44e7-477d-8a86-4facbba47fb1",
+      "sha256": "ade6b748ff43f8eee64a08a312c68fa9472ded7af9a125043a1912f7e61657d2",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 2,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        }
+      ],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 240,
+      "match_id": 6554,
+      "source": "https://replay.thehax.pl/36241c5d-5f81-40ad-9acb-9cb9d88afdd5",
+      "sha256": "6abe6a7f2a386d75fc3352baae1a24a76263efb7231481ee8ea45976c033f32a",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 49,
+      "match_id": 6281,
+      "source": "https://replay.thehax.pl/410e8011-6d15-4eb9-8232-9d7198727920",
+      "sha256": "3b65d84c886c18ba50809c243836649825b15d8482c66dde33a5783c2a91057a",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 44,
+      "match_id": 6528,
+      "source": "https://replay.thehax.pl/0260e87e-563f-4fe3-b262-98f22827f2ca",
+      "sha256": "88bae4dcad5c98ca2c52cedbd80e22ce93e9b0cd3d95cdf592d574fb1a2918a0",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 225,
+      "match_id": 6518,
+      "source": "https://replay.thehax.pl/ef667b7c-b9cb-4ce6-a9c7-a6d38abebfe7",
+      "sha256": "9bc93bbe967d94eb5f6f3c8d6bbc2d123b4d73f3c971d0c75b2ad9dd56385fa7",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 1,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        }
+      ],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        2
+      ]
+    },
+    {
+      "recording_id": 241,
+      "match_id": 6554,
+      "source": "https://replay.thehax.pl/7c499b21-b92d-435d-a00f-e9fd2509f8d4",
+      "sha256": "5300d9c383186997b93fdc91cbf1d44d50dc1054bb545a8ae0e270af502afd83",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 216,
+      "match_id": 6247,
+      "source": "https://replay.thehax.pl/b4b4ed52-1bb2-430f-850f-767b3f638530",
+      "sha256": "a70c81802d9febe55ec304df76ac6286e4ab6d65fc0ab5961c55ebdc98fb30eb",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 265,
+      "match_id": 6563,
+      "source": "https://replay.thehax.pl/5a95e637-3c57-43e0-8469-b8e8e1721279?t=0",
+      "sha256": "7b978e54b2d8505faad6ba89bdf09dd6b48b4f2ec02427cfc9782fb28ba9e5e9",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 17,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 399,
+      "match_id": 6326,
+      "source": "https://replay.thehax.pl/d16b76a9-7a92-4ec2-8bc5-ad9f4654d2c3?t=0",
+      "sha256": "0fb685ceae69225bb46ef977248666309f6a132234746bbd3d249d54e8c26294",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 239,
+      "match_id": 6553,
+      "source": "https://replay.thehax.pl/a451e268-63f5-42c8-ae71-172ed4c8e33f",
+      "sha256": "71a40b1da1c6ca19deba5a88065a86e275678ef2d67b25f70eeab675eec6e1a6",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 109,
+      "match_id": 6285,
+      "source": "https://replay.thehax.pl/eca0f1f4-d0b8-46b6-a136-390e138ca4b1",
+      "sha256": "48c7d1997a5b3965cb4ac5ea360c5684235c81df56d56a971b4e92b1b41e3e3f",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 162,
+      "match_id": 6555,
+      "source": "https://replay.thehax.pl/a80c45a8-96e9-4fd6-b5a8-124b25d38057",
+      "sha256": "ffd407ef1ee0c322e53715329158cfc6c0a5707f38069f76a8ba903ba8eb12da",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 156,
+      "match_id": 6493,
+      "source": "https://replay.thehax.pl/950f8bee-0b32-408f-9280-3214bc7a59dc?t=0",
+      "sha256": "5a5ddbcf6879a36eae5996301a3f2a715ab477e2b73f3104270b50b58a54730f",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 96,
+      "match_id": 6527,
+      "source": "https://replay.thehax.pl/23a2b505-d439-4bb9-b667-540c8dc1829a",
+      "sha256": "9b1ad76d049dabf1ba8941a66c7745d8049580241ad200a62ebe09e8be71b0fd",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 234,
+      "match_id": 6515,
+      "source": "https://replay.thehax.pl/60ad6221-0ccc-4f65-b424-cbb168982216",
+      "sha256": "4b75f149aec25d2836f77d40eb867c2d868a95ede5ff499a36d4c3bf2896038d",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "nick": "збс",
+          "reason": "ambiguous_player_identity"
+        }
+      ],
+      "compared_players": 15,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 71,
+      "match_id": 6534,
+      "source": "https://replay.thehax.pl/e2ba0ed6-97cd-45e1-a0bd-95bbf62c8631",
+      "sha256": "e106a1dadb089e6f64b6f07ab00e3bc72a59a4c8822f2cb4b7d810f1d1f05de3",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 7,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 105,
+      "match_id": 6501,
+      "source": "https://replay.thehax.pl/e5c6191f-af1a-497c-be73-8f8e38f2aacc",
+      "sha256": "818417fabe5e6a381529057f5f4d53c7abf570e3bd52a5e1f3d3cc9863823d21",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 45,
+      "match_id": 6540,
+      "source": "https://replay.thehax.pl/b166a1bc-16f3-4541-a498-b0e2f7de99d1",
+      "sha256": "6950ee742abfd6184ad3c41d455b143c8c0c68acbe33febd683f933455f27bb6",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 15,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 376,
+      "match_id": 6306,
+      "source": "https://replay.thehax.pl/11b85343-b749-4b9a-b8b7-901ab28c9cdd",
+      "sha256": "3451fdbdba0fa61fbd978b79d2ef9fab574e085b899393255ad9e71e6439baf4",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 360,
+      "match_id": 6585,
+      "source": "https://replay.thehax.pl/7bffbce0-6eed-4f5c-a3a5-2fb1c422bd12?t=0",
+      "sha256": "de39dc9aa3ae3517a79d6a3ffbe997e43604bcf238ee5cbf3079aea133f24801",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 385,
+      "match_id": 6330,
+      "source": "https://replay.thehax.pl/8460132d-bf49-4b83-bc0f-91ff8ff0611b",
+      "sha256": "5f6ed7827dd8ffa64fa12f0b1a44a611da46e3a2c40d50066ac5bbd560742cbb",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 72,
+      "match_id": 6522,
+      "source": "https://replay.thehax.pl/c58115e9-03f9-49dd-b8d7-5fc5dacef8a5",
+      "sha256": "3ad557a3c7f4536bae7fe172078d11bffa05c8f02f16a231536a8bd3c5c10f91",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        }
+      ],
+      "compared_players": 0,
+      "matched_game_ids": []
+    },
+    {
+      "recording_id": 135,
+      "match_id": 6502,
+      "source": "https://replay.thehax.pl/e9ebbf0c-f550-4b18-944a-c97a5be76f57",
+      "sha256": "c25ad93acbfa17d230e52c9237624d34ec3fc0ec1b97e9dc70bb485c18120a5d",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 23,
+      "matched_game_ids": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "recording_id": 238,
+      "match_id": 6553,
+      "source": "https://replay.thehax.pl/d56e8e05-980c-40ef-8654-cbefaafd8846",
+      "sha256": "ac1037e655989cf15b94d9a0c9ee70a12477d64635c64d912fb4354005269047",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 231,
+      "match_id": 6485,
+      "source": "https://replay.thehax.pl/569e9f8c-5edb-46f0-ad50-dc831ad49e6b",
+      "sha256": "288aa5949716e3bc4b4deb6246f3baddaec2a81d76d5979d6c2523eddd946f10",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 268,
+      "match_id": 6560,
+      "source": "https://replay.thehax.pl/43c6c2d1-bfdf-4237-b329-fe568eb81a7c",
+      "sha256": "f932644ab79707945b886f5af889e92cbf0ac0442a09bc534f7d2076340a7304",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 242,
+      "match_id": 6331,
+      "source": "https://replay.thehax.pl/2c67cf7c-cd14-40a4-9bac-da6317a3be07?t=0",
+      "sha256": "0fb65f53d040f174af39d1141947b99a4613cfa47c676c45db6c5de7617e41b7",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 1,
+          "nick": "cdG",
+          "reason": "ambiguous_player_identity"
+        }
+      ],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 88,
+      "match_id": 6536,
+      "source": "https://replay.thehax.pl/f7b8daa0-9b6b-488f-a20a-28ac34985b4e",
+      "sha256": "0fb459d9f24507fb9884bcef0781208714c91336dbd1dbe8f890bde9847d9c8c",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        }
+      ],
+      "compared_players": 0,
+      "matched_game_ids": []
+    },
+    {
+      "recording_id": 386,
+      "match_id": 6324,
+      "source": "https://replay.thehax.pl/fed60674-811c-4d9e-9c38-bf15224abe51?t=1",
+      "sha256": "94ea4707014e586fa0a980390e89b2f93237c6ba36a91faec242ee0d72f02100",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 177,
+      "match_id": 6547,
+      "source": "https://replay.thehax.pl/11032b32-e0b8-4bee-8920-34636692eaff",
+      "sha256": "dfa12d2d5f3b863aef354370e5213da0abbb873eef35c180de57ea1d8f163bdf",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        }
+      ],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 217,
+      "match_id": 6335,
+      "source": "https://replay.thehax.pl/79c45d49-696c-4387-b5e6-3c972763e0c7?t=725",
+      "sha256": "0cdd84d4e3c9c6f4aeeefc792abd6bf3fb55032af36c013e346ff987e4dfb1b5",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 22,
+      "matched_game_ids": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "recording_id": 73,
+      "match_id": 6522,
+      "source": "https://replay.thehax.pl/7d9c0e9f-4858-49df-af95-425839eb3512",
+      "sha256": "ceb2b17cd8110ecc4b78392172d1c7ad06fa6178fa8f13c8baf23e68a7737b33",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 101,
+      "match_id": 6371,
+      "source": "https://replay.thehax.pl/6559c854-13ef-43b1-8d2d-67e460a2d2c1",
+      "sha256": "92e916fa102f53694e0f774ef3008026248ea9fd5c12f2809f186134ba33e055",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 7,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 68,
+      "match_id": 6535,
+      "source": "https://replay.thehax.pl/db58ee37-0242-43e2-bd9a-3e512a5632cf",
+      "sha256": "a7d3e33337f793ade3770c067a5feba1965fe5b93ffed8b57e22d75ded2c370e",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 9,
+      "match_id": 6255,
+      "source": "https://replay.thehax.pl/ab6d6aa8-0f02-49cd-9c1b-82b1aaa9cd3b",
+      "sha256": "78cbe69853cdc8a762f3120193d4a69a0ac498730ed91128676f88ec63009ebb",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 9,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 77,
+      "match_id": 6533,
+      "source": "https://replay.thehax.pl/4ea07963-274b-47de-bb99-1b2608c87ade",
+      "sha256": "3b88e1afbd91e118fd5e5640132f455b9c6dee343b1ca54034924dca68ba74a0",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 20,
+      "matched_game_ids": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "recording_id": 50,
+      "match_id": 6281,
+      "source": "https://replay.thehax.pl/dd176fd6-f332-48d1-a7d1-53d08daf8f23",
+      "sha256": "458d30b2cd28320c980d7438acdf75eea3d8be806c671f171a633ce6dda6de86",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 5,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 417,
+      "match_id": 6619,
+      "source": "https://replay.thehax.pl/cc751c9f-bd22-420f-99ff-3809db28d77a",
+      "sha256": "8b7f590405869afa972fda3a7a71908add5a11fcca0a3ce62308b8c1080b4d2b",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 18,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 122,
+      "match_id": 6223,
+      "source": "https://replay.thehax.pl/424efe24-c908-4861-97ba-c9318315e9d2",
+      "sha256": "3077c532318e956271ea77eeaa50f3f992caf3974030fdc327725646ad2489d0",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 264,
+      "match_id": 6559,
+      "source": "https://replay.thehax.pl/112aa792-d8c1-4b18-8c3d-318601634334?t=0",
+      "sha256": "b0997a1245b9f2d5980837176ddde800bbf149ae1691e3b57b59a8822b490766",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 154,
+      "match_id": 6323,
+      "source": "https://replay.thehax.pl/02f7bc36-c0b5-4f86-a254-d1b24c2d673a?t=0",
+      "sha256": "53549e712bc9d187b31a1b61c473caa668fd3ca6486b7ebf905ef16b0746943d",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 182,
+      "match_id": 6549,
+      "source": "https://replay.thehax.pl/7c69b371-c65e-4ee4-bf45-d39cbed532a0",
+      "sha256": "d0011dffa04c5fed5b443721ea707eeffbea165eb2714b2c8423e405a66375ea",
+      "cohort": "validation",
+      "skipped": [
+        {
+          "legacy_index": 0,
+          "reason": "ambiguous_or_incompatible_game",
+          "candidates": 0
+        },
+        {
+          "legacy_index": 2,
+          "nick": "Волька",
+          "reason": "ambiguous_player_identity"
+        }
+      ],
+      "compared_players": 15,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 397,
+      "match_id": 6310,
+      "source": "https://replay.thehax.pl/12b50066-fa38-4268-9e9a-46af8e528fcd?t=0",
+      "sha256": "4a294150ad00b21b37fcea580db0e3fa99c0e2bf7945e1084375ed713a12b6ab",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 15,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 69,
+      "match_id": 6523,
+      "source": "https://replay.thehax.pl/1acb9f16-3024-4c0b-9d5c-e9ea3aadd6b3",
+      "sha256": "882fac8a182f0941eb69e7e735cdd690181ec855d58b3c216276bc27982c22ce",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "recording_id": 195,
+      "match_id": 6389,
+      "source": "https://replay.thehax.pl/ccb2225f-af36-4f40-8bde-4a736c8fe750?t=1",
+      "sha256": "40a9490177ac862c9697b4abf8a59e8713245ab74a3f69269d1252e03e707058",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 8,
+      "matched_game_ids": [
+        0
+      ]
+    },
+    {
+      "recording_id": 97,
+      "match_id": 6539,
+      "source": "https://replay.thehax.pl/445f8104-8291-42c9-aaa0-1e44568e19e9",
+      "sha256": "6bf3f21ae665a5e775f8aa3ff541effaa0ed835eeb59cbe4e47eab97ffb24fb5",
+      "cohort": "validation",
+      "skipped": [],
+      "compared_players": 16,
+      "matched_game_ids": [
+        0,
+        1
+      ]
+    }
+  ]
+}
