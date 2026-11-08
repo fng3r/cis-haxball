@@ -1,9 +1,10 @@
 // Role inference uses live movement, not nicknames, actions or a prescribed lineup.
 // Coordinates are relative to the goal a replay side defends, never Django home/away.
-export const POSITION_VERSION = 1;
+export const POSITION_VERSION = 2;
 export const POSITION_WINDOW_TICKS = 30 * 60;
+export const MIN_POSITION_TICKS = 15 * 60;
 const SAMPLE_TICKS = 6;
-const MIN_TICKS = 10 * 60;
+const MIN_WINDOW_TICKS = 10 * 60;
 const clamp = value => Math.max(0, Math.min(1, value));
 const round = value => Math.round(value * 1000) / 1000;
 
@@ -25,7 +26,7 @@ export function positionGeometry(stadium) {
 
 /** Classify contemporaneous teammates; no fixed player count or mandatory role slots. */
 export function classifyPositionWindow(players) {
-  const eligible = players.filter(p => p.ticks >= MIN_TICKS).sort((a, b) => a.depth - b.depth);
+  const eligible = players.filter(p => p.ticks >= MIN_WINDOW_TICKS).sort((a, b) => a.depth - b.depth);
   const result = new Map();
   if (eligible.length < 2) return result;
   for (const player of eligible) {
@@ -117,11 +118,14 @@ export function createPositionTracker(stadium) {
         const dominant = roles[0];
         // Confidence is evidence consistency, not a calibrated probability.
         const share = dominant ? dominant[1].ticks / total.ticks : 0;
-        const position = total.ticks >= MIN_TICKS && share >= 0.55 ? dominant[0] : null;
+        const enoughPlay = total.ticks >= MIN_POSITION_TICKS;
+        const position = enoughPlay && share >= 0.55 ? dominant[0] : null;
         return [id, { position,
           positionConfidence: position ? round(share * dominant[1].confidence / dominant[1].ticks) : 0,
-          positionRoles: roles.map(([position, role]) => ({ position, ticks: role.ticks, share: round(role.ticks / total.ticks) })),
-          positionPeriods: total.periods,
+          // A very short appearance cannot support a position estimate. Do not
+          // leave speculative labels in its breakdown after clearing the main role.
+          positionRoles: enoughPlay ? roles.map(([position, role]) => ({ position, ticks: role.ticks, share: round(role.ticks / total.ticks) })) : [],
+          positionPeriods: enoughPlay ? total.periods : total.periods.map(period => ({ ...period, position: null, confidence: 0 })),
         }];
       }));
     },

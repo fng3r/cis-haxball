@@ -152,7 +152,7 @@ positions from live movement; the pinned upstream engine remains untouched.
 
 ## Inferred playing positions
 
-The active engine emits `positionVersion: 1` and adds these fields to each player:
+The active engine emits `positionVersion: 2` and adds these fields to each player:
 
 - `position`: `GK`, `DM`, `AM`, `ST`, or `null` when no role dominates.
 - `positionConfidence`: 0–1 evidence consistency, **not a probability of correctness**.
@@ -176,9 +176,14 @@ Outfield depth groups identify DM, AM and ST. Similar-depth forwards on opposite
 flanks can both be ST. The detector does not prescribe four players, one role per
 team, or an AM/ST split. It deliberately does not call a wide striker LW/RW.
 
-Substitutions use native player ID plus replay side, not nicknames. A window needs
-at least ten seconds of evidence per player and two eligible players on that
-side. The main role must cover at least 55% of observed play; otherwise it is null
+Substitutions use native player ID plus replay side, not nicknames. No role is
+reported until a player has at least **15 seconds of observed active play** in
+that replay game. Shorter appearances have a null main role, zero confidence,
+an empty role breakdown and unclassified periods retaining their observed time.
+Paused or off-field time does not qualify. A local window still needs ten seconds
+of evidence per player and two eligible players on that side, so substitutions
+crossing a window boundary can contribute to a sufficiently long appearance.
+The main role must cover at least 55% of observed play; otherwise it is null
 while the breakdown remains available. Role changes have 30-second resolution,
 not exact transition timestamps. Unsupported/multi-goal pitch layouts remain
 unclassified. Roles are estimates of movement patterns, not declared assignments.

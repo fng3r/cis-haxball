@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { analyzeReplay } from '../src/engine/analyze.js';
-import { createPositionTracker, positionGeometry, POSITION_WINDOW_TICKS } from '../src/engine/positions.js';
+import { createPositionTracker, positionGeometry, POSITION_WINDOW_TICKS, MIN_POSITION_TICKS } from '../src/engine/positions.js';
 import { replayCases } from './replay-fixtures.js';
 
 const stadium = { goals: [
@@ -57,7 +57,8 @@ describe('movement-based position inference', () => {
   it('handles replacement keepers within a window using their contemporaneous teammates', () => {
     const tracker = createPositionTracker(stadium);
     observe(tracker, red(lineup), 900);
-    observe(tracker, red(lineup.map(p => p.id === 'keeper' ? { ...p, id: 'replacement' } : p)), 900, 900);
+    const replacement = red(lineup.map(p => p.id === 'keeper' ? { ...p, id: 'replacement' } : p));
+    observe(tracker, replacement, 900, 900);
     const result = tracker.finish();
     expect(result.get('keeper').position).toBe('GK');
     expect(result.get('replacement').position).toBe('GK');
@@ -84,6 +85,31 @@ describe('movement-based position inference', () => {
     expect(infer(red(lineup), 1800, {}).size).toBe(0);
   });
 
+  it.each([600, 818, 869, MIN_POSITION_TICKS - 1])('suppresses all speculative roles for a %i-tick appearance', ticks => {
+    for (const player of infer(red(lineup), ticks).values()) {
+      expect(player.position).toBeNull();
+      expect(player.positionConfidence).toBe(0);
+      expect(player.positionRoles).toEqual([]);
+      expect(player.positionPeriods.every(period => period.position === null && period.confidence === 0)).toBe(true);
+      expect(player.positionPeriods.reduce((sum, period) => sum + period.observedTicks, 0)).toBe(ticks);
+    }
+  });
+
+  it('starts reporting roles after fifteen seconds of active appearance', () => {
+    expect(infer(red(lineup), MIN_POSITION_TICKS).get('keeper').position).toBe('GK');
+    const tracker = createPositionTracker(stadium);
+    observe(tracker, red(lineup), 450);
+    observe(tracker, red(lineup), 450, 30000);
+    expect(tracker.finish().get('keeper').position).toBe('GK');
+  });
+
+  it('does not count a long pause towards the minimum appearance', () => {
+    const tracker = createPositionTracker(stadium);
+    observe(tracker, red(lineup), 450);
+    observe(tracker, red(lineup), 449, 30000);
+    expect(tracker.finish().get('keeper').position).toBeNull();
+  });
+
   it('retains unclassified presence even when an appearance falls between spatial samples', () => {
     const tracker = createPositionTracker(stadium);
     observe(tracker, red(lineup), 1799);
@@ -96,7 +122,7 @@ describe('movement-based position inference', () => {
 
   it.each(replayCases)('exports bounded, deterministic role evidence for $file', fixture => {
     const result = analyzeReplay(readFileSync(new URL(`./fixtures/${fixture.file}`, import.meta.url)));
-    expect(result.positionVersion).toBe(1);
+    expect(result.positionVersion).toBe(2);
     for (const game of result.games) for (const player of game.players) {
       expect([null, 'GK', 'DM', 'AM', 'ST']).toContain(player.position);
       expect(player.positionConfidence).toBeGreaterThanOrEqual(0);

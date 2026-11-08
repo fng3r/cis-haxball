@@ -1,13 +1,14 @@
 # Position inference — ЧР #16
 
-Snapshot: 2026-11-08. Engine `positionVersion: 1`.
+Snapshot: 2026-11-08. Initial audit: `positionVersion: 1`. The current
+`positionVersion: 2` minimum-playtime follow-up is documented below.
 
 Position inference is now part of the active original-engine adapter. It adds
 estimated roles without modifying the pinned legacy runtime, engine v2, existing
 metrics, or saved Django statistics. No database writes or bulk reanalysis were
 performed for this experiment.
 
-## Method
+## Method used in the initial audit
 
 - Use only captured live play, including substitutions. Sample movement at 10 Hz;
   count each player's presence at full tick resolution.
@@ -130,16 +131,34 @@ an actual dominant role, as with RichVladimirKC.
 
 Historical comparison counts above remain unchanged: they measure agreement with
 saved legacy labels, not accuracy against these reviews. Review annotations are
-stored separately in the validation snapshot; no classifier rules or database
-statistics were changed.
+stored separately in the validation snapshot. These reviews did not themselves
+change classifier rules or database statistics; the subsequent minimum-playtime
+change is described below.
 
-### Remaining cases worth reviewing
+### Minimum-playtime follow-up
 
 - Match **6335**, recording **217**, `black`, and match **6533**, recording **77**,
-  `bonusbuychik`: approximately 14-second appearances, legacy GK → DM. Very short
-  evidence is still capable of producing a misleading main role.
-- Seventy entries have no dominant role. They may reflect actual role changes,
+  `bonusbuychik`: approximately 14-second appearances, legacy GK → DM in the
+  original audit. The user confirmed there is insufficient time to determine a
+  position. Neither inferred label should be treated as reliable evidence.
+- In `positionVersion: 2`, the player must have **at least 15 seconds of observed
+  active play in that replay game** before any role is reported. Shorter
+  appearances retain their observed time, but have a null main position, zero
+  confidence, no role shares and unclassified period labels. Pauses and off-field
+  time do not qualify. Both reviewed short appearances are now unclassified.
+- The internal ten-second window evidence requirement is retained for longer
+  appearances spanning window boundaries. The main-role threshold and spatial
+  classification rules are unchanged. This prevents the minimum-appearance rule
+  from discarding valid substitution evidence merely because of window alignment.
+- The initial audit had seventy entries with no dominant role. They may reflect actual role changes,
   brief appearances or classifier instability; null is not proof of a role change.
+
+The version-1 snapshot and comparison chart remain an historical baseline. The
+version-2 follow-up results are stored separately in the JSON snapshot rather than
+rewriting the earlier experiment's counts. No saved database results were changed.
+Rechecking the same 80 recordings confirmed that all changed main-role predictions
+belong to appearances shorter than fifteen seconds; both reviewed examples are
+unclassified. All 163 analyzer tests and the production build passed.
 
 Current strengths are recognizing stable goalkeepers and defensive midfielders,
 allowing two forwards without a prescribed formation, and retaining uncertainty.
