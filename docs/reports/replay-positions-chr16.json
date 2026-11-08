@@ -1689,7 +1689,35 @@
           "position": null
         }
       ],
-      "note": "Same 80-recording sample and replay byte checksums as the original audit. Only appearances under fifteen seconds changed main labels; historical baseline counts retained above."
+      "note": "Same 80-recording sample and replay byte checksums as the original audit. Only appearances under fifteen seconds changed main labels; historical baseline counts retained above.",
+      "unclassified_breakdown": {
+        "total": 86,
+        "below_minimum_active_play": 43,
+        "at_least_minimum_but_no_main_role": 43
+      }
     }
-  ]
+  ],
+  "validation_limitations": {
+    "reviewed_at": "2026-11-08",
+    "split_unit": "database_recording_id_not_content_hash",
+    "validation_record_count": 80,
+    "validation_unique_replay_hashes": 79,
+    "duplicate_validation_recording_groups": [
+      [
+        66,
+        67
+      ]
+    ],
+    "calibration_validation_overlap": [
+      {
+        "validation_recording_ids": [
+          245
+        ],
+        "calibration_recording_ids": [
+          244
+        ]
+      }
+    ],
+    "interpretation": "Descriptive record-level agreement with another heuristic, not an independent accuracy benchmark. Future splits must group by replay checksum before tuning; reviewed cases are development data."
+  }
 }

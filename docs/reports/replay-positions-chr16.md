@@ -39,6 +39,15 @@ games** was evaluated. Sampling alternated BFF and futsal recordings so BFF was
 not overwhelmed by the larger futsal catalogue. This is a stratified experiment,
 not a season-wide population accuracy estimate.
 
+**Validation limitation found during the research summary:** the database-ID split
+was not fully independent by replay content. Validation recordings **66** and
+**67** contain identical bytes, so the 80 records represent **79 unique replay
+files**. Validation recording **245** also shares its bytes with a calibration
+recording. The tables retain the measured record-level counts; they must not be
+described as an untouched, independent accuracy benchmark. Future validation
+must deduplicate and split by replay checksum before tuning. The later manual
+reviews also make this a development dataset, rather than an unseen test set.
+
 The comparison contains **1,161 player/game/side entries**, not 1,161 unique people.
 Only the six positions accepted by the old `tasks.py` importer were references:
 GK, DM, AM, ST, LW and RW. Spectators and zero-playtime entries were omitted.
@@ -159,6 +168,11 @@ rewriting the earlier experiment's counts. No saved database results were change
 Rechecking the same 80 recordings confirmed that all changed main-role predictions
 belong to appearances shorter than fifteen seconds; both reviewed examples are
 unclassified. All 163 analyzer tests and the production build passed.
+
+The current follow-up has 1,075 assigned main roles and 86 unclassified entries:
+43 are below the minimum playtime, and 43 have enough total playtime but no main
+role assigned. The latter group must not automatically be called genuinely mixed
+roles: the reviewed RichVladimirKC example demonstrates a classification error.
 
 Current strengths are recognizing stable goalkeepers and defensive midfielders,
 allowing two forwards without a prescribed formation, and retaining uncertainty.
