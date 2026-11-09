@@ -3118,15 +3118,15 @@ class ReplayRecording(models.Model):
     match = models.ForeignKey(Match, related_name='replay_recordings', on_delete=models.CASCADE)
     source_key = models.CharField(max_length=160)
     replay_url = models.URLField(max_length=512)
-    content_sha256 = models.CharField(max_length=64, blank=True)
     replay_file = models.FileField(upload_to='replays/', max_length=255, blank=True)
+    content_sha256 = models.CharField(max_length=64, blank=True)
     response_sha256 = models.CharField(max_length=64, blank=True)
-    raw_response = models.JSONField(default=dict, blank=True)
     engine_version = models.CharField(max_length=80, blank=True)
     schema_version = models.PositiveSmallIntegerField(default=1)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
     error_message = models.TextField(blank=True)
     analyzed_at = models.DateTimeField(null=True, blank=True)
+    raw_response = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['id']

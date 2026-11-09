@@ -48,7 +48,9 @@ def schedule_fetch_match_replay_stats(sender, instance, **kwargs):
 
 
 @receiver(post_delete, sender=ReplayRecording)
-def delete_archived_replay(sender, instance, **kwargs):
+def delete_archived_replay(sender, instance, using, **kwargs):
     if instance.replay_file:
+        from .services.replay_storage import delete_unused_archive
+
         storage, name = instance.replay_file.storage, instance.replay_file.name
-        transaction.on_commit(lambda: storage.delete(name))
+        transaction.on_commit(lambda: delete_unused_archive(storage, name, using), using=using)

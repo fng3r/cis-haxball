@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import tempfile
 from io import StringIO
 from pathlib import Path
@@ -1105,4 +1106,28 @@ class LocalReplayIntegrationTests(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             self.match.delete()
             self.assertTrue(storage.exists(name))
+        self.assertFalse(storage.exists(name))
+
+    def test_identical_archives_share_flat_checksum_path_and_survive_partial_deletion(self):
+        first = self.seed()
+        second = ReplayRecording.objects.create(match=self.match, source_key='powtorki:duplicate', replay_url=self.url)
+        data = b'HBR2archive'
+        with patch('tournament.services.replay_storage.download_replay', return_value=data):
+            recording_bytes(first)
+            recording_bytes(second)
+        first.refresh_from_db()
+        second.refresh_from_db()
+        name = f'replays/{hashlib.sha256(data).hexdigest()}.hbr2'
+        self.assertEqual(first.replay_file.name, name)
+        self.assertEqual(second.replay_file.name, name)
+        storage = first.replay_file.storage
+        self.assertEqual(storage.listdir('replays'), ([], [name.split('/')[-1]]))
+        with self.captureOnCommitCallbacks(execute=True):
+            first.delete()
+        self.assertTrue(storage.exists(name))
+        with patch('tournament.services.replay_storage.download_replay') as download:
+            self.assertEqual(recording_bytes(second), data)
+            download.assert_not_called()
+        with self.captureOnCommitCallbacks(execute=True):
+            second.delete()
         self.assertFalse(storage.exists(name))

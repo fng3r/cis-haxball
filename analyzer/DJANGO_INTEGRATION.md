@@ -278,7 +278,8 @@ fields before running updated Django/Celery code.
 ## Permanent replay files
 
 `ReplayRecording.replay_file` stores the original `.hbr2` in Django media storage
-under `replays/<recording ID>/`. The first ingestion or playback download saves
+as `replays/<SHA-256>.hbr2`. Identical recordings share the same file.
+Existing files at older paths remain readable. The first ingestion or playback download saves
 it before analysis. Playback and explicit reanalysis subsequently use that copy,
 even when the source host is offline. Original URLs remain provenance/recovery
 sources; reanalysis does not refresh remote bytes.
@@ -302,7 +303,7 @@ Missing stored files are downloaded again and checked against the saved SHA-256.
 Changed remote bytes or corrupt stored files are rejected rather than silently
 replacing the recording used for saved part mappings. Failed analysis retains
 the archived file for retries. Deleting a recording (including cascades) deletes
-its file after the database transaction commits.
+its file after the database transaction commits, once no other recording references it.
 
 Run normal `makemigrations tournament` / `migrate` when upgrading; migrations are
 local to the installation in this repository. Back up media storage alongside
