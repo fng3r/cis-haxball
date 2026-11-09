@@ -12,8 +12,8 @@ from django.utils.cache import patch_vary_headers
 from django.views.decorators.http import require_GET
 
 from .models import Match, ReplayRecording
-from .replay_stats_client import download_replay
 from .services.local_replays import active_parts, recording_sources
+from .services.replay_storage import recording_bytes
 from .templatetags.tournament_extras import cup_round_name, tour_name
 
 
@@ -138,7 +138,7 @@ def match_recording(request, pk, index):
     keys = [key for key, _ in recording_sources(match)]
     recording = get_object_or_404(ReplayRecording, pk=index, match=match, source_key__in=keys)
     try:
-        data = download_replay(recording.replay_url)
+        data = recording_bytes(recording)
     except Exception:
         return JsonResponse({'error': 'Could not download the recording. Please retry.'}, status=502)
     response = HttpResponse(data, content_type='application/octet-stream')

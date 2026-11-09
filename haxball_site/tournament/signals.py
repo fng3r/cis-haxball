@@ -2,7 +2,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import AwardSubmission, AwardVote, Match
+from .models import AwardSubmission, AwardVote, Match, ReplayRecording
 from .tasks import fetch_match_replay_stats
 
 
@@ -45,3 +45,10 @@ def schedule_fetch_match_replay_stats(sender, instance, **kwargs):
         return
 
     transaction.on_commit(lambda: fetch_match_replay_stats.delay(instance.pk))
+
+
+@receiver(post_delete, sender=ReplayRecording)
+def delete_archived_replay(sender, instance, **kwargs):
+    if instance.replay_file:
+        storage, name = instance.replay_file.storage, instance.replay_file.name
+        transaction.on_commit(lambda: storage.delete(name))

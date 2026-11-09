@@ -18,10 +18,11 @@ from tournament.models import (
     ReplayRecording,
     ReplayTeamStats,
 )
-from tournament.replay_stats_client import download_replay, get_replay_source_and_id
+from tournament.replay_stats_client import get_replay_source_and_id
 from tournament.services.replay_audit import evaluate_match, exclusion_description
 from tournament.services.replay_positions import player_position_fields
 from tournament.services.replay_rosters import player_aliases, protocol_players
+from tournament.services.replay_storage import recording_bytes
 
 
 def recording_sources(match):
@@ -251,7 +252,7 @@ def ingest_match(match_id, force=False, recording_ids=None):
                 recording.save(update_fields=['replay_url'])
                 continue
             try:
-                data = download_replay(url)
+                data = recording_bytes(recording)
                 result = analyze_local_replay(data)
                 checksum = hashlib.sha256(data).hexdigest()
                 # Same-byte reanalysis always refreshes output. Changed bytes cannot inherit game mappings blindly.

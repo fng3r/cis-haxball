@@ -3119,6 +3119,7 @@ class ReplayRecording(models.Model):
     source_key = models.CharField(max_length=160)
     replay_url = models.URLField(max_length=512)
     content_sha256 = models.CharField(max_length=64, blank=True)
+    replay_file = models.FileField(upload_to='replays/', max_length=255, blank=True)
     response_sha256 = models.CharField(max_length=64, blank=True)
     raw_response = models.JSONField(default=dict, blank=True)
     engine_version = models.CharField(max_length=80, blank=True)

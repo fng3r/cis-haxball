@@ -274,3 +274,38 @@ development-database findings and subsequent user confirmations. It is a consist
 check, not an accuracy estimate. The audit itself requires no extra schema beyond
 the current ingestion models; generate/apply ordinary migrations for the relevance
 fields before running updated Django/Celery code.
+
+## Permanent replay files
+
+`ReplayRecording.replay_file` stores the original `.hbr2` in Django media storage
+under `replays/<recording ID>/`. The first ingestion or playback download saves
+it before analysis. Playback and explicit reanalysis subsequently use that copy,
+even when the source host is offline. Original URLs remain provenance/recovery
+sources; reanalysis does not refresh remote bytes.
+
+Archive existing current recording records, including sources removed from match
+replay lists, without running the analyzer:
+
+```sh
+python haxball_site/manage.py archive_replays
+# Optional filters:
+python haxball_site/manage.py archive_replays --season 25
+python haxball_site/manage.py archive_replays --match-ids 6862 6867
+```
+
+The command runs synchronously, skips network downloads for available files,
+reports individual failures and exits unsuccessfully if any fail. Rerun to retry.
+Existing analysis statuses/results remain unchanged. Legacy `MatchReplay` rows
+are not processed by this command.
+
+Missing stored files are downloaded again and checked against the saved SHA-256.
+Changed remote bytes or corrupt stored files are rejected rather than silently
+replacing the recording used for saved part mappings. Failed analysis retains
+the archived file for retries. Deleting a recording (including cascades) deletes
+its file after the database transaction commits.
+
+Run normal `makemigrations tournament` / `migrate` when upgrading; migrations are
+local to the installation in this repository. Back up media storage alongside
+the database and make it accessible to both web and Celery processes. The manifest
+remains JSON with Django recording URLs; its existing preparation restriction is
+unchanged.

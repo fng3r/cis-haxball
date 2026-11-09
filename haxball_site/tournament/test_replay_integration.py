@@ -1,4 +1,5 @@
 import copy
+import tempfile
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -7,7 +8,7 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.template.loader import render_to_string
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from .local_replay_analyzer import analyze_local_replay
@@ -40,11 +41,17 @@ from .services.local_replays import (
 from .services.replay_positions import select_positions
 from .services.replay_presentation import statistics
 from .services.replay_stats import MatchReplayStatsAggregator
+from .services.replay_storage import recording_bytes
 from .tasks import fetch_match_replay_stats, reanalyze_replay_recordings
 
 
 class LocalReplayIntegrationTests(TestCase):
     def setUp(self):
+        self.media = tempfile.TemporaryDirectory()
+        self.addCleanup(self.media.cleanup)
+        storage = override_settings(MEDIA_ROOT=self.media.name)
+        storage.enable()
+        self.addCleanup(storage.disable)
         self.client = Client(HTTP_USER_AGENT='Replay integration tests')
 
     @classmethod
@@ -113,7 +120,7 @@ class LocalReplayIntegrationTests(TestCase):
     def test_ingestion_classifies_scored_restart_and_keeps_raw_and_domain_statistics(self):
         raw = self.regulation_with_restart()
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'recording'),
+            patch('tournament.services.replay_storage.download_replay', return_value=b'recording'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=raw),
         ):
             ingest_match(self.match.pk)
@@ -145,7 +152,7 @@ class LocalReplayIntegrationTests(TestCase):
         self.match.save(update_fields=['replays'])
         full = {**copy.deepcopy(raw), 'games': [raw['games'][0], raw['games'][2]]}
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'full'),
+            patch('tournament.services.replay_storage.download_replay', return_value=b'full'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=full),
         ):
             ingest_match(self.match.pk)
@@ -256,7 +263,7 @@ class LocalReplayIntegrationTests(TestCase):
         MatchReplayStatsPlayer.objects.create(replay_stats=part, nick='old player', rating=9.8, played_ticks=10)
         before = [list(model.objects.values()) for model in (MatchReplay, MatchReplayStats, MatchReplayStatsPlayer)]
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2fixture'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result) as engine,
         ):
             self.assertEqual(fetch_match_replay_stats(self.match.pk)['created_games'], 2)
@@ -282,7 +289,7 @@ class LocalReplayIntegrationTests(TestCase):
         raw = copy.deepcopy(self.result)
         raw['games'][0]['kicks'][0] += 17
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2fixture'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result),
         ):
             ingest_match(self.match.pk, force=True)
@@ -290,7 +297,7 @@ class LocalReplayIntegrationTests(TestCase):
         first_hash = recording.content_sha256
         response_hash = recording.response_sha256
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2fixture'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=raw) as engine,
         ):
             ingest_match(self.match.pk, force=True)
@@ -438,7 +445,7 @@ class LocalReplayIntegrationTests(TestCase):
         )
         player.update(updated)
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2fixture'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=raw),
         ):
             ingest_match(self.match.pk, force=True)
@@ -520,7 +527,7 @@ class LocalReplayIntegrationTests(TestCase):
         invalid = copy.deepcopy(self.result)
         invalid['games'][1]['kicks'] = []
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2fixture'),
             patch('tournament.services.local_replays.analyze_local_replay', return_value=invalid),
         ):
             self.assertEqual(ingest_match(self.match.pk, force=True)['failed_recordings'], 1)
@@ -553,7 +560,7 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertEqual(len(active_parts(self.match)), 2)
         self.assertFalse(active_parts(self.match)[0].included)
         Match.objects.filter(pk=self.match.pk).update(replays=[self.url + '/download', self.url])
-        with patch('tournament.services.local_replays.download_replay') as download:
+        with patch('tournament.services.replay_storage.download_replay') as download:
             ingest_match(self.match.pk)
             download.assert_not_called()
         self.assertEqual(ReplayRecording.objects.count(), 1)
@@ -579,7 +586,7 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertNotIn('mappingUrl', data['recordings'][0])
         self.assertEqual(self.client.post(endpoint).status_code, 405)
         self.assertNotIn('Access-Control-Allow-Origin', self.client.get(endpoint, HTTP_ORIGIN='https://untrusted.test'))
-        with patch('tournament.replay_integration.download_replay', return_value=b'HBR2actual') as download:
+        with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2actual') as download:
             binary = self.client.get(data['recordings'][0]['url'], HTTP_ORIGIN='http://localhost:3000')
             self.assertEqual(binary.content, b'HBR2actual')
             self.assertEqual(binary['Access-Control-Allow-Origin'], 'http://localhost:3000')
@@ -745,7 +752,7 @@ class LocalReplayIntegrationTests(TestCase):
         self.match.replays = [self.url, 'https://replay.thehax.pl/not-stored']
         self.match.save(update_fields=['replays'])
         with (
-            patch('tournament.services.local_replays.download_replay', return_value=b'HBR2fixture') as download,
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2fixture') as download,
             patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result),
         ):
             result = reanalyze_replay_recordings.run([archived.pk])
@@ -1019,3 +1026,83 @@ class LocalReplayIntegrationTests(TestCase):
         reconcile_parts(self.match)
         last.refresh_from_db()
         self.assertEqual(last.label, 'Custom overtime')
+
+    def test_archive_is_reused_by_playback_and_forced_reanalysis(self):
+        recording = self.seed()
+        with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive') as download:
+            self.assertEqual(recording_bytes(recording), b'HBR2archive')
+            download.assert_called_once_with(self.url)
+        recording.refresh_from_db()
+        self.assertTrue(recording.replay_file.storage.exists(recording.replay_file.name))
+        with (
+            patch(
+                'tournament.services.replay_storage.download_replay', side_effect=RuntimeError('offline')
+            ) as download,
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result) as engine,
+        ):
+            response = self.client.get(reverse('tournament:analyzer_recording', args=[self.match.pk, recording.pk]))
+            self.assertEqual(response.content, b'HBR2archive')
+            self.assertEqual(ingest_match(self.match.pk, force=True)['failed_recordings'], 0)
+            engine.assert_called_once_with(b'HBR2archive')
+            download.assert_not_called()
+
+    def test_analysis_failure_retains_download_for_retry(self):
+        with (
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive'),
+            patch('tournament.services.local_replays.analyze_local_replay', side_effect=ValueError('engine failed')),
+        ):
+            self.assertEqual(ingest_match(self.match.pk)['failed_recordings'], 1)
+        recording = ReplayRecording.objects.get(match=self.match)
+        self.assertEqual(recording.status, 'failed')
+        self.assertTrue(recording.replay_file)
+        with (
+            patch('tournament.services.replay_storage.download_replay') as download,
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result),
+        ):
+            self.assertEqual(ingest_match(self.match.pk)['failed_recordings'], 0)
+            download.assert_not_called()
+
+    def test_archive_backfill_preserves_analysis_and_rejects_changed_bytes(self):
+        recording = self.seed()
+        before = list(ReplayPlayerStats.objects.values())
+        with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive'):
+            call_command('archive_replays', stdout=StringIO())
+        recording.refresh_from_db()
+        self.assertEqual(recording.status, 'ready')
+        self.assertEqual(recording.raw_response, self.result)
+        self.assertEqual(list(ReplayPlayerStats.objects.values()), before)
+        with patch('tournament.services.replay_storage.download_replay') as download:
+            call_command('archive_replays', stdout=StringIO())
+            download.assert_not_called()
+        recording.replay_file.storage.delete(recording.replay_file.name)
+        with (
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2changed'),
+            self.assertRaises(CommandError),
+        ):
+            call_command('archive_replays', stdout=StringIO(), stderr=StringIO())
+        recording.refresh_from_db()
+        self.assertEqual(recording.status, 'ready')
+        self.assertEqual(recording.raw_response, self.result)
+        with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive'):
+            self.assertEqual(recording_bytes(recording), b'HBR2archive')
+
+    def test_corrupt_archive_is_not_silently_replaced(self):
+        recording = self.seed()
+        with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive'):
+            recording_bytes(recording)
+        with recording.replay_file.open('wb') as target:
+            target.write(b'corrupt')
+        with patch('tournament.services.replay_storage.download_replay') as download:
+            with self.assertRaisesRegex(ValueError, 'bytes changed'):
+                recording_bytes(recording)
+            download.assert_not_called()
+
+    def test_archive_deleted_only_after_recording_deletion_commits(self):
+        recording = self.seed()
+        with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive'):
+            recording_bytes(recording)
+        storage, name = recording.replay_file.storage, recording.replay_file.name
+        with self.captureOnCommitCallbacks(execute=True):
+            self.match.delete()
+            self.assertTrue(storage.exists(name))
+        self.assertFalse(storage.exists(name))
