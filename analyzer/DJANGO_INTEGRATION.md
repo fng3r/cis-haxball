@@ -284,18 +284,19 @@ it before analysis. Playback and explicit reanalysis subsequently use that copy,
 even when the source host is offline. Original URLs remain provenance/recovery
 sources; reanalysis does not refresh remote bytes.
 
-Archive existing current recording records, including sources removed from match
+Download and store files for existing current recording records, including sources removed from match
 replay lists, without running the analyzer:
 
 ```sh
-python haxball_site/manage.py archive_replays
+python haxball_site/manage.py store_replays
 # Optional filters:
-python haxball_site/manage.py archive_replays --season 25
-python haxball_site/manage.py archive_replays --match-ids 6862 6867
+python haxball_site/manage.py store_replays --season 25
+python haxball_site/manage.py store_replays --match-ids 6862 6867
 ```
 
 The command runs synchronously, skips network downloads for available files,
-reports individual failures and exits unsuccessfully if any fail. Rerun to retry.
+prints progress before and after each recording (including its match/recording ID),
+reports downloaded/existing/failed totals and elapsed time, and exits unsuccessfully if any fail. Rerun to retry.
 Existing analysis statuses/results remain unchanged. Legacy `MatchReplay` rows
 are not processed by this command.
 

@@ -1067,20 +1067,20 @@ class LocalReplayIntegrationTests(TestCase):
         recording = self.seed()
         before = list(ReplayPlayerStats.objects.values())
         with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive'):
-            call_command('archive_replays', stdout=StringIO())
+            call_command('store_replays', stdout=StringIO())
         recording.refresh_from_db()
         self.assertEqual(recording.status, 'ready')
         self.assertEqual(recording.raw_response, self.result)
         self.assertEqual(list(ReplayPlayerStats.objects.values()), before)
         with patch('tournament.services.replay_storage.download_replay') as download:
-            call_command('archive_replays', stdout=StringIO())
+            call_command('store_replays', stdout=StringIO())
             download.assert_not_called()
         recording.replay_file.storage.delete(recording.replay_file.name)
         with (
             patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2changed'),
             self.assertRaises(CommandError),
         ):
-            call_command('archive_replays', stdout=StringIO(), stderr=StringIO())
+            call_command('store_replays', stdout=StringIO(), stderr=StringIO())
         recording.refresh_from_db()
         self.assertEqual(recording.status, 'ready')
         self.assertEqual(recording.raw_response, self.result)
@@ -1131,3 +1131,36 @@ class LocalReplayIntegrationTests(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             second.delete()
         self.assertFalse(storage.exists(name))
+
+    def test_store_replays_reports_progress_before_download_and_continues_after_failure(self):
+        first = self.seed()
+        second = ReplayRecording.objects.create(
+            match=self.match, source_key='powtorki:second', replay_url='https://replay.thehax.pl/second'
+        )
+        output, errors = StringIO(), StringIO()
+
+        def download(url):
+            recording = first if url == first.replay_url else second
+            index = 1 if recording.pk == first.pk else 2
+            self.assertIn(
+                f'[{index}/2] Match {self.match.pk}, recording {recording.pk}: Downloading replay...', output.getvalue()
+            )
+            if index == 1:
+                raise RuntimeError('Host unavailable')
+            return b'HBR2archive'
+
+        with (
+            patch('tournament.services.replay_storage.download_replay', side_effect=download),
+            self.assertRaises(CommandError),
+        ):
+            call_command('store_replays', stdout=output, stderr=errors)
+        self.assertIn('Storing replay files for 2 recordings...', output.getvalue())
+        self.assertIn('Downloaded and stored: 1; already stored: 0; failed: 1', output.getvalue())
+        self.assertIn(f'recording {first.pk}: Failed', errors.getvalue())
+        self.assertIn('Host unavailable', errors.getvalue())
+        output = StringIO()
+        with patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2archive') as retry:
+            call_command('store_replays', stdout=output)
+            retry.assert_called_once_with(first.replay_url)
+        self.assertIn('Checking stored file...', output.getvalue())
+        self.assertIn('Downloaded and stored: 1; already stored: 1; failed: 0', output.getvalue())
