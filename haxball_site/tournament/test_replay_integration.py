@@ -857,6 +857,8 @@ class LocalReplayIntegrationTests(TestCase):
         Match.objects.filter(pk=self.match.pk).update(
             stage=stage, numb_tour=tour, series=series, match_date=date(2026, 10, 2)
         )
+        endpoint = reverse('tournament:analyzer_manifest', args=[self.match.pk])
+        self.assertIsNone(self.client.get(endpoint).json()['match']['series'])
         second = Match.objects.create(
             league=self.league,
             stage=stage,
@@ -866,7 +868,6 @@ class LocalReplayIntegrationTests(TestCase):
             team_guest=self.home,
             match_date=date(2026, 10, 1),
         )
-        endpoint = reverse('tournament:analyzer_manifest', args=[self.match.pk])
         data = self.client.get(endpoint).json()
         self.assertEqual(data['match']['series'], {'id': series.pk, 'matchNumber': 1})
         self.assertEqual(data['match']['tour']['name'], 'Финал')
@@ -877,6 +878,9 @@ class LocalReplayIntegrationTests(TestCase):
         self.assertEqual(data['match']['series']['matchNumber'], 2)
         Match.objects.filter(pk=self.match.pk).update(series=None)
         self.assertIsNone(self.client.get(endpoint).json()['match']['series'])
+        self.assertIsNone(
+            self.client.get(reverse('tournament:analyzer_manifest', args=[second.pk])).json()['match']['series']
+        )
 
     def test_replay_admin_models_are_deletable_and_parent_deletion_cascades(self):
         from django.contrib import admin
