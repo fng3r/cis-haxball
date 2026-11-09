@@ -61,10 +61,11 @@ export default function PlayerMaps({ game, player, statistic, onStatistic, label
   }, [game.stadium, player, statistic]);
   if (!player) return null;
   const label = labels[statistic];
+  const count = ['goals', 'assists', 'kicks', 'passes', 'shots', 'completedPasses', 'shotsOnTarget'].includes(statistic) ? player[statistic] : null;
   const events = player.maps?.[statistic] || [];
   return <section aria-label="Player maps" className={embedded ? 'min-w-0' : 'min-w-0 border-t border-base-300 pt-5 @min-[80rem]:border-l @min-[80rem]:border-t-0 @min-[80rem]:pl-6 @min-[80rem]:pt-0'}>
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h3 className="text-sm font-semibold">{player.nick} · {label}</h3>
+      <h3 className="text-sm font-semibold">{player.nick} · {label}{Number.isFinite(count) ? ` (${count})` : ''}</h3>
       {!hideStatistic && <div className="flex flex-wrap items-center gap-2">
       <label className="flex items-center gap-2 text-xs text-base-content/60">Map statistic<select className="select select-sm w-44" value={statistic} onChange={event => onStatistic(event.target.value)}>{Object.entries(labels).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
       </div>}

@@ -83,9 +83,10 @@ describe('local replay workspace', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'players' }));
     fireEvent.mouseEnter(screen.getByRole('button', { name: 'Alice' }));
     expect(screen.getByRole('img', { name: 'Alice: Movement heatmap' })).toBeInTheDocument();
-    for (const [column, map] of [['Goals', 'Goals'], ['Assists', 'Assists'], ['Kicks', 'Kicks'], ['Passes', 'Passes'], ['On target', 'Shots on goal']]) {
+    for (const [column, map, count] of [['Goals', 'Goals', 1], ['Assists', 'Assists', 0], ['Kicks', 'Kicks', 3], ['Passes', 'Passes', 2], ['On target', 'Shots on goal', 1]]) {
       fireEvent.click(screen.getByRole('button', { name: `${column} map for Alice` }));
       expect(screen.getByRole('img', { name: `Alice: ${map}` })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: `Alice · ${map} (${count})` })).toBeInTheDocument();
     }
     fireEvent.click(screen.getByRole('button', { name: 'Alice' }));
     expect(screen.getByRole('img', { name: 'Alice: Movement heatmap' })).toBeInTheDocument();
