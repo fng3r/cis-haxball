@@ -184,6 +184,8 @@ export default function App() {
     })();
     return () => controller.abort();
   }, [matchAttempt]);
+  const contextRecordingIds = new Set(recordings.map(item => item.matchRecording?.id));
+  const visibleMatchParts = matchContext?.parts.filter(part => part.included && contextRecordingIds.has(part.recordingId)) || [];
   const matchRecording = recording?.matchRecording;
   const activeMatchContext = matchRecording ? matchContext : null;
   const currentPart = activeMatchContext?.parts.find(part => part.recordingId === matchRecording.id && part.gameId === game?.id);
@@ -293,9 +295,9 @@ export default function App() {
             {['error', 'cancelled'].includes(item.status) && <button className="btn btn-ghost btn-xs mt-2" aria-label={`Retry analysis of ${item.file.name}`} onClick={() => retry(item.id)}><RotateCcw className="size-3" aria-hidden="true" />Retry analysis</button>}
           </div>)}</div>
         </section>}
-        {matchContext && <section aria-label="Match parts">
-          <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Match parts</span><span>{matchContext.parts.filter(part => part.included).length}</span></div>
-          <div className="space-y-2">{matchContext.parts.filter(part => part.included).map(part => {
+        {visibleMatchParts.length > 0 && <section aria-label="Match parts">
+          <div className="mb-3 flex justify-between text-xs font-semibold uppercase tracking-wider text-base-content/50"><span>Match parts</span><span>{visibleMatchParts.length}</span></div>
+          <div className="space-y-2">{visibleMatchParts.map(part => {
             const source = recordings.find(item => item.matchRecording?.id === part.recordingId);
             const partGame = source?.result?.games.find(item => item.id === part.gameId);
             return <GameCard key={part.id} label={part.displayLabel || part.label} game={partGame} selected={currentPart?.id === part.id} disabled={!partGame} onSelect={() => openPart(part)} />;

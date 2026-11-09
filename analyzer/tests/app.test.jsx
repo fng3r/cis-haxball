@@ -445,5 +445,19 @@ it.each([null, 100])('loads the whole match and selects the requested part %s by
     expect(playerButton.querySelector('img')).toHaveAttribute('src', '/away.png');
     expect(playerButton.querySelector('img').nextSibling.textContent).toContain('Alice');
     expect(screen.queryByRole('combobox', { name: 'Red side team' })).toBeNull();
+    // Removing a source must remove its parts rather than leaving disabled loading cards.
+    const removedFile = requestedPart ? 'a.hbr2' : 'b.hbr2';
+    const removedPart = requestedPart ? 'Half [2]' : 'Half [1]';
+    const remainingPart = requestedPart ? 'Half [1]' : 'Half [2]';
+    fireEvent.click(screen.getByRole('button', { name: `Remove recording ${removedFile}` }));
+    expect(screen.queryByRole('button', { name: removedPart })).not.toBeInTheDocument();
+    const partsList = screen.getByRole('region', { name: 'Match parts' });
+    expect(within(partsList).getByRole('button', { name: remainingPart })).toBeEnabled();
+    expect(within(within(partsList).getByText('Match parts').parentElement).getByText('1')).toBeInTheDocument();
+    if (requestedPart) fireEvent.click(screen.getByRole('button', { name: 'Clear all recordings' }));
+    else fireEvent.click(screen.getByRole('button', { name: 'Remove recording a.hbr2' }));
+    expect(screen.queryByRole('region', { name: 'Match parts' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: remainingPart })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear all recordings' })).not.toBeInTheDocument();
   } finally { window.history.replaceState({}, '', previous); }
 });
