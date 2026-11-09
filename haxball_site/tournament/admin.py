@@ -2122,6 +2122,13 @@ class ReplayRecordingAdmin(ReplayGeneratedAdmin):
     search_fields = ('match__id', 'replay_url', 'source_key')
     actions = (reanalyze_recordings,)
 
+    def get_fieldsets(self, request, obj=None):
+        fields = [field for field in self.get_readonly_fields(request, obj) if field != 'raw_response']
+        return (
+            (None, {'fields': fields}),
+            ('Исходный ответ анализатора', {'fields': ('raw_response',), 'classes': ('collapse',)}),
+        )
+
 
 @admin.register(ReplayGame)
 class ReplayGameAdmin(ReplayGeneratedAdmin):
