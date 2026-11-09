@@ -445,6 +445,17 @@ it.each([null, 100])('loads the whole match and selects the requested part %s by
     expect(playerButton.querySelector('img')).toHaveAttribute('src', '/away.png');
     expect(playerButton.querySelector('img').nextSibling.textContent).toContain('Alice');
     expect(screen.queryByRole('combobox', { name: 'Red side team' })).toBeNull();
+    // Unrelated uploads use their own header; returning to a match recording restores context.
+    await loadFile();
+    await waitFor(() => expect(FakeWorker.instances).toHaveLength(3));
+    act(() => FakeWorker.instances[2].send({ type: 'result', result: { games: [game] } }));
+    expect(screen.queryByLabelText('Match context')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'match.hbr2' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Replay scoreboard').querySelectorAll('img')).toHaveLength(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Open recording b.hbr2' }));
+    expect(screen.getByLabelText('Match context')).toHaveTextContent('ЧР #17');
+    expect(screen.getByLabelText('Replay scoreboard')).toHaveTextContent('Away');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove recording match.hbr2' }));
     // Removing a source must remove its parts rather than leaving disabled loading cards.
     const removedFile = requestedPart ? 'a.hbr2' : 'b.hbr2';
     const removedPart = requestedPart ? 'Half [2]' : 'Half [1]';

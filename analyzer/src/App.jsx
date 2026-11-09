@@ -317,8 +317,8 @@ export default function App() {
         </section>}
         <section ref={playerCard} className={focusMode ? 'flex h-dvh flex-col overflow-hidden bg-base-100' : 'scroll-mt-4 overflow-hidden rounded-box border border-base-300 bg-base-100'}>
           <div className="flex items-start justify-between gap-3 border-b border-base-300 px-4 py-3 sm:px-7">
-            <div className="min-w-0 flex-1">{matchContext || matchLoading || matchError
-              ? <MatchContext context={matchContext} loading={matchLoading} error={matchError} onRetry={() => setMatchAttempt(value => value + 1)} />
+            <div className="min-w-0 flex-1">{activeMatchContext || (!recording && (matchLoading || matchError))
+              ? <MatchContext context={activeMatchContext} loading={matchLoading} error={matchError} onRetry={() => setMatchAttempt(value => value + 1)} />
               : <><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-base-content/45">Replay workspace</p><h2 className="mt-1 truncate text-sm font-semibold">{game ? filename : 'Every match has a story.'}</h2></>}
             </div>
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2" aria-label="Replay controls">
