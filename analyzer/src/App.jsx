@@ -1,14 +1,15 @@
 import MatchContext, { TeamIdentity } from './components/MatchContext.jsx';
 import { contextURL, fetchMatchContext, fetchMatchRecording } from './match-context.js';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Download, FolderOpen, Maximize, Minimize, Moon, RotateCcw, Sun, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Columns2, Download, FolderOpen, Maximize, Minimize, Moon, RotateCcw, Sun, Trash2, X } from 'lucide-react';
 import NativePlayer from './components/NativePlayer.jsx';
 import ReplayLinkForm from './components/ReplayLinkForm.jsx';
 import KeyboardShortcuts from './components/KeyboardShortcuts.jsx';
 import EngineSwitcher from './components/EngineSwitcher.jsx';
-import { V2Overview, V2Players } from './components/V2Stats.jsx';
+import { V2Overview, V2Players, playerMapLabels } from './components/V2Stats.jsx';
 import { getEngine } from './engine-selection.js';
 import PlayerMaps from './components/PlayerMaps.jsx';
+import PlayerComparison from './components/PlayerComparison.jsx';
 import ThirdsMap from './components/ThirdsMap.jsx';
 import { serializeStats } from './export-stats.js';
 import { useReplayLibrary } from './useReplayLibrary.js';
@@ -135,6 +136,7 @@ export default function App() {
   const nativePlayer = useRef(null);
   const playerCard = useRef(null), statsCard = useRef(null);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [comparisonMode, setComparisonMode] = useState(false);
   const [mapStatistic, setMapStatistic] = useState('heatmap');
   const [tab, setTab] = useState('overview');
   const [focusMode, setFocusMode] = useState(false);
@@ -349,7 +351,10 @@ export default function App() {
               <div className="space-y-6"><h3 className="text-sm font-semibold">The balance of play</h3><Comparison label="Possession" values={game.possession} percentage /><Comparison label="Goals" values={[game.scoreRed, game.scoreBlue]} /><Comparison label="Kicks" values={game.kicks} /><Comparison label="Completed passes" values={game.passes} /><Comparison label="Shots on goal" values={game.shots} /></div>
               <div className="xl:border-l xl:border-base-300 xl:pl-8"><h3 className="mb-5 text-sm font-semibold">Ball territory</h3><ThirdsMap game={game} /></div>
             </div>)}
-            {tab === 'players' && (isV2 ? <V2Players game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} /> : <PlayerTable redIdentity={redIdentity} blueIdentity={blueIdentity} game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />)}
+            {tab === 'players' && <>
+              <div className="mb-5 flex justify-end"><button className={`btn btn-sm ${comparisonMode ? 'btn-primary' : ''}`} aria-label="Comparison mode" aria-pressed={comparisonMode} disabled={game.players.length < 2} onClick={() => setComparisonMode(value => !value)}><Columns2 className="size-4" aria-hidden="true" />Comparison mode</button></div>
+              {comparisonMode && game.players.length >= 2 ? <PlayerComparison key={`${recording.id}:${game.id}`} game={game} selectedPlayer={selectedPlayer} statistic={mapStatistic} onStatistic={setMapStatistic} labels={isV2 ? playerMapLabels(game) : undefined} redIdentity={redIdentity} blueIdentity={blueIdentity} /> : (isV2 ? <V2Players game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} /> : <PlayerTable redIdentity={redIdentity} blueIdentity={blueIdentity} game={game} selectedPlayer={selectedPlayer} onSelect={setSelectedPlayer} mapStatistic={mapStatistic} onStatistic={setMapStatistic} />)}
+            </>}
             {tab === 'goals' && <><p className="mb-3 text-xs text-base-content/55">Choose a goal to jump to the build-up.</p><GoalList awayTeam={activeMatchContext?.teams.away} redIdentity={redIdentity} blueIdentity={blueIdentity} game={isV2 ? { ...game, goals: game.goals.map(goal => ({ ...goal, scoreRed: goal.score[0], scoreBlue: goal.score[1] })) } : game} onSeek={seekGoal} /></>}
           </div>
         </section> : !busy && <div className="grid gap-5 sm:grid-cols-3">{[['Watch it back', 'Scrub the timeline and revisit every goal.'], ['Read the game', 'Compare possession, passing and shots.'], ['Find the detail', 'Inspect individual player contributions.']].map(([title, text]) => <div key={title} className="border-t border-base-content/20 pt-4"><h3 className="text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-relaxed text-base-content/55">{text}</p></div>)}</div>)}

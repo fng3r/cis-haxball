@@ -52,7 +52,7 @@ export function drawPlayerMap(canvas, stadium, player, statistic, color) {
   ctx.globalAlpha = 1;
 }
 
-export default function PlayerMaps({ game, player, statistic, onStatistic, labels = MAP_LABELS }) {
+export default function PlayerMaps({ game, player, statistic, onStatistic, labels = MAP_LABELS, embedded = false, hideStatistic = false }) {
   const canvas = useRef(null);
   useEffect(() => {
     if (!player) return;
@@ -62,12 +62,12 @@ export default function PlayerMaps({ game, player, statistic, onStatistic, label
   if (!player) return null;
   const label = labels[statistic];
   const events = player.maps?.[statistic] || [];
-  return <section aria-label="Player maps" className="min-w-0 border-t border-base-300 pt-5 @min-[80rem]:border-l @min-[80rem]:border-t-0 @min-[80rem]:pl-6 @min-[80rem]:pt-0">
+  return <section aria-label="Player maps" className={embedded ? 'min-w-0' : 'min-w-0 border-t border-base-300 pt-5 @min-[80rem]:border-l @min-[80rem]:border-t-0 @min-[80rem]:pl-6 @min-[80rem]:pt-0'}>
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h3 className="text-sm font-semibold">{player.nick} · {label}</h3>
-      <div className="flex flex-wrap items-center gap-2">
+      {!hideStatistic && <div className="flex flex-wrap items-center gap-2">
       <label className="flex items-center gap-2 text-xs text-base-content/60">Map statistic<select className="select select-sm w-44" value={statistic} onChange={event => onStatistic(event.target.value)}>{Object.entries(labels).map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
-      </div>
+      </div>}
     </div>
     <canvas ref={canvas} width="1000" height="500" role="img" aria-label={`${player.nick}: ${label}`} className="mx-auto block h-auto w-full max-w-3xl rounded-box" />
     {statistic === 'heatmap' && events.length > 0 && <div className="mx-auto mt-4 flex max-w-3xl items-center justify-end gap-2 text-[11px] text-base-content/60" aria-label="Relative occupancy: blue is low, red is high"><span>Less time</span><span className="h-2 w-32 rounded-full" style={{ background: `linear-gradient(to right, ${HEAT_COLORS.join(', ')})` }} /><span>More time</span></div>}

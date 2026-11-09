@@ -472,3 +472,44 @@ it.each([null, 100])('loads the whole match and selects the requested part %s by
     expect(screen.queryByRole('button', { name: 'Clear all recordings' })).not.toBeInTheDocument();
   } finally { window.history.replaceState({}, '', previous); }
 });
+
+it('compares player maps with independent selectors and one shared statistic, resetting choices for another game', async () => {
+  render(<App />);
+  const worker = await loadFile();
+  const players = [game.players[0], { ...game.players[0], id: '2:blue', nick: 'Bob', team: 'blue' }, { ...game.players[0], id: '3:red', nick: 'Carol' }];
+  act(() => worker.send({ type: 'result', result: { games: [
+    { ...game, players },
+    { ...game, id: 1, startTick: 10000, players: [{ ...players[0], id: '4:red', nick: 'Dan' }, { ...players[1], id: '5:blue', nick: 'Eve' }] },
+  ] } }));
+  fireEvent.click(screen.getByRole('tab', { name: 'players' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Carol' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Comparison mode' }));
+  expect(screen.getByRole('button', { name: 'Comparison mode' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Left player' })).toHaveValue('3:red');
+  expect(screen.getByRole('combobox', { name: 'Right player' })).toHaveValue('2:blue');
+  expect(screen.getByRole('img', { name: 'Carol: Movement heatmap' })).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: 'Bob: Movement heatmap' })).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Right player' }), { target: { value: '1:red' } });
+  expect(screen.getByRole('combobox', { name: 'Left player' })).toHaveValue('3:red');
+  expect(within(screen.getByRole('combobox', { name: 'Left player' })).getByRole('option', { name: 'Alice' })).toBeDisabled();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Map statistic' }), { target: { value: 'passes' } });
+  expect(screen.getByRole('img', { name: 'Carol: Passes' })).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: 'Alice: Passes' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Comparison mode' }));
+  expect(screen.getByRole('table')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Carol' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Comparison mode' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Game 2' }));
+  expect(screen.getByRole('combobox', { name: 'Left player' })).toHaveValue('4:red');
+  expect(screen.getByRole('combobox', { name: 'Right player' })).toHaveValue('5:blue');
+  expect(screen.getByRole('img', { name: 'Dan: Movement heatmap' })).toBeInTheDocument();
+});
+
+it('disables player comparison when fewer than two players are available', async () => {
+  render(<App />);
+  const worker = await loadFile();
+  act(() => worker.send({ type: 'result', result: { games: [game] } }));
+  fireEvent.click(screen.getByRole('tab', { name: 'players' }));
+  expect(screen.getByRole('button', { name: 'Comparison mode' })).toBeDisabled();
+});

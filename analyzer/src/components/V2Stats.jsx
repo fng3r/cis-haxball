@@ -71,6 +71,10 @@ export function V2Overview({ game }) {
   </div>;
 }
 
+export function playerMapLabels(game) {
+  return Object.fromEntries(Object.entries(V2_MAP_LABELS).filter(([key]) => available(game, key)));
+}
+
 export function V2Players({ game, selectedPlayer, onSelect, mapStatistic, onStatistic }) {
   const [sort, setSort] = useState(null);
   const [group, setGroup] = useState('Attack');
@@ -99,7 +103,7 @@ export function V2Players({ game, selectedPlayer, onSelect, mapStatistic, onStat
         <p className="mt-4 text-xs leading-relaxed text-base-content/55">Click a player to see their heatmap, or a statistic to see where it happened.</p>
       </div>
       <div className="min-w-0">
-        <PlayerMaps game={game} player={player} statistic={available(game, visibleStatistic) ? visibleStatistic : 'heatmap'} onStatistic={onStatistic} labels={Object.fromEntries(Object.entries(V2_MAP_LABELS).filter(([key]) => available(game, key)))} />
+        <PlayerMaps game={game} player={player} statistic={available(game, visibleStatistic) ? visibleStatistic : 'heatmap'} onStatistic={onStatistic} labels={playerMapLabels(game)} />
         {available(game, visibleStatistic) && descriptions[visibleStatistic] && <p className="mt-3 text-xs leading-relaxed text-base-content/65">{descriptions[visibleStatistic]}</p>}
       </div>
     </div>
