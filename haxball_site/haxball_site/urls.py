@@ -24,7 +24,10 @@ from django.views.defaults import page_not_found
 
 from ckeditor_uploader import views as ckuploader_views
 
+from reservation.api import reservations
+
 urlpatterns = [
+    path('api/reservations/', reservations, name='reservations_api'),
     path('admin/', admin.site.urls),
     re_path(r'^ckeditor/upload/', login_required(ckuploader_views.upload), name='ckeditor_upload'),
     re_path(r'^ckeditor/browse/', never_cache(login_required(ckuploader_views.browse)), name='ckeditor_browse'),

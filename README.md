@@ -31,3 +31,7 @@
 ### Запуск
 - Поднимаем development server - `python manage.py runserver`
 - Параллельно запускаем [vite](https://vite.dev/) dev server для сборки Tailwind'а и автоматического обновления при изменении шаблонов - `cd tailwind && npn run dev`
+
+## Public API
+
+- [Broadcasting schedule: reservations by date](docs/reservations-api.md)
