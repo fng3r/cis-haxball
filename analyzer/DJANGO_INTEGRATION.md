@@ -52,7 +52,12 @@ Legacy `MatchReplay*` models and their stored results remain independent.
   Stores nullable primary/secondary positions and confidence, observed role ticks,
   and bounded per-role time/confidence evidence for whole-match aggregation.
 
-Raw goals, event locations and maps remain in the raw engine response. Domain
+Raw goals and event locations remain in the stored engine response. Player
+`maps.heatmap` occupancy arrays are omitted by the Django adapter; the standalone
+analyzer generates its own heatmaps from replay files. Other event maps and role
+evidence are retained. Existing responses are replaced on successful explicit
+reanalysis (`build_match_stats --reanalyze`, or `--reanalyze-all` to also include
+stored recordings removed from match replay lists). Domain
 models do not invent xG, ratings, saves, pass attempts or other unavailable data.
 The established match statistics components render current metrics through a
 presentation adapter. Current statistics are shown automatically when usable;

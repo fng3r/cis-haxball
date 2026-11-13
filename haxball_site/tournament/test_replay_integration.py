@@ -1164,3 +1164,25 @@ class LocalReplayIntegrationTests(TestCase):
             retry.assert_called_once_with(first.replay_url)
         self.assertIn('Checking stored file...', output.getvalue())
         self.assertIn('Downloaded and stored: 1; already stored: 1; failed: 0', output.getvalue())
+
+    def test_reanalysis_replaces_old_heatmap_response_and_preserves_part_corrections(self):
+        old = copy.deepcopy(self.result)
+        old['games'][0]['players'][0]['maps']['heatmap'] = [{'x': 1, 'y': 2, 'ticks': 100}]
+        recording = self.seed(old)
+        part = active_parts(self.match)[0]
+        part.label_override = 'Keep label'
+        part.red_is_home_override = False
+        part.save()
+        with (
+            patch('tournament.services.replay_storage.download_replay', return_value=b'HBR2fixture'),
+            patch('tournament.services.local_replays.analyze_local_replay', return_value=self.result),
+        ):
+            self.assertEqual(ingest_match(self.match.pk, force=True)['failed_recordings'], 0)
+        recording.refresh_from_db()
+        part.refresh_from_db()
+        self.assertEqual(recording.raw_response, self.result)
+        for game in recording.raw_response['games']:
+            for player in game['players']:
+                self.assertNotIn('heatmap', player.get('maps', {}))
+        self.assertEqual(part.label, 'Keep label')
+        self.assertFalse(part.red_is_home)

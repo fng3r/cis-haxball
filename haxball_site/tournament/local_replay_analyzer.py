@@ -27,6 +27,11 @@ def analyze_local_replay(data):
     payload = json.loads(result.stdout)
     if payload.get('schemaVersion') != 1 or payload.get('engine') != 'haxball-replay-analyzer-poc':
         raise ValueError('Unexpected local analyzer schema/engine')
+    # Browser movement maps are rebuilt from replay files. Django only needs the
+    # extracted statistics and role evidence, not the large occupancy-cell arrays.
+    for game in payload.get('games', []):
+        for player in game.get('players', []):
+            player.get('maps', {}).pop('heatmap', None)
     return payload
 
 
