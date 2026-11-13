@@ -33,3 +33,7 @@
 - Параллельно запускаем [vite](https://vite.dev/) dev server для сборки Tailwind'а и автоматического обновления при изменении шаблонов - `cd tailwind && npn run dev`
 
 Replay Analyzer: [integration, domain models and deployment instructions](analyzer/DJANGO_INTEGRATION.md).
+
+## Public API
+
+- [Broadcasting schedule: reservations by date](docs/reservations-api.md)
