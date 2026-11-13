@@ -74,8 +74,8 @@ There are no `match.home`, `match.away` or `match.competition` aliases.
 
 The query covers `[local midnight, next local midnight)` in `TIME_ZONE`, even
 when a request has another active timezone. It includes reservations earlier on
-the requested date, including earlier today. Cancelled reservations, played
-matches and inactive or missing hosts are excluded. Like the available
+the requested date, including earlier today. Played matches remain in the schedule. Cancelled reservations
+and inactive or missing hosts are excluded. Like the available
 reservation list, it does not restrict by season activity. No author, canceller,
 host control URL or other private user data is returned. An empty day returns
 `reservations: []`.

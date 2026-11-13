@@ -29,7 +29,6 @@ def reservations(request):
             time_date__gte=start,
             time_date__lt=end,
             is_cancelled=False,
-            match__is_played=False,
             host__is_active=True,
         )
         .select_related(

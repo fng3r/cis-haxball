@@ -109,7 +109,7 @@ class ReservationsApiTests(TestCase):
         with patch('django.utils.timezone.now', return_value=self.start + timedelta(hours=20)):
             self.assertEqual([r['id'] for r in self.get_schedule().json()['reservations']], [entry.pk])
 
-    def test_filters_cancelled_played_inactive_and_missing_hosts(self):
+    def test_includes_played_matches_but_filters_cancelled_inactive_and_missing_hosts(self):
         available = self.reserve()
         self.reserve(cancelled_at=self.start)
         inactive = ReservationHost.objects.create(name='Inactive', codename='inactive', is_active=False)
@@ -119,8 +119,10 @@ class ReservationsApiTests(TestCase):
             league=self.league, numb_tour=self.match.numb_tour, team_home=self.home, team_guest=self.away
         )
         Match.objects.filter(pk=played_match.pk).update(is_played=True)
-        self.reserve(match=played_match)
-        self.assertEqual([r['id'] for r in self.get_schedule().json()['reservations']], [available.pk])
+        played = self.reserve(match=played_match)
+        reservations = self.get_schedule().json()['reservations']
+        self.assertEqual([r['id'] for r in reservations], [available.pk, played.pk])
+        self.assertTrue(reservations[1]['match']['isPlayed'])
 
     def test_chronological_order_with_id_ties_and_constant_queries(self):
         late = self.reserve(self.start + timedelta(hours=3))
