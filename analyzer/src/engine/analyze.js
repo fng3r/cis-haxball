@@ -24,10 +24,13 @@ function inflateRaw(bytes) {
   return result;
 }
 
-function playerMaps(game, player, cells) {
-  const belongs = event => event.playerId != null
-    ? `${event.playerId}:${event.team}` === player.id
+function belongsToPlayer(event, player) {
+  return typeof event === 'string' ? event === player.nick
     : event.player === player.nick && (!event.team || event.team === player.team);
+}
+
+function playerMaps(game, player, cells) {
+  const belongs = event => belongsToPlayer(event, player);
   const goals = game.goals.filter(g => !g.ownGoal && g.scorer === player.nick && g.team === player.team);
   const assists = game.goals.filter(g => g.assist === player.nick && g.team === player.team);
   return {
@@ -51,9 +54,9 @@ function normalizeGame(game, index, frames, roster, startTick, includeFrames, he
     }),
     goals: game.goals.filter(g => !g.ownGoal && g.scorer === player.nick && g.team === player.team).length,
     assists: game.goals.filter(g => g.assist === player.nick && g.team === player.team).length,
-    kicks: game.kicks.filter(k => k.player === player.nick).length,
-    passes: game.passes.filter(p => (typeof p === 'string' ? p : p.player) === player.nick).length,
-    shots: game.shots.filter(s => s.player === player.nick).length,
+    kicks: game.kicks.filter(event => belongsToPlayer(event, player)).length,
+    passes: game.passes.filter(event => belongsToPlayer(event, player)).length,
+    shots: game.shots.filter(event => belongsToPlayer(event, player)).length,
     maps: playerMaps(game, player, heatmaps?.get(player.id)),
   }));
   return {
@@ -93,7 +96,7 @@ export function analyzeReplay(input, { onProgress = () => {}, includeFrames = fa
       for (const item of runtime.state.I) {
         if (!item.H || !item.ea.$ || runtime.state.K?.Bb !== 1 || runtime.state.K?.Oa > 0) continue;
         const team = item.ea.$ === 1 ? 'red' : 'blue';
-        const key = `${item.V}:${team}`;
+        const key = JSON.stringify([item.w, team]);
         const player = roster.get(key) || { id: key, nick: item.w, team, playedTicks: 0 };
         player.playedTicks++;
         // Match native display precedence and retain the last value used in play,

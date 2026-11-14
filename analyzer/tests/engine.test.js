@@ -87,3 +87,16 @@ describe('standalone replay analysis', () => {
     expect(() => analyzeReplay(single.subarray(0, 100))).toThrow();
   });
 });
+
+it('combines BeNzEmA appearances in match 6981 without duplicating actions or losing movement time', () => {
+  const result = analyzeReplay(readFileSync(new URL('./fixtures/futsal-reconnect.hbr2', import.meta.url)));
+  const players = result.games[0].players.filter(player => player.nick === 'BeNzEmA');
+  expect(players).toHaveLength(1);
+  expect(players[0]).toMatchObject({
+    id: JSON.stringify(['BeNzEmA', 'red']), team: 'red', playedTicks: 28466,
+    goals: 1, assists: 2, kicks: 35, passes: 16, shots: 3,
+  });
+  expect(players[0].maps.heatmap.reduce((ticks, cell) => ticks + cell.ticks, 0)).toBe(28466);
+  expect(players[0].positionObservedTicks).toBe(28465);
+  for (const key of ['goals', 'assists', 'kicks', 'passes', 'shots']) expect(players[0].maps[key]).toHaveLength(players[0][key]);
+});

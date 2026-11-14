@@ -118,16 +118,16 @@ def materialize(recording, result, rosters, players):
                     'middle_ticks': raw['thirds'][1],
                 },
             )
+        identities = [(p['nick'], p['team']) for p in raw['players']]
+        if len(identities) != len(set(identities)):
+            raise ValueError('Analyzer returned duplicate player nicknames on the same side; reanalysis required')
         seen_players = []
         for p in raw['players']:
-            identity = str(p['id'])
-            seen_players.append(identity)
-            ReplayPlayerStats.objects.update_or_create(
+            row, _ = ReplayPlayerStats.objects.update_or_create(
                 game=game,
-                replay_player_id=identity,
+                nick=p['nick'],
+                side=p['team'],
                 defaults={
-                    'side': p['team'],
-                    'nick': p['nick'],
                     'avatar': p.get('avatar'),
                     'player_id': players.get(p['nick'].strip().casefold()),
                     'active_ticks': p['playedTicks'],
@@ -139,7 +139,8 @@ def materialize(recording, result, rosters, players):
                     **player_position_fields(p),
                 },
             )
-        game.player_stats.exclude(replay_player_id__in=seen_players).delete()
+            seen_players.append(row.pk)
+        game.player_stats.exclude(pk__in=seen_players).delete()
 
 
 def classify_parts(match, reset_override_ids=()):

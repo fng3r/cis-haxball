@@ -3231,7 +3231,6 @@ class ReplayTeamStats(models.Model):
 
 class ReplayPlayerStats(models.Model):
     game = models.ForeignKey(ReplayGame, related_name='player_stats', on_delete=models.CASCADE)
-    replay_player_id = models.CharField(max_length=80)
     side = models.CharField(max_length=4, choices=ReplayTeamStats.Side.choices)
     nick = models.CharField(max_length=150)
     avatar = models.CharField('Аватар в реплее', max_length=2, null=True, blank=True)
@@ -3254,9 +3253,7 @@ class ReplayPlayerStats(models.Model):
     position_roles = models.JSONField(default=list, blank=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['game', 'replay_player_id'], name='replay_player_identity_unique')
-        ]
+        constraints = [models.UniqueConstraint(fields=['game', 'nick', 'side'], name='replay_player_identity_unique')]
         verbose_name = 'Статистика игрока в реплее'
         verbose_name_plural = 'Статистика игроков в реплеях'
 

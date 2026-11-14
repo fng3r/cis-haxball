@@ -79,7 +79,6 @@ class ReplayAdminTests(TestCase):
             ReplayTeamStats.objects.create(game=game, side=side)
             ReplayPlayerStats.objects.create(
                 game=game,
-                replay_player_id=str(index),
                 nick=player.nickname,
                 side=side,
                 player=player if index % 2 == 0 else None,

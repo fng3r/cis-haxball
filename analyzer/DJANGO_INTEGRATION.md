@@ -43,7 +43,7 @@ Legacy `MatchReplay*` models and their stored results remain independent.
   `included=False` retains the association and prevents automatic resurrection.
 - `ReplayTeamStats`: one row per game/red-or-blue side, with captured goals,
   possession ticks, kicks, completed passes, on-target shots and territory ticks.
-- `ReplayPlayerStats`: one row per game/replay player identity (including side),
+- `ReplayPlayerStats`: one row per game + exact nickname + replay side,
   with recorded nickname, optional resolved Django player and supported metrics.
   Its nullable `avatar` contains the recording's last active custom avatar for
   that game: short text/emoji, not a profile-image URL. Room overrides precede
@@ -316,3 +316,30 @@ local to the installation in this repository. Back up media storage alongside
 the database and make it accessible to both web and Celery processes. The manifest
 remains JSON with Django recording URLs; its existing preparation restriction is
 unchanged.
+
+## Player identity upgrade
+
+The original engine now accumulates statistics by exact nickname and side within
+one game, so reconnecting with a new native connection ID does not create another
+player row. Browser row IDs encode `[nickname, side]`; native replay/player IDs
+are still used by playback and do not define statistics identities. Actions are
+counted once and playtime, heatmaps, avatars and role observations span all such
+appearances. Different games and sides remain separate.
+
+`ReplayPlayerStats.replay_player_id` is removed; its uniqueness constraint is
+replaced with `(game, nick, side)`. Since app migrations are installation-local,
+generate the migration as usual. Before applying it, delete the **current derived
+player rows only**, then rebuild them with the updated workers:
+
+```sh
+python haxball_site/manage.py makemigrations tournament
+python haxball_site/manage.py shell -c "from tournament.models import ReplayPlayerStats; print(ReplayPlayerStats.objects.all().delete())"
+python haxball_site/manage.py migrate
+python haxball_site/manage.py build_match_stats --reanalyze-all
+```
+
+Pause ingestion while replacing the schema and restart Celery workers with the
+new code before queuing reanalysis. Keep recordings, raw responses, games,
+match-part configuration and legacy statistics. Reanalysis replaces the old raw
+responses and recreates player rows; failed recordings can be retried. Do not
+materialize old connection-keyed duplicate player lists into the new schema.

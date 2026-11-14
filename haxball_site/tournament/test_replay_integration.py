@@ -327,7 +327,9 @@ class LocalReplayIntegrationTests(TestCase):
         self.seed()
         for game in self.result['games']:
             for player in game['players']:
-                stored = ReplayPlayerStats.objects.get(game__engine_game_id=game['id'], replay_player_id=player['id'])
+                stored = ReplayPlayerStats.objects.get(
+                    game__engine_game_id=game['id'], nick=player['nick'], side=player['team']
+                )
                 self.assertEqual(stored.primary_position, player['primaryPosition'])
                 self.assertEqual(stored.avatar, player['avatar'])
                 self.assertEqual(stored.secondary_position, player['secondaryPosition'])
@@ -436,7 +438,7 @@ class LocalReplayIntegrationTests(TestCase):
         part.save()
         row = part.game.player_stats.first()
         raw = copy.deepcopy(self.result)
-        player = next(p for p in raw['games'][0]['players'] if p['id'] == row.replay_player_id)
+        player = next(p for p in raw['games'][0]['players'] if p['nick'] == row.nick and p['team'] == row.side)
         updated = self.position_player(
             player,
             identity=player['id'],
@@ -1186,3 +1188,13 @@ class LocalReplayIntegrationTests(TestCase):
                 self.assertNotIn('heatmap', player.get('maps', {}))
         self.assertEqual(part.label, 'Keep label')
         self.assertFalse(part.red_is_home)
+
+    def test_player_rows_are_identified_by_game_nickname_and_side_not_engine_id(self):
+        recording = self.seed()
+        before = list(ReplayPlayerStats.objects.order_by('pk').values('pk', 'game_id', 'nick', 'side'))
+        raw = copy.deepcopy(self.result)
+        for game in raw['games']:
+            for index, player in enumerate(game['players']):
+                player['id'] = f'changed-connection-{index}'
+        materialize(recording, raw, {'home': set(), 'away': set()}, {})
+        self.assertEqual(before, list(ReplayPlayerStats.objects.order_by('pk').values('pk', 'game_id', 'nick', 'side')))

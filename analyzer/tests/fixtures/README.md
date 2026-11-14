@@ -41,3 +41,13 @@ These files do not contain manually annotated pass, shot, recovery or assist
 labels. Regression values and conservation checks do not establish human-verified
 accuracy of inferred actions. The tests do not treat original-engine scorer or
 assist attribution as ground truth for v2's different contact-aware rules.
+
+## Reconnection regression
+
+`futsal-reconnect.hbr2` is match 6981's second recording, downloaded from its
+saved source on 2026-11-14 for the reported duplicate-player regression:
+https://replay.thehax.pl/8cbafbda-33ff-48a3-b91b-ff17f2d7900d
+
+SHA-256: `1506feefa0c16635fd7da3e67b129f494e872dbc959abc4a8f598ef3e52774b1`.
+BeNzEmA appears under connection IDs 116 and 144; statistics must expose one
+red-side row with 28,466 played ticks and one set of actions.
