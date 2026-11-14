@@ -1,11 +1,62 @@
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils import timezone
 
-from core.models import NewComment, Post, Reaction, ReactionType, Subscription
+from core.models import Category, NewComment, Post, Reaction, ReactionType, Subscription
 from core.services.reactions import build_reactions_context
+
+
+class PostSlugTests(TestCase):
+    def setUp(self):
+        self.author = User.objects.create_user(username='post-author')
+        self.category = Category.objects.create(title='Posts', slug='posts')
+        self.client.defaults['HTTP_USER_AGENT'] = 'Post slug regression test'
+        self.client.force_login(self.author)
+
+    def test_create_post_with_symbol_only_title(self):
+        for title in ['🚷', '!!!', '⚽🔥']:
+            with self.subTest(title=title):
+                response = self.client.post(
+                    reverse('core:new_post', args=[self.category.slug]),
+                    {'title': title, 'body': 'Post body'},
+                )
+
+                self.assertRedirects(response, self.category.get_absolute_url(), fetch_redirect_response=False)
+                post = Post.objects.get(title=title)
+                self.assertEqual(post.slug, 'post')
+                self.assertEqual(resolve(post.get_absolute_url()).kwargs, {'pk': post.pk, 'slug': 'post'})
+
+    def test_create_post_preserves_transliterated_slug(self):
+        self.client.post(
+            reverse('core:new_post', args=[self.category.slug]),
+            {'title': 'Привет мир', 'body': 'Post body'},
+        )
+
+        self.assertEqual(Post.objects.get(title='Привет мир').slug, 'privet-mir')
+
+    def test_existing_empty_slug_has_working_detail_link(self):
+        post = Post.objects.create(title='🚷', author=self.author, category=self.category, body='Post body', slug='')
+
+        url = post.get_absolute_url()
+
+        self.assertEqual(resolve(url).kwargs, {'pk': post.pk, 'slug': 'post'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['post'].pk, post.pk)
+        self.assertContains(response, reverse('core:post_edit', args=['post', post.pk]))
+        post.refresh_from_db()
+        self.assertEqual(post.slug, '')
+
+        homepage = self.client.get(reverse('core:home'))
+        self.assertEqual(homepage.status_code, 200)
+        self.assertContains(homepage, url)
+
+    def test_existing_slug_is_preserved_in_detail_link(self):
+        post = Post(id=1144, title='Post', slug='custom-slug')
+
+        self.assertEqual(post.get_absolute_url(), '/post/1144/custom-slug')
 
 
 class ReactionsFeatureTests(TestCase):

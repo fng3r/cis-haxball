@@ -156,7 +156,7 @@ def post_new(request, slug):
             post = form.save(commit=False)
             post.author = request.user
             post.category = category
-            post.slug = slugify(post.title)
+            post.slug = slugify(post.title) or 'post'
             post.created = datetime.now()
             post.save()
             return redirect(category.get_absolute_url())
@@ -274,9 +274,7 @@ class ProfileDetail(View):
         from balance.models import UserGift
 
         context['owned_gifts'] = list(
-            UserGift.objects.filter(owner=profile.name)
-            .select_related('gift', 'buyer', 'owner')
-            .order_by('-created_at')
+            UserGift.objects.filter(owner=profile.name).select_related('gift', 'buyer', 'owner').order_by('-created_at')
         )
 
         if request.htmx:

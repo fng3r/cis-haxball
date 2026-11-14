@@ -309,7 +309,7 @@ class Post(models.Model):
     objects = PostQuerySet.as_manager()
 
     def get_absolute_url(self):
-        return reverse('core:post_detail', args=[self.id, self.slug])
+        return reverse('core:post_detail', args=[self.id, self.slug or 'post'])
 
     def last_comment(self):
         return self.comments.annotate(Max('created'))

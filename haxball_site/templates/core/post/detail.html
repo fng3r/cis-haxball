@@ -65,7 +65,7 @@
           <span>
             {{ post.title }}
             {% if post.author == user or user.is_superuser %}
-              <a href="{% url 'core:post_edit' post.slug post.id %}" class="tw:text-warning! tw:text-base tw:text-right"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+              <a href="{% url 'core:post_edit' post.slug|default:'post' post.id %}" class="tw:text-warning! tw:text-base tw:text-right"><i class="fa fa-pencil" aria-hidden="true"></i></a>
             {% endif %}
           </span>
           {% if post.category %}
